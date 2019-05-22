@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import csv
-from datetime import datetime, timedelta
+from datetime import timedelta
 import json
 import mock
 from moneyed import Money
@@ -666,7 +666,7 @@ class ProjectAdminFormTest(BluebottleTestCase):
     def test_deadline_too_far(self):
         self.form.cleaned_data = {
             'status': ProjectPhase.objects.get(slug='campaign'),
-            'deadline': datetime.now() + timedelta(days=70),
+            'deadline': now() + timedelta(days=70),
             'amount_asked': Money(100, 'EUR')
         }
         with self.assertRaises(ValidationError) as error:
@@ -680,7 +680,7 @@ class ProjectAdminFormTest(BluebottleTestCase):
     def test_deadline(self):
         self.form.cleaned_data = {
             'status': ProjectPhase.objects.get(slug='campaign'),
-            'deadline': datetime.now() + timedelta(days=40),
+            'deadline': now() + timedelta(days=40),
             'amount_asked': Money(100, 'EUR')
         }
         self.form.clean()

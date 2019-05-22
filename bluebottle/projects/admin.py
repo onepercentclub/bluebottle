@@ -1,7 +1,7 @@
 import csv
 import logging
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import six
 from adminfilters.multiselect import UnionFieldListFilter
@@ -20,6 +20,7 @@ from django.http.response import HttpResponseRedirect, HttpResponseForbidden, Ht
 from django.utils.html import format_html
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 from django_summernote.admin import SummernoteInlineModelAdmin
 from django_summernote.widgets import SummernoteWidget
 from moneyed.classes import Money
@@ -257,8 +258,8 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
             self.cleaned_data['status'].slug == 'campaign' and
             'amount_asked' in self.cleaned_data and
             self.cleaned_data['amount_asked'].amount > 0 and
-            'deadline' in self.cleaned_data and
-            self.cleaned_data['deadline'] > datetime.now() + timedelta(days=60)
+            self.cleaned_data.get('deadline') and
+            self.cleaned_data['deadline'] > timezone.now() + timedelta(days=60)
         ):
             raise forms.ValidationError(
                 _('Crowdfunding projects cannot run longer then 60 days')

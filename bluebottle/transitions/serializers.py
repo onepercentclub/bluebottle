@@ -45,7 +45,7 @@ class TransitionSerializer(serializers.Serializer):
         resource.save()
 
     class Meta:
-        fields = ('id', 'transition', )
+        fields = ('id', 'transition', 'resource')
 
     class JSONAPIMeta:
         resource_name = 'transitions'

@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
 
+from bluebottle.follow.models import follow, unfollow
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.notifications.decorators import transition
 
@@ -40,17 +41,11 @@ class Event(Activity):
         return (self.start - self.end).seconds / 60
 
     @property
-    def accepted_members(self):
-        return self.contributions.filter(status=Participant.Status.accepted)
-
-    @property
-    def attending_members(self):
-        return self.contributions.filter(
-            status__in=(Participant.Status.attending, Participant.Status.accepted)
-        )
+    def participants(self):
+        return self.contributions.filter(status=Participant.Status.going)
 
     def check_capcity(self):
-        if len(self.accepted_members) >= self.capacity and self.status == Activity.Status.open:
+        if len(self.participants) >= self.capacity and self.status == Activity.Status.open:
             self.full()
         elif self.status == Activity.Status.full:
             self.reopen()
@@ -77,9 +72,7 @@ class Event(Activity):
         target=Activity.Status.running,
     )
     def started(self, **kwargs):
-        for member in self.accepted_members:
-            member.attending()
-            member.save()
+        pass
 
     @transition(
         field='status',
@@ -87,8 +80,8 @@ class Event(Activity):
         target=Activity.Status.done,
     )
     def done(self, **kwargs):
-        for member in self.attending_members:
-            member.done()
+        for member in self.participants:
+            member.success()
             member.save()
 
     @transition(
@@ -110,11 +103,11 @@ class Event(Activity):
 
 class Participant(Contribution):
     class Status(Contribution.Status):
-        accepted = ChoiceItem('accepted', _('accepted'))
-        attending = ChoiceItem('attending', _('attending'))
-        rejected = ChoiceItem('rejected', _('rejected'))
-        absent = ChoiceItem('absent', _('absent'))
+        going = ChoiceItem('going', _('going'))
         withdrawn = ChoiceItem('withdrawn', _('withdrawn'))
+        rejected = ChoiceItem('rejected', _('rejected'))
+        no_show = ChoiceItem('no_show', _('no_show'))
+        closed = ChoiceItem('closed', _('closed'))
 
     time_spent = models.FloatField()
 
@@ -122,58 +115,64 @@ class Participant(Contribution):
         return self.activity.status == Activity.Status.open
 
     def save(self, *args, **kwargs):
-        if self.activity.automatically_accept:
-            self.accept()
+        if self.status == self.Status.new:
+            self.go()
 
         super(Participant, self).save(*args, **kwargs)
 
     @transition(
         field='status',
-        source=[Status.new, Status.rejected],
-        target=Status.accepted,
+        source=(Status.new, Status.withdrawn, ),
+        target=Status.going,
         conditions=[event_is_open]
     )
-    def accept(self, **kwargs):
+    def go(self, **kwargs):
+        follow(self.user, self.activity)
         self.activity.check_capcity()
 
     @transition(
         field='status',
-        source=[Status.new, Status.accepted],
-        target=Status.rejected,
-        conditions=[event_is_open]
-    )
-    def reject(self, **kwargs):
-        self.activity.check_capcity()
-
-    @transition(
-        field='status',
-        source=[Status.new, Status.accepted],
+        source=Status.going,
         target=Status.withdrawn,
         conditions=[event_is_open]
     )
-    def withdrawn(self, **kwargs):
+    def withdraw(self, **kwargs):
+        unfollow(self.user, self.activity)
         self.activity.check_capcity()
 
     @transition(
         field='status',
-        source=[Status.new, Status.accepted],
-        target=Status.attending,
+        source=[Status.going],
+        target=Status.rejected,
+        permission=Contribution.is_activity_manager
     )
-    def attending(self, **kwargs):
-        pass
+    def rejected(self, **kwargs):
+        unfollow(self.user, self.activity)
+        self.activity.check_capcity()
 
     @transition(
         field='status',
-        source=Status.attending,
+        source=[Status.going, Status.no_show, Status.rejected, Status.withdrawn],
         target=Status.success,
     )
     def success(self, **kwargs):
+        follow(self.user, self.activity)
         self.time_spent = self.activity.duration
 
     @transition(
         field='status',
-        source=[Status.success, Status.attending],
-        target=Status.absent,
+        source=Status.success,
+        target=Status.no_show,
+        permission=Contribution.is_activity_manager
     )
-    def absent(self, **kwargs):
+    def no_show(self, **kwargs):
+        unfollow(self.user, self.activity)
+        self.time_spent = None
+
+    @transition(
+        field='status',
+        source='*',
+        target=Status.closed,
+    )
+    def close(self, **kwargs):
         self.time_spent = None

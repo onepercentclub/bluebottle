@@ -19,8 +19,8 @@ class ParticipantInline(admin.TabularInline):
     model = Participant
 
     raw_id_fields = ('user', )
-    readonly_fields = ('participant', 'created', 'status', 'time_spent')
-    fields = readonly_fields
+    readonly_fields = ('created', 'status', )
+    fields = ('user', 'created', 'status', 'time_spent')
 
     extra = 0
 
@@ -46,6 +46,6 @@ class ParticipantAdmin(FSMAdmin):
 @admin.register(Event)
 class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
-    inlines = (ParticipantInline, )
+    inlines = ActivityChildAdmin.inlines + (ParticipantInline, )
 
     base_model = Event

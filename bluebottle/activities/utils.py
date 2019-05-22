@@ -4,6 +4,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.members.serializers import UserPreviewSerializer
+from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import (
     ResourcePermissionField,
@@ -15,33 +16,37 @@ class BaseActivitySerializer(ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('slug',))
-    type = serializers.SerializerMethodField()
     owner = ResourceRelatedField(read_only=True)
 
-    def get_type(self, instance):
-        return instance._meta.model_name
+    transitions = AvailableTransitionsField(source='status')
+    is_follower = serializers.SerializerMethodField()
+
+    included_serializers = {
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'contributions': 'bluebottle.activities.serializers.ContributionSerializer',
+    }
+
+    def get_is_follower(self, instance):
+        return instance.followers.filter(user=self.context['request'].user).exists()
 
     class Meta:
         model = Activity
         fields = (
             'id',
             'initiative',
-            'status',
             'owner',
             'title',
             'description',
-            'type'
         )
 
-    included_serializers = {
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-    }
+        meta_fields = ('permissions', 'transitions', 'status', 'created', 'updated', 'is_follower', )
 
     class JSONAPIMeta:
         included_resources = [
             'owner',
-            'initiative'
+            'initiative',
+            'contributions',
         ]
         resource_name = 'activities'
 

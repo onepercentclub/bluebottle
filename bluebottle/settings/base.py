@@ -335,6 +335,7 @@ TENANT_APPS = (
 
     'bluebottle.transitions',
     'bluebottle.files',
+    'bluebottle.follow',
     'bluebottle.initiatives',
     'bluebottle.activities',
     'bluebottle.events',

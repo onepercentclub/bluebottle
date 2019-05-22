@@ -10,7 +10,7 @@ class EventSerializer(BaseActivitySerializer):
         model = Event
         fields = BaseActivitySerializer.Meta.fields + (
             'permissions',
-            'address',
+            'location',
             'capacity',
             'end',
             'registration_deadline',

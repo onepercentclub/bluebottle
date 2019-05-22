@@ -6,8 +6,8 @@ from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 
 from bluebottle.geo.models import (
-    Location, LocationGroup, Region, SubRegion, Country, Place
-)
+    Location, LocationGroup, Region, SubRegion, Country, Place,
+    InitiativePlace, ActivityPlace)
 from bluebottle.projects.models import Project
 
 
@@ -120,3 +120,27 @@ class PlaceInline(GenericStackedInline):
 
 
 admin.site.register(Location, LocationAdmin)
+
+
+@admin.register(InitiativePlace)
+class InitiativePlaceAdmin(admin.ModelAdmin):
+
+    fieldsets = (
+        (_('Info'), {'fields': ('street', 'street_number', 'postal_code',
+                                'province', 'country', 'formatted_address')}),
+        (_('Map'), {'fields': ('position', )})
+    )
+
+
+@admin.register(ActivityPlace)
+class ActivityPlaceAdmin(admin.ModelAdmin):
+
+    fieldsets = (
+        (_('Map'), {'fields': ('position', )}),
+        (_('Info'), {
+            'fields': (
+                'street', 'street_number', 'postal_code',
+                'province', 'country', 'formatted_address'
+            )
+        })
+    )

@@ -7,8 +7,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import InitiativePlace
-from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage, \
-    InitiativeNeedsWorkOwnerMessage
+from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
 from bluebottle.notifications.decorators import transition
 from bluebottle.organizations.models import Organization, OrganizationContact
 
@@ -105,8 +104,6 @@ class Initiative(models.Model):
         field='status',
         source=ReviewStatus.submitted,
         target=ReviewStatus.needs_work,
-        messages=[InitiativeNeedsWorkOwnerMessage],
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         custom={'button_name': _('needs work')}
     )
     def needs_work(self, **kwargs):
@@ -127,7 +124,6 @@ class Initiative(models.Model):
         field='status',
         source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
         target=ReviewStatus.closed,
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         messages=[InitiativeClosedOwnerMessage],
         custom={'button_name': _('close')}
     )

@@ -8,6 +8,7 @@ from polymorphic.models import PolymorphicModel
 
 class Activity(PolymorphicModel):
     class Status(DjangoChoices):
+        draft = ChoiceItem('draft', _('draft'))
         open = ChoiceItem('open', _('open'))
         full = ChoiceItem('full', _('full'))
         running = ChoiceItem('running', _('running'))

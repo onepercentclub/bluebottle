@@ -7,6 +7,7 @@ from geoposition.fields import GeopositionField
 from sorl.thumbnail import ImageField
 from parler.models import TranslatedFields
 
+from bluebottle.geo.fields import PointField
 from bluebottle.utils.models import SortableTranslatableModel
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
@@ -159,3 +160,16 @@ class InitiativePlace(models.Model):
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
     position = GeopositionField()
+
+
+class ActivityPlace(models.Model):
+    street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
+    street = models.CharField(_('Street'), max_length=255, blank=True, null=True)
+    postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)
+    locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
+    province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
+    country = models.ForeignKey('geo.Country')
+
+    formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
+
+    position = PointField()

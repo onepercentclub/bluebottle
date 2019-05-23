@@ -1,3 +1,5 @@
+from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
+
 from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateAPIView
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
@@ -13,9 +15,7 @@ class FundingList(ListCreateAPIView):
 
     lookup_field = 'slug'
 
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
+    permission_classes = (ActivityTypePermission, ActivityPermission,)
 
 
 class FundingDetail(RetrieveUpdateAPIView):
@@ -24,9 +24,7 @@ class FundingDetail(RetrieveUpdateAPIView):
 
     lookup_field = 'slug'
 
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
+    permission_classes = (ActivityTypePermission, ActivityPermission,)
 
 
 class DonationList(ListCreateAPIView):

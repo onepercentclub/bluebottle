@@ -59,9 +59,6 @@ class FileContentView(RetrieveAPIView):
             response['X-Accel-Redirect'] = thumbnail.url
 
         response['Content-Type'] = content_type
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
-            file
-        )
 
         return response
 

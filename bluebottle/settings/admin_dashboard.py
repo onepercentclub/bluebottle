@@ -197,6 +197,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['projects.change_projectplatformsettings']
             },
             {
+                'name': 'initiatives.initiativeplatformsettings',
+                'permissions': ['initiatives.change_initiativeplatformsettings']
+            },
+
+            {
                 'name': 'members.memberplatformsettings',
                 'permissions': ['members.change_memberplatformsettings']
             },

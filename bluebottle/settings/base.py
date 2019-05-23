@@ -267,7 +267,6 @@ SHARED_APPS = (
     'django.contrib.postgres',
 
     # 3rd party apps
-    'mapwidgets',
     'lockdown',
     'django_extensions',
     'raven.contrib.django',

@@ -104,4 +104,3 @@ class LocationListTestCase(GeoTestCase):
         self.assertEqual(len(response.data), self.count)
         self.assertEqual(response.data[0]['name'], self.locations[0].name)
         self.assertEqual(response.data[0]['description'], self.locations[0].description)
-        self.assertEqual(response.data[0]['latitude'], 10.0)

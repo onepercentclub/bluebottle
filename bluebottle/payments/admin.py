@@ -139,6 +139,12 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def lookup_allowed(self, key, value):
+        if key in ('order__donations__project_id', ):
+            return True
+        else:
+            return super(OrderPaymentAdmin, self).lookup_allowed(key, value)
+
 
 admin.site.register(OrderPayment, OrderPaymentAdmin)
 

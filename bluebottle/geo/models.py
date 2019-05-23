@@ -7,6 +7,7 @@ from geoposition.fields import GeopositionField
 from sorl.thumbnail import ImageField
 from parler.models import TranslatedFields
 
+from bluebottle.geo.fields import PointField
 from bluebottle.utils.models import SortableTranslatableModel
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
@@ -113,7 +114,7 @@ class LocationGroup(models.Model):
 
 class Location(models.Model):
     name = models.CharField(_('name'), max_length=255)
-    position = GeopositionField(null=True)
+    position = PointField(null=True)
     group = models.ForeignKey('geo.LocationGroup', verbose_name=_('location group'),
                               null=True, blank=True)
     city = models.CharField(_('city'), blank=True, null=True, max_length=255)
@@ -121,6 +122,18 @@ class Location(models.Model):
     description = models.TextField(_('description'), blank=True)
     image = ImageField(_('image'), max_length=255, null=True, blank=True,
                        upload_to='location_images/', help_text=_('Location picture'))
+
+    @property
+    def latitude(self):
+        if not self.position:
+            return None
+        return self.position.coords[1]
+
+    @property
+    def longitude(self):
+        if not self.position:
+            return None
+        return self.position.coords[0]
 
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']

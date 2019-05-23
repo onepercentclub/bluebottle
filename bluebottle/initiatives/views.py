@@ -45,6 +45,7 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
 class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Initiative.objects.all()
     serializer_class = InitiativeSerializer
+    permission_classes = (ResourceOwnerPermission,)
 
     def get_exception_handler(self):
         return exception_handler

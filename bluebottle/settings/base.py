@@ -266,6 +266,8 @@ SHARED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.postgres',
 
+    'mapwidgets',
+
     # 3rd party apps
     'lockdown',
     'django_extensions',

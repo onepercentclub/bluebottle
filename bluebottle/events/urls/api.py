@@ -23,5 +23,4 @@ urlpatterns = [
         ParticipantTransitionList.as_view(),
         name='participant-transition-list'
     ),
-
 ]

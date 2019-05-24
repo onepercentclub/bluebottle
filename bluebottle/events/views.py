@@ -1,6 +1,6 @@
 from rest_framework_json_api.views import AutoPrefetchMixin
 
-from bluebottle.activities.permissions import ActivityPermission
+from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
 from bluebottle.events.models import Event, Participant
 from bluebottle.events.serializers import (
     EventSerializer,
@@ -20,22 +20,31 @@ class EventList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
 
-    permission_classes = (ActivityPermission,)
+    permission_classes = (ActivityTypePermission, ActivityPermission,)
 
     prefetch_for_includes = {
         'initiative': ['initiative'],
-        'image': ['image']
+        'images': ['images'],
+        'location': ['location'],
+        'owner': ['owner']
     }
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
 
-class EventDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+class EventDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
 
     permission_classes = (ActivityPermission,)
+
+    prefetch_for_includes = {
+        'initiative': ['initiative'],
+        'image': ['image'],
+        'location': ['location'],
+        'owner': ['owner']
+    }
 
 
 class EventTransitionList(TransitionList):

@@ -17,6 +17,13 @@ class ActivitySerializer(PolymorphicModelSerializer):
     class Meta:
         model = Activity
 
+    class JSONAPIMeta:
+        included_resources = [
+            'owner',
+            'initiative',
+            'location'
+        ]
+
 
 class ContributionSerializer(PolymorphicModelSerializer):
 

@@ -5,12 +5,14 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField
 from djchoices.choices import DjangoChoices, ChoiceItem
 
+from multiselectfield import MultiSelectField
+
 from bluebottle.files.fields import ImageField
-from bluebottle.geo.models import InitiativePlace
-from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage, \
-    InitiativeNeedsWorkOwnerMessage
+from bluebottle.geo.models import Geolocation
+from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
 from bluebottle.notifications.decorators import transition
 from bluebottle.organizations.models import Organization, OrganizationContact
+from bluebottle.utils.models import BasePlatformSettings
 
 
 class Initiative(models.Model):
@@ -19,8 +21,7 @@ class Initiative(models.Model):
         submitted = ChoiceItem('submitted', _('submitted'))
         needs_work = ChoiceItem('needs_work', _('needs work'))
         approved = ChoiceItem('approved', _('approved'))
-        cancelled = ChoiceItem('cancelled', _('cancelled'))
-        rejected = ChoiceItem('rejected', _('rejected'))
+        closed = ChoiceItem('closed', _('closed'))
 
     title = models.CharField(_('title'), max_length=255)
 
@@ -45,7 +46,7 @@ class Initiative(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    slug = models.SlugField(_('slug'), max_length=100)
+    slug = models.SlugField(_('slug'), default='new', max_length=100)
 
     pitch = models.TextField(
         _('pitch'), help_text=_('Pitch your smart idea in one sentence'),
@@ -77,7 +78,7 @@ class Initiative(models.Model):
         )
     )
 
-    place = models.ForeignKey(InitiativePlace, null=True, blank=True, on_delete=SET_NULL)
+    place = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
     has_organization = models.NullBooleanField(null=True, default=None)
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
@@ -106,8 +107,6 @@ class Initiative(models.Model):
         field='status',
         source=ReviewStatus.submitted,
         target=ReviewStatus.needs_work,
-        messages=[InitiativeNeedsWorkOwnerMessage],
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         custom={'button_name': _('needs work')}
     )
     def needs_work(self, **kwargs):
@@ -126,28 +125,17 @@ class Initiative(models.Model):
 
     @transition(
         field='status',
-        source=ReviewStatus.submitted,
-        target=ReviewStatus.rejected,
-        messages=[InitiativeClosedOwnerMessage],
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
-        custom={'button_name': _('reject')}
-    )
-    def reject(self, **kwargs):
-        pass
-
-    @transition(
-        field='status',
         source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
-        target=ReviewStatus.cancelled,
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
-        custom={'button_name': _('cancel')}
+        target=ReviewStatus.closed,
+        messages=[InitiativeClosedOwnerMessage],
+        custom={'button_name': _('close')}
     )
-    def cancel(self, **kwargs):
+    def close(self, **kwargs):
         pass
 
     @transition(
         field='status',
-        source=[ReviewStatus.cancelled, ReviewStatus.approved, ReviewStatus.rejected],
+        source=[ReviewStatus.approved, ReviewStatus.closed],
         target=ReviewStatus.submitted,
         form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         custom={'button_name': _('re-open')}
@@ -178,7 +166,22 @@ class Initiative(models.Model):
         return self.title
 
     def save(self, **kwargs):
-        if not self.slug:
+        if self.slug == 'new' and self.title:
             self.slug = slugify(self.title)
 
         super(Initiative, self).save(**kwargs)
+
+
+class InitiativePlatformSettings(BasePlatformSettings):
+    ACTIVITY_TYPES = (
+        ('funding', _('Funding')),
+        ('event', _('Events')),
+        ('job', _('Jobs')),
+    )
+
+    activity_types = MultiSelectField(max_length=100, choices=ACTIVITY_TYPES)
+    require_organization = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name_plural = _('initiative platform settings')
+        verbose_name = _('initiative platform settings')

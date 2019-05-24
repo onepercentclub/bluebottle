@@ -4,6 +4,7 @@ import stripe
 from django.http import HttpResponse
 from django.views.generic import View
 
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments_stripe.utils import get_webhook_secret
 
@@ -49,4 +50,7 @@ class WebHookView(View):
         except StripePayment.DoesNotExist:
             # StripePayment not found
             return HttpResponse(status=400)
+        except PaymentException:
+            # Payment error due to failed charge e.g.
+            return HttpResponse(status=200)
         return HttpResponse(status=200)

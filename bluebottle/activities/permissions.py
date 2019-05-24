@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.utils.permissions import ResourcePermission
 
 
@@ -33,3 +33,11 @@ class ActivityPermission(ResourcePermission):
             return perms
         else:
             return perms and user == obj.owner
+
+
+class ActivityTypePermission(ResourcePermission):
+    def has_permission(self, request, view):
+        (settings, _) = InitiativePlatformSettings.objects.get_or_create()
+
+        if request.method == 'POST':
+            return view.model.__name__.lower() in settings.activity_types

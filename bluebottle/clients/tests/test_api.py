@@ -11,6 +11,7 @@ from bluebottle.analytics.models import AnalyticsPlatformSettings, AnalyticsAdap
 from bluebottle.clients import properties
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -225,6 +226,18 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['copyright'], 'Malle Eppie Ltd.')
         self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://epp.ie')
         self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
+
+    def test_initiative_platform_settings(self):
+        # Create initiative platform settings and confirm they end up correctly in settings api
+        InitiativePlatformSettings.objects.create(
+            activity_types=['event', 'job'],
+            require_organization=True
+        )
+
+        response = self.client.get(self.settings_url)
+
+        self.assertEqual(response.data['platform']['initiatives']['activity_types'], ['event', 'job'])
+        self.assertEqual(response.data['platform']['initiatives']['require_organization'], True)
 
     def test_analytics_platform_settings(self):
         # Create analytics platform settings and confirm they end up correctly in settings api

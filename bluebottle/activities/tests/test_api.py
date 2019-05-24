@@ -1,6 +1,6 @@
 from django.urls import reverse
-from rest_framework import status
 
+from rest_framework import status
 from bluebottle.events.tests.factories import EventFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase

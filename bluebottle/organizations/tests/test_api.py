@@ -81,7 +81,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         Tests that the organizations search is not intelligent.
         """
         # Search for organizations with "evil" in their name.
-        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'Evil'}))
+        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'filter[search]': 'Evil'}))
         response = self.client.get(url, user=self.user_1)
         self.assertEqual(response.status_code, 200)
         # Expect two organizations with 'ev'
@@ -92,7 +92,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         Tests that the list of organizations can be obtained from its
         endpoint with different order.
         """
-        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'Knight'}))
+        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'filter[search]': 'Knight'}))
         response = self.client.get(url, user=self.user_1)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['meta']['pagination']['count'], 2)
@@ -101,7 +101,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         """
         Tests that the organizations search is case insensitive.
         """
-        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'kids'}))
+        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'filter[search]': 'kids'}))
         response = self.client.get(url, user=self.user_1)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['meta']['pagination']['count'], 2)

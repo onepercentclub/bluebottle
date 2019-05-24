@@ -16,9 +16,9 @@ class EventList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     permission_classes = (ActivityPermission,)
 
     prefetch_for_includes = {
-        'initiatives': ['initiatives'],
+        'initiative': ['initiative'],
         'images': ['images'],
-        'locations': ['locations'],
+        'location': ['location'],
         'owner': ['owner']
     }
 

@@ -17,6 +17,21 @@ class ActivitySerializer(PolymorphicModelSerializer):
     class Meta:
         model = Activity
 
+    class JSONAPIMeta:
+        included_resources = [
+            'owner',
+            'initiative',
+            'location'
+        ]
+        resource_name = 'events'
+
+    included_serializers = {
+        'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'location': 'bluebottle.geo.serializers.ActivityPlaceSerializer',
+    }
+
 
 class ContributionSerializer(PolymorphicModelSerializer):
 

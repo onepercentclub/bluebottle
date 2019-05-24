@@ -1,8 +1,12 @@
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.contenttypes.fields import GenericRelation
+
 from django_fsm import FSMField
+
 from djchoices.choices import DjangoChoices, ChoiceItem
+
 from polymorphic.models import PolymorphicModel
 
 
@@ -29,13 +33,15 @@ class Activity(PolymorphicModel):
         choices=Status.choices,
         protected=True
     )
-    initiative = models.ForeignKey('initiatives.Initiative', related_name='activites')
+    initiative = models.ForeignKey('initiatives.Initiative', related_name='activities')
 
-    title = models.CharField(_('title'), max_length=255, unique=True, db_index=True)
-    slug = models.SlugField(_('slug'), max_length=100, unique=True)
+    title = models.CharField(_('title'), max_length=255)
+    slug = models.SlugField(_('slug'), max_length=100)
     description = models.TextField(
         _('description'), blank=True
     )
+
+    followers = GenericRelation('follow.Follow', object_id_field='instance_id')
 
     class Meta:
         verbose_name = _("Activity")
@@ -74,3 +80,11 @@ class Contribution(PolymorphicModel):
 
     activity = models.ForeignKey(Activity, related_name='contributions')
     user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True)
+
+    @classmethod
+    def is_user(cls, instance, user):
+        return instance.user == user
+
+    @classmethod
+    def is_activity_manager(cls, instance, user):
+        return instance.activity.initiative.activity_manager == user

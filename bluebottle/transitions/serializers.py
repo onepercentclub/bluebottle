@@ -36,6 +36,7 @@ class TransitionSerializer(serializers.Serializer):
         transition = self.validated_data['transition']
 
         available_transitions = getattr(resource, 'get_available_{}_transitions'.format(self.field))()
+
         if transition not in [available_transition.name for available_transition in available_transitions]:
             raise ValidationError('Transition is not available')
 
@@ -45,7 +46,7 @@ class TransitionSerializer(serializers.Serializer):
         resource.save()
 
     class Meta:
-        fields = ('id', 'transition', )
+        fields = ('id', 'transition', 'resource')
 
     class JSONAPIMeta:
         resource_name = 'transitions'

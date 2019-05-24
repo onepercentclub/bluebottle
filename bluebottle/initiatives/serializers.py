@@ -75,6 +75,7 @@ class InitiativeSerializer(ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     reviewer = ResourceRelatedField(read_only=True)
+    activities = ResourceRelatedField(many=True, read_only=True)
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True, required=False)
@@ -92,6 +93,7 @@ class InitiativeSerializer(ModelSerializer):
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
+        'activities': 'bluebottle.activities.serializers.ActivitySerializer',
     }
 
     class Meta:
@@ -101,7 +103,7 @@ class InitiativeSerializer(ModelSerializer):
             'id', 'title', 'pitch', 'categories', 'owner',
             'reviewer', 'promoter', 'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_html', 'image',
-            'theme', 'place',
+            'theme', 'place', 'activities',
         )
 
         meta_fields = ('permissions', 'transitions', 'status', 'created',)
@@ -109,7 +111,7 @@ class InitiativeSerializer(ModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'owner', 'reviewer', 'promoter', 'categories', 'theme', 'place', 'image',
-            'organization', 'organization_contact',
+            'organization', 'organization_contact', 'activities'
         ]
         resource_name = 'initiatives'
 
@@ -117,8 +119,12 @@ class InitiativeSerializer(ModelSerializer):
 class InitiativeReviewTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Initiative.objects.all())
     field = 'status'
+    included_serializers = {
+        'resource': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+    }
 
     class JSONAPIMeta:
+        included_resources = ['resource']
         resource_name = 'initiative-transitions'
 
 

@@ -36,6 +36,7 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'image': ['image'],
         'organization': ['organization'],
         'organization_contact': ['organization_contact'],
+        'activities': ['activities'],
     }
 
     def perform_create(self, serializer):
@@ -60,6 +61,7 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
         'image': ['image'],
         'organization': ['organization'],
         'organization_contact': ['organization_contact'],
+        'activities': ['activities'],
     }
 
 

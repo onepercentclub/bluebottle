@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('tasks', '0042_auto_20190524_1039'),
         ('activities', '0002_auto_20190524_1041'),
     ]
 

@@ -17,20 +17,29 @@ class EventList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
 
     prefetch_for_includes = {
         'initiative': ['initiative'],
-        'image': ['image']
+        'images': ['images'],
+        'location': ['location'],
+        'owner': ['owner']
     }
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
 
-class EventDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+class EventDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
 
-    lookup_field = 'slug'
+    lookup_field = 'pk'
 
     permission_classes = (ActivityPermission,)
+
+    prefetch_for_includes = {
+        'initiative': ['initiative'],
+        'image': ['image'],
+        'location': ['location'],
+        'owner': ['owner']
+    }
 
 
 class ParticipantList(ListCreateAPIView):

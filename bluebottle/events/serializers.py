@@ -10,9 +10,9 @@ class EventSerializer(BaseActivitySerializer):
         model = Event
         fields = BaseActivitySerializer.Meta.fields + (
             'permissions',
-            'address',
             'capacity',
             'end',
+            'location',
             'registration_deadline',
             'start',
         )
@@ -20,9 +20,17 @@ class EventSerializer(BaseActivitySerializer):
     class JSONAPIMeta:
         included_resources = [
             'owner',
-            'initiative'
+            'initiative',
+            'location'
         ]
         resource_name = 'events'
+
+    included_serializers = {
+        'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+    }
 
 
 class ParticipantSerializer(BaseContributionSerializer):

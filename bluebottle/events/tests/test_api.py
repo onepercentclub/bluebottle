@@ -86,7 +86,7 @@ class EventTestCase(BluebottleTestCase):
 
     def test_update_event(self):
         event = EventFactory.create(owner=self.user, title='Pollute Katwijk Beach')
-        event_url = reverse('event-detail', args=(event.slug,))
+        event_url = reverse('event-detail', args=(event.id,))
         response = self.client.get(event_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'Pollute Katwijk Beach')
@@ -145,7 +145,7 @@ class EventTestCase(BluebottleTestCase):
 
     def test_update_event_not_owner(self):
         event = EventFactory.create(title='Pollute Katwijk Beach')
-        event_url = reverse('event-detail', args=(event.slug,))
+        event_url = reverse('event-detail', args=(event.id,))
         response = self.client.get(event_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'Pollute Katwijk Beach')

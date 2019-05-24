@@ -5,7 +5,6 @@ from django.utils.html import format_html
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.events.models import Event, Participant
 from bluebottle.utils.admin import FSMAdmin
-
 from bluebottle.utils.forms import FSMModelForm
 
 

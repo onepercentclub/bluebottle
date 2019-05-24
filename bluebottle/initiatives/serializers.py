@@ -88,7 +88,7 @@ class InitiativeSerializer(ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'place': 'bluebottle.geo.serializers.InitiativePlaceSerializer',
+        'place': 'bluebottle.geo.serializers.GeolocationSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',

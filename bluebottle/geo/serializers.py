@@ -4,7 +4,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
-from bluebottle.geo.models import Country, Location, Place, InitiativePlace
+from bluebottle.geo.models import Country, Location, Place, InitiativePlace, Geolocation
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -64,3 +64,31 @@ class InitiativePlaceSerializer(ModelSerializer):
     class JSONAPIMeta:
         included_resources = ['country', ]
         resource_name = 'places'
+
+
+class GeolocationSerializer(ModelSerializer):
+    position = serializers.SerializerMethodField()
+
+    included_serializers = {
+        'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer'
+    }
+
+    def get_position(self, obj):
+        return {
+            'latitude': obj.position.coords[1],
+            'longitude': obj.position.coords[0]
+        }
+
+    class Meta:
+        model = Geolocation
+        fields = (
+            'id', 'street', 'street_number', 'locality', 'province', 'country',
+            'position', 'formatted_address',
+        )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'country',
+            'position'
+        ]
+        resource_name = 'locations'

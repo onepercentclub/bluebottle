@@ -60,7 +60,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
     def test_review_initiative_illegal_transition(self):
         self.client.force_login(self.superuser)
         # reject the
-        self.initiative.reject()
+        self.initiative.close()
         self.initiative.save()
 
         review_url = reverse('admin:initiatives_initiative_transition',
@@ -75,7 +75,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.post(review_url, {'confirm': True})
         self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.status, 'rejected')
+        self.assertEqual(self.initiative.status, 'closed')
         messages = list(get_messages(response.wsgi_request))
         self.assertEqual(str(messages[0]), 'Transition not allowed: approve')
 

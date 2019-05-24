@@ -3,22 +3,21 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution
+from bluebottle.geo.models import Geolocation
 from bluebottle.notifications.decorators import transition
 
 
 class Event(Activity):
+    capacity = models.PositiveIntegerField(null=True, blank=True)
+    automatically_accept = models.BooleanField(default=True)
+
+    location = models.ForeignKey(Geolocation, verbose_name=_('location'),
+                                 null=True, blank=True, on_delete=models.SET_NULL)
+    location_hint = models.TextField(_('location hint'), null=True, blank=True)
+
     start = models.DateTimeField(_('start'))
     end = models.DateTimeField(_('end'))
     registration_deadline = models.DateTimeField(_('registration deadline'))
-    capacity = models.PositiveIntegerField()
-    automatically_accept = models.BooleanField(default=True)
-
-    address = models.CharField(
-        help_text=_('Address the event takes place'),
-        max_length=200,
-        null=True,
-        blank=True
-    )  # TODO:  Make this a foreign key to an address
 
     class Meta:
         verbose_name = _("Event")
@@ -57,6 +56,15 @@ class Event(Activity):
 
     @transition(
         field='status',
+        source=Activity.Status.draft,
+        target=Activity.Status.open,
+        form='bluebottle.events.forms.EventSubmitForm',
+    )
+    def submit(self, **kwargs):
+        pass
+
+    @transition(
+        field='status',
         source=Activity.Status.open,
         target=Activity.Status.full,
     )
@@ -67,6 +75,7 @@ class Event(Activity):
         field='status',
         source=Activity.Status.full,
         target=Activity.Status.open,
+        form='bluebottle.events.forms.EventSubmitForm',
     )
     def reopen(self, **kwargs):
         pass
@@ -76,7 +85,7 @@ class Event(Activity):
         source=[Activity.Status.full, Activity.Status.open],
         target=Activity.Status.running,
     )
-    def started(self, **kwargs):
+    def do_start(self, **kwargs):
         for member in self.accepted_members:
             member.attending()
             member.save()
@@ -96,7 +105,7 @@ class Event(Activity):
         source=Activity.Status.open,
         target=Activity.Status.closed,
     )
-    def closed(self, **kwargs):
+    def close(self, **kwargs):
         pass
 
     @transition(

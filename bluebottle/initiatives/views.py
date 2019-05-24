@@ -8,7 +8,7 @@ from bluebottle.initiatives.serializers import (
     InitiativeSerializer, InitiativeReviewTransitionSerializer
 )
 from bluebottle.transitions.views import TransitionList
-from bluebottle.utils.permissions import ResourceOwnerPermission
+from bluebottle.utils.permissions import InitiativePermission
 from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin
 
 
@@ -16,7 +16,7 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Initiative.objects.all()
     serializer_class = InitiativeSerializer
 
-    permission_classes = (ResourceOwnerPermission,)
+    permission_classes = (InitiativePermission,)
 
     filter_backends = (
         InitiativeSearchFilter,
@@ -45,7 +45,7 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
 class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Initiative.objects.all()
     serializer_class = InitiativeSerializer
-    permission_classes = (ResourceOwnerPermission,)
+    permission_classes = (InitiativePermission,)
 
     def get_exception_handler(self):
         return exception_handler

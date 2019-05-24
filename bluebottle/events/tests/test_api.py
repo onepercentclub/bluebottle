@@ -34,7 +34,6 @@ class EventTestCase(BluebottleTestCase):
                     'end': str(now() + timedelta(days=21, hours=4)),
                     'registration_deadline': str(now() + timedelta(days=14)),
                     'capacity': 10,
-                    'address': 'Zuid-Boulevard Katwijk aan Zee',
                     'description': 'We will clean up the beach south of Katwijk'
                 },
                 'relationships': {

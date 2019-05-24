@@ -6,6 +6,7 @@ from django.utils.timezone import now
 from bluebottle.events.models import Event
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory
 
 
 class EventFactory(factory.DjangoModelFactory):
@@ -25,3 +26,5 @@ class EventFactory(factory.DjangoModelFactory):
     registration_deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=2))
     start = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=4))
     end = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=5))
+
+    location = factory.SubFactory(GeolocationFactory)

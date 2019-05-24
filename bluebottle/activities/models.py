@@ -34,13 +34,13 @@ class Activity(PolymorphicModel):
     )
     initiative = models.ForeignKey('initiatives.Initiative', related_name='activities')
 
-    title = models.CharField(_('title'), max_length=255, unique=True, db_index=True)
-    slug = models.SlugField(_('slug'), max_length=100, unique=True)
+    title = models.CharField(_('title'), max_length=255)
+    slug = models.SlugField(_('slug'), max_length=100)
     description = models.TextField(
         _('description'), blank=True
     )
 
-    followers = GenericRelation('follow.Follow')
+    followers = GenericRelation('follow.Follow', object_id_field='instance_id')
 
     class Meta:
         verbose_name = _("Activity")

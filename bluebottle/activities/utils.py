@@ -3,19 +3,17 @@ from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import (
     ResourcePermissionField,
-    FSMSerializer)
+)
 
 
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):
-    id = serializers.CharField(source='slug', read_only=True)
     status = FSMField(read_only=True)
-    permissions = ResourcePermissionField('activity-detail', view_args=('slug',))
+    permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
 
     transitions = AvailableTransitionsField(source='status')
@@ -38,9 +36,11 @@ class BaseActivitySerializer(ModelSerializer):
             'owner',
             'title',
             'description',
+            'is_follower',
+            'status',
         )
 
-        meta_fields = ('permissions', 'transitions', 'status', 'created', 'updated', 'is_follower', )
+        meta_fields = ('permissions', 'transitions', 'created', 'updated', )
 
     class JSONAPIMeta:
         included_resources = [
@@ -52,12 +52,26 @@ class BaseActivitySerializer(ModelSerializer):
 
 
 # This can't be in serializers because of circular imports
-class BaseContributionSerializer(FSMSerializer):
+class BaseContributionSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = UserPreviewSerializer()
+    user = ResourceRelatedField(read_only=True)
 
-    permissions = ResourcePermissionField('project_detail', view_args=('slug',))
+    permissions = ResourcePermissionField('project_detail', view_args=('pk',))
+    transitions = AvailableTransitionsField(source='status')
+
+    included_serializers = {
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
 
     class Meta:
         model = Contribution
-        fields = ('status', 'user', 'permissions', )
+        fields = ('user', 'activity', 'status', )
+        meta_fields = ('permissions', 'transitions', 'created', 'updated', )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'user',
+            'activity',
+        ]
+        resource_name = 'contributions'

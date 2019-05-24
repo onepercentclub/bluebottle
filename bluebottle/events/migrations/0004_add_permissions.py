@@ -10,7 +10,7 @@ def add_group_permissions(apps, schema_editor):
     group_perms = {
         'Staff': {
             'perms': (
-                'add_event', 'change_event', 'delete_event',
+                'add_participant', 'change_participant', 'delete_participant',
             )
         },
         'Anonymous': {
@@ -20,10 +20,9 @@ def add_group_permissions(apps, schema_editor):
         },
         'Authenticated': {
             'perms': (
-                'api_read_event',
-                'api_add_own_event',
-                'api_change_own_event',
-                'api_delete_own_event',
+                'api_read_participant',
+                'api_add_participant',
+                'api_change_own_participant',
             )
         }
     }
@@ -34,7 +33,7 @@ def add_group_permissions(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('events', '0001_initial'),
+        ('events', '0003_auto_20190522_1329'),
     ]
 
     operations = [

@@ -24,6 +24,8 @@ def follow(user, instance):
 
 def unfollow(user, instance):
     try:
-        Follow.objects.get(user=user, instance=instance).delete()
+        Follow.objects.get(
+            user=user, instance_id=instance.pk, content_type=ContentType.objects.get_for_model(instance)
+        ).delete()
     except Follow.DoesNotExist:
         pass

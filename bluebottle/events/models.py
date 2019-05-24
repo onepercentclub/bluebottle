@@ -36,6 +36,9 @@ class Event(Activity):
             ('api_delete_own_event', 'Can delete own event through the API'),
         )
 
+    class JSONAPIMeta:
+        resource_name = 'events'
+
     @property
     def duration(self):
         return (self.start - self.end).seconds / 60
@@ -89,7 +92,7 @@ class Event(Activity):
         source=Activity.Status.open,
         target=Activity.Status.closed,
     )
-    def closed(self, **kwargs):
+    def close(self, **kwargs):
         pass
 
     @transition(
@@ -109,10 +112,33 @@ class Participant(Contribution):
         no_show = ChoiceItem('no_show', _('no_show'))
         closed = ChoiceItem('closed', _('closed'))
 
-    time_spent = models.FloatField()
+    time_spent = models.FloatField(default=0)
+
+    class Meta:
+        verbose_name = _("Participant")
+        verbose_name_plural = _("Participants")
+
+        permissions = (
+            ('api_read_participant', 'Can view participant through the API'),
+            ('api_add_participant', 'Can add participant through the API'),
+            ('api_change_participant', 'Can change participant through the API'),
+            ('api_delete_participant', 'Can delete participant through the API'),
+
+            ('api_read_own_participant', 'Can view own participant through the API'),
+            ('api_add_own_participant', 'Can add own participant through the API'),
+            ('api_change_own_participant', 'Can change own participant through the API'),
+            ('api_delete_own_participant', 'Can delete own participant through the API'),
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'participants'
 
     def event_is_open(self):
         return self.activity.status == Activity.Status.open
+
+    @property
+    def owner(self):
+        return self.user
 
     def save(self, *args, **kwargs):
         if self.status == self.Status.new:

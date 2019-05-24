@@ -4,7 +4,7 @@ from bluebottle.initiatives.models import Initiative
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
-from bluebottle.test.factory_models.geo import InitiativePlaceFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.files.tests.factories import ImageFactory
 
 
@@ -21,4 +21,4 @@ class InitiativeFactory(factory.DjangoModelFactory):
 
     theme = factory.SubFactory(ProjectThemeFactory)
     image = factory.SubFactory(ImageFactory)
-    place = factory.SubFactory(InitiativePlaceFactory)
+    place = factory.SubFactory(GeolocationFactory)

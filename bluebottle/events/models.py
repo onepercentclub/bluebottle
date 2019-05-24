@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.geo.models import ActivityPlace
+from bluebottle.geo.models import Geolocation
 from bluebottle.notifications.decorators import transition
 
 
@@ -11,7 +11,7 @@ class Event(Activity):
     capacity = models.PositiveIntegerField(null=True, blank=True)
     automatically_accept = models.BooleanField(default=True)
 
-    location = models.ForeignKey(ActivityPlace, verbose_name=_('location'),
+    location = models.ForeignKey(Geolocation, verbose_name=_('location'),
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 

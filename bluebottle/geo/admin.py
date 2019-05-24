@@ -7,7 +7,7 @@ from parler.admin import TranslatableAdmin
 
 from bluebottle.geo.models import (
     Location, LocationGroup, Region, SubRegion, Country, Place,
-    InitiativePlace, ActivityPlace)
+    InitiativePlace, Geolocation)
 from bluebottle.projects.models import Project
 
 
@@ -132,8 +132,8 @@ class InitiativePlaceAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(ActivityPlace)
-class ActivityPlaceAdmin(admin.ModelAdmin):
+@admin.register(Geolocation)
+class GeolocationAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (_('Map'), {'fields': ('position', )}),

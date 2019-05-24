@@ -2,14 +2,14 @@ from django import forms
 from django.contrib.admin.widgets import AdminSplitDateTime
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.geo.models import ActivityPlace
+from bluebottle.geo.models import Geolocation
 
 
 class EventSubmitForm(forms.Form):
     title = forms.CharField(required=True, label=_('Title'))
     description = forms.CharField(required=True, label=_('Description'), widget=forms.Textarea)
 
-    location = forms.ModelChoiceField(ActivityPlace.objects, required=True, label=_('Location'))
+    location = forms.ModelChoiceField(Geolocation.objects, required=True, label=_('Location'))
     location_hint = forms.CharField(label=_('Location hint'))
 
     start = forms.DateTimeField(required=True, label=_('Start'), widget=AdminSplitDateTime)

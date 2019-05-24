@@ -23,14 +23,6 @@ class ActivitySerializer(PolymorphicModelSerializer):
             'initiative',
             'location'
         ]
-        resource_name = 'events'
-
-    included_serializers = {
-        'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
-        'location': 'bluebottle.geo.serializers.ActivityPlaceSerializer',
-    }
 
 
 class ContributionSerializer(PolymorphicModelSerializer):

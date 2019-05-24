@@ -6,7 +6,7 @@ from django_fsm import FSMField
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.files.fields import ImageField
-from bluebottle.geo.models import InitiativePlace
+from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
 from bluebottle.notifications.decorators import transition
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -75,7 +75,7 @@ class Initiative(models.Model):
         )
     )
 
-    place = models.ForeignKey(InitiativePlace, null=True, blank=True, on_delete=SET_NULL)
+    place = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
     has_organization = models.NullBooleanField(null=True, default=None)
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)

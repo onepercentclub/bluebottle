@@ -162,7 +162,7 @@ class InitiativePlace(models.Model):
     position = GeopositionField()
 
 
-class ActivityPlace(models.Model):
+class Geolocation(models.Model):
     street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
     street = models.CharField(_('Street'), max_length=255, blank=True, null=True)
     postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)

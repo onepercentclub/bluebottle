@@ -52,12 +52,19 @@ class OrganizationContactDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIVie
     )
 
 
+class OrganizationSearchFilter(filters.SearchFilter):
+    search_param = "filter[search]"
+
+
 class OrganizationList(AutoPrefetchMixin, generics.ListCreateAPIView):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     pagination_class = OrganizationPagination
-    filter_backends = (filters.SearchFilter,)
+
+    filter_backends = (OrganizationSearchFilter, )
+
     search_fields = ['name']
+
     permission_classes = (IsAuthenticated,)
     renderer_classes = (BluebottleJSONAPIRenderer, )
     parser_classes = (JSONParser, )

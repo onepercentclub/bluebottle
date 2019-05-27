@@ -57,6 +57,7 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
         'reviewer': ['reviewer'],
         'promoter': ['promoter'],
         'theme': ['theme'],
+        'place': ['place'],
         'location': ['location'],
         'categories': ['categories'],
         'image': ['image'],

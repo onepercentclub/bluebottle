@@ -25,6 +25,9 @@ class LocationSerializer(serializers.ModelSerializer):
         model = Location
         fields = ('id', 'name', 'description', 'image', 'latitude', 'longitude')
 
+    class JSONAPIMeta:
+        resource_name = 'locations'
+
 
 class PlaceSerializer(serializers.ModelSerializer):
     class Meta:

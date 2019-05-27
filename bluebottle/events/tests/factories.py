@@ -3,7 +3,7 @@ from datetime import timedelta
 import factory.fuzzy
 from django.utils.timezone import now
 
-from bluebottle.events.models import Event
+from bluebottle.events.models import Event, Participant
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
@@ -28,3 +28,11 @@ class EventFactory(factory.DjangoModelFactory):
     end = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=5))
 
     location = factory.SubFactory(GeolocationFactory)
+
+
+class ParticipantFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = Participant
+
+    activity = factory.SubFactory(EventFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)

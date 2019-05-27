@@ -8,6 +8,7 @@ from polymorphic.admin import (
 
 from bluebottle.activities.models import Activity
 from bluebottle.events.models import Event
+from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.funding.models import Funding
 from bluebottle.jobs.models import Job
 from bluebottle.utils.admin import FSMAdmin
@@ -15,6 +16,7 @@ from bluebottle.utils.admin import FSMAdmin
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin):
     raw_id_fields = ['owner', 'initiative']
+    inlines = (FollowAdminInline, )
 
     readonly_fields = ['status']
 

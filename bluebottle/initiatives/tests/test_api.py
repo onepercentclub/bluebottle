@@ -405,7 +405,7 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
         initiative = Initiative.objects.get(pk=self.initiative.pk)
         self.assertEqual(initiative.status, 'submitted')
         self.assertTrue(data['data']['id'])
-        self.assertTrue(data['data']['attributes']['transition'], 'submit')
+        self.assertEqual(data['data']['attributes']['transition'], 'submit')
 
     def test_transition_disallowed(self):
         data = {

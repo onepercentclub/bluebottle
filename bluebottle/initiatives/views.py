@@ -4,11 +4,11 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 from bluebottle.files.views import FileContentView
 from bluebottle.initiatives.filters import InitiativeSearchFilter
 from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.permissions import InitiativePermission
 from bluebottle.initiatives.serializers import (
     InitiativeSerializer, InitiativeReviewTransitionSerializer
 )
 from bluebottle.transitions.views import TransitionList
-from bluebottle.utils.permissions import InitiativePermission
 from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin
 
 

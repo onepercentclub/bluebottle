@@ -2,22 +2,25 @@ import datetime
 import json
 
 from django.contrib.gis.geos import Point
-from django.test.utils import override_settings
-from django.test import tag
-
 from django.core.urlresolvers import reverse
 from django.test import TestCase
+from django.test import tag
+from django.test.utils import override_settings
 from django.utils.timezone import get_current_timezone
-
 from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
 
-from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
 from bluebottle.test.utils import JSONAPITestClient
+
+
+def get_include(response, name):
+    included = response.json()['included']
+    return [include for include in included if include['type'] == name][0]
 
 
 class InitiativeAPITestCase(TestCase):
@@ -76,6 +79,34 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         )
         self.assertEqual(len(response_data['included']), 2)
 
+    def test_create_with_location(self):
+        geolocation = GeolocationFactory.create(position=Point(23.6851594, 43.0579025))
+        data = {
+            'data': {
+                'type': 'initiatives',
+                'attributes': {
+                    'title': 'Some title'
+                },
+                'relationships': {
+                    'place': {
+                        'data': {
+                            'type': 'geolocations',
+                            'id': geolocation.id
+                        },
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        geolocation = get_include(response, 'geolocations')
+        self.assertEqual(geolocation['attributes']['position'],
+                         {'latitude': 43.0579025, 'longitude': 23.6851594})
+
     def test_create_anonymous(self):
         response = self.client.post(
             self.url,
@@ -91,11 +122,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             owner=self.owner,
             place=GeolocationFactory(position=Point(23.6851594, 43.0579025))
         )
-
         self.url = reverse('initiative-detail', args=(self.initiative.pk,))
-
-    def get_include(self, data, name):
-        return [include for include in data['included'] if include['type'] == name][0]
 
     def test_patch(self):
         data = {
@@ -150,13 +177,13 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.content)
+        data = response.json()
         self.assertEqual(
             data['data']['relationships']['image']['data']['id'],
             file_data['data']['id']
         )
 
-        image = self.get_include(data, 'images')
+        image = get_include(response, 'images')
         response = self.client.get(
             image['attributes']['links']['large'],
             user=self.owner
@@ -208,17 +235,16 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             self.url,
             user=self.owner
         )
-        data = json.loads(response.content)
 
+        data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], self.initiative.title)
+        self.assertEqual(data['meta']['status'], self.initiative.status)
+        self.assertEqual(data['meta']['transitions'], [{'name': 'submit', 'target': 'submitted'}])
+        self.assertEqual(data['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
+        self.assertEqual(data['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
 
-        self.assertEqual(data['data']['attributes']['title'], self.initiative.title)
-        self.assertEqual(data['data']['meta']['status'], self.initiative.status)
-        self.assertEqual(data['data']['meta']['transitions'], [{'name': 'submit', 'target': 'submitted'}])
-        self.assertEqual(data['data']['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
-        self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
-
-        geolocation = self.get_include(data, 'geolocations')
+        geolocation = get_include(response, 'geolocations')
         self.assertEqual(geolocation['attributes']['position'], {'latitude': 43.0579025, 'longitude': 23.6851594})
 
     def test_get_other(self):
@@ -226,9 +252,8 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             self.url,
             user=BlueBottleUserFactory.create()
         )
-        data = json.loads(response.content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(data['data']['attributes']['title'], self.initiative.title)
+        self.assertEqual(response.data['title'], self.initiative.title)
 
 
 @override_settings(

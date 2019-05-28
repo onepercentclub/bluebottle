@@ -19,8 +19,8 @@ class Event(Activity):
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
-    datetime_start = models.DateTimeField(_('start'))
-    datetime_end = models.DateTimeField(_('end'))
+    start_time = models.DateTimeField(_('start'))
+    end_time = models.DateTimeField(_('end'))
     registration_deadline = models.DateTimeField(_('registration deadline'))
 
     class Meta:
@@ -43,7 +43,7 @@ class Event(Activity):
 
     @property
     def duration(self):
-        return (self.datetime_start - self.datetime_end).seconds / 60
+        return (self.start_time - self.end_time).seconds / 60
 
     @property
     def participants(self):

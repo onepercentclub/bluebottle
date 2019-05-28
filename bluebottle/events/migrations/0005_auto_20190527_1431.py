@@ -15,12 +15,12 @@ class Migration(migrations.Migration):
         migrations.RenameField(
             model_name='event',
             old_name='end',
-            new_name='datetime_end',
+            new_name='end_time',
         ),
         migrations.RenameField(
             model_name='event',
             old_name='start',
-            new_name='datetime_start',
+            new_name='start_time',
         ),
         migrations.AlterField(
             model_name='participant',

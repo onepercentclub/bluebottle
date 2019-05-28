@@ -20,8 +20,8 @@ class EventTasksTestCase(BluebottleTestCase):
 
     def test_event_start_task(self):
         event = EventFactory.create(
-            datetime_start=now() - timedelta(hours=1),
-            datetime_end=now() + timedelta(hours=3),
+            start_time=now() - timedelta(hours=1),
+            end_time=now() + timedelta(hours=3),
         )
         self.assertEqual(event.status, 'open')
         check_event_start()
@@ -31,8 +31,8 @@ class EventTasksTestCase(BluebottleTestCase):
 
     def test_event_end_task(self):
         event = EventFactory.create(
-            datetime_start=now() - timedelta(hours=5),
-            datetime_end=now() - timedelta(hours=1)
+            start_time=now() - timedelta(hours=5),
+            end_time=now() - timedelta(hours=1)
         )
         event.start()
         event.save()

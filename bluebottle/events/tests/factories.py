@@ -24,8 +24,8 @@ class EventFactory(factory.DjangoModelFactory):
     status = 'open'
 
     registration_deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=2))
-    start = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=4))
-    end = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=5))
+    datetime_start = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=4))
+    datetime_end = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=5))
 
     location = factory.SubFactory(GeolocationFactory)
 

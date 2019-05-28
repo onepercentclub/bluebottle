@@ -8,6 +8,9 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.notifications.decorators import transition
 
 
+from .tasks import *  # noqa
+
+
 class Event(Activity):
     capacity = models.PositiveIntegerField(null=True, blank=True)
     automatically_accept = models.BooleanField(default=True)
@@ -16,8 +19,8 @@ class Event(Activity):
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
-    start = models.DateTimeField(_('start'))
-    end = models.DateTimeField(_('end'))
+    datetime_start = models.DateTimeField(_('start'))
+    datetime_end = models.DateTimeField(_('end'))
     registration_deadline = models.DateTimeField(_('registration deadline'))
 
     class Meta:
@@ -40,7 +43,7 @@ class Event(Activity):
 
     @property
     def duration(self):
-        return (self.start - self.end).seconds / 60
+        return (self.datetime_start - self.datetime_end).seconds / 60
 
     @property
     def participants(self):
@@ -83,8 +86,8 @@ class Event(Activity):
         source=[Activity.Status.full, Activity.Status.open],
         target=Activity.Status.running,
     )
-    def do_start(self, **kwargs):
-        for member in self.accepted_members:
+    def start(self, **kwargs):
+        for member in self.participants:
             member.attending()
             member.save()
 

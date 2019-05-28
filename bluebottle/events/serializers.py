@@ -12,12 +12,12 @@ class EventSerializer(BaseActivitySerializer):
     class Meta(BaseActivitySerializer.Meta):
         model = Event
         fields = BaseActivitySerializer.Meta.fields + (
-            'permissions',
             'capacity',
-            'end',
+            'datetime_end',
+            'datetime_start',
             'location',
+            'permissions',
             'registration_deadline',
-            'start',
         )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):

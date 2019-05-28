@@ -30,8 +30,8 @@ class EventTestCase(BluebottleTestCase):
                 'type': 'events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start': str(now() + timedelta(days=21)),
-                    'end': str(now() + timedelta(days=21, hours=4)),
+                    'start_time': str(now() + timedelta(days=21)),
+                    'end_time': str(now() + timedelta(days=21, hours=4)),
                     'registration_deadline': str(now() + timedelta(days=14)),
                     'capacity': 10,
                     'description': 'We will clean up the beach south of Katwijk'
@@ -64,8 +64,8 @@ class EventTestCase(BluebottleTestCase):
                 'type': 'events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start': str(now() + timedelta(days=21)),
-                    'end': str(now() + timedelta(days=21, hours=4)),
+                    'start_time': str(now() + timedelta(days=21)),
+                    'end_time': str(now() + timedelta(days=21, hours=4)),
                     'registration_deadline': str(now() + timedelta(days=14)),
                     'capacity': 10,
                     'address': 'Zuid-Boulevard Katwijk aan Zee',
@@ -96,8 +96,8 @@ class EventTestCase(BluebottleTestCase):
                 'id': event.id,
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start': str(now() + timedelta(days=21)),
-                    'end': str(now() + timedelta(days=21, hours=4)),
+                    'start_time': str(now() + timedelta(days=21)),
+                    'end_time': str(now() + timedelta(days=21, hours=4)),
                     'registration_deadline': str(now() + timedelta(days=14)),
                     'capacity': 10,
                     'address': 'Zuid-Boulevard Katwijk aan Zee',
@@ -123,8 +123,8 @@ class EventTestCase(BluebottleTestCase):
                 'type': 'events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start': str(now() + timedelta(days=21)),
-                    'end': str(now() + timedelta(days=21, hours=4)),
+                    'start_time': str(now() + timedelta(days=21)),
+                    'end_time': str(now() + timedelta(days=21, hours=4)),
                     'registration_deadline': str(now() + timedelta(days=14)),
                     'capacity': 10,
                     'address': 'Zuid-Boulevard Katwijk aan Zee',
@@ -155,8 +155,8 @@ class EventTestCase(BluebottleTestCase):
                 'id': event.id,
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start': str(now() + timedelta(days=21)),
-                    'end': str(now() + timedelta(days=21, hours=4)),
+                    'start_time': str(now() + timedelta(days=21)),
+                    'end_time': str(now() + timedelta(days=21, hours=4)),
                     'registration_deadline': str(now() + timedelta(days=14)),
                     'capacity': 10,
                     'address': 'Zuid-Boulevard Katwijk aan Zee',

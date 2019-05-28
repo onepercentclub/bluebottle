@@ -1,14 +1,14 @@
 from django.contrib import admin
 
 from bluebottle.activities.admin import ActivityChildAdmin
-from bluebottle.jobs.models import Job, Applicant
+from bluebottle.assignments.models import Assignment, Applicant
 
 from bluebottle.utils.forms import FSMModelForm
 
 
-class JobAdminForm(FSMModelForm):
+class AssignmentAdminForm(FSMModelForm):
     class Meta:
-        model = Job
+        model = Assignment
         fields = '__all__'
 
 
@@ -20,11 +20,9 @@ class ApplicantInline(admin.TabularInline):
     extra = 0
 
 
-class JobAdmin(ActivityChildAdmin):
-    form = JobAdminForm
+@admin.register(Assignment)
+class AssignmentAdmin(ActivityChildAdmin):
+    form = AssignmentAdminForm
     inlines = (ApplicantInline, )
 
-    base_model = Job
-
-
-admin.site.register(Job, JobAdmin)
+    base_model = Assignment

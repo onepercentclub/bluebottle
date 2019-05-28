@@ -1,10 +1,14 @@
+import json
+
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.geo.models import Country, Location
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import CountryFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
 class GeoTestCase(BluebottleTestCase):
@@ -94,7 +98,7 @@ class LocationListTestCase(GeoTestCase):
                 description="Description {}".format(i))
             )
 
-    def test_api_country_list_endpoint(self):
+    def test_api_location_list_endpoint(self):
         """
         Ensure get request returns 200.
         """
@@ -104,3 +108,40 @@ class LocationListTestCase(GeoTestCase):
         self.assertEqual(len(response.data), self.count)
         self.assertEqual(response.data[0]['name'], self.locations[0].name)
         self.assertEqual(response.data[0]['description'], self.locations[0].description)
+
+
+class GeolocationCreateTestCase(GeoTestCase):
+    """
+    Test case for ``GeolocationList`` API view.
+    Endpoint: /api/geo/geolocations
+    """
+    def setUp(self):
+        super(GeoTestCase, self).setUp()
+        self.country = CountryFactory.create()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory.create()
+
+    def test_api_geolocation_create(self):
+        """
+        Ensure post request returns 201.
+        """
+        data = {
+            "data": {
+                "type": "geolocations",
+                "attributes": {
+                    "position": {"latitude": 43.0579025, "longitude": 23.6851594},
+                },
+                "relationships": {
+                    "country": {
+                        "data": {
+                            "type": "countries",
+                            "id": self.country.id
+                        }
+                    }
+                }
+            }
+        }
+        response = self.client.post(reverse('geolocation-list'), json.dumps(data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['position'],
+                         {'latitude': 43.0579025, 'longitude': 23.6851594})

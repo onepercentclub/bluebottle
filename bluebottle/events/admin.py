@@ -46,5 +46,5 @@ class ParticipantAdmin(FSMAdmin):
 class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
     inlines = ActivityChildAdmin.inlines + (ParticipantInline, )
-
+    list_display = ['title', 'status', 'start_time', 'end_time']
     base_model = Event

@@ -6,7 +6,7 @@ from bluebottle.activities.models import Activity, Contribution
 from bluebottle.notifications.decorators import transition
 
 
-class Job(Activity):
+class Assignment(Activity):
     registration_deadline = models.DateTimeField(_('registration deadline'))
     end = models.DateField(_('end'))
     capacity = models.PositiveIntegerField()
@@ -98,14 +98,14 @@ class Applicant(Contribution):
     time_spent = models.FloatField(_('time spent'))
 
     @property
-    def job_is_open(self):
+    def assignment_is_open(self):
         return self.event_.status == Activity.Status.open
 
     @transition(
         field='status',
         source=[Status.new, Status.rejected],
         target=Status.accepted,
-        conditions=[job_is_open]
+        conditions=[assignment_is_open]
     )
     def accept(self):
         self.event_.check_capcity()
@@ -114,7 +114,7 @@ class Applicant(Contribution):
         field='status',
         source=[Status.new, Status.accepted],
         target=Status.rejected,
-        conditions=[job_is_open]
+        conditions=[assignment_is_open]
     )
     def reject(self):
         self.event_.check_capcity()
@@ -123,7 +123,7 @@ class Applicant(Contribution):
         field='status',
         source=[Status.new, Status.accepted],
         target=Status.withdrawn,
-        conditions=[job_is_open]
+        conditions=[assignment_is_open]
     )
     def withdraw(self):
         self.event_.check_capcity()

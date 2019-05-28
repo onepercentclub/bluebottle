@@ -20,7 +20,6 @@ class EventFactory(factory.DjangoModelFactory):
     initiative = factory.SubFactory(InitiativeFactory)
     capacity = 10
     automatically_accept = True
-    status = 'open'
 
     registration_deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=2))
     start = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=4))

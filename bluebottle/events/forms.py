@@ -10,7 +10,6 @@ class EventSubmitForm(forms.Form):
     description = forms.CharField(required=True, label=_('Description'), widget=forms.Textarea)
 
     location = forms.ModelChoiceField(Geolocation.objects, required=True, label=_('Location'))
-    location_hint = forms.CharField(label=_('Location hint'))
 
     start = forms.DateTimeField(required=True, label=_('Start'), widget=AdminSplitDateTime)
     end = forms.DateTimeField(required=True, label=_('End'), widget=AdminSplitDateTime)

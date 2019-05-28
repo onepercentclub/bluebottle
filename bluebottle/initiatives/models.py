@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
-from django_fsm import FSMField
+from bluebottle.fsm import FSMField
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from multiselectfield import MultiSelectField
@@ -10,7 +10,6 @@ from multiselectfield import MultiSelectField
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
-from bluebottle.notifications.decorators import transition
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.models import BasePlatformSettings
 
@@ -83,8 +82,7 @@ class Initiative(models.Model):
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
-    @transition(
-        field='status',
+    @status.transition(
         source=ReviewStatus.created,
         target=ReviewStatus.submitted,
         form='bluebottle.initiatives.forms.InitiativeSubmitForm',
@@ -93,8 +91,7 @@ class Initiative(models.Model):
     def submit(self, **kwargs):
         pass
 
-    @transition(
-        field='status',
+    @status.transition(
         source=ReviewStatus.needs_work,
         target=ReviewStatus.submitted,
         form='bluebottle.initiatives.forms.InitiativeSubmitForm',
@@ -103,8 +100,7 @@ class Initiative(models.Model):
     def resubmit(self, **kwargs):
         pass
 
-    @transition(
-        field='status',
+    @status.transition(
         source=ReviewStatus.submitted,
         target=ReviewStatus.needs_work,
         custom={'button_name': _('needs work')}
@@ -112,8 +108,7 @@ class Initiative(models.Model):
     def needs_work(self, **kwargs):
         pass
 
-    @transition(
-        field='status',
+    @status.transition(
         source=ReviewStatus.submitted,
         target=ReviewStatus.approved,
         messages=[InitiativeApproveOwnerMessage],
@@ -121,10 +116,10 @@ class Initiative(models.Model):
         custom={'button_name': _('approve')}
     )
     def approve(self, **kwargs):
-        pass
+        for activity in self.activities.filter(status='draft'):
+            activity.open()
 
-    @transition(
-        field='status',
+    @status.transition(
         source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
         target=ReviewStatus.closed,
         messages=[InitiativeClosedOwnerMessage],
@@ -133,8 +128,7 @@ class Initiative(models.Model):
     def close(self, **kwargs):
         pass
 
-    @transition(
-        field='status',
+    @status.transition(
         source=[ReviewStatus.approved, ReviewStatus.closed],
         target=ReviewStatus.submitted,
         form='bluebottle.initiatives.forms.InitiativeSubmitForm',

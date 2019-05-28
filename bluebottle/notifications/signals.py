@@ -12,7 +12,7 @@ def validate_transition_form(sender, instance, name=None, method_kwargs=None, **
 
     transition = method_kwargs['transition']
 
-    if transition.form:
+    if transition.serializer:
         form = transition.form(data=model_to_dict(instance))
         if form.errors:
             raise ValidationError(

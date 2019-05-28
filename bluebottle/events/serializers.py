@@ -1,6 +1,9 @@
+from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
-from bluebottle.activities.utils import BaseActivitySerializer, BaseContributionSerializer
+from bluebottle.activities.utils import (
+    BaseActivitySerializer, BaseContributionSerializer, ActivitySubmitSerializer
+)
 from bluebottle.events.models import Event, Participant
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.transitions.serializers import TransitionSerializer
@@ -34,6 +37,23 @@ class EventSerializer(BaseActivitySerializer):
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
+
+
+class EventSubmitSerializer(ActivitySubmitSerializer):
+    capacity = serializers.IntegerField(required=True)
+    start = serializers.DateTimeField(required=True)
+    end = serializers.DateTimeField(required=True)
+    registration_deadline = serializers.DateTimeField(required=True)
+
+    class Meta(ActivitySubmitSerializer.Meta):
+        model = Event
+        fields = ActivitySubmitSerializer.Meta.fields + (
+            'capacity',
+            'start',
+            'end',
+            'location',
+            'registration_deadline',
+        )
 
 
 class EventTransitionSerializer(TransitionSerializer):

@@ -19,9 +19,9 @@ class AvailableTransitionsField(ReadOnlyField):
         transitions = getattr(value, 'get_available_{}_transitions'.format(self.source))()
 
         return (
-            {'name': transition.name, 'target': transition.target}
+            {'name': transition['name'], 'target': transition['target']}
             for transition in transitions
-            if not transition.form or transition.form(data=model_to_dict(value)).is_valid()
+            if 'form' not in transition or transition['form'](data=model_to_dict(value)).is_valid()
         )
 
     def get_attribute(self, instance):
@@ -33,16 +33,16 @@ class TransitionSerializer(serializers.Serializer):
 
     def save(self):
         resource = self.validated_data['resource']
-        transition = self.validated_data['transition']
+        transition_name = self.validated_data['transition']
 
-        available_transitions = getattr(resource, 'get_available_{}_transitions'.format(self.field))()
+        transitions = getattr(resource, 'get_available_{}_transitions'.format(self.field))()
 
-        if transition not in [available_transition.name for available_transition in available_transitions]:
+        if transition_name not in [transition['name'] for transition in transitions]:
             raise ValidationError('Transition is not available')
 
-        self.instance = Transition(resource, transition)
+        self.instance = Transition(resource, transition_name)
 
-        getattr(resource, transition)()
+        getattr(resource, transition_name)()
         resource.save()
 
     class Meta:

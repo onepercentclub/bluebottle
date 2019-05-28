@@ -40,24 +40,31 @@ class FSMField(models.CharField):
 
         setattr(cls, '_transition_{}_to'.format(self.name), transition_to)
 
+        def get_available_transitions(instance):
+            return self.get_available_transitions(instance)
+
+        setattr(cls, 'get_available_{}_transitions'.format(self.name), get_available_transitions)
+
     def get_all_transitions(self, instance):
         return [transition for transition in self.transitions if getattr(instance, self.name) in transition['source']]
 
-    def get_all_available_transitions(self, instance):
+    def get_available_transitions(self, instance):
         return [
             transition for transition in self.get_all_transitions(instance) if
             all(condition(instance) for condition in (transition.get('conditions') or []))
         ]
 
     def transition(field, source, target, conditions=None, **kwargs):
-        field.transitions.append({
-            'source': source,
-            'target': target,
-            'conditions': conditions,
-            'kwargs': kwargs
-        })
-
         def inner_transition(func):
+            field.transitions.append({
+                'source': source,
+                'target': target,
+                'conditions': conditions,
+                'kwargs': kwargs,
+                'method': func,
+                'name': func.__name__
+            })
+
             def do_transition(self):
                 original_source = getattr(self, field.name)
 

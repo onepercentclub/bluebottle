@@ -14,25 +14,25 @@ class Assignment(Activity):
     expertise = models.ForeignKey('tasks.Skill', verbose_name=_('expertise'), null=True)
 
     location = models.CharField(
-        help_text=_('Location the job takes place'),
+        help_text=_('Location the assignment takes place'),
         max_length=200,
         null=True,
         blank=True
     )  # TODO:  Make this a foreign key to an address
 
     class Meta:
-        verbose_name = _("Job")
-        verbose_name_plural = _("Jobs")
+        verbose_name = _("Assignment")
+        verbose_name_plural = _("Assignments")
         permissions = (
-            ('api_read_job', 'Can view job through the API'),
-            ('api_add_job', 'Can add job through the API'),
-            ('api_change_job', 'Can change job through the API'),
-            ('api_delete_job', 'Can delete job through the API'),
+            ('api_read_assignment', 'Can view assignment through the API'),
+            ('api_add_assignment', 'Can add assignment through the API'),
+            ('api_change_assignment', 'Can change assignment through the API'),
+            ('api_delete_assignment', 'Can delete assignment through the API'),
 
-            ('api_read_own_job', 'Can view own job through the API'),
-            ('api_add_own_job', 'Can add own job through the API'),
-            ('api_change_own_job', 'Can change own job through the API'),
-            ('api_delete_own_job', 'Can delete own job through the API'),
+            ('api_read_own_assignment', 'Can view own assignment through the API'),
+            ('api_add_own_assignment', 'Can add own assignment through the API'),
+            ('api_change_own_assignment', 'Can change own assignment through the API'),
+            ('api_delete_own_assignment', 'Can delete own assignment through the API'),
         )
 
     def check_capcity(self):

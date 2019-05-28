@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
 
+from bluebottle.events.messages import EventDoneOwnerMessage, EventClosedOwnerMessage
 from bluebottle.follow.models import follow, unfollow
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.geo.models import Geolocation
@@ -83,6 +84,14 @@ class Event(Activity):
 
     @transition(
         field='status',
+        source=Activity.Status.closed,
+        target=Activity.Status.draft,
+    )
+    def redraft(self, **kwargs):
+        pass
+
+    @transition(
+        field='status',
         source=[Activity.Status.full, Activity.Status.open],
         target=Activity.Status.running,
     )
@@ -95,6 +104,7 @@ class Event(Activity):
         field='status',
         source=Activity.Status.running,
         target=Activity.Status.done,
+        messages=[EventDoneOwnerMessage]
     )
     def done(self, **kwargs):
         for member in self.participants:
@@ -105,16 +115,9 @@ class Event(Activity):
         field='status',
         source=Activity.Status.open,
         target=Activity.Status.closed,
+        messages=[EventClosedOwnerMessage]
     )
     def close(self, **kwargs):
-        pass
-
-    @transition(
-        field='status',
-        source=Activity.Status.closed,
-        target=Activity.Status.open,
-    )
-    def extend(self, **kwargs):
         pass
 
 

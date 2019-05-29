@@ -225,8 +225,9 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             data['data']['relationships']['location']['data']['id'],
             unicode(location.pk)
         )
+
         self.assertEqual(
-            data['included'][1]['attributes']['name'],
+            get_include(response, 'locations')['attributes']['name'],
             location.name
         )
 

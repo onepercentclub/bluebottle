@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
+from django.utils.html import format_html
 from django.forms.models import model_to_dict
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -175,6 +176,10 @@ class Initiative(models.Model):
 
     def __unicode__(self):
         return self.title
+
+    @property
+    def full_url(self):
+        return format_html('/initiatives/details/{}/{}/', self.id, self.slug)
 
     def save(self, **kwargs):
         if self.slug == 'new' and self.title:

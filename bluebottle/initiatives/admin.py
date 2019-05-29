@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
@@ -17,16 +18,20 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     list_filter = ['status']
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
-    readonly_fields = ['status']
+    readonly_fields = ['status', 'link']
 
     def get_fieldsets(self, request, obj=None):
         return (
-            (_('Basic'), {'fields': ('title', 'slug', 'owner', 'image', 'video_url')}),
+            (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner', 'image', 'video_url')}),
             (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'place')}),
             (_('Review'), {'fields': ('reviewer', 'status', 'status_transition')}),
         )
 
     inlines = [ActivityAdminInline, MessageAdminInline]
+
+    def link(self, obj):
+        return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title)
+    link.short_description = _("Show on site")
 
 
 class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):

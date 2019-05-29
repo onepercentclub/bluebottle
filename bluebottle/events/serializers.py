@@ -20,6 +20,7 @@ class EventSerializer(BaseActivitySerializer):
             'start_time',
             'is_online',
             'location',
+            'location_hint',
             'permissions',
             'registration_deadline',
         )

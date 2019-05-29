@@ -2,14 +2,17 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=event.owner.name event_title=obj.title %}
-Hi {{ receiver_name }},
-Your initiative "{{ event_title }}" has been closed.
+{% blocktrans context='email' with recipient_name=event.owner.name event_title=obj.title %}
+Hey {{ receiver_name }},
+
+We wanted to let you know that your event "{{ event_title }}" has been closed.
+
+You can update your attendees by posting a message on your event page.
+Make sure the email notification is turned on, so all attendees will be notified of the update.
 {% endblocktrans %}
 
 {% endblock %}
 
 {% block action %}
-    <a href="{{ site }}{{ obj.full_url }}"
-       class="action-email">{% trans 'view event' context 'email' %}</a>
+   {% trans 'Post update' context 'email' %}: {{ obj.full_url }}
 {% endblock %}`

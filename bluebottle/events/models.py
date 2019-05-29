@@ -120,7 +120,6 @@ class Event(Activity):
         pass
 
     @Activity.status.transition(
-        field='status',
         source=Activity.Status.closed,
         target=Activity.Status.draft,
     )
@@ -128,7 +127,6 @@ class Event(Activity):
         pass
 
     @Activity.status.transition(
-        field='status',
         source=[Activity.Status.full, Activity.Status.open],
         target=Activity.Status.running,
         conditions=[can_start]

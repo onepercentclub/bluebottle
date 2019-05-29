@@ -27,7 +27,9 @@ class BaseActivitySerializer(ModelSerializer):
     }
 
     def get_is_follower(self, instance):
-        return instance.followers.filter(user=self.context['request'].user).exists()
+        user = self.context['request'].user
+
+        return user.is_authenticated and instance.followers.filter(user=user).exists()
 
     class Meta:
         model = Activity

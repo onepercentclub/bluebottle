@@ -7,8 +7,8 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
-from bluebottle.geo.models import Location, Country, InitiativePlace
-from bluebottle.geo.serializers import LocationSerializer, InitiativePlaceSerializer
+from bluebottle.geo.models import Location, Country, Geolocation
+from bluebottle.geo.serializers import LocationSerializer, GeolocationSerializer
 from bluebottle.projects.models import Project
 from bluebottle.utils.views import TranslatedApiViewMixin
 
@@ -48,8 +48,8 @@ class LocationList(ListAPIView):
 
 
 class InitiativePlaceList(AutoPrefetchMixin, CreateAPIView):
-    queryset = InitiativePlace.objects.all()
-    serializer_class = InitiativePlaceSerializer
+    queryset = Geolocation.objects.all()
+    serializer_class = GeolocationSerializer
 
     authentication_classes = (
         JSONWebTokenAuthentication,

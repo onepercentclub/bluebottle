@@ -91,4 +91,4 @@ class GeolocationSerializer(ModelSerializer):
             'country',
             'position'
         ]
-        resource_name = 'locations'
+        resource_name = 'places'

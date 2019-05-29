@@ -13,7 +13,7 @@ from rest_framework import status
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import GeolocationFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
 from bluebottle.test.utils import JSONAPITestClient
 
@@ -193,6 +193,42 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             response['X-Accel-Redirect'].startswith(
                 '/media/cache/'
             )
+        )
+
+    def test_put_location(self):
+        location = LocationFactory.create()
+
+        data = {
+            'data': {
+                'id': self.initiative.id,
+                'type': 'initiatives',
+                'relationships': {
+                    'location': {
+                        'data': {
+                            'type': 'locations',
+                            'id': location.pk
+                        }
+                    }
+                }
+            }
+        }
+        response = self.client.patch(
+            self.url,
+            json.dumps(data),
+            content_type="application/vnd.api+json",
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(
+            data['data']['relationships']['location']['data']['id'],
+            unicode(location.pk)
+        )
+
+        self.assertEqual(
+            get_include(response, 'locations')['attributes']['name'],
+            location.name
         )
 
     def test_patch_anonymous(self):

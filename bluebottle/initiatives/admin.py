@@ -17,7 +17,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     list_filter = ['status']
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
-    readonly_fields = ['status']
+    readonly_fields = ['status', 'status_transition']
 
     def get_fieldsets(self, request, obj=None):
         return (

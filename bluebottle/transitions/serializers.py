@@ -1,7 +1,5 @@
 import uuid
 
-from django.forms.models import model_to_dict
-
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
@@ -19,9 +17,8 @@ class AvailableTransitionsField(ReadOnlyField):
         transitions = getattr(value, 'get_available_{}_transitions'.format(self.source))()
 
         return (
-            {'name': transition['name'], 'target': transition['target']}
+            {'name': transition.name, 'target': transition.target}
             for transition in transitions
-            if 'form' not in transition or transition['form'](data=model_to_dict(value)).is_valid()
         )
 
     def get_attribute(self, instance):
@@ -33,16 +30,16 @@ class TransitionSerializer(serializers.Serializer):
 
     def save(self):
         resource = self.validated_data['resource']
-        transition_name = self.validated_data['transition']
+        transition = self.validated_data['transition']
 
-        transitions = getattr(resource, 'get_available_{}_transitions'.format(self.field))()
+        available_transitions = getattr(resource, 'get_available_{}_transitions'.format(self.field))()
 
-        if transition_name not in [transition['name'] for transition in transitions]:
+        if transition not in [available_transition.name for available_transition in available_transitions]:
             raise ValidationError('Transition is not available')
 
-        self.instance = Transition(resource, transition_name)
+        self.instance = Transition(resource, transition)
 
-        getattr(resource, transition_name)()
+        getattr(resource, transition)()
         resource.save()
 
     class Meta:

@@ -20,7 +20,7 @@ from django.template.response import TemplateResponse
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
-from django_fsm import TransitionNotAllowed
+from bluebottle.fsm import TransitionNotAllowed
 from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 

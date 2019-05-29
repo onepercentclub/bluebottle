@@ -5,6 +5,19 @@ class TransitionNotAllowed(Exception):
     pass
 
 
+class Transition(object):
+    def __init__(self, name, source, target, method, conditions=None, options=None):
+        self.name = name
+        self.source = source
+        self.target = target
+        self.method = method
+        self.conditions = conditions or []
+        self.options = options or {}
+
+    def is_allowed(self, instance):
+        return all(condition(instance) is None for condition in self.conditions)
+
+
 class FSMFieldDescriptor(object):
     def __init__(self, field):
         self.field = field
@@ -45,32 +58,33 @@ class FSMField(models.CharField):
 
         setattr(cls, 'get_available_{}_transitions'.format(self.name), get_available_transitions)
 
+        def get_all_transitions(instance):
+            return self.get_all_transitions(instance)
+
+        setattr(cls, 'get_all_{}_transitions'.format(self.name), get_all_transitions)
+
     def get_all_transitions(self, instance):
-        return [transition for transition in self.transitions if getattr(instance, self.name) in transition['source']]
+        return [transition for transition in self.transitions if getattr(instance, self.name) in transition.source]
 
     def get_available_transitions(self, instance):
         return [
             transition for transition in self.get_all_transitions(instance) if
-            all(condition(instance) for condition in (transition.get('conditions') or []))
+            all(condition(instance) for condition in transition.conditions)
         ]
 
     def transition(field, source, target, conditions=None, **kwargs):
         def inner_transition(func):
-            field.transitions.append({
-                'source': source,
-                'target': target,
-                'conditions': conditions,
-                'kwargs': kwargs,
-                'method': func,
-                'name': func.__name__
-            })
+            transition = Transition(
+                func.__name__, source, target, func, conditions, kwargs
+            )
+            field.transitions.append(transition)
 
             def do_transition(self):
                 original_source = getattr(self, field.name)
 
                 getattr(self, '_transition_{}_to'.format(field.name))(target)
 
-                if conditions and not all(condition(self) for condition in conditions):
+                if not transition.is_allowed(self):
                     raise TransitionNotAllowed(
                         'Not allowed to transition from {} to {}'.format(
                             original_source, target

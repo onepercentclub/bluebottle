@@ -85,7 +85,6 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             self.event.status, Event.Status.open
         )
-        self.event._meta.fields[5].get_all_available_transitions(self.event)
 
     def test_full(self):
         ParticipantFactory.create(activity=self.event)

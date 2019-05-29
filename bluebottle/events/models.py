@@ -1,6 +1,9 @@
 from django.db import models
+from django.forms.models import model_to_dict
+
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
+
 from djchoices.choices import ChoiceItem
 
 from bluebottle.follow.models import follow, unfollow
@@ -53,53 +56,64 @@ class Event(Activity):
     def participants(self):
         return self.contributions.filter(status=Participant.Status.new)
 
-    def is_started(self):
-        return self.start < now()
+    def can_start(self):
+        if self.start > now():
+            return _('The start date has not passed')
 
-    def is_not_started(self):
-        return self.start > now()
+    def can_open(self):
+        if self.start < now():
+            return _('The start date has passed')
 
-    def is_ended(self):
-        return self.end < now()
+    def can_end(self):
+        if not self.end < now():
+            return _('The end date has not passed')
+
+    def is_complete(self):
+        from bluebottle.events.serializers import EventSubmitSerializer
+        serializer = EventSubmitSerializer(
+            data=model_to_dict(self)
+        )
+        if not serializer.is_valid:
+            return _('Please make sure all required fields are filled in')
 
     @Activity.status.transition(
         source=Activity.Status.draft,
         target=Activity.Status.open,
         serializer='bluebottle.events.serializers.EventSubmitSerializer',
     )
-    def open(self, **kwargs):
+    def open(self):
         pass
 
     @Activity.status.transition(
         source=Activity.Status.open,
         target=Activity.Status.full,
-        conditions=[is_not_started]
+        conditions=[can_open]
     )
-    def full(self, **kwargs):
+    def full(self):
         pass
 
     @Activity.status.transition(
         source=Activity.Status.full,
         target=Activity.Status.open,
-        conditions=[is_not_started]
+        conditions=[can_open]
     )
-    def reopen(self, **kwargs):
+    def reopen(self):
         pass
 
     @Activity.status.transition(
         source=[Activity.Status.full, Activity.Status.open],
         target=Activity.Status.running,
-        conditions=[is_started]
+        conditions=[can_start]
     )
-    def do_start(self, **kwargs):
+    def do_start(self):
         pass
 
     @Activity.status.transition(
         source=Activity.Status.running,
         target=Activity.Status.done,
-        conditions=[is_ended]
+        conditions=[can_end]
     )
-    def done(self, **kwargs):
+    def done(self):
         for member in self.participants:
             member.success()
             member.save()
@@ -112,15 +126,15 @@ class Event(Activity):
         ],
         target=Activity.Status.closed,
     )
-    def close(self, **kwargs):
+    def close(self):
         pass
 
     @Activity.status.transition(
         source=Activity.Status.closed,
         target=Activity.Status.open,
-        conditions=[is_not_started]
+        conditions=[can_open]
     )
-    def extend(self, **kwargs):
+    def extend(self):
         pass
 
 
@@ -153,10 +167,12 @@ class Participant(Contribution):
         resource_name = 'participants'
 
     def event_is_open(self):
-        return self.activity.status == Activity.Status.open
+        if not self.activity.status == Activity.Status.open:
+            return _('The event is not open')
 
     def event_is_open_or_full(self):
-        return self.activity.status in (Activity.Status.open, Activity.Status.full)
+        if self.activity.status not in (Activity.Status.open, Activity.Status.full):
+            return _('The event is not open or full')
 
     @property
     def owner(self):
@@ -175,7 +191,7 @@ class Participant(Contribution):
         target=Status.withdrawn,
         conditions=[event_is_open_or_full]
     )
-    def withdraw(self, **kwargs):
+    def withdraw(self):
         unfollow(self.user, self.activity)
 
     @Contribution.status.transition(
@@ -183,14 +199,14 @@ class Participant(Contribution):
         target=Status.rejected,
         permission=Contribution.is_activity_manager
     )
-    def rejected(self, **kwargs):
+    def rejected(self):
         unfollow(self.user, self.activity)
 
     @Contribution.status.transition(
         source=[Status.new, Status.no_show, Status.rejected, Status.withdrawn],
         target=Status.success,
     )
-    def success(self, **kwargs):
+    def success(self):
         follow(self.user, self.activity)
         self.time_spent = self.activity.duration
 
@@ -199,7 +215,7 @@ class Participant(Contribution):
         target=Status.no_show,
         permission=Contribution.is_activity_manager
     )
-    def no_show(self, **kwargs):
+    def no_show(self):
         unfollow(self.user, self.activity)
         self.time_spent = None
 
@@ -207,5 +223,5 @@ class Participant(Contribution):
         source='*',
         target=Status.closed,
     )
-    def close(self, **kwargs):
+    def close(self):
         self.time_spent = None

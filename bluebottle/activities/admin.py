@@ -51,7 +51,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
         activity_link.short_description = _('Activity')
 
     class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'start', 'status']
+        readonly_fields = ['activity_link', 'start_time', 'end_time', 'status']
         fields = readonly_fields
         model = Event
 
@@ -60,16 +60,15 @@ class ActivityAdminInline(StackedPolymorphicInline):
         fields = readonly_fields
         model = Funding
 
-    class JobInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'start', 'status']
+    class AssignmentInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
+        readonly_fields = ['activity_link', 'deadline', 'status']
         fields = readonly_fields
         model = Assignment
 
     child_inlines = (
         EventInline,
         FundingInline,
-        # FIXME: This throws an error. Dunno why...
-        # JobInline
+        AssignmentInline
     )
 
     def has_delete_permission(self, request, obj=None):

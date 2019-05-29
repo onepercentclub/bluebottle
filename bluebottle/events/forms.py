@@ -11,8 +11,8 @@ class EventSubmitForm(forms.Form):
 
     location = forms.ModelChoiceField(Geolocation.objects, required=True, label=_('Location'))
 
-    start = forms.DateTimeField(required=True, label=_('Start'), widget=AdminSplitDateTime)
-    end = forms.DateTimeField(required=True, label=_('End'), widget=AdminSplitDateTime)
+    start_time = forms.DateTimeField(required=True, label=_('Start'), widget=AdminSplitDateTime)
+    end_time = forms.DateTimeField(required=True, label=_('End'), widget=AdminSplitDateTime)
     registration_deadline = forms.DateTimeField(label=_('Registration deadline'), widget=AdminSplitDateTime)
 
     capacity = forms.IntegerField(label=_('Attendee limit'))
@@ -25,8 +25,8 @@ class EventSubmitForm(forms.Form):
             'description',
             'location',
             'location_hint',
-            'start',
-            'end',
+            'start_time',
+            'end_time',
             'registration_deadline',
             'capacity'
         ]

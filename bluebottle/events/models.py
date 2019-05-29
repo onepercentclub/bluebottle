@@ -44,7 +44,7 @@ class Event(Activity):
 
     @property
     def duration(self):
-        return (self.start_time - self.end_time).seconds / 60
+        return (self.end_time - self.start_time).seconds / 60
 
     @property
     def participants(self):

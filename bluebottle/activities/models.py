@@ -3,11 +3,12 @@ from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.fields import GenericRelation
 
-from django_fsm import FSMField
+from bluebottle.fsm import FSMField
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from polymorphic.models import PolymorphicModel
+from bluebottle.initiatives.models import Initiative
 
 
 class Activity(PolymorphicModel):
@@ -29,11 +30,10 @@ class Activity(PolymorphicModel):
     updated = models.DateTimeField(auto_now=True)
 
     status = FSMField(
-        default=Status.open,
+        default=Status.draft,
         choices=Status.choices,
-        protected=True
     )
-    initiative = models.ForeignKey('initiatives.Initiative', related_name='activities')
+    initiative = models.ForeignKey(Initiative, related_name='activities')
 
     title = models.CharField(_('title'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100)
@@ -54,6 +54,9 @@ class Activity(PolymorphicModel):
     def __unicode__(self):
         return self.title
 
+    def is_complete(self):
+        return self.initiative.status == Initiative.ReviewStatus.approved
+
     @property
     def contribution_count(self):
         return self.contributions.count()
@@ -63,6 +66,14 @@ class Activity(PolymorphicModel):
             self.slug = slugify(self.title)
 
         super(Activity, self).save(**kwargs)
+
+    @status.transition(
+        source=Status.draft,
+        target=Status.open,
+        conditions=[is_complete]
+    )
+    def open(self):
+        pass
 
 
 class Contribution(PolymorphicModel):

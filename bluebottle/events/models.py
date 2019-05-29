@@ -1,12 +1,16 @@
 from django.db import models
+from django.forms.models import model_to_dict
+
 from django.utils.translation import ugettext_lazy as _
+from django.utils.timezone import now
+
 from djchoices.choices import ChoiceItem
 
+from bluebottle.fsm import TransitionNotAllowed
 from bluebottle.events.messages import EventDoneOwnerMessage, EventClosedOwnerMessage
 from bluebottle.follow.models import follow, unfollow
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.geo.models import Geolocation
-from bluebottle.notifications.decorators import transition
 
 
 from .tasks import *  # noqa
@@ -16,6 +20,7 @@ class Event(Activity):
     capacity = models.PositiveIntegerField(null=True, blank=True)
     automatically_accept = models.BooleanField(default=True)
 
+    is_online = models.NullBooleanField(null=True, default=None)
     location = models.ForeignKey(Geolocation, verbose_name=_('location'),
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
@@ -42,88 +47,124 @@ class Event(Activity):
     class JSONAPIMeta:
         resource_name = 'events'
 
+    def save(self, *args, **kwargs):
+        if self.status == Activity.Status.draft:
+            try:
+                self.open()
+            except TransitionNotAllowed:
+                pass
+
+        super(Event, self).save(*args, **kwargs)
+
+    def check_capacity(self):
+        if len(self.participants) >= self.capacity and self.status == Event.Status.open:
+            self.full()
+            self.save()
+        elif len(self.participants) < self.capacity and self.status == Event.Status.full:
+            self.reopen()
+
     @property
     def duration(self):
         return (self.start_time - self.end_time).seconds / 60
 
     @property
     def participants(self):
-        return self.contributions.filter(status=Participant.Status.going)
+        return self.contributions.filter(status=Participant.Status.new)
 
-    def check_capcity(self):
-        if len(self.participants) >= self.capacity and self.status == Activity.Status.open:
-            self.full()
-        elif self.status == Activity.Status.full:
-            self.reopen()
+    def can_start(self):
+        if self.start_time > now():
+            return _('The start date has not passed')
 
-    @transition(
-        field='status',
+    def can_open(self):
+        if self.start_time < now():
+            return _('The start date has passed')
+
+    def can_end(self):
+        if not self.end_time < now():
+            return _('The end date has not passed')
+
+    def is_complete(self):
+        from bluebottle.events.serializers import EventSubmitSerializer
+        serializer = EventSubmitSerializer(
+            data=model_to_dict(self)
+        )
+        if not serializer.is_valid():
+            return _('Please make sure all required fields are filled in')
+
+    def initiative_is_approved(self):
+        if not self.initiative.status == 'approved':
+            return _('Please make sure the initiative is approved')
+
+    @Activity.status.transition(
         source=Activity.Status.draft,
         target=Activity.Status.open,
-        form='bluebottle.events.forms.EventSubmitForm',
+        serializer='bluebottle.events.serializers.EventSubmitSerializer',
+        conditions=[is_complete, initiative_is_approved]
     )
-    def submit(self, **kwargs):
+    def open(self):
         pass
 
-    @transition(
-        field='status',
+    @Activity.status.transition(
         source=Activity.Status.open,
         target=Activity.Status.full,
+        conditions=[can_open]
     )
-    def full(self, **kwargs):
+    def full(self):
         pass
 
-    @transition(
-        field='status',
+    @Activity.status.transition(
         source=Activity.Status.full,
         target=Activity.Status.open,
-        form='bluebottle.events.forms.EventSubmitForm',
+        conditions=[can_open]
     )
-    def reopen(self, **kwargs):
+    def reopen(self):
         pass
 
-    @transition(
-        field='status',
+    @Activity.status.transition(
         source=Activity.Status.closed,
         target=Activity.Status.draft,
     )
     def redraft(self, **kwargs):
         pass
 
-    @transition(
-        field='status',
+    @Activity.status.transition(
         source=[Activity.Status.full, Activity.Status.open],
         target=Activity.Status.running,
+        conditions=[can_start]
     )
     def start(self, **kwargs):
-        for member in self.participants:
-            member.attending()
-            member.save()
+        pass
 
-    @transition(
-        field='status',
+    @Activity.status.transition(
         source=Activity.Status.running,
         target=Activity.Status.done,
+        conditions=[can_end],
         messages=[EventDoneOwnerMessage]
     )
-    def done(self, **kwargs):
+    def done(self):
         for member in self.participants:
             member.success()
             member.save()
 
-    @transition(
-        field='status',
-        source=Activity.Status.open,
+    @Activity.status.transition(
+        source='*',
         target=Activity.Status.closed,
         messages=[EventClosedOwnerMessage]
     )
-    def close(self, **kwargs):
+    def close(self):
+        pass
+
+    @Activity.status.transition(
+        source=Activity.Status.closed,
+        target=Activity.Status.open,
+        conditions=[can_open]
+    )
+    def extend(self):
         pass
 
 
 class Participant(Contribution):
     class Status(Contribution.Status):
-        going = ChoiceItem('going', _('going'))
         withdrawn = ChoiceItem('withdrawn', _('withdrawn'))
         rejected = ChoiceItem('rejected', _('rejected'))
         no_show = ChoiceItem('no_show', _('no_show'))
@@ -151,71 +192,71 @@ class Participant(Contribution):
         resource_name = 'participants'
 
     def event_is_open(self):
-        return self.activity.status == Activity.Status.open
+        if not self.activity.status == Activity.Status.open:
+            return _('The event is not open')
+
+    def event_is_open_or_full(self):
+        if self.activity.status not in (Activity.Status.open, Activity.Status.full):
+            return _('The event is not open or full')
 
     @property
     def owner(self):
         return self.user
 
     def save(self, *args, **kwargs):
-        if self.status == self.Status.new:
-            self.go()
+        created = self.pk is None
 
         super(Participant, self).save(*args, **kwargs)
 
-    @transition(
-        field='status',
-        source=(Status.new, Status.withdrawn, ),
-        target=Status.going,
-        conditions=[event_is_open]
-    )
-    def go(self, **kwargs):
-        follow(self.user, self.activity)
-        self.activity.check_capcity()
+        if created:
+            follow(self.user, self.activity)
 
-    @transition(
-        field='status',
-        source=Status.going,
+        self.activity.check_capacity()
+
+    @Contribution.status.transition(
+        source=Status.new,
         target=Status.withdrawn,
-        conditions=[event_is_open]
+        conditions=[event_is_open_or_full]
     )
-    def withdraw(self, **kwargs):
+    def withdraw(self):
         unfollow(self.user, self.activity)
-        self.activity.check_capcity()
 
-    @transition(
-        field='status',
-        source=[Status.going],
+    @Contribution.status.transition(
+        source=Status.withdrawn,
+        target=Status.new,
+        conditions=[event_is_open_or_full]
+    )
+    def reapply(self):
+        follow(self.user, self.activity)
+
+    @Contribution.status.transition(
+        source=[Status.new],
         target=Status.rejected,
         permission=Contribution.is_activity_manager
     )
-    def rejected(self, **kwargs):
+    def reject(self):
         unfollow(self.user, self.activity)
-        self.activity.check_capcity()
 
-    @transition(
-        field='status',
-        source=[Status.going, Status.no_show, Status.rejected, Status.withdrawn],
+    @Contribution.status.transition(
+        source=[Status.new, Status.no_show, Status.rejected, Status.withdrawn],
         target=Status.success,
     )
-    def success(self, **kwargs):
+    def success(self):
         follow(self.user, self.activity)
         self.time_spent = self.activity.duration
 
-    @transition(
-        field='status',
+    @Contribution.status.transition(
         source=Status.success,
         target=Status.no_show,
         permission=Contribution.is_activity_manager
     )
-    def no_show(self, **kwargs):
+    def no_show(self):
         unfollow(self.user, self.activity)
         self.time_spent = None
 
-    @transition(
-        field='status',
+    @Contribution.status.transition(
         source='*',
         target=Status.closed,
     )
-    def close(self, **kwargs):
+    def close(self):
         self.time_spent = None

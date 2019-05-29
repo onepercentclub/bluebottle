@@ -11,6 +11,6 @@ urlpatterns = [
         name='used-country-list'),
     url(r'^locations/$', LocationList.as_view(),
         name='location-list'),
-    url(r'^geolocations/$', GeolocationList.as_view(),
+    url(r'^geolocations$', GeolocationList.as_view(),
         name='geolocation-list'),
 ]

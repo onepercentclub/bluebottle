@@ -1,22 +1,26 @@
 import datetime
 import json
 
-
-from django.test.utils import override_settings
-from django.test import tag
-
+from django.contrib.gis.geos import Point
 from django.core.urlresolvers import reverse
 from django.test import TestCase
+from django.test import tag
+from django.test.utils import override_settings
 from django.utils.timezone import get_current_timezone
-
 from django_elasticsearch_dsl.test import ESTestCase
+from rest_framework import status
 
-from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import LocationFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
 from bluebottle.test.utils import JSONAPITestClient
+
+
+def get_include(response, name):
+    included = response.json()['included']
+    return [include for include in included if include['type'] == name][0]
 
 
 class InitiativeAPITestCase(TestCase):
@@ -46,9 +50,10 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
                 'relationships': {
                     'theme': {
                         'data': {
-                            'type': 'themes', 'id': self.theme.pk
+                            'type': 'themes',
+                            'id': self.theme.pk
                         },
-                    },
+                    }
                 }
             }
         }
@@ -57,7 +62,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             json.dumps(data),
             user=self.owner
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_data = json.loads(response.content)
 
         initiative = Initiative.objects.get(pk=response_data['data']['id'])
@@ -74,21 +79,49 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         )
         self.assertEqual(len(response_data['included']), 2)
 
+    def test_create_with_location(self):
+        geolocation = GeolocationFactory.create(position=Point(23.6851594, 43.0579025))
+        data = {
+            'data': {
+                'type': 'initiatives',
+                'attributes': {
+                    'title': 'Some title'
+                },
+                'relationships': {
+                    'place': {
+                        'data': {
+                            'type': 'geolocations',
+                            'id': geolocation.id
+                        },
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        geolocation = get_include(response, 'geolocations')
+        self.assertEqual(geolocation['attributes']['position'],
+                         {'latitude': 43.0579025, 'longitude': 23.6851594})
+
     def test_create_anonymous(self):
         response = self.client.post(
             self.url,
             json.dumps({})
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class InitiativeDetailAPITestCase(InitiativeAPITestCase):
     def setUp(self):
         super(InitiativeDetailAPITestCase, self).setUp()
         self.initiative = InitiativeFactory(
-            owner=self.owner
+            owner=self.owner,
+            place=GeolocationFactory(position=Point(23.6851594, 43.0579025))
         )
-
         self.url = reverse('initiative-detail', args=(self.initiative.pk,))
 
     def test_patch(self):
@@ -106,7 +139,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             json.dumps(data),
             user=self.owner
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEqual(data['data']['attributes']['title'], 'Some title')
 
@@ -118,7 +151,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 test_file.read(),
                 content_type="image/png",
                 HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.jpg"',
-                HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+                user=self.owner
             )
 
         file_data = json.loads(response.content)
@@ -140,20 +173,22 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             self.url,
             json.dumps(data),
             content_type="application/vnd.api+json",
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
         self.assertEqual(
             data['data']['relationships']['image']['data']['id'],
             file_data['data']['id']
         )
+
+        image = get_include(response, 'images')
         response = self.client.get(
-            data['included'][0]['attributes']['links']['large'],
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            image['attributes']['links']['large'],
+            user=self.owner
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(
             response['X-Accel-Redirect'].startswith(
                 '/media/cache/'
@@ -210,7 +245,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             self.url,
             json.dumps(data),
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_patch_wrong_user(self):
         data = {
@@ -228,23 +263,32 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             json.dumps(data),
             user=BlueBottleUserFactory.create()
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_get(self):
+    def test_get_owner(self):
         response = self.client.get(
             self.url,
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
-        data = json.loads(response.content)
 
-        self.assertEqual(response.status_code, 200)
+        data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], self.initiative.title)
+        self.assertEqual(data['meta']['status'], self.initiative.status)
+        self.assertEqual(data['meta']['transitions'], [{'name': 'submit', 'target': 'submitted'}])
+        self.assertEqual(data['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
+        self.assertEqual(data['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
 
-        self.assertEqual(data['data']['attributes']['title'], self.initiative.title)
-        self.assertEqual(data['data']['meta']['status'], self.initiative.status)
-        self.assertEqual(data['data']['meta']['transitions'], [{'name': 'submit', 'target': 'submitted'}])
-        self.assertEqual(data['data']['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
-        self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
-        self.assertEqual(len(data['included']), 5)
+        geolocation = get_include(response, 'geolocations')
+        self.assertEqual(geolocation['attributes']['position'], {'latitude': 43.0579025, 'longitude': 23.6851594})
+
+    def test_get_other(self):
+        response = self.client.get(
+            self.url,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], self.initiative.title)
 
 
 @override_settings(
@@ -390,7 +434,7 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
             json.dumps(data),
             user=self.owner
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
@@ -422,7 +466,7 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
             user=self.owner
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content)
         self.assertEqual(data['errors'][0], u'Transition is not available')
 

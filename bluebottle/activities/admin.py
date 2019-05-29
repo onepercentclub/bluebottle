@@ -10,7 +10,7 @@ from bluebottle.activities.models import Activity
 from bluebottle.events.models import Event
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.funding.models import Funding
-from bluebottle.jobs.models import Job
+from bluebottle.assignments.models import Assignment
 from bluebottle.utils.admin import FSMAdmin
 
 
@@ -25,7 +25,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin):
 class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     fsm_field = 'status'
     base_model = Activity
-    child_models = (Event, Funding, Job)
+    child_models = (Event, Funding, Assignment)
     list_filter = (PolymorphicChildModelFilter,)
 
     list_display = ['created', 'title', 'type', 'contribution_count']
@@ -63,7 +63,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
     class JobInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
         readonly_fields = ['activity_link', 'start', 'status']
         fields = readonly_fields
-        model = Job
+        model = Assignment
 
     child_inlines = (
         EventInline,

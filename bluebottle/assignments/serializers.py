@@ -1,16 +1,16 @@
 from bluebottle.activities.utils import BaseContributionSerializer, BaseActivitySerializer
-from bluebottle.jobs.models import Job, Applicant
+from bluebottle.assignments.models import Assignment, Applicant
 
 
-class JobSerializer(BaseActivitySerializer):
+class AssignmentSerializer(BaseActivitySerializer):
     class Meta:
-        model = Job
+        model = Assignment
         fields = BaseActivitySerializer.Meta.fields + (
             'start', 'end', 'registration_deadline', 'capacity',
         )
 
 
-class JobParticipantSerializer(BaseContributionSerializer):
+class AssignmentParticipantSerializer(BaseContributionSerializer):
     class Meta:
         model = Applicant
         fields = BaseContributionSerializer.Meta.fields + ('time_spent', )

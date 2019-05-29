@@ -1,7 +1,7 @@
+from django.contrib.gis.geos import Point
 from rest_framework import serializers
-
-from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from bluebottle.geo.models import Country, Location, Place, InitiativePlace, Geolocation
@@ -69,24 +69,39 @@ class InitiativePlaceSerializer(ModelSerializer):
         resource_name = 'places'
 
 
+class PointSerializer(serializers.CharField):
+
+    def to_representation(self, instance):
+        return {
+            'latitude': instance.coords[1],
+            'longitude': instance.coords[0]
+        }
+
+    def to_internal_value(self, data):
+        if not data:
+            return None
+        try:
+            point = Point(float(data['longitude']), float(data['latitude']))
+        except ValueError as e:
+            raise serializers.ValidationError("Invalid point. {}".format(e))
+        return point
+
+
 class GeolocationSerializer(ModelSerializer):
-    position = serializers.SerializerMethodField()
+    position = PointSerializer()
 
     included_serializers = {
         'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer'
     }
 
-    def get_position(self, obj):
-        return {
-            'latitude': obj.position.coords[1],
-            'longitude': obj.position.coords[0]
-        }
-
     class Meta:
         model = Geolocation
         fields = (
-            'id', 'street', 'street_number', 'locality', 'province', 'country',
-            'position', 'formatted_address',
+            'id', 'street', 'street_number',
+            'locality', 'province',
+            'country',
+            'position',
+            'formatted_address',
         )
 
     class JSONAPIMeta:
@@ -94,4 +109,4 @@ class GeolocationSerializer(ModelSerializer):
             'country',
             'position'
         ]
-        resource_name = 'locations'
+        resource_name = 'geolocations'

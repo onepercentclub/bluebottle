@@ -4,6 +4,7 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.messages import get_messages
 from django.core import mail
 from django.urls.base import reverse
+from rest_framework import status
 
 from bluebottle.initiatives.admin import InitiativeAdmin
 from bluebottle.initiatives.models import Initiative
@@ -28,12 +29,12 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.get(review_url)
 
         # Should show confirmation page
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'Are you sure you want to change')
 
         # Confirm should change status
         response = self.client.post(review_url, {'confirm': True, 'send_messages': True})
-        self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'approved')
         # Should send out one mail
@@ -46,12 +47,12 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.get(review_url)
 
         # Should show confirmation page
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'Are you sure you want to change')
 
         # Confirm should change status
         response = self.client.post(review_url, {'confirm': True, 'send_messages': False})
-        self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'approved')
         # No mail should be sent
@@ -68,12 +69,12 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.get(review_url)
 
         # Should show confirmation page
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'Are you sure you want to change')
 
         # Confirm should change status
         response = self.client.post(review_url, {'confirm': True})
-        self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'closed')
         messages = list(get_messages(response.wsgi_request))
@@ -84,7 +85,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
                              args=(self.initiative.id, 'approve'))
         response = self.client.post(review_url, {'confirm': False})
         # Should redirect with message
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertTrue(response.url.startswith('/en/admin/login'))
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'submitted')
@@ -96,7 +97,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
                              args=(self.initiative.id, 'approve'))
         response = self.client.post(review_url, {'confirm': False})
         # Should redirect with message
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'submitted')
 
@@ -111,7 +112,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.post(review_url, {'confirm': True})
 
         # Should redirect with error message
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'created')
         messages = list(get_messages(response.wsgi_request))
@@ -128,7 +129,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.post(review_url, {'confirm': True})
 
         # Should redirect with error message
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'created')
 

@@ -109,7 +109,7 @@ class EventTransitionTestCase(BluebottleTestCase):
 
     def test_start(self):
         ParticipantFactory.create(activity=self.event)
-        self.event.start = now() - timedelta(days=1)
+        self.event.start_time = now() - timedelta(days=1)
         self.event.start()
 
         self.assertEqual(
@@ -119,7 +119,7 @@ class EventTransitionTestCase(BluebottleTestCase):
 
     def test_start_date_in_future(self):
         ParticipantFactory.create(activity=self.event)
-        self.event.start = now() + timedelta(days=1)
+        self.event.start_time = now() + timedelta(days=1)
         self.assertRaises(
             TransitionNotAllowed,
             self.event.start
@@ -127,9 +127,9 @@ class EventTransitionTestCase(BluebottleTestCase):
 
     def test_done(self):
         participant = ParticipantFactory.create(activity=self.event)
-        self.event.start = now() - timedelta(days=1)
+        self.event.start_time = now() - timedelta(days=1)
         self.event.start()
-        self.event.end = now() - timedelta(days=1)
+        self.event.end_time = now() - timedelta(days=1)
         self.event.done()
 
         self.assertEqual(
@@ -145,9 +145,9 @@ class EventTransitionTestCase(BluebottleTestCase):
 
     def test_done_date_in_future(self):
         ParticipantFactory.create(activity=self.event)
-        self.event.start = now() - timedelta(days=1)
+        self.event.start_time = now() - timedelta(days=1)
         self.event.start()
-        self.event.end = now() + timedelta(days=1)
+        self.event.end_time = now() + timedelta(days=1)
 
         self.assertRaises(
             TransitionNotAllowed,
@@ -165,7 +165,7 @@ class EventTransitionTestCase(BluebottleTestCase):
     def test_extend(self):
         self.event.close()
 
-        self.event.start = now() + timedelta(days=1)
+        self.event.start_time = now() + timedelta(days=1)
         self.event.extend()
 
         self.assertEqual(
@@ -176,7 +176,7 @@ class EventTransitionTestCase(BluebottleTestCase):
     def test_extend_start_date_passed(self):
         self.event.close()
 
-        self.event.start = now() - timedelta(days=1)
+        self.event.start_time = now() - timedelta(days=1)
         self.assertRaises(
             TransitionNotAllowed,
             self.event.extend

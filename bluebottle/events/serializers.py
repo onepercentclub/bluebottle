@@ -18,6 +18,7 @@ class EventSerializer(BaseActivitySerializer):
             'capacity',
             'end_time',
             'start_time',
+            'is_online',
             'location',
             'permissions',
             'registration_deadline',

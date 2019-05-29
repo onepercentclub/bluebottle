@@ -20,6 +20,7 @@ class Event(Activity):
     capacity = models.PositiveIntegerField(null=True, blank=True)
     automatically_accept = models.BooleanField(default=True)
 
+    is_online = models.NullBooleanField(null=True, default=None)
     location = models.ForeignKey(Geolocation, verbose_name=_('location'),
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)

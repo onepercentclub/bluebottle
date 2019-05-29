@@ -5,7 +5,9 @@ from django.utils.timezone import now
 from bluebottle.events.models import Event
 from bluebottle.events.tasks import check_event_end, check_event_start
 from bluebottle.events.tests.factories import EventFactory
-from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
+from bluebottle.initiatives.tests.factories import (
+    InitiativePlatformSettingsFactory, InitiativeFactory
+)
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
@@ -17,9 +19,14 @@ class EventTasksTestCase(BluebottleTestCase):
             activity_types=['event']
         )
         self.client = JSONAPITestClient()
+        self.initiative = InitiativeFactory.create()
+        self.initiative.submit()
+        self.initiative.approve()
+        self.initiative.save()
 
     def test_event_start_task(self):
         event = EventFactory.create(
+            initiative=self.initiative,
             start_time=now() - timedelta(hours=1),
             end_time=now() + timedelta(hours=3),
         )
@@ -31,6 +38,7 @@ class EventTasksTestCase(BluebottleTestCase):
 
     def test_event_end_task(self):
         event = EventFactory.create(
+            initiative=self.initiative,
             start_time=now() - timedelta(hours=5),
             end_time=now() - timedelta(hours=1)
         )

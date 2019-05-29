@@ -1,3 +1,5 @@
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
@@ -5,6 +7,7 @@ from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer, ActivitySubmitSerializer
 )
 from bluebottle.events.models import Event, Participant
+from bluebottle.geo.models import Geolocation
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.transitions.serializers import TransitionSerializer
 
@@ -43,16 +46,22 @@ class EventSerializer(BaseActivitySerializer):
 
 class EventSubmitSerializer(ActivitySubmitSerializer):
     capacity = serializers.IntegerField(required=True)
-    start = serializers.DateTimeField(required=True)
-    end = serializers.DateTimeField(required=True)
+    start_time = serializers.DateTimeField(required=True)
+    end_time = serializers.DateTimeField(required=True)
     registration_deadline = serializers.DateTimeField(required=True)
+
+    location = serializers.PrimaryKeyRelatedField(
+        required=True,
+        queryset=Geolocation.objects.all(),
+        error_messages={'null': _('Location is required')}
+    )
 
     class Meta(ActivitySubmitSerializer.Meta):
         model = Event
         fields = ActivitySubmitSerializer.Meta.fields + (
             'capacity',
-            'start',
-            'end',
+            'start_time',
+            'end_time',
             'location',
             'registration_deadline',
         )

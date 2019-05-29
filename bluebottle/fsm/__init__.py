@@ -154,7 +154,7 @@ class FSMField(models.CharField):
                 original_source = getattr(self, field.name)  # Keep current status so we can revert
 
                 if not transition.is_allowed(self):
-                    # THe transition is not currently possible
+                    # The transition is not currently possible
                     raise TransitionNotAllowed(
                         'Not allowed to transition from {} to {}'.format(
                             original_source, target

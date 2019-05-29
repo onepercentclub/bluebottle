@@ -133,9 +133,7 @@ class Event(Activity):
         conditions=[can_start]
     )
     def start(self, **kwargs):
-        for member in self.participants:
-            member.attending()
-            member.save()
+        pass
 
     @Activity.status.transition(
         source=Activity.Status.running,
@@ -236,7 +234,7 @@ class Participant(Contribution):
         target=Status.rejected,
         permission=Contribution.is_activity_manager
     )
-    def rejected(self):
+    def reject(self):
         unfollow(self.user, self.activity)
 
     @Contribution.status.transition(

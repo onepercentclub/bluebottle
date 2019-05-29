@@ -48,20 +48,24 @@ class ActivityAdminInline(StackedPolymorphicInline):
                 args=(obj.id,)
             )
             return format_html("<a href='{}'>{}</a>", url, obj.title)
-        activity_link.short_description = _('Activity')
+        activity_link.short_description = _('Edit activity')
+
+        def link(self, obj):
+            return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title)
+        link.short_description = _('View on site')
 
     class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'start_time', 'end_time', 'status']
+        readonly_fields = ['activity_link', 'link', 'start_time', 'end_time', 'status']
         fields = readonly_fields
         model = Event
 
     class FundingInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'target', 'deadline', 'status']
+        readonly_fields = ['activity_link', 'link', 'target', 'deadline', 'status']
         fields = readonly_fields
         model = Funding
 
     class AssignmentInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'deadline', 'status']
+        readonly_fields = ['activity_link', 'link', 'deadline', 'status']
         fields = readonly_fields
         model = Assignment
 

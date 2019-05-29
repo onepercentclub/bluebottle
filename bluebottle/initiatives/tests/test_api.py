@@ -291,6 +291,13 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
 
+    def test_get_anonymous(self):
+        response = self.client.get(
+            self.url
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], self.initiative.title)
+
 
 @override_settings(
     ELASTICSEARCH_DSL_AUTOSYNC=True,

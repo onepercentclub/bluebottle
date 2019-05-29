@@ -6,6 +6,7 @@ from django.utils.timezone import now
 
 from djchoices.choices import ChoiceItem
 
+from bluebottle.fsm import TransitionNotAllowed
 from bluebottle.follow.models import follow, unfollow
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.geo.models import Geolocation
@@ -41,6 +42,15 @@ class Event(Activity):
     class JSONAPIMeta:
         resource_name = 'events'
 
+    def save(self, *args, **kwargs):
+        if self.status == Activity.Status.draft:
+            try:
+                self.open()
+            except TransitionNotAllowed:
+                pass
+
+        super(Event, self).save(*args, **kwargs)
+
     def check_capacity(self):
         if len(self.participants) >= self.capacity and self.status == Event.Status.open:
             self.full()
@@ -73,13 +83,18 @@ class Event(Activity):
         serializer = EventSubmitSerializer(
             data=model_to_dict(self)
         )
-        if not serializer.is_valid:
+        if not serializer.is_valid():
             return _('Please make sure all required fields are filled in')
+
+    def initiative_is_approved(self):
+        if not self.initiative.status == 'approved':
+            return _('Please make sure the initiative is approved')
 
     @Activity.status.transition(
         source=Activity.Status.draft,
         target=Activity.Status.open,
         serializer='bluebottle.events.serializers.EventSubmitSerializer',
+        conditions=[is_complete, initiative_is_approved]
     )
     def open(self):
         pass

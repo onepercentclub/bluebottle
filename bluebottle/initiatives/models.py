@@ -8,6 +8,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from multiselectfield import MultiSelectField
 
 from bluebottle.files.fields import ImageField
+from bluebottle.fsm import TransitionNotAllowed
 from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -117,8 +118,12 @@ class Initiative(models.Model):
     )
     def approve(self):
         for activity in self.activities.filter(status='draft'):
-            activity.open()
-            activity.save()
+            activity.initiative = self
+            try:
+                activity.open()
+                activity.save()
+            except TransitionNotAllowed:
+                pass
 
     @status.transition(
         source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],

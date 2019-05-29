@@ -88,14 +88,15 @@ class FSMField(models.CharField):
             def do_transition(self):
                 original_source = getattr(self, field.name)
 
-                getattr(self, '_transition_{}_to'.format(field.name))(target)
-
                 if not transition.is_allowed(self):
                     raise TransitionNotAllowed(
                         'Not allowed to transition from {} to {}'.format(
                             original_source, target
                         )
                     )
+
+                getattr(self, '_transition_{}_to'.format(field.name))(target)
+
                 try:
                     return func(self)
                 except Exception:

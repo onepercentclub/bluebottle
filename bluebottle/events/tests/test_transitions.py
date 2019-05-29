@@ -57,7 +57,7 @@ class EventTransitionOpenTestCase(BluebottleTestCase):
             event.status, Event.Status.open
         )
 
-    def test_approve_initiatve_incomplete(self, **kwargs):
+    def test_approve_initiative_incomplete(self, **kwargs):
         self.initiative.approve()
         self.initiative.save()
 

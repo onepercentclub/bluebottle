@@ -20,12 +20,11 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
                      'owner__first_name', 'owner__last_name', 'owner__email']
     readonly_fields = ['status', 'link']
 
-    def get_fieldsets(self, request, obj=None):
-        return (
-            (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner', 'image', 'video_url')}),
-            (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'place')}),
-            (_('Review'), {'fields': ('reviewer', 'status', 'status_transition')}),
-        )
+    fieldsets = (
+        (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner', 'image', 'video_url')}),
+        (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'place')}),
+        (_('Review'), {'fields': ('reviewer', 'status', 'status_transition')}),
+    )
 
     inlines = [ActivityAdminInline, MessageAdminInline]
 

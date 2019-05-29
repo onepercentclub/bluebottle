@@ -129,3 +129,12 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
 
         messages = list(get_messages(response.wsgi_request))
         self.assertTrue('Theme is required' in messages[0].message)
+
+    def test_initiative_admin(self):
+        self.client.force_login(self.superuser)
+        admin_url = reverse('admin:initiatives_initiative_change',
+                            args=(self.initiative.id,))
+        response = self.client.get(admin_url)
+        self.assertContains(response, 'Show on site')
+        self.assertContains(response, 'Activities')
+        self.assertContains(response, 'Messages')

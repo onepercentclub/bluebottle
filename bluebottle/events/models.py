@@ -7,9 +7,13 @@ from django.utils.timezone import now
 from djchoices.choices import ChoiceItem
 
 from bluebottle.fsm import TransitionNotAllowed
+from bluebottle.events.messages import EventDoneOwnerMessage, EventClosedOwnerMessage
 from bluebottle.follow.models import follow, unfollow
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.geo.models import Geolocation
+
+
+from .tasks import *  # noqa
 
 
 class Event(Activity):
@@ -20,8 +24,8 @@ class Event(Activity):
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
-    start = models.DateTimeField(_('start'))
-    end = models.DateTimeField(_('end'))
+    start_time = models.DateTimeField(_('start'))
+    end_time = models.DateTimeField(_('end'))
     registration_deadline = models.DateTimeField(_('registration deadline'))
 
     class Meta:
@@ -60,7 +64,7 @@ class Event(Activity):
 
     @property
     def duration(self):
-        return (self.start - self.end).seconds / 60
+        return (self.start_time - self.end_time).seconds / 60
 
     @property
     def participants(self):
@@ -116,17 +120,29 @@ class Event(Activity):
         pass
 
     @Activity.status.transition(
+        field='status',
+        source=Activity.Status.closed,
+        target=Activity.Status.draft,
+    )
+    def redraft(self, **kwargs):
+        pass
+
+    @Activity.status.transition(
+        field='status',
         source=[Activity.Status.full, Activity.Status.open],
         target=Activity.Status.running,
         conditions=[can_start]
     )
-    def do_start(self):
-        pass
+    def start(self, **kwargs):
+        for member in self.participants:
+            member.attending()
+            member.save()
 
     @Activity.status.transition(
         source=Activity.Status.running,
         target=Activity.Status.done,
-        conditions=[can_end]
+        conditions=[can_end],
+        messages=[EventDoneOwnerMessage]
     )
     def done(self):
         for member in self.participants:
@@ -136,6 +152,7 @@ class Event(Activity):
     @Activity.status.transition(
         source='*',
         target=Activity.Status.closed,
+        messages=[EventClosedOwnerMessage]
     )
     def close(self):
         pass

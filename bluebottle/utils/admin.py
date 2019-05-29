@@ -343,7 +343,7 @@ class FSMAdmin(admin.ModelAdmin):
                     log_action(
                         instance,
                         request.user,
-                        'Changed status to {}'.format(transition)
+                        'Changed status to {}'.format(transition.name)
                     )
 
                     return HttpResponseRedirect(link)

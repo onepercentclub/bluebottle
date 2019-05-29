@@ -33,29 +33,7 @@ CELERYBEAT_SCHEDULE = {
         'task': 'bluebottle.tasks.tasks.send_task_reminder_mails',
         'schedule': crontab(hour=9, minute=30),
     },
-    'sync_surveys': {
-        'task': 'bluebottle.surveys.tasks.sync_surveys',
-        'schedule': timedelta(hours=1),
-    },
-    'update_salesforce_30': {
-        'task': 'bluebottle.common.tasks.update_salesforce',
-        'schedule': crontab(minute='*/30'),
-        'kwargs': {
-            'tenant': 'onepercent',
-            'synchronize': True,
-            'updated': 60,
-            'log_to_salesforce': True
-        }
-    },
-    'update_salesforce_week': {
-        'task': 'bluebottle.common.tasks.update_salesforce',
-        'schedule': crontab(minute=0, hour=12, day_of_week='sun'),
-        'kwargs': {
-            'tenant': 'onepercent',
-            'csv_export': True,
-            'log_to_salesforce': True
-        }
-    },
+
 }
 
 CELERY_TIMEZONE = 'Europe/Amsterdam'

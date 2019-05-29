@@ -1,0 +1,13 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with recipient_name=event.owner.name event_title=obj.title %}
+        Hi {{ receiver_name }},<br>
+        Your event "{{ event_title }}" has been completed!
+    {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+   {% trans 'view event' context 'email' %}: {{ obj.full_url }}
+{% endblock %}`

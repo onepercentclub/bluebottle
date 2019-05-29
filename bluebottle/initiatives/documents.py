@@ -4,7 +4,7 @@ from bluebottle.utils.documents import MultiTenantIndex
 
 from bluebottle.initiatives.models import Initiative
 from bluebottle.bb_projects.models import ProjectTheme
-from bluebottle.geo.models import InitiativePlace
+from bluebottle.geo.models import Geolocation
 from bluebottle.categories.models import Category
 from bluebottle.members.models import Member
 
@@ -56,7 +56,7 @@ class InitiativeDocument(DocType):
     class Meta:
         model = Initiative
         related_models = (
-            InitiativePlace, Member, ProjectTheme
+            Geolocation, Member, ProjectTheme
         )
 
     def get_queryset(self):
@@ -65,7 +65,7 @@ class InitiativeDocument(DocType):
         )
 
     def get_instances_from_related(self, related_instance):
-        if isinstance(related_instance, (ProjectTheme, InitiativePlace, Category)):
+        if isinstance(related_instance, (ProjectTheme, Geolocation, Category)):
             return related_instance.initiative_set.all()
         if isinstance(related_instance, Member):
             return list(related_instance.own_initiatives.all()) + list(related_instance.review_initiatives.all())

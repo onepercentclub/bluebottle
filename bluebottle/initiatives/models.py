@@ -1,16 +1,16 @@
 from django.db import models
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
+from django.forms.models import model_to_dict
 from django.utils.translation import ugettext_lazy as _
-from django_fsm import FSMField
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from multiselectfield import MultiSelectField
 
 from bluebottle.files.fields import ImageField
+from bluebottle.fsm import FSMField, TransitionNotAllowed
 from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
-from bluebottle.notifications.decorators import transition
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.models import BasePlatformSettings
 
@@ -79,68 +79,79 @@ class Initiative(models.Model):
     )
 
     place = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
+    location = models.ForeignKey('geo.Location', null=True, blank=True, on_delete=models.SET_NULL)
+
     has_organization = models.NullBooleanField(null=True, default=None)
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
-    @transition(
-        field='status',
+    def is_complete(self):
+        from bluebottle.initiatives.serializers import InitiativeSubmitSerializer
+
+        serializer = InitiativeSubmitSerializer(
+            data=model_to_dict(self)
+        )
+        if not serializer.is_valid():
+            return [unicode(error) for errors in serializer.errors.values() for error in errors]
+
+    @status.transition(
         source=ReviewStatus.created,
         target=ReviewStatus.submitted,
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        conditions=[is_complete],
         custom={'button_name': _('submit')}
     )
-    def submit(self, **kwargs):
+    def submit(self):
         pass
 
-    @transition(
-        field='status',
+    @status.transition(
         source=ReviewStatus.needs_work,
         target=ReviewStatus.submitted,
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        conditions=[is_complete],
         custom={'button_name': _('resubmit')}
     )
-    def resubmit(self, **kwargs):
+    def resubmit(self):
         pass
 
-    @transition(
-        field='status',
+    @status.transition(
         source=ReviewStatus.submitted,
         target=ReviewStatus.needs_work,
         custom={'button_name': _('needs work')}
     )
-    def needs_work(self, **kwargs):
+    def needs_work(self):
         pass
 
-    @transition(
-        field='status',
+    @status.transition(
         source=ReviewStatus.submitted,
         target=ReviewStatus.approved,
         messages=[InitiativeApproveOwnerMessage],
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        conditions=[is_complete],
         custom={'button_name': _('approve')}
     )
-    def approve(self, **kwargs):
-        pass
+    def approve(self):
+        for activity in self.activities.filter(status='draft'):
+            activity.initiative = self
+            try:
+                activity.open()
+                activity.save()
+            except TransitionNotAllowed:
+                pass
 
-    @transition(
-        field='status',
+    @status.transition(
         source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
         target=ReviewStatus.closed,
         messages=[InitiativeClosedOwnerMessage],
         custom={'button_name': _('close')}
     )
-    def close(self, **kwargs):
+    def close(self):
         pass
 
-    @transition(
-        field='status',
+    @status.transition(
         source=[ReviewStatus.approved, ReviewStatus.closed],
         target=ReviewStatus.submitted,
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        conditions=[is_complete],
         custom={'button_name': _('re-open')}
     )
-    def reopen(self, **kwargs):
+    def reopen(self):
         pass
 
     class Meta:

@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
+from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.events.models import Event, Participant
@@ -9,9 +11,13 @@ from bluebottle.utils.forms import FSMModelForm
 
 
 class EventAdminForm(FSMModelForm):
+
     class Meta:
         model = Event
         fields = '__all__'
+        widgets = {
+            'description': SummernoteWidget(attrs={'height': 200})
+        }
 
 
 class ParticipantInline(admin.TabularInline):
@@ -48,3 +54,14 @@ class EventAdmin(ActivityChildAdmin):
     inlines = ActivityChildAdmin.inlines + (ParticipantInline, )
     list_display = ['title', 'status', 'start_time', 'end_time']
     base_model = Event
+
+    fieldsets = (
+        (_('Basic'), {'fields': (
+            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition'
+        )}),
+        (_('Details'), {'fields': (
+            'description', 'capacity',
+            'start_time', 'end_time', 'registration_deadline',
+            'location', 'location_hint'
+        )}),
+    )

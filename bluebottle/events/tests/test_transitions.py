@@ -110,7 +110,7 @@ class EventTransitionTestCase(BluebottleTestCase):
     def test_start(self):
         ParticipantFactory.create(activity=self.event)
         self.event.start = now() - timedelta(days=1)
-        self.event.do_start()
+        self.event.start()
 
         self.assertEqual(
             self.event.status,
@@ -122,13 +122,13 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.event.start = now() + timedelta(days=1)
         self.assertRaises(
             TransitionNotAllowed,
-            self.event.do_start
+            self.event.start
         )
 
     def test_done(self):
         participant = ParticipantFactory.create(activity=self.event)
         self.event.start = now() - timedelta(days=1)
-        self.event.do_start()
+        self.event.start()
         self.event.end = now() - timedelta(days=1)
         self.event.done()
 
@@ -146,7 +146,7 @@ class EventTransitionTestCase(BluebottleTestCase):
     def test_done_date_in_future(self):
         ParticipantFactory.create(activity=self.event)
         self.event.start = now() - timedelta(days=1)
-        self.event.do_start()
+        self.event.start()
         self.event.end = now() + timedelta(days=1)
 
         self.assertRaises(

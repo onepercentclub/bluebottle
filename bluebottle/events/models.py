@@ -71,15 +71,15 @@ class Event(Activity):
         return self.contributions.filter(status=Participant.Status.new)
 
     def can_start(self):
-        if self.start > now():
+        if self.start_time > now():
             return _('The start date has not passed')
 
     def can_open(self):
-        if self.start < now():
+        if self.start_time < now():
             return _('The start date has passed')
 
     def can_end(self):
-        if not self.end < now():
+        if not self.end_time < now():
             return _('The end date has not passed')
 
     def is_complete(self):

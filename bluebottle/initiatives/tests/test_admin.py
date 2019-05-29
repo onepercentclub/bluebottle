@@ -67,12 +67,6 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
                              args=(self.initiative.id, 'approve'))
         response = self.client.get(review_url)
 
-        # Should show confirmation page
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Are you sure you want to change')
-
-        # Confirm should change status
-        response = self.client.post(review_url, {'confirm': True})
         self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'closed')
@@ -115,8 +109,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'created')
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue('This field is required' in messages[0].message)
-        self.assertTrue('Pitch' in messages[0].message)
+        self.assertTrue('Pitch is required' in messages[0].message)
 
     def test_review_initiative_missing_theme(self):
         self.client.force_login(self.superuser)
@@ -133,5 +126,4 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(self.initiative.status, 'created')
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue('This field is required' in messages[0].message)
-        self.assertTrue('Theme' in messages[0].message)
+        self.assertTrue('Theme is required' in messages[0].message)

@@ -1,14 +1,14 @@
 from django.db import models
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
+from django.forms.models import model_to_dict
 from django.utils.translation import ugettext_lazy as _
-from bluebottle.fsm import FSMField
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from multiselectfield import MultiSelectField
 
 from bluebottle.files.fields import ImageField
-from bluebottle.fsm import TransitionNotAllowed
+from bluebottle.fsm import FSMField, TransitionNotAllowed
 from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -83,10 +83,19 @@ class Initiative(models.Model):
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
+    def is_complete(self):
+        from bluebottle.initiatives.serializers import InitiativeSubmitSerializer
+
+        serializer = InitiativeSubmitSerializer(
+            data=model_to_dict(self)
+        )
+        if not serializer.is_valid():
+            return [unicode(error) for errors in serializer.errors.values() for error in errors]
+
     @status.transition(
         source=ReviewStatus.created,
         target=ReviewStatus.submitted,
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        conditions=[is_complete],
         custom={'button_name': _('submit')}
     )
     def submit(self):
@@ -95,7 +104,7 @@ class Initiative(models.Model):
     @status.transition(
         source=ReviewStatus.needs_work,
         target=ReviewStatus.submitted,
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        conditions=[is_complete],
         custom={'button_name': _('resubmit')}
     )
     def resubmit(self):
@@ -113,7 +122,7 @@ class Initiative(models.Model):
         source=ReviewStatus.submitted,
         target=ReviewStatus.approved,
         messages=[InitiativeApproveOwnerMessage],
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        conditions=[is_complete],
         custom={'button_name': _('approve')}
     )
     def approve(self):
@@ -137,7 +146,7 @@ class Initiative(models.Model):
     @status.transition(
         source=[ReviewStatus.approved, ReviewStatus.closed],
         target=ReviewStatus.submitted,
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        conditions=[is_complete],
         custom={'button_name': _('re-open')}
     )
     def reopen(self):

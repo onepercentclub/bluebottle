@@ -1,4 +1,8 @@
 from django.db import models
+from django.dispatch import Signal
+
+pre_transition = Signal(providing_args=['instance', 'name', 'source', 'target', 'options', 'kwargs'])
+post_transition = Signal(providing_args=['instance', 'name', 'source', 'target', 'options', 'kwargs'])
 
 
 class TransitionNotAllowed(Exception):
@@ -19,6 +23,17 @@ class Transition(object):
 
     def is_allowed(self, instance):
         return all(condition(instance) is None for condition in self.conditions)
+
+    def errors(self, instance):
+        for condition in self.conditions:
+            error = condition(instance)
+
+            if error:
+                if isinstance(error, (list, tuple)):
+                    for e in error:
+                        yield e
+                else:
+                    yield error
 
 
 class FSMFieldDescriptor(object):
@@ -85,7 +100,7 @@ class FSMField(models.CharField):
             )
             field.transitions.append(transition)
 
-            def do_transition(self):
+            def do_transition(self, **kwargs):
                 original_source = getattr(self, field.name)
 
                 if not transition.is_allowed(self):
@@ -95,10 +110,29 @@ class FSMField(models.CharField):
                         )
                     )
 
+                pre_transition.send(
+                    sender=self.__class__,
+                    instance=self,
+                    name=transition.name,
+                    source=transition.source,
+                    target=transition.target,
+                    options=transition.options,
+                    **kwargs
+                )
+
                 getattr(self, '_transition_{}_to'.format(field.name))(target)
 
                 try:
-                    return func(self)
+                    func(self)
+                    post_transition.send(
+                        sender=self.__class__,
+                        instance=self,
+                        name=transition.name,
+                        source=transition.source,
+                        target=transition.target,
+                        options=transition.options,
+                        **kwargs
+                    )
                 except Exception:
                     getattr(self, '_transition_{}_to'.format(field.name))(original_source)
                     raise

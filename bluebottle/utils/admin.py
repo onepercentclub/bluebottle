@@ -8,7 +8,6 @@ from django.contrib import admin, messages
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db.models.aggregates import Sum
 from django.db.models.fields.files import FieldFile
@@ -327,6 +326,13 @@ class FSMAdmin(admin.ModelAdmin):
         form = TransitionConfirmationForm(request.POST)
         transition = self.get_transition(instance, transition_name)
 
+        if not transition:
+            messages.error(
+                request,
+                'Transition not allowed: {}'.format(transition_name)
+            )
+            return HttpResponseRedirect(link)
+
         if 'confirm' in request.POST and request.POST['confirm']:
             if form.is_valid():
                 send_messages = form.cleaned_data['send_messages']
@@ -342,24 +348,21 @@ class FSMAdmin(admin.ModelAdmin):
 
                     return HttpResponseRedirect(link)
                 except TransitionNotAllowed:
-                    messages.error(
-                        request,
-                        'Transition not allowed: {}'.format(transition.name)
-                    )
-                    return HttpResponseRedirect(link)
-                except ValidationError, e:
-                    template = loader.get_template(
-                        'admin/transition_errors.html'
-                    )
-                    errors = template.render({
-                        'errors': e.args[0]
-                    })
+                    errors = transition.errors(instance)
+                    if errors:
+                        template = loader.get_template(
+                            'admin/transition_errors.html'
+                        )
+                        error_message = template.render({'errors': errors})
+                    else:
+                        error_message = 'Transition not allowed: {}'.format(transition.name)
 
-                    messages.error(request, errors)
+                    messages.error(request, error_message)
+
                     return HttpResponseRedirect(link)
 
         transition_messages = []
-        for message_list in [message(instance).get_messages() for message in transition.messages]:
+        for message_list in [message(instance).get_messages() for message in transition.options.get('messages', [])]:
             transition_messages += message_list
 
         context = dict(

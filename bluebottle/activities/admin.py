@@ -51,7 +51,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
         activity_link.short_description = _('Activity')
 
     class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'start', 'status']
+        readonly_fields = ['activity_link', 'start_time', 'end_time', 'status']
         fields = readonly_fields
         model = Event
 

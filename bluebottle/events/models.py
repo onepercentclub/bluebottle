@@ -119,11 +119,7 @@ class Event(Activity):
             member.save()
 
     @Activity.status.transition(
-        source=[
-            Activity.Status.open,
-            Activity.Status.running,
-            Activity.Status.done,
-        ],
+        source='*',
         target=Activity.Status.closed,
     )
     def close(self):
@@ -179,9 +175,11 @@ class Participant(Contribution):
         return self.user
 
     def save(self, *args, **kwargs):
+        created = self.pk is None
+
         super(Participant, self).save(*args, **kwargs)
 
-        if self.pk is None:
+        if created:
             follow(self.user, self.activity)
 
         self.activity.check_capacity()
@@ -193,6 +191,14 @@ class Participant(Contribution):
     )
     def withdraw(self):
         unfollow(self.user, self.activity)
+
+    @Contribution.status.transition(
+        source=Status.withdrawn,
+        target=Status.new,
+        conditions=[event_is_open_or_full]
+    )
+    def reapply(self):
+        follow(self.user, self.activity)
 
     @Contribution.status.transition(
         source=[Status.new],

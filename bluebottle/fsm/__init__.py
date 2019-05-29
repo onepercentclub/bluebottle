@@ -8,6 +8,9 @@ class TransitionNotAllowed(Exception):
 class Transition(object):
     def __init__(self, name, source, target, method, conditions=None, options=None):
         self.name = name
+        if not isinstance(source, list):
+            source = [source]
+
         self.source = source
         self.target = target
         self.method = method
@@ -64,12 +67,15 @@ class FSMField(models.CharField):
         setattr(cls, 'get_all_{}_transitions'.format(self.name), get_all_transitions)
 
     def get_all_transitions(self, instance):
-        return [transition for transition in self.transitions if getattr(instance, self.name) in transition.source]
+        return [
+            transition for transition in self.transitions
+            if '*' in transition.source or getattr(instance, self.name) in transition.source
+        ]
 
     def get_available_transitions(self, instance):
         return [
             transition for transition in self.get_all_transitions(instance) if
-            all(condition(instance) for condition in transition.conditions)
+            transition.is_allowed(instance)
         ]
 
     def transition(field, source, target, conditions=None, **kwargs):

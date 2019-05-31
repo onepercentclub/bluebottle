@@ -46,7 +46,7 @@ class Initiative(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    slug = models.SlugField(_('slug'), default='new', max_length=100)
+    slug = models.SlugField(_('slug'), max_length=100)
 
     pitch = models.TextField(
         _('pitch'), help_text=_('Pitch your smart idea in one sentence'),
@@ -177,7 +177,7 @@ class Initiative(models.Model):
         return self.title
 
     def save(self, **kwargs):
-        if self.slug == 'new' and self.title:
+        if self.slug == '' and self.title:
             self.slug = slugify(self.title)
 
         super(Initiative, self).save(**kwargs)

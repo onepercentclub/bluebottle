@@ -11,6 +11,7 @@ from bluebottle.utils.admin import FSMAdmin, BasePlatformSettingsAdmin
 
 class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     fsm_field = 'status'
+    prepopulated_fields = {"slug": ("title",)}
 
     raw_id_fields = ('owner', 'reviewer')
     list_display = ['title', 'created', 'status']

@@ -55,7 +55,7 @@ class Activity(PolymorphicModel):
         return self.title
 
     def is_complete(self):
-        return self.initiative.status == Initiative.ReviewStatus.approved
+        return self.initiative.status == Initiative.Status.approved
 
     @property
     def contribution_count(self):

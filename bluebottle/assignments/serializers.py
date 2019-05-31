@@ -9,6 +9,14 @@ class AssignmentSerializer(BaseActivitySerializer):
             'start', 'end', 'registration_deadline', 'capacity',
         )
 
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        included_resources = [
+            'owner',
+            'initiative',
+            'place'
+        ]
+        resource_name = 'activities/assignments'
+
 
 class AssignmentParticipantSerializer(BaseContributionSerializer):
     class Meta:

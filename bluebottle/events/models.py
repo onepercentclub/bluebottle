@@ -205,10 +205,6 @@ class Participant(Contribution):
         if self.activity.status not in (Activity.Status.open, Activity.Status.full):
             return _('The event is not open or full')
 
-    @property
-    def owner(self):
-        return self.user
-
     def save(self, *args, **kwargs):
         created = self.pk is None
 

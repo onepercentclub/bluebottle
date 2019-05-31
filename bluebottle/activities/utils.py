@@ -34,6 +34,7 @@ class BaseActivitySerializer(ModelSerializer):
     class Meta:
         model = Activity
         fields = (
+            'slug',
             'id',
             'initiative',
             'owner',

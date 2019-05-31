@@ -473,4 +473,4 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(data['errors'][0], u'Transition is not available')
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
-        self.assertEqual(initiative.status, 'created')
+        self.assertEqual(initiative.status, 'draft')

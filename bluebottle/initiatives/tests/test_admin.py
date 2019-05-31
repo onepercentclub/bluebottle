@@ -112,7 +112,6 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         self.initiative = InitiativeFactory.create(status='created', pitch='')
         self.assertEqual(self.initiative.status, 'created')
-
         review_url = reverse('admin:initiatives_initiative_transition',
                              args=(self.initiative.id, 'submit'))
 
@@ -123,15 +122,13 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'created')
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue('Pitch is required' in messages[0].message)
+        self.assertEqual(messages[0].message, 'Transition not allowed: submit')
 
     def test_review_initiative_missing_theme(self):
         self.client.force_login(self.superuser)
         self.initiative = InitiativeFactory.create(status='created', theme=None)
-
         review_url = reverse('admin:initiatives_initiative_transition',
                              args=(self.initiative.id, 'submit'))
-
         response = self.client.post(review_url, {'confirm': True})
 
         # Should redirect with error message
@@ -140,4 +137,4 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(self.initiative.status, 'created')
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue('Theme is required' in messages[0].message)
+        self.assertEqual(messages[0].message, 'Transition not allowed: submit')

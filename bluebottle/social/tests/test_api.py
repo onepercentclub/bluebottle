@@ -11,12 +11,12 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
-@httmock.urlmatch(netloc='graph.facebook.com', path='/v2.9/me')
+@httmock.urlmatch(netloc='graph.facebook.com', path='/[v0-9\.]+/me')
 def facebook_me_mock(url, request):
     return json.dumps({'firstname': 'bla', 'lastname': 'bla'})
 
 
-@httmock.urlmatch(netloc='graph.facebook.com', path='/v2.9/oauth/access_token')
+@httmock.urlmatch(netloc='graph.facebook.com', path='/[v0-9\.]+/oauth/access_token')
 def facebook_access_token(url, request):
     if urlparse.parse_qs(request.body)['fb_exchange_token'][0] == 'test_token':
         return json.dumps({'access_token': 'long_lived_token'})
@@ -79,7 +79,7 @@ class SocialTokenAPITestCase(BluebottleTestCase):
                 )
 
                 self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-                self.assertEqual(json.loads(response.content), {})
+                self.assertEqual(response.data, {})
 
     @mock.patch(
         'social_django.utils.BACKENDS',

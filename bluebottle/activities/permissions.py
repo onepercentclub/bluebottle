@@ -41,3 +41,4 @@ class ActivityTypePermission(ResourcePermission):
 
         if request.method == 'POST':
             return view.model.__name__.lower() in settings.activity_types
+        return True

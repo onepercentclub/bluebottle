@@ -1,0 +1,9 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=obj.owner.name initiative_title=obj.title %}
+Hi {{ receiver_name }},
+This is a test message!
+{% endblocktrans %}
+{% endblock %}`

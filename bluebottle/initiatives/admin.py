@@ -23,7 +23,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     fieldsets = (
         (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner', 'image', 'video_url')}),
         (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'place')}),
-        (_('Review'), {'fields': ('reviewer', 'status', 'status_transition')}),
+        (_('Review'), {'fields': ('reviewer', 'status')}),
     )
 
     inlines = [ActivityAdminInline, MessageAdminInline]

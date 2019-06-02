@@ -17,13 +17,13 @@ class TestMessage(TransitionMessage):
         'title': 'title'
     }
 
-    def get_recipients(self):
-        return [self.obj.owner]
-
 
 class AnotherTestMessage(TransitionMessage):
     subject = _("Test message")
-    template = 'test_message'
+    template = 'test_messages/test_message'
+
+    def get_recipients(self):
+        return [self.obj.owner, self.obj.reviewer]
 
 
 @override_settings(
@@ -47,17 +47,20 @@ class MessageTestCase(BluebottleTestCase):
         self.assertEqual(subject, "Test bericht voor Some title")
 
     def test_translated_messages(self):
-        dutchy = BlueBottleUserFactory.create(primary_language='nl')
-        message = TestMessage(InitiativeFactory(owner=dutchy, title='Some title'))
+        dutch = BlueBottleUserFactory.create(primary_language='nl')
+        message = TestMessage(InitiativeFactory(owner=dutch, title='Some title'))
         messages = message.get_messages()
         self.assertEqual(len(messages), 1)
         self.assertEqual(messages[0].subject, "Test bericht voor Some title")
 
-    def test_send_messages(self):
-        dutchy = BlueBottleUserFactory.create()
-        message = TestMessage(InitiativeFactory(owner=dutchy, title='Some title'))
+    def test_send_translated_messages(self):
+        english = BlueBottleUserFactory.create(primary_language='en')
+        dutch = BlueBottleUserFactory.create(primary_language='nl')
+        message = AnotherTestMessage(InitiativeFactory(
+            owner=dutch, reviewer=english, title='Some title'))
+
         message.compose_and_send()
-        self.assertEquals(len(mail.outbox), 1)
-        email = mail.outbox[0]
-        self.assertEqual(email.subject, "Test message for Some title")
-        self.assertTrue('This is a test message' in email.body)
+        self.assertEquals(len(mail.outbox), 2)
+        self.assertEqual(mail.outbox[0].subject, "Test bericht")
+        self.assertEqual(mail.outbox[1].subject, "Test message")
+        self.assertTrue('This is a test message' in mail.outbox[1].body)

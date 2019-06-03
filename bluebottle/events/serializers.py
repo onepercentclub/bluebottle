@@ -34,7 +34,7 @@ class EventSerializer(BaseActivitySerializer):
             'initiative',
             'place'
         ]
-        resource_name = 'events'
+        resource_name = 'activities/events'
 
     included_serializers = {
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',

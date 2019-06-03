@@ -45,7 +45,7 @@ class Event(Activity):
         )
 
     class JSONAPIMeta:
-        resource_name = 'events'
+        resource_name = 'activities/events'
 
     def save(self, *args, **kwargs):
         if self.status == Activity.Status.draft:

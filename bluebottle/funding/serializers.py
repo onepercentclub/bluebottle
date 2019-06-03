@@ -12,6 +12,14 @@ class FundingSerializer(BaseActivitySerializer):
             'deadline', 'duration', 'target',
         )
 
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        included_resources = [
+            'owner',
+            'initiative',
+            'place'
+        ]
+        resource_name = 'activities/funding'
+
 
 class DonationSerializer(BaseContributionSerializer):
     amount = MoneySerializer()

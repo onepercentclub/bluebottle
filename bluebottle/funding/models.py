@@ -25,6 +25,9 @@ class Funding(Activity):
         choices=lazy(get_currency_choices, tuple)()
     )
 
+    class JSONAPIMeta:
+        resource_name = 'activities/funding'
+
     class Meta:
         verbose_name = _("Funding")
         verbose_name_plural = _("Funding Activities")

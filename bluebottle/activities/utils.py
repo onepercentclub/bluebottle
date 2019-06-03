@@ -20,6 +20,8 @@ class BaseActivitySerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source='status')
     is_follower = serializers.SerializerMethodField()
 
+    slug = serializers.CharField(read_only=True)
+
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
@@ -34,6 +36,7 @@ class BaseActivitySerializer(ModelSerializer):
     class Meta:
         model = Activity
         fields = (
+            'slug',
             'id',
             'initiative',
             'owner',

@@ -12,7 +12,7 @@ class InitiativeTestCase(TestCase):
 
     def test_status_changes(self):
         initiative = InitiativeFactory.create(title='Dharma initiative')
-        self.assertEqual(initiative.status, 'created')
+        self.assertEqual(initiative.status, 'draft')
 
         initiative.submit()
         self.assertEqual(initiative.status, 'submitted')

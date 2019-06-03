@@ -68,6 +68,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         initiative = Initiative.objects.get(pk=response_data['data']['id'])
 
         self.assertEqual(response_data['data']['attributes']['title'], 'Some title')
+        self.assertEqual(response_data['data']['attributes']['slug'], 'some-title')
         self.assertEqual(initiative.title, 'Some title')
         self.assertEqual(
             response_data['data']['relationships']['owner']['data']['id'],
@@ -479,4 +480,4 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(data['errors'][0], u'Transition is not available')
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
-        self.assertEqual(initiative.status, 'created')
+        self.assertEqual(initiative.status, 'draft')

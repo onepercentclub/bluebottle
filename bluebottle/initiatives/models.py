@@ -17,8 +17,8 @@ from bluebottle.utils.models import BasePlatformSettings
 
 
 class Initiative(models.Model):
-    class ReviewStatus(DjangoChoices):
-        created = ChoiceItem('created', _('created'))
+    class Status(DjangoChoices):
+        draft = ChoiceItem('draft', _('draft'))
         submitted = ChoiceItem('submitted', _('submitted'))
         needs_work = ChoiceItem('needs_work', _('needs work'))
         approved = ChoiceItem('approved', _('approved'))
@@ -27,8 +27,8 @@ class Initiative(models.Model):
     title = models.CharField(_('title'), max_length=255)
 
     status = FSMField(
-        default=ReviewStatus.created,
-        choices=ReviewStatus.choices,
+        default=Status.draft,
+        choices=Status.choices,
         protected=True
     )
     owner = models.ForeignKey(
@@ -47,7 +47,7 @@ class Initiative(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    slug = models.SlugField(_('slug'), default='new', max_length=100)
+    slug = models.SlugField(_('slug'), max_length=100)
 
     pitch = models.TextField(
         _('pitch'), help_text=_('Pitch your smart idea in one sentence'),
@@ -96,8 +96,8 @@ class Initiative(models.Model):
             return [unicode(error) for errors in serializer.errors.values() for error in errors]
 
     @status.transition(
-        source=ReviewStatus.created,
-        target=ReviewStatus.submitted,
+        source=Status.draft,
+        target=Status.submitted,
         conditions=[is_complete],
         custom={'button_name': _('submit')}
     )
@@ -105,8 +105,8 @@ class Initiative(models.Model):
         pass
 
     @status.transition(
-        source=ReviewStatus.needs_work,
-        target=ReviewStatus.submitted,
+        source=Status.needs_work,
+        target=Status.submitted,
         conditions=[is_complete],
         custom={'button_name': _('resubmit')}
     )
@@ -114,16 +114,16 @@ class Initiative(models.Model):
         pass
 
     @status.transition(
-        source=ReviewStatus.submitted,
-        target=ReviewStatus.needs_work,
+        source=Status.submitted,
+        target=Status.needs_work,
         custom={'button_name': _('needs work')}
     )
     def needs_work(self):
         pass
 
     @status.transition(
-        source=ReviewStatus.submitted,
-        target=ReviewStatus.approved,
+        source=Status.submitted,
+        target=Status.approved,
         messages=[InitiativeApproveOwnerMessage],
         conditions=[is_complete],
         custom={'button_name': _('approve')}
@@ -138,8 +138,8 @@ class Initiative(models.Model):
                 pass
 
     @status.transition(
-        source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
-        target=ReviewStatus.closed,
+        source=[Status.approved, Status.submitted, Status.needs_work],
+        target=Status.closed,
         messages=[InitiativeClosedOwnerMessage],
         custom={'button_name': _('close')}
     )
@@ -147,8 +147,8 @@ class Initiative(models.Model):
         pass
 
     @status.transition(
-        source=[ReviewStatus.approved, ReviewStatus.closed],
-        target=ReviewStatus.submitted,
+        source=[Status.approved, Status.closed],
+        target=Status.submitted,
         conditions=[is_complete],
         custom={'button_name': _('re-open')}
     )
@@ -182,7 +182,7 @@ class Initiative(models.Model):
         return format_html('/initiatives/details/{}/{}/', self.id, self.slug)
 
     def save(self, **kwargs):
-        if self.slug == 'new' and self.title:
+        if self.slug == '' and self.title:
             self.slug = slugify(self.title)
 
         super(Initiative, self).save(**kwargs)

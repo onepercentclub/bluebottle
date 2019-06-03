@@ -35,6 +35,9 @@ class Assignment(Activity):
             ('api_delete_own_assignment', 'Can delete own assignment through the API'),
         )
 
+    class JSONAPIMeta:
+        resource_name = 'activities/assignments'
+
     def check_capcity(self):
         if len(self.accepted_applicants) >= self.capacity:
             self.full()

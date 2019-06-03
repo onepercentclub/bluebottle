@@ -162,6 +162,18 @@ class EventTransitionTestCase(BluebottleTestCase):
             Event.Status.closed
         )
 
+    def test_redraft(self):
+        self.event.close()
+        self.assertEqual(
+            self.event.status,
+            Event.Status.closed
+        )
+        self.event.redraft()
+        self.assertEqual(
+            self.event.status,
+            Event.Status.draft
+        )
+
     def test_extend(self):
         self.event.close()
 

@@ -27,7 +27,7 @@ class EventTestCase(BluebottleTestCase):
     def test_create_event(self):
         data = {
             'data': {
-                'type': 'events',
+                'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
                     'start_time': str(now() + timedelta(days=21)),
@@ -61,7 +61,7 @@ class EventTestCase(BluebottleTestCase):
 
         data = {
             'data': {
-                'type': 'events',
+                'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
                     'start_time': str(now() + timedelta(days=21)),
@@ -92,7 +92,7 @@ class EventTestCase(BluebottleTestCase):
 
         data = {
             'data': {
-                'type': 'events',
+                'type': 'activities/events',
                 'id': event.id,
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
@@ -120,7 +120,7 @@ class EventTestCase(BluebottleTestCase):
         another_user = BlueBottleUserFactory.create()
         data = {
             'data': {
-                'type': 'events',
+                'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
                     'start_time': str(now() + timedelta(days=21)),
@@ -151,7 +151,7 @@ class EventTestCase(BluebottleTestCase):
 
         data = {
             'data': {
-                'type': 'events',
+                'type': 'activities/events',
                 'id': event.id,
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
@@ -195,7 +195,7 @@ class EventTransitionTestCase(BluebottleTestCase):
                 'relationships': {
                     'resource': {
                         'data': {
-                            'type': 'events',
+                            'type': 'activities/events',
                             'id': self.event.pk
                         }
                     }
@@ -214,7 +214,7 @@ class EventTransitionTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['included'][0]['type'], 'events')
+        self.assertEqual(data['included'][0]['type'], 'activities/events')
         self.assertEqual(data['included'][0]['attributes']['status'], 'closed')
 
 
@@ -239,7 +239,7 @@ class ParticipantTestCase(BluebottleTestCase):
                     'activity': {
                         'data': {
                             'id': self.event.pk,
-                            'type': 'events',
+                            'type': 'activities/events',
                         },
                     },
                 }
@@ -256,7 +256,7 @@ class ParticipantTestCase(BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
-        self.assertEqual(data['included'][0]['type'], 'events')
+        self.assertEqual(data['included'][0]['type'], 'activities/events')
         self.assertTrue(data['included'][0]['attributes']['is-follower'])
 
     def test_follow(self):
@@ -325,7 +325,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.assertEqual(data['included'][1]['type'], 'participants')
         self.assertEqual(data['included'][1]['attributes']['status'], 'withdrawn')
 
-        self.assertEqual(data['included'][0]['type'], 'events')
+        self.assertEqual(data['included'][0]['type'], 'activities/events')
         self.assertEqual(data['included'][0]['attributes']['is-follower'], False)
 
     def test_reapply(self):
@@ -367,5 +367,5 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.assertEqual(data['included'][1]['type'], 'participants')
         self.assertEqual(data['included'][1]['attributes']['status'], 'new')
 
-        self.assertEqual(data['included'][0]['type'], 'events')
+        self.assertEqual(data['included'][0]['type'], 'activities/events')
         self.assertEqual(data['included'][0]['attributes']['is-follower'], True)

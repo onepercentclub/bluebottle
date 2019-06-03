@@ -5,7 +5,6 @@ from rest_framework import serializers
 from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import ResourceRelatedField
 
-
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ImageSerializer as OldImageSerializer, SorlImageField

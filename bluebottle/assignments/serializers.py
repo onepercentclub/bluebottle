@@ -6,7 +6,7 @@ class AssignmentSerializer(BaseActivitySerializer):
     class Meta:
         model = Assignment
         fields = BaseActivitySerializer.Meta.fields + (
-            'start', 'end', 'registration_deadline', 'capacity',
+            'end_time', 'registration_deadline', 'capacity',
         )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):

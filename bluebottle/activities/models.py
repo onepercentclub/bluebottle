@@ -23,7 +23,7 @@ class Activity(PolymorphicModel):
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('owner'),
-        related_name='own_%(class)s',
+        related_name='activities',
     )
 
     created = models.DateTimeField(auto_now_add=True)

@@ -3,6 +3,7 @@ from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity, Contribution
+from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import (
@@ -19,6 +20,8 @@ class BaseActivitySerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source='status')
     is_follower = serializers.SerializerMethodField()
 
+    slug = serializers.CharField(read_only=True)
+
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
@@ -26,11 +29,14 @@ class BaseActivitySerializer(ModelSerializer):
     }
 
     def get_is_follower(self, instance):
-        return instance.followers.filter(user=self.context['request'].user).exists()
+        user = self.context['request'].user
+
+        return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
 
     class Meta:
         model = Activity
         fields = (
+            'slug',
             'id',
             'initiative',
             'owner',
@@ -49,6 +55,20 @@ class BaseActivitySerializer(ModelSerializer):
             'contributions',
         ]
         resource_name = 'activities'
+
+
+class ActivitySubmitSerializer(ModelSerializer):
+    owner = serializers.PrimaryKeyRelatedField(required=True, queryset=Member.objects.all())
+    title = serializers.CharField(required=True)
+    description = serializers.CharField(required=True)
+
+    class Meta:
+        model = Activity
+        fields = (
+            'owner',
+            'title',
+            'description',
+        )
 
 
 # This can't be in serializers because of circular imports

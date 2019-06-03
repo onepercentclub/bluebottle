@@ -6,18 +6,19 @@ from django_fsm import FSMMeta, Transition
 
 
 class NotificationTransition(Transition):
-    def __init__(self, method, source, target, on_error, conditions, permission, custom, messages, form):
+    def __init__(self, method, source, target, on_error, conditions, permission, custom, messages, form, serializer):
         super(NotificationTransition, self).__init__(
             method, source, target, on_error, conditions, permission, custom
         )
         self.messages = messages
         self.form = form
+        self.serializer = serializer
 
 
 class FSMNotificationsMeta(FSMMeta):
     def add_transition(
         self, method, source, target, on_error=None, conditions=[],
-        permission=None, custom={}, messages=[], form=None
+        permission=None, custom={}, messages=[], form=None, serializer=None
     ):
         if source in self.transitions:
             raise AssertionError('Duplicate transition for {0} state'.format(source))
@@ -30,13 +31,14 @@ class FSMNotificationsMeta(FSMMeta):
             conditions=conditions,
             permission=permission,
             form=form,
+            serializer=serializer,
             messages=messages,
             custom=custom)
 
 
 def transition(
     field, source='*', target=None, on_error=None, conditions=[],
-    permission=None, custom={}, messages=[], form=None
+    permission=None, custom={}, messages=[], form=None, serializer=None
 ):
     """
     Method decorator for mark allowed transitions
@@ -56,11 +58,11 @@ def transition(
         if isinstance(source, (list, tuple, set)):
             for state in source:
                 func._django_fsm.add_transition(
-                    func, state, target, on_error, conditions, permission, custom, messages, form_class
+                    func, state, target, on_error, conditions, permission, custom, messages, form_class, serializer
                 )
         else:
             func._django_fsm.add_transition(
-                func, source, target, on_error, conditions, permission, custom, messages, form_class
+                func, source, target, on_error, conditions, permission, custom, messages, form_class, serializer
             )
 
         @wraps(func)

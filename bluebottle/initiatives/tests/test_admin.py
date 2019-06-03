@@ -6,6 +6,7 @@ from django.core import mail
 from django.urls.base import reverse
 from rest_framework import status
 
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.admin import InitiativeAdmin
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -14,6 +15,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
 class TestInitiativeAdmin(BluebottleAdminTestCase):
+
     def setUp(self):
         super(TestInitiativeAdmin, self).setUp()
         self.site = AdminSite()
@@ -21,6 +23,16 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create(status='created')
         self.initiative.submit()
         self.initiative.save()
+
+    def test_initiative_admin(self):
+        image = ImageFactory.create()
+        self.initiative.image = image
+        self.initiative.save()
+        self.client.force_login(self.superuser)
+        admin_url = reverse('admin:initiatives_initiative_change',
+                            args=(self.initiative.id,))
+        response = self.client.get(admin_url)
+        self.assertContains(response, image.id)
 
     def test_review_initiative_send_mail(self):
         self.client.force_login(self.superuser)
@@ -68,13 +80,8 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
                              args=(self.initiative.id, 'approve'))
         response = self.client.get(review_url)
 
-        # Should show confirmation page
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertContains(response, 'Are you sure you want to change')
+        self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
 
-        # Confirm should change status
-        response = self.client.post(review_url, {'confirm': True})
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'closed')
         messages = list(get_messages(response.wsgi_request))
@@ -105,7 +112,6 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         self.initiative = InitiativeFactory.create(status='created', pitch='')
         self.assertEqual(self.initiative.status, 'created')
-
         review_url = reverse('admin:initiatives_initiative_transition',
                              args=(self.initiative.id, 'submit'))
 
@@ -116,16 +122,13 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'created')
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue('This field is required' in messages[0].message)
-        self.assertTrue('Pitch' in messages[0].message)
+        self.assertEqual(messages[0].message, 'Transition not allowed: submit')
 
     def test_review_initiative_missing_theme(self):
         self.client.force_login(self.superuser)
         self.initiative = InitiativeFactory.create(status='created', theme=None)
-
         review_url = reverse('admin:initiatives_initiative_transition',
                              args=(self.initiative.id, 'submit'))
-
         response = self.client.post(review_url, {'confirm': True})
 
         # Should redirect with error message
@@ -134,5 +137,4 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(self.initiative.status, 'created')
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue('This field is required' in messages[0].message)
-        self.assertTrue('Theme' in messages[0].message)
+        self.assertEqual(messages[0].message, 'Transition not allowed: submit')

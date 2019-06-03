@@ -8,7 +8,7 @@ from bluebottle.notifications.decorators import transition
 
 class Assignment(Activity):
     registration_deadline = models.DateTimeField(_('registration deadline'))
-    end = models.DateField(_('end'))
+    end_time = models.DateField(_('End time'))
     capacity = models.PositiveIntegerField()
 
     expertise = models.ForeignKey('tasks.Skill', verbose_name=_('expertise'), null=True)
@@ -34,6 +34,9 @@ class Assignment(Activity):
             ('api_change_own_assignment', 'Can change own assignment through the API'),
             ('api_delete_own_assignment', 'Can delete own assignment through the API'),
         )
+
+    class JSONAPIMeta:
+        resource_name = 'activities/assignments'
 
     def check_capcity(self):
         if len(self.accepted_applicants) >= self.capacity:

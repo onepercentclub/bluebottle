@@ -1,23 +1,23 @@
 from django.db import models
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
+from django.forms.models import model_to_dict
 from django.utils.translation import ugettext_lazy as _
-from django_fsm import FSMField
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from multiselectfield import MultiSelectField
 
 from bluebottle.files.fields import ImageField
+from bluebottle.fsm import FSMField, TransitionNotAllowed
 from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
-from bluebottle.notifications.decorators import transition
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.models import BasePlatformSettings
 
 
 class Initiative(models.Model):
-    class ReviewStatus(DjangoChoices):
-        created = ChoiceItem('created', _('created'))
+    class Status(DjangoChoices):
+        draft = ChoiceItem('draft', _('draft'))
         submitted = ChoiceItem('submitted', _('submitted'))
         needs_work = ChoiceItem('needs_work', _('needs work'))
         approved = ChoiceItem('approved', _('approved'))
@@ -26,8 +26,8 @@ class Initiative(models.Model):
     title = models.CharField(_('title'), max_length=255)
 
     status = FSMField(
-        default=ReviewStatus.created,
-        choices=ReviewStatus.choices,
+        default=Status.draft,
+        choices=Status.choices,
         protected=True
     )
     owner = models.ForeignKey(
@@ -46,7 +46,7 @@ class Initiative(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    slug = models.SlugField(_('slug'), default='new', max_length=100)
+    slug = models.SlugField(_('slug'), max_length=100)
 
     pitch = models.TextField(
         _('pitch'), help_text=_('Pitch your smart idea in one sentence'),
@@ -79,68 +79,79 @@ class Initiative(models.Model):
     )
 
     place = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
+    location = models.ForeignKey('geo.Location', null=True, blank=True, on_delete=models.SET_NULL)
+
     has_organization = models.NullBooleanField(null=True, default=None)
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
-    @transition(
-        field='status',
-        source=ReviewStatus.created,
-        target=ReviewStatus.submitted,
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+    def is_complete(self):
+        from bluebottle.initiatives.serializers import InitiativeSubmitSerializer
+
+        serializer = InitiativeSubmitSerializer(
+            data=model_to_dict(self)
+        )
+        if not serializer.is_valid():
+            return [unicode(error) for errors in serializer.errors.values() for error in errors]
+
+    @status.transition(
+        source=Status.draft,
+        target=Status.submitted,
+        conditions=[is_complete],
         custom={'button_name': _('submit')}
     )
-    def submit(self, **kwargs):
+    def submit(self):
         pass
 
-    @transition(
-        field='status',
-        source=ReviewStatus.needs_work,
-        target=ReviewStatus.submitted,
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+    @status.transition(
+        source=Status.needs_work,
+        target=Status.submitted,
+        conditions=[is_complete],
         custom={'button_name': _('resubmit')}
     )
-    def resubmit(self, **kwargs):
+    def resubmit(self):
         pass
 
-    @transition(
-        field='status',
-        source=ReviewStatus.submitted,
-        target=ReviewStatus.needs_work,
+    @status.transition(
+        source=Status.submitted,
+        target=Status.needs_work,
         custom={'button_name': _('needs work')}
     )
-    def needs_work(self, **kwargs):
+    def needs_work(self):
         pass
 
-    @transition(
-        field='status',
-        source=ReviewStatus.submitted,
-        target=ReviewStatus.approved,
+    @status.transition(
+        source=Status.submitted,
+        target=Status.approved,
         messages=[InitiativeApproveOwnerMessage],
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        conditions=[is_complete],
         custom={'button_name': _('approve')}
     )
-    def approve(self, **kwargs):
-        pass
+    def approve(self):
+        for activity in self.activities.filter(status='draft'):
+            activity.initiative = self
+            try:
+                activity.open()
+                activity.save()
+            except TransitionNotAllowed:
+                pass
 
-    @transition(
-        field='status',
-        source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
-        target=ReviewStatus.closed,
+    @status.transition(
+        source=[Status.approved, Status.submitted, Status.needs_work],
+        target=Status.closed,
         messages=[InitiativeClosedOwnerMessage],
         custom={'button_name': _('close')}
     )
-    def close(self, **kwargs):
+    def close(self):
         pass
 
-    @transition(
-        field='status',
-        source=[ReviewStatus.approved, ReviewStatus.closed],
-        target=ReviewStatus.submitted,
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+    @status.transition(
+        source=[Status.approved, Status.closed],
+        target=Status.submitted,
+        conditions=[is_complete],
         custom={'button_name': _('re-open')}
     )
-    def reopen(self, **kwargs):
+    def reopen(self):
         pass
 
     class Meta:
@@ -166,7 +177,7 @@ class Initiative(models.Model):
         return self.title
 
     def save(self, **kwargs):
-        if self.slug == 'new' and self.title:
+        if self.slug == '' and self.title:
             self.slug = slugify(self.title)
 
         super(Initiative, self).save(**kwargs)

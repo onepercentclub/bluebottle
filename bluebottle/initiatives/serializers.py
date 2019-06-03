@@ -1,8 +1,9 @@
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import serializers
 
 from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import ResourceRelatedField
-
 
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import (
@@ -10,6 +11,8 @@ from bluebottle.bluebottle_drf2.serializers import (
 )
 from bluebottle.utils.fields import SafeField
 from bluebottle.categories.models import Category
+from bluebottle.geo.models import Geolocation
+from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.members.models import Member
@@ -90,6 +93,7 @@ class InitiativeSerializer(ModelSerializer):
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
         'place': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'location': 'bluebottle.geo.serializers.LocationSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
@@ -103,17 +107,61 @@ class InitiativeSerializer(ModelSerializer):
             'id', 'title', 'pitch', 'categories', 'owner',
             'reviewer', 'promoter', 'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_html', 'image',
-            'theme', 'place', 'activities',
+            'theme', 'place', 'location', 'activities',
         )
 
         meta_fields = ('permissions', 'transitions', 'status', 'created',)
 
     class JSONAPIMeta:
         included_resources = [
-            'owner', 'reviewer', 'promoter', 'categories', 'theme', 'place', 'image',
-            'organization', 'organization_contact', 'activities'
+            'owner', 'reviewer', 'promoter', 'categories', 'theme', 'place', 'location',
+            'image', 'organization', 'organization_contact', 'activities'
         ]
         resource_name = 'initiatives'
+
+
+def _error_messages_for(label):
+    return {
+        'error_messages': {'required': "'{}' is required".format(label)}
+    }
+
+
+class InitiativeSubmitSerializer(ModelSerializer):
+    title = serializers.CharField(required=True, error_messages={'blank': _('Title is required')})
+    pitch = serializers.CharField(required=True, error_messages={'blank': _('Pitch is required')})
+    story = serializers.CharField(required=True, error_messages={'blank': _('Story is required')})
+
+    theme = serializers.PrimaryKeyRelatedField(
+        required=True,
+        queryset=ProjectTheme.objects.all(),
+        error_messages={'null': _('Theme is required')}
+    )
+    image = serializers.PrimaryKeyRelatedField(
+        required=True,
+        queryset=Image.objects.all(),
+        error_messages={'null': _('Image is required')}
+    )
+    owner = serializers.PrimaryKeyRelatedField(
+        required=True,
+        queryset=Member.objects.all(),
+        error_messages={'null': _('Owner is required')}
+    )
+    place = serializers.PrimaryKeyRelatedField(
+        required=True, queryset=Geolocation.objects.all(),
+        error_messages={'null': _('Place is required')}
+    )
+
+    # TODO add dependent fields: has_organization/organization/organization_contact and
+    # place / location
+
+    class Meta:
+        model = Initiative
+        fields = (
+            'title', 'pitch', 'owner',
+            'has_organization', 'organization',
+            'organization_contact', 'story', 'video_url', 'image',
+            'theme', 'place',
+        )
 
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):

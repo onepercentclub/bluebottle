@@ -27,7 +27,7 @@ class EventAPITestCase(BluebottleTestCase):
     def test_create_event(self):
         data = {
             'data': {
-                'type': 'events',
+                'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
                     'start_time': str(now() + timedelta(days=21)),
@@ -48,7 +48,7 @@ class EventAPITestCase(BluebottleTestCase):
         response = self.client.post(self.url, json.dumps(data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], 'open')
+        self.assertEqual(response.data['status'], 'draft')
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
 
         # Add an event with the same title should NOT return an error
@@ -61,7 +61,7 @@ class EventAPITestCase(BluebottleTestCase):
 
         data = {
             'data': {
-                'type': 'events',
+                'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
                     'start_time': str(now() + timedelta(days=21)),
@@ -92,7 +92,7 @@ class EventAPITestCase(BluebottleTestCase):
 
         data = {
             'data': {
-                'type': 'events',
+                'type': 'activities/events',
                 'id': event.id,
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
@@ -120,7 +120,7 @@ class EventAPITestCase(BluebottleTestCase):
         another_user = BlueBottleUserFactory.create()
         data = {
             'data': {
-                'type': 'events',
+                'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
                     'start_time': str(now() + timedelta(days=21)),
@@ -151,7 +151,7 @@ class EventAPITestCase(BluebottleTestCase):
 
         data = {
             'data': {
-                'type': 'events',
+                'type': 'activities/events',
                 'id': event.id,
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
@@ -195,7 +195,7 @@ class EventTransitionTestCase(BluebottleTestCase):
                 'relationships': {
                     'resource': {
                         'data': {
-                            'type': 'events',
+                            'type': 'activities/events',
                             'id': self.event.pk
                         }
                     }
@@ -203,7 +203,7 @@ class EventTransitionTestCase(BluebottleTestCase):
             }
         }
 
-    def test_submit(self):
+    def test_close(self):
         response = self.client.post(
             self.transition_url,
             json.dumps(self.data),
@@ -214,7 +214,7 @@ class EventTransitionTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['included'][0]['type'], 'events')
+        self.assertEqual(data['included'][0]['type'], 'activities/events')
         self.assertEqual(data['included'][0]['attributes']['status'], 'closed')
 
 
@@ -239,7 +239,7 @@ class ParticipantTestCase(BluebottleTestCase):
                     'activity': {
                         'data': {
                             'id': self.event.pk,
-                            'type': 'events',
+                            'type': 'activities/events',
                         },
                     },
                 }
@@ -255,8 +255,8 @@ class ParticipantTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['status'], 'going')
-        self.assertEqual(data['included'][0]['type'], 'events')
+        self.assertEqual(data['data']['attributes']['status'], 'new')
+        self.assertEqual(data['included'][0]['type'], 'activities/events')
         self.assertTrue(data['included'][0]['attributes']['is-follower'])
 
     def test_follow(self):
@@ -282,7 +282,13 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.participant_user = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create()
+        self.initiative.submit()
+        self.initiative.approve()
+        self.initiative.save()
+
         self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)
+        self.event.open()
+        self.event.save()
         self.participant = ParticipantFactory.create(user=self.participant_user, activity=self.event)
 
         self.transition_url = reverse('participant-transition-list')
@@ -319,7 +325,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.assertEqual(data['included'][1]['type'], 'participants')
         self.assertEqual(data['included'][1]['attributes']['status'], 'withdrawn')
 
-        self.assertEqual(data['included'][0]['type'], 'events')
+        self.assertEqual(data['included'][0]['type'], 'activities/events')
         self.assertEqual(data['included'][0]['attributes']['is-follower'], False)
 
     def test_reapply(self):
@@ -335,7 +341,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
             'data': {
                 'type': 'participant-transitions',
                 'attributes': {
-                    'transition': 'go',
+                    'transition': 'reapply',
                 },
                 'relationships': {
                     'resource': {
@@ -359,7 +365,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['included'][1]['type'], 'participants')
-        self.assertEqual(data['included'][1]['attributes']['status'], 'going')
+        self.assertEqual(data['included'][1]['attributes']['status'], 'new')
 
-        self.assertEqual(data['included'][0]['type'], 'events')
+        self.assertEqual(data['included'][0]['type'], 'activities/events')
         self.assertEqual(data['included'][0]['attributes']['is-follower'], True)

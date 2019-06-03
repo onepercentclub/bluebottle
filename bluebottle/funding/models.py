@@ -25,6 +25,9 @@ class Funding(Activity):
         choices=lazy(get_currency_choices, tuple)()
     )
 
+    class JSONAPIMeta:
+        resource_name = 'activities/funding'
+
     class Meta:
         verbose_name = _("Funding")
         verbose_name_plural = _("Funding Activities")
@@ -65,7 +68,7 @@ class Funding(Activity):
         source=Activity.Status.open,
         target=Activity.Status.running,
     )
-    def start(self, **kwargs):
+    def start(self):
         if self.duration:
             self.deadline = timezone.now().date() + datetime.timedelta(days=self.duration)
 
@@ -74,7 +77,7 @@ class Funding(Activity):
         source=Activity.Status.running,
         target=Activity.Status.done,
     )
-    def done(self, **kwargs):
+    def done(self):
         pass
 
     @transition(
@@ -82,7 +85,7 @@ class Funding(Activity):
         source=Activity.Status.running,
         target=Activity.Status.closed,
     )
-    def closed(self, **kwargs):
+    def closed(self):
         pass
 
     @transition(
@@ -91,7 +94,7 @@ class Funding(Activity):
         target=Activity.Status.running,
         conditions=[deadline_in_future]
     )
-    def extend(self, **kwargs):
+    def extend(self):
         pass
 
 
@@ -110,7 +113,7 @@ class Donation(Contribution):
         target=Status.refunded,
         conditions=[funding_is_running]
     )
-    def refund(self, **kwargs):
+    def refund(self):
         pass
 
     @transition(
@@ -119,7 +122,7 @@ class Donation(Contribution):
         target=Status.failed,
         conditions=[funding_is_running]
     )
-    def fail(self, **kwargs):
+    def fail(self):
         pass
 
     @transition(
@@ -128,5 +131,5 @@ class Donation(Contribution):
         target=Status.success,
         conditions=[funding_is_running]
     )
-    def success(self, **kwargs):
+    def success(self):
         pass

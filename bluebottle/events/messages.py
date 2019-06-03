@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class EventDoneOwnerMessage(TransitionMessage):
-    subject = _('Your event is completed')
+    subject = _('The status of your event was changed to successful')
     template = 'messages/event_done_owner'
 
 

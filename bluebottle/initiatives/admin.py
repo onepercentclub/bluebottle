@@ -27,6 +27,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     form = InitiativeAdminForm
 
     fsm_field = 'status'
+    prepopulated_fields = {"slug": ("title",)}
 
     raw_id_fields = ('owner', 'reviewer')
     list_display = ['title', 'created', 'status']
@@ -38,7 +39,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     fieldsets = (
         (_('Basic'), {'fields': ('title', 'slug', 'owner', 'image', 'video_url')}),
         (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'place')}),
-        (_('Review'), {'fields': ('reviewer', 'status', 'status_transition')}),
+        (_('Review'), {'fields': ('reviewer', 'status')}),
     )
 
     inlines = [ActivityAdminInline, MessageAdminInline]

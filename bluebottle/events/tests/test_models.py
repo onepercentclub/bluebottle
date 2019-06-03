@@ -16,7 +16,6 @@ class EventTestCase(BluebottleTestCase):
             capacity=10
         )
 
-        ParticipantFactory.create_batch(3, activity=event, status='going')
-
+        ParticipantFactory.create_batch(3, activity=event, status='new')
         self.assertEqual(event.duration, 240)
         self.assertEqual(event.participants.count(), 3)

@@ -69,7 +69,10 @@ class Event(Activity):
 
     @property
     def participants(self):
-        return self.contributions.filter(status=Participant.Status.new)
+        return self.contributions.filter(
+            status__in=[Participant.Status.new,
+                        Participant.Status.success]
+        )
 
     def can_start(self):
         if not self.start_time:

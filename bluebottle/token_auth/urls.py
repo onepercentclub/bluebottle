@@ -5,7 +5,7 @@ from bluebottle.token_auth.views import (
     TokenRedirectView, TokenLoginView,
     TokenErrorView, MembersOnlyView,
     SupportTokenLoginView, SupportTokenLogoutView, SupportTokenErrorView,
-    SupportMetadataView)
+    SupportMetadataView, SupportTokenRedirectView)
 
 urlpatterns = [
     url(r'^redirect/$', TokenRedirectView.as_view(), name='token-redirect'),
@@ -17,9 +17,10 @@ urlpatterns = [
     url(r'^metadata/$', MetadataView.as_view(), name='token-metadata'),
 
     # Support SSO urls
-    url(r'^support/login/(?P<token>.*?)$', SupportTokenLoginView.as_view(), name='token-login'),
-    url(r'^support/logout/$', SupportTokenLogoutView.as_view(), name='token-logout'),
-    url(r'^support/error/$', SupportTokenErrorView.as_view(), name='token-logout'),
-    url(r'^support/metadata/$', SupportMetadataView.as_view(), name='token-logout'),
+    url(r'^support/login/(?P<token>.*?)$', SupportTokenLoginView.as_view(), name='support-token-login'),
+    url(r'^support/logout/$', SupportTokenLogoutView.as_view(), name='support-token-logout'),
+    url(r'^support/error/$', SupportTokenErrorView.as_view(), name='support-token-error'),
+    url(r'^support/metadata/$', SupportMetadataView.as_view(), name='support-token-metadata'),
+    url(r'^support/redirect/$', SupportTokenRedirectView.as_view(), name='support-token-redirect'),
 
 ]

@@ -17,7 +17,7 @@ def get_auth(request, prop='TOKEN_AUTH', **kwargs):
         backend = settings['backend']
         if not backend.startswith('bluebottle'):
             backend = 'bluebottle.{}'.format(backend)
-    except AttributeError:
+    except (KeyError, AttributeError):
         raise ImproperlyConfigured('TokenAuth backend not set')
 
     try:
@@ -36,9 +36,10 @@ class TokenRedirectView(View):
     permanent = False
     query_string = True
     pattern_name = 'article-detail'
+    settings_prop = 'TOKEN_AUTH'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, prop=self.settings_prop, **kwargs)
         sso_url = auth.sso_url(target_url=request.GET.get('url'))
         return HttpResponseRedirect(sso_url)
 
@@ -132,6 +133,10 @@ class MetadataView(View):
         auth = get_auth(request, prop=self.settings_prop, **kwargs)
         metadata = auth.get_metadata()
         return HttpResponse(content=metadata, content_type='text/xml')
+
+
+class SupportTokenRedirectView(TokenRedirectView):
+    settings_prop = 'SUPPORT_TOKEN_AUTH'
 
 
 class SupportTokenLoginView(TokenLoginView):

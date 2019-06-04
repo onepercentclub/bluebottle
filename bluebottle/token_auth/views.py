@@ -7,12 +7,12 @@ from django.template import loader
 from django.utils.module_loading import import_string
 from django.views.generic.base import View, TemplateView
 
+from bluebottle.clients import properties
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
-from bluebottle.token_auth.utils import get_settings
 
 
-def get_auth(request, **kwargs):
-    settings = get_settings()
+def get_auth(request, prop='TOKEN_AUTH', **kwargs):
+    settings = getattr(properties, prop)
     try:
         backend = settings['backend']
         if not backend.startswith('bluebottle'):
@@ -48,8 +48,10 @@ class TokenLoginView(View):
     Parse GET/POST request and login through set Authentication backend
     """
 
+    settings_prop = 'TOKEN_AUTH'
+
     def get(self, request, link=None, token=None):
-        auth = get_auth(request, token=token, link=link)
+        auth = get_auth(request, prop=self.settings_prop, token=token, link=link)
 
         try:
             user, created = auth.authenticate()
@@ -82,8 +84,10 @@ class TokenLogoutView(TemplateView):
     query_string = True
     template_name = 'token/token-logout.tpl'
 
+    settings_prop = 'TOKEN_AUTH'
+
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, prop=self.settings_prop, **kwargs)
         url = auth.process_logout()
         if url:
             return HttpResponseRedirect(url)
@@ -94,11 +98,12 @@ class TokenErrorView(TemplateView):
 
     query_string = True
     template_name = 'token/token-error.tpl'
+    settings_prop = 'TOKEN_AUTH'
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         context['message'] = request.GET.get('message', 'Unknown')
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, prop=self.settings_prop, **kwargs)
         context['ssoUrl'] = auth.sso_url()
         return self.render_to_response(context)
 
@@ -107,9 +112,10 @@ class MembersOnlyView(TemplateView):
 
     query_string = True
     template_name = 'token/members-only.tpl'
+    settings_prop = 'TOKEN_AUTH'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, prop=self.settings_prop, **kwargs)
         context = self.get_context_data(**kwargs)
         context['url'] = request.GET.get('url', '')
         context['ssoUrl'] = auth.sso_url()
@@ -120,8 +126,25 @@ class MetadataView(View):
     """
     Show (SAML) metadata
     """
+    settings_prop = 'TOKEN_AUTH'
 
     def get(self, request, *args, **kwargs):
         auth = get_auth(request, **kwargs)
         metadata = auth.get_metadata()
-        return HttpResponse(content=metadata, content_type='text/xml')
+        return HttpResponse(content=metadata, prop=self.settings_prop, content_type='text/xml')
+
+
+class SupportTokenLoginView(TokenLoginView):
+    settings_prop = 'SUPPORT_TOKEN_AUTH'
+
+
+class SupportTokenLogoutView(TokenLogoutView):
+    settings_prop = 'SUPPORT_TOKEN_AUTH'
+
+
+class SupportTokenErrorView(TokenErrorView):
+    settings_prop = 'SUPPORT_TOKEN_AUTH'
+
+
+class SupportMetadataView(MetadataView):
+    settings_prop = 'SUPPORT_TOKEN_AUTH'

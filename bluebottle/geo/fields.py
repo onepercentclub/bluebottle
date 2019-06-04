@@ -1,8 +1,7 @@
-import re
-
 import six
 from django.contrib.gis.forms import PointField as GisPointField
 from django.contrib.gis.geos import Point
+from django.utils.encoding import smart_text
 from geoposition import Geoposition
 from geoposition.fields import GeopositionField
 from mapwidgets import GooglePointFieldWidget
@@ -34,6 +33,13 @@ class PointFormField(GisPointField):
 
 class PointField(GeopositionField):
 
+    def from_db_value(self, value, expression, connection, context):
+        return self.to_python(value)
+
+    def value_to_string(self, obj):
+        value = self._get_val_from_obj(obj)
+        return smart_text(value)
+
     def formfield(self, **kwargs):
         defaults = {
             'form_class': PointFormField
@@ -51,16 +57,8 @@ class PointField(GeopositionField):
             return None
         if isinstance(value, Point):
             return value
-        if isinstance(value, list):
-            return Point(value[1], value[2])
 
-        # POINT
-        if 'POINT' in value:
-            value_parts = re.search(".*\(([\d\.]+)\s([\d\.]+)\)", value).groups()
-            # reverse
-            value_parts = value_parts[::-1]
-        else:
-            value_parts = value.rsplit(',')
+        value_parts = value.rsplit(',')
         try:
             latitude = value_parts[0]
         except IndexError:

@@ -129,9 +129,9 @@ class MetadataView(View):
     settings_prop = 'TOKEN_AUTH'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, prop=self.settings_prop, **kwargs)
         metadata = auth.get_metadata()
-        return HttpResponse(content=metadata, prop=self.settings_prop, content_type='text/xml')
+        return HttpResponse(content=metadata, content_type='text/xml')
 
 
 class SupportTokenLoginView(TokenLoginView):

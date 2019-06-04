@@ -19,7 +19,7 @@ class AssignmentFactory(factory.DjangoModelFactory):
     initiative = factory.SubFactory(InitiativeFactory)
 
     capacity = 3
-    end_time = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=5))
+    deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=5))
     registration_deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=2))
 
 

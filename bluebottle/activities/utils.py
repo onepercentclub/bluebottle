@@ -6,9 +6,7 @@ from bluebottle.activities.models import Activity, Contribution
 from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField
-from bluebottle.utils.serializers import (
-    ResourcePermissionField,
-)
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 # This can't be in serializers because of circular imports

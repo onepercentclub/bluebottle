@@ -1,49 +1,89 @@
+from rest_framework_json_api.views import AutoPrefetchMixin
+
 from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
 
-from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateAPIView
+from bluebottle.utils.views import (
+    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
+    CreateAPIView,
+)
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
 
 from bluebottle.funding.models import Funding, Donation
-from bluebottle.funding.serializers import FundingSerializer, DonationSerializer
+from bluebottle.funding.serializers import FundingSerializer, DonationSerializer, FundingTransitionSerializer
+from bluebottle.transitions.views import TransitionList
 
 
-class FundingList(ListCreateAPIView):
+class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Funding.objects.all()
     serializer_class = FundingSerializer
 
-    lookup_field = 'slug'
-
     permission_classes = (ActivityTypePermission, ActivityPermission,)
 
+    prefetch_for_includes = {
+        'initiative': ['initiative'],
+        'owner': ['owner']
+    }
 
-class FundingDetail(RetrieveUpdateAPIView):
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Funding.objects.all()
     serializer_class = FundingSerializer
 
-    lookup_field = 'slug'
-
     permission_classes = (ActivityTypePermission, ActivityPermission,)
 
+    prefetch_for_includes = {
+        'activitiy': ['initiative'],
+        'owner': ['owner']
+    }
 
-class DonationList(ListCreateAPIView):
+
+class FundingTransitionList(TransitionList):
+    serializer_class = FundingTransitionSerializer
+    queryset = Funding.objects.all()
+
+    prefetch_for_includes = {
+        'resource': ['event'],
+    }
+
+
+class DonationList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Donation.objects.all()
     serializer_class = DonationSerializer
 
-    lookup_field = 'slug'
-
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
+    prefetch_for_includes = {
+        'activity': ['activity'],
+        'user': ['user']
+    }
 
-class DonationDetail(RetrieveUpdateAPIView):
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Donation.objects.all()
     serializer_class = DonationSerializer
 
-    lookup_field = 'slug'
-
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+
+    prefetch_for_includes = {
+        'activity': ['activity'],
+        'user': ['user']
+    }
+
+
+class PaymentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+    permission_classes = []
+
+    prefetch_for_includes = {
+        'activity': ['activity'],
+        'user': ['user']
+    }

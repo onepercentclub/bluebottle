@@ -99,3 +99,7 @@ class Contribution(PolymorphicModel):
     @classmethod
     def is_activity_manager(cls, instance, user):
         return instance.activity.initiative.activity_manager == user
+
+    @property
+    def owner(self):
+        return self.user

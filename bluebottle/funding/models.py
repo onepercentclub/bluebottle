@@ -2,15 +2,19 @@ import datetime
 
 from django.db import models
 from django.db.models.aggregates import Sum
+from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
-from djchoices.choices import ChoiceItem
+from djchoices.choices import DjangoChoices, ChoiceItem
 from moneyed.classes import Money
 from multiselectfield import MultiSelectField
 
+from polymorphic.models import PolymorphicModel
+
+from bluebottle.fsm import FSMField, TransitionNotAllowed
+
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.notifications.decorators import transition
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices
 
@@ -24,6 +28,8 @@ class Funding(Activity):
         max_length=100, default=[],
         choices=lazy(get_currency_choices, tuple)()
     )
+
+    account = models.ForeignKey('payouts.PayoutAccount', null=True)
 
     class JSONAPIMeta:
         resource_name = 'activities/funding'
@@ -42,6 +48,15 @@ class Funding(Activity):
             ('api_change_own_funding', 'Can change own funding through the API'),
             ('api_delete_own_funding', 'Can delete own funding through the API'),
         )
+
+    def save(self, *args, **kwargs):
+        if self.status == Activity.Status.draft:
+            try:
+                self.open()
+            except TransitionNotAllowed:
+                pass
+
+        super(Funding, self).save(*args, **kwargs)
 
     @property
     def amount_raised(self):
@@ -63,8 +78,28 @@ class Funding(Activity):
     def deadline_in_future(self):
         return not self.deadline or self.deadline > timezone.now()
 
-    @transition(
-        field='status',
+    def is_complete(self):
+        from bluebottle.funding.serializers import FundingSubmitSerializer
+        serializer = FundingSubmitSerializer(
+            data=model_to_dict(self)
+        )
+        if not serializer.is_valid():
+            print serializer.errors
+            return _('Please make sure all required fields are filled in')
+
+    def initiative_is_approved(self):
+        if not self.initiative.status == 'approved':
+            return _('Please make sure the initiative is approved')
+
+    @Activity.status.transition(
+        source=Activity.Status.draft,
+        target=Activity.Status.open,
+        conditions=[is_complete, initiative_is_approved]
+    )
+    def open(self):
+        pass
+
+    @Activity.status.transition(
         source=Activity.Status.open,
         target=Activity.Status.running,
     )
@@ -72,24 +107,21 @@ class Funding(Activity):
         if self.duration:
             self.deadline = timezone.now().date() + datetime.timedelta(days=self.duration)
 
-    @transition(
-        field='status',
+    @Activity.status.transition(
         source=Activity.Status.running,
         target=Activity.Status.done,
     )
     def done(self):
         pass
 
-    @transition(
-        field='status',
+    @Activity.status.transition(
         source=Activity.Status.running,
         target=Activity.Status.closed,
     )
     def closed(self):
         pass
 
-    @transition(
-        field='status',
+    @Activity.status.transition(
         source=[Activity.Status.done, Activity.Status.closed],
         target=Activity.Status.running,
         conditions=[deadline_in_future]
@@ -107,29 +139,56 @@ class Donation(Contribution):
     def funding_is_running(self):
         return self.activity.status == Activity.Status.open
 
-    @transition(
-        field='status',
+    @Contribution.status.transition(
         source=[Status.new, Status.success],
         target=Status.refunded,
-        conditions=[funding_is_running]
     )
     def refund(self):
         pass
 
-    @transition(
-        field='status',
+    @Contribution.status.transition(
         source=[Status.new, Status.success],
         target=Status.failed,
-        conditions=[funding_is_running]
     )
     def fail(self):
         pass
 
-    @transition(
-        field='status',
+    @Contribution.status.transition(
         source=[Status.new, Status.failed],
         target=Status.success,
-        conditions=[funding_is_running]
     )
     def success(self):
+        pass
+
+
+class Payment(PolymorphicModel):
+    class Status(DjangoChoices):
+        new = ChoiceItem('new', _('new'))
+        pending = ChoiceItem('pending', _('pending'))
+        success = ChoiceItem('success', _('success'))
+        refunded = ChoiceItem('refunded', _('refunded'))
+        failed = ChoiceItem('success', _('success'))
+
+    status = FSMField(
+        default=Status.new,
+        protected=True
+    )
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    donation = models.OneToOneField(Donation, related_name='payment')
+
+    @status.transition(
+        source=['new'],
+        target='success'
+    )
+    def success(self):
+        self.donation.success()
+        self.donation.save()
+
+    @status.transition(
+        source=['success'],
+        target='refunded'
+    )
+    def refund(self):
         pass

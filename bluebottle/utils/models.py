@@ -102,7 +102,7 @@ class PublishableModel(models.Model):
     publication_date = models.DateTimeField(
         _('publication date'),
         null=True, db_index=True,
-        default=now(),
+        default=now,
         help_text=_("To go live, status must be 'Published'."))
 
     publication_end_date = models.DateTimeField(_('publication end date'),

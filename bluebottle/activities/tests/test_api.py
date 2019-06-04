@@ -4,29 +4,13 @@ import json
 from django.urls import reverse
 from django.test import tag
 from django.test.utils import override_settings
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 
 from django_elasticsearch_dsl.test import ESTestCase
-from rest_framework import status
-from bluebottle.events.tests.factories import EventFactory
+from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
-
-
-class ActivityTestCase(BluebottleTestCase):
-
-    def setUp(self):
-        super(ActivityTestCase, self).setUp()
-        self.client = JSONAPITestClient()
-        self.url = reverse('activity-list')
-        self.user = BlueBottleUserFactory()
-
-    def test_list_activities(self):
-        EventFactory.create_batch(4)
-        response = self.client.get(self.url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['meta']['pagination']['count'], 4)
 
 
 @override_settings(
@@ -34,9 +18,15 @@ class ActivityTestCase(BluebottleTestCase):
     ELASTICSEARCH_DSL_AUTO_REFRESH=True
 )
 @tag('elasticsearch')
-class ActivityListSearchAPITestCase(ESTestCase, ActivityTestCase):
+class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super(ActivityListSearchAPITestCase, self).setUp()
+
+        self.client = JSONAPITestClient()
+        self.url = reverse('activity-list')
+
+        self.user = BlueBottleUserFactory()
+
         self.url = reverse('activity-list')
         self.owner = BlueBottleUserFactory.create()
 
@@ -153,3 +143,38 @@ class ActivityListSearchAPITestCase(ESTestCase, ActivityTestCase):
         self.assertEqual(data['data'][0]['id'], unicode(third.pk))
         self.assertEqual(data['data'][1]['id'], unicode(first.pk))
         self.assertEqual(data['data'][2]['id'], unicode(second.pk))
+
+    def test_sort_popularity(self):
+        first = EventFactory.create()
+
+        second = EventFactory.create()
+        ParticipantFactory.create(
+            activity=second, created=now() - datetime.timedelta(days=7)
+        )
+
+        third = EventFactory.create()
+        ParticipantFactory.create(
+            activity=third, created=now() - datetime.timedelta(days=5)
+        )
+
+        fourth = EventFactory.create()
+        ParticipantFactory.create(
+            activity=fourth, created=now() - datetime.timedelta(days=7)
+        )
+        ParticipantFactory.create(
+            activity=fourth, created=now() - datetime.timedelta(days=5)
+        )
+
+        response = self.client.get(
+            self.url + '?sort=popularity',
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 4)
+
+        self.assertEqual(data['data'][0]['id'], unicode(fourth.pk))
+        self.assertEqual(data['data'][1]['id'], unicode(third.pk))
+        self.assertEqual(data['data'][2]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][3]['id'], unicode(first.pk))

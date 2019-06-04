@@ -3,7 +3,7 @@ from django_elasticsearch_dsl import DocType, fields
 from bluebottle.utils.documents import MultiTenantIndex
 
 from bluebottle.initiatives.models import Initiative
-from bluebottle.activities.models import Activity
+from bluebottle.activities.models import Activity, Contribution
 from bluebottle.members.models import Member
 from bluebottle.utils.search import Search
 
@@ -35,9 +35,12 @@ class ActivityDocument(DocType):
         'story': fields.TextField(),
     })
 
+    contributions = fields.DateField()
+    contribution_count = fields.IntegerField()
+
     class Meta:
         model = Activity
-        related_models = (Initiative, Member)
+        related_models = (Initiative, Member, Contribution)
 
     def get_queryset(self):
         return super(ActivityDocument, self).get_queryset().select_related(
@@ -55,7 +58,18 @@ class ActivityDocument(DocType):
         )
 
     def get_instances_from_related(self, related_instance):
-        if isinstance(related_instance, (Initiative)):
+        if isinstance(related_instance, Initiative):
             return related_instance.activities.all()
         if isinstance(related_instance, Member):
             return related_instance.activities.all()
+        if isinstance(related_instance, Contribution):
+            return related_instance.activity
+
+    def prepare_contributions(self, instance):
+        return [
+            contribution.created for contribution
+            in instance.contributions.filter(status__in=('new', 'success'))
+        ]
+
+    def prepare_contribution_count(self, instance):
+        return len(instance.contributions.filter(status__in=('new', 'success')))

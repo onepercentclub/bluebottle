@@ -25,9 +25,9 @@ class Event(Activity):
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
-    start_time = models.DateTimeField(_('start'))
-    end_time = models.DateTimeField(_('end'))
-    registration_deadline = models.DateTimeField(_('registration deadline'))
+    start_time = models.DateTimeField(_('start'), null=True, blank=True)
+    end_time = models.DateTimeField(_('end'), null=True, blank=True)
+    registration_deadline = models.DateTimeField(_('registration deadline'), null=True, blank=True)
 
     class Meta:
         verbose_name = _("Event")

@@ -1,4 +1,5 @@
 from django.db import models, connection
+
 from bluebottle.funding_stripe import stripe
 
 from bluebottle.funding.models import Payment
@@ -13,13 +14,25 @@ class StripePayment(Payment):
             intent = stripe.PaymentIntent.create(
                 amount=self.donation.amount.amount,
                 currency=self.donation.amount.currency,
-                transfer_data={'destination': self.donation.activity.account.account_id},
+                transfer_data={
+                    'destination': self.donation.activity.account.account_id
+                },
                 metadata=self.metadata
             )
             self.intent_id = intent.id
             self.client_secret = intent.client_secret
 
         super(StripePayment, self).save(*args, **kwargs)
+
+    def update(self):
+        intent = stripe.PaymentIntent.retrieve(self.intent_id)
+
+        if intent.charges[0].refunded and self.status != Payment.Status.refunded:
+            self.refund()
+        elif intent.status == 'failed' and self.status != Payment.Status.failed:
+            self.fail()
+        elif intent.status == 'succeeded' and self.status != Payment.Status.succeeded:
+            self.succeed()
 
     @property
     def metadata(self):

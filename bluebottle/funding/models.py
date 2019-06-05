@@ -167,7 +167,7 @@ class Payment(PolymorphicModel):
         pending = ChoiceItem('pending', _('pending'))
         success = ChoiceItem('success', _('success'))
         refunded = ChoiceItem('refunded', _('refunded'))
-        failed = ChoiceItem('success', _('success'))
+        failed = ChoiceItem('failed', _('failed'))
 
     status = FSMField(
         default=Status.new,
@@ -182,8 +182,16 @@ class Payment(PolymorphicModel):
         source=['new'],
         target='success'
     )
-    def success(self):
+    def succeed(self):
         self.donation.success()
+        self.donation.save()
+
+    @status.transition(
+        source=['new', 'success'],
+        target='failed'
+    )
+    def fail(self):
+        self.donation.fail()
         self.donation.save()
 
     @status.transition(
@@ -191,4 +199,5 @@ class Payment(PolymorphicModel):
         target='refunded'
     )
     def refund(self):
-        pass
+        self.donation.refund()
+        self.donation.save()

@@ -1,14 +1,13 @@
 import json
 import mock
 
-
 from django.urls import reverse
 
 from rest_framework import status
 
 import stripe
 
-from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
@@ -26,59 +25,32 @@ class StripePaymentTestCase(BluebottleTestCase):
         self.initiative.approve()
 
         self.funding = FundingFactory.create(initiative=self.initiative)
+        self.donation = DonationFactory.create(activity=self.funding, user=self.user)
 
-        self.donation_url = reverse('funding-donation-list')
         self.payment_url = reverse('stripe-payment-list')
 
-    def create_donation(self):
-        data = {
-            'data': {
-                'type': 'donations',
-                'attributes': {
-                    'amount': {'currency': 'EUR', 'amount': 100},
-                },
-                'relationships': {
-                    'activity': {
-                        'data': {
-                            'type': 'activities/funding',
-                            'id': self.funding.pk
-                        }
-                    }
-                }
-            }
-        }
-
-        response = self.client.post(self.donation_url, data=json.dumps(data), user=self.user)
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        data = json.loads(response.content)
-
-        return data['data']['id']
-
-    def test_create_payment(self):
-        donation_id = self.create_donation()
-
-        data = {
+        self.data = {
             'data': {
                 'type': 'stripe-payments',
                 'relationships': {
                     'donation': {
                         'data': {
                             'type': 'donations',
-                            'id': donation_id,
+                            'id': self.donation.pk,
                         }
                     }
                 }
             }
         }
 
+    def test_create_payment(self):
         payment_intent = stripe.PaymentIntent('some intent id')
         payment_intent.update({
             'client_secret': 'some client secret',
         })
 
         with mock.patch('stripe.PaymentIntent.create', return_value=payment_intent):
-            response = self.client.post(self.payment_url, data=json.dumps(data), user=self.user)
+            response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
@@ -89,48 +61,18 @@ class StripePaymentTestCase(BluebottleTestCase):
         self.assertEqual(data['included'][0]['attributes']['status'], 'new')
 
     def test_create_payment_other_user(self):
-        donation_id = self.create_donation()
-
-        data = {
-            'data': {
-                'type': 'stripe-payments',
-                'relationships': {
-                    'donation': {
-                        'data': {
-                            'type': 'donations',
-                            'id': donation_id,
-                        }
-                    }
-                }
-            }
-        }
         response = self.client.post(
             self.payment_url,
-            data=json.dumps(data),
+            data=json.dumps(self.data),
             user=BlueBottleUserFactory.create()
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_payment_no_user(self):
-        donation_id = self.create_donation()
-
-        data = {
-            'data': {
-                'type': 'stripe-payments',
-                'relationships': {
-                    'donation': {
-                        'data': {
-                            'type': 'donations',
-                            'id': donation_id,
-                        }
-                    }
-                }
-            }
-        }
         response = self.client.post(
             self.payment_url,
-            data=json.dumps(data),
+            data=json.dumps(self.data),
             user=BlueBottleUserFactory.create()
         )
 

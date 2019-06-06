@@ -50,6 +50,7 @@ class TokenLoginView(View):
     """
 
     settings_prop = 'TOKEN_AUTH'
+    admin_login = False
 
     def get(self, request, link=None, token=None):
         auth = get_auth(request, prop=self.settings_prop, token=token, link=link)
@@ -62,7 +63,7 @@ class TokenLoginView(View):
             return HttpResponseRedirect(url)
 
         target_url = auth.target_url or "/"
-        if target_url and re.match('^\/\w\w\/admin', target_url):
+        if self.admin_login or (target_url and re.match('^\/\w\w\/admin', target_url)):
             # Admin login:
             # Log user in using cookies and redirect directly
             login(request, user)
@@ -141,6 +142,7 @@ class SupportTokenRedirectView(TokenRedirectView):
 
 class SupportTokenLoginView(TokenLoginView):
     settings_prop = 'SUPPORT_TOKEN_AUTH'
+    admin_login = True
 
 
 class SupportTokenLogoutView(TokenLogoutView):

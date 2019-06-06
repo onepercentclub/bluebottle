@@ -177,9 +177,11 @@ class Initiative(models.Model):
         return self.title
 
     def save(self, **kwargs):
-        if self.slug == '' and self.title:
-            self.slug = slugify(self.title)
-
+        if self.slug in ['', 'new']:
+            if self.title:
+                self.slug = slugify(self.title)
+            else:
+                self.slug = 'new'
         super(Initiative, self).save(**kwargs)
 
 

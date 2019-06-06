@@ -13,11 +13,11 @@ class BaseTokenAuthentication(object):
     """
     Base class for TokenAuthentication.
     """
-    def __init__(self, request, **kwargs):
+    def __init__(self, request, prop='TOKEN_AUTH', **kwargs):
         self.args = kwargs
         self.request = request
 
-        self.settings = properties.TOKEN_AUTH
+        self.settings = getattr(properties, prop)
 
     def sso_url(self, target_url=None):
         raise NotImplementedError()

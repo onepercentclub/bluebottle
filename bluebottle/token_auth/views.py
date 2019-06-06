@@ -26,7 +26,7 @@ def get_auth(request, prop='TOKEN_AUTH', **kwargs):
         raise ImproperlyConfigured(
             'TokenAuth backend {} is not defined'.format(backend)
         )
-    return cls(request, **kwargs)
+    return cls(request, prop=prop, **kwargs)
 
 
 class TokenRedirectView(View):

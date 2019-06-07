@@ -1,5 +1,6 @@
 from django.db import models
 from django.template.defaultfilters import slugify
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
@@ -67,6 +68,10 @@ class Activity(PolymorphicModel):
             self.slug = slugify(self.title)
 
         super(Activity, self).save(**kwargs)
+
+    @property
+    def full_url(self):
+        return format_html("/{}/{}/{}", self._meta.app_label, self.pk, self.slug)
 
     @status.transition(
         source=Status.draft,

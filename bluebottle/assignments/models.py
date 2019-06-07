@@ -8,7 +8,7 @@ from bluebottle.notifications.decorators import transition
 
 class Assignment(Activity):
     registration_deadline = models.DateTimeField(_('registration deadline'))
-    end_time = models.DateField(_('End time'))
+    deadline = models.DateField(_('end'))
     capacity = models.PositiveIntegerField()
 
     expertise = models.ForeignKey('tasks.Skill', verbose_name=_('expertise'), null=True)

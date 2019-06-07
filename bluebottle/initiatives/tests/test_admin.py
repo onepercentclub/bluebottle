@@ -33,6 +33,9 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
                             args=(self.initiative.id,))
         response = self.client.get(admin_url)
         self.assertContains(response, image.id)
+        self.assertContains(response, 'Show on site')
+        self.assertContains(response, 'Activities')
+        self.assertContains(response, 'Messages')
 
     def test_review_initiative_send_mail(self):
         self.client.force_login(self.superuser)

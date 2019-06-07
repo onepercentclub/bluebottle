@@ -65,11 +65,14 @@ class Event(Activity):
 
     @property
     def duration(self):
-        return (self.start_time - self.end_time).seconds / 60
+        return (self.end_time - self.start_time).seconds / 60
 
     @property
     def participants(self):
-        return self.contributions.filter(status=Participant.Status.new)
+        return self.contributions.filter(
+            status__in=[Participant.Status.new,
+                        Participant.Status.success]
+        )
 
     def can_start(self):
         if not self.start_time:

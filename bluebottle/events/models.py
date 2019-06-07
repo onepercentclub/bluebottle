@@ -149,6 +149,7 @@ class Event(Activity):
     )
     def done(self):
         for member in self.participants:
+            member.activity = self
             member.success()
             member.save()
 
@@ -205,6 +206,10 @@ class Participant(Contribution):
         if self.activity.status not in (Activity.Status.open, Activity.Status.full):
             return _('The event is not open or full')
 
+    def event_is_closed(self):
+        if self.activity.status in (Activity.Status.open, Activity.Status.full, Activity.Status.running):
+            return _('The event is not closed')
+
     def save(self, *args, **kwargs):
         created = self.pk is None
 
@@ -234,7 +239,6 @@ class Participant(Contribution):
     @Contribution.status.transition(
         source=[Status.new],
         target=Status.rejected,
-        permission=Contribution.is_activity_manager
     )
     def reject(self):
         unfollow(self.user, self.activity)
@@ -242,6 +246,7 @@ class Participant(Contribution):
     @Contribution.status.transition(
         source=[Status.new, Status.no_show, Status.rejected, Status.withdrawn],
         target=Status.success,
+        conditions=[event_is_closed]
     )
     def success(self):
         follow(self.user, self.activity)
@@ -250,15 +255,15 @@ class Participant(Contribution):
     @Contribution.status.transition(
         source=Status.success,
         target=Status.no_show,
-        permission=Contribution.is_activity_manager
+        conditions=[event_is_closed]
     )
     def no_show(self):
         unfollow(self.user, self.activity)
-        self.time_spent = None
+        self.time_spent = 0
 
     @Contribution.status.transition(
         source='*',
         target=Status.closed,
     )
     def close(self):
-        self.time_spent = None
+        self.time_spent = 0

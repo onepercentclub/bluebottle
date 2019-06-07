@@ -196,8 +196,9 @@ class EventTransitionTestCase(BluebottleTestCase):
         )
 
 
-class ParticiantTransitionTestCase(BluebottleTestCase):
+class ParticipantTransitionTestCase(BluebottleTestCase):
     def setUp(self):
+        super(ParticipantTransitionTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
         self.event = EventFactory.create(
             initiative=self.initiative, capacity=1
@@ -298,7 +299,7 @@ class ParticiantTransitionTestCase(BluebottleTestCase):
             Participant.Status.success
         )
         self.assertEqual(
-            len(self.event.participants), 0
+            len(self.event.participants), 1
         )
 
     def test_success_new_event(self):

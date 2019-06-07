@@ -34,7 +34,11 @@ class ElasticSearchFilter(filters.SearchFilter):
 
         sort = self.get_sort(request)
         if sort:
-            search = search.sort(*sort)
+            try:
+                scoring = getattr(self, 'get_sort_{}'.format(sort))()
+                search = search.query(scoring)
+            except AttributeError:
+                search = search.sort(*sort)
 
         return search.to_queryset()
 

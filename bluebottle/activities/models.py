@@ -1,6 +1,7 @@
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
 
 from bluebottle.fsm import FSMField
@@ -23,10 +24,10 @@ class Activity(PolymorphicModel):
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('owner'),
-        related_name='own_%(class)s',
+        related_name='activities',
     )
 
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
     status = FSMField(
@@ -86,7 +87,7 @@ class Contribution(PolymorphicModel):
         default=Status.new,
         protected=True
     )
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
     activity = models.ForeignKey(Activity, related_name='contributions')

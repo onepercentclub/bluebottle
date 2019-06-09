@@ -15,11 +15,9 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
-from django.utils.translation import ugettext_lazy as _
 from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.clients import properties
 from bluebottle.fsm import TransitionNotAllowed
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
@@ -63,17 +61,6 @@ def prep_field(request, obj, field, manyToManySep=';'):
     if isinstance(output, (list, tuple, QuerySet)):
         output = manyToManySep.join([str(item) for item in output])
     return unicode(output).encode('utf-8') if output else ""
-
-
-def mark_as_plan_new(modeladmin, request, queryset):
-    try:
-        status = ProjectPhase.objects.get(slug='plan-new')
-    except ProjectPhase.DoesNotExist:
-        return
-    queryset.update(status=status)
-
-
-mark_as_plan_new.short_description = _("Mark selected projects as status Plan New")
 
 
 def escape_csv_formulas(item):

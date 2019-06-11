@@ -1,3 +1,4 @@
+import json
 import mock
 
 import bunch
@@ -17,9 +18,9 @@ from bluebottle.test.utils import BluebottleTestCase
 
 
 class MockEvent(object):
-    def __init__(self, type, object):
+    def __init__(self, type, data):
         self.type = type
-        self.data = bunch.bunchify({'object': object})
+        self.data = bunch.bunchify(data)
 
 
 class StripePaymentTestCase(BluebottleTestCase):
@@ -45,10 +46,14 @@ class StripePaymentTestCase(BluebottleTestCase):
         self.webhook = reverse('stripe-payment-webhook')
 
     def test_success(self):
+        with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
+            data = json.load(hook_file)
+            data['object']['id'] = self.payment_intent.id
+
         with mock.patch(
             'stripe.Webhook.construct_event',
             return_value=MockEvent(
-                'payment_intent.succeeded', {'id': self.payment_intent.id}
+                'payment_intent.succeeded', data
             )
         ):
             response = self.client.post(
@@ -67,7 +72,7 @@ class StripePaymentTestCase(BluebottleTestCase):
         with mock.patch(
             'stripe.Webhook.construct_event',
             return_value=MockEvent(
-                'payment_intent.payment_failed', {'id': self.payment_intent.id}
+                'payment_intent.payment_failed', {'object': {'id': self.payment_intent.id}}
             )
         ):
             response = self.client.post(
@@ -83,10 +88,14 @@ class StripePaymentTestCase(BluebottleTestCase):
         self.assertEqual(payment.status, StripePayment.Status.failed)
 
     def test_refund(self):
+        with open('bluebottle/funding_stripe/tests/files/intent_webhook_refund.json') as hook_file:
+            data = json.load(hook_file)
+            data['object']['payment_intent'] = self.payment_intent.id
+
         with mock.patch(
             'stripe.Webhook.construct_event',
             return_value=MockEvent(
-                'charge.refunded', {'payment_intent': {'id': self.payment_intent.id}}
+                'charge.refunded', data
             )
         ):
             response = self.client.post(

@@ -43,7 +43,7 @@ class WebHookView(View):
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.refunded':
-                payment = self.get_payment(event.data.object.payment_intent.id)
+                payment = self.get_payment(event.data.object.payment_intent)
                 payment.refund()
                 payment.save()
 

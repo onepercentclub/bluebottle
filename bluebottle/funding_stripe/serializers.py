@@ -12,4 +12,4 @@ class StripePaymentSerializer(PaymentSerializer):
         fields = PaymentSerializer.Meta.fields + ('intent_id', 'client_secret', )
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
-        resource_name = 'stripe-payments'
+        resource_name = 'payments/stripe-payments'

@@ -23,7 +23,7 @@ class Funding(Activity):
     deadline = models.DateField(_('deadline'), null=True, blank=True)
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
-    target = MoneyField()
+    target = MoneyField(null=True, blank=True)
     accepted_currencies = MultiSelectField(
         max_length=100, default=[],
         choices=lazy(get_currency_choices, tuple)()

@@ -7,12 +7,12 @@ from bluebottle.activities.utils import (
 from bluebottle.funding.models import Funding, Donation, Payment
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField
-from bluebottle.utils.serializers import MoneySerializer, ResourcePermissionField
+from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.transitions.serializers import TransitionSerializer
 
 
 class FundingSerializer(BaseActivitySerializer):
-    target = MoneySerializer()
+    target = MoneySerializer(required=False, allow_null=True)
 
     class Meta:
         model = Funding
@@ -27,7 +27,7 @@ class FundingSerializer(BaseActivitySerializer):
             'initiative',
             'place'
         ]
-        resource_name = 'activities/funding'
+        resource_name = 'activities/fundings'
 
     included_serializers = {
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
@@ -72,7 +72,7 @@ class DonationSerializer(BaseContributionSerializer):
         fields = BaseContributionSerializer.Meta.fields + ('amount', )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'donations'
+        resource_name = 'contributions/donations'
         included_resources = [
             'user',
             'activity'

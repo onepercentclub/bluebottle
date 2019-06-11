@@ -36,7 +36,7 @@ class Activity(PolymorphicModel):
     initiative = models.ForeignKey(Initiative, related_name='activities')
 
     title = models.CharField(_('title'), max_length=255)
-    slug = models.SlugField(_('slug'), max_length=100)
+    slug = models.SlugField(_('slug'), max_length=100, default='new')
     description = models.TextField(
         _('description'), blank=True
     )
@@ -62,7 +62,7 @@ class Activity(PolymorphicModel):
         return self.contributions.count()
 
     def save(self, **kwargs):
-        if not self.slug:
+        if self.slug == 'new' and self.title:
             self.slug = slugify(self.title)
 
         super(Activity, self).save(**kwargs)

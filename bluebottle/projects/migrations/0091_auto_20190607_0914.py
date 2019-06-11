@@ -46,7 +46,7 @@ def migrate_projects(apps, schema_editor):
                     truncate(project.projectlocation.latitude, 12)
                 )
             else:
-                point = None
+                point = Point(0, 0)
 
             country = project.country
 

@@ -1,23 +1,139 @@
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework_json_api.relations import ResourceRelatedField
-from rest_framework_json_api.serializers import ModelSerializer
+from rest_framework_json_api.serializers import (
+    ModelSerializer, ValidationError, IntegerField
+)
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer, ActivitySubmitSerializer
 )
-from bluebottle.funding.models import Funding, Donation, Payment
+from bluebottle.files.serializers import ImageField
+from bluebottle.funding.models import Funding, Donation, Payment, Fundraiser, Reward, BudgetLine
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.transitions.serializers import TransitionSerializer
 
 
+class FundingCurrencyValidator(object):
+    """
+    Validates that the currency of the field is the same as the activity currency
+    """
+    message = _('Currency does not match  any of the activities currencies')
+
+    def __init__(self, fields=None, message=None):
+        if fields is None:
+            fields = ['amount']
+
+        self.fields = fields
+        self.message = message or self.message
+
+    def __call__(self, data):
+        for field in self.fields:
+            if unicode(data[field].currency) not in data['activity'].accepted_currencies:
+                raise ValidationError(self.message)
+
+
+class FundraiserSerializer(ModelSerializer):
+    """
+    Serializer to view/create fundraisers
+    """
+    owner = ResourceRelatedField(read_only=True)
+    activity = ResourceRelatedField(queryset=Funding.objects.all())
+    image = ImageField(required=False, allow_null=True)
+
+    amount = MoneySerializer()
+    amount_donated = MoneySerializer(read_only=True)
+
+    validators = [FundingCurrencyValidator()]
+
+    included_serializers = {
+        'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity': 'bluebottle.funding.serializers.FundingSerializer',
+    }
+
+    class Meta:
+        model = Fundraiser
+        fields = (
+            'id', 'owner', 'activity', 'title', 'description', 'image',
+            'amount', 'amount_donated', 'deadline'
+        )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'image',
+            'owner',
+            'activity',
+        ]
+
+        resource_name = 'activities/fundraisers'
+
+    def validate(self, data):
+        if data.get('deadline') and data['deadline'] > data['activity'].deadline:
+            raise ValidationError(
+                {'deadline': [_("Fundraiser deadline exceeds activity deadline.")]}
+            )
+        return data
+
+
+class RewardSerializer(ModelSerializer):
+    activity = ResourceRelatedField(queryset=Funding.objects.all())
+    count = IntegerField(read_only=True)
+    amount = MoneySerializer(min_amount=5.00)
+
+    validators = [FundingCurrencyValidator()]
+
+    included_serializers = {
+        'activity': 'bluebottle.funding.serializers.FundingSerializer',
+    }
+
+    class Meta:
+        model = Reward
+        fields = ('id', 'title', 'description', 'amount', 'limit', 'activity', 'count')
+
+    class JSONAPIMeta:
+        included_resources = [
+            'activity',
+        ]
+
+        resource_name = 'activities/rewards'
+
+
+class BudgetLineSerializer(ModelSerializer):
+    activity = ResourceRelatedField(queryset=Funding.objects.all())
+    amount = MoneySerializer()
+
+    validators = [FundingCurrencyValidator()]
+
+    included_serializers = {
+        'activity': 'bluebottle.funding.serializers.FundingSerializer',
+    }
+
+    class Meta:
+        model = BudgetLine
+        fields = ('activity', 'amount', 'description')
+
+    class JSONAPIMeta:
+        included_resources = [
+            'activity',
+        ]
+
+        resource_name = 'activities/budgetlines'
+
+
 class FundingSerializer(BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
+
+    fundraisers = FundraiserSerializer(many=True, required=False)
+    rewards = RewardSerializer(many=True, required=False)
+    budgetlines = BudgetLineSerializer(many=True, required=False)
 
     class Meta:
         model = Funding
         fields = BaseActivitySerializer.Meta.fields + (
-            'deadline', 'duration', 'target',
+            'deadline', 'duration', 'target', 'budgetlines', 'fundraisers', 'rewards',
         )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
@@ -25,7 +141,10 @@ class FundingSerializer(BaseActivitySerializer):
             'image',
             'owner',
             'initiative',
-            'place'
+            'place',
+            'fundraisers',
+            'budgetlines',
+            'rewards',
         ]
         resource_name = 'activities/fundings'
 
@@ -34,6 +153,9 @@ class FundingSerializer(BaseActivitySerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'place': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'fundraisers': 'bluebottle.funding.serializers.FundraiserSerializer',
+        'rewards': 'bluebottle.funding.serializers.RewardSerializer',
+        'budgetlines': 'bluebottle.funding.serializers.BudgetLineSerializer',
     }
 
 
@@ -59,23 +181,58 @@ class FundingTransitionSerializer(TransitionSerializer):
         resource_name = 'funding-transitions'
 
 
+class IsRelatedToActivity(object):
+    """
+    Validates that the reward activity is the same as the donation activity
+    """
+    message = _('The selected reward is not related to this activity')
+
+    def __init__(self, field):
+        self.field = field
+
+    def __call__(self, data):
+        if self.field in data and not data[self.field].activity == data['activity']:
+            raise ValidationError(self.message)
+
+
+class RewardAmountMatches(object):
+    """
+    Validates that the reward activity is the same as the donation activity
+    """
+    message = _('The amount does not match the selected reward.')
+
+    def __call__(self, data):
+        if 'reward' in data and not data['reward'].amount == data['amount']:
+            raise ValidationError(self.message)
+
+
 class DonationSerializer(BaseContributionSerializer):
     amount = MoneySerializer()
 
     included_serializers = {
         'activity': 'bluebottle.funding.serializers.FundingSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'reward': 'bluebottle.funding.serializers.RewardSerializer',
+        'fundraiser': 'bluebottle.funding.serializers.FundraiserSerializer',
     }
+
+    validators = [
+        IsRelatedToActivity('reward'),
+        IsRelatedToActivity('fundraiser'),
+        RewardAmountMatches(),
+    ]
 
     class Meta(BaseContributionSerializer.Meta):
         model = Donation
-        fields = BaseContributionSerializer.Meta.fields + ('amount', )
+        fields = BaseContributionSerializer.Meta.fields + ('amount', 'fundraiser', 'reward',)
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/donations'
         included_resources = [
             'user',
-            'activity'
+            'activity',
+            'reward',
+            'fundraiser',
         ]
 
 

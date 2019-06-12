@@ -9,12 +9,11 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 from moneyed.classes import Money
 from multiselectfield import MultiSelectField
-
 from polymorphic.models import PolymorphicModel
 
-from bluebottle.fsm import FSMField, TransitionNotAllowed
-
 from bluebottle.activities.models import Activity, Contribution
+from bluebottle.files.fields import ImageField
+from bluebottle.fsm import FSMField
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices
 
@@ -24,7 +23,8 @@ class Funding(Activity):
     class Status(DjangoChoices):
         draft = ChoiceItem('draft', _('draft'))
         submitted = ChoiceItem('submitted', _('submitted'))
-        running = ChoiceItem('running', _('running'))
+        approved = ChoiceItem('approved', _('approved'))
+        open = ChoiceItem('open', _('open'))
         done = ChoiceItem('done', _('done'))
         closed = ChoiceItem('closed', _('closed'))
 
@@ -56,15 +56,6 @@ class Funding(Activity):
             ('api_change_own_funding', 'Can change own funding through the API'),
             ('api_delete_own_funding', 'Can delete own funding through the API'),
         )
-
-    def save(self, *args, **kwargs):
-        if self.status == Activity.Status.draft:
-            try:
-                self.open()
-            except TransitionNotAllowed:
-                pass
-
-        super(Funding, self).save(*args, **kwargs)
 
     @property
     def amount_raised(self):
@@ -108,8 +99,16 @@ class Funding(Activity):
         pass
 
     @Activity.status.transition(
-        source=Activity.Status.open,
-        target=Activity.Status.running,
+        source=Status.submitted,
+        target=Status.approved,
+        conditions=[is_complete, initiative_is_approved]
+    )
+    def approve(self):
+        pass
+
+    @Activity.status.transition(
+        source=Status.approved,
+        target=Status.open,
         conditions=[is_complete, initiative_is_approved]
     )
     def start(self):
@@ -117,26 +116,127 @@ class Funding(Activity):
             self.deadline = timezone.now().date() + datetime.timedelta(days=self.duration)
 
     @Activity.status.transition(
-        source=Activity.Status.running,
-        target=Activity.Status.done,
+        source=Status.open,
+        target=Status.done,
     )
     def done(self):
         pass
 
     @Activity.status.transition(
-        source=Activity.Status.running,
-        target=Activity.Status.closed,
+        source=Status.open,
+        target=Status.closed,
     )
     def closed(self):
         pass
 
     @Activity.status.transition(
-        source=[Activity.Status.done, Activity.Status.closed],
-        target=Activity.Status.running,
+        source=[Status.done, Status.closed],
+        target=Status.open,
         conditions=[deadline_in_future]
     )
     def extend(self):
         pass
+
+
+class Reward(models.Model):
+    """
+    Rewards for donations
+    """
+    amount = MoneyField(_('Amount'))
+    title = models.CharField(_('Title'), max_length=200)
+    description = models.CharField(_('Description'), max_length=500)
+    activity = models.ForeignKey('funding.Funding', verbose_name=_('Activity'), related_name='rewards')
+    limit = models.IntegerField(
+        _('Limit'),
+        null=True,
+        blank=True,
+        help_text=_('How many of this rewards are available')
+    )
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    @property
+    def count(self):
+        return self.donations.filter(
+            status=Donation.Status.success
+        ).count()
+
+    def __unicode__(self):
+        return self.title
+
+    class Meta:
+        ordering = ['-activity__created', 'amount']
+        verbose_name = _("Gift")
+        verbose_name_plural = _("Gifts")
+
+    def delete(self, *args, **kwargs):
+        if self.count:
+            raise ValueError(_('Not allowed to delete a reward with successful donations.'))
+
+        return super(Reward, self).delete(*args, **kwargs)
+
+
+class BudgetLine(models.Model):
+    """
+    BudgetLine: Entries to the Activity Budget sheet.
+    """
+    activity = models.ForeignKey('funding.Funding', related_name='budgetlines')
+    description = models.CharField(_('description'), max_length=255, default='')
+
+    amount = MoneyField()
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('budget line')
+        verbose_name_plural = _('budget lines')
+
+    def __unicode__(self):
+        return u'{0} - {1}'.format(self.description, self.amount)
+
+
+class Fundraiser(models.Model):
+    owner = models.ForeignKey('members.Member', related_name="funding_fundraisers")
+    activity = models.ForeignKey(
+        'funding.Funding',
+        verbose_name=_("activity"),
+        related_name="fundraisers"
+    )
+
+    title = models.CharField(_("title"), max_length=255)
+    description = models.TextField(_("description"), blank=True)
+
+    image = ImageField(blank=True, null=True)
+
+    amount = MoneyField(_("amount"))
+    deadline = models.DateField(_('deadline'), null=True, blank=True)
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return self.title
+
+    @property
+    def amount_donated(self):
+        donations = self.donations.filter(
+            status=[Donation.Status.success]
+        )
+
+        totals = [
+            Money(data['amount__sum'], data['amount_currency']) for data in
+            donations.values('amount_currency').annotate(Sum('amount')).order_by()
+        ]
+
+        totals = [convert(amount, self.amount.currency) for amount in totals]
+
+        return sum(totals) or Money(0, self.amount.currency)
+
+    class Meta():
+        verbose_name = _('fundraiser')
+        verbose_name_plural = _('fundraisers')
 
 
 class Donation(Contribution):
@@ -144,9 +244,17 @@ class Donation(Contribution):
         refunded = ChoiceItem('refunded', _('refunded'))
 
     amount = MoneyField()
+    reward = models.ForeignKey(Reward, null=True, related_name="donations")
+    fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
+
+    @property
+    def payment_method(self):
+        if not self.payment:
+            return None
+        return self.payment.type
 
     def funding_is_running(self):
-        return self.activity.status == Activity.Status.open
+        return self.activity.status == Funding.Status.open
 
     @Contribution.status.transition(
         source=[Status.new, Status.success],

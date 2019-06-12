@@ -31,11 +31,11 @@ class StripePaymentTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'stripe-payments',
+                'type': 'payments/stripe-payments',
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'donations',
+                            'type': 'contributions/donations',
                             'id': self.donation.pk,
                         }
                     }
@@ -76,4 +76,4 @@ class StripePaymentTestCase(BluebottleTestCase):
             user=BlueBottleUserFactory.create()
         )
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

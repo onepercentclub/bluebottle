@@ -5,7 +5,7 @@ class PledgePayment(Payment):
 
     def save(self, *args, **kwargs):
         if self.status == self.Status.new:
-            self.success()
+            self.succeed()
 
         super(PledgePayment, self).save(*args, **kwargs)
 

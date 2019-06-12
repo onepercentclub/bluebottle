@@ -81,8 +81,7 @@ class FSMField(models.CharField):
     def __init__(self, protected=True, max_length=20, *args, **kwargs):
         self.protected = protected
         self.transitions = []
-
-        return super(FSMField, self).__init__(max_length=max_length, *args, **kwargs)
+        super(FSMField, self).__init__(max_length=max_length, *args, **kwargs)
 
     def contribute_to_class(self, cls, name, **kwargs):
         """ Add several fields to the model class.
@@ -95,7 +94,7 @@ class FSMField(models.CharField):
 
         """
         super(FSMField, self).contribute_to_class(cls, name, **kwargs)
-
+        self.name = name
         descriptor = FSMFieldDescriptor(self)
         setattr(cls, self.name, descriptor)
 

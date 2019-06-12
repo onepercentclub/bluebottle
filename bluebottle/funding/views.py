@@ -1,18 +1,13 @@
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
-
+from bluebottle.funding.models import Funding, Donation
+from bluebottle.funding.serializers import FundingSerializer, DonationSerializer, FundingTransitionSerializer
+from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
     CreateAPIView,
 )
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission
-)
-
-from bluebottle.funding.models import Funding, Donation
-from bluebottle.funding.serializers import FundingSerializer, DonationSerializer, FundingTransitionSerializer
-from bluebottle.transitions.views import TransitionList
 
 
 class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -47,7 +42,7 @@ class FundingTransitionList(TransitionList):
     queryset = Funding.objects.all()
 
     prefetch_for_includes = {
-        'resource': ['event'],
+        'resource': ['funding'],
     }
 
 

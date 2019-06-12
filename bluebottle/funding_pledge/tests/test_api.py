@@ -9,10 +9,10 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
-class FundingTestCase(BluebottleTestCase):
+class PaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(FundingTestCase, self).setUp()
+        super(PaymentTestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()

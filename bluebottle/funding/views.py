@@ -6,13 +6,84 @@ from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
     CreateAPIView,
 )
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission
-)
 
-from bluebottle.funding.models import Funding, Donation
-from bluebottle.funding.serializers import FundingSerializer, DonationSerializer, FundingTransitionSerializer
+from bluebottle.funding.models import (
+    Funding, Donation, Reward, Fundraiser, BudgetLine,
+)
+from bluebottle.funding.serializers import (
+    FundingSerializer, DonationSerializer, FundingTransitionSerializer,
+    FundraiserSerializer, RewardSerializer, BudgetLineSerializer
+)
 from bluebottle.transitions.views import TransitionList
+
+
+class RewardList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+    queryset = Reward.objects.all()
+    serializer_class = RewardSerializer
+
+    prefetch_for_includes = {
+        'activity': ['activity'],
+    }
+
+
+class RewardDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = Reward.objects.all()
+    serializer_class = RewardSerializer
+
+    prefetch_for_includes = {
+        'activity': ['activity'],
+    }
+
+    permission_classes = []
+
+
+class FundraiserList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+    queryset = Fundraiser.objects.all()
+    serializer_class = FundraiserSerializer
+
+    prefetch_for_includes = {
+        'owner': ['owner'],
+        'activity': ['activity'],
+    }
+
+    permission_classes = []
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class FundraiserDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = Fundraiser.objects.all()
+    serializer_class = FundraiserSerializer
+
+    prefetch_for_includes = {
+        'owner': ['owner'],
+        'activity': ['activity'],
+    }
+
+    permission_classes = []
+
+
+class BudgetLineList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+    queryset = BudgetLine.objects.all()
+    serializer_class = BudgetLineSerializer
+
+    prefetch_for_includes = {
+        'activity': ['activity'],
+    }
+
+    permission_classes = []
+
+
+class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = BudgetLine.objects.all()
+    serializer_class = BudgetLineSerializer
+
+    prefetch_for_includes = {
+        'activity': ['activity'],
+    }
+
+    permission_classes = []
 
 
 class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -26,6 +97,8 @@ class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'owner': ['owner']
     }
 
+    permission_classes = []
+
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
@@ -34,11 +107,14 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Funding.objects.all()
     serializer_class = FundingSerializer
 
-    permission_classes = (ActivityTypePermission, ActivityPermission,)
+    permission_classes = []
 
     prefetch_for_includes = {
         'activitiy': ['initiative'],
-        'owner': ['owner']
+        'owner': ['owner'],
+        'rewards': ['reward'],
+        'budgetlines': ['budgetlines'],
+        'fundraisers': ['fundraisers']
     }
 
 
@@ -60,7 +136,8 @@ class DonationList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
 
     prefetch_for_includes = {
         'activity': ['activity'],
-        'user': ['user']
+        'user': ['user'],
+        'reward': ['reward'],
     }
 
     def perform_create(self, serializer):

@@ -14,21 +14,20 @@ from bluebottle.assignments.models import Assignment
 from bluebottle.utils.admin import FSMAdmin
 
 
-class ActivityChildAdmin(PolymorphicChildModelAdmin):
+class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline, )
 
-    readonly_fields = ['status']
+    readonly_fields = ['status', 'created', 'updated']
 
 
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
-    fsm_field = 'status'
     base_model = Activity
     child_models = (Event, Funding, Assignment)
     list_filter = (PolymorphicChildModelFilter,)
 
-    list_display = ['created', 'title', 'type', 'contribution_count']
+    list_display = ['created', 'title', 'type', 'status', 'contribution_count']
 
     def type(self, obj):
         return obj.get_real_instance_class().__name__

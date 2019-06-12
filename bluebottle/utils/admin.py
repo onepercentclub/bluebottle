@@ -298,6 +298,8 @@ class FSMAdmin(admin.ModelAdmin):
 
     form = FSMModelForm
 
+    readonly_fields = [fsm_field]
+
     def get_transition(self, instance, name):
         transitions = getattr(
             instance,

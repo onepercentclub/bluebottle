@@ -3,9 +3,8 @@ from django.forms import CheckboxInput
 from django.forms.models import ModelFormMetaclass
 from django.utils.translation import ugettext_lazy as _
 
-from django_fsm import FSMField
-
 from bluebottle.activities.models import Activity
+from bluebottle.fsm import FSMField
 
 
 class ButtonSelectWidget(forms.Select):
@@ -32,9 +31,7 @@ class FSMModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(FSMModelForm, self).__init__(*args, **kwargs)
         for fsm_field in self.fsm_fields:
-            transitions = getattr(
-                self.instance, 'get_available_{}_transitions'.format(fsm_field)
-            )()
+            transitions = getattr(self.instance, 'get_all_{}_transitions'.format(fsm_field))()
             field_name = '{}_transition'.format(fsm_field)
             self.fields[field_name].choices = [
                 (transition.name, transition.name) for transition in transitions

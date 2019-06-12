@@ -57,7 +57,7 @@ class EventAdmin(ActivityChildAdmin):
 
     fieldsets = (
         (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner', 'status',
+            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition'
         )}),
         (_('Details'), {'fields': (
             'description', 'capacity',

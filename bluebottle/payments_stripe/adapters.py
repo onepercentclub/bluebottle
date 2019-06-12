@@ -70,15 +70,6 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
                 self.payment.charge_token = charge.id
                 self.payment.save()
-
-                if 'transfer' in charge:
-                    transfer = stripe.Transfer.retrieve(
-                        charge['transfer'],
-                        api_key=self.credentials['secret_key']
-                    )
-
-                    self.update_from_transfer(transfer)
-                self.update_from_charge(charge)
             except (stripe.error.CardError, stripe.error.InvalidRequestError) as e:
                 self.payment.status = StatusDefinition.FAILED
                 self.payment.save()

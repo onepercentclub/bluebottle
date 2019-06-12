@@ -29,7 +29,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     prepopulated_fields = {"slug": ("title",)}
 
     raw_id_fields = ('owner', 'reviewer', 'promoter', 'place', 'organization', 'organization_contact')
-    list_display = ['title', 'created']
+    list_display = ['title', 'created', 'status']
     list_filter = ['status']
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']

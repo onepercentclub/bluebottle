@@ -152,7 +152,7 @@ class Reward(models.Model):
     @property
     def count(self):
         return self.donations.filter(
-            donation__status=Donation.Status.success
+            status=Donation.Status.success
         ).count()
 
     def __unicode__(self):
@@ -204,7 +204,7 @@ class Fundraiser(models.Model):
     image = ImageField(blank=True, null=True)
 
     amount = MoneyField(_("amount"))
-    deadline = models.DateTimeField(null=True)
+    deadline = models.DateField(_('deadline'), null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -214,8 +214,8 @@ class Fundraiser(models.Model):
 
     @property
     def amount_donated(self):
-        donations = self.donation_set.filter(
-            order__status=[Donation.Status.success]
+        donations = self.donations.filter(
+            status=[Donation.Status.success]
         )
 
         totals = [
@@ -237,6 +237,8 @@ class Donation(Contribution):
         refunded = ChoiceItem('refunded', _('refunded'))
 
     amount = MoneyField()
+    reward = models.ForeignKey(Reward, null=True, related_name="donations")
+    fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
 
     def funding_is_running(self):
         return self.activity.status == Activity.Status.open

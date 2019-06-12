@@ -5,5 +5,5 @@ from bluebottle.funding_pledge.models import PledgePayment
 
 
 @admin.register(PledgePayment)
-class StripePaymentAdmin(PaymentChildAdmin):
+class PledgePaymentAdmin(PaymentChildAdmin):
     base_model = PledgePayment

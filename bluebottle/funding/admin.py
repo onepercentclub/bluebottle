@@ -19,6 +19,7 @@ class DonationInline(admin.TabularInline):
 
     raw_id_fields = ('user',)
     readonly_fields = ('donation', 'user', 'amount', 'status',)
+    fields = readonly_fields
     extra = 0
 
     def donation(self, obj):
@@ -68,7 +69,7 @@ class DonationAdmin(FSMAdmin):
     payment_link.short_description = _('Payment')
 
 
-class PaymentChildAdmin(PolymorphicChildModelAdmin):
+class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 
     raw_id_fields = ['donation']
 
@@ -77,8 +78,8 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin):
     def get_urls(self):
         urls = super(PaymentChildAdmin, self).get_urls()
         process_urls = [
-            url(r'^check/(?P<pk>\d+)/$', self.refund, name="funding_payment_check"),
-            url(r'^refund/(?P<pk>\d+)/$', self.check_status, name="funding_payment_refund"),
+            url(r'^(?P<pk>\d+)/check/$', self.check_status, name="funding_payment_check"),
+            url(r'^(?P<pk>\d+)/refund/$', self.refund, name="funding_payment_refund"),
         ]
         return process_urls + urls
 
@@ -100,8 +101,6 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin):
         payment = Payment.objects.get(pk=pk)
         try:
             payment.refund()
-            payment.save()
-            payment.update()
         except PaymentException as e:
             self.message_user(
                 request,

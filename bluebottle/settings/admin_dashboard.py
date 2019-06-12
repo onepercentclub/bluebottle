@@ -18,10 +18,6 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['initiatives.change_initiative']
             },
             {
-                'name': 'activities.activity',
-                'permissions': ['activities.activities']
-            },
-            {
                 'name': 'categories.category',
                 'permissions': ['categories.change_category']
             },
@@ -32,6 +28,25 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             {
                 'name': 'organizations.organization',
                 'permissions': ['organizations.organization']
+            },
+        ]
+    },
+    {
+        'label': _('Activities'),
+        'app_label': 'activities',
+        'permissions': ['activities.change_activity'],
+        'items': [
+            {
+                'name': 'activities.activity',
+                'permissions': ['activities.activity']
+            },
+            {
+                'name': 'events.event',
+                'permissions': ['events.event']
+            },
+            {
+                'name': 'funding.funding',
+                'permissions': ['funding.funding']
             },
         ]
     },

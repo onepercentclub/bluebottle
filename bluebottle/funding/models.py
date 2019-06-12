@@ -178,6 +178,9 @@ class Payment(PolymorphicModel):
 
     donation = models.OneToOneField(Donation, related_name='payment')
 
+    def can_refund(self):
+        return self.status in ['pending', 'success']
+
     @status.transition(
         source=['new'],
         target='success'
@@ -196,18 +199,16 @@ class Payment(PolymorphicModel):
 
     @status.transition(
         source=['success'],
-        target='refunded'
+        target='refunded',
+        # conditions=[can_refund]
     )
     def refund(self):
+        raise NotImplementedError('Refunding not yet implemented for "{}"'.format(self))
         self.donation.refund()
         self.donation.save()
 
     def __unicode__(self):
         return "{} - {}".format(self.polymorphic_ctype, self.id)
-
-    @property
-    def can_refund(self):
-        return self.status in ['pending', 'success']
 
     class Meta:
         permissions = (

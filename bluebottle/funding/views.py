@@ -24,6 +24,8 @@ class RewardList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'activity': ['activity'],
     }
 
+    permission_classes = []
+
 
 class RewardDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Reward.objects.all()
@@ -137,6 +139,7 @@ class DonationList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'activity': ['activity'],
         'user': ['user'],
         'reward': ['reward'],
+        'fundraiser': ['fundraiser'],
     }
 
     def perform_create(self, serializer):

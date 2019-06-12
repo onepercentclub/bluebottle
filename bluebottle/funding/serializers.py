@@ -71,7 +71,7 @@ class FundraiserSerializer(ModelSerializer):
         resource_name = 'activities/fundraisers'
 
     def validate(self, data):
-        if not data.get('deadline') or data['deadline'] > data['initiative'].deadline:
+        if data.get('deadline') and data['deadline'] > data['activity'].deadline:
             raise ValidationError(
                 {'deadline': [_("Fundraiser deadline exceeds activity deadline.")]}
             )
@@ -177,6 +177,31 @@ class FundingTransitionSerializer(TransitionSerializer):
         resource_name = 'funding-transitions'
 
 
+class IsRelatedToActivity(object):
+    """
+    Validates that the reward activity is the same as the donation activity
+    """
+    message = _('The selected reward is not related to this activity')
+
+    def __init__(self, field):
+        self.field = field
+
+    def __call__(self, data):
+        if self.field in data and not data[self.field].activity == data['activity']:
+            raise ValidationError(self.message)
+
+
+class RewardAmountMatches(object):
+    """
+    Validates that the reward activity is the same as the donation activity
+    """
+    message = _('The amount does not match the selected reward.')
+
+    def __call__(self, data):
+        if 'reward' in data and not data['reward'].amount == data['amount']:
+            raise ValidationError(self.message)
+
+
 class DonationSerializer(BaseContributionSerializer):
     amount = MoneySerializer()
 
@@ -184,17 +209,26 @@ class DonationSerializer(BaseContributionSerializer):
         'activity': 'bluebottle.funding.serializers.FundingSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reward': 'bluebottle.funding.serializers.RewardSerializer',
+        'fundraiser': 'bluebottle.funding.serializers.FundraiserSerializer',
     }
+
+    validators = [
+        IsRelatedToActivity('reward'),
+        IsRelatedToActivity('fundraiser'),
+        RewardAmountMatches(),
+    ]
 
     class Meta(BaseContributionSerializer.Meta):
         model = Donation
-        fields = BaseContributionSerializer.Meta.fields + ('amount', )
+        fields = BaseContributionSerializer.Meta.fields + ('amount', 'fundraiser', 'reward',)
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/donations'
         included_resources = [
             'user',
-            'activity'
+            'activity',
+            'reward',
+            'fundraiser',
         ]
 
 

@@ -201,3 +201,15 @@ class Payment(PolymorphicModel):
     def refund(self):
         self.donation.refund()
         self.donation.save()
+
+    def __unicode__(self):
+        return "{} - {}".format(self.polymorphic_ctype, self.id)
+
+    @property
+    def can_refund(self):
+        return self.status in ['pending', 'success']
+
+    class Meta:
+        permissions = (
+            ('refund_payment', 'Can refund payments'),
+        )

@@ -20,6 +20,14 @@ from bluebottle.utils.fields import MoneyField, get_currency_choices
 
 
 class Funding(Activity):
+
+    class Status(DjangoChoices):
+        draft = ChoiceItem('draft', _('draft'))
+        submitted = ChoiceItem('submitted', _('submitted'))
+        running = ChoiceItem('running', _('running'))
+        done = ChoiceItem('done', _('done'))
+        closed = ChoiceItem('closed', _('closed'))
+
     deadline = models.DateField(_('deadline'), null=True, blank=True)
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
@@ -92,16 +100,17 @@ class Funding(Activity):
             return _('Please make sure the initiative is approved')
 
     @Activity.status.transition(
-        source=Activity.Status.draft,
-        target=Activity.Status.open,
+        source=Status.draft,
+        target=Status.submitted,
         conditions=[is_complete, initiative_is_approved]
     )
-    def open(self):
+    def submit(self):
         pass
 
     @Activity.status.transition(
         source=Activity.Status.open,
         target=Activity.Status.running,
+        conditions=[is_complete, initiative_is_approved]
     )
     def start(self):
         if self.duration:
@@ -181,7 +190,7 @@ class Payment(PolymorphicModel):
     def can_refund(self):
         return self.status in ['pending', 'success']
 
-    @status.transition(
+    @Activity.status.transition(
         source=['new'],
         target='success'
     )
@@ -189,7 +198,7 @@ class Payment(PolymorphicModel):
         self.donation.success()
         self.donation.save()
 
-    @status.transition(
+    @Activity.status.transition(
         source=['new', 'success'],
         target='failed'
     )
@@ -197,7 +206,7 @@ class Payment(PolymorphicModel):
         self.donation.fail()
         self.donation.save()
 
-    @status.transition(
+    @Activity.status.transition(
         source=['success'],
         target='refunded',
         # conditions=[can_refund]

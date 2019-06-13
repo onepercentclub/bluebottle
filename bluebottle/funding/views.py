@@ -42,7 +42,7 @@ class FundingTransitionList(TransitionList):
     queryset = Funding.objects.all()
 
     prefetch_for_includes = {
-        'resource': ['event'],
+        'resource': ['funding'],
     }
 
 

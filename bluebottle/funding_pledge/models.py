@@ -2,6 +2,7 @@ from bluebottle.funding.models import Payment
 
 
 class PledgePayment(Payment):
+
     def save(self, *args, **kwargs):
         if self.status == self.Status.new:
             self.success()

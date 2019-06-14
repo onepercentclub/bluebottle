@@ -55,9 +55,11 @@ class EventAdmin(ActivityChildAdmin):
     list_display = ['title', 'status', 'start_time', 'end_time']
     base_model = Event
 
+    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
+
     fieldsets = (
         (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner', 'status',
+            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition'
         )}),
         (_('Details'), {'fields': (
             'description', 'capacity',

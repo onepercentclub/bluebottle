@@ -73,14 +73,6 @@ class Activity(PolymorphicModel):
     def full_url(self):
         return format_html("/{}/{}/{}", self._meta.app_label, self.pk, self.slug)
 
-    @status.transition(
-        source=Status.draft,
-        target=Status.open,
-        conditions=[is_complete]
-    )
-    def open(self):
-        pass
-
 
 class Contribution(PolymorphicModel):
     class Status(DjangoChoices):

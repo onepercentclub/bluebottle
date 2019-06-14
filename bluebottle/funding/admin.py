@@ -1,17 +1,12 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.funding.models import Funding, Donation
 from bluebottle.utils.admin import FSMAdmin
 from bluebottle.utils.forms import FSMModelForm
-
-
-class FundingAdminForm(FSMModelForm):
-    class Meta:
-        model = Funding
-        exclude = ['status', ]
 
 
 class DonationInline(admin.TabularInline):
@@ -30,11 +25,23 @@ class DonationInline(admin.TabularInline):
 
 
 class FundingAdmin(ActivityChildAdmin):
-    form = FundingAdminForm
     inlines = (DonationInline,)
     base_model = Funding
 
-    readonly_fields = ['amount_raised', ]
+    raw_id_fields = ActivityChildAdmin.raw_id_fields
+
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_raised']
+
+    fieldsets = (
+        (_('Basic'), {'fields': (
+            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition', 'created', 'updated'
+        )}),
+        (_('Details'), {'fields': (
+            'deadline', 'duration',
+            'target', 'amount_raised',
+            'accepted_currencies',
+        )}),
+    )
 
 
 admin.site.register(Funding, FundingAdmin)

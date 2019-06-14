@@ -164,6 +164,7 @@ class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView)
 
 class PaymentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     permission_classes = []
+
     related_permission_classes = {
         'donation': [IsOwner]
     }

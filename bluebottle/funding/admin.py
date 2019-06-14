@@ -14,11 +14,20 @@ from bluebottle.funding_stripe.models import StripePayment
 from bluebottle.utils.admin import FSMAdmin
 
 
-class DonationInline(admin.TabularInline):
+class PaymentLinkMixin(object):
+
+    def payment_link(self, obj):
+        url = reverse('admin:funding_payment_change', args=(obj.payment.id,))
+        return format_html('<a href="{}">{}</a>', url, obj.payment)
+
+    payment_link.short_description = _('Payment')
+
+
+class DonationInline(admin.TabularInline, PaymentLinkMixin):
     model = Donation
 
     raw_id_fields = ('user',)
-    readonly_fields = ('donation', 'user', 'amount', 'status',)
+    readonly_fields = ('donation', 'user', 'amount', 'status', 'payment_link')
     fields = readonly_fields
     extra = 0
 
@@ -39,6 +48,8 @@ class FundingAdmin(ActivityChildAdmin):
 
     readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_raised']
 
+    list_display = ['title', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
+
     fieldsets = (
         (_('Basic'), {'fields': (
             'title', 'slug', 'initiative', 'owner', 'status', 'status_transition', 'created', 'updated'
@@ -54,19 +65,13 @@ class FundingAdmin(ActivityChildAdmin):
 
 
 @admin.register(Donation)
-class DonationAdmin(FSMAdmin):
+class DonationAdmin(FSMAdmin, PaymentLinkMixin):
     raw_id_fields = ['activity', 'user']
     readonly_fields = ['payment_link', 'status']
     model = Donation
     list_display = ['user', 'status', 'amount']
 
     fields = ['created', 'activity', 'user', 'amount', 'status', 'status_transition', 'payment_link']
-
-    def payment_link(self, obj):
-        url = reverse('admin:funding_payment_change', args=(obj.payment.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.payment)
-
-    payment_link.short_description = _('Payment')
 
 
 class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):

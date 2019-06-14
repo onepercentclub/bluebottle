@@ -31,11 +31,11 @@ class StripePaymentTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'stripe-payments',
+                'type': 'payments/stripe-payments',
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'donations',
+                            'type': 'contributions/donations',
                             'id': self.donation.pk,
                         }
                     }

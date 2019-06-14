@@ -9,13 +9,11 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 from moneyed.classes import Money
 from multiselectfield import MultiSelectField
-
 from polymorphic.models import PolymorphicModel
-
-from bluebottle.fsm import FSMField, TransitionNotAllowed
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.files.fields import ImageField
+from bluebottle.fsm import FSMField
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices
 
@@ -25,7 +23,8 @@ class Funding(Activity):
     class Status(DjangoChoices):
         draft = ChoiceItem('draft', _('draft'))
         submitted = ChoiceItem('submitted', _('submitted'))
-        running = ChoiceItem('running', _('running'))
+        approved = ChoiceItem('approved', _('approved'))
+        open = ChoiceItem('open', _('open'))
         done = ChoiceItem('done', _('done'))
         closed = ChoiceItem('closed', _('closed'))
 
@@ -57,15 +56,6 @@ class Funding(Activity):
             ('api_change_own_funding', 'Can change own funding through the API'),
             ('api_delete_own_funding', 'Can delete own funding through the API'),
         )
-
-    def save(self, *args, **kwargs):
-        if self.status == Activity.Status.draft:
-            try:
-                self.open()
-            except TransitionNotAllowed:
-                pass
-
-        super(Funding, self).save(*args, **kwargs)
 
     @property
     def amount_raised(self):
@@ -109,8 +99,16 @@ class Funding(Activity):
         pass
 
     @Activity.status.transition(
-        source=Activity.Status.open,
-        target=Activity.Status.running,
+        source=Status.submitted,
+        target=Status.approved,
+        conditions=[is_complete, initiative_is_approved]
+    )
+    def approve(self):
+        pass
+
+    @Activity.status.transition(
+        source=Status.approved,
+        target=Status.open,
         conditions=[is_complete, initiative_is_approved]
     )
     def start(self):
@@ -118,22 +116,22 @@ class Funding(Activity):
             self.deadline = timezone.now().date() + datetime.timedelta(days=self.duration)
 
     @Activity.status.transition(
-        source=Activity.Status.running,
-        target=Activity.Status.done,
+        source=Status.open,
+        target=Status.done,
     )
     def done(self):
         pass
 
     @Activity.status.transition(
-        source=Activity.Status.running,
-        target=Activity.Status.closed,
+        source=Status.open,
+        target=Status.closed,
     )
     def closed(self):
         pass
 
     @Activity.status.transition(
-        source=[Activity.Status.done, Activity.Status.closed],
-        target=Activity.Status.running,
+        source=[Status.done, Status.closed],
+        target=Status.open,
         conditions=[deadline_in_future]
     )
     def extend(self):
@@ -249,8 +247,14 @@ class Donation(Contribution):
     reward = models.ForeignKey(Reward, null=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
 
+    @property
+    def payment_method(self):
+        if not self.payment:
+            return None
+        return self.payment.type
+
     def funding_is_running(self):
-        return self.activity.status == Activity.Status.open
+        return self.activity.status == Funding.Status.open
 
     @Contribution.status.transition(
         source=[Status.new, Status.success],

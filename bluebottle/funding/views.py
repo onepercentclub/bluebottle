@@ -5,11 +5,14 @@ from bluebottle.funding.models import Funding, Donation
 from bluebottle.funding.models import (
     Reward, Fundraiser, BudgetLine,
 )
-from bluebottle.funding.serializers import FundingSerializer, DonationSerializer, FundingTransitionSerializer
+from bluebottle.funding.serializers import (
+    FundingSerializer, DonationSerializer, FundingTransitionSerializer
+)
 from bluebottle.funding.serializers import (
     FundraiserSerializer, RewardSerializer, BudgetLineSerializer
 )
 from bluebottle.transitions.views import TransitionList
+from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
     CreateAPIView,
@@ -161,8 +164,11 @@ class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView)
 
 class PaymentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     permission_classes = []
+    related_permission_classes = {
+        'donation': [IsOwner]
+    }
 
     prefetch_for_includes = {
-        'activity': ['activity'],
+        'donation': ['donation'],
         'user': ['user']
     }

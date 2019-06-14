@@ -28,11 +28,11 @@ class PaymentTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'pledge-payments',
+                'type': 'payments/pledge-payments',
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'donations',
+                            'type': 'contributions/donations',
                             'id': self.donation.pk,
                         }
                     }
@@ -44,7 +44,6 @@ class PaymentTestCase(BluebottleTestCase):
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
-
         self.assertEqual(data['data']['attributes']['status'], 'success')
         self.assertEqual(data['included'][0]['attributes']['status'], 'success')
 
@@ -54,14 +53,11 @@ class PaymentTestCase(BluebottleTestCase):
             data=json.dumps(self.data),
             user=BlueBottleUserFactory.create()
         )
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_payment_no_user(self):
         response = self.client.post(
             self.payment_url,
-            data=json.dumps(self.data),
-            user=BlueBottleUserFactory.create()
+            data=json.dumps(self.data)
         )
-
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

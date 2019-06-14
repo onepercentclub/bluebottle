@@ -3,18 +3,16 @@ import os
 from collections import namedtuple
 
 import magic
-
 from django.conf import settings
 from django.core.signing import TimestampSigner, BadSignature
-from django.http.response import HttpResponseNotFound
 from django.http import Http404, HttpResponse
+from django.http.response import HttpResponseNotFound
 from django.template.loader import render_to_string
-from django.utils.translation import ugettext as _
 from django.utils import translation
+from django.utils.translation import ugettext as _
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
 from parler.utils.i18n import get_language
-
 from rest_framework import generics
 from rest_framework import views, response
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
@@ -30,10 +28,8 @@ from bluebottle.clients import properties
 from bluebottle.projects.models import Project
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.permissions import ResourcePermission
-
 from .models import Language
 from .serializers import ShareSerializer, LanguageSerializer
-
 
 mime = magic.Magic(mime=True)
 
@@ -216,12 +212,33 @@ class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView):
         serializer.save()
 
 
-class CreateAPIView(ViewPermissionsMixin, generics.CreateAPIView):
+class RelatedPermissionMixin(object):
+    related_permission_classes = {}
+
+    def check_related_object_permissions(self, request, obj):
+        """
+        Check if the request should be permitted for a given related object.
+        Raises an appropriate exception if the request is not permitted.
+        """
+        for related, permissions in self.related_permission_classes.items():
+            related_obj = getattr(obj, related)
+            for permission in permissions:
+                if not permission().has_object_permission(request, None, related_obj):
+                    self.permission_denied(
+                        request, message=getattr(permission, 'message', None)
+                    )
+
+
+class CreateAPIView(ViewPermissionsMixin, generics.CreateAPIView, RelatedPermissionMixin):
     permission_classes = (ResourcePermission,)
 
     def perform_create(self, serializer):
         if hasattr(serializer.Meta, 'model'):
             self.check_object_permissions(
+                self.request,
+                serializer.Meta.model(**serializer.validated_data)
+            )
+            self.check_related_object_permissions(
                 self.request,
                 serializer.Meta.model(**serializer.validated_data)
             )

@@ -7,4 +7,4 @@ class PledgePaymentSerializer(PaymentSerializer):
         model = PledgePayment
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
-        resource_name = 'pledge-payments'
+        resource_name = 'payments/pledge-payments'

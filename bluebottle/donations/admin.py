@@ -1,6 +1,6 @@
 from django import forms
-from django.contrib.admin.filters import SimpleListFilter
 from django.contrib import admin
+from django.contrib.admin.filters import SimpleListFilter
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -9,7 +9,7 @@ from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.rewards.models import Reward
 from bluebottle.utils.admin import (
-    link_to, export_as_csv_action, TotalAmountAdminChangeList
+    export_as_csv_action, TotalAmountAdminChangeList
 )
 from bluebottle.utils.utils import StatusDefinition
 
@@ -226,21 +226,15 @@ class DonationAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    admin_project = link_to(
-        lambda obj: obj.project,
-        'admin:projects_project_change',
-        view_args=lambda obj: (obj.project.id,),
-        short_description='project',
-        truncate=50
-    )
+    def admin_project(self, obj):
+        url = reverse('admin:projects_project_change', args=(obj.project.id, ))
+        return format_html('<a href="{}">{}</a>', url, obj.project.title)
+    admin_project.short_description = _('Project')
 
-    admin_fundraiser = link_to(
-        lambda obj: obj.fundraiser,
-        'admin:fundraisers_fundraiser_change',
-        view_args=lambda obj: (obj.fundraiser_id,),
-        short_description='fundraiser',
-        truncate=50
-    )
+    def admin_fundraiser(self, obj):
+        url = reverse('admin:fundraisers_fundraiser_change', args=(obj.fundraiser.id, ))
+        return format_html('<a href="{}">{}</a>', url, obj.fundraiser.title)
+    admin_fundraiser.short_description = _('Fundraiser')
 
 
 admin.site.register(Donation, DonationAdmin)

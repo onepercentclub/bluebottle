@@ -1,5 +1,4 @@
 import csv
-import urllib
 
 from adminfilters.multiselect import UnionFieldListFilter
 from django.conf import settings
@@ -16,15 +15,11 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
-from django.urls.exceptions import NoReverseMatch
-from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
-from bluebottle.fsm import TransitionNotAllowed
 from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.clients import properties
+from bluebottle.fsm import TransitionNotAllowed
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
 from bluebottle.tasks.models import TaskMember
@@ -32,82 +27,6 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.forms import FSMModelForm
 from bluebottle.utils.forms import TransitionConfirmationForm
 from .models import Language
-
-
-def link_to(value, url_name, view_args=(), view_kwargs={}, query={},
-            short_description=None, truncate=None):
-    """
-    Return admin field with link to named view with view_args/view_kwargs
-    or view_[kw]args(obj) methods and HTTP GET parameters.
-
-    Parameters:
-
-      * value: function(object) or string for object proeprty name
-      * url_name: name used to reverse() view
-      * view_args: () or function(object) -> () returing view params
-      * view_kwargs: {} or function(object) -> {} returing view params
-      * query: {} or function(object) -> {} returning HTTP GET params
-      * short_description: string with description, defaults to
-        'value'/property name
-    """
-
-    def prop(self, obj):
-        # Replace view_args methods by result of function calls
-        if callable(view_args):
-            args = view_args(obj)
-        else:
-            args = view_args
-
-        if callable(view_kwargs):
-            kwargs = view_kwargs(obj)
-        else:
-            kwargs = view_kwargs
-
-        # Construct URL
-        try:
-            url = reverse(url_name, args=args, kwargs=kwargs)
-        except NoReverseMatch:
-            url = ''
-
-        if callable(query):
-            params = query(obj)
-        else:
-            params = query
-
-        # Append query parameters
-        if params:
-            url += '?' + urllib.urlencode(params)
-
-        # Get value
-        if callable(value):
-            # Call value getter
-            new_value = value(obj)
-        else:
-            # String, assume object property
-            assert isinstance(value, basestring)
-            new_value = getattr(obj, value)
-
-        if truncate:
-            new_value = unicode(new_value)
-            new_value = (new_value[:truncate] + '...') if len(
-                new_value) > truncate else new_value
-
-        if url and new_value:
-            return format_html(
-                u'<a href="{}">{}</a>',
-                url, new_value
-            )
-        if url:
-            return None
-        return new_value
-
-    if not short_description:
-        # No short_description set, use property name
-        assert isinstance(value, basestring)
-        short_description = value
-    prop.short_description = short_description
-
-    return prop
 
 
 class LanguageAdmin(admin.ModelAdmin):
@@ -142,17 +61,6 @@ def prep_field(request, obj, field, manyToManySep=';'):
     if isinstance(output, (list, tuple, QuerySet)):
         output = manyToManySep.join([str(item) for item in output])
     return unicode(output).encode('utf-8') if output else ""
-
-
-def mark_as_plan_new(modeladmin, request, queryset):
-    try:
-        status = ProjectPhase.objects.get(slug='plan-new')
-    except ProjectPhase.DoesNotExist:
-        return
-    queryset.update(status=status)
-
-
-mark_as_plan_new.short_description = _("Mark selected projects as status Plan New")
 
 
 def escape_csv_formulas(item):

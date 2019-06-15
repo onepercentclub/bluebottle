@@ -4,13 +4,15 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
-from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
+from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, StackedPolymorphicInline, \
+    PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Funding, Donation, Payment
-from bluebottle.funding_pledge.models import PledgePayment
-from bluebottle.funding_stripe.models import StripePayment
+from bluebottle.funding.models import Funding, Donation, Payment, FundingPlatformSettings, PaymentProvider
+from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
+from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider
+from bluebottle.utils.admin import BasePlatformSettingsAdmin
 from bluebottle.utils.admin import FSMAdmin
 
 
@@ -121,3 +123,26 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 class PaymentAdmin(PolymorphicParentModelAdmin):
     model = Payment
     child_models = (StripePayment, PledgePayment)
+
+
+class PaymentProviderAdmin(StackedPolymorphicInline):
+    model = PaymentProvider
+
+    class PledgePaymentMethodAdmin(StackedPolymorphicInline.Child):
+        model = PledgePaymentProvider
+        readonly_fields = ['provider']
+
+    class StripePaymentMethodAdmin(StackedPolymorphicInline.Child):
+        model = StripePaymentProvider
+        readonly_fields = ['provider']
+
+    child_inlines = [
+        PledgePaymentMethodAdmin,
+        StripePaymentMethodAdmin
+    ]
+
+
+@admin.register(FundingPlatformSettings)
+class FundingPlatformSettingsAdmin(PolymorphicInlineSupportMixin, BasePlatformSettingsAdmin):
+    model = FundingPlatformSettings
+    inlines = [PaymentProviderAdmin]

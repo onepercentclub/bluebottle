@@ -1,4 +1,5 @@
-from bluebottle.funding.models import Payment
+from bluebottle.funding.models import Payment, PaymentProvider
+from django.utils.translation import ugettext_lazy as _
 
 
 class PledgePayment(Payment):
@@ -15,3 +16,8 @@ class PledgePayment(Payment):
     )
     def request_refund(self):
         self.refund()
+
+
+class PledgePaymentProvider(PaymentProvider):
+
+    provider = _('Pledge')

@@ -215,7 +215,6 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'initiatives.initiativeplatformsettings',
                 'permissions': ['initiatives.change_initiativeplatformsettings']
             },
-
             {
                 'name': 'members.memberplatformsettings',
                 'permissions': ['members.change_memberplatformsettings']
@@ -236,6 +235,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             {
                 'name': 'mails.mailplatformsettings',
                 'permissions': ['mails.change_mailplatformsettings']
+            },
+            {
+                'name': 'funding.fundingplatformsettings',
+                'permissions': ['funding.change_fundingplatformsettings']
             },
             {
                 'name': 'djmoney_rates.ratesource',

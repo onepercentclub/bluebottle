@@ -17,6 +17,15 @@ class IsOwner(permissions.BasePermission):
         """
         Return `True` if user is owner of the object granted, `False` otherwise.
         """
+        return obj.owner == request.user
+
+
+class IsUser(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
         return obj.user == request.user
 
 

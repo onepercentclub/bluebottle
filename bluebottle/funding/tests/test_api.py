@@ -24,7 +24,11 @@ class BudgetLineListTestCase(BluebottleTestCase):
         self.initiative.submit()
         self.initiative.approve()
 
-        self.funding = FundingFactory.create(initiative=self.initiative, accepted_currencies=['EUR'])
+        self.funding = FundingFactory.create(
+            owner=self.user,
+            initiative=self.initiative,
+            accepted_currencies=['EUR']
+        )
 
         self.create_url = reverse('funding-budget-line-list')
         self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
@@ -106,7 +110,11 @@ class RewardListTestCase(BluebottleTestCase):
         self.initiative.submit()
         self.initiative.approve()
 
-        self.funding = FundingFactory.create(initiative=self.initiative, accepted_currencies=['EUR'])
+        self.funding = FundingFactory.create(
+            owner=self.user,
+            initiative=self.initiative,
+            accepted_currencies=['EUR']
+        )
 
         self.create_url = reverse('funding-reward-list')
         self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
@@ -267,13 +275,14 @@ class FundraiserListTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_other_user(self):
+        # Should be allowed
         response = self.client.post(
             self.create_url,
             data=json.dumps(self.data),
             user=BlueBottleUserFactory.create()
         )
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_no_user(self):
         response = self.client.post(

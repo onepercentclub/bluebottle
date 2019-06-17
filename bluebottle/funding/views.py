@@ -1,3 +1,4 @@
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
@@ -27,7 +28,11 @@ class RewardList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'activity': ['activity'],
     }
 
-    permission_classes = []
+    related_permission_classes = {
+        'activity': [IsOwner]
+    }
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 class RewardDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -38,7 +43,11 @@ class RewardDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
         'activity': ['activity'],
     }
 
-    permission_classes = []
+    related_permission_classes = {
+        'activity': [IsOwner]
+    }
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 class FundraiserList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
@@ -50,7 +59,7 @@ class FundraiserList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'activity': ['activity'],
     }
 
-    permission_classes = []
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -65,7 +74,7 @@ class FundraiserDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
         'activity': ['activity'],
     }
 
-    permission_classes = []
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 class BudgetLineList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
@@ -76,7 +85,11 @@ class BudgetLineList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'activity': ['activity'],
     }
 
-    permission_classes = []
+    related_permission_classes = {
+        'activity': [IsOwner]
+    }
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -87,7 +100,11 @@ class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
         'activity': ['activity'],
     }
 
-    permission_classes = []
+    related_permission_classes = {
+        'activity': [IsOwner]
+    }
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -100,8 +117,6 @@ class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'initiative': ['initiative'],
         'owner': ['owner']
     }
-
-    permission_classes = []
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

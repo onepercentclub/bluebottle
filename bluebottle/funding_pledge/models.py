@@ -20,4 +20,11 @@ class PledgePayment(Payment):
 
 class PledgePaymentProvider(PaymentProvider):
 
-    provider = _('Pledge')
+    @property
+    def payment_methods(self):
+        return [{
+            'provider': _('Pledge'),
+            'code': 'pledge',
+            'name': _('pledge'),
+            'currencies': []
+        }]

@@ -1,9 +1,14 @@
 from django.contrib import admin
 
-from bluebottle.funding.admin import PaymentChildAdmin
-from bluebottle.funding_vitepay.models import StripePayment
+from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin
+from bluebottle.funding_vitepay.models import VitepayPayment, VitepayPaymentProvider
 
 
-@admin.register(StripePayment)
+@admin.register(VitepayPayment)
 class VitepayPaymentAdmin(PaymentChildAdmin):
-    base_model = StripePayment
+    base_model = VitepayPayment
+
+
+@admin.register(VitepayPaymentProvider)
+class PledgePaymentProviderAdmin(PaymentProviderChildAdmin):
+    base_model = VitepayPaymentProvider

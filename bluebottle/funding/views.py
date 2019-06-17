@@ -1,13 +1,15 @@
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
-from bluebottle.funding.models import Funding, Donation
+from bluebottle.funding.models import Funding, Donation, PaymentProvider
 from bluebottle.funding.models import (
     Reward, Fundraiser, BudgetLine,
 )
 from bluebottle.funding.serializers import (
-    FundingSerializer, DonationSerializer, FundingTransitionSerializer
-)
+    FundingSerializer, DonationSerializer, FundingTransitionSerializer,
+    PaymentMethodSerializer)
 from bluebottle.funding.serializers import (
     FundraiserSerializer, RewardSerializer, BudgetLineSerializer
 )
@@ -173,3 +175,14 @@ class PaymentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'donation': ['donation'],
         'user': ['user']
     }
+
+
+class PaymentMethodList(JsonApiViewMixin, APIView):
+
+    serializer_class = PaymentMethodSerializer
+
+    def get(self, request):
+        payment_methods = []
+        for provider in PaymentProvider.objects.all():
+            payment_methods += provider.payment_methods
+        return Response(payment_methods)

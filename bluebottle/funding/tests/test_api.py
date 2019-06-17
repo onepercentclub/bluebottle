@@ -9,6 +9,8 @@ from django.utils.timezone import now
 from rest_framework import status
 from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory, RewardFactory
 from bluebottle.funding.models import Donation
+from bluebottle.funding_pledge.models import PledgePaymentProvider
+from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
@@ -382,3 +384,26 @@ class DonationListTestCase(BluebottleTestCase):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentMethodListTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(PaymentMethodListTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.payment_method_url = reverse('funding-payment-method-list')
+        StripePaymentProvider.objects.create(ideal=True, direct_debit=True, bancontact=True)
+        PledgePaymentProvider.objects.create()
+
+    def test_list(self):
+        response = self.client.get(self.payment_method_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 5)
+        self.assertEqual(
+            response.data[0]['code'],
+            'credit_card'
+        )
+        self.assertEqual(
+            response.data[4]['code'],
+            'pledge'
+        )

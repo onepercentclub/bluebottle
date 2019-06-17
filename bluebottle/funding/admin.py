@@ -4,15 +4,16 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
-from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, StackedPolymorphicInline, \
-    PolymorphicInlineSupportMixin
+from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
 
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Funding, Donation, Payment, FundingPlatformSettings, PaymentProvider
+from bluebottle.funding.models import (
+    Funding, Donation, Payment, PaymentProvider
+)
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider
-from bluebottle.utils.admin import BasePlatformSettingsAdmin
+from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.utils.admin import FSMAdmin
 
 
@@ -125,24 +126,16 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
     child_models = (StripePayment, PledgePayment)
 
 
-class PaymentProviderAdmin(StackedPolymorphicInline):
-    model = PaymentProvider
-
-    class PledgePaymentMethodAdmin(StackedPolymorphicInline.Child):
-        model = PledgePaymentProvider
-        readonly_fields = ['provider']
-
-    class StripePaymentMethodAdmin(StackedPolymorphicInline.Child):
-        model = StripePaymentProvider
-        readonly_fields = ['provider']
-
-    child_inlines = [
-        PledgePaymentMethodAdmin,
-        StripePaymentMethodAdmin
-    ]
+class PaymentProviderChildAdmin(PolymorphicChildModelAdmin):
+    pass
 
 
-@admin.register(FundingPlatformSettings)
-class FundingPlatformSettingsAdmin(PolymorphicInlineSupportMixin, BasePlatformSettingsAdmin):
-    model = FundingPlatformSettings
-    inlines = [PaymentProviderAdmin]
+@admin.register(PaymentProvider)
+class PaymentProviderAdmin(PolymorphicParentModelAdmin):
+    base_model = PaymentProvider
+
+    child_models = (
+        PledgePaymentProvider,
+        StripePaymentProvider,
+        VitepayPaymentProvider
+    )

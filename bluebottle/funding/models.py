@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
-from moneyed import CURRENCIES, Money
+from moneyed import Money
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicModel
 
@@ -16,7 +16,6 @@ from bluebottle.files.fields import ImageField
 from bluebottle.fsm import FSMField
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices
-from bluebottle.utils.models import BasePlatformSettings
 
 
 class Funding(Activity):
@@ -335,30 +334,18 @@ class Payment(PolymorphicModel):
 
 
 class PaymentProvider(PolymorphicModel):
-    provider = _('Unknown')
-
-    class Methods(DjangoChoices):
-        default = ChoiceItem('default', label=_('Default'))
-
-    default_method = Methods.default
-
-    method = models.CharField(_('Payment method'), max_length=100, choices=Methods.choices, default=default_method)
-
-    funding_settings = models.ForeignKey('funding.FundingPlatformSettings')
-    currencies = MultiSelectField(max_length=100, choices=get_currency_choices())
 
     public_settings = {}
     private_settings = {}
 
-    @staticmethod
-    def get_currency_choices():
-        return CURRENCIES
+    @property
+    def payment_methods(self):
+        return [{
+            'provider': 'default',
+            'code': 'default',
+            'name': 'default',
+            'currencies': ['EUR']
+        }]
 
-
-class FundingPlatformSettings(BasePlatformSettings):
-
-    show_donation_amounts = models.BooleanField(_('show donation amounts'), default=True)
-
-    class Meta:
-        verbose_name_plural = _('funding platform settings')
-        verbose_name = _('funding platform settings')
+    def __unicode__(self):
+        return str(self.polymorphic_ctype)

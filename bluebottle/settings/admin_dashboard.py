@@ -237,8 +237,8 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['mails.change_mailplatformsettings']
             },
             {
-                'name': 'funding.fundingplatformsettings',
-                'permissions': ['funding.change_fundingplatformsettings']
+                'name': 'funding.paymentprovider',
+                'permissions': ['funding.change_paymentprovider']
             },
             {
                 'name': 'djmoney_rates.ratesource',

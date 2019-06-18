@@ -8,6 +8,6 @@ class PledgePayment(Payment):
 
     def save(self, *args, **kwargs):
         if self.status == PledgePaymentTransitions.values.new:
-            self.transitions.success()
+            self.transitions.succeed()
 
         super(PledgePayment, self).save(*args, **kwargs)

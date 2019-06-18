@@ -21,8 +21,8 @@ class StripePaymentTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
 
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding, user=self.user)
@@ -31,11 +31,11 @@ class StripePaymentTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'stripe-payments',
+                'type': 'payments/stripe-payments',
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'donations',
+                            'type': 'contributions/donations',
                             'id': self.donation.pk,
                         }
                     }
@@ -73,7 +73,6 @@ class StripePaymentTestCase(BluebottleTestCase):
         response = self.client.post(
             self.payment_url,
             data=json.dumps(self.data),
-            user=BlueBottleUserFactory.create()
         )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

@@ -14,21 +14,20 @@ from bluebottle.assignments.models import Assignment
 from bluebottle.utils.admin import FSMAdmin
 
 
-class ActivityChildAdmin(PolymorphicChildModelAdmin):
+class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline, )
 
-    readonly_fields = ['status']
+    readonly_fields = ['status', 'created', 'updated']
 
 
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
-    fsm_field = 'status'
     base_model = Activity
     child_models = (Event, Funding, Assignment)
     list_filter = (PolymorphicChildModelFilter,)
 
-    list_display = ['created', 'title', 'type', 'contribution_count']
+    list_display = ['created', 'title', 'type', 'status', 'contribution_count']
 
     def type(self, obj):
         return obj.get_real_instance_class().__name__
@@ -48,28 +47,31 @@ class ActivityAdminInline(StackedPolymorphicInline):
                 args=(obj.id,)
             )
             return format_html("<a href='{}'>{}</a>", url, obj.title)
-        activity_link.short_description = _('Activity')
+        activity_link.short_description = _('Edit activity')
+
+        def link(self, obj):
+            return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title)
+        link.short_description = _('View on site')
 
     class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'start_time', 'end_time', 'status']
+        readonly_fields = ['activity_link', 'link', 'start_time', 'end_time', 'status']
         fields = readonly_fields
         model = Event
 
     class FundingInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'target', 'deadline', 'status']
+        readonly_fields = ['activity_link', 'link', 'target', 'deadline', 'status']
         fields = readonly_fields
         model = Funding
 
     class AssignmentInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'end_time', 'status']
+        readonly_fields = ['activity_link', 'link', 'deadline', 'status']
         fields = readonly_fields
         model = Assignment
 
     child_inlines = (
         EventInline,
         FundingInline,
-        # FIXME: This throws an error. Dunno why...
-        # JobInline
+        AssignmentInline
     )
 
     def has_delete_permission(self, request, obj=None):

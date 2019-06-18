@@ -126,6 +126,10 @@ class BudgetLineSerializer(ModelSerializer):
 class FundingSerializer(BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
 
+    fundraisers = FundraiserSerializer(many=True, required=False)
+    rewards = RewardSerializer(many=True, required=False)
+    budgetlines = BudgetLineSerializer(many=True, required=False)
+
     class Meta:
         model = Funding
         fields = BaseActivitySerializer.Meta.fields + (

@@ -3,6 +3,7 @@ import mock
 import stripe
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.models import StripePayment
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -13,8 +14,8 @@ class StripePaymentTestCase(BluebottleTestCase):
         super(StripePaymentTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
 
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding)
@@ -33,16 +34,17 @@ class StripePaymentTestCase(BluebottleTestCase):
 
         self.assertEqual(payment.intent_id, self.payment_intent.id)
         self.assertEqual(payment.client_secret, self.payment_intent.client_secret)
-        self.assertEqual(payment.status, StripePayment.Status.new)
+        self.assertEqual(payment.status, StripePaymentTransitions.values.new)
 
     def test_refund(self):
         payment = StripePayment(donation=self.donation)
+        payment.transitions.succeed()
 
         with mock.patch('stripe.PaymentIntent.create', return_value=self.payment_intent):
             payment.save()
 
         with mock.patch('stripe.PaymentIntent.retrieve', return_value=self.payment_intent):
             with mock.patch('stripe.Charge.refund', return_value=self.payment_intent.charges[0]):
-                payment.request_refund()
+                payment.transitions.request_refund()
 
-        self.assertEqual(payment.status, StripePayment.Status.refunded)
+        self.assertEqual(payment.status, StripePaymentTransitions.values.refund_requested)

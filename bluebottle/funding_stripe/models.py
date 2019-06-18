@@ -31,12 +31,19 @@ class StripePayment(Payment):
     def update(self):
         intent = stripe.PaymentIntent.retrieve(self.intent_id)
 
-        if intent.charges[0].refunded and self.status != Payment.Status.refunded:
-            self.transitions.refund()
+        if len(intent.charges) == 0:
+            # No charge. Do we still need to charge?
+            self.fail()
+            self.save()
+        elif intent.charges.data[0].refunded and self.status != Payment.Status.refunded:
+            self.refund()
+            self.save()
         elif intent.status == 'failed' and self.status != Payment.Status.failed:
-            self.transitions.fail()
-        elif intent.status == 'succeeded' and self.status != Payment.Status.succeeded:
-            self.stransitions.succeed()
+            self.fail()
+            self.save()
+        elif intent.status == 'succeeded' and self.status != Payment.Status.success:
+            self.succeed()
+            self.save()
 
     @property
     def metadata(self):

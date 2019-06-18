@@ -8,7 +8,7 @@ from bluebottle.fsm import TransitionManager
 
 class Assignment(Activity):
     registration_deadline = models.DateTimeField(_('registration deadline'))
-    end_time = models.DateField(_('End time'))
+    deadline = models.DateField(_('Deadline'))
     capacity = models.PositiveIntegerField()
 
     expertise = models.ForeignKey('tasks.Skill', verbose_name=_('expertise'), null=True)

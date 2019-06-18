@@ -3,8 +3,7 @@ import json
 
 from django.contrib.gis.geos import Point
 from django.core.urlresolvers import reverse
-from django.test import TestCase
-from django.test import tag
+from django.test import TestCase, tag
 from django.test.utils import override_settings
 from django.utils.timezone import get_current_timezone
 from django_elasticsearch_dsl.test import ESTestCase
@@ -12,6 +11,7 @@ from rest_framework import status
 
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.events.tests.factories import EventFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
@@ -284,10 +284,33 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         geolocation = get_include(response, 'geolocations')
         self.assertEqual(geolocation['attributes']['position'], {'latitude': 43.0579025, 'longitude': 23.6851594})
 
+    def test_get_activities(self):
+        event = EventFactory.create(initiative=self.initiative)
+        response = self.client.get(
+            self.url,
+            user=self.owner
+        )
+
+        data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data['relationships']['activities']['data'][0]['id'], unicode(event.pk))
+        activity_data = get_include(response, 'activities/events')
+        self.assertEqual(
+            activity_data['attributes']['title'],
+            event.title
+        )
+
     def test_get_other(self):
         response = self.client.get(
             self.url,
             user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], self.initiative.title)
+
+    def test_get_anonymous(self):
+        response = self.client.get(
+            self.url
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)

@@ -1,6 +1,7 @@
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.models import Activity
+from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
@@ -13,9 +14,17 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     serializer_class = ActivitySerializer
     model = Activity
 
+    filter_backends = (
+        ActivitySearchFilter,
+    )
+
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+
+    filter_fields = {
+        'owner__id': ('exact', 'in',),
+    }
 
     prefetch_for_includes = {
         'initiative': ['initiative'],

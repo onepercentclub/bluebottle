@@ -4,7 +4,6 @@ from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 from moneyed.classes import Money
 from multiselectfield import MultiSelectField
-
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.fsm import FSMField, TransitionNotAllowed, TransitionManager, TransitionsMixin
@@ -163,7 +162,7 @@ class Fundraiser(models.Model):
     @property
     def amount_donated(self):
         donations = self.donations.filter(
-            status=[Donation.Status.success]
+            status=[DonationTransitions.values.success]
         )
 
         totals = [
@@ -187,14 +186,34 @@ class Donation(Contribution):
 
     transitions = TransitionManager(DonationTransitions, 'status')
 
+    @property
+    def payment_method(self):
+        if not self.payment:
+            return None
+        return self.payment.type
+
+    class Meta:
+        verbose_name = _('budget line')
+        verbose_name_plural = _('budget lines')
+
+    def __unicode__(self):
+        return u'{0} - {1}'.format(self.description, self.amount)
+
 
 class Payment(TransitionsMixin, PolymorphicModel):
     status = FSMField(
         default=PaymentTransitions.values.new,
     )
+
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
     donation = models.OneToOneField(Donation, related_name='payment')
 
-    transitions = TransitionManager(PaymentTransitions, 'status')
+    def __unicode__(self):
+        return "{} - {}".format(self.polymorphic_ctype, self.id)
+
+    class Meta:
+        permissions = (
+            ('refund_payment', 'Can refund payments'),
+        )

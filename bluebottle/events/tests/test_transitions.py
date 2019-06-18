@@ -8,6 +8,7 @@ from bluebottle.events.models import Event, Participant
 from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
 class EventTransitionOpenTestCase(BluebottleTestCase):
@@ -196,5 +197,149 @@ class EventTransitionTestCase(BluebottleTestCase):
         )
 
 
-class ParticiantTransitionTestCase(BluebottleTestCase):
-    pass
+class ParticipantTransitionTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(ParticipantTransitionTestCase, self).setUp()
+        self.initiative = InitiativeFactory.create()
+        self.event = EventFactory.create(
+            initiative=self.initiative, capacity=1
+        )
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.initiative.save()
+
+        self.event = Event.objects.get(pk=self.event.pk)
+
+        self.user = BlueBottleUserFactory.create()
+
+        self.participant = ParticipantFactory.create(
+            activity=self.event,
+            user=self.user
+        )
+
+    def test_new(self):
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.new
+        )
+        self.assertEqual(
+            len(self.event.participants), 1
+        )
+
+    def test_withdraw(self):
+        self.participant.transitions.withdraw()
+        self.participant.save()
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.withdrawn
+        )
+        self.assertEqual(
+            len(self.event.participants), 0
+        )
+
+    def test_withdraw_closed_event(self):
+        self.event.transitions.close()
+        self.assertRaises(
+            TransitionNotAllowed,
+            self.participant.transitions.withdraw
+        )
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.new
+        )
+
+    def test_reapply(self):
+        self.participant.transitions.withdraw()
+        self.participant.transitions.reapply()
+
+        self.participant.save()
+
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.new
+        )
+        self.assertEqual(
+            len(self.event.participants), 1
+        )
+
+    def test_reapply_closed_event(self):
+        self.participant.transitions.withdraw()
+        self.event.transitions.close()
+
+        self.assertRaises(
+            TransitionNotAllowed,
+            self.participant.transitions.reapply
+        )
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.withdrawn
+        )
+
+    def test_reject(self):
+        self.participant.transitions.reject()
+        self.participant.save()
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.rejected
+        )
+        self.assertEqual(
+            len(self.event.participants), 0
+        )
+
+    def test_success(self):
+        self.event.start_time = now() - timedelta(days=1)
+        self.event.end_time = now() - timedelta(days=1)
+        self.event.transitions.start()
+        self.event.transitions.done()
+        self.event.save()
+
+        self.participant.transitions.success()
+        self.participant.save()
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.success
+        )
+        self.assertEqual(
+            len(self.event.participants), 1
+        )
+
+    def test_success_new_event(self):
+        self.assertRaises(
+            TransitionNotAllowed,
+            self.participant.transitions.success
+        )
+
+    def test_no_show(self):
+        self.event.start_time = now() - timedelta(days=1)
+        self.event.end_time = now() - timedelta(days=1)
+        self.event.transitions.start()
+        self.event.transitions.done()
+        self.event.save()
+
+        self.participant.transitions.success()
+        self.participant.transitions.no_show()
+        self.participant.save()
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.no_show
+        )
+        self.assertEqual(
+            len(self.event.participants), 0
+        )
+
+    def test_no_show_new(self):
+        self.assertRaises(
+            TransitionNotAllowed,
+            self.participant.transitions.no_show
+        )
+
+    def test_close(self):
+        self.participant.transitions.close()
+        self.participant.save()
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.closed
+        )
+        self.assertEqual(
+            len(self.event.participants), 0
+        )

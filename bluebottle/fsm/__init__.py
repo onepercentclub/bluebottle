@@ -83,7 +83,10 @@ class partialmethod(partial):
 
 class ModelTransitionsMeta(type):
     def __new__(cls, name, bases, dct):
-        dct['transitions'] = []
+        if bases:
+            dct['transitions'] = [transition for transition in getattr(bases[0], 'transitions', [])]
+        else:
+            dct['transitions'] = []
 
         for attr in dct:
             if isinstance(dct[attr], Transition):
@@ -104,7 +107,7 @@ class ModelTransitions():
     def transition_to(self, transition, **kwargs):
         original_source = getattr(self.instance, self.field)  # Keep current status so we can revert
 
-        if not transition.is_allowed(self):
+        if transition not in self.all_transitions or not transition.is_allowed(self):
             # The transition is not currently possible
             raise TransitionNotAllowed(
                 'Not allowed to transition from {} to {}'.format(

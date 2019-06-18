@@ -11,10 +11,10 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
-class EventTestCase(BluebottleTestCase):
+class EventAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(EventTestCase, self).setUp()
+        super(EventAPITestCase, self).setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
             activity_types=['event']
         )
@@ -287,7 +287,6 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.initiative.save()
 
         self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)
-        self.event.transitions.open()
         self.event.save()
         self.participant = ParticipantFactory.create(user=self.participant_user, activity=self.event)
 

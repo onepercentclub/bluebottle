@@ -21,9 +21,9 @@ class Event(Activity):
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
-    start_time = models.DateTimeField(_('start'))
-    end_time = models.DateTimeField(_('end'))
-    registration_deadline = models.DateTimeField(_('registration deadline'))
+    start_time = models.DateTimeField(_('start'), null=True, blank=True)
+    end_time = models.DateTimeField(_('end'), null=True, blank=True)
+    registration_deadline = models.DateTimeField(_('registration deadline'), null=True, blank=True)
 
     transitions = TransitionManager(EventTransitions, 'status')
 
@@ -63,11 +63,14 @@ class Event(Activity):
 
     @property
     def duration(self):
-        return (self.start_time - self.end_time).seconds / 60
+        return (self.end_time - self.start_time).seconds / 60
 
     @property
     def participants(self):
-        return self.contributions.filter(status=ParticipantTransitions.values.new)
+        return self.contributions.filter(
+            status__in=[ParticipantTransitions.values.new,
+                        ParticipantTransitions.values.success]
+        )
 
 
 class Participant(Contribution):

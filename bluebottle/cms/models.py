@@ -103,6 +103,9 @@ class LinkGroup(SortableMixin):
 class Link(SortableMixin):
     COMPONENT_CHOICES = (
         ('page', _('Page')),
+        ('initiatives.list', _('Initiative Search')),
+        ('initiatives.create', _('Initiative Create')),
+        ('initiatives.detail', _('Initiative Detail')),
         ('project', _('Project')),
         ('task', _('Task')),
         ('fundraiser', _('Fundraiser')),

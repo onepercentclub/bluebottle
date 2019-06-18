@@ -30,21 +30,21 @@ class WebHookView(View):
         try:
             if event.type == 'payment_intent.succeeded':
                 payment = self.get_payment(event.data.object.id)
-                payment.succeed()
+                payment.transitions.succeed()
                 payment.save()
 
                 return HttpResponse('Updated payment')
 
             if event.type == 'payment_intent.payment_failed':
                 payment = self.get_payment(event.data.object.id)
-                payment.fail()
+                payment.transitions.fail()
                 payment.save()
 
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.refunded':
                 payment = self.get_payment(event.data.object.payment_intent)
-                payment.refund()
+                payment.transitions.refund()
                 payment.save()
 
                 return HttpResponse('Updated payment')

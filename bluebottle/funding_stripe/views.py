@@ -1,12 +1,10 @@
-from django.conf import settings
 from django.views.generic import View
 from django.http import HttpResponse
-
-from bluebottle.funding_stripe import stripe
 
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import StripePayment
 from bluebottle.funding_stripe.serializers import StripePaymentSerializer
+from bluebottle.funding_stripe import stripe
 
 
 class StripePaymentList(PaymentList):
@@ -16,12 +14,13 @@ class StripePaymentList(PaymentList):
 
 class WebHookView(View):
     def post(self, request, **kwargs):
+
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
 
         try:
             event = stripe.Webhook.construct_event(
-                payload, signature_header, settings.STRIPE['webhook_secret']
+                payload, signature_header, stripe.webhook_secret
             )
         except stripe.error.SignatureVerificationError:
             # Invalid signature

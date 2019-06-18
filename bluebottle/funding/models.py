@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models.aggregates import Sum
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
-from moneyed.classes import Money
+from moneyed import Money
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicModel
 
@@ -217,3 +217,21 @@ class Payment(TransitionsMixin, PolymorphicModel):
         permissions = (
             ('refund_payment', 'Can refund payments'),
         )
+
+
+class PaymentProvider(PolymorphicModel):
+
+    public_settings = {}
+    private_settings = {}
+
+    @property
+    def payment_methods(self):
+        return [{
+            'provider': 'default',
+            'code': 'default',
+            'name': 'default',
+            'currencies': ['EUR']
+        }]
+
+    def __unicode__(self):
+        return str(self.polymorphic_ctype)

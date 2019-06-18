@@ -1,4 +1,5 @@
 from django.utils.translation import ugettext_lazy as _
+from rest_framework import serializers
 
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import (
@@ -234,6 +235,20 @@ class DonationSerializer(BaseContributionSerializer):
             'reward',
             'fundraiser',
         ]
+
+
+class PaymentMethodSerializer(serializers.Serializer):
+
+    code = serializers.CharField()
+    name = serializers.CharField()
+    currencies = serializers.ListField()
+    countries = serializers.ListField()
+
+    class Meta(BaseContributionSerializer.Meta):
+        fields = ('code', 'name', 'currencies', 'countries')
+
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        resource_name = 'funding/payment-methods'
 
 
 class PaymentSerializer(ModelSerializer):

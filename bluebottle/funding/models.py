@@ -197,7 +197,7 @@ class Donation(Contribution):
         verbose_name_plural = _('budget lines')
 
     def __unicode__(self):
-        return u'{0} - {1}'.format(self.description, self.amount)
+        return u'{0} - {1}'.format(self.amount)
 
 
 class Payment(TransitionsMixin, PolymorphicModel):

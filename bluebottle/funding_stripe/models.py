@@ -1,13 +1,17 @@
 from django.db import models, connection
 
 from bluebottle.funding_stripe import stripe
+from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment
+from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.payouts.models import StripePayoutAccount
 
 
 class StripePayment(Payment):
     intent_id = models.CharField(max_length=30)
     client_secret = models.CharField(max_length=100)
+
+    transitions = TransitionManager(StripePaymentTransitions, 'status')
 
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -28,11 +32,11 @@ class StripePayment(Payment):
         intent = stripe.PaymentIntent.retrieve(self.intent_id)
 
         if intent.charges[0].refunded and self.status != Payment.Status.refunded:
-            self.refund()
+            self.transitions.refund()
         elif intent.status == 'failed' and self.status != Payment.Status.failed:
-            self.fail()
+            self.transitions.fail()
         elif intent.status == 'succeeded' and self.status != Payment.Status.succeeded:
-            self.succeed()
+            self.stransitions.succeed()
 
     @property
     def metadata(self):
@@ -42,14 +46,3 @@ class StripePayment(Payment):
             "activity_id": self.donation.activity.pk,
             "activity_title": self.donation.activity.title,
         }
-
-    @Payment.status.transition(
-        source=['success'],
-        target='refunded'
-    )
-    def request_refund(self):
-        intent = stripe.PaymentIntent.retrieve(self.intent_id)
-
-        intent.charges[0].refund(
-            reverse_transfer=True,
-        )

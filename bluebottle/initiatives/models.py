@@ -6,21 +6,19 @@ from django.utils.translation import ugettext_lazy as _
 from multiselectfield import MultiSelectField
 
 from bluebottle.files.fields import ImageField
-from bluebottle.fsm import FSMField
+from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.transitions import InitiativeTransitions
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.models import BasePlatformSettings
 
 
-class Initiative(models.Model):
+class Initiative(TransitionsMixin, models.Model):
     status = FSMField(
         default=InitiativeTransitions.values.draft,
         choices=InitiativeTransitions.values.choices,
         protected=True
     )
-
-    transitions = InitiativeTransitions(status)
 
     title = models.CharField(_('title'), max_length=255)
 
@@ -95,6 +93,8 @@ class Initiative(models.Model):
             ('api_change_own_running_initiative', 'Can change own initiative through the API'),
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
+
+    transitions = TransitionManager(InitiativeTransitions, 'status')
 
     class JSONAPIMeta:
         resource_name = 'initiatives'

@@ -8,7 +8,7 @@ from django.utils.timezone import now
 
 from rest_framework import status
 from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory, RewardFactory
-from bluebottle.funding.models import Donation
+from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
@@ -21,8 +21,8 @@ class BudgetLineListTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
 
         self.funding = FundingFactory.create(initiative=self.initiative, accepted_currencies=['EUR'])
 
@@ -103,8 +103,8 @@ class RewardListTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
 
         self.funding = FundingFactory.create(initiative=self.initiative, accepted_currencies=['EUR'])
 
@@ -190,8 +190,9 @@ class FundraiserListTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.initiative.save()
 
         self.funding = FundingFactory.create(initiative=self.initiative, accepted_currencies=['EUR'])
 
@@ -291,8 +292,8 @@ class DonationListTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
 
         self.funding = FundingFactory.create(initiative=self.initiative, accepted_currencies=['EUR'])
 
@@ -323,7 +324,7 @@ class DonationListTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['status'], Donation.Status.new)
+        self.assertEqual(data['data']['attributes']['status'], DonationTransitions.values.new)
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
         self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
         self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))

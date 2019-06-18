@@ -34,48 +34,14 @@ class Transition(object):
         self.conditions = conditions or []
         self.options = options or {}
 
-    def __call__(self, instance, transitions, *args, **kwargs):
-        original_source = getattr(instance, transitions.field.name)  # Keep current status so we can revert
-
-        if not self.is_allowed(instance):
-            # The transition is not currently possible
-            raise TransitionNotAllowed(
-                'Not allowed to transition from {} to {}'.format(
-                    original_source, self.target
-                )
-            )
-
-        # Trigger pre_transition (still with the old value
-        pre_transition.send(
-            sender=instance.__class__,
-            instance=instance,
-            transition=self,
-            **kwargs
-        )
-
-        transitions.transition_to(instance, self.target)
-
-        try:
-            self.method(transitions, instance)
-            post_transition.send(
-                sender=self.__class__,
-                instance=instance,
-                transition=self,
-                **kwargs
-            )
-        except Exception:
-            # the transition failed. Revert the value
-            transitions.transition_to(instance, original_source)
-            raise
-
-    def is_allowed(self, instance):
+    def is_allowed(self, transitions):
         """ Check if the initiative is allowed currently. """
-        return all(condition(instance) is None for condition in self.conditions)
+        return all(condition(transitions) is None for condition in self.conditions)
 
-    def errors(self, instance):
+    def errors(self):
         """ Errors that prevent the transition """
         for condition in self.conditions:
-            error = condition(instance)
+            error = condition()
 
             if error:
                 if isinstance(error, (list, tuple)):
@@ -100,79 +66,103 @@ def transition(source, target, conditions=None, **kwargs):
     """
     def inner_transition(func):
         # Store the transition on the field
-        transition = Transition(
+        return Transition(
             func.__name__, source, target, func, conditions, kwargs
         )
-
-        return transition
 
     return inner_transition
 
 
-class TransitionProxy(object):
-    def __init__(self, instance, transitions):
+class partialmethod(partial):
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return partial(self.func, instance,
+                       *(self.args or ()), **(self.keywords or {}))
+
+
+class ModelTransitionsMeta(type):
+    def __new__(cls, name, bases, dct):
+        dct['transitions'] = []
+
+        for attr in dct:
+            if isinstance(dct[attr], Transition):
+                transition = dct[attr]
+                dct['transitions'].append(transition)
+                dct[attr] = partialmethod(bases[0].transition_to, transition)
+
+        return type.__new__(cls, name, bases, dct)
+
+
+class ModelTransitions():
+    __metaclass__ = ModelTransitionsMeta
+
+    def __init__(self, instance, field):
         self.instance = instance
-        self.transitions = transitions
-
-    def __getattr__(self, attr):
-        value = getattr(self.transitions, attr)
-        if isinstance(value, Transition):
-            return partial(value, self.instance, self.transitions)
-        else:
-            return value
-
-
-class ModelTransitions(object):
-    def __init__(self, field):
         self.field = field
 
-    def transition_to(self, instance, target):
-        setattr(instance, self.field.name, target)
+    def transition_to(self, transition, **kwargs):
+        original_source = getattr(self.instance, self.field)  # Keep current status so we can revert
 
-    def contribute_to_class(self, cls, name):
-        @property
-        def transitions(instance):
-            return TransitionProxy(instance, self)
+        if not transition.is_allowed(self):
+            # The transition is not currently possible
+            raise TransitionNotAllowed(
+                'Not allowed to transition from {} to {}'.format(
+                    original_source, transition.target
+                )
+            )
 
-        setattr(cls, name, transitions)
+        # Trigger pre_transition (still with the old value
+        pre_transition.send(
+            sender=self.instance.__class__,
+            instance=self.instance,
+            transition=transition,
+            **kwargs
+        )
+
+        setattr(self.instance, self.field, transition.target)
+
+        try:
+            transition.method(self)
+
+            post_transition.send(
+                sender=self.instance.__class__,
+                instance=self.instance,
+                transition=transition,
+                **kwargs
+            )
+        except Exception:
+            # the transition failed. Revert the value
+            setattr(self.instance, self.field, transition.target)
+            raise
 
     @property
     def all_transitions(self):
         return [
             transition for transition in self.transitions
-            if '*' in transition.source or getattr(self.instance, self.name) in transition.source
+            if (
+                '*' in transition.source or
+                getattr(self.instance, self.field) in transition.source
+            )
         ]
 
     @property
     def available_transitions(self):
         return [
             transition for transition in self.all_transitions if
-            transition.is_allowed(self.instance)
+            transition.is_allowed(self)
         ]
 
 
-class FSMFieldDescriptor(object):
-    """ Descriptor makes it possible to prevent direct modification of the field """
-    def __init__(self, field):
-        self.field = field
+class TransitionManager(object):
+    def __init__(self, *args):
+        self.args = args
 
-    def __get__(self, instance, type=None):
-        """ If called on a class, return the field, so that we can access the
-        transition decorator on the field.
+    def contribute_to_class(self, cls, name):
+        if not hasattr(cls, '_transitions'):
+            cls._transitions = []
 
-        If called on an instance, return the current value
-        """
-        if instance is None:
-            return self.field
-            raise AttributeError('FSMFields should not be accessed on the class')
-
-        return instance.__dict__[self.field.name]
-
-    def __set__(self, instance, value):
-        """
-        Prevent modification of the field.
-        """
-        instance.__dict__[self.field.name] = value
+        cls._transitions.append((name, ) + self.args)
 
 
 class FSMField(models.CharField):
@@ -187,22 +177,11 @@ class FSMField(models.CharField):
             **kwargs
         )
 
-    def contribute_to_class(self, cls, name, **kwargs):
-        """ Add several fields to the model class.
 
-        Make sure `model.<field>` is an FSMFieldDescriptor
+class TransitionsMixin(object):
+    def __init__(self, *args, **kwargs):
+        if hasattr(self, '_transitions'):
+            for (name, cls, field) in self._transitions:
+                setattr(self, name, cls(self, field))
 
-        expose _transition_to that makes it possible to change the field
-        expose get_all_transitions. This returns all transitions for the currenct value
-        expose get_available_transitions. This returns all transitions where the conditions hold
-        """
-        super(FSMField, self).contribute_to_class(cls, name, **kwargs)
-
-        descriptor = FSMFieldDescriptor(self)
-        setattr(cls, self.name, descriptor)
-
-    def transition(self, *args, **kwargs):
-        def inner(func):
-            return func
-
-        return inner
+        super(TransitionsMixin, self).__init__(*args, **kwargs)

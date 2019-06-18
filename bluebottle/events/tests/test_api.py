@@ -282,12 +282,12 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.participant_user = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create()
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
         self.initiative.save()
 
         self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)
-        self.event.open()
+        self.event.transitions.open()
         self.event.save()
         self.participant = ParticipantFactory.create(user=self.participant_user, activity=self.event)
 

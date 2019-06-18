@@ -296,16 +296,10 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
 
 
 class FSMAdmin(admin.ModelAdmin):
-
-    fsm_field = 'status'
-
     form = FSMModelForm
 
     def get_transition(self, instance, name):
-        transitions = getattr(
-            instance,
-            'get_all_{}_transitions'.format(self.fsm_field)
-        )()
+        transitions = instance.transitions.all_transitions
         for transition in transitions:
             if transition.name == name:
                 return transition
@@ -338,7 +332,11 @@ class FSMAdmin(admin.ModelAdmin):
                 send_messages = form.cleaned_data['send_messages']
 
                 try:
-                    getattr(instance, transition.name)(send_messages=send_messages)
+                    getattr(instance.transitions, transition.name)(
+                        send_messages=send_messages,
+                        user=request.user
+                    )
+
                     instance.save()
                     log_action(
                         instance,

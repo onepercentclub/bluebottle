@@ -17,11 +17,11 @@ class InitiativeTransitions(ModelTransitions):
 
     default = values.draft
 
-    def is_complete(instance):
+    def is_complete(self):
         from bluebottle.initiatives.serializers import InitiativeSubmitSerializer
 
         serializer = InitiativeSubmitSerializer(
-            data=model_to_dict(instance)
+            data=model_to_dict(self.instance)
         )
         if not serializer.is_valid():
             return [unicode(error) for errors in serializer.errors.values() for error in errors]
@@ -32,7 +32,7 @@ class InitiativeTransitions(ModelTransitions):
         conditions=[is_complete],
         custom={'button_name': _('submit')}
     )
-    def submit(self, instance):
+    def submit(self):
         pass
 
     @transition(
@@ -41,7 +41,7 @@ class InitiativeTransitions(ModelTransitions):
         conditions=[is_complete],
         custom={'button_name': _('resubmit')}
     )
-    def resubmit(self, instance):
+    def resubmit(self):
         pass
 
     @transition(
@@ -49,7 +49,7 @@ class InitiativeTransitions(ModelTransitions):
         target=values.needs_work,
         custom={'button_name': _('needs work')}
     )
-    def needs_work(self, instance):
+    def needs_work(self):
         pass
 
     @transition(
@@ -59,9 +59,9 @@ class InitiativeTransitions(ModelTransitions):
         conditions=[is_complete],
         custom={'button_name': _('approve')}
     )
-    def approve(self, instance):
-        for activity in instance.activities.filter(status='draft'):
-            activity.initiative = self
+    def approve(self):
+        for activity in self.instance.activities.filter(status='draft'):
+            activity.initiative = self.instance
             try:
                 activity.transitions.open()
                 activity.save()
@@ -74,7 +74,7 @@ class InitiativeTransitions(ModelTransitions):
         messages=[InitiativeClosedOwnerMessage],
         custom={'button_name': _('close')}
     )
-    def close(self, instance):
+    def close(self):
         pass
 
     @transition(
@@ -83,5 +83,5 @@ class InitiativeTransitions(ModelTransitions):
         conditions=[is_complete],
         custom={'button_name': _('re-open')}
     )
-    def reopen(self, instance):
+    def reopen(self):
         pass

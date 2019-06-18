@@ -21,7 +21,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.site = AdminSite()
         self.initiative_admin = InitiativeAdmin(Initiative, self.site)
         self.initiative = InitiativeFactory.create(status='created')
-        self.initiative.submit()
+        self.initiative.transitions.submit()
         self.initiative.save()
 
     def test_initiative_admin(self):
@@ -73,7 +73,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
     def test_review_initiative_illegal_transition(self):
         self.client.force_login(self.superuser)
         # reject the
-        self.initiative.close()
+        self.initiative.transitions.close()
         self.initiative.save()
 
         review_url = reverse('admin:initiatives_initiative_transition',

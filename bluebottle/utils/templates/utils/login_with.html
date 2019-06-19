@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+    <p>{% trans "Redirecting..." %}</p>
+{% endblock %}
+
+{% block script %}
+
+    <script>
+        var token = "{{ token }}";
+        var link = "{{ link }}";
+
+        function storeToken(token) {
+            // Create fallback for localStorage
+            var authStorage;
+            try {
+                localStorage.setItem('testLocalStorage', 'testLocalStorage');
+                localStorage.removeItem('testLocalStorage');
+                authStorage = localStorage;
+            } catch (ex) {
+                authStorage = {
+                    _data: {},
+                    setItem: function (id, val) {
+                        try {
+                            return setCookie(id, value, 100);
+                        } catch (ex) {
+                            return (this._data[id] = String(val));
+                        }
+                    }
+                };
+            }
+            // Store jwtToken
+            authStorage['jwtToken'] = token;
+        }
+        storeToken(token);
+        // Redirect to deep link
+        location.href = link;
+
+    </script>
+
+{% endblock %}

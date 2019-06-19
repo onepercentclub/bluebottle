@@ -24,7 +24,7 @@ class DummyUser(object):
             def value_to_string(obj):
                 return 1
 
-    def get_login_token(self):
+    def get_jwt_token(self):
         return 'test-token'
 
     def save(self, *args, **kwargs):
@@ -99,28 +99,28 @@ class LoginViewTestCase(TestCase):
         self.factory = RequestFactory()
 
     def test_get(self):
-        response = self.view.get(self.factory.get('/api/sso/authenticate'))
-        user = DummyUser()
-
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(
-            response['Location'], '/login-with/{}/{}'.format(user.pk, user.get_login_token())
-        )
+        request = self.factory.get('/api/sso/authenticate')
+        request.LANGUAGE_CODE = 'en'
+        response = self.view.get(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'var link = "/";')
+        self.assertContains(response, 'var token = "test-token";')
+        self.assertContains(response, 'storeToken')
+        self.assertEqual(response.get('cache-control'), 'no-store, no-cache, private')
 
     def test_get_link(self):
-        response = self.view.get(self.factory.get('/api/sso/authenticate'), link='/test')
-        user = DummyUser()
-
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(
-            response['Location'],
-            '/login-with/{}/{}?next=%2Ftest'.format(user.pk, user.get_login_token())
-        )
+        request = self.factory.get('/api/sso/authenticate')
+        request.LANGUAGE_CODE = 'en'
+        response = self.view.get(request, link='/test')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'var link = "/test";')
+        self.assertContains(response, 'var token = "test-token";')
+        self.assertContains(response, 'storeToken')
 
     def test_admin(self):
         admin_link = '/en/admin/projects'
-
         request = self.factory.get('/api/sso/authenticate')
+        request.LANGUAGE_CODE = 'en'
         SessionMiddleware().process_request(request)
         request.session.save()
 
@@ -135,6 +135,7 @@ class LoginViewTestCase(TestCase):
 
     def test_get_authentication_failed(self):
         request = self.factory.get('/api/sso/authenticate')
+        request.LANGUAGE_CODE = 'en'
         request.fails = True
 
         response = self.view.get(request)

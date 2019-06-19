@@ -77,11 +77,10 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
             'currency': 'usd'
         })
         with patch('stripe.Charge.create', return_value=charge):
-            with patch('stripe.Transfer.retrieve', return_value=transfer):
-                adapter = StripePaymentAdapter(self.order_payment)
-                self.assertTrue(adapter.payment.pk)
-                self.assertEqual(adapter.payment.charge_token, 'some charge token')
-                self.assertEqual(adapter.payment.status, 'settled')
+            adapter = StripePaymentAdapter(self.order_payment)
+            self.assertTrue(adapter.payment.pk)
+            self.assertEqual(adapter.payment.charge_token, 'some charge token')
+            self.assertEqual(adapter.payment.status, 'started')
 
     def test_payment_charged(self):
         charge = stripe.Charge('some charge token')
@@ -101,6 +100,7 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
         with patch('stripe.Charge.create', return_value=charge) as create:
             with patch('stripe.Transfer.retrieve', return_value=transfer):
                 adapter.charge()
+                adapter.update_from_charge(charge)
                 self.assertTrue(adapter.payment.pk)
                 self.assertEqual(adapter.payment.charge_token, 'some charge token')
                 self.assertEqual(adapter.payment.status, 'settled')
@@ -190,14 +190,17 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
             u'chargeable': True
         }
         with patch('stripe.Charge.create', return_value=charge):
-            with patch('stripe.Transfer.retrieve', return_value=transfer):
-                adapter = StripePaymentAdapter(self.order_payment)
-                self.assertTrue(adapter.payment.pk)
-                self.assertEqual(adapter.payment.status, 'settled')
-                # Make sure payment/donation have an updated payout_amount
-                self.assertEqual(adapter.payment.payout_amount, 1210)
-                donation = self.order_payment.order.donations.first()
-                self.assertEqual(donation.payout_amount, Money(12.10, 'USD'))
+            with patch('stripe.Charge.retrieve', return_value=charge):
+                with patch('stripe.Transfer.retrieve', return_value=transfer):
+                    adapter = StripePaymentAdapter(self.order_payment)
+                    adapter.check_payment_status()
+
+                    self.assertTrue(adapter.payment.pk)
+                    self.assertEqual(adapter.payment.status, 'settled')
+                    # Make sure payment/donation have an updated payout_amount
+                    self.assertEqual(adapter.payment.payout_amount, 1210)
+                    donation = self.order_payment.order.donations.first()
+                    self.assertEqual(donation.payout_amount, Money(12.10, 'USD'))
 
     def test_check_payment_status_refunded(self):
         charge = stripe.Charge('some charge token')

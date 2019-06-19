@@ -41,15 +41,16 @@ import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from bluebottle.wallposts.models import Reaction, TextWallpost
+from bluebottle.wallposts.models import Reaction, TextWallpost, MediaWallpost
 from bluebottle.wallposts.notifiers import ObserversContainer
 
 logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, weak=False, sender=TextWallpost)
+@receiver(post_save, weak=False, sender=MediaWallpost)
 def new_wallpost_notification(sender, instance, created, **kwargs):
-    if created:
+    if created and not instance.donation:
         container = ObserversContainer()
         container.notify_wallpost_observers(instance)
 

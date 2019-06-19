@@ -265,7 +265,7 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
         except MediaWallpost.DoesNotExist:
             pass
         if len(text) > 40:
-            return format_html(text[:38] + '&hellip;')
+            return format_html('{}&hellip;', text[:38])
         return text
 
 

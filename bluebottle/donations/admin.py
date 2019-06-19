@@ -185,7 +185,9 @@ class DonationAdmin(admin.ModelAdmin):
         list = []
         for op in object.order_payments.all():
             url = reverse('admin:payments_orderpayment_change', args=[op.id])
-            list.append("<a href='{}'>{}</a>".format(url, op.id))
+            list.append(
+                format_html("<a href='{}'>{}</a>", url, op.id)
+            )
         return format_html(", ".join(list))
     order_payment_links.short_description = _('Order payment')
 

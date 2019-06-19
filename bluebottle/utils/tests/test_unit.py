@@ -9,7 +9,7 @@ from django.contrib.auth.models import Permission
 from django.core.exceptions import SuspiciousFileOperation, ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from django.test.utils import override_settings
 from django.utils.encoding import force_bytes
 
@@ -29,7 +29,7 @@ from bluebottle.utils.permissions import (
     ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission,
     OneOf
 )
-from bluebottle.utils.utils import clean_for_hashtag
+from bluebottle.utils.utils import clean_for_hashtag, get_client_ip
 from ..email_backend import send_mail, create_message
 
 
@@ -673,3 +673,17 @@ class RestrictedImageFormFieldTestCase(TestCase):
 
             with self.assertRaises(ValidationError):
                 self.field.to_python(image_file)
+
+
+class GetClientIPTestCase(TestCase):
+    def test_get_client_ip(self):
+        request = RequestFactory().get('/', HTTP_REMOTE_ADDR='127.0.0.1')
+
+        ip = get_client_ip(request)
+        self.assertEqual(ip, '127.0.0.1')
+
+    def test_get_client_ip_no_spoofing(self):
+        request = RequestFactory().get('/', HTTP_REMOTE_ADDR='8.8.8.8,127.0.0.1')
+
+        ip = get_client_ip(request)
+        self.assertEqual(ip, '127.0.0.1')

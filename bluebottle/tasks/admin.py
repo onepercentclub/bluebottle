@@ -300,7 +300,7 @@ class TaskAdmin(admin.ModelAdmin):
         url = reverse('admin:projects_project_change', args=(obj.project.id,))
         title = obj.project.title
         title = (title[:30] + '&hellip;') if len(title) > 30 else title
-        return format_html(u"<a href='{}'>{}</a>".format(url, title))
+        return format_html(u"<a href='{}'>{}</a>", url, title)
     project_link.short_description = _('Project link')
 
 
@@ -393,16 +393,18 @@ class SkillAdmin(TranslatableAdmin):
 
     def task_link(self, obj):
         url = "{}?skill_filter={}".format(reverse('admin:tasks_task_changelist'), obj.id)
-        return format_html("<a href='{}'>{} {}</a>".format(
+        return format_html(
+            "<a href='{}'>{} {}</a>",
             url, obj.task_set.count(), _('tasks')
-        ))
+        )
     task_link.short_description = _('Tasks with this skill')
 
     def member_link(self, obj):
         url = "{}?skills__id__exact={}".format(reverse('admin:members_member_changelist'), obj.id)
-        return format_html("<a href='{}'>{} {}</a>".format(
+        return format_html(
+            "<a href='{}'>{} {}</a>",
             url, obj.member_set.count(), _('users')
-        ))
+        )
     member_link.short_description = _('Users with this skill')
 
 

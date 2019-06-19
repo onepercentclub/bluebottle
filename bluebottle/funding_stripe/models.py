@@ -4,8 +4,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.funding_stripe import stripe
 from bluebottle.fsm import TransitionManager
-from bluebottle.funding.models import Payment, PaymentProvider
+from bluebottle.funding.models import (
+    Payment, PaymentProvider, KYCCheck
+)
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
+from bluebottle.funding.transitions import KYCCheckTransitions
 from bluebottle.payouts.models import StripePayoutAccount
 
 
@@ -104,3 +107,60 @@ class StripePaymentProvider(PaymentProvider):
                 method_settings['provider'] = 'stripe'
                 methods.append(method_settings)
         return methods
+
+
+class StripeKYCCheck(KYCCheck):
+    account_id = models.CharField(max_length=40)
+    country = models.CharField(max_length=100)
+
+    transitions = TransitionManager(KYCCheckTransitions, 'status')
+
+    @property
+    def account(self):
+        if not self._account:
+            self._account = stripe.Account.retrieve(self.account_id)
+
+        return self._account
+
+    def save(self, *args, **kwargs):
+        if not self.account_id:
+            account = stripe.Account.create(
+                country=self.country
+            )
+            self.account_id = account.id
+
+        super(StripeKYCCheck, self).save(*args, **kwargs)
+
+    def update(self, token):
+        self._account = stripe.Account.modify(
+            self.account_id,
+            token=token
+        )
+
+    @property
+    def verified(self):
+        return not self.account.requirements.eventually_due
+
+    @property
+    def required(self):
+        return self.account.requirements.eventually_due
+
+    @property
+    def disabled(self):
+        return self.account.requirements.disabled
+
+    @property
+    def personal_data(self):
+        return self.account.individual
+
+    @property
+    def external_accounts(self):
+        return self.account.external_accounts.data
+
+    @property
+    def metadata(self):
+        return {
+            "tenant_name": connection.tenant.client_name,
+            "tenant_domain": connection.tenant.domain_url,
+            "member_id": self.user.pk,
+        }

@@ -12,7 +12,8 @@ from bluebottle.activities.models import Activity, Contribution
 from bluebottle.funding.transitions import (
     FundingTransitions,
     DonationTransitions,
-    PaymentTransitions
+    PaymentTransitions,
+    KYCCheckTransitions
 )
 from bluebottle.files.fields import ImageField
 from bluebottle.utils.exchange_rates import convert
@@ -235,3 +236,11 @@ class PaymentProvider(PolymorphicModel):
 
     def __unicode__(self):
         return str(self.polymorphic_ctype)
+
+
+class KYCCheck(models.Model):
+    status = FSMField(
+        default=KYCCheckTransitions.values.new
+    )
+
+    owner = models.OneToOneField('members.Member', related_name="stripe_kyc_checks")

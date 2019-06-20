@@ -65,5 +65,6 @@ easy to add BlueBottle to your Django project.
 
     $ pip install -e git://github.com/onepercentclub/bluebottle.git#egg=bluebottle
 
-#### Pull request - Testing, Reviewing and Merging Flow:
+Pull request - Testing, Reviewing and Merging Flow
+------------
 https://www.lucidchart.com/invitations/accept/89cab398-8c15-4701-8897-d2fef42c0aa7

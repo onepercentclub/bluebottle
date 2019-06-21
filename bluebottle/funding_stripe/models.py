@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models, connection
+from django.db import ProgrammingError
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.funding_stripe import stripe
@@ -111,23 +112,24 @@ class StripePaymentProvider(PaymentProvider):
 
 class StripeKYCCheck(KYCCheck):
     account_id = models.CharField(max_length=40)
-    country = models.CharField(max_length=100)
+    country = models.CharField(max_length=2)
 
     transitions = TransitionManager(KYCCheckTransitions, 'status')
 
     @property
     def account(self):
-        if not self._account:
+        if not hasattr(self, '_account'):
             self._account = stripe.Account.retrieve(self.account_id)
 
         return self._account
 
     def save(self, *args, **kwargs):
         if not self.account_id:
-            account = stripe.Account.create(
-                country=self.country
+            self._account = stripe.Account.create(
+                country=self.country,
+                metadata=self.metadata
             )
-            self.account_id = account.id
+            self.account_id = self._account.id
 
         super(StripeKYCCheck, self).save(*args, **kwargs)
 
@@ -154,13 +156,40 @@ class StripeKYCCheck(KYCCheck):
         return self.account.individual
 
     @property
-    def external_accounts(self):
-        return self.account.external_accounts.data
+    def metadata(self):
+        return {
+            "tenant_name": connection.tenant.client_name,
+            "tenant_domain": connection.tenant.domain_url,
+            "member_id": self.owner.pk,
+        }
+
+
+class ExternalAccount(models.Model):
+    stripe_kyc_check = models.ForeignKey(StripeKYCCheck, related_name='external_accounts')
+    account_id = models.CharField(max_length=40)
+
+    @property
+    def account(self):
+        for account in self.stripe_kyc_check.account.external_accounts:
+            if account.id == self.account_id:
+                self._account = account
+
+        if not hasattr(self, '_account'):
+            self._account = self.stripe_kyc_check.account.external_accounts.retrieve(self.account_id)
+
+        return self._account
+
+    def create(self, token):
+        if self.account_id:
+            raise ProgrammingError('Stripe Account is already created')
+
+        self._account = self.stripe_kyc_check.account.external_accounts.create(token, metadata=self.metadata)
+        self.account_id = self._account.id
+        self.save()
 
     @property
     def metadata(self):
         return {
             "tenant_name": connection.tenant.client_name,
             "tenant_domain": connection.tenant.domain_url,
-            "member_id": self.user.pk,
         }

@@ -1,13 +1,20 @@
 from django.views.generic import View
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.mixins import CreateModelMixin
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe import stripe
-from bluebottle.funding_stripe.models import StripePayment, StripeKYCCheck
-from bluebottle.funding_stripe.serializers import StripePaymentSerializer, StripeKYCCheckSerializer
+from bluebottle.funding_stripe.models import (
+    StripePayment, StripeKYCCheck, ExternalAccount
+)
+from bluebottle.funding_stripe.serializers import (
+    StripePaymentSerializer, StripeKYCCheckSerializer, ExternalAccountSerializer
+)
+from bluebottle.members.models import Member
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView,
@@ -19,31 +26,76 @@ class StripePaymentList(PaymentList):
     serializer_class = StripePaymentSerializer
 
 
-class StripeKYCCheckList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+class StripeKYCCheckDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixin, RetrieveUpdateAPIView):
     queryset = StripeKYCCheck.objects.all()
     serializer_class = StripeKYCCheckSerializer
 
     prefetch_for_includes = {
-        'user': ['user'],
+        'owner': ['owner'],
+        'external_accounts': ['external_accounts'],
     }
 
-    permission_classes = (IsOwner, )
+    permission_classes = (IsAuthenticated, IsOwner, )
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def get_object(self):
+        try:
+            obj = self.request.user.stripe_kyc_check
+        except Member.stripe_kyc_check.RelatedObjectDoesNotExist:
+            raise Http404
+
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     def perform_create(self, serializer):
         token = serializer.validated_data.pop('token')
         serializer.save(owner=self.request.user)
         serializer.instance.update(token)
 
+    def perform_update(self, serializer):
+        token = serializer.validated_data.pop('token')
+        serializer.instance.update(token)
+        serializer.save()
 
-class StripeKYCCheckDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
-    queryset = StripeKYCCheck.objects.all()
-    serializer_class = StripeKYCCheckSerializer
+
+class ExternalAccountsList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+    permission_classes = []
+
+    queryset = ExternalAccount.objects.all()
+    serializer_class = ExternalAccountSerializer
 
     prefetch_for_includes = {
-        'user': ['user'],
+        'stripe_kyc_check': ['stripe_kyc_check'],
     }
 
-    permission_classes = (IsOwner, )
+    related_permission_classes = {
+        'stripe_kyc_check': [IsOwner]
+    }
+
+    def perform_create(self, serializer):
+        token = serializer.validated_data.pop('token')
+        serializer.save()
+        serializer.instance.create(token)
+
+
+class ExternalAccountsDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = ExternalAccount.objects.all()
+    serializer_class = ExternalAccountSerializer
+
+    prefetch_for_includes = {
+        'stripe_kyc_check': ['stripe_kyc_check'],
+    }
+
+    related_permission_classes = {
+        'stripe_kyc_check': [IsOwner]
+    }
+
+    def perform_update(self, serializer):
+        token = serializer.validated_data.pop('token')
+        serializer.instance.update(token)
+        serializer.save()
 
 
 class WebHookView(View):

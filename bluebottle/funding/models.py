@@ -243,4 +243,7 @@ class KYCCheck(models.Model):
         default=KYCCheckTransitions.values.new
     )
 
-    owner = models.OneToOneField('members.Member', related_name="stripe_kyc_checks")
+    owner = models.OneToOneField('members.Member', related_name="stripe_kyc_check")
+
+    class Meta:
+        abstract = True

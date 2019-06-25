@@ -259,3 +259,8 @@ class JSONAPITestClient(Client):
             extra['HTTP_AUTHORIZATION'] = "JWT {0}".format(user.get_jwt_token())
 
         return super(JSONAPITestClient, self).generic(method, path, data, content_type, secure, **extra)
+
+
+def get_included(response, type):
+    included = response.json()['included']
+    return [include for include in included if include['type'] == type][0]

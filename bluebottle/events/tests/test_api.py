@@ -8,7 +8,7 @@ from rest_framework import status
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
 
 
 class EventAPITestCase(BluebottleTestCase):
@@ -276,6 +276,9 @@ class ParticipantTestCase(BluebottleTestCase):
         self.assertEqual(
             event_data['data']['relationships']['contributions']['data'][0]['type'],
             'contributions/participants'
+        )
+        self.assertTrue(
+            get_included(response, 'contributions/participants')
         )
 
     def test_follow(self):

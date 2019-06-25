@@ -32,12 +32,13 @@ class EventSerializer(BaseActivitySerializer):
         included_resources = [
             'owner',
             'initiative',
-            'location'
+            'location',
+            'contributions'
         ]
         resource_name = 'activities/events'
 
     included_serializers = {
-        'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',

@@ -43,6 +43,7 @@ class BaseActivitySerializer(ModelSerializer):
             'description',
             'is_follower',
             'status',
+            'contributions'
         )
 
         meta_fields = ('permissions', 'transitions', 'created', 'updated', )

@@ -259,6 +259,20 @@ class ParticipantTestCase(BluebottleTestCase):
         self.assertEqual(data['included'][0]['type'], 'activities/events')
         self.assertTrue(data['included'][0]['attributes']['is-follower'])
 
+        response = self.client.get(
+            self.event_url, user=self.participant
+        )
+
+        event_data = json.loads(response.content)
+        self.assertEqual(
+            event_data['data']['relationships']['contributions']['meta']['count'],
+            1
+        )
+        self.assertEqual(
+            event_data['data']['relationships']['contributions']['data'][0]['id'],
+            data['data']['id']
+        )
+
     def test_follow(self):
         self.client.post(
             self.participant_url, json.dumps(self.data), user=self.participant

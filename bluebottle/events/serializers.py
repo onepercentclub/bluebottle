@@ -90,7 +90,7 @@ class ParticipantSerializer(BaseContributionSerializer):
         fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'participants'
+        resource_name = 'contributions/participants'
         included_resources = [
             'user',
             'activity'

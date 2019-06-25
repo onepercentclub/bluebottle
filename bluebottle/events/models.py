@@ -199,7 +199,7 @@ class Participant(Contribution):
         )
 
     class JSONAPIMeta:
-        resource_name = 'participants'
+        resource_name = 'contributions/participants'
 
     def event_is_open(self):
         if not self.activity.status == Activity.Status.open:

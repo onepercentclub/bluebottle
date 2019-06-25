@@ -52,11 +52,13 @@ class StripeKYCCheckDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
     def perform_create(self, serializer):
         token = serializer.validated_data.pop('token')
         serializer.save(owner=self.request.user)
-        serializer.instance.update(token)
+        if token:
+            serializer.instance.update(token)
 
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')
-        serializer.instance.update(token)
+        if token:
+            serializer.instance.update(token)
         serializer.save()
 
 

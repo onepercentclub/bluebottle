@@ -49,7 +49,7 @@ class ExternalAccountSerializer(serializers.ModelSerializer):
 
 class StripeKYCCheckSerializer(serializers.ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
-    token = serializers.CharField(write_only=True)
+    token = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     external_accounts = ResourceRelatedField(read_only=True, many=True)
 
@@ -65,7 +65,8 @@ class StripeKYCCheckSerializer(serializers.ModelSerializer):
             'id', 'token', 'country',
             'verified', 'owner',
             'required', 'disabled',
-            'personal_data', 'external_accounts',
+            'individual', 'external_accounts',
+            'tos_acceptance'
         )
 
     class JSONAPIMeta():

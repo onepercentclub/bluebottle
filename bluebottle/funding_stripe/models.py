@@ -127,6 +127,9 @@ class StripeKYCCheck(KYCCheck):
         if not self.account_id:
             self._account = stripe.Account.create(
                 country=self.country,
+                type='custom',
+                settings=self.account_settings,
+                business_type='individual',
                 metadata=self.metadata
             )
             self.account_id = self._account.id
@@ -136,7 +139,7 @@ class StripeKYCCheck(KYCCheck):
     def update(self, token):
         self._account = stripe.Account.modify(
             self.account_id,
-            token=token
+            account_token=token
         )
 
     @property
@@ -152,8 +155,26 @@ class StripeKYCCheck(KYCCheck):
         return self.account.requirements.disabled
 
     @property
-    def personal_data(self):
+    def individual(self):
         return self.account.individual
+
+    @property
+    def tos_acceptance(self):
+        return self.account.tos_acceptance
+
+    @property
+    def account_settings(self):
+        statement_descriptor = connection.tenant.name[:21]
+        return {
+            'payouts': {
+                'schedule': {
+                    'interval': 'manual'
+                }
+            },
+            'payments': {
+                'statement_descriptor': statement_descriptor
+            }
+        }
 
     @property
     def metadata(self):

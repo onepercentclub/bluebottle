@@ -1,11 +1,11 @@
 import factory.fuzzy
 
-from bluebottle.funding_stripe.models import StripePayment
 from bluebottle.funding.tests.factories import DonationFactory
+from bluebottle.funding_vitepay.models import VitepayPayment
 
 
-class StripePaymentFactory(factory.DjangoModelFactory):
+class VitepayPaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = StripePayment
+        model = VitepayPayment
 
     donation = factory.SubFactory(DonationFactory)

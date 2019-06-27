@@ -1,3 +1,5 @@
+from functools import partial
+
 from django.db import models
 from django.dispatch import Signal
 
@@ -32,14 +34,14 @@ class Transition(object):
         self.conditions = conditions or []
         self.options = options or {}
 
-    def is_allowed(self, instance):
+    def is_allowed(self, transitions):
         """ Check if the initiative is allowed currently. """
-        return all(condition(instance) is None for condition in self.conditions)
+        return all(condition(transitions) is None for condition in self.conditions)
 
-    def errors(self, instance):
+    def errors(self):
         """ Errors that prevent the transition """
         for condition in self.conditions:
-            error = condition(instance)
+            error = condition()
 
             if error:
                 if isinstance(error, (list, tuple)):
@@ -49,30 +51,121 @@ class Transition(object):
                     yield error
 
 
-class FSMFieldDescriptor(object):
-    """ Descriptor makes it possible to prevent direct modification of the field """
-    def __init__(self, field):
+def transition(source, target, conditions=None, **kwargs):
+    """ Decorator that creates transition functions
+
+    Example:
+
+    class ExampleTransitions(fsm.Transitions):
+        @transition(
+            source='new'
+            target='test'
+        )
+        def test(self):
+            pass
+    """
+    def inner_transition(func):
+        # Store the transition on the field
+        return Transition(
+            func.__name__, source, target, func, conditions, kwargs
+        )
+
+    return inner_transition
+
+
+class partialmethod(partial):
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return partial(self.func, instance,
+                       *(self.args or ()), **(self.keywords or {}))
+
+
+class ModelTransitionsMeta(type):
+    def __new__(cls, name, bases, dct):
+        if bases:
+            dct['transitions'] = [transition for transition in getattr(bases[0], 'transitions', [])]
+        else:
+            dct['transitions'] = []
+
+        for attr in dct:
+            if isinstance(dct[attr], Transition):
+                transition = dct[attr]
+                dct['transitions'].append(transition)
+                dct[attr] = partialmethod(bases[0].transition_to, transition)
+
+        return type.__new__(cls, name, bases, dct)
+
+
+class ModelTransitions():
+    __metaclass__ = ModelTransitionsMeta
+
+    def __init__(self, instance, field):
+        self.instance = instance
         self.field = field
 
-    def __get__(self, instance, type=None):
-        """ If called on a class, return the field, so that we can access the
-        transition decorator on the field.
+    def transition_to(self, transition, **kwargs):
+        original_source = getattr(self.instance, self.field)  # Keep current status so we can revert
 
-        If called on an instance, return the current value
-        """
-        if instance is None:
-            return self.field
+        if transition not in self.all_transitions or not transition.is_allowed(self):
+            # The transition is not currently possible
+            raise TransitionNotAllowed(
+                'Not allowed to transition from {} to {}'.format(
+                    original_source, transition.target
+                )
+            )
 
-        return instance.__dict__[self.field.name]
+        # Trigger pre_transition (still with the old value
+        pre_transition.send(
+            sender=self.instance.__class__,
+            instance=self.instance,
+            transition=transition,
+            **kwargs
+        )
 
-    def __set__(self, instance, value):
-        """
-        Prevent modification of the field.
-        """
-        if self.field.protected and self.field.name in instance.__dict__:
-            raise AttributeError('Direct {0} modification is not allowed'.format(self.field.name))
+        setattr(self.instance, self.field, transition.target)
 
-        instance.__dict__[self.field.name] = value
+        try:
+            transition.method(self)
+
+            post_transition.send(
+                sender=self.instance.__class__,
+                instance=self.instance,
+                transition=transition,
+                **kwargs
+            )
+        except Exception:
+            # the transition failed. Revert the value
+            setattr(self.instance, self.field, transition.target)
+            raise
+
+    @property
+    def all_transitions(self):
+        return [
+            transition for transition in self.transitions
+            if (
+                '*' in transition.source or
+                getattr(self.instance, self.field) in transition.source
+            )
+        ]
+
+    @property
+    def available_transitions(self):
+        return [
+            transition for transition in self.all_transitions if
+            transition.is_allowed(self)
+        ]
+
+
+class TransitionManager(object):
+    def __init__(self, *args):
+        self.args = args
+
+    def contribute_to_class(self, cls, name):
+        if not hasattr(cls, '_transitions'):
+            cls._transitions = []
+
+        cls._transitions.append((name, ) + self.args)
 
 
 class FSMField(models.CharField):
@@ -80,116 +173,18 @@ class FSMField(models.CharField):
 
     def __init__(self, protected=True, max_length=20, *args, **kwargs):
         self.protected = protected
-        self.transitions = []
-        super(FSMField, self).__init__(max_length=max_length, *args, **kwargs)
 
-    def contribute_to_class(self, cls, name, **kwargs):
-        """ Add several fields to the model class.
-
-        Make sure `model.<field>` is an FSMFieldDescriptor
-
-        expose _transition_to that makes it possible to change the field
-        expose get_all_transitions. This returns all transitions for the currenct value
-        expose get_available_transitions. This returns all transitions where the conditions hold
-
-        """
-        super(FSMField, self).contribute_to_class(cls, name, **kwargs)
-        self.name = name
-        descriptor = FSMFieldDescriptor(self)
-        setattr(cls, self.name, descriptor)
-
-        def transition_to(instance, value):
-            instance.__dict__[self.name] = value
-
-        setattr(cls, '_transition_{}_to'.format(self.name), transition_to)
-
-        def get_available_transitions(instance):
-            return self.get_available_transitions(instance)
-
-        setattr(cls, 'get_available_{}_transitions'.format(self.name), get_available_transitions)
-
-        def get_all_transitions(instance):
-            return self.get_all_transitions(instance)
-
-        setattr(cls, 'get_all_{}_transitions'.format(self.name), get_all_transitions)
-
-    def get_all_transitions(self, instance):
-        return [
-            transition for transition in self.transitions
-            if '*' in transition.source or getattr(instance, self.name) in transition.source
-        ]
-
-    def get_available_transitions(self, instance):
-        return [
-            transition for transition in self.get_all_transitions(instance) if
-            transition.is_allowed(instance)
-        ]
-
-    def transition(field, source, target, conditions=None, **kwargs):
-        """ Decorator that creates transition functions
-
-        Example:
-
-        class Example(models.model):
-            status = FSMField()
-
-            @status.transition(
-                source='new'
-                target='test'
-            )
-            def test(self):
-                pass
+        super(FSMField, self).__init__(
+            max_length=max_length,
+            *args,
+            **kwargs
+        )
 
 
-        """
-        def inner_transition(func):
-            # Store the transition on the field
-            transition = Transition(
-                func.__name__, source, target, func, conditions, kwargs
-            )
-            field.transitions.append(transition)
+class TransitionsMixin(object):
+    def __init__(self, *args, **kwargs):
+        if hasattr(self, '_transitions'):
+            for (name, cls, field) in self._transitions:
+                setattr(self, name, cls(self, field))
 
-            def do_transition(self, **kwargs):
-                original_source = getattr(self, field.name)  # Keep current status so we can revert
-
-                if not transition.is_allowed(self):
-                    # The transition is not currently possible
-                    raise TransitionNotAllowed(
-                        'Not allowed to transition from {} to {}'.format(
-                            original_source, target
-                        )
-                    )
-
-                # Trigger pre_transition (still with the old value
-                pre_transition.send(
-                    sender=self.__class__,
-                    instance=self,
-                    name=transition.name,
-                    source=transition.source,
-                    target=transition.target,
-                    options=transition.options,
-                    **kwargs
-                )
-
-                # Update the value
-                getattr(self, '_transition_{}_to'.format(field.name))(target)
-
-                try:
-                    func(self)
-                    post_transition.send(
-                        sender=self.__class__,
-                        instance=self,
-                        name=transition.name,
-                        source=transition.source,
-                        target=transition.target,
-                        options=transition.options,
-                        **kwargs
-                    )
-                except Exception:
-                    # the transition failed. Revert the value
-                    getattr(self, '_transition_{}_to'.format(field.name))(original_source)
-                    raise
-
-            return do_transition
-
-        return inner_transition
+        super(TransitionsMixin, self).__init__(*args, **kwargs)

@@ -1,33 +1,24 @@
-import datetime
-
 from django.db import models
 from django.db.models.aggregates import Sum
-from django.forms.models import model_to_dict
-from django.utils import timezone
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
-from djchoices.choices import DjangoChoices, ChoiceItem
-from moneyed.classes import Money
+from moneyed import Money
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.files.fields import ImageField
-from bluebottle.fsm import FSMField
+from bluebottle.fsm import FSMField, TransitionNotAllowed, TransitionManager, TransitionsMixin
+from bluebottle.funding.transitions import (
+    FundingTransitions,
+    DonationTransitions,
+    PaymentTransitions
+)
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices
 
 
 class Funding(Activity):
-
-    class Status(DjangoChoices):
-        draft = ChoiceItem('draft', _('draft'))
-        submitted = ChoiceItem('submitted', _('submitted'))
-        approved = ChoiceItem('approved', _('approved'))
-        open = ChoiceItem('open', _('open'))
-        done = ChoiceItem('done', _('done'))
-        closed = ChoiceItem('closed', _('closed'))
-
     deadline = models.DateField(_('deadline'), null=True, blank=True)
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
@@ -38,6 +29,8 @@ class Funding(Activity):
     )
 
     account = models.ForeignKey('payouts.PayoutAccount', null=True)
+
+    transitions = TransitionManager(FundingTransitions, 'status')
 
     class JSONAPIMeta:
         resource_name = 'activities/funding'
@@ -57,6 +50,15 @@ class Funding(Activity):
             ('api_delete_own_funding', 'Can delete own funding through the API'),
         )
 
+    def save(self, *args, **kwargs):
+        if self.status == FundingTransitions.values.draft:
+            try:
+                self.transitions.open()
+            except TransitionNotAllowed:
+                pass
+
+        super(Funding, self).save(*args, **kwargs)
+
     @property
     def amount_raised(self):
         """
@@ -73,69 +75,6 @@ class Funding(Activity):
         amounts = [convert(amount, self.target.currency) for amount in amounts]
 
         return sum(amounts) or Money(0, self.target.currency)
-
-    def deadline_in_future(self):
-        return not self.deadline or self.deadline > timezone.now()
-
-    def is_complete(self):
-        from bluebottle.funding.serializers import FundingSubmitSerializer
-        serializer = FundingSubmitSerializer(
-            data=model_to_dict(self)
-        )
-        if not serializer.is_valid():
-            print serializer.errors
-            return _('Please make sure all required fields are filled in')
-
-    def initiative_is_approved(self):
-        if not self.initiative.status == 'approved':
-            return _('Please make sure the initiative is approved')
-
-    @Activity.status.transition(
-        source=Status.draft,
-        target=Status.submitted,
-        conditions=[is_complete, initiative_is_approved]
-    )
-    def submit(self):
-        pass
-
-    @Activity.status.transition(
-        source=Status.submitted,
-        target=Status.approved,
-        conditions=[is_complete, initiative_is_approved]
-    )
-    def approve(self):
-        pass
-
-    @Activity.status.transition(
-        source=Status.approved,
-        target=Status.open,
-        conditions=[is_complete, initiative_is_approved]
-    )
-    def start(self):
-        if self.duration:
-            self.deadline = timezone.now().date() + datetime.timedelta(days=self.duration)
-
-    @Activity.status.transition(
-        source=Status.open,
-        target=Status.done,
-    )
-    def done(self):
-        pass
-
-    @Activity.status.transition(
-        source=Status.open,
-        target=Status.closed,
-    )
-    def closed(self):
-        pass
-
-    @Activity.status.transition(
-        source=[Status.done, Status.closed],
-        target=Status.open,
-        conditions=[deadline_in_future]
-    )
-    def extend(self):
-        pass
 
 
 class Reward(models.Model):
@@ -159,7 +98,7 @@ class Reward(models.Model):
     @property
     def count(self):
         return self.donations.filter(
-            status=Donation.Status.success
+            status=DonationTransitions.values.success
         ).count()
 
     def __unicode__(self):
@@ -222,7 +161,7 @@ class Fundraiser(models.Model):
     @property
     def amount_donated(self):
         donations = self.donations.filter(
-            status=[Donation.Status.success]
+            status=[DonationTransitions.values.success]
         )
 
         totals = [
@@ -240,12 +179,11 @@ class Fundraiser(models.Model):
 
 
 class Donation(Contribution):
-    class Status(Contribution.Status):
-        refunded = ChoiceItem('refunded', _('refunded'))
-
     amount = MoneyField()
     reward = models.ForeignKey(Reward, null=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
+
+    transitions = TransitionManager(DonationTransitions, 'status')
 
     @property
     def payment_method(self):
@@ -253,87 +191,23 @@ class Donation(Contribution):
             return None
         return self.payment.type
 
-    def funding_is_running(self):
-        return self.activity.status == Funding.Status.open
+    class Meta:
+        verbose_name = _('budget line')
+        verbose_name_plural = _('budget lines')
 
-    @Contribution.status.transition(
-        source=[Status.new, Status.success],
-        target=Status.refunded,
-    )
-    def refund(self):
-        pass
-
-    @Contribution.status.transition(
-        source=[Status.new, Status.success],
-        target=Status.failed,
-    )
-    def fail(self):
-        pass
-
-    @Contribution.status.transition(
-        source=[Status.new, Status.failed],
-        target=Status.success,
-    )
-    def success(self):
-        pass
+    def __unicode__(self):
+        return u'{}'.format(self.amount)
 
 
-class Payment(PolymorphicModel):
-    class Status(DjangoChoices):
-        new = ChoiceItem('new', _('new'))
-        pending = ChoiceItem('pending', _('pending'))
-        success = ChoiceItem('success', _('success'))
-        refund_requested = ChoiceItem('refund_requested', _('refund requested'))
-        refunded = ChoiceItem('refunded', _('refunded'))
-        failed = ChoiceItem('failed', _('failed'))
-
+class Payment(TransitionsMixin, PolymorphicModel):
     status = FSMField(
-        default=Status.new,
-        protected=True
+        default=PaymentTransitions.values.new,
     )
+
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
     donation = models.OneToOneField(Donation, related_name='payment')
-
-    def can_refund(self):
-        return self.status in ['pending', 'success']
-
-    def process_refund_request(self):
-        raise NotImplementedError('Refunding not yet implemented for "{}"'.format(self))
-
-    @Activity.status.transition(
-        source=['pending', 'success'],
-        target='refund_requested',
-        # conditions=[can_refund]
-    )
-    def request_refund(self):
-        self.process_refund_request()
-
-    @Activity.status.transition(
-        source=['new'],
-        target='success'
-    )
-    def succeed(self):
-        self.donation.success()
-        self.donation.save()
-
-    @Activity.status.transition(
-        source=['new', 'success'],
-        target='failed'
-    )
-    def fail(self):
-        self.donation.fail()
-        self.donation.save()
-
-    @Activity.status.transition(
-        source=['success', 'refund_requested'],
-        target='refunded',
-        # conditions=[can_refund]
-    )
-    def refund(self):
-        self.donation.refund()
-        self.donation.save()
 
     def __unicode__(self):
         return "{} - {}".format(self.polymorphic_ctype, self.id)
@@ -342,3 +216,21 @@ class Payment(PolymorphicModel):
         permissions = (
             ('refund_payment', 'Can refund payments'),
         )
+
+
+class PaymentProvider(PolymorphicModel):
+
+    public_settings = {}
+    private_settings = {}
+
+    @property
+    def payment_methods(self):
+        return [{
+            'provider': 'default',
+            'code': 'default',
+            'name': 'default',
+            'currencies': ['EUR']
+        }]
+
+    def __unicode__(self):
+        return str(self.polymorphic_ctype)

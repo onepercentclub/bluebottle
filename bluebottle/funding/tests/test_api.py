@@ -1,14 +1,15 @@
-from datetime import timedelta
 import json
-
-from moneyed import Money
+from datetime import timedelta
 
 from django.urls import reverse
 from django.utils.timezone import now
-
+from moneyed import Money
 from rest_framework import status
+
 from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory, RewardFactory
-from bluebottle.funding.models import Donation
+from bluebottle.funding.transitions import DonationTransitions
+from bluebottle.funding_pledge.models import PledgePaymentProvider
+from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
@@ -21,8 +22,8 @@ class BudgetLineListTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
 
         self.funding = FundingFactory.create(
             owner=self.user,
@@ -107,8 +108,8 @@ class RewardListTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
 
         self.funding = FundingFactory.create(
             owner=self.user,
@@ -198,10 +199,14 @@ class FundraiserListTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.initiative.save()
 
-        self.funding = FundingFactory.create(initiative=self.initiative, accepted_currencies=['EUR'])
+        self.funding = FundingFactory.create(
+            initiative=self.initiative, accepted_currencies=['EUR'],
+            deadline=now() + timedelta(days=15)
+        )
 
         self.create_url = reverse('funding-fundraiser-list')
         self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
@@ -300,8 +305,8 @@ class DonationListTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
 
         self.funding = FundingFactory.create(initiative=self.initiative, accepted_currencies=['EUR'])
 
@@ -332,7 +337,7 @@ class DonationListTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['status'], Donation.Status.new)
+        self.assertEqual(data['data']['attributes']['status'], DonationTransitions.values.new)
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
         self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
         self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
@@ -391,3 +396,26 @@ class DonationListTestCase(BluebottleTestCase):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentMethodListTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(PaymentMethodListTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.payment_method_url = reverse('funding-payment-method-list')
+        StripePaymentProvider.objects.create(ideal=True, direct_debit=True, bancontact=True)
+        PledgePaymentProvider.objects.create()
+
+    def test_list(self):
+        response = self.client.get(self.payment_method_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 5)
+        self.assertEqual(
+            response.data[0]['code'],
+            'credit_card'
+        )
+        self.assertEqual(
+            response.data[4]['code'],
+            'pledge'
+        )

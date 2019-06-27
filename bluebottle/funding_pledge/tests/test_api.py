@@ -17,8 +17,8 @@ class PaymentTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
 
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding, user=self.user)
@@ -44,6 +44,7 @@ class PaymentTestCase(BluebottleTestCase):
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
+
         self.assertEqual(data['data']['attributes']['status'], 'success')
         self.assertEqual(data['included'][0]['attributes']['status'], 'success')
 
@@ -53,6 +54,7 @@ class PaymentTestCase(BluebottleTestCase):
             data=json.dumps(self.data),
             user=BlueBottleUserFactory.create()
         )
+
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_payment_no_user(self):

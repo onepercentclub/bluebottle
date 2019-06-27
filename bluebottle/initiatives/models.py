@@ -2,40 +2,33 @@ from django.db import models
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.html import format_html
-from django.forms.models import model_to_dict
 from django.utils.translation import ugettext_lazy as _
-from djchoices.choices import DjangoChoices, ChoiceItem
 
 from multiselectfield import MultiSelectField
 
 from bluebottle.files.fields import ImageField
-from bluebottle.fsm import FSMField, TransitionNotAllowed
+from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from bluebottle.geo.models import Geolocation
-from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
+from bluebottle.initiatives.transitions import InitiativeTransitions
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.models import BasePlatformSettings
 
 
-class Initiative(models.Model):
-    class Status(DjangoChoices):
-        draft = ChoiceItem('draft', _('draft'))
-        submitted = ChoiceItem('submitted', _('submitted'))
-        needs_work = ChoiceItem('needs_work', _('needs work'))
-        approved = ChoiceItem('approved', _('approved'))
-        closed = ChoiceItem('closed', _('closed'))
+class Initiative(TransitionsMixin, models.Model):
+    status = FSMField(
+        default=InitiativeTransitions.values.draft,
+        choices=InitiativeTransitions.values.choices,
+        protected=True
+    )
 
     title = models.CharField(_('title'), max_length=255)
 
-    status = FSMField(
-        default=Status.draft,
-        choices=Status.choices,
-        protected=True
-    )
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('owner'),
         related_name='own_%(class)ss',
     )
+
     reviewer = models.ForeignKey(
         'members.Member',
         null=True,
@@ -86,75 +79,6 @@ class Initiative(models.Model):
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
-    def is_complete(self):
-        from bluebottle.initiatives.serializers import InitiativeSubmitSerializer
-
-        serializer = InitiativeSubmitSerializer(
-            data=model_to_dict(self)
-        )
-        if not serializer.is_valid():
-            return [unicode(error) for errors in serializer.errors.values() for error in errors]
-
-    @status.transition(
-        source=Status.draft,
-        target=Status.submitted,
-        conditions=[is_complete],
-        custom={'button_name': _('submit')}
-    )
-    def submit(self):
-        pass
-
-    @status.transition(
-        source=Status.needs_work,
-        target=Status.submitted,
-        conditions=[is_complete],
-        custom={'button_name': _('resubmit')}
-    )
-    def resubmit(self):
-        pass
-
-    @status.transition(
-        source=Status.submitted,
-        target=Status.needs_work,
-        custom={'button_name': _('needs work')}
-    )
-    def needs_work(self):
-        pass
-
-    @status.transition(
-        source=Status.submitted,
-        target=Status.approved,
-        messages=[InitiativeApproveOwnerMessage],
-        conditions=[is_complete],
-        custom={'button_name': _('approve')}
-    )
-    def approve(self):
-        for activity in self.activities.filter(status='draft'):
-            activity.initiative = self
-            try:
-                activity.open()
-                activity.save()
-            except TransitionNotAllowed:
-                pass
-
-    @status.transition(
-        source=[Status.approved, Status.submitted, Status.needs_work],
-        target=Status.closed,
-        messages=[InitiativeClosedOwnerMessage],
-        custom={'button_name': _('close')}
-    )
-    def close(self):
-        pass
-
-    @status.transition(
-        source=[Status.approved, Status.closed],
-        target=Status.submitted,
-        conditions=[is_complete],
-        custom={'button_name': _('re-open')}
-    )
-    def reopen(self):
-        pass
-
     class Meta:
         verbose_name = _("Initiative")
         verbose_name_plural = _("Initiatives")
@@ -170,6 +94,8 @@ class Initiative(models.Model):
             ('api_change_own_running_initiative', 'Can change own initiative through the API'),
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
+
+    transitions = TransitionManager(InitiativeTransitions, 'status')
 
     class JSONAPIMeta:
         resource_name = 'initiatives'

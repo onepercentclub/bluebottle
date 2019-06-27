@@ -12,7 +12,7 @@ class InitiativeFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Initiative
 
-    status = Initiative.Status.draft
+    status = 'draft'
     title = factory.Faker('sentence')
     story = factory.Faker('text')
     pitch = factory.Faker('text')

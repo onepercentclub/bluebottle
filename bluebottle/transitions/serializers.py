@@ -14,7 +14,7 @@ class Transition(object):
 
 class AvailableTransitionsField(ReadOnlyField):
     def to_representation(self, value):
-        transitions = getattr(value, 'get_available_{}_transitions'.format(self.source))()
+        transitions = value.transitions.available_transitions
 
         return (
             {'name': transition.name, 'target': transition.target}
@@ -32,14 +32,14 @@ class TransitionSerializer(serializers.Serializer):
         resource = self.validated_data['resource']
         transition = self.validated_data['transition']
 
-        available_transitions = getattr(resource, 'get_available_{}_transitions'.format(self.field))()
+        available_transitions = resource.transitions.available_transitions
 
         if transition not in [available_transition.name for available_transition in available_transitions]:
             raise ValidationError('Transition is not available')
 
         self.instance = Transition(resource, transition)
 
-        getattr(resource, transition)()
+        getattr(resource.transitions, transition)(send_messages=True)
         resource.save()
 
     class Meta:

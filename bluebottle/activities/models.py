@@ -5,23 +5,14 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
 
-from bluebottle.fsm import FSMField
-
-from djchoices.choices import DjangoChoices, ChoiceItem
+from bluebottle.fsm import FSMField, TransitionsMixin
 
 from polymorphic.models import PolymorphicModel
 from bluebottle.initiatives.models import Initiative
+from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
 
 
-class Activity(PolymorphicModel):
-    class Status(DjangoChoices):
-        draft = ChoiceItem('draft', _('draft'))
-        open = ChoiceItem('open', _('open'))
-        full = ChoiceItem('full', _('full'))
-        running = ChoiceItem('running', _('running'))
-        done = ChoiceItem('done', _('done'))
-        closed = ChoiceItem('closed', _('closed'))
-
+class Activity(TransitionsMixin, PolymorphicModel):
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('owner'),
@@ -32,9 +23,9 @@ class Activity(PolymorphicModel):
     updated = models.DateTimeField(auto_now=True)
 
     status = FSMField(
-        default=Status.draft,
-        choices=Status.choices,
+        default=ActivityTransitions.values.draft
     )
+
     initiative = models.ForeignKey(Initiative, related_name='activities')
 
     title = models.CharField(_('title'), max_length=255)
@@ -56,9 +47,6 @@ class Activity(PolymorphicModel):
     def __unicode__(self):
         return self.title
 
-    def is_complete(self):
-        return self.initiative.status == Initiative.Status.approved
-
     @property
     def contribution_count(self):
         return self.contributions.count()
@@ -74,29 +62,16 @@ class Activity(PolymorphicModel):
         return format_html("/{}/{}/{}", self._meta.app_label, self.pk, self.slug)
 
 
-class Contribution(PolymorphicModel):
-    class Status(DjangoChoices):
-        new = ChoiceItem('new', _('new'))
-        success = ChoiceItem('success', _('success'))
-        failed = ChoiceItem('success', _('success'))
-
+class Contribution(TransitionsMixin, PolymorphicModel):
     status = FSMField(
-        default=Status.new,
-        protected=True
+        default=ContributionTransitions.values.new,
     )
+
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
     activity = models.ForeignKey(Activity, related_name='contributions')
     user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True)
-
-    @classmethod
-    def is_user(cls, instance, user):
-        return instance.user == user
-
-    @classmethod
-    def is_activity_manager(cls, instance, user):
-        return instance.activity.initiative.activity_manager == user
 
     @property
     def owner(self):

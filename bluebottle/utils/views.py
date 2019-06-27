@@ -9,8 +9,8 @@ from django.http import Http404, HttpResponse
 from django.http.response import HttpResponseNotFound
 from django.template.loader import render_to_string
 from django.utils import translation
-from django.views.generic import TemplateView
 from django.utils.translation import ugettext as _
+from django.views.generic import TemplateView
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
 from parler.utils.i18n import get_language

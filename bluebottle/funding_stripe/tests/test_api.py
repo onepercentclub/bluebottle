@@ -21,8 +21,8 @@ class StripePaymentTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
 
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding, user=self.user)

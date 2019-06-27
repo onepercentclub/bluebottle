@@ -345,6 +345,7 @@ TENANT_APPS = (
     'bluebottle.funding',
     'bluebottle.funding_pledge',
     'bluebottle.funding_stripe',
+    'bluebottle.funding_vitepay',
 
     'bluebottle.tasks',
     'bluebottle.homepage',

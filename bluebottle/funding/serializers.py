@@ -1,5 +1,5 @@
 from django.utils.translation import ugettext_lazy as _
-
+from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import (
     ModelSerializer, ValidationError, IntegerField
@@ -11,9 +11,9 @@ from bluebottle.activities.utils import (
 from bluebottle.files.serializers import ImageField
 from bluebottle.funding.models import Funding, Donation, Payment, Fundraiser, Reward, BudgetLine
 from bluebottle.transitions.serializers import AvailableTransitionsField
+from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import MoneySerializer
-from bluebottle.transitions.serializers import TransitionSerializer
 
 
 class FundingCurrencyValidator(object):
@@ -234,6 +234,20 @@ class DonationSerializer(BaseContributionSerializer):
             'reward',
             'fundraiser',
         ]
+
+
+class PaymentMethodSerializer(serializers.Serializer):
+
+    code = serializers.CharField()
+    name = serializers.CharField()
+    currencies = serializers.ListField()
+    countries = serializers.ListField()
+
+    class Meta(BaseContributionSerializer.Meta):
+        fields = ('code', 'name', 'currencies', 'countries')
+
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        resource_name = 'funding/payment-methods'
 
 
 class PaymentSerializer(ModelSerializer):

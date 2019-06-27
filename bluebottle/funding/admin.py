@@ -9,8 +9,14 @@ from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModel
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Funding, Donation, Payment
+from bluebottle.funding.models import (
+    PaymentProvider
+)
 from bluebottle.funding_pledge.models import PledgePayment
+from bluebottle.funding_pledge.models import PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePayment
+from bluebottle.funding_stripe.models import StripePaymentProvider
+from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.utils.admin import FSMAdmin
 
 
@@ -121,3 +127,18 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 class PaymentAdmin(PolymorphicParentModelAdmin):
     model = Payment
     child_models = (StripePayment, PledgePayment)
+
+
+class PaymentProviderChildAdmin(PolymorphicChildModelAdmin):
+    pass
+
+
+@admin.register(PaymentProvider)
+class PaymentProviderAdmin(PolymorphicParentModelAdmin):
+    base_model = PaymentProvider
+
+    child_models = (
+        PledgePaymentProvider,
+        StripePaymentProvider,
+        VitepayPaymentProvider
+    )

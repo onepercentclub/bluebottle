@@ -49,13 +49,12 @@ class StripePayment(Payment):
             "activity_title": self.donation.activity.title,
         }
 
-    @Payment.status.transition(
-        source=['success'],
-        target='refunded'
-    )
-    def request_refund(self):
+    def process_refund_request(self):
+        """
+        Refund the payment
+        """
         intent = stripe.PaymentIntent.retrieve(self.intent_id)
-
         intent.charges[0].refund(
-            reverse_transfer=True,
+            reverse_transfer=True
         )
+        # TODO: Check status and possibly transition to `refunded` right away here?

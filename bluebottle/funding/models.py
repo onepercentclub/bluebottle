@@ -283,6 +283,7 @@ class Payment(PolymorphicModel):
         new = ChoiceItem('new', _('new'))
         pending = ChoiceItem('pending', _('pending'))
         success = ChoiceItem('success', _('success'))
+        refund_requested = ChoiceItem('refund_requested', _('refund requested'))
         refunded = ChoiceItem('refunded', _('refunded'))
         failed = ChoiceItem('failed', _('failed'))
 
@@ -297,6 +298,17 @@ class Payment(PolymorphicModel):
 
     def can_refund(self):
         return self.status in ['pending', 'success']
+
+    def process_refund_request(self):
+        raise NotImplementedError('Refunding not yet implemented for "{}"'.format(self))
+
+    @Activity.status.transition(
+        source=['pending', 'success'],
+        target='refund_requested',
+        # conditions=[can_refund]
+    )
+    def request_refund(self):
+        self.process_refund_request()
 
     @Activity.status.transition(
         source=['new'],
@@ -315,12 +327,11 @@ class Payment(PolymorphicModel):
         self.donation.save()
 
     @Activity.status.transition(
-        source=['success'],
+        source=['success', 'refund_requested'],
         target='refunded',
         # conditions=[can_refund]
     )
     def refund(self):
-        raise NotImplementedError('Refunding not yet implemented for "{}"'.format(self))
         self.donation.refund()
         self.donation.save()
 

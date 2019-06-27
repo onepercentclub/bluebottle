@@ -9,9 +9,5 @@ class PledgePayment(Payment):
 
         super(PledgePayment, self).save(*args, **kwargs)
 
-    @Payment.status.transition(
-        source=['success'],
-        target='refund_requested'
-    )
     def request_refund(self):
-        self.refund()
+        pass

@@ -142,6 +142,12 @@ except ImportError:
 ELASTICSEARCH_DSL_AUTOSYNC = False
 
 STRIPE = {
-    'api_key': 'test-key',
-    'webhook_secret': 'test-webhook-secret'
+    'private': {
+        'api_key': 'test-key',
+        'webhook_secret': 'test-webhook-secret'
+    },
+    'public': {
+        'publishable_key': 'test-pub-key'
+    }
+
 }

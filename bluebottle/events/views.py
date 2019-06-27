@@ -24,9 +24,9 @@ class EventList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
 
     prefetch_for_includes = {
         'initiative': ['initiative'],
-        'images': ['images'],
         'location': ['location'],
-        'owner': ['owner']
+        'owner': ['owner'],
+        'contributions': ['contributions']
     }
 
     def perform_create(self, serializer):
@@ -41,9 +41,9 @@ class EventDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
 
     prefetch_for_includes = {
         'initiative': ['initiative'],
-        'image': ['image'],
         'location': ['location'],
-        'owner': ['owner']
+        'owner': ['owner'],
+        'contributions': ['contributions']
     }
 
 

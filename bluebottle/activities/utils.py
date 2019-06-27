@@ -14,6 +14,7 @@ class BaseActivitySerializer(ModelSerializer):
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
+    contributions = ResourceRelatedField(many=True, read_only=True)
 
     transitions = AvailableTransitionsField(source='status')
     is_follower = serializers.SerializerMethodField()
@@ -41,6 +42,7 @@ class BaseActivitySerializer(ModelSerializer):
             'description',
             'is_follower',
             'status',
+            'contributions'
         )
 
         meta_fields = ('permissions', 'transitions', 'created', 'updated', )

@@ -8,7 +8,7 @@ from rest_framework import status
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
 
 
 class EventAPITestCase(BluebottleTestCase):
@@ -113,6 +113,7 @@ class EventAPITestCase(BluebottleTestCase):
             }
         }
         response = self.client.put(event_url, json.dumps(data), user=self.user)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
 
@@ -233,7 +234,7 @@ class ParticipantTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'participants',
+                'type': 'contributions/participants',
                 'attributes': {},
                 'relationships': {
                     'activity': {
@@ -258,6 +259,27 @@ class ParticipantTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['included'][0]['type'], 'activities/events')
         self.assertTrue(data['included'][0]['attributes']['is-follower'])
+
+        response = self.client.get(
+            self.event_url, user=self.participant
+        )
+
+        event_data = json.loads(response.content)
+        self.assertEqual(
+            event_data['data']['relationships']['contributions']['meta']['count'],
+            1
+        )
+        self.assertEqual(
+            event_data['data']['relationships']['contributions']['data'][0]['id'],
+            data['data']['id']
+        )
+        self.assertEqual(
+            event_data['data']['relationships']['contributions']['data'][0]['type'],
+            'contributions/participants'
+        )
+        self.assertTrue(
+            get_included(response, 'contributions/participants')
+        )
 
     def test_follow(self):
         self.client.post(
@@ -303,7 +325,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
                 'relationships': {
                     'resource': {
                         'data': {
-                            'type': 'participants',
+                            'type': 'contributions/participants',
                             'id': self.participant.pk
                         }
                     }
@@ -322,7 +344,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['included'][1]['type'], 'participants')
+        self.assertEqual(data['included'][1]['type'], 'contributions/participants')
         self.assertEqual(data['included'][1]['attributes']['status'], 'withdrawn')
 
         self.assertEqual(data['included'][0]['type'], 'activities/events')
@@ -346,7 +368,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
                 'relationships': {
                     'resource': {
                         'data': {
-                            'type': 'participants',
+                            'type': 'contributions/participants',
                             'id': self.participant.pk
                         }
                     }
@@ -364,7 +386,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['included'][1]['type'], 'participants')
+        self.assertEqual(data['included'][1]['type'], 'contributions/participants')
         self.assertEqual(data['included'][1]['attributes']['status'], 'new')
 
         self.assertEqual(data['included'][0]['type'], 'activities/events')

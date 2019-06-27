@@ -234,6 +234,19 @@ class PasswordSetTest(BluebottleTestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('some-password'))
 
+    def test_update_password_short(self):
+        response = self.client.put(
+            self.set_password_url,
+            {'password': 'some-password', 'new_password': '123456'},
+            token=self.user_token
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue('too short' in response.content)
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('some-password'))
+
     def test_update_password_wrong_token(self):
         other_user = BlueBottleUserFactory.create(
             password='other-password'

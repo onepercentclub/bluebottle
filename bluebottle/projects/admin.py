@@ -1,6 +1,7 @@
 import csv
 import logging
 from collections import OrderedDict
+from datetime import timedelta
 
 import six
 from adminfilters.multiselect import UnionFieldListFilter
@@ -19,6 +20,7 @@ from django.http.response import HttpResponseRedirect, HttpResponseForbidden, Ht
 from django.utils.html import format_html
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 from django_summernote.admin import SummernoteInlineModelAdmin
 from django_summernote.widgets import SummernoteWidget
 from moneyed.classes import Money
@@ -233,6 +235,7 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
                 self.cleaned_data['status'].slug == 'campaign' and \
                 'amount_asked' in self.cleaned_data and \
                 self.cleaned_data['amount_asked'].amount > 0 and \
+                'payout_account' in self.cleaned_data and \
                 (
                     not self.cleaned_data['payout_account'] or (
                         hasattr(self.cleaned_data['payout_account'], 'reviewed') and
@@ -242,12 +245,28 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
             if self.cleaned_data['payout_account']:
                 link_url = reverse('admin:payouts_payoutaccount_change',
                                    args=(self.cleaned_data['payout_account'].id,))
-                link = "<br/><a href='{}'>{}</a>".format(link_url, _("Review payout account"))
+                link = format_html(
+                    "<br/><a href='{}'>{}</a>",
+                    link_url,
+                    _("Review payout account")
+                )
             else:
                 link = ''
 
             raise forms.ValidationError(
                 format_html(_('The bank details need to be reviewed before approving a project') + link)
+            )
+
+        if (
+            'status' in self.cleaned_data and
+            self.cleaned_data['status'].slug == 'campaign' and
+            'amount_asked' in self.cleaned_data and
+            self.cleaned_data['amount_asked'].amount > 0 and
+            self.cleaned_data.get('deadline') and
+            self.cleaned_data['deadline'] > timezone.now() + timedelta(days=60)
+        ):
+            raise forms.ValidationError(
+                _('Crowdfunding projects cannot run longer then 60 days')
             )
 
     def save(self, commit=True):
@@ -752,7 +771,11 @@ class ProjectPhaseAdmin(TranslatableAdmin):
 
     def project_link(self, obj):
         url = "{}?status_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)
-        return format_html("<a href='{}'>{} projects</a>".format(url, obj.project_set.count()))
+        return format_html(
+            "<a href='{}'>{} projects</a>",
+            url,
+            obj.project_set.count()
+        )
 
     def has_delete_permission(self, request, obj=None):
         return False

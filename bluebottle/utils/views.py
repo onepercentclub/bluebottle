@@ -10,6 +10,7 @@ from django.http.response import HttpResponseNotFound
 from django.template.loader import render_to_string
 from django.utils import translation
 from django.utils.translation import ugettext as _
+from django.views.generic import TemplateView
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
 from parler.utils.i18n import get_language
@@ -178,6 +179,15 @@ class ViewPermissionsMixin(object):
             pass
 
         return model_cls
+
+
+class LoginWithView(TemplateView):
+
+    template_name = 'utils/login_with.html'
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
 
 
 class PermissionedView(View, ViewPermissionsMixin):

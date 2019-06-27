@@ -28,9 +28,9 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
 
     prefetch_for_includes = {
         'initiative': ['initiative'],
-        'image': ['image'],
         'location': ['location'],
-        'owner': ['owner']
+        'owner': ['owner'],
+        'contributions': ['contributions']
     }
 
 
@@ -46,7 +46,7 @@ class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyA
 
     prefetch_for_includes = {
         'initiative': ['initiative'],
-        'image': ['image'],
         'location': ['location'],
-        'owner': ['owner']
+        'owner': ['owner'],
+        'contributions': ['contributions']
     }

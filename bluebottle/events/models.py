@@ -95,7 +95,7 @@ class Participant(Contribution):
         )
 
     class JSONAPIMeta:
-        resource_name = 'participants'
+        resource_name = 'contributions/participants'
 
     def save(self, *args, **kwargs):
         created = self.pk is None

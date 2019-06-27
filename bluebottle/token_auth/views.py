@@ -1,11 +1,11 @@
 import re
-import urllib
 
-from django.http.response import HttpResponseRedirect, HttpResponse
-from django.views.generic.base import View, TemplateView
-from django.utils.module_loading import import_string
-from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth import login
+from django.core.exceptions import ImproperlyConfigured
+from django.http.response import HttpResponseRedirect, HttpResponse
+from django.template import loader
+from django.utils.module_loading import import_string
+from django.views.generic.base import View, TemplateView
 
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.utils import get_settings
@@ -58,18 +58,18 @@ class TokenLoginView(View):
             url = '/token/error?message={0}'.format(e)
             return HttpResponseRedirect(url)
 
-        url = "/login-with/{}/{}".format(user.pk, user.get_login_token())
-        target_url = auth.target_url
-        if auth.target_url:
-            if re.match('^\/\w\w\/admin', target_url):
-                # Admin login:
-                # Log user in using cookies and redirect directly
-                login(request, user)
-                url = target_url
-            else:
-                url += '?{}'.format(urllib.urlencode({'next': target_url}))
+        target_url = auth.target_url or "/"
+        if target_url and re.match('^\/\w\w\/admin', target_url):
+            # Admin login:
+            # Log user in using cookies and redirect directly
+            login(request, user)
+            return HttpResponseRedirect(target_url)
 
-        return HttpResponseRedirect(url)
+        template = loader.get_template('utils/login_with.html')
+        context = {'token': user.get_jwt_token(), 'link': target_url}
+        response = HttpResponse(template.render(context, request), content_type='text/html')
+        response['cache-control'] = "no-store, no-cache, private"
+        return response
 
     post = get
 

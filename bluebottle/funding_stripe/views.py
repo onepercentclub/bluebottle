@@ -9,10 +9,10 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe import stripe
 from bluebottle.funding_stripe.models import (
-    StripePayment, StripeKYCCheck, ExternalAccount
+    StripePayment, ConnectAccount, ExternalAccount
 )
 from bluebottle.funding_stripe.serializers import (
-    StripePaymentSerializer, StripeKYCCheckSerializer, ExternalAccountSerializer
+    StripePaymentSerializer, ConnectAccountSerializer, ExternalAccountSerializer
 )
 from bluebottle.members.models import Member
 from bluebottle.utils.permissions import IsOwner
@@ -26,9 +26,9 @@ class StripePaymentList(PaymentList):
     serializer_class = StripePaymentSerializer
 
 
-class StripeKYCCheckDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixin, RetrieveUpdateAPIView):
-    queryset = StripeKYCCheck.objects.all()
-    serializer_class = StripeKYCCheckSerializer
+class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixin, RetrieveUpdateAPIView):
+    queryset = ConnectAccount.objects.all()
+    serializer_class = ConnectAccountSerializer
 
     prefetch_for_includes = {
         'owner': ['owner'],
@@ -42,8 +42,8 @@ class StripeKYCCheckDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
 
     def get_object(self):
         try:
-            obj = self.request.user.stripe_kyc_check
-        except Member.stripe_kyc_check.RelatedObjectDoesNotExist:
+            obj = self.request.user.funding_stripe_payout_account
+        except Member.funding_stripe_payout_account.RelatedObjectDoesNotExist:
             raise Http404
 
         self.check_object_permissions(self.request, obj)
@@ -69,11 +69,11 @@ class ExternalAccountsList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     serializer_class = ExternalAccountSerializer
 
     prefetch_for_includes = {
-        'stripe_kyc_check': ['stripe_kyc_check'],
+        'connect_account': ['connect_account'],
     }
 
     related_permission_classes = {
-        'stripe_kyc_check': [IsOwner]
+        'connect_account': [IsOwner]
     }
 
     def perform_create(self, serializer):
@@ -87,11 +87,11 @@ class ExternalAccountsDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdat
     serializer_class = ExternalAccountSerializer
 
     prefetch_for_includes = {
-        'stripe_kyc_check': ['stripe_kyc_check'],
+        'connect_account': ['connect_account'],
     }
 
     related_permission_classes = {
-        'stripe_kyc_check': [IsOwner]
+        'connect_account': [IsOwner]
     }
 
     def perform_update(self, serializer):

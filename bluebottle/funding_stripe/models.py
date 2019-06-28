@@ -6,10 +6,10 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.funding_stripe import stripe
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import (
-    Payment, PaymentProvider, KYCCheck
+    Payment, PaymentProvider, PayoutAccount
 )
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
-from bluebottle.funding.transitions import KYCCheckTransitions
+from bluebottle.funding.transitions import PayoutAccountTransitions
 from bluebottle.payouts.models import StripePayoutAccount
 
 
@@ -110,11 +110,11 @@ class StripePaymentProvider(PaymentProvider):
         return methods
 
 
-class StripeKYCCheck(KYCCheck):
+class ConnectAccount(PayoutAccount):
     account_id = models.CharField(max_length=40)
     country = models.CharField(max_length=2)
 
-    transitions = TransitionManager(KYCCheckTransitions, 'status')
+    transitions = TransitionManager(PayoutAccountTransitions, 'status')
 
     @property
     def account(self):
@@ -134,7 +134,7 @@ class StripeKYCCheck(KYCCheck):
             )
             self.account_id = self._account.id
 
-        super(StripeKYCCheck, self).save(*args, **kwargs)
+        super(ConnectAccount, self).save(*args, **kwargs)
 
     def update(self, token):
         self._account = stripe.Account.modify(
@@ -186,25 +186,29 @@ class StripeKYCCheck(KYCCheck):
 
 
 class ExternalAccount(models.Model):
-    stripe_kyc_check = models.ForeignKey(StripeKYCCheck, related_name='external_accounts')
+    connect_account = models.ForeignKey(ConnectAccount, related_name='external_accounts')
     account_id = models.CharField(max_length=40)
 
     @property
     def account(self):
-        for account in self.stripe_kyc_check.account.external_accounts:
-            if account.id == self.account_id:
-                self._account = account
+        if self.account_id:
+            for account in self.connect_account.account.external_accounts:
+                if account.id == self.account_id:
+                    self._account = account
 
-        if not hasattr(self, '_account'):
-            self._account = self.stripe_kyc_check.account.external_accounts.retrieve(self.account_id)
+            if not hasattr(self, '_account'):
+                self._account = self.connect_account.account.external_accounts.retrieve(self.account_id)
 
-        return self._account
+            return self._account
 
     def create(self, token):
         if self.account_id:
             raise ProgrammingError('Stripe Account is already created')
 
-        self._account = self.stripe_kyc_check.account.external_accounts.create(token, metadata=self.metadata)
+        self._account = stripe.Account.create_external_account(
+            self.connect_account.account_id,
+            external_account=token
+        )
         self.account_id = self._account.id
         self.save()
 

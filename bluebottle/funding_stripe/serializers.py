@@ -4,7 +4,7 @@ from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.funding.serializers import PaymentSerializer
 from bluebottle.funding_stripe.models import (
-    StripePayment, StripeKYCCheck, ExternalAccount
+    StripePayment, ConnectAccount, ExternalAccount
 )
 
 
@@ -21,7 +21,7 @@ class StripePaymentSerializer(PaymentSerializer):
 
 
 class ExternalAccountSerializer(serializers.ModelSerializer):
-    stripe_kyc_check = ResourceRelatedField(queryset=StripeKYCCheck.objects.all())
+    connect_account = ResourceRelatedField(queryset=ConnectAccount.objects.all())
     token = serializers.CharField(write_only=True)
 
     account_holder_name = serializers.CharField(read_only=True, source='account.account_holder_name')
@@ -31,23 +31,23 @@ class ExternalAccountSerializer(serializers.ModelSerializer):
     routing_number = serializers.CharField(read_only=True, source='account.routing_number')
 
     included_serializers = {
-        'stripe_kyc_check': 'bluebottle.funding_stripe.serializers.StripeKYCCheckSerializer',
+        'connect_account': 'bluebottle.funding_stripe.serializers.ConnectAccountSerializer',
     }
 
     class Meta:
         model = ExternalAccount
 
         fields = (
-            'id', 'token', 'stripe_kyc_check', 'account_holder_name',
+            'id', 'token', 'connect_account', 'account_holder_name',
             'country', 'last4', 'currency', 'routing_number'
         )
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
-        resource_name = 'kyc-check/stripe-external-accounts'
-        included_resources = ['stripe_kyc_check']
+        resource_name = 'payout-accounts/stripe/external-accounts'
+        included_resources = ['connect-account']
 
 
-class StripeKYCCheckSerializer(serializers.ModelSerializer):
+class ConnectAccountSerializer(serializers.ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     token = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
@@ -59,7 +59,7 @@ class StripeKYCCheckSerializer(serializers.ModelSerializer):
     }
 
     class Meta:
-        model = StripeKYCCheck
+        model = ConnectAccount
 
         fields = (
             'id', 'token', 'country',
@@ -70,6 +70,6 @@ class StripeKYCCheckSerializer(serializers.ModelSerializer):
         )
 
     class JSONAPIMeta():
-        resource_name = 'kyc-check/stripe'
+        resource_name = 'payout-accounts/stripe/connect-accounts'
 
         included_resources = ['external_accounts', 'owner']

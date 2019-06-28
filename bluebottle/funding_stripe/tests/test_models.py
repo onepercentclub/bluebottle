@@ -10,7 +10,7 @@ from django.db import ProgrammingError
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.models import (
-    StripePayment, StripeKYCCheck, ExternalAccount
+    StripePayment, ConnectAccount, ExternalAccount
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -58,10 +58,10 @@ class StripePaymentTestCase(BluebottleTestCase):
         self.assertEqual(payment.status, StripePaymentTransitions.values.refund_requested)
 
 
-class StripeKYCCheckTestCase(BluebottleTestCase):
+class ConnectAccountTestCase(BluebottleTestCase):
     def setUp(self):
         account_id = 'some-connect-id'
-        self.check = StripeKYCCheck(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
+        self.check = ConnectAccount(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
 
         self.connect_account = stripe.Account(account_id)
         self.connect_account.update({
@@ -80,7 +80,7 @@ class StripeKYCCheckTestCase(BluebottleTestCase):
             })
         })
 
-        super(StripeKYCCheckTestCase, self).setUp()
+        super(ConnectAccountTestCase, self).setUp()
 
     def test_save(self):
         self.check.account_id = None
@@ -90,7 +90,10 @@ class StripeKYCCheckTestCase(BluebottleTestCase):
             self.check.save()
             create.assert_called_with(
                 country=self.check.country,
-                metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk}
+                metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},
+                settings={'payments': {'statement_descriptor': u''}, 'payouts': {'schedule': {'interval': 'manual'}}},
+                business_type='individual',
+                type='custom'
             )
 
             self.assertEqual(self.check.account.id, self.connect_account.id)
@@ -116,7 +119,7 @@ class StripeKYCCheckTestCase(BluebottleTestCase):
         ) as modify:
             self.check.update(token)
             self.assertEqual(self.check.account.id, self.connect_account.id)
-            modify.assert_called_with(self.check.account_id, token=token)
+            modify.assert_called_with(self.check.account_id, account_token=token)
 
     def test_account(self):
         with mock.patch(
@@ -159,12 +162,12 @@ class StripeKYCCheckTestCase(BluebottleTestCase):
         ):
             self.assertFalse(self.check.disabled)
 
-    def test_personal_data(self):
+    def test_individual(self):
         with mock.patch(
             'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.assertEqual(
-                self.check.personal_data,
+                self.check.individual,
                 self.connect_account.individual
             )
 
@@ -174,10 +177,10 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
         account_id = 'some-connect-id'
         external_account_id = 'some-bank-token'
 
-        self.check = StripeKYCCheck(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
+        self.check = ConnectAccount(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
         self.check.save()
 
-        self.external_account = ExternalAccount(stripe_kyc_check=self.check, account_id=external_account_id)
+        self.external_account = ExternalAccount(connect_account=self.check, account_id=external_account_id)
 
         self.connect_external_account = stripe.BankAccount(external_account_id)
 
@@ -218,15 +221,15 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
     def test_save(self):
         self.external_account.account_id = None
         with mock.patch(
-            'stripe.ListObject.create', return_value=self.connect_account
+            'stripe.Account.create_external_account', return_value=self.connect_account
         ) as create:
             with mock.patch(
                 'stripe.Account.retrieve', return_value=self.connect_account
             ):
                 self.external_account.create('some-token')
                 create.assert_called_with(
-                    'some-token',
-                    metadata={'tenant_name': u'test', 'tenant_domain': u'testserver'}
+                    self.check.account_id,
+                    external_account='some-token',
                 )
 
                 self.assertEqual(self.check.account.id, self.connect_account.id)

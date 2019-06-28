@@ -11,7 +11,7 @@ import stripe
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding_stripe.tests.factories import (
-    StripeKYCCheckFactory,
+    ConnectAccountFactory,
     ExternalAccountFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -84,19 +84,19 @@ class StripePaymentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class StripeKYCCheckDetailsTestCase(BluebottleTestCase):
+class ConnectAccountDetailsTestCase(BluebottleTestCase):
     def setUp(self):
-        super(StripeKYCCheckDetailsTestCase, self).setUp()
+        super(ConnectAccountDetailsTestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
 
-        self.check = StripeKYCCheckFactory(owner=self.user, account_id='some-account-id')
+        self.check = ConnectAccountFactory(owner=self.user, account_id='some-account-id')
 
-        self.url = reverse('stripe-kyc-check-details')
+        self.url = reverse('connect-account-details')
 
         self.data = {
             'data': {
-                'type': 'kyc-check/stripe',
+                'type': 'payout-accounts/stripe/connect-accounts',
                 'id': self.check.pk,
                 'attributes': {
                     'token': 'some-account-token',
@@ -145,11 +145,17 @@ class StripeKYCCheckDetailsTestCase(BluebottleTestCase):
                 )
                 create_account.assert_called_with(
                     country=self.data['data']['attributes']['country'],
-                    metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.user.pk}
+                    metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.user.pk},
+                    settings={
+                        'payments': {'statement_descriptor': u''},
+                        'payouts': {'schedule': {'interval': 'manual'}}
+                    },
+                    business_type='individual',
+                    type='custom'
                 )
                 modify_account.assert_called_with(
                     'some-connect-id',
-                    token='some-account-token'
+                    account_token='some-account-token'
                 )
 
         data = json.loads(response.content)
@@ -169,7 +175,7 @@ class StripeKYCCheckDetailsTestCase(BluebottleTestCase):
             ['external_accounts', 'individual.dob.month']
         )
         self.assertEqual(
-            data['data']['attributes']['personal-data']['first_name'],
+            data['data']['attributes']['individual']['first_name'],
             'Jhon',
         )
 
@@ -213,7 +219,7 @@ class StripeKYCCheckDetailsTestCase(BluebottleTestCase):
             ['external_accounts', 'individual.dob.month']
         )
         self.assertEqual(
-            data['data']['attributes']['personal-data']['first_name'],
+            data['data']['attributes']['individual']['first_name'],
             'Jhon',
         )
 
@@ -240,7 +246,7 @@ class StripeKYCCheckDetailsTestCase(BluebottleTestCase):
     def test_patch(self):
         data = {
             'data': {
-                'type': 'kyc-check/stripe',
+                'type': 'payout-accounts/stripe/connect-accounts',
                 'id': self.check.pk,
                 'attributes': {
                     'token': 'some-account-token',
@@ -257,7 +263,7 @@ class StripeKYCCheckDetailsTestCase(BluebottleTestCase):
                 data=json.dumps(self.data),
                 user=self.user
             )
-            modify_account.assert_called_with('some-account-id', token='some-account-token')
+            modify_account.assert_called_with('some-account-id', account_token='some-account-token')
 
         data = json.loads(response.content)
 
@@ -293,13 +299,13 @@ class ExternalAccountsTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
 
-        self.check = StripeKYCCheckFactory.create(owner=self.user, account_id='some-account-id')
+        self.check = ConnectAccountFactory.create(owner=self.user, account_id='some-account-id')
         self.external_account = ExternalAccountFactory.create(
-            stripe_kyc_check=self.check,
+            connect_account=self.check,
             account_id='some-external-account-id'
         )
 
-        self.url = reverse('stripe-kyc-check-details', args=(self.check.pk, ))
+        self.url = reverse('connect-account-details')
         self.external_account_url = reverse('stripe-external-account-list')
 
         self.connect_external_account = stripe.BankAccount('some-bank-token')
@@ -339,9 +345,10 @@ class ExternalAccountsTestCase(BluebottleTestCase):
                     self.url, user=self.user
                 )
                 retrieve.assert_called_with(self.external_account.account_id)
+                self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.content)
-        external_account = data['included'][0]['attributes']
+        external_account = data['included'][1]['attributes']
 
         self.assertEqual(
             external_account['currency'], self.connect_external_account.currency
@@ -362,14 +369,14 @@ class ExternalAccountsTestCase(BluebottleTestCase):
     def test_create(self):
         data = {
             'data': {
-                'type': 'kyc-check/stripe-external-accounts',
+                'type': 'payout-accounts/stripe/external-accounts',
                 'attributes': {
                     'token': self.connect_external_account.id
                 },
                 'relationships': {
-                    'stripe_kyc_check': {
+                    'connect_account': {
                         'data': {
-                            'type': 'kyc-check/stripe',
+                            'type': 'payout-accounts/stripe/connect-accounts',
                             'id': self.check.pk
                         },
                     }
@@ -381,14 +388,14 @@ class ExternalAccountsTestCase(BluebottleTestCase):
             'stripe.Account.retrieve', return_value=self.connect_account
         ) as retrieve:
             with mock.patch(
-                'stripe.ListObject.create', return_value=self.connect_external_account
+                'stripe.Account.create_external_account', return_value=self.connect_external_account
             ) as retrieve:
                 response = self.client.post(
                     self.external_account_url, data=json.dumps(data), user=self.user
                 )
                 retrieve.assert_called_with(
-                    self.connect_external_account.id,
-                    metadata={'tenant_name': 'test', 'tenant_domain': 'testserver'}
+                    self.check.account_id,
+                    external_account=self.connect_external_account.id,
                 )
 
         data = json.loads(response.content)
@@ -421,7 +428,7 @@ class ExternalAccountsTestCase(BluebottleTestCase):
                 )
 
         data = json.loads(response.content)
-        external_account = data['included'][0]['attributes']
+        external_account = data['included'][1]['attributes']
 
         self.assertEqual(
             external_account['currency'], self.connect_external_account.currency

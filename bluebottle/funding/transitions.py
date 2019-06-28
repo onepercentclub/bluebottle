@@ -132,7 +132,7 @@ class PaymentTransitions(ModelTransitions):
         self.instance.donation.save()
 
 
-class KYCCheckTransitions(ModelTransitions):
+class PayoutAccountTransitions(ModelTransitions):
     class values(DjangoChoices):
         new = ChoiceItem('new', _('new'))
         pending = ChoiceItem('pending', _('pending'))

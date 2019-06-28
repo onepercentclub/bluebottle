@@ -8,4 +8,5 @@ class VitepayPaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = VitepayPayment
 
+    mobile_number = '77000001'
     donation = factory.SubFactory(DonationFactory)

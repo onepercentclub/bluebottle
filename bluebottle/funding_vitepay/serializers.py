@@ -1,14 +1,21 @@
 from rest_framework import serializers
 from bluebottle.funding.serializers import PaymentSerializer
-from bluebottle.funding_stripe.models import StripePayment
+from bluebottle.funding_vitepay.models import VitepayPayment
+from bluebottle.funding_vitepay.utils import get_payment_url
 
 
 class VitepayPaymentSerializer(PaymentSerializer):
-    mobile_number = serializers.CharField(read_only=True)
+    mobile_number = serializers.CharField(required=True)
+    payment_url = serializers.CharField(read_only=True)
 
     class Meta(PaymentSerializer.Meta):
-        model = StripePayment
-        fields = PaymentSerializer.Meta.fields + ('mobile_number',)
+        model = VitepayPayment
+        fields = PaymentSerializer.Meta.fields + ('mobile_number', 'payment_url')
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
         resource_name = 'payments/vitepay-payments'
+
+    def create(self, validated_data):
+        payment = super(VitepayPaymentSerializer, self).create(validated_data)
+        payment.payment_url = get_payment_url(payment)
+        return payment

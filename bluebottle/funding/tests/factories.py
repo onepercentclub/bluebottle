@@ -1,4 +1,5 @@
 import factory.fuzzy
+from moneyed import Money
 
 from bluebottle.funding.models import Funding, Donation, Reward, Fundraiser, BudgetLine
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -26,6 +27,7 @@ class DonationFactory(factory.DjangoModelFactory):
 
     activity = factory.SubFactory(FundingFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
+    amount = Money(35, 'EUR')
 
 
 class RewardFactory(factory.DjangoModelFactory):

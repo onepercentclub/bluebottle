@@ -44,8 +44,8 @@ class EventTransitions(ActivityTransitions):
     @transition(
         source=ActivityTransitions.values.draft,
         target=ActivityTransitions.values.open,
+        conditions=[is_complete, initiative_is_approved],
         serializer='bluebottle.events.serializers.EventSubmitSerializer',
-        conditions=[is_complete, initiative_is_approved]
     )
     def open(self):
         pass
@@ -129,10 +129,14 @@ class ParticipantTransitions(ContributionTransitions):
         if not self.instance.activity.status == EventTransitions.values.done:
             return _('The event is not done')
 
+    def is_user(self, user):
+        return self.instance.user == user
+
     @transition(
         source=values.new,
         target=values.withdrawn,
-        conditions=[event_is_open_or_full]
+        conditions=[event_is_open_or_full],
+        permissions=[is_user]
     )
     def withdraw(self):
         unfollow(self.instance.user, self.instance.activity)
@@ -148,7 +152,7 @@ class ParticipantTransitions(ContributionTransitions):
     @transition(
         source=[values.new],
         target=values.rejected,
-        permission=ContributionTransitions.is_activity_manager
+        permissions=[ContributionTransitions.is_activity_manager]
     )
     def reject(self):
         unfollow(self.instance.user, self.instance.activity)
@@ -165,7 +169,7 @@ class ParticipantTransitions(ContributionTransitions):
     @transition(
         source=values.success,
         target=values.no_show,
-        permission=ContributionTransitions.is_activity_manager
+        permissions=[ContributionTransitions.is_activity_manager]
     )
     def no_show(self):
         unfollow(self.instance.user, self.instance.activity)

@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.follow.models import follow
-from bluebottle.fsm import TransitionNotAllowed, TransitionManager
+from bluebottle.fsm import TransitionNotPossible, TransitionManager
 from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.geo.models import Geolocation
@@ -49,7 +49,7 @@ class Event(Activity):
         if self.status == EventTransitions.values.draft:
             try:
                 self.transitions.open()
-            except TransitionNotAllowed:
+            except TransitionNotPossible:
                 pass
 
         super(Event, self).save(*args, **kwargs)

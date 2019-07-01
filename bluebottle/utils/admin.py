@@ -19,7 +19,7 @@ from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 
 from bluebottle.clients import properties
-from bluebottle.fsm import TransitionNotAllowed
+from bluebottle.fsm import TransitionNotPossible
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
 from bluebottle.tasks.models import TaskMember
@@ -241,7 +241,6 @@ class FSMAdmin(admin.ModelAdmin):
                 try:
                     getattr(instance.transitions, transition.name)(
                         send_messages=send_messages,
-                        user=request.user
                     )
 
                     instance.save()
@@ -252,7 +251,7 @@ class FSMAdmin(admin.ModelAdmin):
                     )
 
                     return HttpResponseRedirect(link)
-                except TransitionNotAllowed:
+                except TransitionNotPossible:
                     errors = transition.errors(instance)
                     if errors:
                         template = loader.get_template(

@@ -1,4 +1,4 @@
-from bluebottle.fsm import TransitionNotAllowed
+from bluebottle.fsm import TransitionNotPossible
 from bluebottle.initiatives.transitions import InitiativeTransitions
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -26,7 +26,7 @@ class InitiativeTransitionTestCase(BluebottleTestCase):
         self.initiative.title = None
 
         self.assertRaises(
-            TransitionNotAllowed,
+            TransitionNotPossible,
             self.initiative.transitions.submit
         )
 

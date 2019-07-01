@@ -277,9 +277,10 @@ class ParticipantTestCase(BluebottleTestCase):
             event_data['data']['relationships']['contributions']['data'][0]['type'],
             'contributions/participants'
         )
-        self.assertTrue(
-            get_included(response, 'contributions/participants')
-        )
+        participant_data = get_included(response, 'contributions/participants')
+
+        self.assertTrue(participant_data['id'], self.participant.pk)
+        self.assertTrue('meta' in participant_data)
 
     def test_follow(self):
         self.client.post(

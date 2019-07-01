@@ -6,7 +6,7 @@ from moneyed import Money
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicModel
 
-from bluebottle.fsm import FSMField, TransitionNotAllowed, TransitionManager, TransitionsMixin
+from bluebottle.fsm import FSMField, TransitionNotPossible, TransitionManager, TransitionsMixin
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.funding.transitions import (
@@ -56,7 +56,7 @@ class Funding(Activity):
         if self.status == FundingTransitions.values.draft:
             try:
                 self.transitions.open()
-            except TransitionNotAllowed:
+            except TransitionNotPossible:
                 pass
 
         super(Funding, self).save(*args, **kwargs)
@@ -198,7 +198,7 @@ class Donation(Contribution):
         verbose_name_plural = _('budget lines')
 
     def __unicode__(self):
-        return u'{1}'.format(self.amount)
+        return u'{}'.format(self.amount)
 
 
 class Payment(TransitionsMixin, PolymorphicModel):

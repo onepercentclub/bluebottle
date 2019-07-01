@@ -14,6 +14,7 @@ class BaseActivitySerializer(ModelSerializer):
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
+    contributions = ResourceRelatedField(many=True, read_only=True)
 
     transitions = AvailableTransitionsField(source='status')
     is_follower = serializers.SerializerMethodField()
@@ -41,6 +42,7 @@ class BaseActivitySerializer(ModelSerializer):
             'description',
             'is_follower',
             'status',
+            'contributions'
         )
 
         meta_fields = ('permissions', 'transitions', 'created', 'updated', )
@@ -71,7 +73,7 @@ class ActivitySubmitSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributionSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = ResourceRelatedField(read_only=True)
+    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
     permissions = ResourcePermissionField('project_detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='status')

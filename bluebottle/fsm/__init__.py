@@ -8,6 +8,12 @@ post_transition = Signal(providing_args=['instance', 'name', 'source', 'target',
 
 
 class TransitionNotAllowed(Exception):
+    """Exception that is raised when a transition that is not allowed the be performed by the current user
+    is tried.
+    """
+
+
+class TransitionNotPossible(Exception):
     """Exception that is raised when a transition that is not allowed in the current state
     is tried.
     """
@@ -23,7 +29,7 @@ class Transition(object):
         `conditions`: conditions that need to hold for the transition to be possible
         `options`: extra arguments passed when defining the transition
     """
-    def __init__(self, name, source, target, method, conditions=None, options=None):
+    def __init__(self, name, source, target, method, conditions=None, permissions=None, options=None):
         self.name = name
         if not isinstance(source, list):
             source = [source]
@@ -32,11 +38,20 @@ class Transition(object):
         self.target = target
         self.method = method
         self.conditions = conditions or []
+        self.permissions = permissions or []
         self.options = options or {}
 
-    def is_allowed(self, transitions):
+    def is_possible(self, transitions):
         """ Check if the initiative is allowed currently. """
-        return all(condition(transitions) is None for condition in self.conditions)
+        return (
+            all(condition(transitions) is None for condition in self.conditions)
+        )
+
+    def is_allowed(self, transitions, user):
+        """ Check if the initiative is allowed currently. """
+        return (
+            all(permission(transitions, user) for permission in self.permissions)
+        )
 
     def errors(self):
         """ Errors that prevent the transition """
@@ -51,7 +66,7 @@ class Transition(object):
                     yield error
 
 
-def transition(source, target, conditions=None, **kwargs):
+def transition(source, target, conditions=None, permissions=None, **kwargs):
     """ Decorator that creates transition functions
 
     Example:
@@ -67,7 +82,13 @@ def transition(source, target, conditions=None, **kwargs):
     def inner_transition(func):
         # Store the transition on the field
         return Transition(
-            func.__name__, source, target, func, conditions, kwargs
+            func.__name__,
+            source=source,
+            target=target,
+            method=func,
+            conditions=conditions,
+            permissions=permissions,
+            options=kwargs
         )
 
     return inner_transition
@@ -104,11 +125,23 @@ class ModelTransitions():
         self.instance = instance
         self.field = field
 
-    def transition_to(self, transition, **kwargs):
+    def transition_to(self, transition, user=None, **kwargs):
         original_source = getattr(self.instance, self.field)  # Keep current status so we can revert
 
-        if transition not in self.all_transitions or not transition.is_allowed(self):
-            # The transition is not currently possible
+        if transition not in self.all_transitions:
+            raise TransitionNotPossible(
+                'Transition from {} to {} is not available'.format(
+                    original_source, transition.target
+                )
+            )
+
+        if not transition.is_possible(self):
+            raise TransitionNotPossible(
+                'Transition from {} to {} is not available'.format(
+                    original_source, transition.target
+                )
+            )
+        if not transition.is_allowed(self, user):
             raise TransitionNotAllowed(
                 'Not allowed to transition from {} to {}'.format(
                     original_source, transition.target
@@ -149,11 +182,11 @@ class ModelTransitions():
             )
         ]
 
-    @property
-    def available_transitions(self):
+    def available_transitions(self, user=None):
         return [
             transition for transition in self.all_transitions if
-            transition.is_allowed(self)
+            transition.is_possible(self) and
+            (user and transition.is_allowed(self, user))
         ]
 
 

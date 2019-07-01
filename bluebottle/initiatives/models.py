@@ -37,6 +37,14 @@ class Initiative(TransitionsMixin, models.Model):
         related_name='review_%(class)ss',
     )
 
+    activity_manager = models.ForeignKey(
+        'members.Member',
+        null=True,
+        blank=True,
+        verbose_name=_('activity manager'),
+        related_name='activity_manager_%(class)ss',
+    )
+
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -113,6 +121,10 @@ class Initiative(TransitionsMixin, models.Model):
                 self.slug = slugify(self.title)
             else:
                 self.slug = 'new'
+
+        if not self.activity_manager:
+            self.activity_manager = self.owner
+
         super(Initiative, self).save(**kwargs)
 
 

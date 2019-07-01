@@ -266,7 +266,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
             self.assertEqual(checked_token.token, token)
             self.assertEqual(checked_token.user.username, user.username)
 
-    @mock.patch.object(get_user_model(), 'get_login_token', create=True, return_value='tralala')
+    @mock.patch.object(get_user_model(), 'get_jwt_token', create=True, return_value='test-token')
     def test_login_view(self, get_jwt_token):
         """
         Test the login view for booking
@@ -280,14 +280,13 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
 
             login_url = reverse('token-login', kwargs={'token': token})
             response = self.client.get(login_url)
-            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, 'var token = "test-token";')
+            self.assertContains(response, 'storeToken')
             user = Member.objects.get(email='john.doe@example.com')
-            self.assertEqual(
-                response['Location'],
-                "/login-with/{}/tralala".format(user.pk)
-            )
+            self.assertEqual(user.remote_id, 'john.doe@example.com')
 
-    @mock.patch.object(get_user_model(), 'get_login_token', create=True, return_value='tralala')
+    @mock.patch.object(get_user_model(), 'get_jwt_token', create=True, return_value='test-token')
     def test_link_view(self, get_jwt_token):
         """
         Test the link view for booking
@@ -301,13 +300,11 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
 
             login_url = reverse('token-login-link', kwargs={'token': token, 'link': '/projects/my-project'})
             response = self.client.get(login_url)
-            self.assertEqual(response.status_code, 302)
-
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, 'var token = "test-token";')
+            self.assertContains(response, 'storeToken')
             user = Member.objects.get(email='john.doe@example.com')
-            self.assertEqual(
-                response['Location'],
-                "/login-with/{}/tralala?next=%2Fprojects%2Fmy-project".format(user.pk)
-            )
+            self.assertEqual(user.remote_id, 'john.doe@example.com')
 
     def test_redirect_view(self):
         """

@@ -207,6 +207,7 @@ class OrderPayment(models.Model, FSMTransition):
                         StatusDefinition.REFUND_REQUESTED,
                         StatusDefinition.REFUNDED,
                         StatusDefinition.CANCELLED,
+                        StatusDefinition.PENDING,
                         StatusDefinition.SETTLED],
                 target=StatusDefinition.FAILED)
     def failed(self):

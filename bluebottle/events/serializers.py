@@ -1,6 +1,8 @@
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
+
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
@@ -32,12 +34,13 @@ class EventSerializer(BaseActivitySerializer):
         included_resources = [
             'owner',
             'initiative',
-            'location'
+            'location',
+            'contributions'
         ]
         resource_name = 'activities/events'
 
     included_serializers = {
-        'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
@@ -89,8 +92,15 @@ class ParticipantSerializer(BaseContributionSerializer):
         model = Participant
         fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
 
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Participant.objects.all(),
+                fields=('activity', 'user')
+            )
+        ]
+
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'participants'
+        resource_name = 'contributions/participants'
         included_resources = [
             'user',
             'activity'

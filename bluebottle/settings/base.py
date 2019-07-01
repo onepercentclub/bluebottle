@@ -200,7 +200,7 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_vitepay', '/payments_flutterwave',
                           '/payments_lipisha', '/payments_beyonic',
                           '/payments_stripe', '/payouts_stripe',
-                          '/media', '/downloads',
+                          '/media', '/downloads', '/login-with',
                           '/surveys', '/token', '/jet')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'

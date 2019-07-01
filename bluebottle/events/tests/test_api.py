@@ -284,6 +284,19 @@ class ParticipantTestCase(BluebottleTestCase):
         self.assertTrue(participant_data['id'], self.participant.pk)
         self.assertTrue('meta' in participant_data)
 
+    def test_create_participant_twice(self):
+        self.client.post(
+            self.participant_url, json.dumps(self.data), user=self.participant
+        )
+        response = self.client.post(
+            self.participant_url, json.dumps(self.data), user=self.participant
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(
+            'must make a unique set' in json.loads(response.content)['errors']['non_field_errors'][0]
+        )
+
     def test_follow(self):
         self.client.post(
             self.participant_url, json.dumps(self.data), user=self.participant

@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from bluebottle.fsm import ModelTransitions, transition, TransitionNotAllowed
+from bluebottle.fsm import ModelTransitions, transition, TransitionNotPossible
 from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
 
 
@@ -30,7 +30,6 @@ class InitiativeTransitions(ModelTransitions):
         source=values.draft,
         target=values.submitted,
         conditions=[is_complete],
-        custom={'button_name': _('submit')}
     )
     def submit(self):
         pass
@@ -39,7 +38,6 @@ class InitiativeTransitions(ModelTransitions):
         source=values.needs_work,
         target=values.submitted,
         conditions=[is_complete],
-        custom={'button_name': _('resubmit')}
     )
     def resubmit(self):
         pass
@@ -47,7 +45,6 @@ class InitiativeTransitions(ModelTransitions):
     @transition(
         source=values.submitted,
         target=values.needs_work,
-        custom={'button_name': _('needs work')}
     )
     def needs_work(self):
         pass
@@ -57,7 +54,6 @@ class InitiativeTransitions(ModelTransitions):
         target=values.approved,
         messages=[InitiativeApproveOwnerMessage],
         conditions=[is_complete],
-        custom={'button_name': _('approve')}
     )
     def approve(self):
         for activity in self.instance.activities.filter(status='draft'):
@@ -65,14 +61,13 @@ class InitiativeTransitions(ModelTransitions):
             try:
                 activity.transitions.open()
                 activity.save()
-            except TransitionNotAllowed:
+            except TransitionNotPossible:
                 pass
 
     @transition(
         source=[values.approved, values.submitted, values.needs_work],
         target=values.closed,
         messages=[InitiativeClosedOwnerMessage],
-        custom={'button_name': _('close')}
     )
     def close(self):
         pass
@@ -81,7 +76,6 @@ class InitiativeTransitions(ModelTransitions):
         source=[values.approved, values.closed],
         target=values.submitted,
         conditions=[is_complete],
-        custom={'button_name': _('re-open')}
     )
     def reopen(self):
         pass

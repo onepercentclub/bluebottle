@@ -97,12 +97,14 @@ class TestOrderPaymentPermissions(BluebottleTestCase):
         self.assertEqual(len(response.data['results']), 3)
 
     @patch('bluebottle.payments.views.get_ip')
+    @patch('bluebottle.payments.views.get_country_code_by_ip')
     @override_settings(SKIP_IP_LOOKUP=False)
-    def test_get_payment_methods_for_ip(self, get_ip):
+    def test_get_payment_methods_for_ip(self, get_country_code_by_ip, get_ip):
         """ Test that passing a IP will restrict the payment methods """
 
         # Zimbawian IP should show 2 methods
         get_ip.return_value = '41.220.16.16'
+        get_country_code_by_ip.return_value = 'ZW'
         response = self.client.get(reverse('payment-method-list'), {},
                                    token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -111,6 +113,7 @@ class TestOrderPaymentPermissions(BluebottleTestCase):
 
         # Dutch IP should show 3 methods
         get_ip.return_value = '213.127.165.114'
+        get_country_code_by_ip.return_value = 'NL'
         response = self.client.get(reverse('payment-method-list'), {},
                                    token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

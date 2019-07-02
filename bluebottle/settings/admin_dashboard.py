@@ -18,10 +18,6 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['initiatives.change_initiative']
             },
             {
-                'name': 'activities.activity',
-                'permissions': ['activities.activities']
-            },
-            {
                 'name': 'categories.category',
                 'permissions': ['categories.change_category']
             },
@@ -32,6 +28,25 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             {
                 'name': 'organizations.organization',
                 'permissions': ['organizations.organization']
+            },
+        ]
+    },
+    {
+        'label': _('Activities'),
+        'app_label': 'activities',
+        'permissions': ['activities.change_activity'],
+        'items': [
+            {
+                'name': 'activities.activity',
+                'permissions': ['activities.activity']
+            },
+            {
+                'name': 'events.event',
+                'permissions': ['events.event']
+            },
+            {
+                'name': 'funding.funding',
+                'permissions': ['funding.funding']
             },
         ]
     },
@@ -200,7 +215,6 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'initiatives.initiativeplatformsettings',
                 'permissions': ['initiatives.change_initiativeplatformsettings']
             },
-
             {
                 'name': 'members.memberplatformsettings',
                 'permissions': ['members.change_memberplatformsettings']
@@ -221,6 +235,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             {
                 'name': 'mails.mailplatformsettings',
                 'permissions': ['mails.change_mailplatformsettings']
+            },
+            {
+                'name': 'funding.paymentprovider',
+                'permissions': ['funding.change_paymentprovider']
             },
             {
                 'name': 'djmoney_rates.ratesource',

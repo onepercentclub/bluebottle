@@ -14,20 +14,20 @@ class InitiativeTestCase(TestCase):
         initiative = InitiativeFactory.create(title='Dharma initiative')
         self.assertEqual(initiative.status, 'draft')
 
-        initiative.submit()
+        initiative.transitions.submit()
         self.assertEqual(initiative.status, 'submitted')
 
-        initiative.needs_work()
+        initiative.transitions.needs_work()
         self.assertEqual(initiative.status, 'needs_work')
 
-        initiative.resubmit()
+        initiative.transitions.resubmit()
         self.assertEqual(initiative.status, 'submitted')
 
-        initiative.approve()
+        initiative.transitions.approve()
         self.assertEqual(initiative.status, 'approved')
 
-        initiative.close()
+        initiative.transitions.close()
         self.assertEqual(initiative.status, 'closed')
 
-        initiative.reopen()
+        initiative.transitions.reopen()
         self.assertEqual(initiative.status, 'submitted')

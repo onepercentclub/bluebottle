@@ -227,6 +227,8 @@ class ParticipantTestCase(BluebottleTestCase):
         self.participant = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
         self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)
 
         self.participant_url = reverse('participant-list')
@@ -277,8 +279,22 @@ class ParticipantTestCase(BluebottleTestCase):
             event_data['data']['relationships']['contributions']['data'][0]['type'],
             'contributions/participants'
         )
+        participant_data = get_included(response, 'contributions/participants')
+
+        self.assertTrue(participant_data['id'], self.participant.pk)
+        self.assertTrue('meta' in participant_data)
+
+    def test_create_participant_twice(self):
+        self.client.post(
+            self.participant_url, json.dumps(self.data), user=self.participant
+        )
+        response = self.client.post(
+            self.participant_url, json.dumps(self.data), user=self.participant
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(
-            get_included(response, 'contributions/participants')
+            'must make a unique set' in json.loads(response.content)['errors']['non_field_errors'][0]
         )
 
     def test_follow(self):
@@ -294,6 +310,40 @@ class ParticipantTestCase(BluebottleTestCase):
 
         self.assertTrue(data['data']['attributes']['is-follower'])
 
+    def test_possible_transitions(self):
+        response = self.client.post(
+            self.participant_url, json.dumps(self.data), user=self.participant
+        )
+        create_data = json.loads(response.content)
+
+        response = self.client.get(
+            reverse('participant-detail', args=(create_data['data']['id'], )),
+            user=self.participant
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(
+            [transition['name'] for transition in data['data']['meta']['transitions']],
+            ['withdraw', 'close']
+        )
+
+    def test_possible_transitions_other_user(self):
+        response = self.client.post(
+            self.participant_url, json.dumps(self.data), user=self.participant
+        )
+        create_data = json.loads(response.content)
+
+        response = self.client.get(
+            reverse('participant-detail', args=(create_data['data']['id'], )),
+            user=BlueBottleUserFactory.create()
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(
+            [transition['name'] for transition in data['data']['meta']['transitions']],
+            ['close']
+        )
+
 
 class ParticipantTransitionTestCase(BluebottleTestCase):
 
@@ -304,12 +354,11 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.participant_user = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create()
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
         self.initiative.save()
 
         self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)
-        self.event.open()
         self.event.save()
         self.participant = ParticipantFactory.create(user=self.participant_user, activity=self.event)
 

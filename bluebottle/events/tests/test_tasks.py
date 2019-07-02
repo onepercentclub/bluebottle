@@ -20,8 +20,8 @@ class EventTasksTestCase(BluebottleTestCase):
         )
         self.client = JSONAPITestClient()
         self.initiative = InitiativeFactory.create()
-        self.initiative.submit()
-        self.initiative.approve()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
         self.initiative.save()
 
     def test_event_start_task(self):
@@ -42,7 +42,7 @@ class EventTasksTestCase(BluebottleTestCase):
             start_time=now() - timedelta(hours=5),
             end_time=now() - timedelta(hours=1)
         )
-        event.start()
+        event.transitions.start()
         event.save()
         self.assertEqual(event.status, 'running')
         check_event_start()

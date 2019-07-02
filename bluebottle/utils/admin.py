@@ -19,7 +19,7 @@ from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 
 from bluebottle.clients import properties
-from bluebottle.fsm import TransitionNotAllowed
+from bluebottle.fsm import TransitionNotPossible
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
 from bluebottle.tasks.models import TaskMember
@@ -201,18 +201,12 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
 
 
 class FSMAdmin(admin.ModelAdmin):
-
-    fsm_field = 'status'
-
     form = FSMModelForm
 
-    readonly_fields = [fsm_field]
+    readonly_fields = ['status']
 
     def get_transition(self, instance, name):
-        transitions = getattr(
-            instance,
-            'get_all_{}_transitions'.format(self.fsm_field)
-        )()
+        transitions = instance.transitions.all_transitions
         for transition in transitions:
             if transition.name == name:
                 return transition
@@ -245,7 +239,10 @@ class FSMAdmin(admin.ModelAdmin):
                 send_messages = form.cleaned_data['send_messages']
 
                 try:
-                    getattr(instance, transition.name)(send_messages=send_messages)
+                    getattr(instance.transitions, transition.name)(
+                        send_messages=send_messages,
+                    )
+
                     instance.save()
                     log_action(
                         instance,
@@ -254,7 +251,7 @@ class FSMAdmin(admin.ModelAdmin):
                     )
 
                     return HttpResponseRedirect(link)
-                except TransitionNotAllowed:
+                except TransitionNotPossible:
                     errors = transition.errors(instance)
                     if errors:
                         template = loader.get_template(
@@ -280,7 +277,7 @@ class FSMAdmin(admin.ModelAdmin):
             obj=instance,
             pk=instance.pk,
             form=form,
-            source=getattr(instance, self.fsm_field),
+            source=instance.status,
             notifications=transition_messages,
             target=transition.name,
         )

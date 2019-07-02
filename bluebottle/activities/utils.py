@@ -6,9 +6,7 @@ from bluebottle.activities.models import Activity, Contribution
 from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField
-from bluebottle.utils.serializers import (
-    ResourcePermissionField,
-)
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 # This can't be in serializers because of circular imports
@@ -75,7 +73,7 @@ class ActivitySubmitSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributionSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = ResourceRelatedField(read_only=True)
+    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
     permissions = ResourcePermissionField('project_detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='status')

@@ -1,9 +1,9 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from djchoices.choices import ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.notifications.decorators import transition
+from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
+from bluebottle.fsm import TransitionManager
 
 
 class Assignment(Activity):
@@ -19,6 +19,8 @@ class Assignment(Activity):
         null=True,
         blank=True
     )  # TODO:  Make this a foreign key to an address
+
+    transitions = TransitionManager(AssignmentTransitions, 'status')
 
     class Meta:
         verbose_name = _("Assignment")
@@ -40,117 +42,14 @@ class Assignment(Activity):
 
     def check_capcity(self):
         if len(self.accepted_applicants) >= self.capacity:
-            self.full()
+            self.transitions.full()
         else:
-            self.reopen()
-
-    @transition(
-        field='status',
-        source=Activity.Status.open,
-        target=Activity.Status.running,
-    )
-    def start(self, **kwargs):
-        pass
-
-    @transition(
-        field='status',
-        source=Activity.Status.running,
-        target=Activity.Status.done,
-    )
-    def success(self, **kwargs):
-        for member in self.accepted_applicants:
-            member.success()
-            member.save()
-
-    @transition(
-        field='status',
-        source=Activity.Status.running,
-        target=Activity.Status.closed,
-    )
-    def close(self, **kwargs):
-        for member in self.accepted_applicants:
-            member.fail()
-            member.save()
-
-    @transition(
-        field='status',
-        source=[Activity.Status.closed, Activity.Status.done, Activity.Status.running],
-        target=Activity.Status.open,
-    )
-    def extend_deadline(self, **kwargs):
-        pass
-
-    @transition(
-        field='status',
-        source=[Activity.Status.closed, Activity.Status.done],
-        target=Activity.Status.running,
-    )
-    def extend(self, **kwargs):
-        pass
+            self.transitions.reopen()
 
 
 class Applicant(Contribution):
-    class Status(Contribution.Status):
-        accepted = ChoiceItem('accepted', _('accepted'))
-        rejected = ChoiceItem('rejected', _('rejected'))
-        withdrawn = ChoiceItem('withdrawn', _('withdrawn'))
-        active = ChoiceItem('attending', _('done'))
-
     motivation = models.TextField()
 
     time_spent = models.FloatField(_('time spent'))
 
-    @property
-    def assignment_is_open(self):
-        return self.event_.status == Activity.Status.open
-
-    @transition(
-        field='status',
-        source=[Status.new, Status.rejected],
-        target=Status.accepted,
-        conditions=[assignment_is_open]
-    )
-    def accept(self):
-        self.event_.check_capcity()
-
-    @transition(
-        field='status',
-        source=[Status.new, Status.accepted],
-        target=Status.rejected,
-        conditions=[assignment_is_open]
-    )
-    def reject(self):
-        self.event_.check_capcity()
-
-    @transition(
-        field='status',
-        source=[Status.new, Status.accepted],
-        target=Status.withdrawn,
-        conditions=[assignment_is_open]
-    )
-    def withdraw(self):
-        self.event_.check_capcity()
-
-    @transition(
-        field='status',
-        source=Status.accepted,
-        target=Status.active,
-    )
-    def activate(self):
-        pass
-
-    @transition(
-        field='status',
-        source=[Status.active, Status.failed],
-        target=Status.success,
-    )
-    def success(self):
-        pass
-
-    @transition(
-        field='status',
-        source=[Status.success, Status.active],
-        target=Status.failed,
-    )
-    def fail(self):
-        self.time_spent = None
+    transitions = TransitionManager(ApplicantTransitions, 'status')

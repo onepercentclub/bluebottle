@@ -31,7 +31,7 @@ class FSMModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(FSMModelForm, self).__init__(*args, **kwargs)
         for fsm_field in self.fsm_fields:
-            transitions = getattr(self.instance, 'get_all_{}_transitions'.format(fsm_field))()
+            transitions = self.instance.transitions.all_transitions
             field_name = '{}_transition'.format(fsm_field)
             self.fields[field_name].choices = [
                 (transition.name, transition.name) for transition in transitions
@@ -50,7 +50,7 @@ class FSMModelForm(forms.ModelForm):
         for field_name in self.fsm_fields:
             transition_name = self.cleaned_data.get('{}_transition'.format(field_name))
             if transition_name:
-                getattr(self.instance, transition_name)()
+                getattr(self.instance.transitions, transition_name)()
         return super(FSMModelForm, self).clean(*args, **kwargs)
 
     @property

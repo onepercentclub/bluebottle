@@ -26,7 +26,7 @@ def check_event_start():
             ).all()
 
             for event in events:
-                event.start()
+                event.transitions.start()
                 event.save()
 
 
@@ -46,5 +46,5 @@ def check_event_end():
             ).all()
 
             for event in events:
-                event.done()
+                event.transitions.done()
                 event.save()

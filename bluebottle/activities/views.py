@@ -22,10 +22,6 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
-    filter_fields = {
-        'owner__id': ('exact', 'in',),
-    }
-
     prefetch_for_includes = {
         'initiative': ['initiative'],
         'location': ['location'],

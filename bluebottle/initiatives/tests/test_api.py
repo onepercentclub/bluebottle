@@ -338,6 +338,19 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
 
+    def test_many_results(self):
+        InitiativeFactory.create_batch(39, owner=self.owner)
+        InitiativeFactory.create()
+
+        response = self.client.get(
+            self.url,
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 40)
+        self.assertEqual(len(data['data']), 8)
+
     def test_filter_owner(self):
         InitiativeFactory.create(owner=self.owner)
         InitiativeFactory.create()
@@ -386,8 +399,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
     def test_sort_title(self):
         second = InitiativeFactory.create(title='B: something else')
-        first = InitiativeFactory.create(title='A: something')
         third = InitiativeFactory.create(title='C: More')
+        first = InitiativeFactory.create(title='A: something')
 
         response = self.client.get(
             self.url + '?sort=alphabetical',

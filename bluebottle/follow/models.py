@@ -29,3 +29,6 @@ def unfollow(user, instance):
         ).delete()
     except Follow.DoesNotExist:
         pass
+
+
+import bluebottle.follow.signals  # NOQA

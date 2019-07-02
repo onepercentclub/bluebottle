@@ -79,6 +79,7 @@ class DonationTransitions(ContributionTransitions):
     @transition(
         source=[values.new, values.success],
         target=values.refunded,
+        follow=False
     )
     def refund(self):
         pass
@@ -86,6 +87,7 @@ class DonationTransitions(ContributionTransitions):
     @transition(
         source=[values.new, values.success],
         target=values.failed,
+        follow=False
     )
     def fail(self):
         pass
@@ -93,6 +95,7 @@ class DonationTransitions(ContributionTransitions):
     @transition(
         source=[values.new, values.failed],
         target=values.success,
+        follow=True
     )
     def success(self):
         pass

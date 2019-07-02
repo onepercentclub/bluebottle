@@ -5,7 +5,6 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
 
 from bluebottle.fsm import transition
-from bluebottle.follow.models import follow, unfollow
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
 from bluebottle.events.messages import EventDoneOwnerMessage, EventClosedOwnerMessage
 
@@ -136,48 +135,52 @@ class ParticipantTransitions(ContributionTransitions):
         source=values.new,
         target=values.withdrawn,
         conditions=[event_is_open_or_full],
-        permissions=[is_user]
+        permissions=[is_user],
+        follow=False
     )
     def withdraw(self):
-        unfollow(self.instance.user, self.instance.activity)
+        pass
 
     @transition(
         source=values.withdrawn,
         target=values.new,
-        conditions=[event_is_open_or_full]
+        conditions=[event_is_open_or_full],
+        follow=True
     )
     def reapply(self):
-        follow(self.instance.user, self.instance.activity)
+        pass
 
     @transition(
         source=[values.new],
         target=values.rejected,
-        permissions=[ContributionTransitions.is_activity_manager]
+        permissions=[ContributionTransitions.is_activity_manager],
+        follow=False
     )
     def reject(self):
-        unfollow(self.instance.user, self.instance.activity)
+        pass
 
     @transition(
         source=[values.new, values.no_show, values.rejected, values.withdrawn],
         target=values.success,
-        conditions=[event_is_done]
+        conditions=[event_is_done],
+        follow=True
     )
     def success(self):
-        follow(self.instance.user, self.instance.activity)
         self.instance.time_spent = self.instance.activity.duration
 
     @transition(
         source=values.success,
         target=values.no_show,
-        permissions=[ContributionTransitions.is_activity_manager]
+        permissions=[ContributionTransitions.is_activity_manager],
+        follow=False
     )
     def no_show(self):
-        unfollow(self.instance.user, self.instance.activity)
         self.instance.time_spent = 0
 
     @transition(
         source='*',
         target=values.closed,
+        follow=False
     )
     def close(self):
         self.instance.time_spent = 0

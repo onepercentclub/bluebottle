@@ -2,19 +2,6 @@
 from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.common.tasks import _send_celery_mail
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.utils.utils import get_country_by_ip, InvalidIpError
-
-
-class TestUtilsTestCase(BluebottleTestCase):
-    def test_no_ip(self):
-        self.assertEqual(get_country_by_ip(), None)
-
-    def test_invalid_ip(self):
-        with self.assertRaises(InvalidIpError):
-            get_country_by_ip("123abc")
-
-    def test_valid_ip(self):
-        self.assertEqual(get_country_by_ip("213.127.165.114"), "Netherlands")
 
 
 class TestCeleryMail(BluebottleTestCase):

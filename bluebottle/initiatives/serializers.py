@@ -12,6 +12,7 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.utils.fields import SafeField
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Geolocation
+from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
@@ -149,6 +150,14 @@ class InitiativeSubmitSerializer(ModelSerializer):
     place = serializers.PrimaryKeyRelatedField(
         required=True, queryset=Geolocation.objects.all(),
         error_messages={'null': _('Place is required')}
+    )
+    organization = serializers.PrimaryKeyRelatedField(
+        required=False, queryset=Organization.objects.all(),
+        error_messages={'null': _('Organization is required')}
+    )
+    organization_contact = serializers.PrimaryKeyRelatedField(
+        required=False, queryset=OrganizationContact.objects.all(),
+        error_messages={'null': _('Organization contact is required')}
     )
 
     # TODO add dependent fields: has_organization/organization/organization_contact and

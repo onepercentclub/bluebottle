@@ -21,7 +21,8 @@ class ActivitySerializer(PolymorphicModelSerializer):
         included_resources = [
             'owner',
             'initiative',
-            'place'
+            'location',
+            'initiative.image'
         ]
 
 

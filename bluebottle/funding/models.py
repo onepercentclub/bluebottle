@@ -238,7 +238,7 @@ class PaymentProvider(PolymorphicModel):
         return str(self.polymorphic_ctype)
 
 
-class PayoutAccount(models.Model):
+class PayoutAccount(models.Model, TransitionsMixin):
     status = FSMField(
         default=PayoutAccountTransitions.values.new
     )
@@ -247,6 +247,8 @@ class PayoutAccount(models.Model):
         'members.Member',
         related_name='%(app_label)s_payout_account'
     )
+
+    transitions = TransitionManager(PayoutAccountTransitions, 'status')
 
     class Meta:
         abstract = True

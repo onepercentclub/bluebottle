@@ -9,7 +9,6 @@ from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount
 )
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
-from bluebottle.funding.transitions import PayoutAccountTransitions
 from bluebottle.payouts.models import StripePayoutAccount
 
 
@@ -114,8 +113,6 @@ class ConnectAccount(PayoutAccount):
     account_id = models.CharField(max_length=40)
     country = models.CharField(max_length=2)
 
-    transitions = TransitionManager(PayoutAccountTransitions, 'status')
-
     @property
     def account(self):
         if not hasattr(self, '_account'):
@@ -133,6 +130,7 @@ class ConnectAccount(PayoutAccount):
                 metadata=self.metadata
             )
             self.account_id = self._account.id
+            self.transitions.submit()
 
         super(ConnectAccount, self).save(*args, **kwargs)
 
@@ -144,7 +142,10 @@ class ConnectAccount(PayoutAccount):
 
     @property
     def verified(self):
-        return not self.account.requirements.eventually_due
+        return (
+            not self.account.requirements.eventually_due and
+            self.account.individual.verification.status == 'verified'
+        )
 
     @property
     def required(self):

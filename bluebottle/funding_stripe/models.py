@@ -2,10 +2,10 @@ from django.conf import settings
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.funding_stripe import stripe
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment, PaymentProvider
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
+from bluebottle.funding_stripe.utils import init_stripe
 from bluebottle.payouts.models import StripePayoutAccount
 
 
@@ -17,6 +17,7 @@ class StripePayment(Payment):
 
     def save(self, *args, **kwargs):
         if not self.pk:
+            stripe = init_stripe()
             intent = stripe.PaymentIntent.create(
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
@@ -31,6 +32,7 @@ class StripePayment(Payment):
         super(StripePayment, self).save(*args, **kwargs)
 
     def update(self):
+        stripe = init_stripe()
         intent = stripe.PaymentIntent.retrieve(self.intent_id)
 
         if len(intent.charges) == 0:

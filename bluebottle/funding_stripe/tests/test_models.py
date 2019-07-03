@@ -3,6 +3,7 @@ import mock
 import stripe
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.models import StripePayment
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -12,6 +13,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class StripePaymentTestCase(BluebottleTestCase):
     def setUp(self):
         super(StripePaymentTestCase, self).setUp()
+        StripePaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create()
 
         self.initiative.transitions.submit()

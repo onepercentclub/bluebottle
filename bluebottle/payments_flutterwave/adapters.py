@@ -22,7 +22,7 @@ class FlutterwaveCreditcardPaymentAdapter(BasePaymentAdapter):
     def create_payment(self):
         self.card_data = self.order_payment.card_data
 
-        if not {'tx_ref'}.issubset(self.card_data):
+        if 'tx_ref' not in self.card_data:
             raise PaymentException('TxRef is required')
 
         payment = FlutterwavePayment(

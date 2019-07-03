@@ -20,6 +20,7 @@ initiative.settings(
 
 @initiative.doc_type
 class InitiativeDocument(DocType):
+    title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
     story = fields.TextField()
     pitch = fields.TextField()

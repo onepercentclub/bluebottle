@@ -7,7 +7,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
 
     sort_fields = {
         'date': ('-created', ),
-        'alphabetical': ('title', ),
+        'alphabetical': ('title_keyword', ),
     }
 
     filters = ('owner.id', 'theme.id', 'place.country', 'categories.id', )

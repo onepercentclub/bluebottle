@@ -1,15 +1,14 @@
 import json
 
-from django.http.response import HttpResponse, Http404
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic.base import RedirectView, View
 
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.services import PaymentService
+from bluebottle.payments_flutterwave.models import FlutterwavePayment
 from bluebottle.utils.utils import get_current_host
-
-from .models import FlutterwaveMpesaPayment
 
 
 class PaymentResponseView(RedirectView):
@@ -28,14 +27,10 @@ class PaymentResponseView(RedirectView):
             return "{0}/orders/{1}/failed".format(get_current_host(), order_payment.order.id)
 
 
-class MpesaPaymentUpdateView(View):
-
-    def post(self, request, *args, **kwargs):
-        payload = json.loads(request.body)
-        try:
-            payment = FlutterwaveMpesaPayment.objects.get(account_number=payload['billrefnumber'])
-        except FlutterwaveMpesaPayment.DoesNotExist:
-            raise Http404('No payment found with this billrefnumber.')
+class FlutterwaveWebhookView(View):
+    def post(self, request, **kwargs):
+        data = json.loads(request.body)
+        payment = FlutterwavePayment.objects.get(transaction_reference=data['txRef'])
         service = PaymentService(payment.order_payment)
-        service.adapter.update_mpesa(**payload)
-        return HttpResponse(status=200, content={'success': 1})
+        service.check_payment_status()
+        return HttpResponse(status=200)

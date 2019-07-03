@@ -39,9 +39,9 @@ class EmailMultiAlternatives(BaseEmailMultiAlternatives):
         if headers is None:
             headers = {}
 
-        return_path = properties.TENANT_MAIL_PROPERTIES.get('return_path')
-        if return_path:
-            headers['Return-Path'] = return_path
+        reply_to = properties.TENANT_MAIL_PROPERTIES.get('reply_to')
+        if reply_to:
+            headers['Reply-To'] = reply_to
 
         if not from_email:
             from_email = construct_from_header()

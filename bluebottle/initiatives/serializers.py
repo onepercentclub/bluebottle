@@ -152,10 +152,12 @@ class InitiativeSubmitSerializer(ModelSerializer):
         error_messages={'null': _('Place is required')}
     )
     organization = serializers.PrimaryKeyRelatedField(
+        allow_null=True,
         required=False, queryset=Organization.objects.all(),
         error_messages={'null': _('Organization is required')}
     )
     organization_contact = serializers.PrimaryKeyRelatedField(
+        allow_null=True,
         required=False, queryset=OrganizationContact.objects.all(),
         error_messages={'null': _('Organization contact is required')}
     )

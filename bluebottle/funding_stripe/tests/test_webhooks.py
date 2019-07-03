@@ -30,7 +30,6 @@ class StripePaymentTestCase(BluebottleTestCase):
     def setUp(self):
         super(StripePaymentTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
-
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 

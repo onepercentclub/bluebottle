@@ -294,11 +294,13 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(data['relationships']['activities']['data'][0]['id'], unicode(event.pk))
+        self.assertEqual(data['relationships']['activities']['data'][0]['type'], 'activities/events')
         activity_data = get_include(response, 'activities/events')
         self.assertEqual(
             activity_data['attributes']['title'],
             event.title
         )
+        self.assertEqual(activity_data['type'], 'activities/events')
 
     def test_get_other(self):
         response = self.client.get(

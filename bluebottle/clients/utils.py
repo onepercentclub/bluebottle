@@ -9,6 +9,7 @@ from collections import namedtuple, defaultdict
 from babel.numbers import get_currency_symbol, get_currency_name
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ImproperlyConfigured
 from django.db import connection, ProgrammingError
 from django.utils.translation import get_language
 from djmoney_rates.exceptions import CurrencyConversionException
@@ -230,8 +231,6 @@ def get_public_properties(request):
             'languageCode': get_language(),
             'siteLinks': get_user_site_links(request.user),
             'platform': {
-                'stripe': get_stripe_settings(),
-                'flutterwave': get_flutterwave_settings(),
                 'payouts': get_payout_settings(),
                 'content': get_platform_settings('cms.SitePlatformSettings'),
                 'projects': get_platform_settings('projects.ProjectPlatformSettings'),
@@ -240,6 +239,16 @@ def get_public_properties(request):
                 'members': get_platform_settings('members.MemberPlatformSettings'),
             }
         }
+
+        try:
+            config['platform']['stripe'] = get_stripe_settings()
+        except ImproperlyConfigured:
+            pass
+        try:
+            config['platform']['flutterwave'] = get_flutterwave_settings()
+        except ImproperlyConfigured:
+            pass
+
         try:
             config['readOnlyFields'] = {
                 'user': properties.TOKEN_AUTH.get('assertion_mapping', {}).keys()

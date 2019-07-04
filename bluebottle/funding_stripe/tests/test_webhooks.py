@@ -69,6 +69,8 @@ class StripePaymentTestCase(BluebottleTestCase):
 
         self.assertEqual(donation.status, DonationTransitions.values.success)
         self.assertEqual(payment.status, StripePaymentTransitions.values.success)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.status, DonationTransitions.values.success)
 
     def test_failed(self):
         with mock.patch(
@@ -88,6 +90,8 @@ class StripePaymentTestCase(BluebottleTestCase):
 
         self.assertEqual(donation.status, DonationTransitions.values.failed)
         self.assertEqual(payment.status, StripePaymentTransitions.values.failed)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.status, DonationTransitions.values.failed)
 
     def test_refund(self):
         self.payment.transitions.succeed()

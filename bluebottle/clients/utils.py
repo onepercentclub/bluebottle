@@ -2,26 +2,23 @@
 
 import importlib
 import itertools
-from collections import namedtuple, defaultdict
+import logging
 import re
+from collections import namedtuple, defaultdict
 
 from babel.numbers import get_currency_symbol, get_currency_name
-from django.db import connection, ProgrammingError
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.db import connection, ProgrammingError
 from django.utils.translation import get_language
-
-from djmoney_rates.utils import get_rate
 from djmoney_rates.exceptions import CurrencyConversionException
-from bluebottle.clients import properties
+from djmoney_rates.utils import get_rate
 from tenant_extras.utils import get_tenant_properties
 
-from bluebottle.payments_flutterwave.utils import get_flutterwave_settings
-from bluebottle.payments_stripe.utils import get_stripe_settings
+from bluebottle.clients import properties
+from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
+from bluebottle.funding_stripe.utils import get_stripe_settings
 from bluebottle.payouts.utils import get_payout_settings
-
-
-import logging
 
 logger = logging.getLogger(__name__)
 

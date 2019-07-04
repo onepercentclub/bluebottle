@@ -85,11 +85,17 @@ class StripePaymentProvider(PaymentProvider):
 
     @property
     def public_settings(self):
-        return settings.STRIPE['public']
+        return {
+            'publishable_key': settings.STRIPE['publishable_key'],
+        }
 
     @property
     def private_settings(self):
-        return settings.STRIPE['private']
+        return {
+            'secret_key': settings.STRIPE['secret_key'],
+            'webhook_secret': settings.STRIPE['webhook_secret'],
+            'webhook_secret_connect': settings.STRIPE['webhook_secret_connect'],
+        }
 
     credit_card = models.BooleanField(_('Credit card'), default=True)
     ideal = models.BooleanField(_('iDEAL'), default=False)

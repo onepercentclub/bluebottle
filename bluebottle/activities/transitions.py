@@ -21,7 +21,7 @@ class ContributionTransitions(ModelTransitions):
     class values(DjangoChoices):
         new = ChoiceItem('new', _('new'))
         success = ChoiceItem('success', _('success'))
-        failed = ChoiceItem('success', _('success'))
+        failed = ChoiceItem('failed', _('failed'))
 
     def is_user(self, user):
         return self.instance.user == user

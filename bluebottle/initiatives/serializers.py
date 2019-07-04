@@ -3,13 +3,16 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
 from rest_framework_json_api.serializers import ModelSerializer
-from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework_json_api.relations import (
+    ResourceRelatedField, PolymorphicResourceRelatedField
+)
 
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ImageSerializer as OldImageSerializer, SorlImageField
 )
 from bluebottle.utils.fields import SafeField
+from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Geolocation
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -79,7 +82,9 @@ class InitiativeSerializer(ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     reviewer = ResourceRelatedField(read_only=True)
-    activities = ResourceRelatedField(many=True, read_only=True)
+    activities = PolymorphicResourceRelatedField(
+        ActivitySerializer, many=True, read_only=True
+    )
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True, required=False)

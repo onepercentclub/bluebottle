@@ -240,6 +240,7 @@ def get_public_properties(request):
                 'members': get_platform_settings('members.MemberPlatformSettings'),
             }
         }
+
         try:
             config['readOnlyFields'] = {
                 'user': properties.TOKEN_AUTH.get('assertion_mapping', {}).keys()

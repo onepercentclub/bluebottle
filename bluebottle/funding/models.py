@@ -204,6 +204,9 @@ class Donation(Contribution):
     def __unicode__(self):
         return u'{}'.format(self.amount)
 
+    class JSONAPIMeta:
+        resource_name = 'contributions/donations'
+
 
 class Payment(TransitionsMixin, PolymorphicModel):
     status = FSMField(

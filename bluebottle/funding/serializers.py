@@ -30,7 +30,7 @@ class FundingCurrencyValidator(object):
 
     def __call__(self, data):
         for field in self.fields:
-            if unicode(data[field].currency) not in data['activity'].accepted_currencies:
+            if data[field].currency != data['activity'].target.currency:
                 raise ValidationError(self.message)
 
 

@@ -3,6 +3,7 @@ import os
 
 from django.test.utils import override_settings
 
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.test.factory_models.payouts import StripePayoutAccountFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import json2obj
@@ -22,6 +23,7 @@ class StripePayoutAccountTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(StripePayoutAccountTestCase, self).setUp()
+        StripePaymentProviderFactory.create()
         self.init_projects()
         self.payout_account = StripePayoutAccountFactory.create(account_id='acct_0000000123')
 

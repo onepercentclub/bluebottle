@@ -1,27 +1,25 @@
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
-
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import (
-    ModelSerializer, ValidationError, IntegerField
-)
+    ModelSerializer, ValidationError, IntegerField)
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer, ActivitySubmitSerializer
 )
 from bluebottle.files.serializers import ImageField
-from bluebottle.funding.models import Funding, Donation, Payment, Fundraiser, Reward, BudgetLine
+from bluebottle.funding.models import Funding, Donation, Payment, Fundraiser, Reward, BudgetLine, PaymentMethod
 from bluebottle.transitions.serializers import AvailableTransitionsField
+from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import MoneySerializer
-from bluebottle.transitions.serializers import TransitionSerializer
 
 
 class FundingCurrencyValidator(object):
     """
     Validates that the currency of the field is the same as the activity currency
     """
-    message = _('Currency does not match  any of the activities currencies')
+    message = _('Currency does not match any of the activities currencies')
 
     def __init__(self, fields=None, message=None):
         if fields is None:
@@ -124,17 +122,32 @@ class BudgetLineSerializer(ModelSerializer):
         resource_name = 'activities/budgetlines'
 
 
+class PaymentMethodSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    name = serializers.CharField()
+    currencies = serializers.ListField()
+    countries = serializers.ListField()
+
+    class Meta():
+        model = PaymentMethod
+        fields = ('code', 'name', 'currencies', 'countries', 'activity')
+
+    class JSONAPIMeta:
+        resource_name = 'funding/payment-methods'
+
+
 class FundingSerializer(BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
 
     fundraisers = FundraiserSerializer(many=True, required=False)
     rewards = RewardSerializer(many=True, required=False)
     budgetlines = BudgetLineSerializer(many=True, required=False)
+    payment_methods = PaymentMethodSerializer(many=True, read_only=True)
 
     class Meta:
         model = Funding
         fields = BaseActivitySerializer.Meta.fields + (
-            'deadline', 'duration', 'target', 'budgetlines', 'fundraisers', 'rewards',
+            'deadline', 'duration', 'target', 'budgetlines', 'fundraisers', 'rewards', 'payment_methods'
         )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
@@ -145,6 +158,7 @@ class FundingSerializer(BaseActivitySerializer):
             'place',
             'fundraisers',
             'budgetlines',
+            'payment_methods',
             'rewards',
         ]
         resource_name = 'activities/fundings'
@@ -157,6 +171,7 @@ class FundingSerializer(BaseActivitySerializer):
         'fundraisers': 'bluebottle.funding.serializers.FundraiserSerializer',
         'rewards': 'bluebottle.funding.serializers.RewardSerializer',
         'budgetlines': 'bluebottle.funding.serializers.BudgetLineSerializer',
+        'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
     }
 
 
@@ -235,20 +250,6 @@ class DonationSerializer(BaseContributionSerializer):
             'reward',
             'fundraiser',
         ]
-
-
-class PaymentMethodSerializer(serializers.Serializer):
-
-    code = serializers.CharField()
-    name = serializers.CharField()
-    currencies = serializers.ListField()
-    countries = serializers.ListField()
-
-    class Meta(BaseContributionSerializer.Meta):
-        fields = ('code', 'name', 'currencies', 'countries')
-
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'funding/payment-methods'
 
 
 class PaymentSerializer(ModelSerializer):

@@ -3,7 +3,7 @@ from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm import TransitionManager
-from bluebottle.funding.models import Payment, PaymentProvider
+from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.utils import init_stripe
 from bluebottle.payouts.models import StripePayoutAccount
@@ -61,27 +61,41 @@ class StripePayment(Payment):
 
 class StripePaymentProvider(PaymentProvider):
 
-    stripe_payment_methods = {
-        'credit_card': {
-            'name': _('Credit card'),
-            'currencies': ['EUR', 'USD'],
-        },
-        'bancontact': {
-            'name': _('Bancontact'),
-            'currencies': ['EUR'],
-            'countries': ['BE']
-        },
-        'ideal': {
-            'name': _('iDEAL'),
-            'currencies': ['EUR'],
-            'countries': ['NL']
-        },
-        'direct_debit': {
-            'name': _('Direct debit'),
-            'currencies': ['EUR'],
-            'countries': ['NL', 'BE', 'DE']
-        }
-    }
+    stripe_payment_methods = [
+        PaymentMethod(
+            provider='stripe',
+            code='credit_card',
+            name=_('Credit card'),
+            currencies=['EUR', 'USD'],
+            countries=[]
+        ),
+        PaymentMethod(
+            provider='stripe',
+            code='bancontact',
+            name=_('Bancontact'),
+            currencies=['EUR'],
+            countries=['BE']
+        ),
+        PaymentMethod(
+            provider='stripe',
+            code='ideal',
+            name=_('iDEAL'),
+            currencies=['EUR'],
+            countries=['NL']
+        ),
+        PaymentMethod(
+            provider='stripe',
+            code='direct_debit',
+            name=_('Direct debit'),
+            currencies=['EUR'],
+            countries=[]
+        )
+    ]
+
+    currencies = ['EUR', 'USD']
+    countries = ['AU', 'AT', 'BE', 'BR', 'CA', 'DK', 'FI', 'FR',
+                 'DE', 'IE', 'LU', 'MX', 'NL', 'NZ', 'NO', 'PT',
+                 'ES', 'SE', 'CH', 'GB', 'US']
 
     @property
     def public_settings(self):
@@ -109,10 +123,9 @@ class StripePaymentProvider(PaymentProvider):
     @property
     def payment_methods(self):
         methods = []
-        for method in ['credit_card', 'ideal', 'bancontact', 'direct_debit']:
-            if getattr(self, method, False):
-                method_settings = self.stripe_payment_methods[method]
-                method_settings['code'] = method
-                method_settings['provider'] = 'stripe'
-                methods.append(method_settings)
+        for code in ['credit_card', 'ideal', 'bancontact', 'direct_debit']:
+            if getattr(self, code, False):
+                for method in self.stripe_payment_methods:
+                    if method.code == code:
+                        methods.append(method)
         return methods

@@ -230,12 +230,12 @@ class DonationAdmin(admin.ModelAdmin):
 
     def admin_project(self, obj):
         url = reverse('admin:projects_project_change', args=(obj.project.id, ))
-        return format_html('<a href="{}">{}</a>', url, obj.project.title)
+        return format_html(u'<a href="{}">{}</a>', url, obj.project)
     admin_project.short_description = _('Project')
 
     def admin_fundraiser(self, obj):
         url = reverse('admin:fundraisers_fundraiser_change', args=(obj.fundraiser.id, ))
-        return format_html('<a href="{}">{}</a>', url, obj.fundraiser.title)
+        return format_html(u'<a href="{}">{}</a>', url, obj.fundraiser)
     admin_fundraiser.short_description = _('Fundraiser')
 
 

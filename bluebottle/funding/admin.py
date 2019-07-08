@@ -62,7 +62,6 @@ class FundingAdmin(ActivityChildAdmin):
             'description',
             'deadline', 'duration',
             'target', 'amount_raised',
-            'accepted_currencies',
             'account'
         )}),
     )

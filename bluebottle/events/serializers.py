@@ -48,10 +48,13 @@ class EventSerializer(BaseActivitySerializer):
 
 
 class EventSubmitSerializer(ActivitySubmitSerializer):
-    capacity = serializers.IntegerField(required=True)
-    start_time = serializers.DateTimeField(required=True)
-    end_time = serializers.DateTimeField(required=True)
-    registration_deadline = serializers.DateTimeField(required=True)
+    capacity = serializers.IntegerField(required=True, error_messages={'blank': _('Capacity is required')})
+    start_time = serializers.DateTimeField(required=True, error_messages={'blank': _('Start time is required')})
+    end_time = serializers.DateTimeField(required=True, error_messages={'blank': _('End time is required')})
+    registration_deadline = serializers.DateTimeField(
+        required=True,
+        error_messages={'blank': _('Registration deadline is required')}
+    )
 
     location = serializers.PrimaryKeyRelatedField(
         required=True,

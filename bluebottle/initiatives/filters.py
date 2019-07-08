@@ -10,7 +10,8 @@ class InitiativeSearchFilter(ElasticSearchFilter):
         'alphabetical': ('title', ),
     }
 
-    filters = ('owner.id', 'theme.id', 'place.country', 'categories.id', )
+    filters = ('owner.id', 'theme.id', 'place.country', 'categories.id', 'categories.slug', )
+
     search_fields = (
         'status', 'title', 'story', 'pitch', 'place.locality', 'place.postal_code',
         'theme.name', 'owner.name', 'promoter.name',

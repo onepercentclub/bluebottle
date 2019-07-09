@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth import get_user_model
 
+from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.utils import get_settings
 
@@ -37,11 +38,27 @@ class BaseTokenAuthentication(object):
 
     def get_user_data(self, data):
         """
-        Set al user data that we got from the SSO service and store it
+        Set all user data that we got from the SSO service and store it
         on the user.
         """
         user_model = get_user_model()()
         return dict([(key, value) for key, value in data.items() if hasattr(user_model, key)])
+
+    def set_custom_data(self, user, data):
+        """
+        Set custom user data
+        """
+        for key, value in data.items():
+            if key.startswith('custom'):
+
+                name = key.replace('custom.', '')
+                try:
+                    field = CustomMemberFieldSettings.objects.get(name=name)
+                    CustomMemberField.objects.update_or_create(
+                        field=field, member=user, defaults={'value': value}
+                    )
+                except CustomMemberFieldSettings.DoesNotExist:
+                    logger.error('Missing custom field: {}'.format(name))
 
     def get_or_create_user(self, data):
         """
@@ -73,6 +90,8 @@ class BaseTokenAuthentication(object):
         if not created:
             user_model.objects.filter(pk=user.pk).update(**user_data)
             user.refresh_from_db()
+
+        self.set_custom_data(user, data)
 
         return user, created
 

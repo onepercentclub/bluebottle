@@ -59,7 +59,7 @@ class Activity(TransitionsMixin, PolymorphicModel):
 
     @property
     def full_url(self):
-        return format_html("/{}/{}/{}", self._meta.app_label, self.pk, self.slug)
+        return format_html("/initiatives/activities/{}/{}/{}", self.__class__.__name__.lower(), self.pk, self.slug)
 
 
 class Contribution(TransitionsMixin, PolymorphicModel):

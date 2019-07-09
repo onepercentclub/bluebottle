@@ -7,6 +7,8 @@ from django.core import mail
 
 from rest_framework import status
 
+from bluebottle.events.tests.factories import EventFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.tests.test_unit import UserTestsMixin
@@ -78,9 +80,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                                     wallpost_data,
                                     token=self.other_token)
 
-        self.assertEqual(wallpost.status_code,
-                         status.HTTP_403_FORBIDDEN,
-                         'Only the project owner can share a wallpost.')
+        self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_permissions_on_task_wallpost_sharing(self):
         """
@@ -96,9 +96,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                                     wallpost_data,
                                     token=self.other_token)
 
-        self.assertEqual(wallpost.status_code,
-                         status.HTTP_403_FORBIDDEN,
-                         'Only the task owner can share a wallpost.')
+        self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
         self.task.project.promoter = BlueBottleUserFactory.create()
         self.task.project.save()
@@ -110,27 +108,23 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                                     token=promoter_token)
 
         self.assertEqual(wallpost.status_code,
-                         status.HTTP_201_CREATED,
-                         'Only the task owner can share a wallpost.')
+                         status.HTTP_201_CREATED)
 
     def test_permissions_on_task_wallpost_non_sharing(self):
         """
-        Tests that only the task creator can share a wallpost.
+        Tests other can post, without sharing
         """
         wallpost_data = {'parent_id': str(self.task.id),
                          'parent_type': 'task',
                          'email_followers': False,
                          'text': 'I can share stuff!'}
 
-        # Non-owner users can't share a post
+        # Non-owner users can post, without email followers
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
                                     token=self.other_token)
 
-        self.assertEqual(
-            wallpost.status_code,
-            status.HTTP_201_CREATED
-        )
+        self.assertEqual(wallpost.status_code, status.HTTP_201_CREATED)
 
     def test_permissions_on_fundraiser_wallpost_sharing(self):
         """
@@ -146,9 +140,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                                     wallpost_data,
                                     token=self.other_token)
 
-        self.assertEqual(wallpost.status_code,
-                         status.HTTP_403_FORBIDDEN,
-                         'Only the fundraiser owner can share a wallpost.')
+        self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_filtering_on_wallpost_list(self):
         authenticated = Group.objects.get(name='Authenticated')
@@ -329,8 +321,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         self.client.logout()
         response = self.client.delete(
             reaction_detail_url, token=self.another_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         # Create a Reaction by another user
         another_reaction_text = "I'm not so sure..."
@@ -454,7 +445,6 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
             response.data)
 
 
-# ProjectWallpostTestsMixin,
 class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
     def setUp(self):
         from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
@@ -961,3 +951,97 @@ class TestPinnedWallpost(BluebottleTestCase):
         # The sixth wallposts should be by initiator but unpinned
         self.assertEqual(response.data['results'][5]['author']['id'], self.initiator.id)
         self.assertEqual(response.data['results'][5]['pinned'], False)
+
+
+class InitiativeWallpostTest(BluebottleTestCase):
+    def setUp(self):
+        super(InitiativeWallpostTest, self).setUp()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.event = EventFactory.create(owner=self.owner)
+
+        self.other_user = BlueBottleUserFactory.create()
+        self.other_token = "JWT {0}".format(
+            self.other_user.get_jwt_token())
+
+        self.media_wallpost_url = reverse('media_wallpost_list')
+        self.text_wallpost_url = reverse('text_wallpost_list')
+        self.wallpost_url = reverse('wallpost_list')
+
+    def test_create_initiative_wallpost(self):
+        """
+        Tests that only the initiative creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': self.initiative.id,
+                         'parent_type': 'initiative',
+                         'text': 'I can share stuff!',
+                         'share_with_twitter': True}
+
+        # The owner can share a wallpost
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.owner_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_201_CREATED,
+            'Initiative owners can share a wallpost.')
+
+        self.initiative.promoter = BlueBottleUserFactory.create()
+        self.initiative.save()
+        promoter_token = "JWT {0}".format(self.initiative.promoter.get_jwt_token())
+
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=promoter_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_201_CREATED,
+            'Initiative promoters can share a wallpost.')
+
+        # Non-owner users can't share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.other_token)
+
+        self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
+
+        params = {'parent_id': self.initiative.id, 'parent_type': 'initiative'}
+        response = self.client.get(self.wallpost_url, params)
+        self.assertEqual(response.data['count'], 2)
+
+    def test_create_event_wallpost(self):
+        """
+        Tests that only the event creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': self.event.id,
+                         'parent_type': 'event',
+                         'text': 'I can share stuff!',
+                         'share_with_twitter': True}
+
+        # The owner can share a wallpost
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.owner_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_201_CREATED,
+            'Event owners can share a wallpost.')
+
+    def test_create_event_wallpost_other(self):
+        """
+        Tests that only the event creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': self.event.id,
+                         'parent_type': 'event',
+                         'text': 'I want to share stuff!',
+                         'share_with_twitter': True}
+
+        # Non-owner users can't share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.other_token)
+
+        self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)

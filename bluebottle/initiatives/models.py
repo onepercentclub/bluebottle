@@ -64,6 +64,7 @@ class Initiative(TransitionsMixin, models.Model):
     promoter = models.ForeignKey(
         'members.Member',
         verbose_name=_('promoter'),
+        blank=True,
         null=True,
     )
 
@@ -124,6 +125,9 @@ class Initiative(TransitionsMixin, models.Model):
 
         if not self.activity_manager:
             self.activity_manager = self.owner
+
+        if self.has_organization and not self.organization and self.owner and self.owner.partner_organization:
+            self.organization = self.owner.partner_organization
 
         super(Initiative, self).save(**kwargs)
 

@@ -1,5 +1,7 @@
 from django.test import TestCase
 
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 
 
@@ -31,3 +33,28 @@ class InitiativeTestCase(TestCase):
 
         initiative.transitions.reopen()
         self.assertEqual(initiative.status, 'submitted')
+
+    def test_activity_manager(self):
+        initiative = InitiativeFactory(activity_manager=None)
+
+        self.assertEqual(initiative.owner, initiative.activity_manager)
+
+    def test_full_url(self):
+        initiative = InitiativeFactory(activity_manager=None, slug='test-initiative')
+
+        self.assertEqual(
+            initiative.full_url,
+            '/initiatives/details/{}/test-initiative/'.format(initiative.pk)
+        )
+
+    def test_member_organization(self):
+        member = BlueBottleUserFactory.create(partner_organization=OrganizationFactory.create())
+        initiative = InitiativeFactory(has_organization=True, organization=None, owner=member)
+
+        self.assertEqual(initiative.organization, member.partner_organization)
+
+    def test_member_organization_no_organizatoin(self):
+        member = BlueBottleUserFactory.create(partner_organization=OrganizationFactory.create())
+        initiative = InitiativeFactory(has_organization=False, organization=None, owner=member)
+
+        self.assertIsNone(initiative.organization)

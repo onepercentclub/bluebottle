@@ -11,7 +11,7 @@ class ActivityTransitions(ModelTransitions):
     class values(DjangoChoices):
         draft = ChoiceItem('draft', _('draft'))
         open = ChoiceItem('open', _('open'))
-        successfull = ChoiceItem('done', _('done'))
+        succeeded = ChoiceItem('succeeded', _('succeeded'))
         closed = ChoiceItem('closed', _('closed'))
 
     default = values.draft
@@ -40,8 +40,8 @@ class ActivityTransitions(ModelTransitions):
 class ContributionTransitions(ModelTransitions):
     class values(DjangoChoices):
         new = ChoiceItem('new', _('new'))
-        success = ChoiceItem('success', _('success'))
-        failed = ChoiceItem('success', _('success'))
+        succeeded = ChoiceItem('succeeded', _('succeeded'))
+        failed = ChoiceItem('failed', _('failed'))
 
     def is_user(self, user):
         return self.instance.user == user

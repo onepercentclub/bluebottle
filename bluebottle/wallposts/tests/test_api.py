@@ -1045,18 +1045,3 @@ class InitiativeWallpostTest(BluebottleTestCase):
                                     token=self.other_token)
 
         self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
-
-        # Non-owner users can do a normal post
-        wallpost_data = {'parent_id': self.event.id,
-                         'parent_type': 'event',
-                         'text': 'I can post stuff!'}
-
-        wallpost = self.client.post(self.media_wallpost_url,
-                                    wallpost_data,
-                                    token=self.other_token)
-
-        self.assertEqual(wallpost.status_code, status.HTTP_201_CREATED)
-
-        params = {'parent_id': self.event.id, 'parent_type': 'event'}
-        response = self.client.get(self.wallpost_url, params)
-        self.assertEqual(response.data['count'], 2)

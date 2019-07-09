@@ -65,7 +65,7 @@ class WallpostParentIdField(serializers.IntegerField):
 
     # Make an exception for project slugs.
     def to_internal_value(self, value):
-        if not value.isdigit():
+        if not isinstance(value, int) and not value.isdigit():
             # Assume a project slug here
             try:
                 project = Project.objects.get(slug=value)

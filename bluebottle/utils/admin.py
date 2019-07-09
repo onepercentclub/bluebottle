@@ -252,7 +252,7 @@ class FSMAdmin(admin.ModelAdmin):
 
                     return HttpResponseRedirect(link)
                 except TransitionNotPossible:
-                    errors = transition.errors(instance)
+                    errors = transition.errors(instance.transitions)
                     if errors:
                         template = loader.get_template(
                             'admin/transition_errors.html'

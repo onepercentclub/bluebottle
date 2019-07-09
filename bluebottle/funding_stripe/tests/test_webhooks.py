@@ -12,7 +12,7 @@ import stripe
 from bluebottle.funding.models import Donation
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
-from bluebottle.funding_stripe.tests.factories import StripePaymentFactory
+from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePaymentProviderFactory
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.models import StripePayment
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -29,8 +29,8 @@ class StripePaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(StripePaymentTestCase, self).setUp()
+        StripePaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create()
-
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
@@ -69,6 +69,8 @@ class StripePaymentTestCase(BluebottleTestCase):
 
         self.assertEqual(donation.status, DonationTransitions.values.success)
         self.assertEqual(payment.status, StripePaymentTransitions.values.success)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.status, DonationTransitions.values.success)
 
     def test_failed(self):
         with mock.patch(
@@ -88,6 +90,8 @@ class StripePaymentTestCase(BluebottleTestCase):
 
         self.assertEqual(donation.status, DonationTransitions.values.failed)
         self.assertEqual(payment.status, StripePaymentTransitions.values.failed)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.status, DonationTransitions.values.failed)
 
     def test_refund(self):
         self.payment.transitions.succeed()

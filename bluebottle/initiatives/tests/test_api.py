@@ -294,11 +294,13 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(data['relationships']['activities']['data'][0]['id'], unicode(event.pk))
+        self.assertEqual(data['relationships']['activities']['data'][0]['type'], 'activities/events')
         activity_data = get_include(response, 'activities/events')
         self.assertEqual(
             activity_data['attributes']['title'],
             event.title
         )
+        self.assertEqual(activity_data['type'], 'activities/events')
 
     def test_get_other(self):
         response = self.client.get(
@@ -337,6 +339,19 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
+
+    def test_many_results(self):
+        InitiativeFactory.create_batch(39, owner=self.owner)
+        InitiativeFactory.create()
+
+        response = self.client.get(
+            self.url,
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 40)
+        self.assertEqual(len(data['data']), 8)
 
     def test_filter_owner(self):
         InitiativeFactory.create(owner=self.owner)
@@ -386,8 +401,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
     def test_sort_title(self):
         second = InitiativeFactory.create(title='B: something else')
-        first = InitiativeFactory.create(title='A: something')
         third = InitiativeFactory.create(title='C: More')
+        first = InitiativeFactory.create(title='A: something')
 
         response = self.client.get(
             self.url + '?sort=alphabetical',

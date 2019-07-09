@@ -351,21 +351,21 @@ class TestTenantAwareMailServer(unittest.TestCase):
             self.assertEquals(smtp.call_args[0], ('tenanthost', 4242))
             self.assertTrue(connection.sendmail.called)
 
-    def test_return_path(self):
+    def test_reply_to(self):
         """ Test simple / traditional case where config comes from settings """
         with mock.patch("bluebottle.clients.mail.properties",
                         new=mock.Mock([])) as properties:
-            return_path = 'info@test.example.com'
+            reply_to = 'info@test.example.com'
             properties.TENANT_MAIL_PROPERTIES = {
                 'address': 'info@example.com',
                 'sender': 'Info Tester',
-                'return_path': return_path
+                'reply_to': reply_to
             }
             msg = EmailMultiAlternatives(
                 subject="test", body="test",
                 to=["test@example.com"]
             )
-            self.assertEquals(msg.extra_headers['Return-Path'], return_path)
+            self.assertEquals(msg.extra_headers['Reply-To'], reply_to)
             self.assertEquals(msg.from_email, 'Info Tester <info@example.com>')
 
 

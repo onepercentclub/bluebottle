@@ -1,22 +1,21 @@
 import logging
-import stripe
 
+import stripe
 from django.http import HttpResponse
 from django.views.generic import View
 
-from bluebottle.payouts.models import PayoutDocument
-from bluebottle.payouts.serializers import PayoutDocumentSerializer
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.utils.utils import get_client_ip
-from bluebottle.payments_stripe.utils import get_webhook_secret
+from bluebottle.funding_stripe.utils import get_private_key
+from bluebottle.payouts.models import PayoutDocument
 from bluebottle.payouts.models import StripePayoutAccount
+from bluebottle.payouts.serializers import PayoutDocumentSerializer
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, RelatedResourceOwnerPermission, IsAuthenticated
 )
+from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateDestroyAPIView, OwnerListViewMixin, PrivateFileView
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +27,7 @@ class WebHookView(View):
 
         try:
             event = stripe.Webhook.construct_event(
-                payload, signature_header, get_webhook_secret('webhook_secret_connect')
+                payload, signature_header, get_private_key('webhook_secret_connect')
             )
             if event.type == 'account.updated':
                 payout_account = StripePayoutAccount.objects.get(account_id=event.data.object.id)

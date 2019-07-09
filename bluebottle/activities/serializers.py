@@ -14,6 +14,13 @@ class ActivitySerializer(PolymorphicModelSerializer):
         AssignmentSerializer
     ]
 
+    included_serializers = {
+        'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+    }
+
     class Meta:
         model = Activity
 

@@ -1,16 +1,14 @@
+import stripe
 from django.db import models
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
-
 from polymorphic.models import PolymorphicModel
 from stripe.error import PermissionError
 
-from bluebottle.payments_stripe.utils import get_secret_key
+from bluebottle.funding_stripe.utils import get_private_key
 from bluebottle.projects.models import Project
 from bluebottle.utils.fields import PrivateFileField
 from bluebottle.utils.utils import reverse_signed
-
-import stripe
 
 
 class PayoutDocument(models.Model):
@@ -118,7 +116,7 @@ class StripePayoutAccount(PayoutAccount):
     @cached_property
     def account(self):
         try:
-            return stripe.Account.retrieve(self.account_id, api_key=get_secret_key())
+            return stripe.Account.retrieve(self.account_id, api_key=get_private_key())
         except PermissionError:
             return {}
 
@@ -169,8 +167,7 @@ class PlainPayoutAccount(PayoutAccount):
 
     type = 'plain'
     providers = [
-        'docdata', 'pledge', 'flutterwave', 'lipisha',
-        'vitepay', 'pledge', 'telesom', 'beyonic'
+        'docdata', 'pledge', 'lipisha', 'telesom', 'beyonic', 'vitepay'
     ]
 
     account_holder_name = models.CharField(
@@ -198,5 +195,24 @@ class PlainPayoutAccount(PayoutAccount):
         return u"{}: {}".format(_("Bank details"), self.account_holder_name)
 
     class Meta:
-        verbose_name = _('Bank details')
-        verbose_name_plural = _('Bank details')
+        verbose_name = _('bank details')
+        verbose_name_plural = _('bank details')
+
+
+class FlutterwavePayoutAccount(PayoutAccount):
+
+    type = 'flutterwave'
+    providers = [
+        'flutterwave', 'pledge'
+    ]
+
+    account = models.CharField(
+        _("flutterwave account"), max_length=100, null=True, blank=True)
+    account_holder_name = models.CharField(
+        _("account holder name"), max_length=100, null=True, blank=True)
+    bank_country_code = models.CharField(
+        _("bank country code"), max_length=2, default='NG', null=True, blank=True)
+    bank_code = models.CharField(
+        _("bank code"), max_length=100, null=True, blank=True)
+    account_number = models.CharField(
+        _("account number"), max_length=255, null=True, blank=True)

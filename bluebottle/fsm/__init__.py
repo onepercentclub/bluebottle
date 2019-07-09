@@ -53,10 +53,10 @@ class Transition(object):
             all(permission(transitions, user) for permission in self.permissions)
         )
 
-    def errors(self):
+    def errors(self, transitions):
         """ Errors that prevent the transition """
         for condition in self.conditions:
-            error = condition()
+            error = condition(transitions)
 
             if error:
                 if isinstance(error, (list, tuple)):

@@ -4,6 +4,7 @@ from collections import namedtuple
 
 import magic
 from django.conf import settings
+from django.core.paginator import Paginator
 from django.core.signing import TimestampSigner, BadSignature
 from django.http import Http404, HttpResponse
 from django.http.response import HttpResponseNotFound
@@ -13,6 +14,7 @@ from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
+from django_elasticsearch_dsl.search import Search
 from parler.utils.i18n import get_language
 from rest_framework import generics
 from rest_framework import views, response
@@ -325,8 +327,18 @@ class TranslatedApiViewMixin(object):
         return qs
 
 
+class ESPaginator(Paginator):
+    def page(self, *args, **kwargs):
+        page = super(ESPaginator, self).page(*args, **kwargs)
+
+        if isinstance(page.object_list, Search):
+            page.object_list = page.object_list.to_queryset()
+        return page
+
+
 class JsonApiPagination(JsonApiPageNumberPagination):
     page_size = 8
+    django_paginator_class = ESPaginator
 
 
 class JsonApiViewMixin(AutoPrefetchMixin):

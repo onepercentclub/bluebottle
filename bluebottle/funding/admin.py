@@ -11,6 +11,7 @@ from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider
 )
+from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
@@ -61,7 +62,6 @@ class FundingAdmin(ActivityChildAdmin):
             'description',
             'deadline', 'duration',
             'target', 'amount_raised',
-            'accepted_currencies',
             'account'
         )}),
     )
@@ -137,5 +137,6 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
     child_models = (
         PledgePaymentProvider,
         StripePaymentProvider,
-        VitepayPaymentProvider
+        VitepayPaymentProvider,
+        FlutterwavePaymentProvider
     )

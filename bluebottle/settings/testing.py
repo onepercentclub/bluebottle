@@ -144,10 +144,10 @@ ELASTICSEARCH_DSL_AUTOSYNC = False
 STRIPE = {
     'private': {
         'api_key': 'test-key',
-        'webhook_secret': 'test-webhook-secret'
+        'webhook_secret': 'test-webhook-secret',
+        'webhook_secret_connect': 'test-webhook-secret-connect',
     },
     'public': {
         'publishable_key': 'test-pub-key'
     }
-
 }

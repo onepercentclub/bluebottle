@@ -35,7 +35,7 @@ class EventTransitions(ActivityTransitions):
             data=model_to_dict(self.instance)
         )
         if not serializer.is_valid():
-            return _('Please make sure all required fields are filled in')
+            return [unicode(error) for errors in serializer.errors.values() for error in errors]
 
     def initiative_is_approved(self):
         if not self.instance.initiative.status == 'approved':

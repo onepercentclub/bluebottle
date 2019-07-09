@@ -39,7 +39,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
         (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner', 'image', 'video_url')}),
         (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'location', 'place')}),
         (_('Organization'), {'fields': ('organization', 'organization_contact')}),
-        (_('Review'), {'fields': ('reviewer', 'promoter', 'status', 'status_transition')}),
+        (_('Review'), {'fields': ('reviewer', 'activity_manager', 'promoter', 'status', 'status_transition')}),
     )
 
     inlines = [ActivityAdminInline, MessageAdminInline]

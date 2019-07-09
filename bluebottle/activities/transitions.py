@@ -2,8 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from bluebottle.fsm import ModelTransitions, transition
-from bluebottle.initiatives.transitions import InitiativeTransitions
+from bluebottle.fsm import ModelTransitions
 
 
 class ActivityTransitions(ModelTransitions):
@@ -16,17 +15,6 @@ class ActivityTransitions(ModelTransitions):
         closed = ChoiceItem('closed', _('closed'))
 
     default = values.draft
-
-    def is_complete(self):
-        return self.instance.initiative.status == InitiativeTransitions.values.approved
-
-    @transition(
-        source=values.draft,
-        target=values.open,
-        conditions=[is_complete]
-    )
-    def open(self):
-        pass
 
 
 class ContributionTransitions(ModelTransitions):

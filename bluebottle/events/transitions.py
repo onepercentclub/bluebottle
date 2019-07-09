@@ -1,4 +1,3 @@
-from django.forms.models import model_to_dict
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
@@ -11,6 +10,12 @@ from bluebottle.events.messages import EventDoneOwnerMessage, EventClosedOwnerMe
 
 
 class EventTransitions(ActivityTransitions):
+    serializer = 'bluebottle.events.serializers.EventSubmitSerializer'
+
+    class values(ActivityTransitions.values):
+        full = ChoiceItem('full', _('full'))
+        running = ChoiceItem('running', _('running'))
+
     def can_start(self):
         if not self.instance.start_time:
             return _('Start date has not been set')
@@ -29,61 +34,40 @@ class EventTransitions(ActivityTransitions):
         if not self.instance.end_time < now():
             return _('The end date has not passed')
 
-    def is_complete(self):
-        from bluebottle.events.serializers import EventSubmitSerializer
-        serializer = EventSubmitSerializer(
-            data=model_to_dict(self.instance)
-        )
-        if not serializer.is_valid():
-            return _('Please make sure all required fields are filled in')
-
-    def initiative_is_approved(self):
-        if not self.instance.initiative.status == 'approved':
-            return _('Please make sure the initiative is approved')
-
     @transition(
-        source=ActivityTransitions.values.draft,
-        target=ActivityTransitions.values.open,
-        conditions=[is_complete, initiative_is_approved],
-        serializer='bluebottle.events.serializers.EventSubmitSerializer',
-    )
-    def open(self):
-        pass
-
-    @transition(
-        source=ActivityTransitions.values.open,
-        target=ActivityTransitions.values.full,
+        source=values.open,
+        target=values.full,
         conditions=[can_open]
     )
     def full(self):
         pass
 
     @transition(
-        source=ActivityTransitions.values.full,
-        target=ActivityTransitions.values.open,
+        source=values.full,
+        target=values.open,
         conditions=[can_open]
     )
     def reopen(self):
         pass
 
     @transition(
-        source=ActivityTransitions.values.closed,
-        target=ActivityTransitions.values.draft,
+        source=values.closed,
+        target=values.draft,
     )
     def redraft(self, **kwargs):
         pass
 
     @transition(
-        source=[ActivityTransitions.values.full, ActivityTransitions.values.open],
-        target=ActivityTransitions.values.running,
+        source=[values.full, values.open],
+        target=values.running,
         conditions=[can_start]
     )
     def start(self, **kwargs):
         pass
 
     @transition(
-        source=ActivityTransitions.values.running,
-        target=ActivityTransitions.values.done,
+        source=values.running,
+        target=values.done,
         conditions=[can_end],
         messages=[EventDoneOwnerMessage]
     )
@@ -95,15 +79,15 @@ class EventTransitions(ActivityTransitions):
 
     @transition(
         source='*',
-        target=ActivityTransitions.values.closed,
+        target=values.closed,
         messages=[EventClosedOwnerMessage]
     )
     def close(self):
         pass
 
     @transition(
-        source=ActivityTransitions.values.closed,
-        target=ActivityTransitions.values.open,
+        source=values.closed,
+        target=values.open,
         conditions=[can_open]
     )
     def extend(self):

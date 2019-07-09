@@ -11,6 +11,12 @@ from bluebottle.activities.transitions import ActivityTransitions, ContributionT
 
 
 class FundingTransitions(ActivityTransitions):
+    serializer = 'bluebottle.events.serializers.EventSubmitSerializer'
+
+    class values(ActivityTransitions.values):
+        full = ChoiceItem('full', _('full'))
+        running = ChoiceItem('running', _('running'))
+
     def deadline_in_future(self):
         return not self.instance.deadline or self.instance.deadline > timezone.now()
 

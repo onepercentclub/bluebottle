@@ -29,7 +29,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     prepopulated_fields = {"slug": ("title",)}
 
     raw_id_fields = ('owner', 'reviewer', 'promoter', 'place', 'organization', 'organization_contact')
-    list_display = ['title', 'created', 'status']
+    list_display = ['title_display', 'created', 'status']
     list_filter = ['status']
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
@@ -41,6 +41,10 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
         (_('Organization'), {'fields': ('organization', 'organization_contact')}),
         (_('Review'), {'fields': ('reviewer', 'activity_manager', 'promoter', 'status', 'status_transition')}),
     )
+
+    def title_display(self, obj):
+        return obj.title or _('- empty -')
+    title_display.short_description = _('Title')
 
     inlines = [ActivityAdminInline, MessageAdminInline]
 

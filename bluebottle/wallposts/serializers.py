@@ -3,9 +3,13 @@ from django.core.exceptions import ValidationError
 
 from rest_framework import serializers
 
+from bluebottle.assignments.models import Assignment
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ContentTextField, PhotoSerializer)
+from bluebottle.events.models import Event
+from bluebottle.funding.models import Funding
 from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
@@ -43,6 +47,14 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
             data = ContentType.objects.get_for_model(Project)
         if data == 'fundraiser':
             data = ContentType.objects.get_for_model(Fundraiser)
+        if data == 'initiative':
+            data = ContentType.objects.get_for_model(Initiative)
+        if data == 'event':
+            data = ContentType.objects.get_for_model(Event)
+        if data == 'assignment':
+            data = ContentType.objects.get_for_model(Assignment)
+        if data == 'funding':
+            data = ContentType.objects.get_for_model(Funding)
         return data
 
 
@@ -53,12 +65,12 @@ class WallpostParentIdField(serializers.IntegerField):
 
     # Make an exception for project slugs.
     def to_internal_value(self, value):
-        if not value.isnumeric():
+        if not value.isdigit():
             # Assume a project slug here
             try:
                 project = Project.objects.get(slug=value)
             except Project.DoesNotExist:
-                raise ValidationError("No project with that slug")
+                raise ValidationError("Project not found: {}".format(value))
             value = project.id
         return value
 

@@ -52,7 +52,6 @@ class FilterQSParams(object):
             qs = qs.filter(conten_object__slug=parent_id)
         elif parent_id:
             qs = qs.filter(conten_object__id=parent_id)
-
         text = self.request.query_params.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |
@@ -102,7 +101,8 @@ class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
         if parent_type == 'project':
             content_type = ContentType.objects.get_for_model(Project)
         else:
-            white_listed_apps = ['projects', 'tasks', 'fundraisers']
+            white_listed_apps = ['projects', 'tasks', 'fundraisers', 'initiatives',
+                                 'assignments', 'events', 'funding']
             content_type = ContentType.objects.filter(
                 app_label__in=white_listed_apps).get(model=parent_type)
         queryset = queryset.filter(content_type=content_type)
@@ -142,10 +142,11 @@ class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIVi
         parent_id = self.request.query_params.get('parent_id', None)
         if parent_type == 'project' and parent_id:
             try:
-                project = Project.objects.get(slug=parent_id)
+                # project = Project.objects.get(slug=parent_id)
+                parent_id = Project.objects.get(slug=parent_id).id
             except Project.DoesNotExist:
                 return Wallpost.objects.none()
-            queryset = queryset.filter(object_id=project.id)
+            queryset = queryset.filter(object_id=parent_id)
         queryset = queryset.order_by('-created')
         return queryset
 

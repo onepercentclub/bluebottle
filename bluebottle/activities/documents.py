@@ -19,6 +19,7 @@ activity.settings(
 
 @activity.doc_type
 class ActivityDocument(DocType):
+    title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
     description = fields.TextField()
     status = fields.KeywordField()

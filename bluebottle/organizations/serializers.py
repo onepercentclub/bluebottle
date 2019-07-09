@@ -29,9 +29,9 @@ class OrganizationSerializer(ModelSerializer):
 
 
 class OrganizationContactSerializer(ModelSerializer):
-    name = serializers.CharField(required=False, allow_blank=True)
-    email = serializers.CharField(required=False, allow_blank=True)
-    phone = serializers.CharField(required=False, allow_blank=True)
+    name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    email = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    phone = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',

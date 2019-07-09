@@ -48,9 +48,9 @@ class OrganizationContact(models.Model):
     """
     Basic details for an organization contact
     """
-    name = models.TextField(_('name'), max_length=100)
-    email = models.EmailField(_('email'), max_length=254)
-    phone = models.TextField(_('phone'), max_length=40)
+    name = models.TextField(_('name'), null=True, blank=True, max_length=100)
+    email = models.EmailField(_('email'), null=True, blank=True, max_length=254)
+    phone = models.TextField(_('phone'), null=True, blank=True, max_length=40)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('owner'))
 
     created = CreationDateTimeField(

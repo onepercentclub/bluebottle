@@ -73,7 +73,7 @@ class InitiativeTransitions(ModelTransitions):
         pass
 
     @transition(
-        source=[values.approved, values.closed],
+        source=[values.closed],
         target=values.submitted,
         conditions=[is_complete],
     )

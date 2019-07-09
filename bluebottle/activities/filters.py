@@ -8,7 +8,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
     sort_fields = {
         'date': ('-created', ),
-        'alphabetical': ('title', ),
+        'alphabetical': ('title_keyword', ),
         'popularity': 'popularity',
     }
 

@@ -25,9 +25,14 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
+    readonly_fields = ['link']
     list_filter = (PolymorphicChildModelFilter,)
 
-    list_display = ['created', 'title', 'type', 'status', 'contribution_count']
+    list_display = ['created', 'title', 'type', 'status', 'contribution_count', 'link']
+
+    def link(self, obj):
+        return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title)
+    link.short_description = _("Show on site")
 
     def type(self, obj):
         return obj.get_real_instance_class().__name__

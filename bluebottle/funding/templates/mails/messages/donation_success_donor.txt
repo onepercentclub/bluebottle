@@ -4,7 +4,7 @@
 
 {% block content %}
 {% if pledged %}
-{% blocktrans with first_name=obj.user.first_name initiator_name=obj.project.owner.full_name slug=obj.project.slug%}
+{% blocktrans with first_name=obj.user.first_name initiator_name=obj.activity.owner.full_name  %}
 
 Thanks {{first_name}}, for co-financing this project. The project initiator {{initiator_name}} has received an email with your pledge.
 {% endblocktrans %}
@@ -14,11 +14,24 @@ Thanks {{ first_name }}, for your donation! Be sure to follow the project page f
 Give some extra support and share this project with your network.
 {% endblocktrans %}
 {% endif %}
-{% include 'donations/mails/donation.txt' donation=obj %}
-{% include 'donations/mails/payment_details.txt' donation=obj %}
+
+{% trans "Donation" %} {% if obj.reward %} - {{ obj.reward.title }} {% endif %}
+{{ obj.amount|format_money }}
+{{ obj.activity.title }}
+{{ obj.activity.full_url }}
+
+{% if not obj.anonymous %}
+{{obj.user.full_name}}
+{% endif %}
+
+{% trans "Date" %}: {{obj.created}}
+{% trans "Order" %}: {{obj.id}}
+{% trans "Initiator" %}: {{obj.activity.owner.full_name}}
+{% if obj.activity.initiative.organization %}{% trans "Organization" %}: {{obj.activity.initiative.organization.name}}{% endif %}
+
 {% if pledged %}
-{% blocktrans with amount=obj.amount|format_money project_title=obj.project.title %}
-    Please transfer the amount of {{ amount }} to "{{ project_title }}".
+{% blocktrans with amount=obj.amount|format_money title=obj.activity.title %}
+    Please transfer the amount of {{ amount }} to "{{ title }}".
 {% endblocktrans %}
 {% endif %}
 {% blocktrans %}

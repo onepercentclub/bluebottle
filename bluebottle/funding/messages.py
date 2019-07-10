@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class DonationSuccessActivityManagerMessage(TransitionMessage):
-    subject = _("You have a new donation!💰")
+    subject = _(u"You have a new donation!💰")
     template = 'messages/donation_success_activity_owner'
 
     def get_recipients(self):

@@ -104,7 +104,7 @@ class Reward(models.Model):
     @property
     def count(self):
         return self.donations.filter(
-            status=DonationTransitions.values.success
+            status=DonationTransitions.values.succeeded
         ).count()
 
     def __unicode__(self):
@@ -170,7 +170,7 @@ class Fundraiser(models.Model):
     @property
     def amount_donated(self):
         donations = self.donations.filter(
-            status=[DonationTransitions.values.success]
+            status=[DonationTransitions.values.succeeded]
         )
 
         totals = [

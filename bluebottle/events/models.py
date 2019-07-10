@@ -65,7 +65,7 @@ class Event(Activity):
     def participants(self):
         return self.contributions.filter(
             status__in=[ParticipantTransitions.values.new,
-                        ParticipantTransitions.values.success]
+                        ParticipantTransitions.values.succeeded]
         )
 
 

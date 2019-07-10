@@ -622,6 +622,7 @@ class TaskApiTestcase(ESTestCase, BluebottleTestCase):
             },
             token=self.some_token
         )
+        self.assertEqual(response.content, status.HTTP_200_OK)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(task.place)
 

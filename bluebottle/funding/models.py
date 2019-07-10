@@ -134,6 +134,9 @@ class BudgetLine(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
+    class JSONAPIMeta:
+        resource_name = 'activities/funding/budgetlines'
+
     class Meta:
         verbose_name = _('budget line')
         verbose_name_plural = _('budget lines')
@@ -255,7 +258,7 @@ class PaymentMethod(object):
         return self.id
 
     class JSONAPIMeta:
-        resource_name = 'funding/payment-methods'
+        resource_name = 'activities/funding/payment-methods'
 
 
 class PaymentProvider(PolymorphicModel):

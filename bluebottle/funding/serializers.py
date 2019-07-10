@@ -164,6 +164,7 @@ class FundingSerializer(BaseActivitySerializer):
         resource_name = 'activities/fundings'
 
     included_serializers = {
+        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',

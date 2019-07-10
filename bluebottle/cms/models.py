@@ -6,6 +6,7 @@ from fluent_contents.models import PlaceholderField, ContentItem
 from adminsortable.fields import SortableForeignKey
 from parler.models import TranslatableModel, TranslatedFields
 
+from bluebottle.activities.models import Activity
 from bluebottle.geo.models import Location
 from bluebottle.projects.models import Project
 from bluebottle.surveys.models import Survey
@@ -220,20 +221,20 @@ class SurveyContent(TitledContent):
 class ActivitiesContent(TitledContent):
     type = 'activities'
     action_text = models.CharField(max_length=80,
-                                   default=_('Start your own initiative'),
+                                   default=_('Find more activities'),
                                    blank=True, null=True)
-    action_link = models.CharField(max_length=100, default="/start-project",
+    action_link = models.CharField(max_length=100, default="/initiatives/activities/list",
                                    blank=True, null=True)
 
-    projects = models.ManyToManyField(
-        Project, blank=True, db_table='cms_activitycontent_activitiess'
+    activities = models.ManyToManyField(
+        Activity, blank=True, db_table='cms_activitycontent_activities'
     )
-    from_homepage = models.BooleanField(default=False)
+    highlighted = models.BooleanField(default=False)
 
     preview_template = 'admin/cms/preview/activities.html'
 
     class Meta:
-        verbose_name = _('Highlighted activities')
+        verbose_name = _('Activities')
 
     def __unicode__(self):
         return unicode(self.title)

@@ -217,6 +217,28 @@ class SurveyContent(TitledContent):
         return unicode(self.survey)
 
 
+class ActivitiesContent(TitledContent):
+    type = 'activities'
+    action_text = models.CharField(max_length=80,
+                                   default=_('Start your own initiative'),
+                                   blank=True, null=True)
+    action_link = models.CharField(max_length=100, default="/start-project",
+                                   blank=True, null=True)
+
+    projects = models.ManyToManyField(
+        Project, blank=True, db_table='cms_activitycontent_activitiess'
+    )
+    from_homepage = models.BooleanField(default=False)
+
+    preview_template = 'admin/cms/preview/activities.html'
+
+    class Meta:
+        verbose_name = _('Highlighted activities')
+
+    def __unicode__(self):
+        return unicode(self.title)
+
+
 class ProjectsContent(TitledContent):
     type = 'projects'
     action_text = models.CharField(max_length=80,

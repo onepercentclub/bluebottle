@@ -9,7 +9,7 @@ from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, D
 
 
 class FundingTransitions(ActivityTransitions):
-    serializer = 'bluebottle.events.serializers.EventSubmitSerializer'
+    serializer = 'bluebottle.funding.serializers.FundingSubmitSerializer'
 
     class values(ActivityTransitions.values):
         partially_funded = ChoiceItem('partially_funded', _('partially funded'))
@@ -51,7 +51,7 @@ class FundingTransitions(ActivityTransitions):
         source='*',
         target=values.closed,
     )
-    def closed(self):
+    def close(self):
         pass
 
     @transition(

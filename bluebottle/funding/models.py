@@ -60,7 +60,7 @@ class Funding(Activity):
         The sum of all contributions (donations) converted to the targets currency
         """
         totals = self.contributions.filter(
-            status='success'
+            status=FundingTransitions.values.succeeded
         ).values(
             'donation__amount_currency'
         ).annotate(

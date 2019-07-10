@@ -10,5 +10,5 @@ class VitepayPaymentAdmin(PaymentChildAdmin):
 
 
 @admin.register(VitepayPaymentProvider)
-class PledgePaymentProviderAdmin(PaymentProviderChildAdmin):
+class VitepayPaymentProviderAdmin(PaymentProviderChildAdmin):
     base_model = VitepayPaymentProvider

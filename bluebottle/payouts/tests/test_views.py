@@ -3,6 +3,7 @@ from mock import patch
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.test.factory_models.payouts import StripePayoutAccountFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -21,6 +22,7 @@ MERCHANT_ACCOUNTS = [
 @override_settings(MERCHANT_ACCOUNTS=MERCHANT_ACCOUNTS)
 class StripePayoutAccountUpdateTestCase(BluebottleTestCase):
     def setUp(self):
+        StripePaymentProviderFactory.create()
         self.payout_account = StripePayoutAccountFactory.create(
             account_id='acct_00000000000035'
         )

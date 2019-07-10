@@ -94,7 +94,7 @@ class DonationTransitions(ContributionTransitions):
         source=[values.new, values.failed],
         target=values.success,
     )
-    def success(self):
+    def succeed(self):
         pass
 
 
@@ -112,7 +112,7 @@ class PaymentTransitions(ModelTransitions):
         target=values.success
     )
     def succeed(self):
-        self.instance.donation.transitions.success()
+        self.instance.donation.transitions.succeed()
         self.instance.donation.save()
 
     @transition(

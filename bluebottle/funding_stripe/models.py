@@ -2,10 +2,10 @@ from django.conf import settings
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.funding_stripe import stripe
 from bluebottle.fsm import TransitionManager
-from bluebottle.funding.models import Payment, PaymentProvider
+from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
+from bluebottle.funding_stripe.utils import init_stripe
 from bluebottle.payouts.models import StripePayoutAccount
 
 
@@ -17,6 +17,7 @@ class StripePayment(Payment):
 
     def save(self, *args, **kwargs):
         if not self.pk:
+            stripe = init_stripe()
             intent = stripe.PaymentIntent.create(
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
@@ -31,6 +32,7 @@ class StripePayment(Payment):
         super(StripePayment, self).save(*args, **kwargs)
 
     def update(self):
+        stripe = init_stripe()
         intent = stripe.PaymentIntent.retrieve(self.intent_id)
 
         if len(intent.charges) == 0:
@@ -59,35 +61,59 @@ class StripePayment(Payment):
 
 class StripePaymentProvider(PaymentProvider):
 
-    stripe_payment_methods = {
-        'credit_card': {
-            'name': _('Credit card'),
-            'currencies': ['EUR', 'USD'],
-        },
-        'bancontact': {
-            'name': _('Bancontact'),
-            'currencies': ['EUR'],
-            'countries': ['BE']
-        },
-        'ideal': {
-            'name': _('iDEAL'),
-            'currencies': ['EUR'],
-            'countries': ['NL']
-        },
-        'direct_debit': {
-            'name': _('Direct debit'),
-            'currencies': ['EUR'],
-            'countries': ['NL', 'BE', 'DE']
-        }
-    }
+    stripe_payment_methods = [
+        PaymentMethod(
+            provider='stripe',
+            code='credit_card',
+            name=_('Credit card'),
+            currencies=['EUR', 'USD'],
+            countries=[]
+        ),
+        PaymentMethod(
+            provider='stripe',
+            code='bancontact',
+            name=_('Bancontact'),
+            currencies=['EUR'],
+            countries=['BE']
+        ),
+        PaymentMethod(
+            provider='stripe',
+            code='ideal',
+            name=_('iDEAL'),
+            currencies=['EUR'],
+            countries=['NL']
+        ),
+        PaymentMethod(
+            provider='stripe',
+            code='direct_debit',
+            name=_('Direct debit'),
+            currencies=['EUR'],
+            countries=[]
+        )
+    ]
+
+    currencies = ['EUR', 'USD']
+    countries = ['AU', 'AT', 'BE', 'BR', 'CA', 'DK', 'FI', 'FR',
+                 'DE', 'IE', 'LU', 'MX', 'NL', 'NZ', 'NO', 'PT',
+                 'ES', 'SE', 'CH', 'GB', 'US']
 
     @property
     def public_settings(self):
-        return settings.STRIPE['public']
+        return {
+            'publishable_key': settings.STRIPE['publishable_key'],
+            'credit_card': self.credit_card,
+            'ideal': self.ideal,
+            'bancontact': self.bancontact,
+            'direct_debit': self.direct_debit
+        }
 
     @property
     def private_settings(self):
-        return settings.STRIPE['private']
+        return {
+            'secret_key': settings.STRIPE['secret_key'],
+            'webhook_secret': settings.STRIPE['webhook_secret'],
+            'webhook_secret_connect': settings.STRIPE['webhook_secret_connect'],
+        }
 
     credit_card = models.BooleanField(_('Credit card'), default=True)
     ideal = models.BooleanField(_('iDEAL'), default=False)
@@ -97,10 +123,9 @@ class StripePaymentProvider(PaymentProvider):
     @property
     def payment_methods(self):
         methods = []
-        for method in ['credit_card', 'ideal', 'bancontact', 'direct_debit']:
-            if getattr(self, method, False):
-                method_settings = self.stripe_payment_methods[method]
-                method_settings['code'] = method
-                method_settings['provider'] = 'stripe'
-                methods.append(method_settings)
+        for code in ['credit_card', 'ideal', 'bancontact', 'direct_debit']:
+            if getattr(self, code, False):
+                for method in self.stripe_payment_methods:
+                    if method.code == code:
+                        methods.append(method)
         return methods

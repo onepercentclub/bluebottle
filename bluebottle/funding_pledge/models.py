@@ -1,6 +1,6 @@
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding_pledge.transitions import PledgePaymentTransitions
-from bluebottle.funding.models import Payment, PaymentProvider
+from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -18,9 +18,11 @@ class PledgePaymentProvider(PaymentProvider):
 
     @property
     def payment_methods(self):
-        return [{
-            'provider': _('Pledge'),
-            'code': 'pledge',
-            'name': _('pledge'),
-            'currencies': []
-        }]
+        return [
+            PaymentMethod(
+                provider='pledge',
+                code='pledge',
+                name=_('Pledge'),
+                currencies=['EUR', 'USD']
+            )
+        ]

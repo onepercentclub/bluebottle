@@ -2,26 +2,24 @@
 
 import importlib
 import itertools
-from collections import namedtuple, defaultdict
+import logging
 import re
+from collections import namedtuple, defaultdict
 
 from babel.numbers import get_currency_symbol, get_currency_name
-from django.db import connection, ProgrammingError
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ImproperlyConfigured
+from django.db import connection, ProgrammingError
 from django.utils.translation import get_language
-
-from djmoney_rates.utils import get_rate
 from djmoney_rates.exceptions import CurrencyConversionException
-from bluebottle.clients import properties
+from djmoney_rates.utils import get_rate
 from tenant_extras.utils import get_tenant_properties
 
-from bluebottle.payments_flutterwave.utils import get_flutterwave_settings
-from bluebottle.payments_stripe.utils import get_stripe_settings
+from bluebottle.clients import properties
+from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
+from bluebottle.funding_stripe.utils import get_stripe_settings
 from bluebottle.payouts.utils import get_payout_settings
-
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -233,8 +231,6 @@ def get_public_properties(request):
             'languageCode': get_language(),
             'siteLinks': get_user_site_links(request.user),
             'platform': {
-                'stripe': get_stripe_settings(),
-                'flutterwave': get_flutterwave_settings(),
                 'payouts': get_payout_settings(),
                 'content': get_platform_settings('cms.SitePlatformSettings'),
                 'projects': get_platform_settings('projects.ProjectPlatformSettings'),
@@ -243,6 +239,15 @@ def get_public_properties(request):
                 'members': get_platform_settings('members.MemberPlatformSettings'),
             }
         }
+
+        try:
+            config['platform']['stripe'] = get_stripe_settings()
+        except ImproperlyConfigured:
+            pass
+        try:
+            config['platform']['flutterwave'] = get_flutterwave_settings()
+        except ImproperlyConfigured:
+            pass
 
         try:
             config['readOnlyFields'] = {

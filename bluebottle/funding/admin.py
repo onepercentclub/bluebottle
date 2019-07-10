@@ -9,8 +9,9 @@ from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModel
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import (
-    Funding, Donation, Payment, PaymentProvider
-)
+    Funding, Donation, Payment, PaymentProvider,
+    BudgetLine)
+from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
@@ -42,9 +43,16 @@ class DonationInline(admin.TabularInline, PaymentLinkMixin):
                            obj.created.strftime('%H:%M'))
 
 
+class BudgetLineInline(admin.TabularInline):
+
+    model = BudgetLine
+
+    extra = 0
+
+
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (DonationInline,)
+    inlines = (BudgetLineInline, DonationInline)
     base_model = Funding
 
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['account']
@@ -61,7 +69,6 @@ class FundingAdmin(ActivityChildAdmin):
             'description',
             'deadline', 'duration',
             'target', 'amount_raised',
-            'accepted_currencies',
             'account'
         )}),
     )
@@ -137,5 +144,6 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
     child_models = (
         PledgePaymentProvider,
         StripePaymentProvider,
-        VitepayPaymentProvider
+        VitepayPaymentProvider,
+        FlutterwavePaymentProvider
     )

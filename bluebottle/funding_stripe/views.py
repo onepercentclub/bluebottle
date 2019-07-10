@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import StripePayment
 from bluebottle.funding_stripe.serializers import StripePaymentSerializer
-from bluebottle.funding_stripe import stripe
+from bluebottle.funding_stripe.utils import init_stripe
 
 
 class StripePaymentList(PaymentList):
@@ -14,6 +14,7 @@ class StripePaymentList(PaymentList):
 
 class WebHookView(View):
     def post(self, request, **kwargs):
+        stripe = init_stripe()
 
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']

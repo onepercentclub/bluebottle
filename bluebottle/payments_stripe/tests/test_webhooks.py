@@ -4,6 +4,7 @@ import stripe
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.payments_stripe import StripePaymentFactory
@@ -43,6 +44,7 @@ PAYMENT_METHODS = (
 )
 class StripePaymentAdapterTestCase(BluebottleTestCase):
     def setUp(self):
+        StripePaymentProviderFactory.create()
         charge_token = 'charge_token'
         source_token = 'source_token'
 

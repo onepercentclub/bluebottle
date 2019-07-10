@@ -19,6 +19,8 @@ class Activity(TransitionsMixin, PolymorphicModel):
         related_name='activities',
     )
 
+    highlight = models.BooleanField(default=False, help_text=_('Highlight this activity to show it on homepage'))
+
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 

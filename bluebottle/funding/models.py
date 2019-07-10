@@ -198,8 +198,8 @@ class Donation(Contribution):
         return self.payment.type
 
     class Meta:
-        verbose_name = _('budget line')
-        verbose_name_plural = _('budget lines')
+        verbose_name = _('donation')
+        verbose_name_plural = _('donations')
 
     def __unicode__(self):
         return u'{}'.format(self.amount)

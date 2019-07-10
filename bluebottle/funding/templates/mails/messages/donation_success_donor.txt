@@ -1,0 +1,27 @@
+{% extends "base.mail.txt" %}
+{% load money %}
+{% load i18n %}
+
+{% block content %}
+{% if pledged %}
+{% blocktrans with first_name=obj.user.first_name initiator_name=obj.project.owner.full_name slug=obj.project.slug%}
+
+Thanks {{first_name}}, for co-financing this project. The project initiator {{initiator_name}} has received an email with your pledge.
+{% endblocktrans %}
+{% else %}
+{% blocktrans with first_name=obj.user.first_name initiator=obj.project.owner.full_name %}
+Thanks {{ first_name }}, for your donation! Be sure to follow the project page for the latest updates on the project.
+Give some extra support and share this project with your network.
+{% endblocktrans %}
+{% endif %}
+{% include 'donations/mails/donation.txt' donation=obj %}
+{% include 'donations/mails/payment_details.txt' donation=obj %}
+{% if pledged %}
+{% blocktrans with amount=obj.amount|format_money project_title=obj.project.title %}
+    Please transfer the amount of {{ amount }} to "{{ project_title }}".
+{% endblocktrans %}
+{% endif %}
+{% blocktrans %}
+    Support even more by sharing the project with your network
+{% endblocktrans %}
+{% endblock content %} 

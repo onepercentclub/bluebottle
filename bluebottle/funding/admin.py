@@ -15,6 +15,7 @@ from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
+from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin
 
 
@@ -52,7 +53,7 @@ class BudgetLineInline(admin.TabularInline):
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, DonationInline)
+    inlines = (BudgetLineInline, DonationInline, MessageAdminInline)
     base_model = Funding
 
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['account']

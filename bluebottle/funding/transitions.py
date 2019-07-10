@@ -8,11 +8,12 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.fsm import transition, ModelTransitions
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage
 
 
 class FundingTransitions(ActivityTransitions):
     def deadline_in_future(self):
-        return not self.instance.deadline or self.instance.deadline > timezone.now()
+        return not self.instance.deadline or self.instance.deadline > timezone.now().date()
 
     def is_complete(self):
         from bluebottle.funding.serializers import FundingSubmitSerializer
@@ -93,6 +94,10 @@ class DonationTransitions(ContributionTransitions):
     @transition(
         source=[values.new, values.failed],
         target=values.success,
+        messages=[
+            DonationSuccessActivityManagerMessage,
+            DonationSuccessDonorMessage
+        ]
     )
     def succeed(self):
         pass

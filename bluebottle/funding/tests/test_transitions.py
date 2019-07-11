@@ -45,7 +45,7 @@ class FundingTaskTestCase(BluebottleAdminTestCase):
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(donation.status, DonationTransitions.values.succeeded)
         self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(mail.outbox[0].subject, 'You have a new donation!💰')
+        self.assertEqual(mail.outbox[0].subject, u'You have a new donation!💰')
         self.assertEqual(mail.outbox[1].subject, 'Thanks for your donation!')
 
         self.funding.deadline = (now() - timedelta(days=1)).date()
@@ -69,8 +69,10 @@ class FundingTaskTestCase(BluebottleAdminTestCase):
         self.funding.deadline = (now() - timedelta(days=1)).date()
         self.funding.save()
 
+        # Run scheduled task
+        check_funding_end()
         self.assertEqual(len(mail.outbox), 5)
-        self.assertEqual(mail.outbox[4].subject, 'You successfully completed your crowdfunding campaign! 🎉')
+        self.assertEqual(mail.outbox[4].subject, u'You successfully completed your crowdfunding campaign! 🎉')
 
     def test_extending(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(100, 'EUR'))

@@ -29,7 +29,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     list_filter = (PolymorphicChildModelFilter, 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['created', 'title', 'type', 'status',
+    list_display = ['title', 'created', 'type', 'status',
                     'contribution_count', 'link', 'highlight']
 
     def link(self, obj):

@@ -12,7 +12,7 @@ logger = logging.getLogger('bluebottle')
 
 
 @periodic_task(
-    run_every=(crontab(minute='*/1')),
+    run_every=(crontab(minute='*/15')),
     name="check_event_start",
     ignore_result=True
 )
@@ -32,7 +32,7 @@ def check_event_start():
 
 
 @periodic_task(
-    run_every=(crontab(minute='*/1')),
+    run_every=(crontab(minute='*/15')),
     name="check_event_end",
     ignore_result=True
 )

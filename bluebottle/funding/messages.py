@@ -38,7 +38,7 @@ class FundingPartiallyFundedMessage(TransitionMessage):
     template = 'messages/funding_partially_funded'
 
     def get_recipients(self):
-        return [self.obj.activity.owner]
+        return [self.obj.owner]
 
 
 class FundingRealisedOwnerMessage(TransitionMessage):
@@ -46,12 +46,12 @@ class FundingRealisedOwnerMessage(TransitionMessage):
     template = 'messages/funding_realised_owner'
 
     def get_recipients(self):
-        return [self.obj.activity.owner]
+        return [self.obj.owner]
 
 
 class FundingClosedMessage(TransitionMessage):
-    subject = _(u"You have a new donation!💰")
-    template = 'messages/donation_success_activity_owner'
+    subject = _(u"Your crowdfunding campaign has been closed")
+    template = 'messages/funding_closed'
 
     def get_recipients(self):
-        return [self.obj.activity.owner]
+        return [self.obj.owner]

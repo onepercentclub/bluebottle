@@ -5,6 +5,7 @@ from bluebottle.funding_pledge.models import PledgePayment
 
 
 class PledgePaymentFactory(factory.DjangoModelFactory):
+
     class Meta(object):
         model = PledgePayment
 

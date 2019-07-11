@@ -5,8 +5,11 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.fsm import transition, ModelTransitions
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
-from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
-    DonationRefundedDonorMessage
+from bluebottle.funding.messages import (
+    DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
+    DonationRefundedDonorMessage, FundingRealisedOwnerMessage,
+    FundingClosedMessage, FundingPartiallyFundedMessage
+)
 
 
 class FundingTransitions(ActivityTransitions):
@@ -23,6 +26,7 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=values.open,
         target=values.partially_funded,
+        messages=[FundingPartiallyFundedMessage]
     )
     def partial(self):
         pass
@@ -30,6 +34,7 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=values.open,
         target=values.succeeded,
+        messages=[FundingRealisedOwnerMessage]
     )
     def succeed(self):
         pass
@@ -51,6 +56,7 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source='*',
         target=values.closed,
+        messages=[FundingClosedMessage]
     )
     def close(self):
         pass
@@ -71,7 +77,7 @@ class DonationTransitions(ContributionTransitions):
         refunded = ChoiceItem('refunded', _('refunded'))
 
     def funding_is_open(self):
-        return self.instance.activity.status == self.values.open
+        return self.instance.activity.status == FundingTransitions.values.open
 
     @transition(
         source=[values.new, values.succeeded],

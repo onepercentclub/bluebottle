@@ -1,11 +1,14 @@
+# -*- coding: utf-8 -*-
 from datetime import timedelta
 
+from django.core import mail
 from django.utils.timezone import now
 from moneyed import Money
 
 from bluebottle.funding.tasks import check_funding_end
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, \
     BudgetLineFactory
+from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -24,6 +27,7 @@ class FundingTaskTestCase(BluebottleAdminTestCase):
             deadline=(now() + timedelta(weeks=2)).date()
         )
         BudgetLineFactory.create_batch(4, activity=self.funding, amount=Money(125, 'EUR'))
+        mail.outbox = []
 
     def test_no_donations(self):
         self.assertEqual(self.funding.initiative.status, 'approved')
@@ -33,11 +37,17 @@ class FundingTaskTestCase(BluebottleAdminTestCase):
         check_funding_end()
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, 'closed')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Your crowdfunding campaign has been closed')
 
     def test_some_donations(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(50, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
-        self.assertEqual(donation.status, 'succeeded')
+        self.assertEqual(donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(mail.outbox[0].subject, 'You have a new donation!💰')
+        self.assertEqual(mail.outbox[1].subject, 'Thanks for your donation!')
+
         self.funding.deadline = (now() - timedelta(days=1)).date()
         self.funding.save()
 
@@ -45,20 +55,22 @@ class FundingTaskTestCase(BluebottleAdminTestCase):
         check_funding_end()
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, 'partially_funded')
+        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(mail.outbox[2].subject, 'Your funding deadline passed')
 
     def test_enough_donations(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(300, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         donation = DonationFactory.create(activity=self.funding, amount=Money(450, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
+        self.assertEqual(len(mail.outbox), 4)
+
         self.assertEqual(donation.status, 'succeeded')
         self.funding.deadline = (now() - timedelta(days=1)).date()
         self.funding.save()
 
-        # Run scheduled task
-        check_funding_end()
-        self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, 'succeeded')
+        self.assertEqual(len(mail.outbox), 5)
+        self.assertEqual(mail.outbox[4].subject, 'You successfully completed your crowdfunding campaign! 🎉')
 
     def test_extending(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(100, 'EUR'))

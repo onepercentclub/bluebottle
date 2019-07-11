@@ -23,8 +23,8 @@ class MainDashboardTest(BluebottleAdminTestCase):
     def test_main_dashboard(self):
         response = self.client.get(self.admin_url)
         self.assertContains(response, 'Recently submitted initiatives')
-        self.assertContains(response, 'Initiatives I\'m reviewing')
         self.assertContains(response, 'Recently submitted events')
+        self.assertContains(response, "Initiatives I'm reviewing")
         self.assertContains(response, 'Recently joined users')
         self.assertContains(response, 'Export metrics')
         # Stand settings don't show export options

@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def queue_analytics_record(timestamp, tags, fields):
-    return
     tags = tags or {}
     fields = fields or {}
 

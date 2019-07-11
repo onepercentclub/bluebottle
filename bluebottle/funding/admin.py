@@ -58,7 +58,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['account']
 
-    readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_raised']
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_donated', 'amount_raised']
 
     list_display = ['title', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
 
@@ -68,8 +68,12 @@ class FundingAdmin(ActivityChildAdmin):
         )}),
         (_('Details'), {'fields': (
             'description',
-            'deadline', 'duration',
-            'target', 'amount_raised',
+            'duration',
+            'deadline',
+            'target',
+            'amount_matching',
+            'amount_donated',
+            'amount_raised',
             'account'
         )}),
     )

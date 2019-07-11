@@ -1,44 +1,21 @@
 import json
 import os
 from datetime import datetime
+
+from django.conf import settings
+from django.test import SimpleTestCase
+from django.test.utils import override_settings
+from django.utils import timezone
 from mock import patch
 
-from django.utils import timezone
-from django.conf import settings
-from django.test.utils import override_settings
-from django.test import SimpleTestCase
-
 from bluebottle.analytics import signals, utils
+from bluebottle.analytics.backends import FileExporter
 from bluebottle.analytics.tasks import queue_analytics_record
-from bluebottle.analytics.backends import InfluxExporter, FileExporter, _convert_timestamp
-
 from .common import FakeModel, FakeModelTwo
 
 
 def do_nothing(**kwargs):
     pass
-
-
-@override_settings(ANALYTICS_ENABLED=True)
-class TestAnalyticsQueue(SimpleTestCase):
-    @patch.object(InfluxExporter, 'process')
-    def test_tags_generation(self, mock_process):
-        tags = {
-            'tenant': 'test',
-            'type': 'order'
-        }
-        fields = {
-            'amount': 100
-        }
-
-        timestamp = timezone.now()
-        queue_analytics_record(timestamp=timestamp, tags=tags, fields=fields)
-        mock_process.assert_called_with(timestamp, tags, fields)
-
-    def test_convert_time_to_microseconds(self):
-        timestamp = datetime(2016, 12, 31, 23, 59, 59, 123456)
-        result = _convert_timestamp(timestamp)
-        self.assertEqual(result, 1483228799123456)
 
 
 @override_settings(ANALYTICS_ENABLED=True)

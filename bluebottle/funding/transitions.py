@@ -5,7 +5,8 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.fsm import transition, ModelTransitions
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
-from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage
+from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
+    DonationRefundedDonorMessage
 
 
 class FundingTransitions(ActivityTransitions):
@@ -75,6 +76,9 @@ class DonationTransitions(ContributionTransitions):
     @transition(
         source=[values.new, values.succeeded],
         target=values.refunded,
+        messages=[
+            DonationRefundedDonorMessage
+        ]
     )
     def refund(self):
         pass

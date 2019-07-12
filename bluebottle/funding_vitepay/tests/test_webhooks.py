@@ -48,7 +48,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.payment.refresh_from_db()
-        self.assertEqual(self.payment.status, PaymentTransitions.values.success)
+        self.assertEqual(self.payment.status, PaymentTransitions.values.succeeded)
 
     def test_failed(self):
         data = {

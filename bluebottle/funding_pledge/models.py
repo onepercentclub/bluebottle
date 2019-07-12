@@ -5,8 +5,6 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod
 from bluebottle.funding_pledge.transitions import PledgePaymentTransitions
-from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod
-from django.utils.translation import ugettext_lazy as _
 
 
 class PledgePayment(Payment):

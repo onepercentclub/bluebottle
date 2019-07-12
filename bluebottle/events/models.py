@@ -1,15 +1,11 @@
 from django.db import models
-
 from django.utils.translation import ugettext_lazy as _
 
+from bluebottle.activities.models import Activity, Contribution
+from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
 from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionNotPossible, TransitionManager
-from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
-from bluebottle.activities.models import Activity, Contribution
 from bluebottle.geo.models import Geolocation
-
-
-from .tasks import *  # noqa
 
 
 class Event(Activity):

@@ -58,6 +58,9 @@ class Activity(TransitionsMixin, PolymorphicModel):
         if self.slug == 'new' and self.title:
             self.slug = slugify(self.title)
 
+        if not self.owner_id:
+            self.owner = self.initiative.owner
+
         super(Activity, self).save(**kwargs)
 
     @property

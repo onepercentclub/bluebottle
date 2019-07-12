@@ -1,0 +1,20 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=obj.owner.name event_title=obj.title context 'email' %}
+Hey {{ recipient_name }},
+<br><br>
+You did it! Your event {{ event_title }} was marked 'successful',
+which means you successfully completed your event. That calls for a celebration.
+<br><br>
+Why not post something on the activity page to update everyone who participated,
+so you can celebrate together. Make sure the email notification is turned on, so all attendees
+will be notified of the update.
+{% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ site }}{{ obj.full_url }}"
+       class="action-email">{% trans 'Post update' context 'email' %}</a>
+{% endblock %}`

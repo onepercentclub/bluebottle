@@ -15,6 +15,7 @@ from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
+from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin
 
 
@@ -52,23 +53,27 @@ class BudgetLineInline(admin.TabularInline):
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, DonationInline)
+    inlines = (BudgetLineInline, DonationInline, MessageAdminInline)
     base_model = Funding
 
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['account']
 
-    readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_raised']
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_donated', 'amount_raised']
 
     list_display = ['title', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
 
     fieldsets = (
         (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition', 'created', 'updated'
+            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition', 'created', 'updated', 'highlight'
         )}),
         (_('Details'), {'fields': (
             'description',
-            'deadline', 'duration',
-            'target', 'amount_raised',
+            'duration',
+            'deadline',
+            'target',
+            'amount_matching',
+            'amount_donated',
+            'amount_raised',
             'account'
         )}),
     )

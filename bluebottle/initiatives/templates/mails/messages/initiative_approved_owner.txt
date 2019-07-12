@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=user.name initiative_title=obj.title %}
+{% blocktrans with recipient_name=user.name initiative_title=obj.title context 'email' %}
 Hey {{ receiver_name }},
 Good news, your initiative "{{ initiative_title }}" has been approved!
 People can now join your activities. No activities yet? This is the perfect

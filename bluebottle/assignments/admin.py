@@ -1,8 +1,8 @@
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.assignments.models import Assignment, Applicant
-
 from bluebottle.utils.forms import FSMModelForm
 
 
@@ -26,3 +26,13 @@ class AssignmentAdmin(ActivityChildAdmin):
     inlines = (ApplicantInline, )
 
     base_model = Assignment
+
+    fieldsets = (
+        (_('Basic'), {'fields': (
+            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition', 'highlight'
+        )}),
+        (_('Details'), {'fields': (
+            'description', 'capacity',
+            'deadline'
+        )}),
+    )

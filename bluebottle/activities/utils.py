@@ -18,6 +18,7 @@ class BaseActivitySerializer(ModelSerializer):
 
     transitions = AvailableTransitionsField(source='status')
     is_follower = serializers.SerializerMethodField()
+    type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
 
     slug = serializers.CharField(read_only=True)
 
@@ -34,6 +35,7 @@ class BaseActivitySerializer(ModelSerializer):
     class Meta:
         model = Activity
         fields = (
+            'type',  # Needed for old style API endpoints like pages / page blocks
             'slug',
             'id',
             'initiative',

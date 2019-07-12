@@ -1,3 +1,5 @@
+from bluebottle.activities.models import Activity
+from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.tasks.serializers import TaskPreviewSerializer
 from django.db import connection
 from django.db.models import Sum
@@ -26,8 +28,8 @@ from bluebottle.cms.models import (
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
-    SitePlatformSettings, WelcomeContent
-)
+    SitePlatformSettings, WelcomeContent,
+    ActivitiesContent)
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.slides.models import Slide
@@ -233,6 +235,27 @@ class ProjectsContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectsContent
         fields = ('id', 'type', 'title', 'sub_title', 'projects',
+                  'action_text', 'action_link')
+
+
+class ActivitiesContentSerializer(serializers.ModelSerializer):
+    activities = serializers.SerializerMethodField()
+
+    def get_activities(self, obj):
+        if obj.highlighted:
+            activities = Activity.objects.filter(
+                highlight=True
+            ).order_by('?')[0:4]
+        else:
+            activities = obj.activities
+
+        return ActivitySerializer(
+            activities, many=True, context=self.context
+        ).to_representation(activities)
+
+    class Meta:
+        model = ActivitiesContent
+        fields = ('id', 'type', 'title', 'sub_title', 'activities',
                   'action_text', 'action_link')
 
 
@@ -498,6 +521,8 @@ class BlockSerializer(serializers.Serializer):
             serializer = PictureItemSerializer
         elif isinstance(obj, ImageTextItem):
             serializer = ImageTextItemSerializer
+        elif isinstance(obj, ActivitiesContent):
+            serializer = ActivitiesContentSerializer
         else:
             serializer = DefaultBlockSerializer
 

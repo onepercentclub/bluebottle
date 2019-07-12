@@ -6,6 +6,8 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 import logging
 
+from bluebottle.events.models import Event
+
 logger = logging.getLogger('bluebottle')
 
 
@@ -15,7 +17,6 @@ logger = logging.getLogger('bluebottle')
     ignore_result=True
 )
 def check_event_start():
-    from bluebottle.events.models import Event
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             # Start events that are running now
@@ -36,7 +37,6 @@ def check_event_start():
     ignore_result=True
 )
 def check_event_end():
-    from bluebottle.events.models import Event
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             # Close events that are over

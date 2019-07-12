@@ -6,6 +6,7 @@ from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.events.models import Event, Participant
+from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin
 from bluebottle.utils.forms import FSMModelForm
 
@@ -51,7 +52,7 @@ class ParticipantAdmin(FSMAdmin):
 @admin.register(Event)
 class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
-    inlines = ActivityChildAdmin.inlines + (ParticipantInline, )
+    inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
     list_display = ['title', 'status', 'start_time', 'end_time']
     base_model = Event
 
@@ -59,7 +60,7 @@ class EventAdmin(ActivityChildAdmin):
 
     fieldsets = (
         (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition'
+            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition', 'highlight'
         )}),
         (_('Details'), {'fields': (
             'description', 'capacity',

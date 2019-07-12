@@ -67,10 +67,10 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['status'], PaymentTransitions.values.success)
+        self.assertEqual(data['data']['attributes']['status'], PaymentTransitions.values.succeeded)
         self.assertEqual(data['data']['attributes']['tx-ref'], self.tx_ref)
         self.donation.refresh_from_db()
-        self.assertEqual(self.donation.status, DonationTransitions.values.success)
+        self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
 
     @patch('bluebottle.funding_flutterwave.utils.post', return_value=failed_response)
     def test_create_payment_failure(self, flutterwave_post):

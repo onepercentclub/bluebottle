@@ -3,6 +3,7 @@ from django.test.utils import override_settings
 from mock import patch
 from rest_framework.status import HTTP_200_OK
 
+from bluebottle.funding.transitions import PaymentTransitions, DonationTransitions
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -52,8 +53,8 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
         self.payment.refresh_from_db()
         donation = self.payment.donation
         donation.refresh_from_db()
-        self.assertEqual(self.payment.status, 'success')
-        self.assertEqual(donation.status, 'success')
+        self.assertEqual(self.payment.status, PaymentTransitions.values.succeeded)
+        self.assertEqual(donation.status, DonationTransitions.values.succeeded)
 
     @classmethod
     def setUpClass(cls):

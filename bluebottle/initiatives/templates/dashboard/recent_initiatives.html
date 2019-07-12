@@ -1,0 +1,19 @@
+{% load i18n %}
+{% block module_content %}
+<ul class="dashboard-item-list">
+    {% spaceless %}
+    {% for initiative in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <span class="float-right" title="Date submitted">
+            {{ initiative.date_submitted|date }}<br>
+        </span>
+        <a href="{% url 'admin:initiatives_initiative_change' initiative.id %}" >{{ initiative.title }}</a>
+        <br>
+        <b>{{ initiative.owner.full_name }}</b>
+        <br>
+        {% trans 'Reviewer:' %} <b>{{ initiative.reviewer }}</b>
+    </li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

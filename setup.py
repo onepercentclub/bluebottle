@@ -16,13 +16,12 @@ changes = ''
 install_requires = [
     'Babel==2.4.0',
     'Django==1.11.15',
-    'Flutterwave==1.0.7',
     'Pillow==4.1.1',
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
     'bleach==2.1.4',
     'bunch==1.0.1',
-    'beyonic-python @ git+https://github.com/beyonic/beyonic-python.git@be8a0eebfaa53cf1b483b9bd1bf95e1a430032de#egg=beyonic-python-0.1.12',
+    'beyonic==0.1.14',
     'celery==3.1.24',
     'django-admin-sortable==2.1',
     'django-admin-tools==0.8.1',
@@ -118,7 +117,6 @@ install_requires = [
     'django-bb-salesforce @ git+https://github.com/onepercentclub/django-bb-salesforce.git@1.2.2#egg=django-bb-salesforce-1.2.2',
     'django-taggit-autocomplete-modified @ git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
     'django-money-rates @ git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github',
-    'Flutterwave @ git+https://github.com/onepercentclub/flutterwave-python.git@9b6adba8e7eff4204d36ea3a627ebccebe285cf4#egg=Flutterwave-1.1.0'
 ]
 
 tests_requires = [

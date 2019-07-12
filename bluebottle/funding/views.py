@@ -164,7 +164,7 @@ class DonationList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     }
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        serializer.save(user=(self.request.user if self.request.user.is_authenticated() else None))
 
 
 class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):

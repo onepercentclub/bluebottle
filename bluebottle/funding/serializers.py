@@ -133,7 +133,7 @@ class PaymentMethodSerializer(serializers.Serializer):
         fields = ('code', 'name', 'currencies', 'countries', 'activity')
 
     class JSONAPIMeta:
-        resource_name = 'funding/payment-methods'
+        resource_name = 'payments/payment-methods'
 
 
 class FundingSerializer(BaseActivitySerializer):
@@ -143,6 +143,11 @@ class FundingSerializer(BaseActivitySerializer):
     rewards = RewardSerializer(many=True, required=False)
     budgetlines = BudgetLineSerializer(many=True, required=False)
     payment_methods = PaymentMethodSerializer(many=True, read_only=True)
+
+    contributions = ResourceRelatedField(
+        read_only=True,
+        many=True
+    )
 
     class Meta:
         model = Funding
@@ -160,6 +165,7 @@ class FundingSerializer(BaseActivitySerializer):
             'budgetlines',
             'payment_methods',
             'rewards',
+            'contributions',
         ]
         resource_name = 'activities/fundings'
 
@@ -172,6 +178,7 @@ class FundingSerializer(BaseActivitySerializer):
         'rewards': 'bluebottle.funding.serializers.RewardSerializer',
         'budgetlines': 'bluebottle.funding.serializers.BudgetLineSerializer',
         'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
+        'contributions': 'bluebottle.funding.serializers.DonationSerializer',
     }
 
 

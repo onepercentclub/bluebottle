@@ -1,11 +1,13 @@
 import logging
 
-import stripe
+
+from django.conf import settings
 from django.http import HttpResponse
 from django.views.generic import View
 
+import stripe
+
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.funding_stripe.utils import get_private_key
 from bluebottle.payouts.models import PayoutDocument
 from bluebottle.payouts.models import StripePayoutAccount
 from bluebottle.payouts.serializers import PayoutDocumentSerializer
@@ -27,7 +29,7 @@ class WebHookView(View):
 
         try:
             event = stripe.Webhook.construct_event(
-                payload, signature_header, get_private_key('webhook_secret_connect')
+                payload, signature_header, settings.STRIPE['webhook_secret_connect']
             )
             if event.type == 'account.updated':
                 payout_account = StripePayoutAccount.objects.get(account_id=event.data.object.id)

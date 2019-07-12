@@ -22,13 +22,13 @@ class Funding(Activity):
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
     target = MoneyField(null=True, blank=True)
-    account = models.ForeignKey('payouts.PayoutAccount', null=True)
+    account = models.ForeignKey('payouts.PayoutAccount', blank=True, null=True)
     transitions = TransitionManager(FundingTransitions, 'status')
 
     country = models.ForeignKey('geo.Country', null=True, blank=True)
 
     class JSONAPIMeta:
-        resource_name = 'activities/funding'
+        resource_name = 'activities/fundings'
 
     class Meta:
         verbose_name = _("Funding")
@@ -255,7 +255,7 @@ class PaymentMethod(object):
         return self.id
 
     class JSONAPIMeta:
-        resource_name = 'funding/payment-methods'
+        resource_name = 'payments/payment-methods'
 
 
 class PaymentProvider(PolymorphicModel):

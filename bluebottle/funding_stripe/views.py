@@ -1,10 +1,17 @@
 from django.views.generic import View
 from django.http import HttpResponse
 
+from rest_framework_json_api.views import AutoPrefetchMixin
+
 from bluebottle.funding.views import PaymentList
-from bluebottle.funding_stripe.models import StripePayment
-from bluebottle.funding_stripe.serializers import StripePaymentSerializer
-from bluebottle.funding_stripe.utils import init_stripe
+from bluebottle.funding_stripe.models import StripeSourcePayment, StripePayment, PaymentIntent
+from bluebottle.funding_stripe.serializers import (
+    StripeSourcePaymentSerializer, StripePaymentSerializer, PaymentIntentSerializer
+)
+from bluebottle.funding_stripe.utils import stripe
+from bluebottle.utils.views import (
+    JsonApiViewMixin, CreateAPIView
+)
 
 
 class StripePaymentList(PaymentList):
@@ -12,10 +19,20 @@ class StripePaymentList(PaymentList):
     serializer_class = StripePaymentSerializer
 
 
+class StripeSourcePaymentList(PaymentList):
+    queryset = StripeSourcePayment.objects.all()
+    serializer_class = StripeSourcePaymentSerializer
+
+
+class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+    queryset = PaymentIntent.objects.all()
+    serializer_class = PaymentIntentSerializer
+
+    permission_classes = []
+
+
 class WebHookView(View):
     def post(self, request, **kwargs):
-        stripe = init_stripe()
-
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
 

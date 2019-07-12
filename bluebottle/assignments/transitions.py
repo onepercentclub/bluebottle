@@ -7,28 +7,31 @@ from bluebottle.activities.transitions import ActivityTransitions, ContributionT
 
 
 class AssignmentTransitions(ActivityTransitions):
+    class values(ActivityTransitions.values):
+        running = ChoiceItem('running', _('running'))
+
     @transition(
         field='status',
-        source=ActivityTransitions.values.open,
-        target=ActivityTransitions.values.running,
+        source=values.open,
+        target=values.running,
     )
     def start(self, **kwargs):
         pass
 
     @transition(
         field='status',
-        source=ActivityTransitions.values.running,
-        target=ActivityTransitions.values.done,
+        source=values.running,
+        target=values.succeeded,
     )
-    def success(self, **kwargs):
+    def succeed(self, **kwargs):
         for member in self.instance.accepted_applicants:
-            member.success()
+            member.succeed()
             member.save()
 
     @transition(
         field='status',
-        source=ActivityTransitions.values.running,
-        target=ActivityTransitions.values.closed,
+        source=values.running,
+        target=values.closed,
     )
     def close(self, **kwargs):
         for member in self.instance.accepted_applicants:
@@ -38,11 +41,11 @@ class AssignmentTransitions(ActivityTransitions):
     @transition(
         field='status',
         source=[
-            ActivityTransitions.values.closed,
-            ActivityTransitions.values.done,
-            ActivityTransitions.values.running
+            values.closed,
+            values.succeeded,
+            values.running
         ],
-        target=ActivityTransitions.values.open,
+        target=values.open,
     )
     def extend_deadline(self, **kwargs):
         pass
@@ -50,10 +53,10 @@ class AssignmentTransitions(ActivityTransitions):
     @transition(
         field='status',
         source=[
-            ActivityTransitions.values.closed,
-            ActivityTransitions.values.done
+            values.closed,
+            values.succeeded
         ],
-        target=ActivityTransitions.values.running,
+        target=values.running,
     )
     def extend(self, **kwargs):
         pass
@@ -64,7 +67,7 @@ class ApplicantTransitions(ContributionTransitions):
         accepted = ChoiceItem('accepted', _('accepted'))
         rejected = ChoiceItem('rejected', _('rejected'))
         withdrawn = ChoiceItem('withdrawn', _('withdrawn'))
-        active = ChoiceItem('attending', _('done'))
+        active = ChoiceItem('attending', _('attending'))
 
     @property
     def assignment_is_open(self):
@@ -108,14 +111,14 @@ class ApplicantTransitions(ContributionTransitions):
     @transition(
         field='status',
         source=[values.active, values.failed],
-        target=values.success,
+        target=values.succeeded,
     )
-    def success(self):
+    def succeed(self):
         pass
 
     @transition(
         field='status',
-        source=[values.success, values.active],
+        source=[values.succeeded, values.active],
         target=values.failed,
     )
     def fail(self):

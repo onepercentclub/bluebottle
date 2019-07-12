@@ -5,7 +5,7 @@ from bluebottle.funding_stripe.utils import init_stripe
 
 class StripePaymentTransitions(PaymentTransitions):
     @transition(
-        source=[PaymentTransitions.values.success],
+        source=[PaymentTransitions.values.succeeded],
         target=PaymentTransitions.values.refund_requested
     )
     def request_refund(self):

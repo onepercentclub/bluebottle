@@ -28,7 +28,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     readonly_fields = ['link']
     list_filter = (PolymorphicChildModelFilter,)
 
-    list_display = ['created', 'title', 'type', 'status', 'contribution_count', 'link']
+    list_display = ['title', 'created', 'type', 'status', 'contribution_count', 'link']
 
     def link(self, obj):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title)

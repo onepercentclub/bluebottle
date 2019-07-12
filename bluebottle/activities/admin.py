@@ -26,7 +26,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
     readonly_fields = ['link']
-    list_filter = (PolymorphicChildModelFilter, 'highlight')
+    list_filter = (PolymorphicChildModelFilter, 'status', 'highlight')
     list_editable = ('highlight',)
 
     list_display = ['title', 'created', 'type', 'status',

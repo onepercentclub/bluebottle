@@ -30,7 +30,7 @@ class DonationFactory(factory.DjangoModelFactory):
     user = factory.SubFactory(BlueBottleUserFactory)
     amount = Money(35, 'EUR')
 
-    
+
 class PaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Payment

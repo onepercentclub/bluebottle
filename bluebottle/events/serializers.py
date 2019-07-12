@@ -50,18 +50,42 @@ class EventSerializer(BaseActivitySerializer):
 
 
 class EventSubmitSerializer(ActivitySubmitSerializer):
-    capacity = serializers.IntegerField(required=True, error_messages={'blank': _('Capacity is required')})
-    start_time = serializers.DateTimeField(required=True, error_messages={'blank': _('Start time is required')})
-    end_time = serializers.DateTimeField(required=True, error_messages={'blank': _('End time is required')})
+    capacity = serializers.IntegerField(
+        required=True,
+        error_messages={
+            'blank': _('Capacity is required'),
+            'null': _('Capacity is required')
+        }
+    )
+    start_time = serializers.DateTimeField(
+        required=True,
+        error_messages={
+            'blank': _('Start time is required'),
+            'null': _('Start time is required')
+        }
+    )
+    end_time = serializers.DateTimeField(
+        required=True,
+        error_messages={
+            'blank': _('End time is required'),
+            'null': _('End time is required')
+        }
+    )
     registration_deadline = serializers.DateTimeField(
         required=True,
-        error_messages={'blank': _('Registration deadline is required')}
+        error_messages={
+            'blank': _('Registration deadline is required'),
+            'null': _('Registration deadline is required')
+        }
     )
 
     location = serializers.PrimaryKeyRelatedField(
         required=True,
         queryset=Geolocation.objects.all(),
-        error_messages={'null': _('Location is required')}
+        error_messages={
+            'blank': _('Location is required'),
+            'null': _('Location is required')
+        }
     )
 
     class Meta(ActivitySubmitSerializer.Meta):

@@ -48,4 +48,4 @@ class EventTasksTestCase(BluebottleTestCase):
         check_event_start()
         check_event_end()
         event = Event.objects.get(pk=event.pk)
-        self.assertEqual(event.status, 'done')
+        self.assertEqual(event.status, 'succeeded')

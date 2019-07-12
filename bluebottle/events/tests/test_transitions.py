@@ -127,25 +127,25 @@ class EventTransitionTestCase(BluebottleTestCase):
             self.event.transitions.start
         )
 
-    def test_done(self):
+    def test_succeeded(self):
         participant = ParticipantFactory.create(activity=self.event)
         self.event.start_time = now() - timedelta(days=1)
         self.event.transitions.start()
         self.event.end_time = now() - timedelta(days=1)
-        self.event.transitions.done()
+        self.event.transitions.succeed()
 
         self.assertEqual(
             self.event.status,
-            EventTransitions.values.done
+            EventTransitions.values.succeeded
         )
 
         participant = Participant.objects.get(pk=participant.pk)
         self.assertEqual(
             participant.status,
-            ParticipantTransitions.values.success
+            ParticipantTransitions.values.succeeded
         )
 
-    def test_done_date_in_future(self):
+    def test_succeeded_date_in_future(self):
         ParticipantFactory.create(activity=self.event)
         self.event.start_time = now() - timedelta(days=1)
         self.event.transitions.start()
@@ -153,7 +153,7 @@ class EventTransitionTestCase(BluebottleTestCase):
 
         self.assertRaises(
             TransitionNotPossible,
-            self.event.transitions.done
+            self.event.transitions.succeed
         )
 
     def test_close(self):
@@ -304,14 +304,14 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.event.start_time = now() - timedelta(days=1)
         self.event.end_time = now() - timedelta(days=1)
         self.event.transitions.start()
-        self.event.transitions.done()
+        self.event.transitions.succeed()
         self.event.save()
 
-        self.participant.transitions.success()
+        self.participant.transitions.succeed()
         self.participant.save()
         self.assertEqual(
             self.participant.status,
-            ParticipantTransitions.values.success
+            ParticipantTransitions.values.succeeded
         )
         self.assertEqual(
             len(self.event.participants), 1
@@ -320,17 +320,17 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
     def test_success_new_event(self):
         self.assertRaises(
             TransitionNotPossible,
-            self.participant.transitions.success
+            self.participant.transitions.succeed
         )
 
     def test_no_show(self):
         self.event.start_time = now() - timedelta(days=1)
         self.event.end_time = now() - timedelta(days=1)
         self.event.transitions.start()
-        self.event.transitions.done()
+        self.event.transitions.succeed()
         self.event.save()
 
-        self.participant.transitions.success()
+        self.participant.transitions.succeed()
         self.participant.transitions.no_show(user=self.event.initiative.activity_manager)
 
         self.participant.save()
@@ -353,10 +353,10 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.event.start_time = now() - timedelta(days=1)
         self.event.end_time = now() - timedelta(days=1)
         self.event.transitions.start()
-        self.event.transitions.done()
+        self.event.transitions.succeed()
         self.event.save()
 
-        self.participant.transitions.success()
+        self.participant.transitions.succeed()
 
         self.assertRaises(
             TransitionNotAllowed,

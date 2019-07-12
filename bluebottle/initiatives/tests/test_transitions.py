@@ -1,3 +1,5 @@
+from django.core import mail
+
 from bluebottle.fsm import TransitionNotPossible
 from bluebottle.initiatives.transitions import InitiativeTransitions
 from bluebottle.test.utils import BluebottleTestCase
@@ -51,6 +53,9 @@ class InitiativeTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             self.initiative.status, InitiativeTransitions.values.approved
         )
+        self.assertEqual(len(mail.outbox), 1)
+        subject = 'Your initiative {} has been approved!'.format(self.initiative.title)
+        self.assertEqual(mail.outbox[0].subject, subject)
 
     def test_close(self):
         self.initiative.transitions.submit()
@@ -58,6 +63,9 @@ class InitiativeTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             self.initiative.status, InitiativeTransitions.values.closed
         )
+        self.assertEqual(len(mail.outbox), 1)
+        subject = 'Your initiative {} has been closed'.format(self.initiative.title)
+        self.assertEqual(mail.outbox[0].subject, subject)
 
     def test_reopen(self):
         self.initiative.transitions.submit()

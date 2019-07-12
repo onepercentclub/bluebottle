@@ -24,7 +24,8 @@ class ElasticSearchFilter(filters.SearchFilter):
         search = self.document.search()
 
         filter_fields = self.get_filter_fields(request)
-        filters = [self.get_filter(request, field) for field in filter_fields]
+        filters = [self.get_filter(request, field) for field in filter_fields] + self.get_default_filters(request)
+
         if filters:
             search = search.filter(Bool(must=filters))
 
@@ -82,3 +83,6 @@ class ElasticSearchFilter(filters.SearchFilter):
     def get_sort(self, request):
         sort = request.GET.get('sort')
         return self.sort_fields.get(sort)
+
+    def get_default_filters(self):
+        return []

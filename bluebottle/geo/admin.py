@@ -139,7 +139,7 @@ class GeolocationAdmin(admin.ModelAdmin):
         (_('Map'), {'fields': ('position', )}),
         (_('Info'), {
             'fields': (
-                'street', 'street_number', 'postal_code',
+                'locality', 'street', 'street_number', 'postal_code',
                 'province', 'country', 'formatted_address'
             )
         })

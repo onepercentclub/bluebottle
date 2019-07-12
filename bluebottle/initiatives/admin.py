@@ -28,7 +28,8 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
 
     prepopulated_fields = {"slug": ("title",)}
 
-    raw_id_fields = ('owner', 'reviewer', 'promoter', 'place', 'organization', 'organization_contact')
+    raw_id_fields = ('owner', 'reviewer', 'promoter', 'activity_manager',
+                     'place', 'organization', 'organization_contact')
     list_display = ['title_display', 'created', 'status']
     list_filter = ['status']
     search_fields = ['title', 'pitch', 'story',
@@ -51,6 +52,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     def link(self, obj):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title)
     link.short_description = _("Show on site")
+
+    class Media:
+        js = ('admin/js/inline-activities-add.js',)
 
 
 @admin.register(InitiativePlatformSettings)

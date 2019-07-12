@@ -1,0 +1,7 @@
+<ul>
+{% for activity in instance.activities.all %}
+    <li>{{ activity.title }}</li>
+{% endfor %}
+</ul>
+
+{{ instance.action }}

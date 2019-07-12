@@ -1,14 +1,14 @@
-from django.views.generic import View
 from django.http import HttpResponse
+from django.views.generic import View
 
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.views import PaymentList
-from bluebottle.funding_vitepay.adapters import VitepayPaymentAdapter
 from bluebottle.funding_vitepay.models import VitepayPayment
 from bluebottle.funding_vitepay.serializers import VitepayPaymentSerializer
+from bluebottle.funding_vitepay.utils import update_payment_status
 
 
-class StripePaymentList(PaymentList):
+class VitepayPaymentList(PaymentList):
     queryset = VitepayPayment.objects.all()
     serializer_class = VitepayPaymentSerializer
 
@@ -19,23 +19,21 @@ class WebHookView(View):
         success = 'success' in request.POST
         failure = 'failure' in request.POST
         authenticity = request.POST.get('authenticity')
-        order_id = request.POST.get('order_id')
+        unique_id = request.POST.get('order_id')
 
         try:
-            payment = self.get_payment(order_id=order_id)
+            payment = self.get_payment(unique_id=unique_id)
         except VitepayPayment.DoesNotExist:
             return HttpResponse('{"status": "0", "message": "Order not found."}')
 
         try:
-            adapter = VitepayPaymentAdapter(payment)
-            adapter.status_update(authenticity, success, failure)
-
+            update_payment_status(payment, authenticity, success, failure)
             return HttpResponse('{"status": "1"}')
         except PaymentException as e:
             return HttpResponse('{"status": "0", "message": "%s"}' % e)
 
-    def get_payment(self, order_id):
+    def get_payment(self, unique_id):
         try:
-            return VitepayPayment.objects.get(order_id=order_id)
+            return VitepayPayment.objects.get(unique_id=unique_id)
         except VitepayPayment.DoesNotExist:
             return HttpResponse('{"status": "0", "message": "Payment not Found"}')

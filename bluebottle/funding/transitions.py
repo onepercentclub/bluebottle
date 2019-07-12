@@ -5,21 +5,28 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.fsm import transition, ModelTransitions
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.funding.messages import (
+    DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
+    DonationRefundedDonorMessage, FundingRealisedOwnerMessage,
+    FundingClosedMessage, FundingPartiallyFundedMessage
+)
 
 
 class FundingTransitions(ActivityTransitions):
-    serializer = 'bluebottle.events.serializers.EventSubmitSerializer'
+    serializer = 'bluebottle.funding.serializers.FundingSubmitSerializer'
 
     class values(ActivityTransitions.values):
         partially_funded = ChoiceItem('partially_funded', _('partially funded'))
         refunded = ChoiceItem('refunded', _('refunded'))
 
     def deadline_in_future(self):
-        return not self.instance.deadline or self.instance.deadline > timezone.now()
+        if not self.instance.deadline or self.instance.deadline < timezone.now().date():
+            return _("Please select a new deadline in the future before extending.")
 
     @transition(
         source=values.open,
         target=values.partially_funded,
+        messages=[FundingPartiallyFundedMessage]
     )
     def partial(self):
         pass
@@ -27,6 +34,7 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=values.open,
         target=values.succeeded,
+        messages=[FundingRealisedOwnerMessage]
     )
     def succeed(self):
         pass
@@ -48,8 +56,9 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source='*',
         target=values.closed,
+        messages=[FundingClosedMessage]
     )
-    def closed(self):
+    def close(self):
         pass
 
     @transition(
@@ -68,11 +77,14 @@ class DonationTransitions(ContributionTransitions):
         refunded = ChoiceItem('refunded', _('refunded'))
 
     def funding_is_open(self):
-        return self.instance.activity.status == self.values.open
+        return self.instance.activity.status == FundingTransitions.values.open
 
     @transition(
         source=[values.new, values.succeeded],
         target=values.refunded,
+        messages=[
+            DonationRefundedDonorMessage
+        ]
     )
     def refund(self):
         pass
@@ -87,6 +99,10 @@ class DonationTransitions(ContributionTransitions):
     @transition(
         source=[values.new, values.failed],
         target=values.succeeded,
+        messages=[
+            DonationSuccessActivityManagerMessage,
+            DonationSuccessDonorMessage
+        ]
     )
     def succeed(self):
         pass

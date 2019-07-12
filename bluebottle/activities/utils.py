@@ -1,3 +1,4 @@
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
@@ -61,7 +62,13 @@ class BaseActivitySerializer(ModelSerializer):
 class ActivitySubmitSerializer(ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(required=True, queryset=Member.objects.all())
     title = serializers.CharField(required=True)
-    description = serializers.CharField(required=True)
+    description = serializers.CharField(
+        required=True,
+        error_messages={
+            'blank': _('Location is required'),
+            'null': _('Location is required')
+        }
+    )
 
     class Meta:
         model = Activity

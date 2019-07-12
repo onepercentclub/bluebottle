@@ -329,8 +329,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.url = reverse('initiative-list')
 
     def test_no_filter(self):
-        InitiativeFactory.create(owner=self.owner)
-        InitiativeFactory.create()
+        InitiativeFactory.create(owner=self.owner, status='approved')
+        InitiativeFactory.create(status='approved')
 
         response = self.client.get(
             self.url,
@@ -341,8 +341,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 2)
 
     def test_many_results(self):
-        InitiativeFactory.create_batch(39, owner=self.owner)
-        InitiativeFactory.create()
+        InitiativeFactory.create_batch(39, owner=self.owner, status='approved')
+        InitiativeFactory.create(status="approved")
 
         response = self.client.get(
             self.url,
@@ -353,9 +353,22 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 40)
         self.assertEqual(len(data['data']), 8)
 
+    def test_not_approved(self):
+        approved = InitiativeFactory.create(owner=self.owner, status='approved')
+        InitiativeFactory.create(owner=self.owner)
+
+        response = self.client.get(
+            self.url,
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], unicode(approved.pk))
+
     def test_filter_owner(self):
         InitiativeFactory.create(owner=self.owner)
-        InitiativeFactory.create()
+        InitiativeFactory.create(status='approved')
 
         response = self.client.get(
             self.url + '?filter[owner.id]={}'.format(self.owner.pk),
@@ -368,10 +381,10 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
 
     def test_search(self):
-        first = InitiativeFactory.create(title='Lorem ipsum dolor sit amet', pitch="Lorem ipsum")
-        InitiativeFactory.create(title='consectetur adipiscing elit')
-        InitiativeFactory.create(title='Nam eu turpis erat')
-        second = InitiativeFactory.create(title='Lorem ipsum dolor sit amet')
+        first = InitiativeFactory.create(title='Lorem ipsum dolor sit amet', pitch="Lorem ipsum", status='approved')
+        InitiativeFactory.create(title='consectetur adipiscing elit', status='approved')
+        InitiativeFactory.create(title='Nam eu turpis erat', status='approved')
+        second = InitiativeFactory.create(title='Lorem ipsum dolor sit amet', status='approved')
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
@@ -385,8 +398,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['data'][1]['id'], unicode(second.pk))
 
     def test_search_boost(self):
-        first = InitiativeFactory.create(title='Something else', pitch='Lorem ipsum dolor sit amet')
-        second = InitiativeFactory.create(title='Lorem ipsum dolor sit amet', pitch="Something else")
+        first = InitiativeFactory.create(title='Something else', pitch='Lorem ipsum dolor sit amet', status='approved')
+        second = InitiativeFactory.create(title='Lorem ipsum dolor sit amet', pitch="Something else", status='approved')
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
@@ -400,9 +413,9 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['data'][1]['id'], unicode(first.pk))
 
     def test_sort_title(self):
-        second = InitiativeFactory.create(title='B: something else')
-        third = InitiativeFactory.create(title='C: More')
-        first = InitiativeFactory.create(title='A: something')
+        second = InitiativeFactory.create(title='B: something else', status='approved')
+        third = InitiativeFactory.create(title='C: More', status='approved')
+        first = InitiativeFactory.create(title='A: something', status='approved')
 
         response = self.client.get(
             self.url + '?sort=alphabetical',
@@ -417,9 +430,9 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['data'][2]['id'], unicode(third.pk))
 
     def test_sort_created(self):
-        first = InitiativeFactory.create()
-        second = InitiativeFactory.create()
-        third = InitiativeFactory.create()
+        first = InitiativeFactory.create(status='approved')
+        second = InitiativeFactory.create(status='approved')
+        third = InitiativeFactory.create(status='approved')
 
         first.created = datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
         first.save()

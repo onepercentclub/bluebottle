@@ -126,6 +126,12 @@ class Initiative(TransitionsMixin, models.Model):
         if not self.activity_manager:
             self.activity_manager = self.owner
 
+        try:
+            if InitiativePlatformSettings.objects.get().require_organization:
+                self.has_organization = True
+        except InitiativePlatformSettings.DoesNotExist:
+            pass
+
         if self.has_organization and not self.organization and self.owner and self.owner.partner_organization:
             self.organization = self.owner.partner_organization
 

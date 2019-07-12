@@ -132,6 +132,39 @@ def _error_messages_for(label):
     }
 
 
+class OrganizationSubmitSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=True, error_messages={'blank': _('Name is required')})
+
+    def __init__(self, *args, **kwargs):
+        super(OrganizationSubmitSerializer, self).__init__(*args, **kwargs)
+
+    def validate_empty_values(self, data):
+        if self.parent.initial_data['has_organization'] and not data:
+            return (False, data)
+        else:
+            return (False if data else True, data)
+
+    class Meta:
+        model = Organization
+        fields = ('name', )
+
+
+class OrganizationContactSubmitSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=True, error_messages={'blank': _('Name is required')})
+    email = serializers.CharField(required=True, error_messages={'blank': _('Email is required')})
+    phone = serializers.CharField(required=True, error_messages={'blank': _('Phone is required')})
+
+    def validate_empty_values(self, data):
+        if self.parent.initial_data['has_organization'] and not data:
+            return (False, data)
+        else:
+            return (False if data else True, data)
+
+    class Meta:
+        model = OrganizationContact
+        fields = ('name', 'email', 'phone', )
+
+
 class InitiativeSubmitSerializer(ModelSerializer):
     title = serializers.CharField(required=True, error_messages={'blank': _('Title is required')})
     pitch = serializers.CharField(required=True, error_messages={'blank': _('Pitch is required')})
@@ -156,12 +189,10 @@ class InitiativeSubmitSerializer(ModelSerializer):
         required=True, queryset=Geolocation.objects.all(),
         error_messages={'null': _('Place is required')}
     )
-    organization = serializers.PrimaryKeyRelatedField(
-        allow_null=True, queryset=Organization.objects.all(),
+    organization = OrganizationSubmitSerializer(
         error_messages={'null': _('Organization is required')}
     )
-    organization_contact = serializers.PrimaryKeyRelatedField(
-        allow_null=True, queryset=OrganizationContact.objects.all(),
+    organization_contact = OrganizationContactSubmitSerializer(
         error_messages={'null': _('Organization contact is required')}
     )
 

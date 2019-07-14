@@ -21,6 +21,10 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 
     readonly_fields = ['status', 'created', 'updated']
 
+    def title_display(self, obj):
+        return obj.title or _('- empty -')
+    title_display.short_description = _('Title')
+
 
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):

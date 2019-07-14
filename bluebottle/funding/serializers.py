@@ -133,7 +133,7 @@ class PaymentMethodSerializer(serializers.Serializer):
         fields = ('code', 'name', 'currencies', 'countries', 'activity')
 
     class JSONAPIMeta:
-        resource_name = 'funding/payment-methods'
+        resource_name = 'payments/payment-methods'
 
 
 class FundingSerializer(BaseActivitySerializer):

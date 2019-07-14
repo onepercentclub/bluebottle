@@ -32,7 +32,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('paymentprovider_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='funding.PaymentProvider')),
                 ('api_secret', models.CharField(max_length=100)),
-                ('prefix', models.CharField(default=b'goodup', max_length=10)),
                 ('api_key', models.CharField(max_length=100)),
                 ('api_url', models.CharField(default=b'https://api.vitepay.com/v1/prod/payments', max_length=100)),
             ],

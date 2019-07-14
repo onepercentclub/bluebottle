@@ -30,9 +30,10 @@ from bluebottle.bb_projects.models import (
 )
 from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.funding.models import PaymentProvider
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
@@ -165,7 +166,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     currencies = MultiSelectField(
         max_length=100, default=[],
-        choices=lazy(get_currency_choices, tuple)()
+        choices=lazy(PaymentProvider.get_currency_choices, tuple)()
     )
 
     celebrate_results = models.BooleanField(
@@ -258,7 +259,7 @@ class Project(BaseProject, PreviousStatusMixin):
                 )
 
         if not self.amount_asked:
-            self.amount_asked = Money(0, get_default_currency())
+            self.amount_asked = Money(0, PaymentProvider.get_default_currency())
 
         if self.amount_asked.amount:
             self.update_amounts(False)

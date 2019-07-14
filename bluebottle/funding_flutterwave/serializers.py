@@ -12,7 +12,7 @@ class FlutterwavePaymentSerializer(PaymentSerializer):
         fields = PaymentSerializer.Meta.fields + ('tx_ref', )
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
-        resource_name = 'payments/flutterwave-payments'
+        resource_name = 'payments/payment-methods'
 
     def create(self, validated_data):
         payment = super(FlutterwavePaymentSerializer, self).create(validated_data)

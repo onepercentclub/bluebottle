@@ -3,16 +3,15 @@ from django.db.models import Count, Sum
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
-
+from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
+from bluebottle.utils.fields import MoneyField
 from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.models import SortableTranslatableModel
-from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
 
 

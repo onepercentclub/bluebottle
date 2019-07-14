@@ -1,9 +1,11 @@
-from django.db import models
+from babel.numbers import get_currency_name
+from django.db import models, connection
 from django.db.models.aggregates import Sum
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from moneyed import Money
 from polymorphic.models import PolymorphicModel
+from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.files.fields import ImageField
@@ -17,12 +19,45 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 
 
+class PaymentProvider(PolymorphicModel):
+
+    public_settings = {}
+    private_settings = {}
+
+    currencies = []
+    countries = []
+
+    @classmethod
+    def get_currency_choices(cls):
+        currencies = []
+        if isinstance(connection.tenant, FakeTenant):
+            currencies = [('EUR', 'Euro')]
+        else:
+            for provider in cls.objects.all():
+                for method in provider.payment_methods:
+                    currencies += [(cur, get_currency_name(cur)) for cur in method.currencies]
+        return list(set(currencies))
+
+    @classmethod
+    def get_default_currency(cls):
+        if len(cls.get_currency_choices()):
+            return cls.get_currency_choices()[0]
+        return 'EUR'
+
+    @property
+    def payment_methods(self):
+        return []
+
+    def __unicode__(self):
+        return str(self.polymorphic_ctype)
+
+
 class Funding(Activity):
     deadline = models.DateField(_('deadline'), null=True, blank=True)
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
-    target = MoneyField(null=True, blank=True)
-    amount_matching = MoneyField(null=True, blank=True)
+    target = MoneyField()
+    amount_matching = MoneyField()
     account = models.ForeignKey('payouts.PayoutAccount', null=True)
     transitions = TransitionManager(FundingTransitions, 'status')
 
@@ -269,20 +304,4 @@ class PaymentMethod(object):
         return self.id
 
     class JSONAPIMeta:
-        resource_name = 'activities/funding/payment-methods'
-
-
-class PaymentProvider(PolymorphicModel):
-
-    public_settings = {}
-    private_settings = {}
-
-    currencies = []
-    countries = []
-
-    @property
-    def payment_methods(self):
-        return []
-
-    def __unicode__(self):
-        return str(self.polymorphic_ctype)
+        resource_name = 'payments/payment-methods'

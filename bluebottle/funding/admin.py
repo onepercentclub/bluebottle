@@ -1,6 +1,7 @@
 from django.conf.urls import url
 from django.contrib import admin
 from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -139,7 +140,11 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
 
 
 class PaymentProviderChildAdmin(PolymorphicChildModelAdmin):
-    pass
+    def response_add(self, request, obj, post_url_continue=None):
+        return redirect(reverse('admin:funding_paymentprovider_changelist'))
+
+    def response_change(self, request, obj):
+        return redirect(reverse('admin:funding_paymentprovider_changelist'))
 
 
 @admin.register(PaymentProvider)

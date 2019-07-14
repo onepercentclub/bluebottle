@@ -1,7 +1,7 @@
 from django.db import models
 
 from bluebottle.fsm import TransitionManager
-from bluebottle.funding.models import Payment, PaymentProvider
+from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod
 from bluebottle.funding.transitions import PaymentTransitions
 
 
@@ -24,12 +24,14 @@ class VitepayPaymentProvider(PaymentProvider):
 
     @property
     def payment_methods(self):
-        return [{
-            'provider': 'vitepay',
-            'name': 'orange_money',
-            'currencies': ['XOF'],
-            'countries': ['ML']
-        }]
+        return [
+            PaymentMethod(
+                provider='vitepay',
+                name='Orange Money',
+                currencies=['XOF'],
+                code='orange_money'
+            )
+        ]
 
     @property
     def private_settings(self):

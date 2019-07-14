@@ -88,7 +88,6 @@ class StripePaymentProvider(PaymentProvider):
             code='direct_debit',
             name=_('Direct debit'),
             currencies=['EUR'],
-            countries=[]
         )
     ]
 

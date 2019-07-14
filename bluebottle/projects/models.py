@@ -12,7 +12,6 @@ from django.db.models.signals import post_init, post_save, pre_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
-from django.utils.functional import lazy
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
@@ -166,7 +165,10 @@ class Project(BaseProject, PreviousStatusMixin):
 
     currencies = MultiSelectField(
         max_length=100, default=[],
-        choices=lazy(PaymentProvider.get_currency_choices, tuple)()
+        choices=[
+            ('EUR', 'EUR'), ('USD', 'USD'), ('XOF', 'XOF'),
+            ('NGN', 'NGN'), ('UGX', 'UGX'), ('KES', 'KES')
+        ]
     )
 
     celebrate_results = models.BooleanField(

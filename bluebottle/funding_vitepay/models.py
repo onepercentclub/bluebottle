@@ -1,15 +1,9 @@
 from django.db import models
+from django.utils.html import format_html
 
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod
 from bluebottle.funding.transitions import PaymentTransitions
-
-
-class VitepayPayment(Payment):
-    mobile_number = models.CharField(max_length=30)
-    unique_id = models.CharField(max_length=30)
-    transitions = TransitionManager(PaymentTransitions, 'status')
-    payment_url = models.CharField(max_length=200, blank=True, null=True)
 
 
 class VitepayPaymentProvider(PaymentProvider):
@@ -40,3 +34,19 @@ class VitepayPaymentProvider(PaymentProvider):
             'api_key': self.api_key,
             'api_url': self.api_url
         }
+
+
+class VitepayPayment(Payment):
+    mobile_number = models.CharField(max_length=30, blank=True, null=True)
+    unique_id = models.CharField(max_length=30)
+    transitions = TransitionManager(PaymentTransitions, 'status')
+    payment_url = models.CharField(max_length=200, blank=True, null=True)
+
+    def update(self):
+        pass
+
+    def save(self, *args, **kwargs):
+        if not self.unique_id:
+            provider = VitepayPaymentProvider.objects.get()
+            self.unique_id = format_html("{}-{}", provider.prefix, self.donation.id)
+        super(VitepayPayment, self).save(*args, **kwargs)

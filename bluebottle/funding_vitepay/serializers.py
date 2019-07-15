@@ -5,12 +5,11 @@ from bluebottle.funding_vitepay.utils import get_payment_url
 
 
 class VitepayPaymentSerializer(PaymentSerializer):
-    mobile_number = serializers.CharField(required=True)
     payment_url = serializers.CharField(read_only=True)
 
     class Meta(PaymentSerializer.Meta):
         model = VitepayPayment
-        fields = PaymentSerializer.Meta.fields + ('mobile_number', 'payment_url')
+        fields = PaymentSerializer.Meta.fields + ('payment_url', )
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
         resource_name = 'payments/vitepay-payments'

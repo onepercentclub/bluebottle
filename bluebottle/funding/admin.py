@@ -92,8 +92,9 @@ class DonationAdmin(FSMAdmin, PaymentLinkMixin):
 
 class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 
-    raw_id_fields = ['donation']
+    model = Funding
 
+    raw_id_fields = ['donation']
     change_form_template = 'admin/funding/payment/change_form.html'
 
     def get_urls(self):
@@ -135,7 +136,7 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 
 @admin.register(Payment)
 class PaymentAdmin(PolymorphicParentModelAdmin):
-    model = Payment
+    base_model = Payment
     child_models = (StripePayment, PledgePayment)
 
 

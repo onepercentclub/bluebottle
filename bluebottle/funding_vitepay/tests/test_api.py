@@ -36,7 +36,6 @@ class VitepayPaymentTestCase(BluebottleTestCase):
             'data': {
                 'type': 'payments/vitepay-payments',
                 'attributes': {
-                    'mobile-number': '77000001'
                 },
                 'relationships': {
                     'donation': {
@@ -59,6 +58,5 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
-        self.assertEqual(data['data']['attributes']['mobile-number'], '77000001')
         self.assertEqual(data['data']['attributes']['payment-url'], 'https://vitepay.com/some-path-to-pay')
         self.assertEqual(data['included'][0]['attributes']['status'], 'new')

@@ -1,11 +1,15 @@
-from django.http import HttpResponse
-from django.views.generic import View
+import logging
 
 from bluebottle.funding.exception import PaymentException
+from django.http import HttpResponse
+from django.views.generic.base import View
+
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_vitepay.models import VitepayPayment
 from bluebottle.funding_vitepay.serializers import VitepayPaymentSerializer
 from bluebottle.funding_vitepay.utils import update_payment_status
+
+logger = logging.getLogger(__name__)
 
 
 class VitepayPaymentList(PaymentList):
@@ -13,7 +17,7 @@ class VitepayPaymentList(PaymentList):
     serializer_class = VitepayPaymentSerializer
 
 
-class WebHookView(View):
+class VitepayWebhookView(View):
 
     def post(self, request, *args, **kwargs):
         success = 'success' in request.POST

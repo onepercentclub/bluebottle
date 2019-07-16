@@ -82,3 +82,6 @@ class Contribution(TransitionsMixin, PolymorphicModel):
     @property
     def owner(self):
         return self.user
+
+    class Meta:
+        ordering = ('-created',)

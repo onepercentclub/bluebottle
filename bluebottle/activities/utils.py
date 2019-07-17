@@ -12,6 +12,7 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):
+    title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)

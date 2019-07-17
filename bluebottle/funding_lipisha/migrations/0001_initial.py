@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('funding', '0015_auto_20190716_1040'),
+        ('funding', '0014_auto_20190714_1440'),
     ]
 
     operations = [

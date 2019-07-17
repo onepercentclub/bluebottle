@@ -34,9 +34,9 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
     raw_id_fields = ('user', 'order')
     readonly_fields = ('order_link', 'payment_link', 'authorization_action',
-                       'amount', 'integration_data', 'payment_method',
+                       'amount', 'integration_data',
                        'transaction_fee', 'status', 'created', 'closed')
-    fields = ('user', 'order') + readonly_fields
+    fields = ('user', 'order', 'payment_method') + readonly_fields
     list_display = ('created', 'user', 'status', 'amount',
                     'payment_method', 'transaction_fee')
 

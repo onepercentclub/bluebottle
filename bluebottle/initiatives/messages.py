@@ -13,8 +13,14 @@ class InitiativeApproveOwnerMessage(TransitionMessage):
 class InitiativeNeedsWorkOwnerMessage(TransitionMessage):
     subject = _('Your initiative {initiative_title} needs work')
     template = 'messages/initiative_needs_work_owner'
+    context = {
+        'initiative_title': 'title'
+    }
 
 
 class InitiativeClosedOwnerMessage(TransitionMessage):
     subject = _('Your initiative {initiative_title} has been closed')
     template = 'messages/initiative_closed_owner'
+    context = {
+        'initiative_title': 'title'
+    }

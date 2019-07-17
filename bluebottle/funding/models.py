@@ -23,6 +23,8 @@ class Funding(Activity):
 
     target = MoneyField(null=True, blank=True)
     account = models.ForeignKey('payouts.PayoutAccount', blank=True, null=True)
+    amount_matching = MoneyField(null=True, blank=True)
+    account = models.ForeignKey('payouts.PayoutAccount', null=True)
     transitions = TransitionManager(FundingTransitions, 'status')
 
     country = models.ForeignKey('geo.Country', null=True, blank=True)
@@ -55,12 +57,12 @@ class Funding(Activity):
         super(Funding, self).save(*args, **kwargs)
 
     @property
-    def amount_raised(self):
+    def amount_donated(self):
         """
         The sum of all contributions (donations) converted to the targets currency
         """
         totals = self.contributions.filter(
-            status='success'
+            status=FundingTransitions.values.succeeded
         ).values(
             'donation__amount_currency'
         ).annotate(
@@ -70,6 +72,16 @@ class Funding(Activity):
         amounts = [convert(amount, self.target.currency) for amount in amounts]
 
         return sum(amounts) or Money(0, self.target.currency)
+
+    @property
+    def amount_raised(self):
+        """
+        The sum of amount donated + amount matching
+        """
+        return self.amount_donated + convert(
+            self.amount_matching or Money(0, self.target.currency),
+            self.target.currency
+        )
 
     @property
     def payment_methods(self):
@@ -104,7 +116,7 @@ class Reward(models.Model):
     @property
     def count(self):
         return self.donations.filter(
-            status=DonationTransitions.values.success
+            status=DonationTransitions.values.succeeded
         ).count()
 
     def __unicode__(self):
@@ -133,6 +145,9 @@ class BudgetLine(models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+    class JSONAPIMeta:
+        resource_name = 'activities/funding/budgetlines'
 
     class Meta:
         verbose_name = _('budget line')
@@ -167,7 +182,7 @@ class Fundraiser(models.Model):
     @property
     def amount_donated(self):
         donations = self.donations.filter(
-            status=[DonationTransitions.values.success]
+            status=[DonationTransitions.values.succeeded]
         )
 
         totals = [
@@ -255,7 +270,7 @@ class PaymentMethod(object):
         return self.id
 
     class JSONAPIMeta:
-        resource_name = 'payments/payment-methods'
+        resource_name = 'activities/funding/payment-methods'
 
 
 class PaymentProvider(PolymorphicModel):

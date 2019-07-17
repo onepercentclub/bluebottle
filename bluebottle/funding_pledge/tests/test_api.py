@@ -45,8 +45,8 @@ class PaymentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['status'], 'success')
-        self.assertEqual(data['included'][0]['attributes']['status'], 'success')
+        self.assertEqual(data['data']['attributes']['status'], 'succeeded')
+        self.assertEqual(data['included'][0]['attributes']['status'], 'succeeded')
 
     def test_create_payment_other_user(self):
         response = self.client.post(

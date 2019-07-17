@@ -34,6 +34,7 @@ class EventSerializer(BaseActivitySerializer):
         included_resources = [
             'owner',
             'initiative',
+            'initiative.image',
             'location',
             'contributions'
         ]
@@ -43,33 +44,42 @@ class EventSerializer(BaseActivitySerializer):
         'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
 
 
 class EventSubmitSerializer(ActivitySubmitSerializer):
-    capacity = serializers.IntegerField(required=True, error_messages={'blank': _('Capacity is required')})
-    start_time = serializers.DateTimeField(required=True, error_messages={'blank': _('Start time is required')})
-    end_time = serializers.DateTimeField(required=True, error_messages={'blank': _('End time is required')})
-    registration_deadline = serializers.DateTimeField(
+    start_time = serializers.DateTimeField(
         required=True,
-        error_messages={'blank': _('Registration deadline is required')}
+        error_messages={
+            'blank': _('Start time is required'),
+            'null': _('Start time is required')
+        }
+    )
+    end_time = serializers.DateTimeField(
+        required=True,
+        error_messages={
+            'blank': _('End time is required'),
+            'null': _('End time is required')
+        }
     )
 
     location = serializers.PrimaryKeyRelatedField(
         required=True,
         queryset=Geolocation.objects.all(),
-        error_messages={'null': _('Location is required')}
+        error_messages={
+            'blank': _('Location is required'),
+            'null': _('Location is required')
+        }
     )
 
     class Meta(ActivitySubmitSerializer.Meta):
         model = Event
         fields = ActivitySubmitSerializer.Meta.fields + (
-            'capacity',
             'start_time',
             'end_time',
             'location',
-            'registration_deadline',
         )
 
 

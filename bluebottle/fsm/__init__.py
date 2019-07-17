@@ -207,7 +207,7 @@ class FSMField(models.CharField):
     def __init__(self, protected=True, max_length=20, *args, **kwargs):
         self.protected = protected
 
-        return super(FSMField, self).__init__(
+        super(FSMField, self).__init__(
             max_length=max_length,
             *args,
             **kwargs

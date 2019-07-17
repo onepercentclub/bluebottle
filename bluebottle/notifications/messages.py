@@ -5,6 +5,14 @@ from bluebottle.notifications.models import Message
 
 
 class TransitionMessage(object):
+    """
+    Base model for sending message
+    When the subject contains a variable it should be specified in context, e.g.
+    subject = "Un update on {initiative_title}"
+    context = {'initiative_title': 'title'}
+    The value is taken as an attribute of the related object (self.obj).
+    So in the example if the transition is on initiative it wil be `initiative.title`.
+    """
     subject = 'Status changed'
     template = 'messages/base'
     context = {}

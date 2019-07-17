@@ -1,0 +1,15 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=obj.activity.owner.name funding_title=obj.activity.title context 'email' %}
+Hey {{ receiver_name }},
+
+Nice! You just received a new donation. Why not head over to your campaign page and say thanks?
+{% endblocktrans %}
+
+{% endblock %}
+
+{% block action %}
+   {% trans 'Go to campaign' context 'email' %}: {{ obj.activity.full_url }}
+{% endblock %}`

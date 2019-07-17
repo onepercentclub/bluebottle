@@ -2,7 +2,7 @@ from django.test import TestCase
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 
 
 class InitiativeTestCase(TestCase):
@@ -58,3 +58,15 @@ class InitiativeTestCase(TestCase):
         initiative = InitiativeFactory(has_organization=False, organization=None, owner=member)
 
         self.assertIsNone(initiative.organization)
+
+    def test_organization_required(self):
+        InitiativePlatformSettingsFactory.create(require_organization=True)
+
+        initiative = InitiativeFactory()
+        self.assertTrue(initiative.has_organization)
+
+    def test_organization_not_required(self):
+        InitiativePlatformSettingsFactory.create(require_organization=False)
+
+        initiative = InitiativeFactory()
+        self.assertFalse(initiative.has_organization)

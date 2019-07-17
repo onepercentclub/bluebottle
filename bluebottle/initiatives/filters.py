@@ -1,3 +1,5 @@
+from elasticsearch_dsl.query import Term
+
 from bluebottle.utils.filters import ElasticSearchFilter
 from bluebottle.initiatives.documents import InitiativeDocument
 
@@ -18,3 +20,11 @@ class InitiativeSearchFilter(ElasticSearchFilter):
     )
 
     boost = {'title': 2}
+
+    def get_default_filters(self, request):
+        fields = super(InitiativeSearchFilter, self).get_filter_fields(request)
+
+        if 'owner.id' not in fields:
+            return [Term(status='approved')]
+
+        return []

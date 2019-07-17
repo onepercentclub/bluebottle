@@ -1,0 +1,13 @@
+{% extends "base.mail.html" %}
+{% load money %}
+{% load i18n %}
+
+{% block content %}
+    <p class="donation-intro">
+        {% blocktrans with first_name=obj.user.first_name title=obj.activity.title context 'email' %}
+            Hi {{ first_name }},<br/>
+            Your funding deadline for {{title}} passed. Unfortunately, you didn’t reach your funding goal within the deadline.
+            We will send you a follow-up email with more information soon.
+        {% endblocktrans %}
+    </p>
+{% endblock content %} 

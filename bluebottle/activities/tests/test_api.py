@@ -31,8 +31,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.owner = BlueBottleUserFactory.create()
 
     def test_no_filter(self):
-        EventFactory.create(owner=self.owner)
-        EventFactory.create()
+        succeeded = EventFactory.create(owner=self.owner, status='succeeded')
+        open = EventFactory.create(status='open')
+        EventFactory.create(status='draft')
+        EventFactory.create(status='closed')
 
         response = self.client.get(
             self.url,
@@ -41,10 +43,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['data'][1]['id'], unicode(succeeded.pk))
+        self.assertEqual(data['data'][0]['id'], unicode(open.pk))
 
     def test_filter_owner(self):
-        EventFactory.create(owner=self.owner)
-        EventFactory.create()
+        EventFactory.create(owner=self.owner, status='open')
+        EventFactory.create(status='open')
 
         response = self.client.get(
             self.url + '?filter[owner.id]={}'.format(self.owner.pk),
@@ -57,8 +61,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
 
     def test_search(self):
-        first = EventFactory.create(title='Lorem ipsum dolor sit amet', description="Lorem ipsum")
-        second = EventFactory.create(title='Lorem ipsum dolor sit amet')
+        first = EventFactory.create(title='Lorem ipsum dolor sit amet', description="Lorem ipsum", status='open')
+        second = EventFactory.create(title='Lorem ipsum dolor sit amet', status='open')
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
@@ -72,8 +76,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], unicode(second.pk))
 
     def test_search_different_type(self):
-        first = EventFactory.create(title='Lorem ipsum dolor sit amet', description="Lorem ipsum")
-        second = FundingFactory.create(title='Lorem ipsum dolor sit amet')
+        first = EventFactory.create(title='Lorem ipsum dolor sit amet', description="Lorem ipsum", status='open')
+        second = FundingFactory.create(title='Lorem ipsum dolor sit amet', status='open')
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
@@ -89,8 +93,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['type'], 'activities/funding')
 
     def test_search_boost(self):
-        first = EventFactory.create(title='Something else', description='Lorem ipsum dolor sit amet')
-        second = EventFactory.create(title='Lorem ipsum dolor sit amet', description="Something else")
+        first = EventFactory.create(title='Something else', description='Lorem ipsum dolor sit amet', status='open')
+        second = EventFactory.create(title='Lorem ipsum dolor sit amet', description="Something else", status='open')
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
@@ -104,9 +108,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], unicode(first.pk))
 
     def test_sort_title(self):
-        second = EventFactory.create(title='B: something else')
-        first = EventFactory.create(title='A: something')
-        third = EventFactory.create(title='C: More')
+        second = EventFactory.create(title='B: something else', status='open')
+        first = EventFactory.create(title='A: something', status='open')
+        third = EventFactory.create(title='C: More', status='open')
 
         response = self.client.get(
             self.url + '?sort=alphabetical',
@@ -121,9 +125,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][2]['id'], unicode(third.pk))
 
     def test_sort_created(self):
-        first = EventFactory.create()
-        second = EventFactory.create()
-        third = EventFactory.create()
+        first = EventFactory.create(status='open')
+        second = EventFactory.create(status='open')
+        third = EventFactory.create(status='open')
 
         first.created = datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
         first.save()
@@ -145,19 +149,19 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][2]['id'], unicode(second.pk))
 
     def test_sort_popularity(self):
-        first = EventFactory.create()
+        first = EventFactory.create(status='open')
 
-        second = EventFactory.create()
+        second = EventFactory.create(status='open')
         ParticipantFactory.create(
             activity=second, created=now() - datetime.timedelta(days=7)
         )
 
-        third = EventFactory.create()
+        third = EventFactory.create(status='open')
         ParticipantFactory.create(
             activity=third, created=now() - datetime.timedelta(days=5)
         )
 
-        fourth = EventFactory.create()
+        fourth = EventFactory.create(status='open')
         ParticipantFactory.create(
             activity=fourth, created=now() - datetime.timedelta(days=7)
         )

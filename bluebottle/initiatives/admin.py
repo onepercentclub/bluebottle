@@ -53,6 +53,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title)
     link.short_description = _("Show on site")
 
+    class Media:
+        js = ('admin/js/inline-activities-add.js',)
+
 
 @admin.register(InitiativePlatformSettings)
 class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):

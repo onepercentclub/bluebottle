@@ -20,9 +20,13 @@ class InitiativeTransitions(ModelTransitions):
     def is_complete(self):
         from bluebottle.initiatives.serializers import InitiativeSubmitSerializer
 
-        serializer = InitiativeSubmitSerializer(
-            data=model_to_dict(self.instance)
-        )
+        data = model_to_dict(self.instance)
+        if self.instance.organization:
+            data['organization'] = model_to_dict(self.instance.organization)
+        if self.instance.organization_contact:
+            data['organization_contact'] = model_to_dict(self.instance.organization_contact)
+
+        serializer = InitiativeSubmitSerializer(data=data)
         if not serializer.is_valid():
             return [unicode(error) for errors in serializer.errors.values() for error in errors]
 
@@ -73,7 +77,7 @@ class InitiativeTransitions(ModelTransitions):
         pass
 
     @transition(
-        source=[values.approved, values.closed],
+        source=[values.closed],
         target=values.submitted,
         conditions=[is_complete],
     )

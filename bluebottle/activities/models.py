@@ -19,6 +19,9 @@ class Activity(TransitionsMixin, PolymorphicModel):
         related_name='activities',
     )
 
+    highlight = models.BooleanField(default=False,
+                                    help_text=_('Highlight this activity to show it on homepage'))
+
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
@@ -55,11 +58,14 @@ class Activity(TransitionsMixin, PolymorphicModel):
         if self.slug == 'new' and self.title:
             self.slug = slugify(self.title)
 
+        if not self.owner_id:
+            self.owner = self.initiative.owner
+
         super(Activity, self).save(**kwargs)
 
     @property
     def full_url(self):
-        return format_html("/{}/{}/{}", self._meta.app_label, self.pk, self.slug)
+        return format_html("/initiatives/activities/{}/{}/{}", self.__class__.__name__.lower(), self.pk, self.slug)
 
 
 class Contribution(TransitionsMixin, PolymorphicModel):

@@ -145,4 +145,5 @@ STRIPE = {
     'api_key': 'test-key',
     'webhook_secret': 'test-webhook-secret',
     'webhook_secret_connect': 'test-webhook-secret-connect',
+    'publishable_key': 'test-pub-key'
 }

@@ -28,8 +28,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
 
     prepopulated_fields = {"slug": ("title",)}
 
-    raw_id_fields = ('owner', 'reviewer', 'promoter', 'place', 'organization', 'organization_contact')
-    list_display = ['title', 'created', 'status']
+    raw_id_fields = ('owner', 'reviewer', 'promoter', 'activity_manager',
+                     'place', 'organization', 'organization_contact')
+    list_display = ['title_display', 'created', 'status']
     list_filter = ['status']
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
@@ -39,14 +40,21 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
         (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner', 'image', 'video_url')}),
         (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'location', 'place')}),
         (_('Organization'), {'fields': ('organization', 'organization_contact')}),
-        (_('Review'), {'fields': ('reviewer', 'promoter', 'status', 'status_transition')}),
+        (_('Review'), {'fields': ('reviewer', 'activity_manager', 'promoter', 'status', 'status_transition')}),
     )
+
+    def title_display(self, obj):
+        return obj.title or _('- empty -')
+    title_display.short_description = _('Title')
 
     inlines = [ActivityAdminInline, MessageAdminInline]
 
     def link(self, obj):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title)
     link.short_description = _("Show on site")
+
+    class Media:
+        js = ('admin/js/inline-activities-add.js',)
 
 
 @admin.register(InitiativePlatformSettings)

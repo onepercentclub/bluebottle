@@ -2,6 +2,8 @@ from mock import patch
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
+from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.token_auth.auth.base import BaseTokenAuthentication
 
 
@@ -27,6 +29,76 @@ class TestBaseTokenAuthentication(TestCase):
             self.assertEqual(authenticate_request.call_count, 1)
             self.assertTrue(created)
             self.assertEqual(user.email, 'test@example.com')
+
+    @patch.object(
+        BaseTokenAuthentication, 'authenticate_request', return_value={'remote_id': 'test@example.com',
+                                                                       'email': 'test@example.com',
+                                                                       'custom.department': 'legal'
+                                                                       }
+    )
+    def test_user_created_custom_field(self, authenticate_request):
+        """ When the user is succesfully authenticated, a new user should
+        be created
+        """
+        field = CustomMemberFieldSettings.objects.create(name='department')
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertEqual(
+                user.extra.get(field=field).value,
+                'legal'
+            )
+
+    @patch.object(
+        BaseTokenAuthentication, 'authenticate_request', return_value={'remote_id': 'test@example.com',
+                                                                       'email': 'test@example.com',
+                                                                       'custom.department': 'legal'
+                                                                       }
+    )
+    def test_user_created_custom_field_missing_field(self, authenticate_request):
+        """ When the user is succesfully authenticated, a new user should
+        be created
+        """
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+            self.assertEqual(user.email, 'test@example.com')
+
+    @patch.object(
+        BaseTokenAuthentication, 'authenticate_request', return_value={'remote_id': 'test@example.com',
+                                                                       'email': 'test@example.com',
+                                                                       'custom.department': 'legal'
+                                                                       }
+    )
+    def test_user_created_custom_field_update(self, authenticate_request):
+        """ When the user is succesfully authenticated, a new user should
+        be created
+        """
+        user = BlueBottleUserFactory.create(remote_id='test@example.com')
+        field = CustomMemberFieldSettings.objects.create(name='department')
+        CustomMemberField.objects.create(field=field, member=user, value='finance')
+
+        self.assertEqual(
+            user.extra.get(field=field).value,
+            'finance'
+        )
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertFalse(created)
+            self.assertEqual(user.email, 'test@example.com')
+
+            self.assertEqual(
+                user.extra.get(field=field).value,
+                'legal'
+            )
 
     @patch.object(
         BaseTokenAuthentication, 'authenticate_request', return_value={'remote_id': 'test@example.com',

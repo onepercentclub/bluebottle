@@ -1,3 +1,4 @@
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
@@ -11,6 +12,7 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):
+    title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
@@ -18,6 +20,7 @@ class BaseActivitySerializer(ModelSerializer):
 
     transitions = AvailableTransitionsField(source='status')
     is_follower = serializers.SerializerMethodField()
+    type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
 
     slug = serializers.CharField(read_only=True)
 
@@ -34,6 +37,7 @@ class BaseActivitySerializer(ModelSerializer):
     class Meta:
         model = Activity
         fields = (
+            'type',  # Needed for old style API endpoints like pages / page blocks
             'slug',
             'id',
             'initiative',
@@ -59,7 +63,13 @@ class BaseActivitySerializer(ModelSerializer):
 class ActivitySubmitSerializer(ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(required=True, queryset=Member.objects.all())
     title = serializers.CharField(required=True)
-    description = serializers.CharField(required=True)
+    description = serializers.CharField(
+        required=True,
+        error_messages={
+            'blank': _('Location is required'),
+            'null': _('Location is required')
+        }
+    )
 
     class Meta:
         model = Activity

@@ -12,7 +12,8 @@ import stripe
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding_stripe.tests.factories import (
     ConnectAccountFactory,
-    ExternalAccountFactory
+    ExternalAccountFactory,
+    StripePaymentProviderFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -23,6 +24,7 @@ class StripePaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(StripePaymentTestCase, self).setUp()
+        StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()

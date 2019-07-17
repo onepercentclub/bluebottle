@@ -346,6 +346,7 @@ TENANT_APPS = (
     'bluebottle.funding_pledge',
     'bluebottle.funding_stripe',
     'bluebottle.funding_vitepay',
+    'bluebottle.funding_flutterwave',
 
     'bluebottle.tasks',
     'bluebottle.homepage',
@@ -944,3 +945,6 @@ TOKEN_LOGIN_TIMEOUT = 30
 
 JSON_API_FORMAT_FIELD_NAMES = 'dasherize'
 JSON_API_UNIFORM_EXCEPTIONS = True
+
+# Don't show url warnings
+SILENCED_SYSTEM_CHECKS = ['urls.W002']

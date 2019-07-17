@@ -25,9 +25,16 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
-    list_filter = (PolymorphicChildModelFilter,)
+    readonly_fields = ['link']
+    list_filter = (PolymorphicChildModelFilter, 'status', 'highlight')
+    list_editable = ('highlight',)
 
-    list_display = ['created', 'title', 'type', 'status', 'contribution_count']
+    list_display = ['title', 'created', 'type', 'status',
+                    'contribution_count', 'link', 'highlight']
+
+    def link(self, obj):
+        return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title)
+    link.short_description = _("Show on site")
 
     def type(self, obj):
         return obj.get_real_instance_class().__name__
@@ -35,7 +42,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
 
 class ActivityAdminInline(StackedPolymorphicInline):
     model = Activity
-    readonly_fields = ['title', 'created', 'status']
+    readonly_fields = ['title', 'created', 'status', 'owner']
     fields = readonly_fields
     extra = 0
 
@@ -46,11 +53,11 @@ class ActivityAdminInline(StackedPolymorphicInline):
                 obj._meta.model_name),
                 args=(obj.id,)
             )
-            return format_html("<a href='{}'>{}</a>", url, obj.title)
+            return format_html("<a href='{}'>{}</a>", url, obj.title or '-empty-')
         activity_link.short_description = _('Edit activity')
 
         def link(self, obj):
-            return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title)
+            return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title or '-empty-')
         link.short_description = _('View on site')
 
     class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
@@ -73,9 +80,3 @@ class ActivityAdminInline(StackedPolymorphicInline):
         FundingInline,
         AssignmentInline
     )
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request):
-        return False

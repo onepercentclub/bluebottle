@@ -2,8 +2,8 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans context='email' with recipient_name=event.owner.name event_title=obj.title %}
-Hey {{ receiver_name }},
+{% blocktrans with recipient_name=obj.owner.name event_title=obj.title context 'email' %}
+Hey {{ recipient_name }},
 <br><br>
 We wanted to let you know that your event "{{ event_title }}" has been closed.
 <br><br>

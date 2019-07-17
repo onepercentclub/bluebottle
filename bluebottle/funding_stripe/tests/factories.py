@@ -1,7 +1,7 @@
 import factory.fuzzy
 
 from bluebottle.funding_stripe.models import (
-    StripePayment, ConnectAccount, ExternalAccount
+    StripePayment, ConnectAccount, ExternalAccount, StripePaymentProvider
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.funding.tests.factories import DonationFactory
@@ -28,3 +28,14 @@ class ExternalAccountFactory(factory.DjangoModelFactory):
         model = ExternalAccount
 
     connect_account = factory.SubFactory(ConnectAccount)
+
+
+class StripePaymentProviderFactory(factory.DjangoModelFactory):
+
+    class Meta(object):
+        model = StripePaymentProvider
+
+    credit_card = True
+    ideal = True
+    bancontact = True
+    direct_debit = True

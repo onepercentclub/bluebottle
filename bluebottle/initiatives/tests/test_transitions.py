@@ -3,13 +3,14 @@ from bluebottle.initiatives.transitions import InitiativeTransitions
 from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory, OrganizationContactFactory
 
 
 class InitiativeTransitionTestCase(BluebottleTestCase):
     def setUp(self):
         super(InitiativeTransitionTestCase, self).setUp()
 
-        self.initiative = InitiativeFactory.create()
+        self.initiative = InitiativeFactory.create(has_organization=False, organization=None)
 
     def test_default_status(self):
         self.assertEqual(
@@ -28,6 +29,42 @@ class InitiativeTransitionTestCase(BluebottleTestCase):
         self.assertRaises(
             TransitionNotPossible,
             self.initiative.transitions.submit
+        )
+
+    def test_submit_has_organization_missing(self):
+        self.initiative.has_organization = True
+
+        self.assertRaises(
+            TransitionNotPossible,
+            self.initiative.transitions.submit
+        )
+
+    def test_submit_has_organization_missing_contact(self):
+        self.initiative.has_organization = True
+
+        self.assertRaises(
+            TransitionNotPossible,
+            self.initiative.transitions.submit
+        )
+
+    def test_submit_has_organization_no_contact_name(self):
+        self.initiative.has_organization = True
+        self.initiative.organization = OrganizationFactory.create()
+        self.initiative.organization_contact = OrganizationContactFactory.create(name=None)
+
+        self.assertRaises(
+            TransitionNotPossible,
+            self.initiative.transitions.submit
+        )
+
+    def test_submit_has_organization(self):
+        self.initiative.has_organization = True
+        self.initiative.organization = OrganizationFactory.create()
+        self.initiative.organization_contact = OrganizationContactFactory.create()
+
+        self.initiative.transitions.submit()
+        self.assertEqual(
+            self.initiative.status, InitiativeTransitions.values.submitted
         )
 
     def test_needs_work(self):

@@ -12,7 +12,11 @@ import stripe
 from bluebottle.funding.models import Donation
 from bluebottle.funding.transitions import DonationTransitions, PayoutAccountTransitions
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
-from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, ConnectAccountFactory
+from bluebottle.funding_stripe.tests.factories import (
+    StripePaymentFactory,
+    StripePaymentProviderFactory,
+    ConnectAccountFactory
+)
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.models import StripePayment, ConnectAccount
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -30,8 +34,8 @@ class StripeWebhookTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(StripeWebhookTestCase, self).setUp()
+        StripePaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create()
-
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
@@ -68,8 +72,10 @@ class StripeWebhookTestCase(BluebottleTestCase):
         payment = StripePayment.objects.get(pk=self.payment.pk)
         donation = Donation.objects.get(pk=self.donation.pk)
 
-        self.assertEqual(donation.status, DonationTransitions.values.success)
-        self.assertEqual(payment.status, StripePaymentTransitions.values.success)
+        self.assertEqual(donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(payment.status, StripePaymentTransitions.values.succeeded)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
 
     def test_failed(self):
         with mock.patch(
@@ -89,6 +95,8 @@ class StripeWebhookTestCase(BluebottleTestCase):
 
         self.assertEqual(donation.status, DonationTransitions.values.failed)
         self.assertEqual(payment.status, StripePaymentTransitions.values.failed)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.status, DonationTransitions.values.failed)
 
     def test_refund(self):
         self.payment.transitions.succeed()

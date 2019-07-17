@@ -1,0 +1,21 @@
+{% load i18n %}
+{% block module_content %}
+<ul class="dashboard-item-list">
+    {% spaceless %}
+    {% for activity in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <span class="float-right" title="Date submitted">
+            {{ activity.date_submitted|date }}<br>
+        </span>
+        <a href="{% url 'admin:funding_funding_change' activity.id %}" >{{ activity.title }}</a>
+        <br>
+        <b>{{ activity.owner.full_name }}</b>
+        <br>
+        Target: {{ activity.target }}
+        <br>
+        Deadline: {{ activity.deadline|date }}
+    </li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

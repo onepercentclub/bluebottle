@@ -1,6 +1,7 @@
 from rest_framework_json_api.exceptions import exception_handler
 from rest_framework_json_api.views import AutoPrefetchMixin
 
+
 from bluebottle.files.views import FileContentView
 from bluebottle.initiatives.filters import InitiativeSearchFilter
 from bluebottle.initiatives.models import Initiative

@@ -8,7 +8,7 @@ from bluebottle.initiatives.views import (
 
 urlpatterns = [
     url(
-        r'^transitions$',
+        r'^/transitions$',
         InitiativeReviewTransitionList.as_view(),
         name='initiative-review-transition-list'
     ),

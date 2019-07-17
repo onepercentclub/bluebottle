@@ -3,6 +3,7 @@ from django.test.utils import override_settings
 from mock import patch
 from moneyed import Money
 
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments_stripe.adapters import StripePaymentAdapter
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -44,6 +45,7 @@ PAYMENT_METHODS = (
 )
 class StripePaymentAdapterTestCase(BluebottleTestCase):
     def setUp(self):
+        StripePaymentProviderFactory.create()
         payout_account = StripePayoutAccountFactory.create()
         self.project = ProjectFactory.create(payout_account=payout_account)
         order = OrderFactory.create()

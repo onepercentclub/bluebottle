@@ -1,4 +1,4 @@
-from elasticsearch_dsl.query import FunctionScore, SF
+from elasticsearch_dsl.query import FunctionScore, SF, Terms
 from bluebottle.utils.filters import ElasticSearchFilter
 from bluebottle.activities.documents import ActivityDocument
 
@@ -8,7 +8,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
     sort_fields = {
         'date': ('-created', ),
-        'alphabetical': ('title', ),
+        'alphabetical': ('title_keyword', ),
         'popularity': 'popularity',
     }
 
@@ -38,3 +38,6 @@ class ActivitySearchFilter(ElasticSearchFilter):
                 ),
             ]
         )
+
+    def get_default_filters(self, request):
+        return [~Terms(status=['draft', 'closed'])]

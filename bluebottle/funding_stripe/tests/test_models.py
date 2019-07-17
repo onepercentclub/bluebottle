@@ -8,6 +8,7 @@ from django.db import ProgrammingError
 
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.models import (
     StripePayment, ConnectAccount, ExternalAccount
@@ -20,6 +21,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class StripePaymentTestCase(BluebottleTestCase):
     def setUp(self):
         super(StripePaymentTestCase, self).setUp()
+        StripePaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create()
 
         self.initiative.transitions.submit()

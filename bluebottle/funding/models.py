@@ -1,23 +1,21 @@
 from django.db import models
 from django.db.models.aggregates import Sum
-from django.utils.functional import lazy
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from moneyed import Money
-from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicModel
 
-from bluebottle.fsm import FSMField, TransitionNotPossible, TransitionManager, TransitionsMixin
-
 from bluebottle.activities.models import Activity, Contribution
+from bluebottle.files.fields import ImageField
+from bluebottle.fsm import FSMField, TransitionNotPossible, TransitionManager, TransitionsMixin
 from bluebottle.funding.transitions import (
     FundingTransitions,
     DonationTransitions,
     PaymentTransitions,
     PayoutAccountTransitions
 )
-from bluebottle.files.fields import ImageField
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.fields import MoneyField, get_currency_choices
+from bluebottle.utils.fields import MoneyField
 
 
 class Funding(Activity):
@@ -25,14 +23,11 @@ class Funding(Activity):
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
     target = MoneyField(null=True, blank=True)
-    accepted_currencies = MultiSelectField(
-        max_length=100, default=[],
-        choices=lazy(get_currency_choices, tuple)()
-    )
-
+    amount_matching = MoneyField(null=True, blank=True)
     account = models.ForeignKey('payouts.PayoutAccount', null=True)
-
     transitions = TransitionManager(FundingTransitions, 'status')
+
+    country = models.ForeignKey('geo.Country', null=True, blank=True)
 
     class JSONAPIMeta:
         resource_name = 'activities/funding'
@@ -62,12 +57,12 @@ class Funding(Activity):
         super(Funding, self).save(*args, **kwargs)
 
     @property
-    def amount_raised(self):
+    def amount_donated(self):
         """
         The sum of all contributions (donations) converted to the targets currency
         """
         totals = self.contributions.filter(
-            status='success'
+            status=FundingTransitions.values.succeeded
         ).values(
             'donation__amount_currency'
         ).annotate(
@@ -77,6 +72,27 @@ class Funding(Activity):
         amounts = [convert(amount, self.target.currency) for amount in amounts]
 
         return sum(amounts) or Money(0, self.target.currency)
+
+    @property
+    def amount_raised(self):
+        """
+        The sum of amount donated + amount matching
+        """
+        return self.amount_donated + convert(
+            self.amount_matching or Money(0, self.target.currency),
+            self.target.currency
+        )
+
+    @property
+    def payment_methods(self):
+        methods = []
+        if not self.target.currency:
+            return []
+        for provider in PaymentProvider.objects.all():
+            for method in provider.payment_methods:
+                if str(self.target.currency) in method.currencies:
+                    methods.append(method)
+        return methods
 
 
 class Reward(models.Model):
@@ -100,7 +116,7 @@ class Reward(models.Model):
     @property
     def count(self):
         return self.donations.filter(
-            status=DonationTransitions.values.success
+            status=DonationTransitions.values.succeeded
         ).count()
 
     def __unicode__(self):
@@ -129,6 +145,9 @@ class BudgetLine(models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+    class JSONAPIMeta:
+        resource_name = 'activities/funding/budgetlines'
 
     class Meta:
         verbose_name = _('budget line')
@@ -163,7 +182,7 @@ class Fundraiser(models.Model):
     @property
     def amount_donated(self):
         donations = self.donations.filter(
-            status=[DonationTransitions.values.success]
+            status=[DonationTransitions.values.succeeded]
         )
 
         totals = [
@@ -194,11 +213,14 @@ class Donation(Contribution):
         return self.payment.type
 
     class Meta:
-        verbose_name = _('budget line')
-        verbose_name_plural = _('budget lines')
+        verbose_name = _('donation')
+        verbose_name_plural = _('donations')
 
     def __unicode__(self):
         return u'{}'.format(self.amount)
+
+    class JSONAPIMeta:
+        resource_name = 'contributions/donations'
 
 
 class Payment(TransitionsMixin, PolymorphicModel):
@@ -220,19 +242,48 @@ class Payment(TransitionsMixin, PolymorphicModel):
         )
 
 
+class PaymentMethod(object):
+    code = ''
+    provider = ''
+    name = ''
+    currencies = []
+    countries = []
+
+    def __init__(self, provider, code, name=None, currencies=None, countries=None):
+        self.provider = provider
+        self.code = code
+        if name:
+            self.name = name
+        else:
+            self.name = code
+        if currencies:
+            self.currencies = currencies
+        if countries:
+            self.countries = countries
+
+    @property
+    def id(self):
+        return format_html("{}-{}", self.provider, self.code)
+
+    @property
+    def pk(self):
+        return self.id
+
+    class JSONAPIMeta:
+        resource_name = 'activities/funding/payment-methods'
+
+
 class PaymentProvider(PolymorphicModel):
 
     public_settings = {}
     private_settings = {}
 
+    currencies = []
+    countries = []
+
     @property
     def payment_methods(self):
-        return [{
-            'provider': 'default',
-            'code': 'default',
-            'name': 'default',
-            'currencies': ['EUR']
-        }]
+        return []
 
     def __unicode__(self):
         return str(self.polymorphic_ctype)

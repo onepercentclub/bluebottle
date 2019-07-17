@@ -12,8 +12,8 @@ from bluebottle.cms.models import (
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, StepsContent, SlidesContent,
     CategoriesContent, LocationsContent, LogosContent,
-    LinksContent, WelcomeContent
-)
+    LinksContent, WelcomeContent,
+    ActivitiesContent)
 from fluent_contents.forms import ContentItemForm
 
 
@@ -65,6 +65,13 @@ class ProjectsBlockPlugin(CMSContentPlugin):
     model = ProjectsContent
     raw_id_fields = ('projects', )
     category = _('Projects')
+
+
+@plugin_pool.register
+class ActivitiesBlockPlugin(CMSContentPlugin):
+    model = ActivitiesContent
+    raw_id_fields = ('activities', )
+    category = _('Activities')
 
 
 @plugin_pool.register

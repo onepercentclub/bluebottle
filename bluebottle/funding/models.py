@@ -13,7 +13,8 @@ from bluebottle.fsm import FSMField, TransitionNotPossible, TransitionManager, T
 from bluebottle.funding.transitions import (
     FundingTransitions,
     DonationTransitions,
-    PaymentTransitions
+    PaymentTransitions,
+    PayoutAccountTransitions
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
@@ -305,3 +306,19 @@ class PaymentMethod(object):
 
     class JSONAPIMeta:
         resource_name = 'payments/payment-methods'
+
+
+class PayoutAccount(models.Model, TransitionsMixin):
+    status = FSMField(
+        default=PayoutAccountTransitions.values.new
+    )
+
+    owner = models.OneToOneField(
+        'members.Member',
+        related_name='%(app_label)s_payout_account'
+    )
+
+    transitions = TransitionManager(PayoutAccountTransitions, 'status')
+
+    class Meta:
+        abstract = True

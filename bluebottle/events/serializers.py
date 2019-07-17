@@ -50,13 +50,6 @@ class EventSerializer(BaseActivitySerializer):
 
 
 class EventSubmitSerializer(ActivitySubmitSerializer):
-    capacity = serializers.IntegerField(
-        required=True,
-        error_messages={
-            'blank': _('Capacity is required'),
-            'null': _('Capacity is required')
-        }
-    )
     start_time = serializers.DateTimeField(
         required=True,
         error_messages={
@@ -69,13 +62,6 @@ class EventSubmitSerializer(ActivitySubmitSerializer):
         error_messages={
             'blank': _('End time is required'),
             'null': _('End time is required')
-        }
-    )
-    registration_deadline = serializers.DateTimeField(
-        required=True,
-        error_messages={
-            'blank': _('Registration deadline is required'),
-            'null': _('Registration deadline is required')
         }
     )
 
@@ -91,11 +77,9 @@ class EventSubmitSerializer(ActivitySubmitSerializer):
     class Meta(ActivitySubmitSerializer.Meta):
         model = Event
         fields = ActivitySubmitSerializer.Meta.fields + (
-            'capacity',
             'start_time',
             'end_time',
             'location',
-            'registration_deadline',
         )
 
 

@@ -4,8 +4,7 @@ from rest_framework.status import HTTP_200_OK
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding.transitions import PaymentTransitions
-from bluebottle.funding_vitepay.models import VitepayPaymentProvider
-from bluebottle.funding_vitepay.tests.factories import VitepayPaymentFactory
+from bluebottle.funding_vitepay.tests.factories import VitepayPaymentFactory, VitepayPaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -20,10 +19,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(VitepayPaymentTestCase, self).setUp()
-        VitepayPaymentProvider.objects.create(
-            api_secret='123456789012345678901234567890123456789012345678901234567890',
-            api_key='123'
-        )
+        VitepayPaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
 
@@ -35,7 +31,6 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.payment = VitepayPaymentFactory.create(
             donation=self.donation,
             unique_id='some-id',
-            payment_url='https://pay.here/'
         )
         self.webhook = reverse('vitepay-payment-webhook')
 
@@ -43,10 +38,11 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         data = {
             'success': 1,
             'authenticity': 'FD549FB47E4D85B5593F5D48C3D524AAD933CBEB',
-            'order_id': self.payment.unique_id
+            'order_id': 'some-id'
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.content, '{"status": "1"}')
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, PaymentTransitions.values.succeeded)
 
@@ -54,9 +50,22 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         data = {
             'failure': 1,
             'authenticity': 'FD549FB47E4D85B5593F5D48C3D524AAD933CBEB',
-            'order_id': self.payment.unique_id
+            'order_id': 'some-id'
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.content, '{"status": "1"}')
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, PaymentTransitions.values.failed)
+
+    def test_not_found(self):
+        data = {
+            'failure': 1,
+            'authenticity': 'FD549FB47E4D85B5593F5D48C3D524AAD933CBEB',
+            'order_id': 'another-id'
+        }
+        response = self.client.post(self.webhook, data, format='multipart')
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.content, '{"status": "0", "message": "Order not found."}')
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, PaymentTransitions.values.new)

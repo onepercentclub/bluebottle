@@ -5,102 +5,24 @@ import logging
 from lipisha import Lipisha, lipisha
 from moneyed.classes import Money
 
-from django.core.exceptions import ImproperlyConfigured
-
 from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.orders.models import Order
-from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_lipisha.models import LipishaProject
-from bluebottle.utils.utils import StatusDefinition
-
 from .models import LipishaPayment
 
 logger = logging.getLogger()
 
 
-class LipishaPaymentAdapter(BasePaymentAdapter):
-    card_data = {}
-
-    STATUS_MAPPING = {
-        'Requested': StatusDefinition.CREATED,
-        'Completed': StatusDefinition.SETTLED,
-        'Cancelled': StatusDefinition.CANCELLED,
-        'Voided': StatusDefinition.FAILED,
-        'Acknowledged': StatusDefinition.AUTHORIZED,
-        'Authorized': StatusDefinition.AUTHORIZED,
-        'Settled': StatusDefinition.SETTLED,
-        'Reversed': StatusDefinition.REFUNDED
-    }
-
-    def __init__(self, order_payment):
-        self.live_mode = getattr(properties, 'LIVE_PAYMENTS_ENABLED', False)
-        if self.live_mode:
-            env = lipisha.PRODUCTION_ENV
-        else:
-            env = lipisha.SANDBOX_ENV
-        super(LipishaPaymentAdapter, self).__init__(order_payment)
-        self.client = Lipisha(
-            self.credentials['api_key'],
-            self.credentials['api_signature'],
-            api_environment=env
-        )
-
-    def _get_mapped_status(self, status):
-        return self.STATUS_MAPPING[status]
-
-    def _get_payment_reference(self):
-        return "{}#{}".format(
-            self.credentials['account_number'],
-            self.payment.reference
-        )
-
-    def create_payment(self):
-        payment = LipishaPayment(
-            order_payment=self.order_payment,
-        )
-        payment.reference = self.order_payment.id
-        payment.save()
-        self.payment_logger.log(payment,
-                                'info',
-                                'payment_tracer: {}, '
-                                'event: payment.lipisha.create_payment.success'.format(self.payment_tracer))
-
-        self.payment = payment
-        return payment
-
-    def get_authorization_action(self):
-
-        if self.payment.status == 'started':
-            return {
-                'type': 'process',
-                'payload': {
-                    'business_number': self.credentials['business_number'],
-                    'account_number': self._get_payment_reference(),
-                    'amount': int(float(self.order_payment.amount))
-                }
-            }
-        else:
-            self.check_payment_status()
-            if self.payment.status in ['settled', 'authorized']:
-                return {
-                    'type': 'success'
-                }
-            else:
-                return {
-                    'type': 'pending'
-                }
-
-
 class LipishaPaymentInterface(object):
-    @property
-    def credentials(self):
-        for account in properties.MERCHANT_ACCOUNTS:
-            if account['merchant'] == 'lipisha' and account['currency'] == 'KES':
-                return account
-        raise ImproperlyConfigured('No merchant account for Lipisha KES')
+    credentials = {}
+
+    def __init__(self):
+        provider = LipishaPaymentProvider.objects.get()
+        self.credentials = provider.private_settings
 
     def _get_client(self):
         self.live_mode = getattr(properties, 'LIVE_PAYMENTS_ENABLED', False)
@@ -120,8 +42,7 @@ class LipishaPaymentInterface(object):
 
         response = client.create_payment_account(
             transaction_account_type=1,
-            transaction_account_name=project.slug,
-            transaction_account_manager=self.credentials['channel_manager']
+            transaction_account_name=project.slug
         )
 
         try:
@@ -173,11 +94,7 @@ class LipishaPaymentInterface(object):
         }
 
     def _update_amounts(self, payment, amount, currency):
-        order_payment = payment.order_payment
-        order_payment.amount = Money(amount, currency)
-        order_payment.save()
-
-        donation = payment.order_payment.order.donations.first()
+        donation = payment.donation
         donation.amount = Money(amount, currency)
         donation.save()
 
@@ -291,23 +208,11 @@ class LipishaPaymentInterface(object):
         except LipishaPayment.MultipleObjectsReturned:
             payment = LipishaPayment.objects.filter(transaction_reference=transaction_reference).last()
 
-        payment.response = json.dumps(data)
-        for k, v in data.items():
-            try:
-                setattr(payment, k, v)
-            except AttributeError:
-                pass
-
-        payment.transaction_mobile_number = data['transaction_mobile']
-        payment.reference = data['transaction_mobile']
-        order_payment = payment.order_payment
+        payment.mobile_number = data['transaction_mobile']
 
         if data['transaction_status'] == 'Success':
-            payment.status = 'settled'
-            order_payment.settled()
+            payment.succeed()
         else:
-            payment.status = 'failed'
-            order_payment.failed()
-        payment.reference = payment.order_payment_id
+            payment.fail()
         payment.save()
         return self.generate_success_response(payment)

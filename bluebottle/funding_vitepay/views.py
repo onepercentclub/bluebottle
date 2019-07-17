@@ -24,9 +24,8 @@ class VitepayWebhookView(View):
         failure = 'failure' in request.POST
         authenticity = request.POST.get('authenticity')
         unique_id = request.POST.get('order_id')
-
         try:
-            payment = self.get_payment(unique_id=unique_id)
+            payment = VitepayPayment.objects.get(unique_id=unique_id)
         except VitepayPayment.DoesNotExist:
             return HttpResponse('{"status": "0", "message": "Order not found."}')
 
@@ -35,9 +34,3 @@ class VitepayWebhookView(View):
             return HttpResponse('{"status": "1"}')
         except PaymentException as e:
             return HttpResponse('{"status": "0", "message": "%s"}' % e)
-
-    def get_payment(self, unique_id):
-        try:
-            return VitepayPayment.objects.get(unique_id=unique_id)
-        except VitepayPayment.DoesNotExist:
-            return HttpResponse('{"status": "0", "message": "Payment not Found"}')

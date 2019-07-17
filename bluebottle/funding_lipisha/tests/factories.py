@@ -1,12 +1,20 @@
 import factory.fuzzy
 
 from bluebottle.funding.tests.factories import DonationFactory
-from bluebottle.funding_vitepay.models import VitepayPayment
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider
+from bluebottle.funding_lipisha.models import LipishaPayment
 
 
-class VitepayPaymentFactory(factory.DjangoModelFactory):
+class LipishaPaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = VitepayPayment
-
-    mobile_number = '77000001'
+        model = LipishaPayment
     donation = factory.SubFactory(DonationFactory)
+
+
+class LipishaPaymentProviderFactory(factory.DjangoModelFactory):
+
+    class Meta(object):
+        model = LipishaPaymentProvider
+
+    api_signature = '123456789012345678901234567890123456789012345678901234567890'
+    api_key = '12345'

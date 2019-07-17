@@ -9,6 +9,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.orders.models import Order
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.payments.exception import PaymentException
@@ -23,6 +24,7 @@ logger = logging.getLogger()
 
 class LipishaPaymentAdapter(BasePaymentAdapter):
     card_data = {}
+    credentials = {}
 
     STATUS_MAPPING = {
         'Requested': StatusDefinition.CREATED,
@@ -47,6 +49,8 @@ class LipishaPaymentAdapter(BasePaymentAdapter):
             self.credentials['api_signature'],
             api_environment=env
         )
+        provider = LipishaPaymentProvider.objects.get()
+        self.credentials = provider.private_settings
 
     def _get_mapped_status(self, status):
         return self.STATUS_MAPPING[status]
@@ -92,48 +96,6 @@ class LipishaPaymentAdapter(BasePaymentAdapter):
                 return {
                     'type': 'pending'
                 }
-
-    def check_payment_status(self):
-        # If we have a transaction reference, then use that
-        if self.payment.transaction_reference and self.payment.transaction_reference != '4':
-            response = self.client.get_transactions(
-                transaction_type='Payment',
-                transaction=self.payment.transaction_reference
-            )
-        else:
-            response = self.client.get_transactions(
-                transaction_type='Payment',
-                transaction_reference=self.order_payment.id
-            )
-
-        self.payment.update_response = json.dumps(response)
-        data = response['content']
-
-        if len(data) == 0:
-            self.payment.status = StatusDefinition.FAILED
-            self.payment.save()
-            raise PaymentException('Payment could not be verified yet. Payment not found.')
-        else:
-            payment = data[0]
-            # Make sure we set the right properties
-            payment['transaction_reference'] = payment['transaction']
-            for k, v in payment.iteritems():
-                setattr(self.payment, k, v)
-            if self.payment.transaction_amount != self.payment.order_payment.amount.amount:
-                # Update donation amount based on the amount registered at Lipisha
-                amount = Money(self.payment.transaction_amount, 'KES')
-                donation = self.payment.order_payment.order.donations.all()[0]
-                self.payment.order_payment.amount = amount
-                donation.amount = amount
-                donation.save()
-                self.payment.order_payment.save()
-
-        self.payment.status = self._get_mapped_status(self.payment.transaction_status)
-
-        if self.payment.status in ['settled', 'authorized']:
-            self.order_payment.set_authorization_action({'type': 'success'})
-
-        self.payment.save()
 
 
 class LipishaPaymentInterface(object):

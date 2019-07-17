@@ -10,6 +10,8 @@ class LipishaPaymentProvider(PaymentProvider):
 
     api_key = models.CharField(max_length=100)
     api_signature = models.CharField(max_length=500)
+    prefix = models.CharField(max_length=100, default='goodup')
+    paybill = models.CharField(max_length=10)
 
     currencies = ['KES']
     countries = ['KE']
@@ -35,9 +37,10 @@ class LipishaPaymentProvider(PaymentProvider):
 
 class LipishaPayment(Payment):
     mobile_number = models.CharField(max_length=30, blank=True, null=True)
+    method = models.CharField(max_length=30, default='Paybill (M-Pesa)')
+    transaction = models.CharField(max_length=200, blank=True, null=True)
     unique_id = models.CharField(max_length=30)
     transitions = TransitionManager(PaymentTransitions, 'status')
-    payment_url = models.CharField(max_length=200, blank=True, null=True)
 
     def update(self):
         pass

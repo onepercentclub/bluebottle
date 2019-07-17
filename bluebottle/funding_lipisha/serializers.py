@@ -1,20 +1,18 @@
-from rest_framework import serializers
 from bluebottle.funding.serializers import PaymentSerializer
-from bluebottle.funding_vitepay.models import VitepayPayment
-from bluebottle.funding_vitepay.utils import get_payment_url
+from bluebottle.funding_lipisha.models import LipishaPayment
+from bluebottle.funding_lipisha.utils import initiate_push_payment
 
 
 class LipishaPaymentSerializer(PaymentSerializer):
-    payment_url = serializers.CharField(read_only=True)
 
     class Meta(PaymentSerializer.Meta):
-        model = VitepayPayment
-        fields = PaymentSerializer.Meta.fields + ('payment_url', )
+        model = LipishaPayment
+        fields = PaymentSerializer.Meta.fields + ('mobile_number', )
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
-        resource_name = 'payments/vitepay-payments'
+        resource_name = 'payments/lipisha-payments'
 
     def create(self, validated_data):
         payment = super(LipishaPaymentSerializer, self).create(validated_data)
-        payment.payment_url = get_payment_url(payment)
+        payment = initiate_push_payment(payment)
         return payment

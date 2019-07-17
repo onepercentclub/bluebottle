@@ -1,13 +1,50 @@
 import bunch
 from django.urls import reverse
+from mock import patch
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding.transitions import PaymentTransitions
-from bluebottle.funding_vitepay.models import VitepayPaymentProvider
-from bluebottle.funding_vitepay.tests.factories import VitepayPaymentFactory
+from bluebottle.funding_lipisha.tests.factories import LipishaPaymentFactory, LipishaPaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
+
+
+lipisha_success_response = {
+    u'content': [
+        {
+            u'transaction': u'A35EE9256',
+            u'transaction_account_name': u'Donations',
+            u'transaction_account_number': u'03858',
+            u'transaction_amount': u'2500.0000',
+            u'transaction_currency': u'KES',
+            u'transaction_date': u'2017-05-19 00:15:02',
+            u'transaction_email': u'',
+            u'transaction_method': u'Paybill (M-Pesa)',
+            u'transaction_mobile_number': u'31715283569',
+            u'transaction_name': u'ROSE ONESMUS RACHEL',
+            u'transaction_reference': u'4312',
+            u'transaction_reversal_status': u'None',
+            u'transaction_reversal_status_id': u'1',
+            u'transaction_status': u'Completed',
+            u'transaction_type': u'Payment'
+        }
+    ],
+    u'status': {
+        u'status': u'SUCCESS',
+        u'status_code': 0,
+        u'status_description': u'Transactions Found'
+    }
+}
+
+lipisha_not_found_response = {
+    u'content': [],
+    u'status': {
+        u'status': u'SUCCESS',
+        u'status_code': 4000,
+        u'status_description': u'Transactions Not Found'
+    }
+}
 
 
 class MockEvent(object):
@@ -16,14 +53,11 @@ class MockEvent(object):
         self.data = bunch.bunchify(data)
 
 
-class VitepayPaymentTestCase(BluebottleTestCase):
+class LipishaPaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(VitepayPaymentTestCase, self).setUp()
-        VitepayPaymentProvider.objects.create(
-            api_secret='123456789012345678901234567890123456789012345678901234567890',
-            api_key='123'
-        )
+        super(LipishaPaymentTestCase, self).setUp()
+        LipishaPaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
 
@@ -32,18 +66,32 @@ class VitepayPaymentTestCase(BluebottleTestCase):
 
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding)
-        self.payment = VitepayPaymentFactory.create(
+        self.payment = LipishaPaymentFactory.create(
             donation=self.donation,
-            unique_id='some-id',
-            payment_url='https://pay.here/'
+            unique_id='some-id'
         )
-        self.webhook = reverse('vitepay-payment-webhook')
+        self.webhook = reverse('lipisha-payment-webhook')
 
-    def test_success(self):
+    @patch('bluebottle.payments_lipisha.adapters.Lipisha')
+    def test_success(self, mock_client):
+        instance = mock_client.return_value
+        instance.get_transactions.return_value = lipisha_success_response
         data = {
-            'success': 1,
-            'authenticity': 'FD549FB47E4D85B5593F5D48C3D524AAD933CBEB',
-            'order_id': self.payment.unique_id
+            'api_key': '1234567890',
+            'api_signature': '9784904749074987dlndflnlfgnh',
+            'api_version': '2.0.0',
+            'api_type': 'Initiate',
+            'transaction_account': '424242',
+            'transaction_account_number': '424242',
+            'transaction_merchant_reference': '',
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Completed',
+            'transaction_mobile': '25471000000',
+            'transaction_type': 'Payment'
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
@@ -52,9 +100,18 @@ class VitepayPaymentTestCase(BluebottleTestCase):
 
     def test_failed(self):
         data = {
-            'failure': 1,
-            'authenticity': 'FD549FB47E4D85B5593F5D48C3D524AAD933CBEB',
-            'order_id': self.payment.unique_id
+            'transaction_account': '424242',
+            'transaction_account_number': '424242',
+            'transaction_merchant_reference': '',
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Completed',
+            'transaction_mobile': '25471000000',
+            'api_key': '1234567890',
+            'api_signature': '9784904749074987dlndflnlfgnh'
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)

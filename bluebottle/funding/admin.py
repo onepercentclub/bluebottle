@@ -13,6 +13,7 @@ from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
     BudgetLine)
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
@@ -156,5 +157,6 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
         PledgePaymentProvider,
         StripePaymentProvider,
         VitepayPaymentProvider,
-        FlutterwavePaymentProvider
+        FlutterwavePaymentProvider,
+        LipishaPaymentProvider
     )

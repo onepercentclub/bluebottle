@@ -20,7 +20,6 @@ class LipishaWebHookView(View):
 
     permanent = False
     query_string = True
-    pattern_name = 'vitepay-payment-initiate'
 
     def post(self, request):
         if request.POST['api_type'] == 'Initiate':

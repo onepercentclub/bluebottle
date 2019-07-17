@@ -1,3 +1,6 @@
+import random
+import string
+
 from django.db import models
 from django.db.models.aggregates import Sum
 from django.utils.html import format_html
@@ -201,10 +204,17 @@ class Fundraiser(models.Model):
 
 class Donation(Contribution):
     amount = MoneyField()
+    client_secret = models.CharField(max_length=32, blank=True, null=True)
     reward = models.ForeignKey(Reward, null=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
 
     transitions = TransitionManager(DonationTransitions, 'status')
+
+    def save(self, *args, **kwargs):
+        if not self.user and not self.client_secret:
+            self.client_secret = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
+
+        super(Donation, self).save(*args, **kwargs)
 
     @property
     def payment_method(self):

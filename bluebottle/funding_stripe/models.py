@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, Donation
-from bluebottle.funding_stripe.transitions import StripePaymentTransitions
+from bluebottle.funding_stripe.transitions import StripePaymentTransitions, StripeSourcePaymentTransitions
 from bluebottle.funding_stripe.utils import stripe
 from bluebottle.payouts.models import StripePayoutAccount
 
@@ -47,7 +47,7 @@ class PaymentIntent(models.Model):
 
 
 class StripePayment(Payment):
-    payment_intent = models.ForeignKey(PaymentIntent)
+    payment_intent = models.OneToOneField(PaymentIntent, related_name='payment')
     transitions = TransitionManager(StripePaymentTransitions, 'status')
 
     def update(self):
@@ -72,12 +72,12 @@ class StripeSourcePayment(Payment):
     source_token = models.CharField(max_length=30)
     charge_token = models.CharField(max_length=30, blank=True, null=True)
 
-    transitions = TransitionManager(StripePaymentTransitions, 'status')
+    transitions = TransitionManager(StripeSourcePaymentTransitions, 'status')
 
     def charge(self):
         charge = stripe.Charge.create(
-            amount=self.payment.amount,
-            currency=self.payment.currency,
+            amount=self.donation.amount,
+            currency=self.donation.amount.currency,
             source=self.source_token,
             destination={
                 'destination': StripePayoutAccount.objects.all()[0].account_id,
@@ -86,6 +86,7 @@ class StripeSourcePayment(Payment):
         )
 
         self.charge_token = charge.id
+        self.transitions.charge()
         self.save()
 
     @property

@@ -9,6 +9,7 @@ from bluebottle.activities.utils import (
 )
 from bluebottle.files.serializers import ImageField
 from bluebottle.funding.models import Funding, Donation, Payment, Fundraiser, Reward, BudgetLine, PaymentMethod
+from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.fields import FSMField
@@ -219,19 +220,42 @@ class IsRelatedToActivity(object):
             raise ValidationError(self.message)
 
 
-class RewardAmountMatches(object):
+def reward_amount_matches(data):
     """
     Validates that the reward activity is the same as the donation activity
     """
-    message = _('The amount does not match the selected reward.')
+    if 'reward' in data and not data['reward'].amount == data['amount']:
+        raise ValidationError(
+            _('The amount does not match the selected reward.')
+        )
+
+
+class DonationMemberValidator(object):
+    """
+    Validates that the reward activity is the same as the donation activity
+    """
+    message = _('User can only be set, not changed.')
+
+    def set_context(self, serializer):
+        if serializer.instance:
+            self.user = serializer.instance.user
+        else:
+            self.user = None
 
     def __call__(self, data):
-        if 'reward' in data and not data['reward'].amount == data['amount']:
+        if data.get('user') and data['user'].is_authenticated and self.user and self.user != data['user']:
             raise ValidationError(self.message)
 
 
 class DonationSerializer(BaseContributionSerializer):
     amount = MoneySerializer()
+
+    user = ResourceRelatedField(
+        queryset=Member.objects.all(),
+        default=serializers.CurrentUserDefault(),
+        allow_null=True,
+        required=False
+    )
 
     included_serializers = {
         'activity': 'bluebottle.funding.serializers.FundingSerializer',
@@ -243,12 +267,13 @@ class DonationSerializer(BaseContributionSerializer):
     validators = [
         IsRelatedToActivity('reward'),
         IsRelatedToActivity('fundraiser'),
-        RewardAmountMatches(),
+        DonationMemberValidator(),
+        reward_amount_matches,
     ]
 
     class Meta(BaseContributionSerializer.Meta):
         model = Donation
-        fields = BaseContributionSerializer.Meta.fields + ('amount', 'fundraiser', 'reward',)
+        fields = BaseContributionSerializer.Meta.fields + ('amount', 'fundraiser', 'reward', )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/donations'
@@ -258,6 +283,14 @@ class DonationSerializer(BaseContributionSerializer):
             'reward',
             'fundraiser',
         ]
+
+
+class DonationCreateSerializer(DonationSerializer):
+    amount = MoneySerializer()
+
+    class Meta(DonationSerializer.Meta):
+        model = Donation
+        fields = DonationSerializer.Meta.fields + ('client_secret', )
 
 
 class PaymentSerializer(ModelSerializer):

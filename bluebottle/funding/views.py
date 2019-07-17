@@ -1,5 +1,6 @@
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework_json_api.views import AutoPrefetchMixin
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
 from bluebottle.funding.models import (
@@ -8,8 +9,11 @@ from bluebottle.funding.models import (
 )
 from bluebottle.funding.serializers import (
     FundingSerializer, DonationSerializer, FundingTransitionSerializer,
-    FundraiserSerializer, RewardSerializer, BudgetLineSerializer
+    FundraiserSerializer, RewardSerializer, BudgetLineSerializer,
+    DonationCreateSerializer,
 )
+from bluebottle.funding.authentication import DonationAuthentication
+from bluebottle.funding.permissions import DonationOwnerPermission
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
@@ -151,7 +155,7 @@ class FundingTransitionList(TransitionList):
 
 class DonationList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Donation.objects.all()
-    serializer_class = DonationSerializer
+    serializer_class = DonationCreateSerializer
 
     permission_classes = (
     )
@@ -171,8 +175,11 @@ class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView)
     queryset = Donation.objects.all()
     serializer_class = DonationSerializer
 
-    permission_classes = (
+    authentication_classes = (
+        JSONWebTokenAuthentication, DonationAuthentication,
     )
+
+    permission_classes = (DonationOwnerPermission, )
 
     prefetch_for_includes = {
         'activity': ['activity'],

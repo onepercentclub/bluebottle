@@ -12,6 +12,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.transitions import InitiativeTransitions
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.models import BasePlatformSettings
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 class Initiative(TransitionsMixin, models.Model):
@@ -112,9 +113,11 @@ class Initiative(TransitionsMixin, models.Model):
     def __unicode__(self):
         return self.title
 
-    @property
     def get_absolute_url(self):
-        return format_html('/initiatives/details/{}/{}/', self.id, self.slug)
+        domain = get_current_host()
+        language = get_current_language()
+        link = format_html('{}/{}/initiatives/details/{}/{}', domain, language, self.id, self.slug)
+        return link
 
     def save(self, **kwargs):
         if self.slug in ['', 'new']:

@@ -29,6 +29,6 @@ class EventTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(
-            event.full_url,
+            event.get_absolute_url,
             '/initiatives/activities/event/{}/the-greatest-event'.format(event.pk)
         )

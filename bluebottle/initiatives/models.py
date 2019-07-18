@@ -113,7 +113,7 @@ class Initiative(TransitionsMixin, models.Model):
         return self.title
 
     @property
-    def full_url(self):
+    def get_absolute_url(self):
         return format_html('/initiatives/details/{}/{}/', self.id, self.slug)
 
     def save(self, **kwargs):

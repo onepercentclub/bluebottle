@@ -64,7 +64,7 @@ class Activity(TransitionsMixin, PolymorphicModel):
         super(Activity, self).save(**kwargs)
 
     @property
-    def full_url(self):
+    def get_absolute_url(self):
         return format_html("/initiatives/activities/{}/{}/{}", self.__class__.__name__.lower(), self.pk, self.slug)
 
 

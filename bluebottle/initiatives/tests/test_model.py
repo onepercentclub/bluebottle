@@ -10,7 +10,7 @@ class InitiativeTestCase(TestCase):
     def test_properties(self):
         initiative = InitiativeFactory.create(title='Dharma initiative')
         expected = '/initiatives/details/{}/dharma-initiative/'.format(initiative.id)
-        self.assertEqual(initiative.full_url, expected)
+        self.assertEqual(initiative.get_absolute_url, expected)
 
     def test_status_changes(self):
         initiative = InitiativeFactory.create(title='Dharma initiative')
@@ -43,7 +43,7 @@ class InitiativeTestCase(TestCase):
         initiative = InitiativeFactory(activity_manager=None, slug='test-initiative')
 
         self.assertEqual(
-            initiative.full_url,
+            initiative.get_absolute_url,
             '/initiatives/details/{}/test-initiative/'.format(initiative.pk)
         )
 

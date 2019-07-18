@@ -199,6 +199,14 @@ def get_current_host(include_scheme=True):
         return host
 
 
+def get_current_language():
+    """
+    Get the current language from request
+    """
+    request = ThreadLocal.get_current_request()
+    return request.LANGUAGE_CODE
+
+
 class InvalidIpError(Exception):
     """ Custom exception for an invalid IP address """
 

@@ -34,10 +34,11 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     list_filter = ['status']
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
-    readonly_fields = ['status', 'link']
+    readonly_fields = ['status', 'link', 'created', 'updated']
 
     fieldsets = (
-        (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner', 'image', 'video_url')}),
+        (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner', 'image', 'video_url',
+                                 'created', 'updated')}),
         (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'location', 'place')}),
         (_('Organization'), {'fields': ('organization', 'organization_contact')}),
         (_('Review'), {'fields': ('reviewer', 'activity_manager', 'promoter', 'status', 'status_transition')}),

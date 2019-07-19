@@ -14,5 +14,5 @@ Make sure the email notification is turned on, so all attendees will be notified
 {% endblock %}
 
 {% block action %}
-   {% trans 'Post update' context 'email' %}: {{ obj.full_url }}
+   {% trans 'Post update' context 'email' %}: {{ obj.get_absolute_url }}
 {% endblock %}`

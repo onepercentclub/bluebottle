@@ -11,5 +11,5 @@
 {% endblock %}
 
 {% block action %}
-   {% trans 'view initiative' context 'email' %}: {{ obj.full_url }}
+   {% trans 'view initiative' context 'email' %}: {{ obj.get_absolute_url }}
 {% endblock %}`

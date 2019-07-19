@@ -15,6 +15,6 @@ will be notified of the update.
 {% endblock %}
 
 {% block action %}
-    <a href="{{ site }}{{ obj.full_url }}"
+    <a href="{{ site }}{{ obj.get_absolute_url }}"
        class="action-email">{% trans 'Post update' context 'email' %}</a>
 {% endblock %}`

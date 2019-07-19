@@ -11,5 +11,5 @@
 {% endblock content %} 
 
 {% block action %}
-   {% trans 'Go to campaign' context 'email' %}: {{ obj.activity.full_url }}
+   {% trans 'Go to campaign' context 'email' %}: {{ obj.activity.get_absolute_url }}
 {% endblock %}`

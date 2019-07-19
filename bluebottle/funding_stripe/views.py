@@ -8,7 +8,7 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding.transitions import PayoutAccountTransitions
-from bluebottle.funding_stripe import stripe
+from bluebottle.funding_stripe.utils import stripe
 from bluebottle.funding_stripe.models import (
     StripePayment, ConnectAccount, ExternalAccount
 )

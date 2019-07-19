@@ -96,7 +96,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
         country = data.pop('country', None)
         if account_token and country:
             tenant = connection.tenant
-            secret_key = settings.STRIPE.api_key
+            secret_key = settings.STRIPE['api_key']
 
             # Set descriptor that appears on bank statement
             payout_statement_descriptor = tenant.name[:21]

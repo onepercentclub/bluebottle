@@ -20,15 +20,7 @@ class EventTestCase(BluebottleTestCase):
         self.assertEqual(event.duration, 240)
         self.assertEqual(event.participants.count(), 3)
 
-    def test_full_url(self):
-        event = EventFactory.create(
-            title='The greatest event',
-            start_time=now() - timedelta(hours=1),
-            end_time=now() + timedelta(hours=3),
-            capacity=10
-        )
-
-        self.assertEqual(
-            event.get_absolute_url,
-            '/initiatives/activities/event/{}/the-greatest-event'.format(event.pk)
-        )
+    def test_absolute_url(self):
+        activity = EventFactory()
+        expected = 'http://testserver/en/initiatives/activities/event/{}/{}'.format(activity.id, activity.slug)
+        self.assertEqual(activity.get_absolute_url(), expected)

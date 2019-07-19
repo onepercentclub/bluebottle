@@ -8,7 +8,7 @@ from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod, PayoutAccount
 )
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
-from bluebottle.funding_stripe.utils import init_stripe
+from bluebottle.funding_stripe.utils import stripe
 from bluebottle.payouts.models import StripePayoutAccount
 
 
@@ -20,7 +20,6 @@ class StripePayment(Payment):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            stripe = init_stripe()
             intent = stripe.PaymentIntent.create(
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
@@ -35,7 +34,6 @@ class StripePayment(Payment):
         super(StripePayment, self).save(*args, **kwargs)
 
     def update(self):
-        stripe = init_stripe()
         intent = stripe.PaymentIntent.retrieve(self.intent_id)
 
         if len(intent.charges) == 0:
@@ -141,13 +139,13 @@ class ConnectAccount(PayoutAccount):
     @property
     def account(self):
         if not hasattr(self, '_account'):
-            self._account = init_stripe().Account.retrieve(self.account_id)
+            self._account = stripe.Account.retrieve(self.account_id)
 
         return self._account
 
     def save(self, *args, **kwargs):
         if not self.account_id:
-            self._account = init_stripe().Account.create(
+            self._account = stripe.Account.create(
                 country=self.country,
                 type='custom',
                 settings=self.account_settings,
@@ -160,7 +158,7 @@ class ConnectAccount(PayoutAccount):
         super(ConnectAccount, self).save(*args, **kwargs)
 
     def update(self, token):
-        self._account = init_stripe().Account.modify(
+        self._account = stripe.Account.modify(
             self.account_id,
             account_token=token
         )
@@ -231,7 +229,7 @@ class ExternalAccount(models.Model):
         if self.account_id:
             raise ProgrammingError('Stripe Account is already created')
 
-        self._account = init_stripe().Account.create_external_account(
+        self._account = stripe.Account.create_external_account(
             self.connect_account.account_id,
             external_account=token
         )

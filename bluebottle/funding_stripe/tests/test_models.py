@@ -72,6 +72,9 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 'first_name': 'Jhon',
                 'last_name': 'Example',
                 'email': 'jhon@example.com',
+                'verification': {
+                    'status': 'verified',
+                }
             }),
             'requirements': bunch.bunchify({
                 'eventually_due': ['external_accounts', 'individual.dob.month'],

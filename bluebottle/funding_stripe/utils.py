@@ -22,8 +22,6 @@ def get_stripe_settings():
     return provider.public_settings
 
 
-def init_stripe():
-    stripe.api_key = settings.STRIPE['api_key']
-    stripe.webhook_secret = settings.STRIPE['webhook_secret']
-    stripe.webhook_secret_connect = settings.STRIPE['webhook_secret_connect']
-    return stripe
+stripe.api_key = settings.STRIPE['api_key']
+stripe.webhook_secret = settings.STRIPE['webhook_secret']
+stripe.webhook_secret_connect = settings.STRIPE['webhook_secret_connect']

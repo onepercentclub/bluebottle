@@ -27,10 +27,8 @@ class Funding(Activity):
     target = MoneyField(null=True, blank=True)
     account = models.ForeignKey('payouts.PayoutAccount', blank=True, null=True)
     amount_matching = MoneyField(null=True, blank=True)
-    account = models.ForeignKey('payouts.PayoutAccount', null=True)
-    transitions = TransitionManager(FundingTransitions, 'status')
-
     country = models.ForeignKey('geo.Country', null=True, blank=True)
+    transitions = TransitionManager(FundingTransitions, 'status')
 
     class JSONAPIMeta:
         resource_name = 'activities/fundings'
@@ -280,7 +278,7 @@ class PaymentMethod(object):
         return self.id
 
     class JSONAPIMeta:
-        resource_name = 'activities/funding/payment-methods'
+        resource_name = 'payments/payment-methods'
 
 
 class PaymentProvider(PolymorphicModel):

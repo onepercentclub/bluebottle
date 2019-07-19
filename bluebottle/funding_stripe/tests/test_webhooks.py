@@ -129,7 +129,6 @@ class IntentWebhookTestCase(BluebottleTestCase):
         ):
             response = self.client.post(
                 self.webhook,
-                reverse('stripe-payment-webhook'),
                 HTTP_STRIPE_SIGNATURE='some signature'
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)

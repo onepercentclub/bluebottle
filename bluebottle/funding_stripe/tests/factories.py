@@ -7,13 +7,6 @@ from bluebottle.funding_stripe.models import (
 from bluebottle.funding.tests.factories import DonationFactory
 
 
-class StripePaymentFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = StripePayment
-
-    donation = factory.SubFactory(DonationFactory)
-
-
 class StripeSourcePaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = StripeSourcePayment
@@ -26,6 +19,14 @@ class StripePaymentIntentFactory(factory.DjangoModelFactory):
         model = PaymentIntent
 
     donation = factory.SubFactory(DonationFactory)
+
+
+class StripePaymentFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = StripePayment
+
+    donation = factory.SubFactory(DonationFactory)
+    payment_intent = factory.SubFactory(StripeSourcePaymentFactory)
 
 
 class StripePaymentProviderFactory(factory.DjangoModelFactory):

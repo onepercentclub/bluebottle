@@ -140,3 +140,32 @@ class PaymentTransitions(ModelTransitions):
     def refund(self):
         self.instance.donation.transitions.refund()
         self.instance.donation.save()
+
+
+class PayoutAccountTransitions(ModelTransitions):
+    class values(DjangoChoices):
+        new = ChoiceItem('new', _('new'))
+        pending = ChoiceItem('pending', _('pending'))
+        verified = ChoiceItem('verified', _('verified'))
+        rejected = ChoiceItem('rejected', _('rejected'))
+
+    @transition(
+        source=[values.new, values.rejected],
+        target=values.pending
+    )
+    def submit(self):
+        pass
+
+    @transition(
+        source=[values.pending, values.rejected],
+        target='verified'
+    )
+    def verify(self):
+        pass
+
+    @transition(
+        source=[values.pending, values.verified],
+        target=values.rejected
+    )
+    def reject(self):
+        pass

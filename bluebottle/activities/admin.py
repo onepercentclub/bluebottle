@@ -33,7 +33,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
                     'contribution_count', 'link', 'highlight']
 
     def link(self, obj):
-        return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title)
+        return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title)
     link.short_description = _("Show on site")
 
     def type(self, obj):
@@ -57,7 +57,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
         activity_link.short_description = _('Edit activity')
 
         def link(self, obj):
-            return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title or '-empty-')
+            return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title or '-empty-')
         link.short_description = _('View on site')
 
     class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):

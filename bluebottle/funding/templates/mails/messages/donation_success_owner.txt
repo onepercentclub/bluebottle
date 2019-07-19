@@ -11,5 +11,5 @@ Nice! You just received a new donation. Why not head over to your campaign page 
 {% endblock %}
 
 {% block action %}
-   {% trans 'Go to campaign' context 'email' %}: {{ obj.activity.full_url }}
+   {% trans 'Go to campaign' context 'email' %}: {{ obj.activity.get_absolute_url }}
 {% endblock %}`

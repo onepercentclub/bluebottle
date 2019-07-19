@@ -17,7 +17,7 @@
             </th>
             <th class="donation-amount">{{ obj.amount|format_money }}</th>
             <tr class="donation-location">
-                <td><a href="{{obj.activity.full_url}}">{{obj.activity.title}}</a></td>
+                <td><a href="{{obj.activity.get_absolute_url}}">{{obj.activity.title}}</a></td>
             </tr>
         </tr>
         <tr class="donation-table-row">

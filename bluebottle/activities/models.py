@@ -10,6 +10,7 @@ from bluebottle.fsm import FSMField, TransitionsMixin
 from polymorphic.models import PolymorphicModel
 from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 class Activity(TransitionsMixin, PolymorphicModel):
@@ -63,9 +64,13 @@ class Activity(TransitionsMixin, PolymorphicModel):
 
         super(Activity, self).save(**kwargs)
 
-    @property
-    def full_url(self):
-        return format_html("/initiatives/activities/{}/{}/{}", self.__class__.__name__.lower(), self.pk, self.slug)
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        link = format_html("{}/{}/initiatives/activities/{}/{}/{}",
+                           domain, language,
+                           self.__class__.__name__.lower(), self.pk, self.slug)
+        return link
 
 
 class Contribution(TransitionsMixin, PolymorphicModel):

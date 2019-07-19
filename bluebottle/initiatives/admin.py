@@ -37,7 +37,8 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     readonly_fields = ['status', 'link', 'created', 'updated']
 
     fieldsets = (
-        (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner', 'image', 'video_url',
+        (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner', 'activity_manager',
+                                 'image', 'video_url',
                                  'created', 'updated')}),
         (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'location', 'place')}),
         (_('Organization'), {'fields': ('organization', 'organization_contact')}),
@@ -51,7 +52,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     inlines = [ActivityAdminInline, MessageAdminInline]
 
     def link(self, obj):
-        return format_html('<a href="{}" target="_blank">{}</a>', obj.full_url, obj.title)
+        return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title)
     link.short_description = _("Show on site")
 
     class Media:

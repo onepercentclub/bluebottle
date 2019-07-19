@@ -188,13 +188,16 @@ def get_current_host(include_scheme=True):
     E.g. http://localhost:8000 or https://bluebottle.org
     """
     request = ThreadLocal.get_current_request()
-    host = request.get_host()
+    if request:
+        host = request.get_host()
+    else:
+        host = connection.tenant.domain_url
     if include_scheme:
-        if request.is_secure():
+        if request and request.is_secure():
             scheme = 'https'
         else:
             scheme = 'http'
-        return '{0}://{1}'.format(scheme, request.get_host())
+        return '{0}://{1}'.format(scheme, host)
     else:
         return host
 
@@ -204,7 +207,10 @@ def get_current_language():
     Get the current language from request
     """
     request = ThreadLocal.get_current_request()
-    return request.LANGUAGE_CODE
+    if request:
+        return request.LANGUAGE_CODE
+    else:
+        return properties.LANGUAGE_CODE
 
 
 class InvalidIpError(Exception):

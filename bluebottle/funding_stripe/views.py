@@ -8,6 +8,7 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding.transitions import PayoutAccountTransitions
+from bluebottle.funding_stripe.utils import stripe
 from bluebottle.funding_stripe.models import (
     StripePayment, ConnectAccount, ExternalAccount
 )
@@ -19,7 +20,6 @@ from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView,
 )
-from bluebottle.funding_stripe.utils import init_stripe
 
 
 class StripePaymentList(PaymentList):
@@ -103,8 +103,6 @@ class ExternalAccountsDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdat
 
 class WebHookView(View):
     def post(self, request, **kwargs):
-        stripe = init_stripe()
-
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
 
@@ -152,7 +150,6 @@ class ConnectWebHookView(View):
 
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
-        stripe = init_stripe()
 
         try:
             event = stripe.Webhook.construct_event(

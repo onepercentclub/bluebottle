@@ -1,11 +1,10 @@
-import stripe
 from django.db import models
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from polymorphic.models import PolymorphicModel
 from stripe.error import PermissionError
 
-from bluebottle.funding_stripe.utils import get_private_key
+from bluebottle.funding_stripe.utils import stripe
 from bluebottle.projects.models import Project
 from bluebottle.utils.fields import PrivateFileField
 from bluebottle.utils.utils import reverse_signed
@@ -116,7 +115,7 @@ class StripePayoutAccount(PayoutAccount):
     @cached_property
     def account(self):
         try:
-            return stripe.Account.retrieve(self.account_id, api_key=get_private_key())
+            return stripe.Account.retrieve(self.account_id)
         except PermissionError:
             return {}
 

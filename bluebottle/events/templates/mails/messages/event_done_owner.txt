@@ -16,5 +16,5 @@ will be notified of the update.
 {% endblock %}
 
 {% block action %}
-   {% trans 'Post update' context 'email' %}: {{ obj.full_url }}
+   {% trans 'Post update' context 'email' %}: {{ obj.get_absolute_url }}
 {% endblock %}`

@@ -32,11 +32,11 @@ from bluebottle.utils.admin import export_as_csv_action
 class OrderPaymentAdmin(admin.ModelAdmin):
     model = OrderPayment
     date_hierarchy = 'created'
-    raw_id_fields = ('user',)
+    raw_id_fields = ('user', 'order')
     readonly_fields = ('order_link', 'payment_link', 'authorization_action',
-                       'amount', 'integration_data', 'payment_method',
+                       'amount', 'integration_data',
                        'transaction_fee', 'status', 'created', 'closed')
-    fields = ('user',) + readonly_fields
+    fields = ('user', 'order', 'payment_method') + readonly_fields
     list_display = ('created', 'user', 'status', 'amount',
                     'payment_method', 'transaction_fee')
 

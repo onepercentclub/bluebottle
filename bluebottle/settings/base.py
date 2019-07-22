@@ -554,21 +554,21 @@ DONATIONS_ENABLED = True
 # Analytics Service
 ANALYTICS_ENABLED = False
 ANALYTICS_BACKENDS = {
-    'influxdb': {
-        'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
-        'host': 'localhost',
-        'port': 8086,
-        'username': '',
-        'password': '',
-        'database': 'platform_v1',
-        'measurement': 'saas',
-        'ssl': True
-    },
-    'file': {
-        'handler_class': 'bluebottle.analytics.backends.FileExporter',
-        'base_dir': os.path.join(PROJECT_ROOT, 'analytics'),
-        'measurement': 'saas',
-    }
+    # 'influxdb': {
+    #     'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
+    #     'host': 'localhost',
+    #     'port': 8086,
+    #     'username': '',
+    #     'password': '',
+    #     'database': 'platform_v1',
+    #     'measurement': 'saas',
+    #     'ssl': True
+    # },
+    # 'file': {
+    #     'handler_class': 'bluebottle.analytics.backends.FileExporter',
+    #     'base_dir': os.path.join(PROJECT_ROOT, 'analytics'),
+    #     'measurement': 'saas',
+    # }
 }
 
 ANALYTICS_FRONTEND = ''

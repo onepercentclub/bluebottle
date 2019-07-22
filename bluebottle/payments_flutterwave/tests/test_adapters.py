@@ -29,9 +29,9 @@ success_response = {
 
 
 failed_response = {
-    'status': 'failed',
+    'status': 'success',
     'data': {
-        'status': 'successful'
+        'status': 'failed'
     }
 }
 

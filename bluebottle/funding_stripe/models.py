@@ -110,7 +110,7 @@ class StripePaymentProvider(PaymentProvider):
     @property
     def private_settings(self):
         return {
-            'secret_key': settings.STRIPE['secret_key'],
+            'api_key': settings.STRIPE['api_key'],
             'webhook_secret': settings.STRIPE['webhook_secret'],
             'webhook_secret_connect': settings.STRIPE['webhook_secret_connect'],
         }

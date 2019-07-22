@@ -10,7 +10,17 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
-initiate_response = {
+
+initiate_response_fail = {
+    "status": {
+        "status": "FAIL",
+        "status_code": "3000",
+        "status_description": "Invalid API Credentials"
+    },
+    "content": []
+}
+
+initiate_response_success = {
     "status": {
         "status_code": "0000",
         "status_description": "Payment Requested",
@@ -62,9 +72,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
             }
         }
 
-    @patch('bluebottle.funding.adapters.requests.post',
-           return_value=type('obj', (object,),
-                             {'status_code': 200, 'content': 'https://lipisha.com/some-path-to-pay'}))
+    @patch('lipisha.Lipisha._make_api_call', return_value=initiate_response_success)
     def test_create_payment(self, lipisha_post):
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
 
@@ -72,5 +80,12 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
-        self.assertEqual(data['data']['attributes']['payment-url'], 'https://lipisha.com/some-path-to-pay')
+        self.assertEqual(data['data']['attributes']['transaction'], 'ABC12345QR')
         self.assertEqual(data['included'][0]['attributes']['status'], 'new')
+
+    @patch('lipisha.Lipisha._make_api_call', return_value=initiate_response_fail)
+    def test_create_payment_fail(self, lipisha_post):
+        response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.content, "Error creating payment: Invalid API Credentials")

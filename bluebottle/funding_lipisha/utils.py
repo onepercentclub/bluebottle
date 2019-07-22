@@ -74,7 +74,7 @@ def initiate_push_payment(payment):
         payment.transaction = response['content']['transaction']
         payment.save()
     else:
-        payment.fail()
+        payment.transitions.fail()
         payment.save()
         raise PaymentException(response['status']['status_description'])
     return payment
@@ -127,7 +127,7 @@ def generate_success_response(payment):
 
     return {
         "api_key": credentials['api_key'],
-        "api_signature": credentials['api_signature'],
+        # "api_signature": credentials['api_signature'],
         "api_version": "1.0.4",
         "api_type": "Receipt",
         "transaction_reference": payment.transaction_reference,
@@ -144,7 +144,7 @@ def generate_error_response(reference):
     credentials = get_credentials()
     return {
         "api_key": credentials['api_key'],
-        "api_signature": credentials['api_signature'],
+        # "api_signature": credentials['api_signature'],
         "api_version": "1.0.4",
         "api_type": "Receipt",
         "transaction_reference": reference,

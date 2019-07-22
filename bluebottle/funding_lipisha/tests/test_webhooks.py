@@ -1,4 +1,3 @@
-import bunch
 from django.urls import reverse
 from mock import patch
 from rest_framework.status import HTTP_200_OK
@@ -8,7 +7,6 @@ from bluebottle.funding.transitions import PaymentTransitions
 from bluebottle.funding_lipisha.tests.factories import LipishaPaymentFactory, LipishaPaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
-
 
 lipisha_success_response = {
     u'content': [
@@ -47,12 +45,6 @@ lipisha_not_found_response = {
 }
 
 
-class MockEvent(object):
-    def __init__(self, type, data):
-        self.type = type
-        self.data = bunch.bunchify(data)
-
-
 class LipishaPaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
@@ -72,7 +64,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         )
         self.webhook = reverse('lipisha-payment-webhook')
 
-    @patch('bluebottle.payments_lipisha.adapters.Lipisha')
+    @patch('lipisha.Lipisha._make_api_call', return_value=lipisha_success_response)
     def test_success(self, mock_client):
         instance = mock_client.return_value
         instance.get_transactions.return_value = lipisha_success_response

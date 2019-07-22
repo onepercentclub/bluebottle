@@ -3,7 +3,7 @@ import stripe
 from django.core.exceptions import ImproperlyConfigured
 
 
-def get_private_key(key='secret_key'):
+def get_private_key(key='api_key'):
     from bluebottle.funding_stripe.models import StripePaymentProvider
     provider = StripePaymentProvider.objects.first()
     if not provider:

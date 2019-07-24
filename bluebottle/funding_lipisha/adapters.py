@@ -9,7 +9,6 @@ from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.orders.models import Order
-from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_lipisha.models import LipishaProject
 from .models import LipishaPayment
@@ -36,24 +35,6 @@ class LipishaPaymentInterface(object):
             api_environment=env
         )
         return client
-
-    def create_account_number(self, project):
-        client = self._get_client()
-
-        response = client.create_payment_account(
-            transaction_account_type=1,
-            transaction_account_name=project.slug
-        )
-
-        try:
-            account_number = response['content']['transaction_account_number']
-
-            LipishaProject.objects.create(
-                project=project,
-                account_number=account_number
-            )
-        except KeyError:
-            raise PaymentException("Could not create an account number at Lipisha")
 
     def generate_success_response(self, payment):
         donation = payment.order_payment.order.donations.first()

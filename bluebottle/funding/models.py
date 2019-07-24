@@ -120,14 +120,9 @@ class Funding(Activity):
 
     @property
     def payment_methods(self):
-        methods = []
-        if not self.target.currency:
+        if not self.account or self.account.payment_methods:
             return []
-        for provider in PaymentProvider.objects.all():
-            for method in provider.payment_methods:
-                if str(self.target.currency) in method.currencies:
-                    methods.append(method)
-        return methods
+        return self.account.payment_methods
 
 
 class Reward(models.Model):

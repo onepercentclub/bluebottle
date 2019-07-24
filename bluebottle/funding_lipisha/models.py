@@ -2,8 +2,9 @@ from django.db import models
 from django.utils.html import format_html
 
 from bluebottle.fsm import TransitionManager
-from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, PayoutAccount
+from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod
 from bluebottle.funding.transitions import PaymentTransitions
+from bluebottle.payouts.models import PayoutAccount
 
 
 class LipishaPaymentProvider(PaymentProvider):
@@ -52,11 +53,9 @@ class LipishaPayment(Payment):
         super(LipishaPayment, self).save(*args, **kwargs)
 
 
-class LipishaAccount(PayoutAccount):
-    account_id = models.CharField(max_length=40)
-    country = models.CharField(max_length=2)
+class LipishaPayoutAccount(PayoutAccount):
+    account_number = models.CharField(max_length=40)
+    provider_class = LipishaPaymentProvider
 
     def save(self, *args, **kwargs):
-        if not self.account_id:
-            pass
-        super(LipishaAccount, self).save(*args, **kwargs)
+        super(LipishaPayoutAccount, self).save(*args, **kwargs)

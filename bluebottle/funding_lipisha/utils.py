@@ -6,7 +6,7 @@ from moneyed import Money
 from bluebottle.clients import properties
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donation, Funding
-from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayment
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayment, LipishaPayoutAccount
 
 
 def get_credentials():
@@ -110,17 +110,16 @@ def check_payment_status(payment):
         payment.transactions.fail()
     if data.transaction_status in ['Reversed']:
         payment.transactions.refund()
-
     payment.save()
 
 
 def generate_success_response(payment):
-    donation = payment.order_payment.order.donations.first()
+    donation = payment.donation
     message = "Dear {}, thanks for your donation {} of {} {} to {}!".format(
         donation.name,
-        payment.transaction_reference,
-        payment.transaction_currency,
-        payment.transaction_amount,
+        payment.transaction,
+        donation.amount.currency,
+        donation.amount.amount,
         donation.project.title
     )
     credentials = get_credentials()
@@ -199,9 +198,99 @@ def update_webhook_payment(data):
     payment.reference = data['transaction_mobile']
 
     if data['transaction_status'] == 'Completed':
-        payment.succeed()
+        payment.transactions.succeed()
     else:
-        payment.fail()
-    payment.reference = payment.order_payment_id
+        payment.transactions.fail()
     payment.save()
     return payment
+
+
+def initiate_payment(data):
+    """
+    Look for an existing payment and update that or create a new one.
+    """
+    account_number = data['transaction_account_number']
+    transaction_merchant_reference = data['transaction_merchant_reference']
+    transaction_reference = data['transaction_reference']
+    payment = None
+    credentials = get_credentials()
+
+    # Credentials should match
+    if credentials['api_key'] != data['api_key']:
+        return generate_error_response(transaction_reference)
+    if credentials['api_signature'] != data['api_signature']:
+        return generate_error_response(transaction_reference)
+
+    # If account number has a # then it is a donation started at our platform
+    if transaction_merchant_reference:
+        try:
+            payment = LipishaPayment.objects.get(unique_id=transaction_merchant_reference)
+        except LipishaPayment.DoesNotExist:
+            # Payment not found
+            pass
+
+    if transaction_reference:
+        try:
+            payment = LipishaPayment.objects.get(transaction=transaction_reference)
+        except LipishaPayment.DoesNotExist:
+            # Payment not found
+            pass
+
+    if not payment:
+        # If we haven't found a payment by now we should create a new donation
+        try:
+            account = LipishaPayoutAccount.objects.get(account_number=account_number)
+            project = account.projec
+        except LipishaPayoutAccount.DoesNotExist:
+            return generate_error_response(transaction_reference)
+
+        name = data['transaction_name'].replace('+', ' ').title()
+
+        donation = Donation.objects.create(
+            amount=Money(data['transaction_amount'], data['transaction_currency']),
+            name=name,
+            project=project)
+
+        payment = LipishaPayment.objects.create(
+            donation=donation,
+            transaction=transaction_reference,
+        )
+
+    payment.response = json.dumps(data)
+
+    if data['transaction_status'] == 'Completed':
+        payment.transactions.succeed()
+    else:
+        payment.transactions.failed()
+    payment.save()
+    return generate_success_response(payment)
+
+
+def acknowledge_payment(data):
+    """
+    Find existing payment and switch to given status
+    """
+    transaction_reference = data['transaction_reference']
+    credentials = get_credentials()
+
+    # Credentials should match
+    if credentials['api_key'] != data['api_key']:
+        return generate_error_response(transaction_reference)
+    if credentials['api_signature'] != data['api_signature']:
+        return generate_error_response(transaction_reference)
+
+    try:
+        payment = LipishaPayment.objects.get(transaction=transaction_reference)
+    except LipishaPayment.DoesNotExist:
+        return generate_error_response(transaction_reference)
+    except LipishaPayment.MultipleObjectsReturned:
+        payment = LipishaPayment.objects.filter(transaction=transaction_reference).last()
+
+    payment.mobile_number = data['transaction_mobile']
+
+    if data['transaction_status'] == ['Success', 'Completed']:
+        payment.transitions.succeed()
+    else:
+        payment.transitions.fail()
+    payment.save()
+    return generate_success_response(payment)

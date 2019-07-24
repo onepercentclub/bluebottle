@@ -4,6 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from polymorphic.models import PolymorphicModel
 from stripe.error import PermissionError
 
+from bluebottle.funding_pledge.models import PledgePaymentProvider
 from bluebottle.funding_stripe.utils import stripe
 from bluebottle.projects.models import Project
 from bluebottle.utils.fields import PrivateFileField
@@ -47,6 +48,7 @@ class PayoutAccount(PolymorphicModel):
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
     user = models.ForeignKey('members.Member')
+    provider_class = PledgePaymentProvider
 
     reviewed = models.BooleanField(
         _('Bank reviewed'),
@@ -62,6 +64,11 @@ class PayoutAccount(PolymorphicModel):
     @property
     def projects(self):
         return Project.objects.filter(payout_account=self).all()
+
+    @property
+    def payment_methods(self):
+        provider = self.provider_class.objects.get()
+        return provider.payment_methods
 
     class Meta:
         permissions = (

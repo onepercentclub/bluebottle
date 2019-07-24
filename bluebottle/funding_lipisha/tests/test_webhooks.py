@@ -49,7 +49,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(LipishaPaymentTestCase, self).setUp()
-        LipishaPaymentProviderFactory.create()
+        self.provider = LipishaPaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
 
@@ -58,26 +58,25 @@ class LipishaPaymentTestCase(BluebottleTestCase):
 
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding)
+        self.webhook = reverse('lipisha-payment-webhook')
         self.payment = LipishaPaymentFactory.create(
             donation=self.donation,
-            unique_id='some-id'
+            unique_id='some-id',
+            transaction='7ACCB5CC8'
         )
-        self.webhook = reverse('lipisha-payment-webhook')
 
     @patch('lipisha.Lipisha._make_api_call', return_value=lipisha_success_response)
-    def test_success(self, mock_client):
-        instance = mock_client.return_value
-        instance.get_transactions.return_value = lipisha_success_response
+    def test_acknowledge(self, mock_client):
         data = {
-            'api_key': '1234567890',
-            'api_signature': '9784904749074987dlndflnlfgnh',
+            'api_key': self.provider.api_key,
+            'api_signature': self.provider.api_signature,
             'api_version': '2.0.0',
-            'api_type': 'Initiate',
+            'api_type': 'Acknowledge',
             'transaction_account': '424242',
             'transaction_account_number': '424242',
-            'transaction_merchant_reference': '',
+            'transaction_merchant_reference': self.payment.unique_id,
             'transaction': '7ACCB5CC8',
-            'transaction_reference': '7ACCB5CC8',
+            'transaction_reference': self.payment.transaction,
             'transaction_amount': '1750',
             'transaction_currency': 'KES',
             'transaction_name': 'SAM+GICHURU',
@@ -90,20 +89,20 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, PaymentTransitions.values.succeeded)
 
-    def test_failed(self):
+    def test_ackknowledge_failed(self):
         data = {
             'transaction_account': '424242',
             'transaction_account_number': '424242',
-            'transaction_merchant_reference': '',
-            'transaction': '7ACCB5CC8',
+            'transaction_merchant_reference': self.payment.unique_id,
+            'transaction': self.payment.transaction,
             'transaction_reference': '7ACCB5CC8',
             'transaction_amount': '1750',
             'transaction_currency': 'KES',
             'transaction_name': 'SAM+GICHURU',
             'transaction_status': 'Completed',
             'transaction_mobile': '25471000000',
-            'api_key': '1234567890',
-            'api_signature': '9784904749074987dlndflnlfgnh'
+            'api_key': self.provider.api_key,
+            'api_signature': self.provider.api_signature,
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)

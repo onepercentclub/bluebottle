@@ -426,3 +426,15 @@ class EventTransitionValidationTestCase(BluebottleTestCase):
             TransitionNotPossible,
             event.transitions.open
         )
+
+    def test_empty_registration_deadline(self):
+        # Test that validation doesn't trip if registration deadline isn't filled in
+        event = EventFactory.create(
+            registration_deadline=None,
+            start_time=now() + timedelta(weeks=2),
+        )
+        self.assertEqual(
+            event.status,
+            EventTransitions.values.draft
+        )
+        self.assertEqual(event.transitions.is_complete(), None)

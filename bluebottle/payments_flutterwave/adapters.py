@@ -68,7 +68,8 @@ class FlutterwaveCreditcardPaymentAdapter(BasePaymentAdapter):
         }
         data = self.post(self.verify_url, data)
         self.payment.response = data
-        if data['status'] == 'success':
+
+        if data['data']['status'] == 'successful':
             self.order_payment.set_authorization_action({'type': 'success'})
             self.payment.status = 'settled'
         else:

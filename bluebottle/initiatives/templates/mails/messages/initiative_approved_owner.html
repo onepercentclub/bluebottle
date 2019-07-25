@@ -11,5 +11,6 @@
 {% endblock %}
 
 {% block action %}
-   {% trans 'view initiative' context 'email' %}: {{ obj.get_absolute_url }}
+    <a href="{{ obj.get_absolute_url }}"
+       class="action-email">{% trans 'view initiative' context 'email' %}</a>
 {% endblock %}`

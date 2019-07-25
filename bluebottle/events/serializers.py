@@ -82,6 +82,10 @@ class EventSubmitSerializer(ActivitySubmitSerializer):
         """
         if not self.initial_data['is_online'] and not data['location']:
             raise serializers.ValidationError("Location is required or select 'is online'")
+        if self.initial_data['start_time'] > self.initial_data['end_time']:
+            raise serializers.ValidationError("End time should be after start time")
+        if self.initial_data['registration_deadline'] > self.initial_data['start_time']:
+            raise serializers.ValidationError("Registration deadline should be before start time")
         return data
 
     class Meta(ActivitySubmitSerializer.Meta):

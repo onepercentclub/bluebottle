@@ -374,3 +374,55 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             len(self.event.participants), 0
         )
+
+
+class EventTransitionValidationTestCase(BluebottleTestCase):
+
+    def test_not_online_requires_location(self):
+        event = EventFactory.create(
+            location=None,
+            is_online=False
+        )
+        self.assertEqual(
+            event.status,
+            EventTransitions.values.draft
+        )
+        self.assertEqual(event.transitions.is_complete(), [u"Location is required or select 'is online'"])
+
+        self.assertRaises(
+            TransitionNotPossible,
+            event.transitions.open
+        )
+
+    def test_wrong_end_date(self):
+        event = EventFactory.create(
+            registration_deadline=now() + timedelta(weeks=3),
+            start_time=now() + timedelta(weeks=2),
+            end_time=now() + timedelta(weeks=1),
+        )
+        self.assertEqual(
+            event.status,
+            EventTransitions.values.draft
+        )
+        self.assertEqual(event.transitions.is_complete(), [u"End time should be after start time"])
+
+        self.assertRaises(
+            TransitionNotPossible,
+            event.transitions.open
+        )
+
+    def test_wrong_registration_deadline(self):
+        event = EventFactory.create(
+            registration_deadline=now() + timedelta(weeks=3),
+            start_time=now() + timedelta(weeks=2),
+        )
+        self.assertEqual(
+            event.status,
+            EventTransitions.values.draft
+        )
+        self.assertEqual(event.transitions.is_complete(), [u"End time should be after start time"])
+
+        self.assertRaises(
+            TransitionNotPossible,
+            event.transitions.open
+        )

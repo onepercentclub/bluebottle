@@ -2,8 +2,8 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=obj.owner.name event_title=obj.title context 'email' %}
-Hey {{ recipient_name }},
+{% blocktrans with recipient_name=obj.owner.full_name event_title=obj.title context 'email' %}
+Hi {{ recipient_name }},
 
 You did it! Your event {{ event_title }} was marked 'successful',
 which means you successfully completed your event. That calls for a celebration.

@@ -99,6 +99,7 @@ def migrate_projects(apps, schema_editor):
             owner=project.owner,
             reviewer=project.reviewer,
             activity_manager=project.task_manager,
+            promoter=project.promoter,
             status=map_status(project.status)
 
         )

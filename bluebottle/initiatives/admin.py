@@ -38,7 +38,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
 
     fieldsets = (
         (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner',
-                                 'activity_manager', 'promoter',
                                  'image', 'video_url',
                                  'created', 'updated')}),
         (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'location', 'place')}),

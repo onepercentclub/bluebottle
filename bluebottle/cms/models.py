@@ -108,6 +108,7 @@ class Link(SortableMixin):
         ('initiatives.start', _('Initiative Start')),
         ('initiatives.create', _('Initiative Create')),
         ('initiatives.detail', _('Initiative Detail')),
+        ('initiatives.activities.list', _('Activities Search')),
         ('project', _('Project')),
         ('task', _('Task')),
         ('fundraiser', _('Fundraiser')),

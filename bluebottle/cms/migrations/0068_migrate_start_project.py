@@ -22,6 +22,14 @@ def migrate_start_project(apps, schema_editor):
             component_id='',
             title='Start an initiative'
         )
+        Link.objects.filter(
+            component='project',
+            link_group__site_links__language=english.id
+        ).update(
+            component='initiatives.activities.list',
+            component_id='',
+            title='Search activities'
+        )
 
     if dutch:
         Link.objects.filter(
@@ -32,6 +40,14 @@ def migrate_start_project(apps, schema_editor):
             component='initiatives.start',
             component_id='',
             title='Start een initiatief'
+        )
+        Link.objects.filter(
+            component='project',
+            link_group__site_links__language=dutch.id
+        ).update(
+            component='initiatives.activities.list',
+            component_id='',
+            title='Zoek activiteiten'
         )
 
     if french:
@@ -44,6 +60,15 @@ def migrate_start_project(apps, schema_editor):
             component_id='',
             title='Lancez votre participatif'
         )
+        Link.objects.filter(
+            component='project',
+            link_group__site_links__language=french.id
+        ).update(
+            component='initiatives.activities.list',
+            component_id='',
+            title='Rechercher des activités'
+        )
+
 
 class Migration(migrations.Migration):
 

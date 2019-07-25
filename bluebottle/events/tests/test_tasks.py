@@ -28,7 +28,7 @@ class EventTasksTestCase(BluebottleTestCase):
         event = EventFactory.create(
             initiative=self.initiative,
             start_time=now() - timedelta(hours=1),
-            end_time=now() + timedelta(hours=3),
+            end_time=now() + timedelta(hours=3)
         )
         self.assertEqual(event.status, 'open')
         check_event_start()

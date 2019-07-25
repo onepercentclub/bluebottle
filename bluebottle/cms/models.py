@@ -105,8 +105,10 @@ class Link(SortableMixin):
     COMPONENT_CHOICES = (
         ('page', _('Page')),
         ('initiatives.list', _('Initiative Search')),
+        ('initiatives.start', _('Initiative Start')),
         ('initiatives.create', _('Initiative Create')),
         ('initiatives.detail', _('Initiative Detail')),
+        ('initiatives.activities.list', _('Activities Search')),
         ('project', _('Project')),
         ('task', _('Task')),
         ('fundraiser', _('Fundraiser')),

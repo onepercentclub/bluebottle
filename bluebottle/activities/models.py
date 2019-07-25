@@ -56,7 +56,7 @@ class Activity(TransitionsMixin, PolymorphicModel):
         return self.contributions.count()
 
     def save(self, **kwargs):
-        if self.slug == 'new' and self.title:
+        if not self.slug or self.slug in ['new', ''] and self.title:
             self.slug = slugify(self.title)
 
         if not self.owner_id:

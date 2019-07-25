@@ -301,7 +301,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         )
 
     def test_success(self):
-        self.event.start_time = now() - timedelta(days=1)
+        self.event.start_time = now() - timedelta(days=2)
         self.event.end_time = now() - timedelta(days=1)
         self.event.transitions.start()
         self.event.transitions.succeed()
@@ -420,7 +420,7 @@ class EventTransitionValidationTestCase(BluebottleTestCase):
             event.status,
             EventTransitions.values.draft
         )
-        self.assertEqual(event.transitions.is_complete(), [u"End time should be after start time"])
+        self.assertEqual(event.transitions.is_complete(), [u"Registration deadline should be before start time"])
 
         self.assertRaises(
             TransitionNotPossible,

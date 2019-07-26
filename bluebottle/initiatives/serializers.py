@@ -1,6 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import (
@@ -87,7 +88,10 @@ class InitiativeSerializer(ModelSerializer):
     )
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
-    title = serializers.CharField(allow_blank=True, required=False)
+    title = serializers.CharField(
+        allow_blank=True,
+        validators=[UniqueValidator(queryset=Initiative.objects.all())]
+    )
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
 
     transitions = AvailableTransitionsField(source='status')
@@ -166,7 +170,10 @@ class OrganizationContactSubmitSerializer(serializers.ModelSerializer):
 
 
 class InitiativeSubmitSerializer(ModelSerializer):
-    title = serializers.CharField(required=True, error_messages={'blank': _('Title is required')})
+    title = serializers.CharField(
+        required=True,
+        error_messages={'blank': _('Title is required')}
+    )
     pitch = serializers.CharField(required=True, error_messages={'blank': _('Pitch is required')})
     story = serializers.CharField(required=True, error_messages={'blank': _('Story is required')})
 

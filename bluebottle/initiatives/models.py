@@ -146,7 +146,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ('funding', _('Funding')),
         ('event', _('Events')),
-        ('job', _('Jobs')),
+        ('assignment', _('Assignment')),
     )
 
     activity_types = MultiSelectField(max_length=100, choices=ACTIVITY_TYPES)

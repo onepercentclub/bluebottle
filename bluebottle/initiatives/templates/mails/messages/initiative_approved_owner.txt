@@ -12,5 +12,5 @@ moment to create one (or two), so people can help you reach your initiative’s 
 {% endblock %}
 
 {% block action %}
-   {% trans 'view initiative' context 'email' %}: {{ obj.get_absolute_url }}
+   {% trans 'View initiative' context 'email' %}: {{ obj.get_absolute_url }}
 {% endblock %}`

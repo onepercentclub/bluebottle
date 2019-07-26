@@ -152,7 +152,6 @@ class OrganizationSubmitSerializer(serializers.ModelSerializer):
 class OrganizationContactSubmitSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=True, error_messages={'blank': _('Name is required')})
     email = serializers.CharField(required=True, error_messages={'blank': _('Email is required')})
-    phone = serializers.CharField(required=True, error_messages={'blank': _('Phone is required')})
 
     def validate_empty_values(self, data):
         if self.parent.initial_data['has_organization'] and not data:

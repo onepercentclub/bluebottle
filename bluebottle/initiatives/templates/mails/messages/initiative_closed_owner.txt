@@ -10,5 +10,5 @@ Unfortunately, your initiative "{{ initiative_title }}" has been closed.
 {% endblock %}
 
 {% block action %}
-   {% trans 'view initiative' context 'email' %}: {{ obj.get_absolute_url }}
+   {% trans 'View initiative' context 'email' %}: {{ obj.get_absolute_url }}
 {% endblock %}`

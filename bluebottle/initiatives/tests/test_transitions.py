@@ -74,6 +74,18 @@ class InitiativeTransitionTestCase(BluebottleTestCase):
             self.initiative.status, InitiativeTransitions.values.submitted
         )
 
+    def test_submit_contact_without_phone(self):
+        self.initiative.has_organization = True
+        self.initiative.organization = OrganizationFactory.create()
+        self.initiative.organization_contact = OrganizationContactFactory.create(
+            phone=None
+        )
+
+        self.initiative.transitions.submit()
+        self.assertEqual(
+            self.initiative.status, InitiativeTransitions.values.submitted
+        )
+
     def test_needs_work(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.needs_work()

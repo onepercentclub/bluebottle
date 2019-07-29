@@ -4,6 +4,6 @@ from bluebottle.funding_flutterwave.views import FlutterwavePaymentList, Flutter
 
 
 urlpatterns = [
-    url(r'^$', FlutterwavePaymentList.as_view(), name='flutterwave-payment-list'),
-    url(r'^webhook$', FlutterwaveWebhookView.as_view(), name='flutterwave-payment-webhook'),
+    url(r'^/payments/$', FlutterwavePaymentList.as_view(), name='flutterwave-payment-list'),
+    url(r'^/webhook/$', FlutterwaveWebhookView.as_view(), name='flutterwave-payment-webhook'),
 ]

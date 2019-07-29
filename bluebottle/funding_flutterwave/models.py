@@ -52,6 +52,8 @@ class FlutterwavePayoutAccount(PayoutAccount):
         'flutterwave', 'pledge'
     ]
 
+    provider_class = FlutterwavePaymentProvider
+
     account = models.CharField(
         _("flutterwave account"), max_length=100, null=True, blank=True)
     account_holder_name = models.CharField(

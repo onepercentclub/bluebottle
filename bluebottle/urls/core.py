@@ -83,7 +83,7 @@ urlpatterns = [
         include('bluebottle.funding.urls.api')),
     url(r'^api/funding/pledge',
         include('bluebottle.funding_pledge.urls.api')),
-    url(r'^api/funding/stripe/',
+    url(r'^api/funding/stripe',
         include('bluebottle.funding_stripe.urls.api')),
     url(r'^api/funding/vitepay',
         include('bluebottle.funding_vitepay.urls.api')),

@@ -52,8 +52,8 @@ class PaymentLinkMixin(object):
 class PayoutAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner', )
-
-    fields = ('owner', 'reviewed', 'funding_links')
+    readonly_fields = ('status', 'funding_links')
+    fields = ('owner', 'status', 'funding_links')
 
 
 @admin.register(PayoutAccount)
@@ -61,7 +61,8 @@ class PayoutAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAd
     base_model = PayoutAccount
     list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
     list_filter = ('reviewed', PolymorphicChildModelFilter)
-    raw_id_fields = ('owner', )
+    readonly_fields = ('funding_links', )
+    raw_id_fields = ('owner',)
 
     ordering = ('-created',)
     child_models = [

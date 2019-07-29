@@ -26,7 +26,7 @@ class FlutterwavePayoutAccountAdmin(PayoutAccountProjectLinkMixin, PolymorphicCh
             url(
                 r'^(?P<account_id>.+)/generate-account/$',
                 self.admin_site.admin_view(self.generate_account),
-                name='flutterwave-payout-generate-account',
+                name='old-flutterwave-payout-generate-account',
             ),
         ]
         return custom_urls + urls
@@ -38,7 +38,7 @@ class FlutterwavePayoutAccountAdmin(PayoutAccountProjectLinkMixin, PolymorphicCh
             "account_number": account.account_number,
             "business_name": account.account_holder_name,
             "business_email": account.user.email,
-            "business_contact": account.user.full_name,
+            "business_contact": account.owner.full_name,
             "business_contact_mobile": "",
             "business_mobile": "",
             "split_type": "flat",

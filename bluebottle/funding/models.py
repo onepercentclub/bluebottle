@@ -1,3 +1,6 @@
+import random
+import string
+
 from django.db import models
 from django.db.models.aggregates import Sum
 from django.utils.html import format_html
@@ -23,14 +26,13 @@ class Funding(Activity):
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
     target = MoneyField(null=True, blank=True)
+    account = models.ForeignKey('payouts.PayoutAccount', blank=True, null=True)
     amount_matching = MoneyField(null=True, blank=True)
-    account = models.ForeignKey('payouts.PayoutAccount', null=True)
+    country = models.ForeignKey('geo.Country', null=True, blank=True)
     transitions = TransitionManager(FundingTransitions, 'status')
 
-    country = models.ForeignKey('geo.Country', null=True, blank=True)
-
     class JSONAPIMeta:
-        resource_name = 'activities/funding'
+        resource_name = 'activities/fundings'
 
     class Meta:
         verbose_name = _("Funding")
@@ -201,10 +203,17 @@ class Fundraiser(models.Model):
 
 class Donation(Contribution):
     amount = MoneyField()
+    client_secret = models.CharField(max_length=32, blank=True, null=True)
     reward = models.ForeignKey(Reward, null=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
 
     transitions = TransitionManager(DonationTransitions, 'status')
+
+    def save(self, *args, **kwargs):
+        if not self.user and not self.client_secret:
+            self.client_secret = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
+
+        super(Donation, self).save(*args, **kwargs)
 
     @property
     def payment_method(self):
@@ -270,7 +279,7 @@ class PaymentMethod(object):
         return self.id
 
     class JSONAPIMeta:
-        resource_name = 'activities/funding/payment-methods'
+        resource_name = 'payments/payment-methods'
 
 
 class PaymentProvider(PolymorphicModel):

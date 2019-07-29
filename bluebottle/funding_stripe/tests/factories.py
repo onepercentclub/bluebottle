@@ -1,10 +1,26 @@
 import factory.fuzzy
 
+from bluebottle.funding.tests.factories import DonationFactory
 from bluebottle.funding_stripe.models import (
-    StripePayment, ConnectAccount, ExternalAccount, StripePaymentProvider
+    ConnectAccount, ExternalAccount,
+    StripePayment, StripePaymentProvider, PaymentIntent,
+    StripeSourcePayment
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.funding.tests.factories import DonationFactory
+
+
+class StripeSourcePaymentFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = StripeSourcePayment
+
+    donation = factory.SubFactory(DonationFactory)
+
+
+class StripePaymentIntentFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = PaymentIntent
+
+    donation = factory.SubFactory(DonationFactory)
 
 
 class StripePaymentFactory(factory.DjangoModelFactory):
@@ -12,6 +28,7 @@ class StripePaymentFactory(factory.DjangoModelFactory):
         model = StripePayment
 
     donation = factory.SubFactory(DonationFactory)
+    payment_intent = factory.SubFactory(StripePaymentIntentFactory)
 
 
 class ConnectAccountFactory(factory.DjangoModelFactory):

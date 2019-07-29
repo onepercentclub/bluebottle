@@ -28,7 +28,7 @@ class StripePaymentFactory(factory.DjangoModelFactory):
         model = StripePayment
 
     donation = factory.SubFactory(DonationFactory)
-    payment_intent = factory.SubFactory(StripeSourcePaymentFactory)
+    payment_intent = factory.SubFactory(StripePaymentIntentFactory)
 
 
 class ConnectAccountFactory(factory.DjangoModelFactory):

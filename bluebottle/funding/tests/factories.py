@@ -20,6 +20,7 @@ class FundingFactory(factory.DjangoModelFactory):
     account = factory.SubFactory(StripePayoutAccountFactory)
     deadline = factory.Faker('future_date')
     target = Money(5000, 'EUR')
+    amount_matching = Money(0, 'EUR')
 
 
 class DonationFactory(factory.DjangoModelFactory):

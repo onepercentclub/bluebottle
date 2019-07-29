@@ -1,25 +1,28 @@
 import json
-import mock
 
 import bunch
-
+import mock
+import stripe
 from django.urls import reverse
-
 from rest_framework import status
 
-import stripe
-
 from bluebottle.funding.models import Donation
-from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.transitions import DonationTransitions, PayoutAccountTransitions
+from bluebottle.funding_stripe.models import ConnectAccount
+from bluebottle.funding_stripe.models import StripeSourcePayment
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentIntentFactory,
-    StripePaymentProviderFactory,
     StripeSourcePaymentFactory
 )
-from bluebottle.funding_stripe.transitions import StripePaymentTransitions, StripeSourcePaymentTransitions
-from bluebottle.funding_stripe.models import StripeSourcePayment
+from bluebottle.funding_stripe.tests.factories import (
+    StripePaymentProviderFactory,
+    ConnectAccountFactory
+)
+from bluebottle.funding_stripe.transitions import StripePaymentTransitions
+from bluebottle.funding_stripe.transitions import StripeSourcePaymentTransitions
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -350,3 +353,74 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self._refresh()
         self.assertEqual(self.donation.status, DonationTransitions.values.refunded)
         self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.disputed)
+
+
+class StripeConnectWebhookTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(StripeConnectWebhookTestCase, self).setUp()
+        self.user = BlueBottleUserFactory.create()
+
+        self.connect_account = stripe.Account('some-account-id')
+        self.connect_account.update(bunch.bunchify({
+            'requirements': {
+                'disabled': False,
+                'eventually_due': [],
+            },
+            'individual': {
+                'verification': {
+                    'status': 'verified',
+                }
+            },
+
+        }))
+
+        with mock.patch('stripe.Account.create', return_value=self.connect_account):
+            self.payout_account = ConnectAccountFactory.create(owner=self.user)
+
+        self.webhook = reverse('stripe-payment-webhook')
+
+    def test_verified(self):
+        with open('bluebottle/funding_stripe/tests/files/connect_webhook_verified.json') as hook_file:
+            data = json.load(hook_file)
+            data['object']['id'] = self.payout_account.account_id
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'account.updated', data
+            )
+        ):
+            with mock.patch('stripe.Account.retrieve', return_value=self.connect_account):
+                response = self.client.post(
+                    reverse('stripe-connect-webhook'),
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        payout_account = ConnectAccount.objects.get(pk=self.payout_account.pk)
+
+        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.verified)
+
+    def test_disabled(self):
+        with open('bluebottle/funding_stripe/tests/files/connect_webhook_verified.json') as hook_file:
+            data = json.load(hook_file)
+            data['object']['id'] = self.payout_account.account_id
+
+        self.connect_account.requirements.disabled = True
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'account.updated', data
+            )
+        ):
+            with mock.patch('stripe.Account.retrieve', return_value=self.connect_account):
+                response = self.client.post(
+                    reverse('stripe-connect-webhook'),
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        payout_account = ConnectAccount.objects.get(pk=self.payout_account.pk)
+
+        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.rejected)

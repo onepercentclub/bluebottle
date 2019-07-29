@@ -66,8 +66,8 @@ class ActivitySubmitSerializer(ModelSerializer):
     description = serializers.CharField(
         required=True,
         error_messages={
-            'blank': _('Location is required'),
-            'null': _('Location is required')
+            'blank': _('Description is required'),
+            'null': _('Description is required')
         }
     )
 

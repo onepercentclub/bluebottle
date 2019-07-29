@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db import models
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
@@ -116,7 +115,7 @@ class StripePayoutAccount(PayoutAccount):
     @cached_property
     def account(self):
         try:
-            return stripe.Account.retrieve(self.account_id, api_key=settings.STRIPE['api_key'])
+            return stripe.Account.retrieve(self.account_id)
         except PermissionError:
             return {}
 

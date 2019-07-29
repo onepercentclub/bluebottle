@@ -7,11 +7,6 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory, Initiative
 
 class InitiativeTestCase(TestCase):
 
-    def test_properties(self):
-        initiative = InitiativeFactory.create(title='Dharma initiative')
-        expected = '/initiatives/details/{}/dharma-initiative/'.format(initiative.id)
-        self.assertEqual(initiative.full_url, expected)
-
     def test_status_changes(self):
         initiative = InitiativeFactory.create(title='Dharma initiative')
         self.assertEqual(initiative.status, 'draft')
@@ -36,16 +31,12 @@ class InitiativeTestCase(TestCase):
 
     def test_activity_manager(self):
         initiative = InitiativeFactory(activity_manager=None)
-
         self.assertEqual(initiative.owner, initiative.activity_manager)
 
-    def test_full_url(self):
-        initiative = InitiativeFactory(activity_manager=None, slug='test-initiative')
-
-        self.assertEqual(
-            initiative.full_url,
-            '/initiatives/details/{}/test-initiative/'.format(initiative.pk)
-        )
+    def test_absolute_url(self):
+        initiative = InitiativeFactory(activity_manager=None)
+        expected = 'http://testserver/en/initiatives/details/{}/{}'.format(initiative.id, initiative.slug)
+        self.assertEqual(initiative.get_absolute_url(), expected)
 
     def test_member_organization(self):
         member = BlueBottleUserFactory.create(partner_organization=OrganizationFactory.create())

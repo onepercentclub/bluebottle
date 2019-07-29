@@ -369,6 +369,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.user_create_api_url,
                                     {'email': new_user_email, 'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('password' in response.data)
 
     def test_duplicate_user_create(self):
         """

@@ -1,12 +1,9 @@
-from django.conf import settings
 from django.db import connection
-
-import stripe
-
 from rest_framework import serializers, exceptions
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
+from bluebottle.funding_stripe.utils import stripe
 from bluebottle.payouts.models import (
     PayoutAccount, PlainPayoutAccount, PayoutDocument, StripePayoutAccount
 )
@@ -96,7 +93,6 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
         country = data.pop('country', None)
         if account_token and country:
             tenant = connection.tenant
-            secret_key = settings.STRIPE['api_key']
 
             # Set descriptor that appears on bank statement
             payout_statement_descriptor = tenant.name[:21]
@@ -107,7 +103,6 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
                 country=country,
                 type='custom',
                 payout_schedule={'interval': 'manual'},
-                api_key=secret_key,
                 payout_statement_descriptor=payout_statement_descriptor,
                 statement_descriptor=statement_descriptor,
                 metadata={

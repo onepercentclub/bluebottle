@@ -13,7 +13,7 @@
 {% endblock content %} 
 
 {% block action %}
-    <a href="{{ site }}{{ obj.activity.full_url }}" class="action-email">
+    <a href="{{ site }}{{ obj.activity.get_absolute_url }}" class="action-email">
        {% trans 'Go to campaign' context 'email' %}:
     </a>
 {% endblock %}`

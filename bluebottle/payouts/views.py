@@ -1,13 +1,11 @@
 import logging
 
-
 from django.conf import settings
 from django.http import HttpResponse
 from django.views.generic import View
 
-import stripe
-
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
+from bluebottle.funding_stripe.utils import stripe
 from bluebottle.payouts.models import PayoutDocument
 from bluebottle.payouts.models import StripePayoutAccount
 from bluebottle.payouts.serializers import PayoutDocumentSerializer

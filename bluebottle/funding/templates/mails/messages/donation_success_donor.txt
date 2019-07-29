@@ -10,7 +10,7 @@ Give some extra support and share this project with your network.
 {% trans "Donation" %} {% if obj.reward %} - {{ obj.reward.title }} {% endif %}
 {{ obj.amount|format_money }}
 {{ obj.activity.title }}
-{{ obj.activity.full_url }}
+{{ obj.activity.get_absolute_url }}
 
 {% if not obj.anonymous %}
 {{obj.user.full_name}}

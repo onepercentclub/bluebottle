@@ -1,7 +1,6 @@
+import stripe
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-
-import stripe
 
 
 def get_stripe_settings():

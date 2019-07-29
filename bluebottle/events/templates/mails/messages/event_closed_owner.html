@@ -2,8 +2,8 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=obj.owner.name event_title=obj.title context 'email' %}
-Hey {{ recipient_name }},
+{% blocktrans with recipient_name=obj.owner.full_name event_title=obj.title context 'email' %}
+Hi {{ recipient_name }},
 <br><br>
 We wanted to let you know that your event "{{ event_title }}" has been closed.
 <br><br>
@@ -13,7 +13,7 @@ Make sure the email notification is turned on, so all attendees will be notified
 {% endblock %}
 
 {% block action %}
-    <a href="{{ site }}{{ obj.full_url }}" class="action-email">
+    <a href="{{ site }}{{ obj.get_absolute_url }}" class="action-email">
        {% trans 'Post update' context 'email' %}:
     </a>
 {% endblock %}`

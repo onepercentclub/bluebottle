@@ -193,19 +193,21 @@ class IntentWebHookView(View):
 
                 return HttpResponse('Updated payment')
 
-            if event.type == 'payment_intent.payment_failed':
+            elif event.type == 'payment_intent.payment_failed':
                 payment = self.get_payment(event.data.object.id)
                 payment.transitions.fail()
                 payment.save()
 
                 return HttpResponse('Updated payment')
 
-            if event.type == 'charge.refunded':
+            elif event.type == 'charge.refunded':
                 payment = self.get_payment(event.data.object.payment_intent)
                 payment.transitions.refund()
                 payment.save()
 
                 return HttpResponse('Updated payment')
+            else:
+                return HttpResponse('Skipped event {}'.format(event.type))
 
         except StripePayment.DoesNotExist:
             return HttpResponse('Payment not found', status=400)

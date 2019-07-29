@@ -38,17 +38,6 @@ class StripePaymentSerializer(PaymentSerializer):
         resource_name = 'payments/stripe-payments'
 
 
-class StripeSourcePaymentSerializer(PaymentSerializer):
-    charge_token = serializers.CharField(required=False, allow_blank=True)
-
-    class Meta(PaymentSerializer.Meta):
-        model = StripeSourcePayment
-        fields = PaymentSerializer.Meta.fields + ('source_token', 'charge_token', )
-
-    class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
-        resource_name = 'payments/stripe-source-payments'
-
-
 class ExternalAccountSerializer(serializers.ModelSerializer):
     connect_account = ResourceRelatedField(queryset=ConnectAccount.objects.all())
     token = serializers.CharField(write_only=True)
@@ -102,3 +91,14 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
         resource_name = 'payout-accounts/stripe/connect-accounts'
 
         included_resources = ['external_accounts', 'owner']
+
+
+class StripeSourcePaymentSerializer(PaymentSerializer):
+    charge_token = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta(PaymentSerializer.Meta):
+        model = StripeSourcePayment
+        fields = PaymentSerializer.Meta.fields + ('source_token', 'charge_token', )
+
+    class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
+        resource_name = 'payments/stripe-source-payments'

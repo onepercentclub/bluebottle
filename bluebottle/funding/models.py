@@ -1,5 +1,9 @@
+import random
+import string
+
 from babel.numbers import get_currency_name
-from django.db import models, connection
+from django.db import connection
+from django.db import models
 from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
 from django.utils.html import format_html
@@ -60,13 +64,12 @@ class Funding(Activity):
 
     target = MoneyField()
     amount_matching = MoneyField()
+    country = models.ForeignKey('geo.Country', null=True, blank=True)
     account = models.ForeignKey('funding.PayoutAccount', null=True, on_delete=SET_NULL)
     transitions = TransitionManager(FundingTransitions, 'status')
 
-    country = models.ForeignKey('geo.Country', null=True, blank=True)
-
     class JSONAPIMeta:
-        resource_name = 'activities/funding'
+        resource_name = 'activities/fundings'
 
     class Meta:
         verbose_name = _("Funding")
@@ -232,10 +235,17 @@ class Fundraiser(models.Model):
 
 class Donation(Contribution):
     amount = MoneyField()
+    client_secret = models.CharField(max_length=32, blank=True, null=True)
     reward = models.ForeignKey(Reward, null=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
 
     transitions = TransitionManager(DonationTransitions, 'status')
+
+    def save(self, *args, **kwargs):
+        if not self.user and not self.client_secret:
+            self.client_secret = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
+
+        super(Donation, self).save(*args, **kwargs)
 
     @property
     def payment_method(self):

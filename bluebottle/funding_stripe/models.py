@@ -1,21 +1,22 @@
 from django.conf import settings
-from django.db import models, connection
 from django.db import ProgrammingError
+from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm import TransitionManager
+from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount)
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
+from bluebottle.funding_stripe.transitions import StripeSourcePaymentTransitions
 from bluebottle.funding_stripe.utils import stripe
 
 
-class StripePayment(Payment):
+class PaymentIntent(models.Model):
     intent_id = models.CharField(max_length=30)
     client_secret = models.CharField(max_length=100)
-
-    transitions = TransitionManager(StripePaymentTransitions, 'status')
+    donation = models.ForeignKey(Donation)
 
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -30,11 +31,31 @@ class StripePayment(Payment):
             self.intent_id = intent.id
             self.client_secret = intent.client_secret
 
-        super(StripePayment, self).save(*args, **kwargs)
+        super(PaymentIntent, self).save(*args, **kwargs)
+
+    @property
+    def intent(self):
+        return stripe.PaymentIntent.retrieve(self.intent_id)
+
+    @property
+    def metadata(self):
+        return {
+            "tenant_name": connection.tenant.client_name,
+            "tenant_domain": connection.tenant.domain_url,
+            "activity_id": self.donation.activity.pk,
+            "activity_title": self.donation.activity.title,
+        }
+
+    class JSONAPIMeta:
+        resource_name = 'payments/stripe-payment-intents'
+
+
+class StripePayment(Payment):
+    payment_intent = models.OneToOneField(PaymentIntent, related_name='payment')
+    transitions = TransitionManager(StripePaymentTransitions, 'status')
 
     def update(self):
-        intent = stripe.PaymentIntent.retrieve(self.intent_id)
-
+        intent = self.payment_intent.intent
         if len(intent.charges) == 0:
             # No charge. Do we still need to charge?
             self.fail()
@@ -48,6 +69,28 @@ class StripePayment(Payment):
         elif intent.status == 'succeeded' and self.status != Payment.Status.success:
             self.succeed()
             self.save()
+
+
+class StripeSourcePayment(Payment):
+    source_token = models.CharField(max_length=30)
+    charge_token = models.CharField(max_length=30, blank=True, null=True)
+
+    transitions = TransitionManager(StripeSourcePaymentTransitions, 'status')
+
+    def charge(self):
+        charge = stripe.Charge.create(
+            amount=self.donation.amount,
+            currency=self.donation.amount.currency,
+            source=self.source_token,
+            destination={
+                'destination': StripePayoutAccount.objects.all()[0].account_id,
+            },
+            metadata=self.metadata
+        )
+
+        self.charge_token = charge.id
+        self.transitions.charge()
+        self.save()
 
     @property
     def metadata(self):
@@ -64,7 +107,7 @@ class StripePaymentProvider(PaymentProvider):
     stripe_payment_methods = [
         PaymentMethod(
             provider='stripe',
-            code='credit_card',
+            code='credit-card',
             name=_('Credit card'),
             currencies=['EUR', 'USD'],
             countries=[]
@@ -85,7 +128,7 @@ class StripePaymentProvider(PaymentProvider):
         ),
         PaymentMethod(
             provider='stripe',
-            code='direct_debit',
+            code='direct-debit',
             name=_('Direct debit'),
             currencies=['EUR'],
         )
@@ -100,10 +143,10 @@ class StripePaymentProvider(PaymentProvider):
     def public_settings(self):
         return {
             'publishable_key': settings.STRIPE['publishable_key'],
-            'credit_card': self.credit_card,
+            'credit-card': self.credit_card,
             'ideal': self.ideal,
             'bancontact': self.bancontact,
-            'direct_debit': self.direct_debit
+            'direct-debit': self.direct_debit
         }
 
     @property
@@ -122,8 +165,8 @@ class StripePaymentProvider(PaymentProvider):
     @property
     def payment_methods(self):
         methods = []
-        for code in ['credit_card', 'ideal', 'bancontact', 'direct_debit']:
-            if getattr(self, code, False):
+        for code in ['credit-card', 'ideal', 'bancontact', 'direct-debit']:
+            if getattr(self, code.replace('-', '_'), False):
                 for method in self.stripe_payment_methods:
                     if method.code == code:
                         methods.append(method)

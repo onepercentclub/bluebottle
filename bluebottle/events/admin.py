@@ -65,6 +65,6 @@ class EventAdmin(ActivityChildAdmin):
         (_('Details'), {'fields': (
             'description', 'capacity',
             'start_time', 'end_time', 'registration_deadline',
-            'location', 'location_hint'
+            'is_online', 'location', 'location_hint'
         )}),
     )

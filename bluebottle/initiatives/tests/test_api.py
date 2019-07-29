@@ -80,6 +80,32 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         )
         self.assertEqual(len(response_data['included']), 2)
 
+    def test_create_duplicate_title(self):
+        InitiativeFactory.create(title='Some title')
+        data = {
+            'data': {
+                'type': 'initiatives',
+                'attributes': {
+                    'title': 'Some title'
+                },
+                'relationships': {
+                    'theme': {
+                        'data': {
+                            'type': 'themes',
+                            'id': self.theme.pk
+                        },
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json(), {u'errors': {u'title': [u'This field must be unique.']}})
+
     def test_create_with_location(self):
         geolocation = GeolocationFactory.create(position=Point(23.6851594, 43.0579025))
         data = {

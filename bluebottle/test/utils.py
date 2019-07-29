@@ -236,6 +236,18 @@ class FsmTestMixin(object):
                              instance.status))
 
 
+class override_properties():
+    def __init__(self, **kwargs):
+        self.properties = kwargs
+
+    def __enter__(self):
+        self.old_properties = properties.tenant_properties
+        properties.tenant_properties = self.properties
+
+    def __exit__(self, *args):
+        properties.tenant_properties = self.old_properties
+
+
 class JSONAPITestClient(Client):
 
     def patch(self, path, data='',
@@ -265,15 +277,3 @@ class JSONAPITestClient(Client):
 def get_included(response, type):
     included = response.json()['included']
     return [include for include in included if include['type'] == type][0]
-
-
-class override_properties():
-    def __init__(self, **kwargs):
-        self.properties = kwargs
-
-    def __enter__(self):
-        self.old_properties = properties.tenant_properties
-        properties.tenant_properties = self.properties
-
-    def __exit__(self, *args):
-        properties.tenant_properties = self.old_properties

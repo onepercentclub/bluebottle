@@ -1,17 +1,6 @@
-from django.conf import settings
 import stripe
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-
-
-def get_private_key(key='api_key'):
-    from bluebottle.funding_stripe.models import StripePaymentProvider
-    provider = StripePaymentProvider.objects.first()
-    if not provider:
-        raise ImproperlyConfigured('Stripe not enabled for this tenant')
-    try:
-        return provider.private_settings[key]
-    except KeyError:
-        raise ImproperlyConfigured('Stripe property missing {}'.format(key))
 
 
 def get_stripe_settings():

@@ -21,7 +21,9 @@ flutterwave_settings = {
 
 success_response = {
     'status': 'success',
-    'data': {}
+    'data': {
+        'status': 'successful'
+    }
 }
 
 

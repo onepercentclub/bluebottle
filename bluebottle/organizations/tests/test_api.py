@@ -248,6 +248,26 @@ class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['name'], 'Brian Brown')
 
+    def test_create_contact_without_phone(self):
+        data = {
+            'data': {
+                'type': 'organization-contacts',
+                'attributes': {
+                    'name': 'Brian Brown',
+                    'email': 'brian@brown.com'
+                }
+            }
+        }
+
+        response = self.client.post(
+            reverse('organization_contact_list'),
+            json.dumps(data),
+            user=self.user_1
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['name'], 'Brian Brown')
+
     def test_organization_contact(self):
         contact = OrganizationContactFactory.create(owner=self.user_1)
 

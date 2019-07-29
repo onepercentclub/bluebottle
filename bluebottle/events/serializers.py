@@ -66,13 +66,23 @@ class EventSubmitSerializer(ActivitySubmitSerializer):
     )
 
     location = serializers.PrimaryKeyRelatedField(
-        required=True,
+        required=False,
+        allow_null=True,
+        allow_empty=True,
         queryset=Geolocation.objects.all(),
         error_messages={
             'blank': _('Location is required'),
             'null': _('Location is required')
         }
     )
+
+    def validate(self, data):
+        """
+        Check that location is set if not online
+        """
+        if not self.initial_data['is_online'] and not data['location']:
+            raise serializers.ValidationError("Location is required or select 'is online'")
+        return data
 
     class Meta(ActivitySubmitSerializer.Meta):
         model = Event

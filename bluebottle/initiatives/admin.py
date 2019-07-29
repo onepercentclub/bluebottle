@@ -37,7 +37,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     readonly_fields = ['status', 'link', 'created', 'updated']
 
     fieldsets = (
-        (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner', 'activity_manager',
+        (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner',
                                  'image', 'video_url',
                                  'created', 'updated')}),
         (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'location', 'place')}),

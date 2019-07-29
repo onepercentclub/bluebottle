@@ -294,9 +294,9 @@ class FundraiserListTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class DonationListTestCase(BluebottleTestCase):
+class DonationTestCase(BluebottleTestCase):
     def setUp(self):
-        super(DonationListTestCase, self).setUp()
+        super(DonationTestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
@@ -337,6 +337,217 @@ class DonationListTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
         self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
         self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertIsNone(data['data']['attributes']['client-secret'])
+
+    def test_update(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+
+        patch_data = {
+            'data': {
+                'type': 'contributions/donations',
+                'id': data['data']['id'],
+                'attributes': {
+                    'amount': {'amount': 200, 'currency': 'EUR'},
+                },
+            }
+        }
+
+        response = self.client.patch(update_url, json.dumps(patch_data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['attributes']['amount'], {'amount': 200, 'currency': 'EUR'})
+
+    def test_update_change_user(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+
+        patch_data = {
+            'data': {
+                'type': 'contributions/donations',
+                'id': data['data']['id'],
+                'relationships': {
+                    'user': {
+                        'data': {
+                            'id': BlueBottleUserFactory.create().pk,
+                            'type': 'members',
+                        }
+                    }
+                },
+            }
+        }
+
+        response = self.client.patch(update_url, json.dumps(patch_data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data['errors']['non_field_errors'][0],
+            u'User can only be set, not changed.'
+        )
+
+    def test_update_wrong_user(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+
+        patch_data = {
+            'data': {
+                'type': 'contributions/donations',
+                'id': data['data']['id'],
+                'attributes': {
+                    'amount': {'amount': 200, 'currency': 'EUR'},
+                },
+            }
+        }
+
+        response = self.client.patch(update_url, json.dumps(patch_data), user=BlueBottleUserFactory.create())
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_no_token(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+
+        patch_data = {
+            'data': {
+                'type': 'contributions/donations',
+                'id': data['data']['id'],
+                'attributes': {
+                    'amount': {'amount': 200, 'currency': 'EUR'},
+                },
+            }
+        }
+
+        response = self.client.patch(update_url, json.dumps(patch_data))
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_no_user(self):
+        response = self.client.post(self.create_url, json.dumps(self.data))
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['attributes']['status'], DonationTransitions.values.new)
+        self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
+        self.assertEqual(len(data['data']['attributes']['client-secret']), 32)
+        self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
+        self.assertEqual(data['data']['relationships']['user']['data'], None)
+
+    def test_update_no_user(self):
+        response = self.client.post(self.create_url, json.dumps(self.data))
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+
+        patch_data = {
+            'data': {
+                'type': 'contributions/donations',
+                'id': data['data']['id'],
+                'attributes': {
+                    'amount': {'amount': 200, 'currency': 'EUR'},
+                },
+            }
+        }
+
+        response = self.client.patch(
+            update_url,
+            json.dumps(patch_data),
+            HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(data['data']['attributes']['amount'], {'amount': 200, 'currency': 'EUR'})
+
+    def test_update_no_user_set_user(self):
+        response = self.client.post(self.create_url, json.dumps(self.data))
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+
+        patch_data = {
+            'data': {
+                'type': 'contributions/donations',
+                'id': data['data']['id'],
+                'attributes': {
+                    'amount': {'amount': 200, 'currency': 'EUR'},
+                },
+                'relationships': {
+                    'user': {
+                        'data': {
+                            'id': self.user.pk,
+                            'type': 'members',
+                        }
+                    }
+                }
+            }
+        }
+
+        response = self.client.patch(
+            update_url,
+            json.dumps(patch_data),
+            HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(data['data']['attributes']['amount'], {'amount': 200, 'currency': 'EUR'})
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
+
+    def test_update_no_user_wrong_token(self):
+        response = self.client.post(self.create_url, json.dumps(self.data))
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+
+        patch_data = {
+            'data': {
+                'type': 'contributions/donations',
+                'id': data['data']['id'],
+                'attributes': {
+                    'amount': {'amount': 200, 'currency': 'EUR'},
+                },
+            }
+        }
+
+        response = self.client.patch(
+            update_url,
+            json.dumps(patch_data),
+            HTTP_AUTHORIZATION='Donation wrong-token'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_fundraiser(self):
         fundraiser = FundraiserFactory.create(activity=self.funding)

@@ -1,7 +1,7 @@
 import factory.fuzzy
 
 from bluebottle.funding_stripe.models import (
-    StripePayment, ConnectAccount, ExternalAccount, StripePaymentProvider
+    StripePayment, StripePayoutAccount, ExternalAccount, StripePaymentProvider
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.funding.tests.factories import DonationFactory
@@ -16,7 +16,7 @@ class StripePaymentFactory(factory.DjangoModelFactory):
 
 class ConnectAccountFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = ConnectAccount
+        model = StripePayoutAccount
 
     country = factory.Faker('country_code')
 
@@ -27,7 +27,7 @@ class ExternalAccountFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = ExternalAccount
 
-    connect_account = factory.SubFactory(ConnectAccount)
+    connect_account = factory.SubFactory(StripePayoutAccount)
 
 
 class StripePaymentProviderFactory(factory.DjangoModelFactory):

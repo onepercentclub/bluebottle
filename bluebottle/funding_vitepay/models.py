@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.html import format_html
 
 from bluebottle.fsm import TransitionManager
-from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod
+from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, PayoutAccount
 from bluebottle.funding.transitions import PaymentTransitions
 
 
@@ -50,3 +50,11 @@ class VitepayPayment(Payment):
             provider = VitepayPaymentProvider.objects.get()
             self.unique_id = format_html("{}-{}", provider.prefix, self.donation.id)
         super(VitepayPayment, self).save(*args, **kwargs)
+
+
+class VitepayPayoutAccount(PayoutAccount):
+    account_number = models.CharField(max_length=40)
+    provider_class = VitepayPaymentProvider
+
+    def save(self, *args, **kwargs):
+        super(VitepayPayoutAccount, self).save(*args, **kwargs)

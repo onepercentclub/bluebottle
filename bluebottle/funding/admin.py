@@ -1,3 +1,5 @@
+import logging
+
 from django.conf.urls import url
 from django.contrib import admin
 from django.http import HttpResponseRedirect
@@ -5,20 +7,37 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
-from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
+from polymorphic.admin import PolymorphicChildModelAdmin
+from polymorphic.admin import PolymorphicChildModelFilter
+from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
-    BudgetLine)
+    BudgetLine, PayoutAccount)
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
-from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider
+from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.notifications.admin import MessageAdminInline
+from bluebottle.payouts.models import FlutterwavePayoutAccount
 from bluebottle.utils.admin import FSMAdmin
+
+logger = logging.getLogger(__name__)
+
+
+class PayoutAccountFundingLinkMixin(object):
+    def funding_links(self, obj):
+        return format_html(", ".join([
+            format_html(
+                u"<a href='{}'>{}</a>",
+                reverse('admin:funding_funding_change', args=(p.id, )),
+                p.title
+            ) for p in obj.funding_set.all()
+        ]))
+    funding_links.short_description = _('Funding activities')
 
 
 class PaymentLinkMixin(object):
@@ -28,6 +47,29 @@ class PaymentLinkMixin(object):
         return format_html('<a href="{}">{}</a>', url, obj.payment)
 
     payment_link.short_description = _('Payment')
+
+
+class PayoutAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
+    base_model = PayoutAccount
+    raw_id_fields = ('owner', )
+
+    fields = ('owner', 'reviewed', 'funding_links')
+
+
+@admin.register(PayoutAccount)
+class PayoutAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
+    base_model = PayoutAccount
+    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
+    list_filter = ('reviewed', PolymorphicChildModelFilter)
+    raw_id_fields = ('owner', )
+
+    ordering = ('-created',)
+    child_models = [
+        StripePayoutAccount,
+        FlutterwavePayoutAccount,
+        # LipishaPayoutAccount,
+        # VitepayPayoutAccount
+    ]
 
 
 class DonationInline(admin.TabularInline, PaymentLinkMixin):

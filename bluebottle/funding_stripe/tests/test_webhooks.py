@@ -18,7 +18,7 @@ from bluebottle.funding_stripe.tests.factories import (
     ConnectAccountFactory
 )
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
-from bluebottle.funding_stripe.models import StripePayment, ConnectAccount
+from bluebottle.funding_stripe.models import StripePayment, StripePayoutAccount
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -177,7 +177,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                 )
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        payout_account = ConnectAccount.objects.get(pk=self.payout_account.pk)
+        payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
         self.assertEqual(payout_account.status, PayoutAccountTransitions.values.verified)
 
@@ -200,6 +200,6 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                 )
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        payout_account = ConnectAccount.objects.get(pk=self.payout_account.pk)
+        payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
         self.assertEqual(payout_account.status, PayoutAccountTransitions.values.rejected)

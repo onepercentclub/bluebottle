@@ -67,7 +67,7 @@ class Activity(TransitionsMixin, PolymorphicModel):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        link = format_html("{}/{}/initiatives/activities/{}/{}/{}",
+        link = format_html("{}/{}/initiatives/activities/details/{}/{}/{}",
                            domain, language,
                            self.__class__.__name__.lower(), self.pk, self.slug)
         return link

@@ -1,5 +1,6 @@
 from babel.numbers import get_currency_name
 from django.db import models, connection
+from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -59,7 +60,7 @@ class Funding(Activity):
 
     target = MoneyField()
     amount_matching = MoneyField()
-    account = models.ForeignKey('payouts.PayoutAccount', null=True)
+    account = models.ForeignKey('funding.PayoutAccount', null=True, on_delete=SET_NULL)
     transitions = TransitionManager(FundingTransitions, 'status')
 
     country = models.ForeignKey('geo.Country', null=True, blank=True)
@@ -120,7 +121,7 @@ class Funding(Activity):
 
     @property
     def payment_methods(self):
-        if not self.account or self.account.payment_methods:
+        if not self.account or not self.account.payment_methods:
             return []
         return self.account.payment_methods
 
@@ -303,17 +304,24 @@ class PaymentMethod(object):
         resource_name = 'payments/payment-methods'
 
 
-class PayoutAccount(models.Model, TransitionsMixin):
+class PayoutAccount(PolymorphicModel, TransitionsMixin):
     status = FSMField(
         default=PayoutAccountTransitions.values.new
     )
+    provider_class = None
 
     owner = models.OneToOneField(
         'members.Member',
         related_name='%(app_label)s_payout_account'
     )
 
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    reviewed = models.BooleanField(default=False)
+
     transitions = TransitionManager(PayoutAccountTransitions, 'status')
 
-    class Meta:
-        abstract = True
+    @property
+    def payment_methods(self):
+        provider = self.provider_class.objects.get()
+        return provider.payment_methods

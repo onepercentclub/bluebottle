@@ -5,11 +5,10 @@ from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import (
-    Payment, PaymentProvider, PaymentMethod, PayoutAccount
-)
+    Payment, PaymentProvider, PaymentMethod,
+    PayoutAccount)
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.utils import stripe
-from bluebottle.payouts.models import StripePayoutAccount
 
 
 class StripePayment(Payment):
@@ -131,9 +130,11 @@ class StripePaymentProvider(PaymentProvider):
         return methods
 
 
-class ConnectAccount(PayoutAccount):
+class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40)
     country = models.CharField(max_length=2)
+
+    provider_class = StripePaymentProvider
 
     @property
     def account(self):
@@ -154,7 +155,7 @@ class ConnectAccount(PayoutAccount):
             self.account_id = self._account.id
             self.transitions.submit()
 
-        super(ConnectAccount, self).save(*args, **kwargs)
+        super(StripePayoutAccount, self).save(*args, **kwargs)
 
     def update(self, token):
         self._account = stripe.Account.modify(
@@ -209,7 +210,7 @@ class ConnectAccount(PayoutAccount):
 
 
 class ExternalAccount(models.Model):
-    connect_account = models.ForeignKey(ConnectAccount, related_name='external_accounts')
+    connect_account = models.ForeignKey(StripePayoutAccount, related_name='external_accounts')
     account_id = models.CharField(max_length=40)
 
     @property

@@ -10,7 +10,7 @@ from bluebottle.funding.views import PaymentList
 from bluebottle.funding.transitions import PayoutAccountTransitions
 from bluebottle.funding_stripe.utils import stripe
 from bluebottle.funding_stripe.models import (
-    StripePayment, ConnectAccount, ExternalAccount
+    StripePayment, StripePayoutAccount, ExternalAccount
 )
 from bluebottle.funding_stripe.serializers import (
     StripePaymentSerializer, ConnectAccountSerializer, ExternalAccountSerializer,
@@ -28,7 +28,7 @@ class StripePaymentList(PaymentList):
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixin, RetrieveUpdateAPIView):
-    queryset = ConnectAccount.objects.all()
+    queryset = StripePayoutAccount.objects.all()
     serializer_class = ConnectAccountSerializer
 
     prefetch_for_includes = {
@@ -180,8 +180,8 @@ class ConnectWebHookView(View):
             else:
                 return HttpResponse('Skipped event {}'.format(event.type))
 
-        except ConnectAccount.DoesNotExist:
+        except StripePayoutAccount.DoesNotExist:
             return HttpResponse('Payment not found', status=400)
 
     def get_account(self, account_id):
-        return ConnectAccount.objects.get(account_id=account_id)
+        return StripePayoutAccount.objects.get(account_id=account_id)

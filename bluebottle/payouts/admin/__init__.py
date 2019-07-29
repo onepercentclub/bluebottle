@@ -5,7 +5,6 @@ from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
 from bluebottle.payouts.admin.flutterwave import FlutterwavePayoutAccountAdmin
-from bluebottle.payouts.admin.lipisha import LipishaPayoutAccountAdmin
 from bluebottle.payouts.admin.plain import PlainPayoutAccountAdmin
 from bluebottle.payouts.admin.stripe import StripePayoutAccountAdmin
 from bluebottle.payouts.admin.utils import PayoutAccountProjectLinkMixin
@@ -27,7 +26,6 @@ class PayoutAccountAdmin(PayoutAccountProjectLinkMixin, PolymorphicParentModelAd
             (admin.model, admin) for admin in (
                 StripePayoutAccountAdmin,
                 FlutterwavePayoutAccountAdmin,
-                LipishaPayoutAccountAdmin,
                 PlainPayoutAccountAdmin
             )
         )

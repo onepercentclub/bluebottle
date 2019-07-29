@@ -11,7 +11,7 @@ from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.models import (
-    StripePayment, ConnectAccount, ExternalAccount
+    StripePayment, StripePayoutAccount, ExternalAccount
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -63,7 +63,7 @@ class StripePaymentTestCase(BluebottleTestCase):
 class ConnectAccountTestCase(BluebottleTestCase):
     def setUp(self):
         account_id = 'some-connect-id'
-        self.check = ConnectAccount(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
+        self.check = StripePayoutAccount(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
 
         self.connect_account = stripe.Account(account_id)
         self.connect_account.update({
@@ -182,7 +182,7 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
         account_id = 'some-connect-id'
         external_account_id = 'some-bank-token'
 
-        self.check = ConnectAccount(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
+        self.check = StripePayoutAccount(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
         self.check.save()
 
         self.external_account = ExternalAccount(connect_account=self.check, account_id=external_account_id)

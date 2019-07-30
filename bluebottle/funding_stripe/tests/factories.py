@@ -31,7 +31,7 @@ class StripePaymentFactory(factory.DjangoModelFactory):
     payment_intent = factory.SubFactory(StripePaymentIntentFactory)
 
 
-class ConnectAccountFactory(factory.DjangoModelFactory):
+class StripePayoutAccountFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = StripePayoutAccount
 
@@ -44,7 +44,7 @@ class ExternalAccountFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = ExternalAccount
 
-    connect_account = factory.SubFactory(StripePayoutAccount)
+    connect_account = factory.SubFactory(StripePayoutAccountFactory)
 
 
 class StripePaymentProviderFactory(factory.DjangoModelFactory):

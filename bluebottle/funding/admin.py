@@ -16,13 +16,12 @@ from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
     BudgetLine, PayoutAccount)
-from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider
+from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwavePayoutAccount
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.payouts.models import FlutterwavePayoutAccount
 from bluebottle.utils.admin import FSMAdmin
 
 logger = logging.getLogger(__name__)

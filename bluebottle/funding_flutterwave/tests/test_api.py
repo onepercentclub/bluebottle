@@ -11,15 +11,19 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
+
 success_response = {
     'status': 'success',
-    'data': {}
+    'data': {
+        'status': 'successful'
+    }
 }
 
-
 failed_response = {
-    'status': 'failed',
-    'data': {}
+    'status': 'success',
+    'data': {
+        'status': 'failed'
+    }
 }
 
 

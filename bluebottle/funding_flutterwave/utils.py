@@ -27,7 +27,7 @@ def check_payment_status(payment):
     }
     data = post(verify_url, data)
     payment.update_response = data
-    if data['status'] == 'success':
+    if data['data']['status'] == 'successful':
         payment.transitions.succeed()
     else:
         payment.transitions.fail()

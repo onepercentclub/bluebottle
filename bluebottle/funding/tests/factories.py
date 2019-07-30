@@ -2,9 +2,9 @@ import factory.fuzzy
 from moneyed import Money
 
 from bluebottle.funding.models import Funding, Donation, Reward, Fundraiser, BudgetLine, Payment
+# from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.payouts import StripePayoutAccountFactory
 
 
 class FundingFactory(factory.DjangoModelFactory):
@@ -17,7 +17,7 @@ class FundingFactory(factory.DjangoModelFactory):
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
-    account = factory.SubFactory(StripePayoutAccountFactory)
+    # account = factory.SubFactory(StripePayoutAccountFactory)
     deadline = factory.Faker('future_date')
     target = Money(5000, 'EUR')
     amount_matching = Money(0, 'EUR')

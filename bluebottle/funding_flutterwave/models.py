@@ -1,14 +1,11 @@
 from django.db import models
-
-from bluebottle.fsm import TransitionManager
-from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, PayoutAccount
-from bluebottle.funding.transitions import PaymentTransitions
 from django.utils.translation import ugettext_lazy as _
+
+from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, PayoutAccount
 
 
 class FlutterwavePayment(Payment):
     tx_ref = models.CharField(max_length=30)
-    transitions = TransitionManager(PaymentTransitions, 'status')
 
 
 class FlutterwavePaymentProvider(PaymentProvider):

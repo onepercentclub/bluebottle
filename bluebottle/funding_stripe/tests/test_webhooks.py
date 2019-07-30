@@ -17,7 +17,7 @@ from bluebottle.funding_stripe.tests.factories import (
 )
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentProviderFactory,
-    ConnectAccountFactory
+    StripePayoutAccountFactory
 )
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.transitions import StripeSourcePaymentTransitions
@@ -376,7 +376,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         }))
 
         with mock.patch('stripe.Account.create', return_value=self.connect_account):
-            self.payout_account = ConnectAccountFactory.create(owner=self.user)
+            self.payout_account = StripePayoutAccountFactory.create(owner=self.user)
 
         self.webhook = reverse('stripe-payment-webhook')
 

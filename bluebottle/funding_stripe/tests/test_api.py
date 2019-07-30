@@ -11,7 +11,7 @@ import stripe
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding_stripe.tests.factories import (
-    ConnectAccountFactory,
+    StripePayoutAccountFactory,
     ExternalAccountFactory,
     StripePaymentProviderFactory
 )
@@ -132,7 +132,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
 
-        self.check = ConnectAccountFactory(owner=self.user, account_id='some-account-id')
+        self.check = StripePayoutAccountFactory(owner=self.user, account_id='some-account-id')
 
         self.url = reverse('connect-account-details')
 
@@ -341,7 +341,7 @@ class ExternalAccountsTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
 
-        self.check = ConnectAccountFactory.create(owner=self.user, account_id='some-account-id')
+        self.check = StripePayoutAccountFactory.create(owner=self.user, account_id='some-account-id')
         self.external_account = ExternalAccountFactory.create(
             connect_account=self.check,
             account_id='some-external-account-id'

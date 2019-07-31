@@ -46,6 +46,14 @@ class Initiative(TransitionsMixin, models.Model):
         related_name='activity_manager_%(class)ss',
     )
 
+    promoter = models.ForeignKey(
+        'members.Member',
+        verbose_name=_('promoter'),
+        blank=True,
+        null=True,
+        related_name='promoter_%(class)ss',
+    )
+
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -61,13 +69,6 @@ class Initiative(TransitionsMixin, models.Model):
     categories = models.ManyToManyField('categories.Category', blank=True)
 
     image = ImageField(blank=True, null=True)
-
-    promoter = models.ForeignKey(
-        'members.Member',
-        verbose_name=_('promoter'),
-        blank=True,
-        null=True,
-    )
 
     video_url = models.URLField(
         _('video'),
@@ -145,7 +146,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ('funding', _('Funding')),
         ('event', _('Events')),
-        ('job', _('Jobs')),
+        ('assignment', _('Assignment')),
     )
 
     activity_types = MultiSelectField(max_length=100, choices=ACTIVITY_TYPES)

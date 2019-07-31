@@ -1,9 +1,10 @@
 import json
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import get_object_or_404
 from django.views.generic.base import RedirectView, View
 
+from bluebottle.orders.models import Order
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.services import PaymentService
@@ -30,7 +31,28 @@ class PaymentResponseView(RedirectView):
 class FlutterwaveWebhookView(View):
     def post(self, request, **kwargs):
         data = json.loads(request.body)
-        payment = FlutterwavePayment.objects.get(transaction_reference=data['txRef'])
+        try:
+            payment = FlutterwavePayment.objects.get(transaction_reference=data['txRef'])
+        except FlutterwavePayment.DoesNotExist:
+            try:
+                order = Order.objects.get(id=data['txRef'])
+                if not order.order_payment:
+                    order_payment = OrderPayment.objects.create(
+                        order=order,
+                        user=order.user,
+                        payment_method='flutterwaveCreditcard'
+                    )
+                    order_payment.save()
+                if not FlutterwavePayment.objects.filter(order_payment=order.order_payment).count():
+                    payment = FlutterwavePayment.objects.create(
+                        order_payment=order.order_payment,
+                        transaction_reference=order.id
+                    )
+                    payment.save()
+                payment = order.order_payment.payment
+            except Order.DoesNotExist:
+                return HttpResponseNotFound()
+
         service = PaymentService(payment.order_payment)
         service.check_payment_status()
         return HttpResponse(status=200)

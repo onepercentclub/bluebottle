@@ -12,6 +12,7 @@ from rest_framework.test import APIClient as RestAPIClient
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_tenant_model
 
+from bluebottle.clients import properties
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.utils.models import Language
@@ -233,6 +234,18 @@ class FsmTestMixin(object):
                          '{0} should change to {1} not {2}'.format(
                              instance.__class__.__name__, new_status,
                              instance.status))
+
+
+class override_properties():
+    def __init__(self, **kwargs):
+        self.properties = kwargs
+
+    def __enter__(self):
+        self.old_properties = properties.tenant_properties
+        properties.tenant_properties = self.properties
+
+    def __exit__(self, *args):
+        properties.tenant_properties = self.old_properties
 
 
 class JSONAPITestClient(Client):

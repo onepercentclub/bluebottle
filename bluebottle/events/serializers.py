@@ -53,7 +53,6 @@ class ParticipantTransitionSerializer(TransitionSerializer):
 
 class EventSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
-    # contributions = serializers.SerializerMethodField()
     contributions = FilteredRelatedField(
         serializer=ParticipantSerializer,
         filter_backend=ParticipantListFilter)

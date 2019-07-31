@@ -17,3 +17,5 @@ class PledgePaymentProviderAdmin(PaymentProviderChildAdmin):
 @admin.register(StripePayoutAccount)
 class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     model = StripePayoutAccount
+
+    fields = PayoutAccountChildAdmin.fields + ('account_id', 'country')

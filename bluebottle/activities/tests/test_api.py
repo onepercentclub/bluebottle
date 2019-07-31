@@ -90,7 +90,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], unicode(first.pk))
         self.assertEqual(data['data'][0]['type'], 'activities/events')
         self.assertEqual(data['data'][1]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][1]['type'], 'activities/funding')
+        self.assertEqual(data['data'][1]['type'], 'activities/fundings')
 
     def test_search_boost(self):
         first = EventFactory.create(title='Something else', description='Lorem ipsum dolor sit amet', status='open')

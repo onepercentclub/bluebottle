@@ -102,6 +102,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
             'transaction_status': 'Completed',
             'transaction_mobile': '25471000000',
             'api_key': self.provider.api_key,
+            'api_type': 'Acknowledge',
             'api_signature': self.provider.api_signature,
         }
         response = self.client.post(self.webhook, data, format='multipart')

@@ -120,7 +120,7 @@ def generate_success_response(payment):
         payment.transaction,
         donation.amount.currency,
         donation.amount.amount,
-        donation.project.title
+        donation.activity.title
     )
     credentials = get_credentials()
 
@@ -129,7 +129,7 @@ def generate_success_response(payment):
         # "api_signature": credentials['api_signature'],
         "api_version": "1.0.4",
         "api_type": "Receipt",
-        "transaction_reference": payment.transaction_reference,
+        "transaction_reference": payment.transaction,
         "transaction_status_code": "001",
         "transaction_status": "SUCCESS",
         "transaction_status_description": "Transaction received successfully.",
@@ -240,7 +240,7 @@ def initiate_payment(data):
         # If we haven't found a payment by now we should create a new donation
         try:
             account = LipishaPayoutAccount.objects.get(account_number=account_number)
-            project = account.projec
+            funding = account.funding
         except LipishaPayoutAccount.DoesNotExist:
             return generate_error_response(transaction_reference)
 
@@ -249,14 +249,12 @@ def initiate_payment(data):
         donation = Donation.objects.create(
             amount=Money(data['transaction_amount'], data['transaction_currency']),
             name=name,
-            project=project)
+            funding=funding)
 
         payment = LipishaPayment.objects.create(
             donation=donation,
             transaction=transaction_reference,
         )
-
-    payment.response = json.dumps(data)
 
     if data['transaction_status'] == 'Completed':
         payment.transactions.succeed()

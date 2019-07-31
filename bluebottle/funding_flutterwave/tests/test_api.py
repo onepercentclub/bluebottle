@@ -11,7 +11,6 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
-
 success_response = {
     'status': 'success',
     'data': {
@@ -39,7 +38,6 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
 
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding, user=self.user)
 

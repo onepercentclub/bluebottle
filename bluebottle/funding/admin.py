@@ -17,7 +17,7 @@ from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
     BudgetLine, PayoutAccount)
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwavePayoutAccount
-from bluebottle.funding_lipisha.models import LipishaPaymentProvider
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayoutAccount
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
@@ -67,7 +67,7 @@ class PayoutAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAd
     child_models = [
         StripePayoutAccount,
         FlutterwavePayoutAccount,
-        # LipishaPayoutAccount,
+        LipishaPayoutAccount,
         # VitepayPayoutAccount
     ]
 

@@ -1,18 +1,17 @@
-from HTMLParser import HTMLParser
 import json
-from moneyed import Money
 import re
+from HTMLParser import HTMLParser
 
 from django.core.urlresolvers import resolve, reverse
 from django.core.validators import BaseValidator
 from django.utils.translation import ugettext_lazy as _
-
+from moneyed import Money
 from rest_framework import serializers
 from rest_framework_json_api.serializers import ModelSerializer as JSONAPIModelSerializer
 
-from .validators import validate_postal_code
-from .models import Address, Language
 from bluebottle.utils.fields import FSMField
+from .models import Address, Language
+from .validators import validate_postal_code
 
 
 class MaxAmountValidator(BaseValidator):
@@ -279,3 +278,26 @@ class FSMSerializer(serializers.ModelSerializer):
             getattr(instance, transition.name)()
 
         return super(FSMSerializer, self).update(instance, validated_data)
+
+
+class FilteredRelatedField(serializers.SerializerMethodField):
+    """
+    Filter a related queryset based on `filter_backend` and then serialize it using `serializer`.
+    """
+    def __init__(self, serializer, filter_backend, **kwargs):
+        self.serializer = serializer
+        self.filter_backend = filter_backend
+        kwargs['read_only'] = True
+        super(FilteredRelatedField, self).__init__(**kwargs)
+        self.source = getattr(kwargs, 'source', self.field_name)
+
+    def to_representation(self, value):
+        queryset = value
+        queryset = self.filter_backend().filter_queryset(
+            request=self.context['request'],
+            queryset=queryset,
+            view=self.context['view']
+        )
+        return self.serializer(
+            queryset, many=True, context=self.context
+        ).to_representation(queryset)

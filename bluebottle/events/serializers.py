@@ -1,21 +1,62 @@
 from django.utils.translation import ugettext_lazy as _
-
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer, ActivitySubmitSerializer
 )
+from bluebottle.events.filters import ParticipantListFilter
 from bluebottle.events.models import Event, Participant
 from bluebottle.geo.models import Geolocation
-from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.transitions.serializers import TransitionSerializer
+from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
+
+
+class ParticipantSerializer(BaseContributionSerializer):
+    included_serializers = {
+        'activity': 'bluebottle.events.serializers.EventSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+    class Meta(BaseContributionSerializer.Meta):
+        model = Participant
+        fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Participant.objects.all(),
+                fields=('activity', 'user')
+            )
+        ]
+
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        resource_name = 'contributions/participants'
+        included_resources = [
+            'user',
+            'activity'
+        ]
+
+
+class ParticipantTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=Participant.objects.all())
+    field = 'status'
+    included_serializers = {
+        'resource': 'bluebottle.events.serializers.ParticipantSerializer',
+        'resource.activity': 'bluebottle.events.serializers.EventSerializer',
+    }
+
+    class JSONAPIMeta:
+        included_resources = ['resource', 'resource.activity']
+        resource_name = 'participant-transitions'
 
 
 class EventSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
+    # contributions = serializers.SerializerMethodField()
+    contributions = FilteredRelatedField(
+        serializer=ParticipantSerializer,
+        filter_backend=ParticipantListFilter)
 
     class Meta(BaseActivitySerializer.Meta):
         model = Event
@@ -103,41 +144,3 @@ class EventTransitionSerializer(TransitionSerializer):
     class JSONAPIMeta:
         included_resources = ['resource', ]
         resource_name = 'event-transitions'
-
-
-class ParticipantSerializer(BaseContributionSerializer):
-    included_serializers = {
-        'activity': 'bluebottle.events.serializers.EventSerializer',
-        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-    }
-
-    class Meta(BaseContributionSerializer.Meta):
-        model = Participant
-        fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
-
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Participant.objects.all(),
-                fields=('activity', 'user')
-            )
-        ]
-
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/participants'
-        included_resources = [
-            'user',
-            'activity'
-        ]
-
-
-class ParticipantTransitionSerializer(TransitionSerializer):
-    resource = ResourceRelatedField(queryset=Participant.objects.all())
-    field = 'status'
-    included_serializers = {
-        'resource': 'bluebottle.events.serializers.ParticipantSerializer',
-        'resource.activity': 'bluebottle.events.serializers.EventSerializer',
-    }
-
-    class JSONAPIMeta:
-        included_resources = ['resource', 'resource.activity']
-        resource_name = 'participant-transitions'

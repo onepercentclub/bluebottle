@@ -24,10 +24,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.client = JSONAPITestClient()
         self.url = reverse('activity-list')
-
-        self.user = BlueBottleUserFactory()
-
-        self.url = reverse('activity-list')
         self.owner = BlueBottleUserFactory.create()
 
     def test_no_filter(self):
@@ -56,7 +52,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         data = json.loads(response.content)
-
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
 

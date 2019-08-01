@@ -55,6 +55,39 @@ class ParticipantTransitionSerializer(TransitionSerializer):
         ]
 
 
+class EventListSerializer(BaseActivitySerializer):
+    permissions = ResourcePermissionField('event-detail', view_args=('pk',))
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Event
+        fields = BaseActivitySerializer.Meta.fields + (
+            'capacity',
+            'end_time',
+            'start_time',
+            'is_online',
+            'location',
+            'location_hint',
+            'permissions',
+            'registration_deadline',
+        )
+
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        included_resources = [
+            'owner',
+            'initiative',
+            'initiative.image',
+            'location',
+        ]
+        resource_name = 'activities/events'
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+    }
+
+
 class EventSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
     contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)

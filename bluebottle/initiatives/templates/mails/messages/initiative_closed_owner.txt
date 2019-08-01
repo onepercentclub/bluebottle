@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=obj.owner.full_name initiative_title=obj.title context 'email' %}
+{% blocktrans with recipient_name=obj.owner.first_name initiative_title=obj.title context 'email' %}
 Hi {{ recipient_name }},
 Unfortunately, your initiative "{{ initiative_title }}" has been closed.
 {% endblocktrans %}

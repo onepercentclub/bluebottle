@@ -7,6 +7,7 @@ from django.core.validators import BaseValidator
 from django.utils.translation import ugettext_lazy as _
 from moneyed import Money
 from rest_framework import serializers
+from rest_framework_json_api.relations import SerializerMethodResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer as JSONAPIModelSerializer
 
 from bluebottle.utils.fields import FSMField
@@ -280,24 +281,21 @@ class FSMSerializer(serializers.ModelSerializer):
         return super(FSMSerializer, self).update(instance, validated_data)
 
 
-class FilteredRelatedField(serializers.SerializerMethodField):
+class FilteredRelatedField(SerializerMethodResourceRelatedField):
     """
     Filter a related queryset based on `filter_backend` and then serialize it using `serializer`.
     """
-    def __init__(self, serializer, filter_backend, **kwargs):
-        self.serializer = serializer
-        self.filter_backend = filter_backend
+    def __init__(self, **kwargs):
+        self.filter_backend = kwargs.pop('filter_backend', None)
         kwargs['read_only'] = True
         super(FilteredRelatedField, self).__init__(**kwargs)
-        self.source = getattr(kwargs, 'source', self.field_name)
 
-    def to_representation(self, value):
-        queryset = value
-        queryset = self.filter_backend().filter_queryset(
+    def get_attribute(self, instance):
+        queryset = super(FilteredRelatedField, self).get_attribute(instance)
+        filter_backend = self.child_relation.filter_backend
+        queryset = filter_backend().filter_queryset(
             request=self.context['request'],
             queryset=queryset,
             view=self.context['view']
         )
-        return self.serializer(
-            queryset, many=True, context=self.context
-        ).to_representation(queryset)
+        return queryset

@@ -14,10 +14,6 @@ from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelate
 
 
 class ParticipantSerializer(BaseContributionSerializer):
-    included_serializers = {
-        'activity': 'bluebottle.events.serializers.EventSerializer',
-        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-    }
 
     class Meta(BaseContributionSerializer.Meta):
         model = Participant
@@ -36,6 +32,11 @@ class ParticipantSerializer(BaseContributionSerializer):
             'user',
             'activity'
         ]
+
+    included_serializers = {
+        'activity': 'bluebottle.events.serializers.EventSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
 
 
 class ParticipantTransitionSerializer(TransitionSerializer):
@@ -57,7 +58,7 @@ class ParticipantTransitionSerializer(TransitionSerializer):
 class EventSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
     contributions = FilteredRelatedField(
-        serializer=ParticipantSerializer,
+        many=True,
         filter_backend=ParticipantListFilter)
 
     class Meta(BaseActivitySerializer.Meta):
@@ -79,7 +80,8 @@ class EventSerializer(BaseActivitySerializer):
             'initiative',
             'initiative.image',
             'location',
-            'contributions'
+            'contributions',
+            'contributions.user'
         ]
         resource_name = 'activities/events'
 

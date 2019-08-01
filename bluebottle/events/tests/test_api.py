@@ -265,12 +265,16 @@ class ParticipantTestCase(BluebottleTestCase):
         response = self.client.get(
             self.event_url, user=self.participant
         )
-
         event_data = json.loads(response.content)
         self.assertEqual(
-            event_data['data']['relationships']['contributions']['meta']['count'],
+            len(event_data['data']['relationships']['contributions']['data']),
             1
         )
+        # See how/if we want to re-add meta here
+        # self.assertEqual(
+        #     event_data['data']['relationships']['contributions']['meta']['count'],
+        #     1
+        # )
         self.assertEqual(
             event_data['data']['relationships']['contributions']['data'][0]['id'],
             data['data']['id']

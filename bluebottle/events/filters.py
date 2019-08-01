@@ -10,12 +10,19 @@ class ParticipantListFilter(DjangoFilterBackend):
     otherwise only show accepted participants.
     """
     def filter_queryset(self, request, queryset, view):
-        queryset = queryset.filter(
-            Q(user=request.user) |
-            Q(activity__owner=request.user) |
-            Q(status__in=[
+        if request.user.is_authenticated():
+            queryset = queryset.filter(
+                Q(user=request.user) |
+                Q(activity__owner=request.user) |
+                Q(status__in=[
+                    ParticipantTransitions.values.new,
+                    ParticipantTransitions.values.succeeded
+                ])
+            )
+        else:
+            queryset = queryset.filter(status__in=[
                 ParticipantTransitions.values.new,
                 ParticipantTransitions.values.succeeded
             ])
-        )
+
         return super(ParticipantListFilter, self).filter_queryset(request, queryset, view)

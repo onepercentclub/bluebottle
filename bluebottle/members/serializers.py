@@ -11,6 +11,7 @@ from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import LocationSerializer, PlaceSerializer
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
 from bluebottle.tasks.models import Skill, Task, TaskMember
@@ -90,6 +91,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     location = LocationSerializer()
     permissions = UserPermissionsSerializer(read_only=True)
+    organization = OrganizationSerializer(read_only=True, source='partner_organization')
 
     class Meta:
         model = BB_USER_MODEL
@@ -98,6 +100,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
             'verified', 'permissions', 'matching_options_set',
+            'organization'
         )
 
 

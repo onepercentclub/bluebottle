@@ -115,6 +115,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                             resource_type,
                             getattr(serializer, '_poly_force_type_resolution', False)
                         )
+
                         # NEW: Add meta to included resource
                         meta = cls.extract_meta(serializer_class, serializer_resource)
                         if meta:

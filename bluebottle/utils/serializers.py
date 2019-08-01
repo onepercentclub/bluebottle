@@ -283,7 +283,10 @@ class FSMSerializer(serializers.ModelSerializer):
 
 class FilteredRelatedField(SerializerMethodResourceRelatedField):
     """
-    Filter a related queryset based on `filter_backend` and then serialize it using `serializer`.
+    Filter a related queryset based on `filter_backend`.
+    Example:
+    `contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
+    Note: `many=True` is required
     """
     def __init__(self, **kwargs):
         self.filter_backend = kwargs.pop('filter_backend', None)

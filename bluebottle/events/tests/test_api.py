@@ -367,7 +367,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'participant-transitions',
+                'type': 'contributions/participant-transitions',
                 'attributes': {
                     'transition': 'withdraw',
                 },
@@ -410,7 +410,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
         data = {
             'data': {
-                'type': 'participant-transitions',
+                'type': 'contributions/participant-transitions',
                 'attributes': {
                     'transition': 'reapply',
                 },

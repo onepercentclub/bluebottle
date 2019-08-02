@@ -32,7 +32,7 @@ class Event(Activity):
             aggregate(count=Count('user__id'), hours=Sum('participant__time_spent'))
         committed = self.contributions.filter(
             status=ParticipantTransitions.values.new).\
-            aggregate(commited_count=Count('user__id'), committed_hours=Sum('participant__time_spent'))
+            aggregate(committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent'))
         stats.update(committed)
         return stats
 

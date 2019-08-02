@@ -270,11 +270,15 @@ class ParticipantTestCase(BluebottleTestCase):
             len(event_data['data']['relationships']['contributions']['data']),
             1
         )
-        # See how/if we want to re-add meta here
-        # self.assertEqual(
-        #     event_data['data']['relationships']['contributions']['meta']['count'],
-        #     1
-        # )
+        self.assertEqual(
+            event_data['data']['attributes']['stats']['count'],
+            0
+        )
+        self.assertEqual(
+            event_data['data']['attributes']['stats']['committed_count'],
+            1
+        )
+
         self.assertEqual(
             event_data['data']['relationships']['contributions']['data'][0]['id'],
             data['data']['id']

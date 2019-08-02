@@ -142,6 +142,14 @@ class ParticipantTransitions(ContributionTransitions):
         unfollow(self.instance.user, self.instance.activity)
 
     @transition(
+        source=[values.rejected],
+        target=values.new,
+        permissions=[ContributionTransitions.is_activity_manager]
+    )
+    def unreject(self):
+        follow(self.instance.user, self.instance.activity)
+
+    @transition(
         source=[values.new, values.no_show, values.rejected, values.withdrawn],
         target=values.succeeded,
         conditions=[event_is_successful]

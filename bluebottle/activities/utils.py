@@ -17,7 +17,6 @@ class BaseActivitySerializer(ModelSerializer):
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
     contributions = ResourceRelatedField(many=True, read_only=True)
-
     transitions = AvailableTransitionsField(source='status')
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')

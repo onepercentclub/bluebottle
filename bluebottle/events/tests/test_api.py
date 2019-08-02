@@ -331,8 +331,15 @@ class ParticipantTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(
-            [transition['name'] for transition in data['data']['meta']['transitions']],
+            [
+                transition['name'] for transition in data['data']['meta']['transitions']
+                if transition['available']
+            ],
             ['withdraw', 'close']
+        )
+        self.assertEqual(
+            data['data']['meta']['transitions'][1]['conditions'],
+            {u'event_is_successful': u'The event is not successful'}
         )
 
     def test_possible_transitions_other_user(self):
@@ -348,8 +355,14 @@ class ParticipantTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(
-            [transition['name'] for transition in data['data']['meta']['transitions']],
+            [
+                transition['name'] for transition in data['data']['meta']['transitions']
+                if transition['available']],
             ['close']
+        )
+        self.assertEqual(
+            data['data']['meta']['transitions'][1]['conditions'],
+            {u'event_is_successful': u'The event is not successful'}
         )
 
 

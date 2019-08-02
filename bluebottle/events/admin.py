@@ -25,14 +25,14 @@ class ParticipantInline(admin.TabularInline):
     model = Participant
 
     raw_id_fields = ('user', )
-    readonly_fields = ('created', 'status', )
-    fields = ('user', 'created', 'status', 'time_spent')
+    readonly_fields = ('created', 'status', 'participant')
+    fields = ('participant', 'user', 'created', 'status', 'time_spent')
 
     extra = 0
 
     def participant(self, obj):
         url = reverse('admin:events_participant_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.user)
+        return format_html('<a href="{}">{}</a>', url, obj.id)
 
 
 class ParticipantAdminForm(FSMModelForm):
@@ -56,11 +56,13 @@ class EventAdmin(ActivityChildAdmin):
     list_display = ['title', 'status', 'start_time', 'end_time']
     base_model = Event
 
+    readonly_fields = ActivityChildAdmin.readonly_fields
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
 
     fieldsets = (
         (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition', 'highlight'
+            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition', 'highlight',
+            'stats_data'
         )}),
         (_('Details'), {'fields': (
             'description', 'capacity',

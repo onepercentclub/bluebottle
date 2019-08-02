@@ -337,6 +337,17 @@ class UserApiIntegrationTest(BluebottleTestCase):
                          {u'GET': True, u'OPTIONS': True})
         self.client.logout()
 
+    def test_current_user_organization(self):
+        """
+        Test retrieving the currently logged in user with partner organization
+        """
+        organization = OrganizationFactory.create(name='GoodUp')
+        self.user_1.partner_organization = organization
+        self.user_1.save()
+        response = self.client.get(self.current_user_api_url, token=self.user_1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['organization']['name'], 'GoodUp')
+
     @override_settings(SEND_WELCOME_MAIL=True)
     def test_user_create(self):
         """

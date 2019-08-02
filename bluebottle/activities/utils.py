@@ -51,7 +51,7 @@ class BaseActivitySerializer(ModelSerializer):
             'stats'
         )
 
-        meta_fields = ('permissions', 'transitions', 'created', 'updated', )
+        meta_fields = ('permissions', 'transitions', 'created', 'updated')
 
     class JSONAPIMeta:
         included_resources = [

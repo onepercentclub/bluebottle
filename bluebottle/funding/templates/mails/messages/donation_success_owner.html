@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=obj.activity.owner.name funding_title=obj.activity.title context 'email' %}
+{% blocktrans with recipient_name=obj.activity.owner.first_name funding_title=obj.activity.title context 'email' %}
 Hi {{ recipient_name }},
 <br><br>
 Nice! You just received a new donation. Why not head over to your campaign page and say thanks?

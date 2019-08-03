@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=obj.owner.full_name event_title=obj.title context 'email' %}
+{% blocktrans with recipient_name=obj.owner.first_name event_title=obj.title context 'email' %}
 Hi {{ recipient_name }},
 <br><br>
 You did it! Your event {{ event_title }} was marked 'successful',

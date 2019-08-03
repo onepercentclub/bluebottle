@@ -3,8 +3,8 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans with first_name=obj.user.first_name title=obj.activity.title context 'email' %}
-        Hi {{ first_name }},
+    {% blocktrans with recipient_name=obj.owner.first_name title=obj.title context 'email' %}
+        Hi {{ recipient_name }},
         Congrats! Your funding deadline for "{{title}}" has passed and you’ve successfully reached your funding goal.
         Head over to your campaign page and thank your awesome backers for their support.
     {% endblocktrans %}

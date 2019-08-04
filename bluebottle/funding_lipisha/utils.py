@@ -44,32 +44,7 @@ def initiate_push_payment(payment):
         currency=payment.donation.amount.currency,
         reference=payment.unique_id
     )
-    """
-    {
-        u'status': {
-            u'status': u'SUCCESS',
-            u'status_code': u'0000',
-            u'status_description': u'Payment Requested'
-        },
-        u'content': {
-            u'transaction': u'UUZUEHSSX',
-            u'reference': u'local-40',
-            u'amount': u'789',
-            u'account_number': u'08857',
-            u'mobile_number': u'254',
-            u'method': u'Paybill (M-Pesa)'
-        }
-    }
 
-    {
-        u'status': {
-            u'status': u'FAIL',
-            u'status_code': 3000,
-            u'status_description': u'Invalid API Credentials'
-        },
-        u'content': []
-    }
-    """
     if response['status']['status'] == 'SUCCESS':
         payment.transaction = response['content']['transaction']
         payment.save()
@@ -256,7 +231,7 @@ def initiate_payment(data):
             transaction=transaction_reference,
         )
 
-    if data['transaction_status'] == 'Completed':
+    if data['transaction_status'] in ['Success', 'Completed']:
         payment.transactions.succeed()
     else:
         payment.transactions.failed()
@@ -286,7 +261,7 @@ def acknowledge_payment(data):
 
     payment.mobile_number = data['transaction_mobile']
 
-    if data['transaction_status'] == ['Success', 'Completed']:
+    if data['transaction_status'] in ['Success', 'Completed']:
         payment.transitions.succeed()
     else:
         payment.transitions.fail()

@@ -254,7 +254,6 @@ class CreateAPIView(ViewPermissionsMixin, generics.CreateAPIView, RelatedPermiss
                 self.request,
                 serializer.Meta.model(**serializer.validated_data)
             )
-
         serializer.save()
 
 

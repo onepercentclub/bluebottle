@@ -27,7 +27,7 @@ class FundingTestCase(BluebottleAdminTestCase):
             owner=user,
             initiative=self.initiative,
             target=Money(500, 'EUR'),
-            deadline=(now() + timedelta(weeks=2)).date()
+            deadline=now() + timedelta(weeks=2)
         )
         BudgetLineFactory.create_batch(4, activity=self.funding, amount=Money(125, 'EUR'))
         mail.outbox = []
@@ -58,7 +58,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
         self.assertTrue('Hi Bill,' in mail.outbox[1].body)
 
-        self.funding.deadline = (now() - timedelta(days=1)).date()
+        self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
 
         # Run scheduled task
@@ -77,7 +77,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 4)
 
         self.assertEqual(donation.status, 'succeeded')
-        self.funding.deadline = (now() - timedelta(days=1)).date()
+        self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
 
         # Run scheduled task
@@ -90,7 +90,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         donation = DonationFactory.create(activity=self.funding, amount=Money(100, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(donation.status, 'succeeded')
-        self.funding.deadline = (now() - timedelta(days=1)).date()
+        self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
 
         # Run scheduled task
@@ -99,13 +99,13 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(self.funding.status, 'partially_funded')
 
         # Extend the campaign
-        self.funding.deadline = (now() + timedelta(weeks=2)).date()
+        self.funding.deadline = now() + timedelta(weeks=2)
         self.funding.transitions.close()
         self.funding.transitions.extend()
         self.funding.save()
         donation = DonationFactory.create(activity=self.funding, amount=Money(700, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
-        self.funding.deadline = (now() - timedelta(days=1)).date()
+        self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
 
         # Run scheduled task

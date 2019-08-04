@@ -59,7 +59,7 @@ class PaymentProvider(PolymorphicModel):
 
 
 class Funding(Activity):
-    deadline = models.DateField(_('deadline'), null=True, blank=True)
+    deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
     target = MoneyField()
@@ -205,7 +205,7 @@ class Fundraiser(models.Model):
     image = ImageField(blank=True, null=True)
 
     amount = MoneyField(_("amount"))
-    deadline = models.DateField(_('deadline'), null=True, blank=True)
+    deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

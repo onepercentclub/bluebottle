@@ -14,6 +14,10 @@ class FlutterwavePaymentList(PaymentList):
     queryset = FlutterwavePayment.objects.all()
     serializer_class = FlutterwavePaymentSerializer
 
+    def perform_create(self, serializer):
+        super(FlutterwavePaymentList, self).perform_create(serializer)
+        check_payment_status(serializer.instance)
+
 
 class FlutterwaveWebhookView(View):
 

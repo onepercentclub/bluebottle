@@ -214,7 +214,7 @@ class FundraiserListTestCase(BluebottleTestCase):
                     'title': 'Test title',
                     'description': 'Test description',
                     'amount': {'amount': 100, 'currency': 'EUR'},
-                    'deadline': str((now() + timedelta(days=10)).date())
+                    'deadline': str(now() + timedelta(days=10))
                 },
                 'relationships': {
                     'activity': {

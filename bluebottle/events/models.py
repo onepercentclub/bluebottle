@@ -64,10 +64,10 @@ class Event(Activity):
         super(Event, self).save(*args, **kwargs)
 
     def check_capacity(self):
-        if len(self.participants) >= self.capacity and self.status == EventTransitions.values.open:
+        if self.capacity and len(self.participants) >= self.capacity and self.status == EventTransitions.values.open:
             self.transitions.full()
             self.save()
-        elif len(self.participants) < self.capacity and self.status == EventTransitions.values.full:
+        elif self.capacity and len(self.participants) < self.capacity and self.status == EventTransitions.values.full:
             self.transitions.reopen()
 
     @property

@@ -22,5 +22,6 @@ class EventTestCase(BluebottleTestCase):
 
     def test_absolute_url(self):
         activity = EventFactory()
-        expected = 'http://testserver/en/initiatives/activities/event/{}/{}'.format(activity.id, activity.slug)
+        expected = 'http://testserver/en/initiatives/activities/' \
+                   'details/event/{}/{}'.format(activity.id, activity.slug)
         self.assertEqual(activity.get_absolute_url(), expected)

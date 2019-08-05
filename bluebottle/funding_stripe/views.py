@@ -65,8 +65,8 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
 
     def get_object(self):
         try:
-            obj = self.request.user.funding_stripe_payout_account
-        except Member.funding_stripe_payout_account.RelatedObjectDoesNotExist:
+            obj = self.request.user.funding_payout_account
+        except Member.funding_payout_account.RelatedObjectDoesNotExist:
             raise Http404
 
         self.check_object_permissions(self.request, obj)

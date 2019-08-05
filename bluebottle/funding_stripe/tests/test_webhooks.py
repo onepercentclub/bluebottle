@@ -41,7 +41,8 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
-        self.funding = FundingFactory.create(initiative=self.initiative)
+        self.account = StripePayoutAccountFactory.create()
+        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
         self.donation = DonationFactory.create(activity=self.funding)
 
         self.payment_intent = stripe.PaymentIntent('some intent id')
@@ -154,7 +155,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
-        self.funding = FundingFactory.create(initiative=self.initiative)
+        self.account = StripePayoutAccountFactory.create()
+        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
         self.donation = DonationFactory.create(activity=self.funding)
 
         self.payment = StripeSourcePaymentFactory.create(

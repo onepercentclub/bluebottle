@@ -326,7 +326,7 @@ class PayoutAccount(PolymorphicModel, TransitionsMixin):
 
     owner = models.OneToOneField(
         'members.Member',
-        related_name='%(app_label)s_payout_account'
+        related_name='funding_payout_account'
     )
 
     created = models.DateTimeField(auto_now_add=True)

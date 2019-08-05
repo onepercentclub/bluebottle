@@ -47,7 +47,6 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 country=self.check.country,
                 metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},
                 settings={'payments': {'statement_descriptor': u''}, 'payouts': {'schedule': {'interval': 'manual'}}},
-                business_type='individual',
                 type='custom'
             )
 

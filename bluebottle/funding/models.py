@@ -59,7 +59,7 @@ class PaymentProvider(PolymorphicModel):
 
 
 class Funding(Activity):
-    deadline = models.DateField(_('deadline'), null=True, blank=True)
+    deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
     target = MoneyField()
@@ -205,7 +205,7 @@ class Fundraiser(models.Model):
     image = ImageField(blank=True, null=True)
 
     amount = MoneyField(_("amount"))
-    deadline = models.DateField(_('deadline'), null=True, blank=True)
+    deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -276,8 +276,6 @@ class Payment(TransitionsMixin, PolymorphicModel):
 
     donation = models.OneToOneField(Donation, related_name='payment')
 
-    transitions = TransitionManager(PaymentTransitions, 'status')
-
     def __unicode__(self):
         return "{} - {}".format(self.polymorphic_ctype, self.id)
 
@@ -326,7 +324,7 @@ class PayoutAccount(PolymorphicModel, TransitionsMixin):
 
     owner = models.OneToOneField(
         'members.Member',
-        related_name='%(app_label)s_payout_account'
+        related_name='funding_payout_account'
     )
 
     created = models.DateTimeField(auto_now_add=True)

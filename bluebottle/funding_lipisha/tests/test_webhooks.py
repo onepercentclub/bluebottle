@@ -1,10 +1,14 @@
+import json
+
 from django.urls import reverse
 from mock import patch
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding.transitions import PaymentTransitions
-from bluebottle.funding_lipisha.tests.factories import LipishaPaymentFactory, LipishaPaymentProviderFactory
+from bluebottle.funding_lipisha.models import LipishaPayment
+from bluebottle.funding_lipisha.tests.factories import LipishaPaymentFactory, LipishaPaymentProviderFactory, \
+    LipishaPayoutAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -45,18 +49,105 @@ lipisha_not_found_response = {
 }
 
 
-class LipishaPaymentTestCase(BluebottleTestCase):
+class LipishaPaymentInitiateTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(LipishaPaymentTestCase, self).setUp()
+        super(LipishaPaymentInitiateTestCase, self).setUp()
         self.provider = LipishaPaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
 
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
+        self.account = LipishaPayoutAccountFactory.create()
+        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
+        self.donation = DonationFactory.create(activity=self.funding)
+        self.webhook = reverse('lipisha-payment-webhook')
 
-        self.funding = FundingFactory.create(initiative=self.initiative)
+    @patch('lipisha.Lipisha._make_api_call', return_value=lipisha_success_response)
+    def test_initiate(self, mock_client):
+        data = {
+            'api_key': self.provider.api_key,
+            'api_signature': self.provider.api_signature,
+            'api_version': '2.0.0',
+            'api_type': 'Initiate',
+            'transaction_account': self.account.account_number,
+            'transaction_account_number': self.account.account_number,
+            'transaction_merchant_reference': '',
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Completed',
+            'transaction_mobile': '25471000000',
+            'transaction_type': 'Payment'
+        }
+        response = self.client.post(self.webhook, data, format='multipart')
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(json.loads(response.content)['transaction_status'], 'SUCCESS')
+        payment = LipishaPayment.objects.get()
+        self.assertEqual(payment.status, PaymentTransitions.values.succeeded)
+
+    def test_initiate_failed(self):
+        data = {
+            'api_key': self.provider.api_key,
+            'api_signature': self.provider.api_signature,
+            'api_version': '2.0.0',
+            'api_type': 'Initiate',
+            'transaction_account': self.account.account_number,
+            'transaction_account_number': self.account.account_number,
+            'transaction_merchant_reference': '',
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Failed',
+            'transaction_mobile': '25471000000',
+            'transaction_type': 'Payment'
+        }
+        response = self.client.post(self.webhook, data, format='multipart')
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(json.loads(response.content)['transaction_status'], 'SUCCESS')
+        payment = LipishaPayment.objects.get()
+        self.assertEqual(payment.status, PaymentTransitions.values.failed)
+
+    def test_acknowledge_wrong_key(self):
+        data = {
+            'api_key': 'hacker-key',
+            'api_signature': self.provider.api_signature,
+            'api_version': '2.0.0',
+            'api_type': 'Initiate',
+            'transaction_account': self.account.account_number,
+            'transaction_account_number': self.account.account_number,
+            'transaction_merchant_reference': '',
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Completed',
+            'transaction_mobile': '25471000000',
+            'transaction_type': 'Payment'
+        }
+        response = self.client.post(self.webhook, data, format='multipart')
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(json.loads(response.content)['transaction_status'], 'FAIL')
+
+
+class LipishaPaymentAcknowledgeTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(LipishaPaymentAcknowledgeTestCase, self).setUp()
+        self.provider = LipishaPaymentProviderFactory.create()
+
+        self.initiative = InitiativeFactory.create()
+
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.account = LipishaPayoutAccountFactory.create()
+        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
         self.donation = DonationFactory.create(activity=self.funding)
         self.webhook = reverse('lipisha-payment-webhook')
         self.payment = LipishaPaymentFactory.create(
@@ -86,10 +177,11 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(json.loads(response.content)['transaction_status'], 'SUCCESS')
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, PaymentTransitions.values.succeeded)
 
-    def test_ackknowledge_failed(self):
+    def test_acknowledge_failed(self):
         data = {
             'transaction_account': '424242',
             'transaction_account_number': '424242',
@@ -99,7 +191,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
             'transaction_amount': '1750',
             'transaction_currency': 'KES',
             'transaction_name': 'SAM+GICHURU',
-            'transaction_status': 'Completed',
+            'transaction_status': 'Failed',
             'transaction_mobile': '25471000000',
             'api_key': self.provider.api_key,
             'api_type': 'Acknowledge',
@@ -107,5 +199,50 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(json.loads(response.content)['transaction_status'], 'SUCCESS')
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, PaymentTransitions.values.failed)
+
+    def test_acknowledge_wrong_key(self):
+        data = {
+            'transaction_account': '424242',
+            'transaction_account_number': '424242',
+            'transaction_merchant_reference': self.payment.unique_id,
+            'transaction': self.payment.transaction,
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Failed',
+            'transaction_mobile': '25471000000',
+            'api_key': '98762323454',
+            'api_type': 'Acknowledge',
+            'api_signature': self.provider.api_signature,
+        }
+        response = self.client.post(self.webhook, data, format='multipart')
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(json.loads(response.content)['transaction_status'], 'FAIL')
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, PaymentTransitions.values.new)
+
+    def test_acknowledge_not_found(self):
+        data = {
+            'transaction_account': '424242',
+            'transaction_account_number': '424242',
+            'transaction_merchant_reference': self.payment.unique_id,
+            'transaction': self.payment.transaction,
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Failed',
+            'transaction_mobile': '25471000000',
+            'api_key': self.provider.api_key,
+            'api_type': 'Acknowledge',
+            'api_signature': self.provider.api_signature,
+        }
+        response = self.client.post(self.webhook, data, format='multipart')
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(json.loads(response.content)['transaction_status'], 'SUCCESS')
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, PaymentTransitions.values.failed)

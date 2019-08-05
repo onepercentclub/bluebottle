@@ -6,5 +6,6 @@ class FundingTestCase(BluebottleTestCase):
 
     def test_absolute_url(self):
         funding = FundingFactory()
-        expected = 'http://testserver/en/initiatives/activities/funding/{}/{}'.format(funding.id, funding.slug)
+        expected = 'http://testserver/en/initiatives/activities/details' \
+                   '/funding/{}/{}'.format(funding.id, funding.slug)
         self.assertEqual(funding.get_absolute_url(), expected)

@@ -17,9 +17,8 @@ class LipishaPaymentList(PaymentList):
     serializer_class = LipishaPaymentSerializer
 
     def perform_create(self, serializer):
-        payment = serializer.save()
-        payment = initiate_push_payment(payment)
-        return payment
+        super(LipishaPaymentList, self).perform_create(serializer)
+        initiate_push_payment(serializer.save())
 
     def post(self, request, **kwargs):
         try:

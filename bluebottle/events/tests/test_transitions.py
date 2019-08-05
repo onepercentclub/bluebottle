@@ -1,14 +1,15 @@
 from datetime import timedelta
+
+from django.core import mail
 from django.utils.timezone import now
 
-from bluebottle.fsm import TransitionNotAllowed, TransitionNotPossible
-from bluebottle.test.utils import BluebottleTestCase
-
 from bluebottle.events.models import Event, Participant
-from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
+from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
+from bluebottle.fsm import TransitionNotAllowed, TransitionNotPossible
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 
 class EventTransitionOpenTestCase(BluebottleTestCase):
@@ -19,14 +20,15 @@ class EventTransitionOpenTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.save()
 
-        self.event = EventFactory.create(title='', initiative=self.initiative)
+        user = BlueBottleUserFactory.create(first_name='Nono')
+        self.event = EventFactory.create(title='', initiative=self.initiative, owner=user)
 
     def test_default_status(self):
         self.assertEqual(
             self.event.status, EventTransitions.values.draft
         )
 
-    def test_complete(self):
+    def test_open(self):
         self.initiative.transitions.approve()
 
         self.event.title = 'Some title'
@@ -163,6 +165,9 @@ class EventTransitionTestCase(BluebottleTestCase):
             self.event.status,
             EventTransitions.values.closed
         )
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(mail.outbox[1].subject, "Your event has been closed")
+        self.assertTrue("Hi Nono,", mail.outbox[1].body)
 
     def test_redraft(self):
         self.event.transitions.close()

@@ -140,4 +140,4 @@ class ParticipantTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta:
         included_resources = ['resource', 'resource.activity']
-        resource_name = 'participant-transitions'
+        resource_name = 'contributions/participant-transitions'

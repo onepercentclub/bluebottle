@@ -20,11 +20,13 @@ class PaymentIntent(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk:
+            # FIXME: First verify that the funding activity has a valid Stripe account connected.
+            account_id = self.donation.activity.account.account_id
             intent = stripe.PaymentIntent.create(
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
                 transfer_data={
-                    'destination': StripePayoutAccount.objects.all()[0].account_id,
+                    'destination': account_id,
                 },
                 metadata=self.metadata
             )
@@ -192,7 +194,9 @@ class StripePayoutAccount(PayoutAccount):
                 country=self.country,
                 type='custom',
                 settings=self.account_settings,
-                business_type='individual',
+                # Loek 05-05-2019: Although this is in documentation https://stripe.com/docs/api/accounts/create
+                # adding business_type here will cause the request to fail :-o
+                # business_type='individual',
                 metadata=self.metadata
             )
             self.account_id = self._account.id

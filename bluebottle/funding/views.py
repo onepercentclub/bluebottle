@@ -13,7 +13,7 @@ from bluebottle.funding.serializers import (
     DonationCreateSerializer,
 )
 from bluebottle.funding.authentication import DonationAuthentication
-from bluebottle.funding.permissions import DonationOwnerPermission
+from bluebottle.funding.permissions import DonationOwnerPermission, PaymentPermission
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
@@ -188,7 +188,7 @@ class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView)
 
 
 class PaymentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
-    permission_classes = []
+    permission_classes = (PaymentPermission, )
 
     related_permission_classes = {
         'donation': [IsOwner]

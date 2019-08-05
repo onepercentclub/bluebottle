@@ -32,7 +32,9 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
-        self.funding = FundingFactory.create(initiative=self.initiative)
+        self.account = StripePayoutAccountFactory.create()
+
+        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
         self.donation = DonationFactory.create(activity=self.funding, user=None)
 
         self.intent_url = reverse('stripe-payment-intent-list')
@@ -192,7 +194,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                         'payments': {'statement_descriptor': u''},
                         'payouts': {'schedule': {'interval': 'manual'}}
                     },
-                    business_type='individual',
+                    # business_type='individual',
                     type='custom'
                 )
                 modify_account.assert_called_with(

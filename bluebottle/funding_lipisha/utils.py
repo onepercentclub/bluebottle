@@ -224,7 +224,7 @@ def initiate_payment(data):
         donation = Donation.objects.create(
             amount=Money(data['transaction_amount'], data['transaction_currency']),
             name=name,
-            funding=funding)
+            activity=funding)
 
         payment = LipishaPayment.objects.create(
             donation=donation,
@@ -232,9 +232,9 @@ def initiate_payment(data):
         )
 
     if data['transaction_status'] in ['Success', 'Completed']:
-        payment.transactions.succeed()
+        payment.transitions.succeed()
     else:
-        payment.transactions.failed()
+        payment.transitions.fail()
     payment.save()
     return generate_success_response(payment)
 

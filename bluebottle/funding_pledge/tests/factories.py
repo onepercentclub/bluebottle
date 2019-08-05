@@ -10,3 +10,9 @@ class PledgePaymentFactory(factory.DjangoModelFactory):
         model = PledgePayment
 
     donation = factory.SubFactory(DonationFactory)
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        payment = super(PledgePaymentFactory, cls)._create(model_class, *args, **kwargs)
+        payment.transitions.succeed()
+        return payment

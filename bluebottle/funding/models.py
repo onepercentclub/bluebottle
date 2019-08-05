@@ -276,8 +276,6 @@ class Payment(TransitionsMixin, PolymorphicModel):
 
     donation = models.OneToOneField(Donation, related_name='payment')
 
-    transitions = TransitionManager(PaymentTransitions, 'status')
-
     def __unicode__(self):
         return "{} - {}".format(self.polymorphic_ctype, self.id)
 

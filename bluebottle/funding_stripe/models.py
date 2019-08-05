@@ -80,14 +80,12 @@ class StripeSourcePayment(Payment):
     transitions = TransitionManager(StripeSourcePaymentTransitions, 'status')
 
     def charge(self):
-        # First check that this account is valid
-        account_id = self.donation.activity.account.account_id
         charge = stripe.Charge.create(
             amount=self.donation.amount,
             currency=self.donation.amount.currency,
             source=self.source_token,
             destination={
-                'destination': account_id,
+                'destination': StripePayoutAccount.objects.all()[0].account_id,
             },
             metadata=self.metadata
         )
@@ -187,6 +185,7 @@ class StripePayoutAccount(PayoutAccount):
     def account(self):
         if not hasattr(self, '_account'):
             self._account = stripe.Account.retrieve(self.account_id)
+
         return self._account
 
     def save(self, *args, **kwargs):

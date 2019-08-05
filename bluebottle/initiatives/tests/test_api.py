@@ -303,7 +303,14 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
         self.assertEqual(data['meta']['status'], self.initiative.status)
-        self.assertEqual(data['meta']['transitions'], [{'name': 'submit', 'target': 'submitted'}])
+        self.assertEqual(
+            data['meta']['transitions'],
+            [{
+                u'available': True,
+                u'conditions': {},
+                u'name': u'submit',
+                u'target': u'submitted'
+            }])
         self.assertEqual(data['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
         self.assertEqual(data['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
 

@@ -298,6 +298,23 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
             len(self.event.participants), 0
         )
 
+    def test_untreject(self):
+        self.participant.transitions.reject(self.event.initiative.activity_manager)
+        self.participant.save()
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.rejected
+        )
+        self.participant.transitions.unreject(self.event.initiative.activity_manager)
+        self.participant.save()
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.new
+        )
+        self.assertEqual(
+            len(self.event.participants), 1
+        )
+
     def test_reject_no_owner(self):
         self.assertRaises(
             TransitionNotAllowed,

@@ -14,11 +14,23 @@ class Transition(object):
 
 class AvailableTransitionsField(ReadOnlyField):
     def to_representation(self, value):
-        transitions = value.transitions.available_transitions(user=self.context['request'].user)
+        user = self.context['request'].user
+        transitions = value.transitions
 
         return (
-            {'name': transition.name, 'target': transition.target}
-            for transition in transitions
+            {
+                'name': transition.name,
+                'target': transition.target,
+                'available': (
+                    transition.is_possible(value.transitions) and
+                    (user and transition.is_allowed(transitions, user))
+                ),
+                'conditions': {
+                    condition.__name__: getattr(transitions, condition.__name__)()
+                    for condition in transition.conditions if getattr(transitions, condition.__name__)()
+                }
+            }
+            for transition in transitions.all_transitions
         )
 
     def get_attribute(self, instance):

@@ -265,12 +265,20 @@ class ParticipantTestCase(BluebottleTestCase):
         response = self.client.get(
             self.event_url, user=self.participant
         )
-
         event_data = json.loads(response.content)
         self.assertEqual(
-            event_data['data']['relationships']['contributions']['meta']['count'],
+            len(event_data['data']['relationships']['contributions']['data']),
             1
         )
+        self.assertEqual(
+            event_data['data']['attributes']['stats']['count'],
+            0
+        )
+        self.assertEqual(
+            event_data['data']['attributes']['stats']['committed_count'],
+            1
+        )
+
         self.assertEqual(
             event_data['data']['relationships']['contributions']['data'][0]['id'],
             data['data']['id']
@@ -323,8 +331,15 @@ class ParticipantTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(
-            [transition['name'] for transition in data['data']['meta']['transitions']],
+            [
+                transition['name'] for transition in data['data']['meta']['transitions']
+                if transition['available']
+            ],
             ['withdraw', 'close']
+        )
+        self.assertEqual(
+            data['data']['meta']['transitions'][1]['conditions'],
+            {u'event_is_successful': u'The event is not successful'}
         )
 
     def test_possible_transitions_other_user(self):
@@ -340,9 +355,101 @@ class ParticipantTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(
-            [transition['name'] for transition in data['data']['meta']['transitions']],
+            [
+                transition['name'] for transition in data['data']['meta']['transitions']
+                if transition['available']],
             ['close']
         )
+        self.assertEqual(
+            data['data']['meta']['transitions'][1]['conditions'],
+            {u'event_is_successful': u'The event is not successful'}
+        )
+
+
+class ParticipantListFilterCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(ParticipantListFilterCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory.create()
+
+        self.initiative = InitiativeFactory.create()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)
+        ParticipantFactory.create_batch(3, activity=self.event, status='succeeded')
+        ParticipantFactory.create_batch(2, activity=self.event, status='closed')
+        ParticipantFactory.create_batch(3, status='succeeded')
+
+        self.participant_url = reverse('participant-list')
+        self.event_url = reverse('event-detail', args=(self.event.pk,))
+
+    def test_list_all_participants(self):
+        # Random user should only see successful participants (filtered by activity)
+        response = self.client.get(
+            self.participant_url, user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 6)
+
+    def test_list_participants(self):
+        # Random user should only see successful participants (filtered by activity)
+        response = self.client.get(
+            self.participant_url, {'filter[activity.id]': self.event.id}, user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 3)
+
+    def test_list_participants_event_owner(self):
+        # Event host should see all participants (rejected / no show etc)
+        response = self.client.get(
+            self.participant_url, {'filter[activity.id]': self.event.id}, user=self.event.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 5)
+
+    def test_list_participants_by_event(self):
+        # Requesting an event Random user should see successful participants
+        response = self.client.get(self.event_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['contributions']), 3)
+
+    def test_list_participants_by_event_owner(self):
+        # Requesting an event event owner  should see successful all participants (rejected / no show etc)
+        response = self.client.get(self.event_url, user=self.event.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['contributions']), 5)
+
+    def test_list_my_participation(self):
+        response = self.client.get(
+            self.participant_url, {'filter[user.id]': self.user.id}, user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 0)
+
+        # Create 4 participant objects for this user for different events
+        ParticipantFactory.create_batch(4, status='closed', user=self.user)
+        response = self.client.get(
+            self.participant_url, {'filter[user.id]': self.user.id}, user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 4)
+
+    def test_list_my_participation_by_event(self):
+        # Filtering by user and activity user should only see
+        # own participation for that event
+        ParticipantFactory.create_batch(4, status='closed', user=self.user)
+        ParticipantFactory.create(activity=self.event, status='closed', user=self.user)
+        response = self.client.get(
+            self.participant_url,
+            {
+                'filter[activity.id]': self.event.id,
+                'filter[user.id]': self.user.id
+            },
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
 
 
 class ParticipantTransitionTestCase(BluebottleTestCase):

@@ -334,6 +334,13 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             event.title
         )
         self.assertEqual(activity_data['type'], 'activities/events')
+        activity_location = activity_data['relationships']['location']['data']
+
+        self.assertTrue(
+            activity_location in (
+                {'type': included['type'], 'id': included['id']} for included in response.json()['included']
+            )
+        )
 
     def test_get_other(self):
         response = self.client.get(

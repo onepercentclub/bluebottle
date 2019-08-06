@@ -108,6 +108,7 @@ class InitiativeSerializer(ModelSerializer):
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
         'activities': 'bluebottle.activities.serializers.ActivitySerializer',
+        'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
 
     class Meta:
@@ -125,7 +126,7 @@ class InitiativeSerializer(ModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'owner', 'reviewer', 'promoter', 'categories', 'theme', 'place', 'location',
-            'image', 'organization', 'organization_contact', 'activities'
+            'image', 'organization', 'organization_contact', 'activities', 'activities.location',
         ]
         resource_name = 'initiatives'
 

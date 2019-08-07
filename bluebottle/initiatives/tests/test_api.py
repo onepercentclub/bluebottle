@@ -78,7 +78,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             response_data['data']['relationships']['theme']['data']['id'],
             unicode(initiative.theme.pk)
         )
-        self.assertEqual(len(response_data['included']), 2)
+        self.assertEqual(len(response_data['included']), 3)
 
     def test_create_duplicate_title(self):
         InitiativeFactory.create(title='Some title')
@@ -103,8 +103,11 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             json.dumps(data),
             user=self.owner
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(), {u'errors': {u'title': [u'This field must be unique.']}})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            get_include(response, 'initiative-validations')['attributes']['title'],
+            [{u'code': u'unique', u'title': u'This field must be unique.'}],
+        )
 
     def test_create_with_location(self):
         geolocation = GeolocationFactory.create(position=Point(23.6851594, 43.0579025))
@@ -294,6 +297,9 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_owner(self):
+        self.initiative.title = ''
+        self.initiative.save()
+
         response = self.client.get(
             self.url,
             user=self.owner
@@ -316,6 +322,17 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         geolocation = get_include(response, 'geolocations')
         self.assertEqual(geolocation['attributes']['position'], {'latitude': 43.0579025, 'longitude': 23.6851594})
+
+        self.assertEqual(
+            data['relationships']['validations']['data'],
+            {u'type': u'initiative-validations', u'id': unicode(self.initiative.pk)}
+        )
+        validations = get_include(response, 'initiative-validations')
+
+        self.assertEqual(
+            validations['attributes']['title'],
+            [{u'code': u'blank', u'title': u'This field may not be blank.'}]
+        )
 
     def test_get_activities(self):
         event = EventFactory.create(initiative=self.initiative)
@@ -356,6 +373,49 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
+
+
+class InitiativeValidationTestCase(InitiativeAPITestCase):
+    def setUp(self):
+        super(InitiativeValidationTestCase, self).setUp()
+        self.initiative = InitiativeFactory(
+            owner=self.owner
+        )
+        self.url = reverse('initiative-validations', args=(self.initiative.pk,))
+        self.detail_url = reverse('initiative-detail', args=(self.initiative.pk,))
+
+    def test_missing_title(self):
+        data = self.client.get(self.detail_url, user=self.owner).json()['data']
+
+        data['type'] = 'initiative-validations'
+        data['attributes']['title'] = ''
+
+        response = self.client.put(self.url, data=json.dumps({'data': data}), user=self.owner)
+        self.assertEqual(
+            response.json()['data']['attributes']['title'],
+            [{'title': 'This field may not be blank.', 'code': 'blank'}]
+        )
+
+    def test_duplicate_title(self):
+        InitiativeFactory.create(title=self.initiative.title, status='approved')
+        data = self.client.get(self.detail_url, user=self.owner).json()['data']
+
+        data['type'] = 'initiative-validations'
+
+        response = self.client.put(self.url, data=json.dumps({'data': data}), user=self.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_duplicate_missing_image(self):
+        data = self.client.get(self.detail_url, user=self.owner).json()['data']
+
+        data['type'] = 'initiative-validations'
+        data['relationships']['image'] = None
+
+        response = self.client.put(self.url, data=json.dumps({'data': data}), user=self.owner)
+        self.assertEqual(
+            response.json()['data']['attributes']['image'],
+            [{'title': u'This field is required.', 'code': 'required'}]
+        )
 
 
 @override_settings(

@@ -18,6 +18,7 @@ class InitiativeTransitions(ModelTransitions):
     default = values.draft
 
     def is_complete(self):
+        return
         from bluebottle.initiatives.serializers import InitiativeSubmitSerializer
 
         data = model_to_dict(self.instance)

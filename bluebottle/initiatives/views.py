@@ -1,4 +1,4 @@
-from rest_framework_json_api.exceptions import exception_handler
+from rest_framework import response
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 
@@ -7,10 +7,13 @@ from bluebottle.initiatives.filters import InitiativeSearchFilter
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.permissions import InitiativePermission
 from bluebottle.initiatives.serializers import (
-    InitiativeSerializer, InitiativeReviewTransitionSerializer
+    InitiativeSerializer, InitiativeReviewTransitionSerializer,
+    InitiativeValidationSerializer
 )
 from bluebottle.transitions.views import TransitionList
-from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin
+from bluebottle.utils.views import (
+    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin
+)
 
 
 class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -50,9 +53,6 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
     serializer_class = InitiativeSerializer
     permission_classes = (InitiativePermission,)
 
-    def get_exception_handler(self):
-        return exception_handler
-
     prefetch_for_includes = {
         'owner': ['owner'],
         'reviewer': ['reviewer'],
@@ -66,6 +66,19 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
         'organization_contact': ['organization_contact'],
         'activities': ['activities'],
     }
+
+
+class InitiativeValidation(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = Initiative.objects.all()
+    serializer_class = InitiativeValidationSerializer
+    permission_classes = (InitiativePermission,)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+        return response.Response(serializer.data)
 
 
 class InitiativeImage(FileContentView):

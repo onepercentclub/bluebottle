@@ -136,8 +136,13 @@ class Initiative(TransitionsMixin, models.Model):
         except InitiativePlatformSettings.DoesNotExist:
             pass
 
-        if self.has_organization and not self.organization and self.owner and self.owner.partner_organization:
-            self.organization = self.owner.partner_organization
+        if self.has_organization:
+            if not self.organization and self.owner and self.owner.partner_organization:
+                self.organization = self.owner.partner_organization
+
+            if not self.organization_contact:
+                self.organization_contact = OrganizationContact(owner=self.owner)
+                self.organization_contact.save()
 
         super(Initiative, self).save(**kwargs)
 

@@ -3,6 +3,7 @@ from django.core import mail
 from bluebottle.fsm import TransitionNotPossible
 from bluebottle.initiatives.transitions import InitiativeTransitions
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -68,7 +69,6 @@ class InitiativeTransitionTestCase(BluebottleTestCase):
         self.initiative.has_organization = True
         self.initiative.organization = OrganizationFactory.create()
         self.initiative.organization_contact = OrganizationContactFactory.create()
-
         self.initiative.transitions.submit()
         self.assertEqual(
             self.initiative.status, InitiativeTransitions.values.submitted
@@ -81,6 +81,34 @@ class InitiativeTransitionTestCase(BluebottleTestCase):
             phone=None
         )
 
+        self.initiative.transitions.submit()
+        self.assertEqual(
+            self.initiative.status, InitiativeTransitions.values.submitted
+        )
+
+    def test_submit_contact_without_place(self):
+        self.initiative.place = None
+        self.initiative.save()
+        self.assertRaises(
+            TransitionNotPossible,
+            self.initiative.transitions.submit
+        )
+
+    def test_submit_contact_without_location_has_locations(self):
+        LocationFactory.create_batch(5)
+        self.initiative.place = None
+        self.initiative.location = None
+        self.initiative.save()
+        self.assertRaises(
+            TransitionNotPossible,
+            self.initiative.transitions.submit
+        )
+
+    def test_submit_contact_with_location_has_locations(self):
+        locations = LocationFactory.create_batch(5)
+        self.initiative.place = None
+        self.initiative.location = locations[0]
+        self.initiative.save()
         self.initiative.transitions.submit()
         self.assertEqual(
             self.initiative.status, InitiativeTransitions.values.submitted

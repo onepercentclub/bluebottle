@@ -1,9 +1,7 @@
-from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from rest_framework.utils.serializer_helpers import ReturnDict
 from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import (
     ResourceRelatedField, PolymorphicResourceRelatedField
@@ -26,7 +24,8 @@ from bluebottle.transitions.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
 from bluebottle.utils.serializers import (
-    ResourcePermissionField
+    ResourcePermissionField, RelatedField,
+    NonModelRelatedResourceField, ValidationSerializer, NoCommitMixin
 )
 
 
@@ -79,80 +78,43 @@ class InitiativeImageSerializer(ImageSerializer):
     relationship = 'initiative_set'
 
 
-class RelatedField(serializers.Field):
-    def __init__(self, queryset, *args, **kwargs):
-        self.queryset = queryset
-        super(RelatedField, self).__init__(*args, **kwargs)
-
-    def to_internal_value(self, data):
-        try:
-            data = data['id']
-        except TypeError:
-            pass
-
-        try:
-            return self.queryset.get(pk=data)
-        except ObjectDoesNotExist:
-            self.fail('does_not_exist', pk_value=data)
-
-    def to_representation(self, value):
-        return value.pk
-
-
-class NonModelRelatedResourceField(ResourceRelatedField):
-    def __init__(self, serializer, read_only=True, source='*', *args, **kwargs):
-        super(NonModelRelatedResourceField, self).__init__(read_only=True, source='*', *args, **kwargs)
-
-        class JSONAPIMeta:
-            resource_name = serializer.JSONAPIMeta.resource_name
-
-        self.JSONAPIMeta = JSONAPIMeta
-
-
-class InitiativeValidationSerializer(serializers.ModelSerializer):
+class InitiativeValidationSerializer(ValidationSerializer):
     image = RelatedField(queryset=Image.objects.all())
     owner = RelatedField(queryset=Member.objects.all())
     theme = RelatedField(queryset=ProjectTheme.objects.all())
     place = RelatedField(queryset=Geolocation.objects.all())
+    organization_id = RelatedField(queryset=Organization.objects.all())
+    organization = RelatedField(allow_null=True, queryset=Geolocation.objects.all())
     story = SafeField()
     title = serializers.CharField(
-        validators=[UniqueValidator(queryset=Initiative.objects.all())]
+        validators=[UniqueValidator(queryset=Initiative.objects.filter(status='approved'))]
     )
+    pitch = serializers.CharField()
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
 
-    # TODO add dependent fields: has_organization/organization/organization_contact and
-    # place / location
+    organization = ResourceRelatedField(read_only=True)
+    organization_contact = ResourceRelatedField(read_only=True)
+
+    included_serializers = {
+        'organization': 'bluebottle.organizations.serializers.OrganizationValidationSerializer',
+        'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactValidationSerializer',
+    }
 
     class Meta:
         model = Initiative
         fields = (
             'title', 'pitch', 'owner',
             'has_organization', 'story', 'video_url', 'image',
-            'theme', 'place', 'video_html',
+            'theme', 'place', 'video_html', 'organization_id', 'organization',
+            'organization_contact',
         )
 
     class JSONAPIMeta:
         resource_name = 'initiative-validations'
-
-    @property
-    def data(self):
-        data = {}
-
-        if not hasattr(self, 'initial_data') and self.instance:
-            self.initial_data = self.to_representation(self.instance)
-
-        try:
-            self.is_valid(raise_exception=True)
-        except serializers.ValidationError, e:
-            for key, errors in e.detail.items():
-                data[key] = (
-                    {'code': error.code, 'title': unicode(error)} for error in errors
-                )
-
-        return ReturnDict(data, serializer=self)
+        included_resources = ['organization', 'organization_contact']
 
 
-class InitiativeSerializer(ModelSerializer):
+class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     image = ImageField(required=False, allow_null=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
@@ -183,6 +145,9 @@ class InitiativeSerializer(ModelSerializer):
         'activities': 'bluebottle.activities.serializers.ActivitySerializer',
         'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'validations': 'bluebottle.initiatives.serializers.InitiativeValidationSerializer',
+        'validations.organization': 'bluebottle.organizations.serializers.OrganizationValidationSerializer',
+        'validations.organization_contact':
+            'bluebottle.organizations.serializers.OrganizationContactValidationSerializer',
     }
 
     class Meta:
@@ -201,7 +166,7 @@ class InitiativeSerializer(ModelSerializer):
         included_resources = [
             'owner', 'reviewer', 'promoter', 'categories', 'theme', 'place', 'location',
             'image', 'organization', 'organization_contact', 'activities', 'activities.location',
-            'validations',
+            'validations', 'validations.organization', 'validations.organization_contact',
         ]
         resource_name = 'initiatives'
 

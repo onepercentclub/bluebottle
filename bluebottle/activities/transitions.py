@@ -17,6 +17,7 @@ class ActivityTransitions(ModelTransitions):
     default = values.draft
 
     def is_complete(self):
+        return
         serializer_class = import_string(self.serializer)
         serializer = serializer_class(
             data=model_to_dict(self.instance)

@@ -39,7 +39,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
                     'link', 'highlight']
 
     def link(self, obj):
-        return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title)
+        return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title)
     link.short_description = _("Show on site")
 
     def type(self, obj):
@@ -63,11 +63,11 @@ class ActivityAdminInline(StackedPolymorphicInline):
         activity_link.short_description = _('Edit activity')
 
         def link(self, obj):
-            return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title or '-empty-')
+            return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
         link.short_description = _('View on site')
 
     class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'link', 'start_time', 'end_time', 'status']
+        readonly_fields = ['activity_link', 'link', 'start_date', 'start_time', 'duration', 'status']
         fields = readonly_fields
         model = Event
 

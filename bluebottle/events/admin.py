@@ -53,7 +53,7 @@ class ParticipantAdmin(FSMAdmin):
 class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
     inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
-    list_display = ['title', 'status', 'start_time', 'end_time']
+    list_display = ['title', 'status', 'start_date', 'start_time', 'duration']
     base_model = Event
 
     readonly_fields = ActivityChildAdmin.readonly_fields
@@ -66,7 +66,7 @@ class EventAdmin(ActivityChildAdmin):
         )}),
         (_('Details'), {'fields': (
             'description', 'capacity',
-            'start_time', 'end_time', 'registration_deadline',
+            'start_date', 'start_time', 'duration', 'registration_deadline',
             'is_online', 'location', 'location_hint'
         )}),
     )

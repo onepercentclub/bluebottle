@@ -21,8 +21,8 @@ def check_event_start():
         with LocalTenant(tenant, clear_tenant=True):
             # Start events that are running now
             events = Event.objects.filter(
-                start_time__lte=now(),
-                end_time__gte=now(),
+                start_date=now().date(),
+                start_time__lte=now().time(),
                 status__in=['full', 'open']
             ).all()
 
@@ -41,7 +41,8 @@ def check_event_end():
         with LocalTenant(tenant, clear_tenant=True):
             # Close events that are over
             events = Event.objects.filter(
-                end_time__lte=now(),
+                end_date__lte=now.date(),
+                end_time__lte=now.time(),
                 status__in=['running']
             ).all()
 

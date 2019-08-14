@@ -1,3 +1,4 @@
+import datetime
 
 from django.db import models
 from django.db.models import Count, Sum
@@ -19,9 +20,10 @@ class Event(Activity):
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
-    start_time = models.DateTimeField(_('start'), null=True, blank=True)
-    end_time = models.DateTimeField(_('end'), null=True, blank=True)
-    registration_deadline = models.DateTimeField(_('registration deadline'), null=True, blank=True)
+    start_date = models.DateField(_('start'), null=True, blank=True)
+    start_time = models.TimeField(_('start'), null=True, blank=True)
+    duration = models.FloatField(_('end'), null=True, blank=True)
+    registration_deadline = models.DateField(_('registration deadline'), null=True, blank=True)
 
     transitions = TransitionManager(EventTransitions, 'status')
 
@@ -71,8 +73,12 @@ class Event(Activity):
             self.transitions.reopen()
 
     @property
-    def duration(self):
-        return (self.end_time - self.start_time).seconds / 60
+    def start(self):
+        return datetime.datetime.combine(self.start_date, self.start_time)
+
+    @property
+    def end(self):
+        return self.start + datetime.timedelta(hours=self.duration)
 
     @property
     def participants(self):

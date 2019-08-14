@@ -141,8 +141,8 @@ class Initiative(TransitionsMixin, models.Model):
                 self.organization = self.owner.partner_organization
 
             if not self.organization_contact:
-                self.organization_contact = OrganizationContact(owner=self.owner)
-                self.organization_contact.save()
+                contact = OrganizationContact.objects.create(owner=self.owner)
+                self.organization_contact = contact
 
         super(Initiative, self).save(**kwargs)
 

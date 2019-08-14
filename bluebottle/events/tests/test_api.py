@@ -176,6 +176,47 @@ class EventAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+class EventValidationTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(BluebottleTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.event = EventFactory.create(initiative=self.initiative, owner=self.owner)
+
+        self.url = reverse('event-validations', args=(self.event.pk,))
+        self.detail_url = reverse('event-detail', args=(self.event.pk,))
+
+    def get_data(self):
+        data = self.client.get(self.detail_url, user=self.owner).json()['data']
+        data['type'] = 'event-validations'
+        for key, value in data.pop('relationships').items():
+            if value:
+                data['attributes'][key] = value['data']
+
+        return data
+
+    def test_missing_title(self):
+        data = self.get_data()
+        data['attributes']['title'] = ''
+
+        response = self.client.put(self.url, data=json.dumps({'data': data}), user=self.owner)
+        self.assertEqual(
+            response.json()['data']['attributes']['title'],
+            [{'title': 'This field may not be blank.', 'code': 'blank'}]
+        )
+
+    def test_duplicate_missing_location(self):
+        data = self.get_data()
+        data['attributes']['location'] = None
+
+        response = self.client.put(self.url, data=json.dumps({'data': data}), user=self.owner)
+        self.assertEqual(
+            response.json()['data']['attributes']['location'],
+            [{'title': u'This field may not be null.', 'code': 'null'}]
+        )
+
+
 class EventTransitionTestCase(BluebottleTestCase):
 
     def setUp(self):

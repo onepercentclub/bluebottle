@@ -4,13 +4,17 @@ from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseContributionSerializer, ActivitySubmitSerializer
+    BaseActivitySerializer, BaseContributionSerializer, ActivitySubmitSerializer,
+    ActivityValidationSerializer
 )
 from bluebottle.events.filters import ParticipantListFilter
 from bluebottle.events.models import Event, Participant
 from bluebottle.geo.models import Geolocation
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
+from bluebottle.utils.serializers import (
+    RelatedField, NonModelRelatedResourceField, NoCommitMixin
+)
 
 
 class ParticipantSerializer(BaseContributionSerializer):
@@ -55,20 +59,40 @@ class ParticipantTransitionSerializer(TransitionSerializer):
         ]
 
 
+class EventValidationSerializer(ActivityValidationSerializer):
+    start_date = serializers.DateField()
+    start_time = serializers.TimeField()
+    duration = serializers.FloatField()
+    is_online = serializers.BooleanField()
+    location = RelatedField(queryset=Geolocation.objects.all())
+
+    class Meta:
+        model = Event
+        fields = ActivityValidationSerializer.Meta.fields + (
+            'start_date', 'start_time', 'is_online', 'location', 'duration'
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'activities/event-validations'
+
+
 class EventListSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
+    validations = NonModelRelatedResourceField(EventValidationSerializer)
 
     class Meta(BaseActivitySerializer.Meta):
         model = Event
         fields = BaseActivitySerializer.Meta.fields + (
             'capacity',
-            'end_time',
+            'start_date',
             'start_time',
+            'duration',
             'is_online',
             'location',
             'location_hint',
             'permissions',
             'registration_deadline',
+            'validations',
         )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
@@ -77,6 +101,7 @@ class EventListSerializer(BaseActivitySerializer):
             'initiative',
             'initiative.image',
             'location',
+            'validations',
         ]
         resource_name = 'activities/events'
 
@@ -85,44 +110,26 @@ class EventListSerializer(BaseActivitySerializer):
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'validations': 'bluebottle.events.serializers.EventValidationSerializer',
     }
 
 
-class EventSerializer(BaseActivitySerializer):
-    permissions = ResourcePermissionField('event-detail', view_args=('pk',))
+class EventSerializer(NoCommitMixin, EventListSerializer):
     contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
 
-    class Meta(BaseActivitySerializer.Meta):
-        model = Event
-        fields = BaseActivitySerializer.Meta.fields + (
-            'capacity',
-            'end_time',
-            'start_time',
-            'is_online',
-            'location',
-            'location_hint',
-            'permissions',
-            'registration_deadline',
-        )
-
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        included_resources = [
-            'owner',
-            'initiative',
-            'initiative.image',
-            'location',
+        included_resources = EventListSerializer.JSONAPIMeta.included_resources + [
             'contributions',
             'contributions.user'
         ]
         resource_name = 'activities/events'
 
-    included_serializers = {
-        'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
-        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
-        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-    }
+    included_serializers = dict(
+        EventListSerializer.included_serializers,
+        **{
+            'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
+        }
+    )
 
 
 class EventSubmitSerializer(ActivitySubmitSerializer):
@@ -131,13 +138,6 @@ class EventSubmitSerializer(ActivitySubmitSerializer):
         error_messages={
             'blank': _('Start time is required'),
             'null': _('Start time is required')
-        }
-    )
-    end_time = serializers.DateTimeField(
-        required=True,
-        error_messages={
-            'blank': _('End time is required'),
-            'null': _('End time is required')
         }
     )
 
@@ -158,10 +158,8 @@ class EventSubmitSerializer(ActivitySubmitSerializer):
         """
         if not self.initial_data['is_online'] and not data['location']:
             raise serializers.ValidationError("Location is required or select 'is online'")
-        if self.initial_data['start_time'] > self.initial_data['end_time']:
-            raise serializers.ValidationError("End time should be after start time")
         if self.initial_data['registration_deadline'] and \
-                self.initial_data['registration_deadline'] > self.initial_data['start_time']:
+                self.initial_data['registration_deadline'] > self.initial_data['start_date']:
             raise serializers.ValidationError("Registration deadline should be before start time")
         return data
 
@@ -169,7 +167,6 @@ class EventSubmitSerializer(ActivitySubmitSerializer):
         model = Event
         fields = ActivitySubmitSerializer.Meta.fields + (
             'start_time',
-            'end_time',
             'location',
         )
 

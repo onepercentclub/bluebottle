@@ -1,4 +1,4 @@
-from django.utils.timezone import now
+from datetime import datetime
 from django.utils.translation import ugettext_lazy as _
 
 from djchoices.choices import ChoiceItem
@@ -17,21 +17,21 @@ class EventTransitions(ActivityTransitions):
         running = ChoiceItem('running', _('running'))
 
     def can_start(self):
-        if not self.instance.start_time:
+        if not self.instance.start:
             return _('Start date has not been set')
-        if self.instance.start_time > now():
+        if self.instance.start > datetime.now():
             return _('The start date has not passed')
 
     def can_open(self):
-        if not self.instance.start_time:
+        if not self.instance.start:
             return _('Start date has not been set')
-        if self.instance.start_time < now():
+        if self.instance.start < datetime.now():
             return _('The start date has passed')
 
     def can_end(self):
-        if not self.instance.end_time:
-            return _('End date has not been set')
-        if not self.instance.end_time < now():
+        if not self.instance.duration:
+            return _('Duration has not been set')
+        if not self.instance.end < datetime.now():
             return _('The end date has not passed')
 
     @transition(

@@ -1,14 +1,11 @@
-from rest_framework import response
 from rest_framework_json_api.views import AutoPrefetchMixin
-
 
 from bluebottle.files.views import FileContentView
 from bluebottle.initiatives.filters import InitiativeSearchFilter
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.permissions import InitiativePermission
 from bluebottle.initiatives.serializers import (
-    InitiativeSerializer, InitiativeReviewTransitionSerializer,
-    InitiativeValidationSerializer
+    InitiativeSerializer, InitiativeReviewTransitionSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.views import (
@@ -66,19 +63,6 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
         'organization_contact': ['organization_contact'],
         'activities': ['activities'],
     }
-
-
-class InitiativeValidation(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
-    queryset = Initiative.objects.all()
-    serializer_class = InitiativeValidationSerializer
-    permission_classes = (InitiativePermission,)
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-
-        return response.Response(serializer.data)
 
 
 class InitiativeImage(FileContentView):

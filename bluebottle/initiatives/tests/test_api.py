@@ -15,6 +15,7 @@ from bluebottle.events.tests.factories import EventFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import JSONAPITestClient
 
 
@@ -80,8 +81,8 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         )
         self.assertEqual(len(response_data['included']), 3)
 
-    def test_create_duplicate_title(self):
-        InitiativeFactory.create(title='Some title')
+    def test_create_validation(self):
+        InitiativeFactory.create(title='Some title', status='approved')
         data = {
             'data': {
                 'type': 'initiatives',
@@ -104,9 +105,69 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        validations = get_include(response, 'initiative-validations')
         self.assertEqual(
-            get_include(response, 'initiative-validations')['attributes']['title'],
+            validations['attributes']['title'],
             [{u'code': u'unique', u'title': u'This field must be unique.'}],
+        )
+        self.assertEqual(
+            validations['attributes']['image'],
+            [{u'code': u'null', u'title': u'This field may not be null.'}],
+        )
+
+    def test_create_validation_has_organization(self):
+        data = {
+            'data': {
+                'type': 'initiatives',
+                'attributes': {
+                    'title': 'Some title',
+                    'has_organization': True
+                },
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        validations = get_include(response, 'initiative-validations')
+        self.assertEqual(
+            validations['attributes']['organization-id'],
+            [{u'code': u'null', u'title': u'This field may not be null.'}],
+        )
+
+    def test_create_validation_organization_website(self):
+        organization = OrganizationFactory.create(website='')
+
+        data = {
+            'data': {
+                'type': 'initiatives',
+                'attributes': {
+                    'title': 'Some title',
+                    'has_organization': True
+                },
+                'relationships': {
+                    'organization': {
+                        'data': {
+                            'type': 'organizations',
+                            'id': organization.pk
+                        },
+                    }
+                }
+
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        validations = get_include(response, 'organization-validations')
+        self.assertEqual(
+            validations['attributes']['website'],
+            [{u'code': u'blank', u'title': u'This field may not be blank.'}],
         )
 
     def test_create_with_location(self):
@@ -312,8 +373,8 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(
             data['meta']['transitions'],
             [{
-                u'available': True,
-                u'conditions': {},
+                u'available': False,
+                u'conditions': {'is_complete': [u'Title is required']},
                 u'name': u'submit',
                 u'target': u'submitted'
             }])
@@ -373,49 +434,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
-
-
-class InitiativeValidationTestCase(InitiativeAPITestCase):
-    def setUp(self):
-        super(InitiativeValidationTestCase, self).setUp()
-        self.initiative = InitiativeFactory(
-            owner=self.owner
-        )
-        self.url = reverse('initiative-validations', args=(self.initiative.pk,))
-        self.detail_url = reverse('initiative-detail', args=(self.initiative.pk,))
-
-    def test_missing_title(self):
-        data = self.client.get(self.detail_url, user=self.owner).json()['data']
-
-        data['type'] = 'initiative-validations'
-        data['attributes']['title'] = ''
-
-        response = self.client.put(self.url, data=json.dumps({'data': data}), user=self.owner)
-        self.assertEqual(
-            response.json()['data']['attributes']['title'],
-            [{'title': 'This field may not be blank.', 'code': 'blank'}]
-        )
-
-    def test_duplicate_title(self):
-        InitiativeFactory.create(title=self.initiative.title, status='approved')
-        data = self.client.get(self.detail_url, user=self.owner).json()['data']
-
-        data['type'] = 'initiative-validations'
-
-        response = self.client.put(self.url, data=json.dumps({'data': data}), user=self.owner)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_duplicate_missing_image(self):
-        data = self.client.get(self.detail_url, user=self.owner).json()['data']
-
-        data['type'] = 'initiative-validations'
-        data['relationships']['image'] = None
-
-        response = self.client.put(self.url, data=json.dumps({'data': data}), user=self.owner)
-        self.assertEqual(
-            response.json()['data']['attributes']['image'],
-            [{'title': u'This field is required.', 'code': 'required'}]
-        )
 
 
 @override_settings(

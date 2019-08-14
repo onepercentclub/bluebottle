@@ -14,7 +14,7 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.utils.fields import SafeField
 from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.categories.models import Category
-from bluebottle.geo.models import Geolocation
+from bluebottle.geo.models import Geolocation, Location
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer, ImageField
@@ -233,8 +233,9 @@ class InitiativeSubmitSerializer(ModelSerializer):
         error_messages={'null': _('Owner is required')}
     )
     place = serializers.PrimaryKeyRelatedField(
-        required=True, queryset=Geolocation.objects.all(),
-        error_messages={'null': _('Place is required')}
+        allow_null=True,
+        allow_empty=True,
+        queryset=Geolocation.objects.all()
     )
     organization = OrganizationSubmitSerializer(
         error_messages={'null': _('Organization is required')}
@@ -245,6 +246,17 @@ class InitiativeSubmitSerializer(ModelSerializer):
 
     # TODO add dependent fields: has_organization/organization/organization_contact and
     # place / location
+
+    def validate(self, data):
+        """
+        Check that location or place is set
+        """
+        if Location.objects.count():
+            if not self.initial_data['location']:
+                raise serializers.ValidationError("Location is required")
+        elif not self.initial_data['place']:
+            raise serializers.ValidationError("Place is required")
+        return data
 
     class Meta:
         model = Initiative

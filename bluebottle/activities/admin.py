@@ -18,7 +18,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline, )
 
-    readonly_fields = ['status', 'created', 'updated', 'stats_data']
+    readonly_fields = ['status', 'review_status', 'created', 'updated', 'stats_data']
 
     def stats_data(self, obj):
         return format_html("<table>{}</table>", format_html("".join([
@@ -32,10 +32,10 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
     readonly_fields = ['link']
-    list_filter = (PolymorphicChildModelFilter, 'status', 'highlight')
+    list_filter = (PolymorphicChildModelFilter, 'status', 'review_status', 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['title', 'created', 'type', 'status',
+    list_display = ['title', 'created', 'type', 'status', 'review_status',
                     'link', 'highlight']
 
     def link(self, obj):

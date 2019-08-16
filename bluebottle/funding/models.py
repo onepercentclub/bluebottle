@@ -10,7 +10,7 @@ from polymorphic.models import PolymorphicModel
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.files.fields import ImageField
-from bluebottle.fsm import FSMField, TransitionNotPossible, TransitionManager, TransitionsMixin
+from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from bluebottle.funding.transitions import (
     FundingTransitions,
     DonationTransitions,
@@ -31,6 +31,9 @@ class Funding(Activity):
     country = models.ForeignKey('geo.Country', null=True, blank=True)
     transitions = TransitionManager(FundingTransitions, 'status')
 
+    needs_review = True
+    complete_serializer = 'bluebottle.funding.serializers.FundingValidationSerializer'
+
     class JSONAPIMeta:
         resource_name = 'activities/fundings'
 
@@ -48,15 +51,6 @@ class Funding(Activity):
             ('api_change_own_funding', 'Can change own funding through the API'),
             ('api_delete_own_funding', 'Can delete own funding through the API'),
         )
-
-    def save(self, *args, **kwargs):
-        if self.status == FundingTransitions.values.draft:
-            try:
-                self.transitions.open()
-            except TransitionNotPossible:
-                pass
-
-        super(Funding, self).save(*args, **kwargs)
 
     @property
     def amount_donated(self):

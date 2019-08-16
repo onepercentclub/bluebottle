@@ -25,10 +25,6 @@ class AvailableTransitionsField(ReadOnlyField):
                     transition.is_possible(value.transitions) and
                     (user and transition.is_allowed(transitions, user))
                 ),
-                'conditions': {
-                    condition.__name__: getattr(transitions, condition.__name__)()
-                    for condition in transition.conditions if getattr(transitions, condition.__name__)()
-                }
             }
             for transition in transitions.all_transitions
         )

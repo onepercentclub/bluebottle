@@ -115,28 +115,6 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             [{u'code': u'null', u'title': u'This field may not be null.'}],
         )
 
-    def test_create_validation_has_organization(self):
-        data = {
-            'data': {
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title',
-                    'has_organization': True
-                },
-            }
-        }
-        response = self.client.post(
-            self.url,
-            json.dumps(data),
-            user=self.owner
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        validations = get_include(response, 'initiative-validations')
-        self.assertEqual(
-            validations['attributes']['organization-id'],
-            [{u'code': u'null', u'title': u'This field may not be null.'}],
-        )
-
     def test_create_validation_organization_website(self):
         organization = OrganizationFactory.create(website='')
 
@@ -374,7 +352,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             data['meta']['transitions'],
             [{
                 u'available': False,
-                u'conditions': {'is_complete': [u'Title is required']},
                 u'name': u'submit',
                 u'target': u'submitted'
             }])

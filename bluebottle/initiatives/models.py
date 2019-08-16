@@ -9,7 +9,7 @@ from multiselectfield import MultiSelectField
 from bluebottle.files.fields import ImageField
 from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from bluebottle.geo.models import Geolocation
-from bluebottle.initiatives.transitions import InitiativeTransitions
+from bluebottle.initiatives.transitions import InitiativeReviewTransitions
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -17,8 +17,8 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 
 class Initiative(TransitionsMixin, models.Model):
     status = FSMField(
-        default=InitiativeTransitions.values.draft,
-        choices=InitiativeTransitions.values.choices,
+        default=InitiativeReviewTransitions.values.draft,
+        choices=InitiativeReviewTransitions.values.choices,
         protected=True
     )
 
@@ -106,7 +106,7 @@ class Initiative(TransitionsMixin, models.Model):
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
 
-    transitions = TransitionManager(InitiativeTransitions, 'status')
+    transitions = TransitionManager(InitiativeReviewTransitions, 'status')
 
     class JSONAPIMeta:
         resource_name = 'initiatives'
@@ -122,7 +122,7 @@ class Initiative(TransitionsMixin, models.Model):
 
     def save(self, **kwargs):
         if self.slug in ['', 'new']:
-            if self.title:
+            if self.title and slugify(self.title):
                 self.slug = slugify(self.title)
             else:
                 self.slug = 'new'

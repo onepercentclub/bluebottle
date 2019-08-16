@@ -1,16 +1,16 @@
-from datetime import datetime
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from djchoices.choices import ChoiceItem
 
 from bluebottle.fsm import transition
 from bluebottle.follow.models import follow, unfollow
+from bluebottle.initiatives.transitions import ReviewTransitions
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
 from bluebottle.events.messages import EventSucceededOwnerMessage, EventClosedOwnerMessage
 
 
 class EventTransitions(ActivityTransitions):
-    serializer = 'bluebottle.events.serializers.EventSubmitSerializer'
 
     class values(ActivityTransitions.values):
         full = ChoiceItem('full', _('full'))
@@ -19,19 +19,21 @@ class EventTransitions(ActivityTransitions):
     def can_start(self):
         if not self.instance.start:
             return _('Start date has not been set')
-        if self.instance.start > datetime.now():
+        if self.instance.start > now():
             return _('The start date has not passed')
 
     def can_open(self):
+        if self.instance.review_status != ReviewTransitions.values.approved:
+            return _('The event is not approved')
         if not self.instance.start:
             return _('Start date has not been set')
-        if self.instance.start < datetime.now():
+        if self.instance.start < now():
             return _('The start date has passed')
 
     def can_end(self):
         if not self.instance.duration:
             return _('Duration has not been set')
-        if not self.instance.end < datetime.now():
+        if not self.instance.end < now():
             return _('The end date has not passed')
 
     @transition(
@@ -48,13 +50,6 @@ class EventTransitions(ActivityTransitions):
         conditions=[can_open]
     )
     def reopen(self):
-        pass
-
-    @transition(
-        source=values.closed,
-        target=values.draft,
-    )
-    def redraft(self, **kwargs):
         pass
 
     @transition(

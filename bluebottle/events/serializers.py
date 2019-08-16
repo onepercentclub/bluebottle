@@ -1,10 +1,11 @@
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseContributionSerializer, ActivitySubmitSerializer,
+    BaseActivitySerializer, BaseContributionSerializer,
     ActivityValidationSerializer
 )
 from bluebottle.events.filters import ParticipantListFilter
@@ -59,17 +60,51 @@ class ParticipantTransitionSerializer(TransitionSerializer):
         ]
 
 
+class LocationNotNull(object):
+    message = _("Location is required or select 'is online'")
+
+    def set_context(self, serializer_field):
+        """
+        This hook is called by the serializer instance,
+        prior to the validation call being made.
+        """
+        self.instance = getattr(serializer_field.parent, 'instance', None)
+
+    def __call__(self, value):
+        if not self.instance.is_online and value is None:
+            ValidationError(self.message, code='location')
+
+
 class EventValidationSerializer(ActivityValidationSerializer):
     start_date = serializers.DateField()
     start_time = serializers.TimeField()
     duration = serializers.FloatField()
+    registration_deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
-    location = RelatedField(queryset=Geolocation.objects.all())
+    location = RelatedField(
+        queryset=Geolocation.objects.all(),
+        allow_null=True,
+        validators=[LocationNotNull()]
+    )
+
+    def validate(self, data):
+        if not data['is_online'] and data['location'] is None:
+            raise serializers.ValidationError(
+                {'location': _("This field is required or select 'is online'")}
+            )
+
+        if data.get('registration_deadline') and data['registration_deadline'] > data['start_date']:
+            raise serializers.ValidationError(
+                {'registration_deadline': _('Registration deadline should be before start time')}
+            )
+
+        return data
 
     class Meta:
         model = Event
         fields = ActivityValidationSerializer.Meta.fields + (
-            'start_date', 'start_time', 'is_online', 'location', 'duration'
+            'start_date', 'start_time', 'is_online', 'location', 'duration',
+            'registration_deadline',
         )
 
     class JSONAPIMeta:
@@ -130,45 +165,6 @@ class EventSerializer(NoCommitMixin, EventListSerializer):
             'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
         }
     )
-
-
-class EventSubmitSerializer(ActivitySubmitSerializer):
-    start_time = serializers.DateTimeField(
-        required=True,
-        error_messages={
-            'blank': _('Start time is required'),
-            'null': _('Start time is required')
-        }
-    )
-
-    location = serializers.PrimaryKeyRelatedField(
-        required=False,
-        allow_null=True,
-        allow_empty=True,
-        queryset=Geolocation.objects.all(),
-        error_messages={
-            'blank': _('Location is required'),
-            'null': _('Location is required')
-        }
-    )
-
-    def validate(self, data):
-        """
-        Check that location is set if not online
-        """
-        if not self.initial_data['is_online'] and not data['location']:
-            raise serializers.ValidationError("Location is required or select 'is online'")
-        if self.initial_data['registration_deadline'] and \
-                self.initial_data['registration_deadline'] > self.initial_data['start_date']:
-            raise serializers.ValidationError("Registration deadline should be before start time")
-        return data
-
-    class Meta(ActivitySubmitSerializer.Meta):
-        model = Event
-        fields = ActivitySubmitSerializer.Meta.fields + (
-            'start_time',
-            'location',
-        )
 
 
 class EventTransitionSerializer(TransitionSerializer):

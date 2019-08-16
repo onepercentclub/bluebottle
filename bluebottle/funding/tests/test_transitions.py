@@ -29,6 +29,8 @@ class FundingTestCase(BluebottleAdminTestCase):
             target=Money(500, 'EUR'),
             deadline=(now() + timedelta(weeks=2)).date()
         )
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
         BudgetLineFactory.create_batch(4, activity=self.funding, amount=Money(125, 'EUR'))
         mail.outbox = []
 

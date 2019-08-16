@@ -1,7 +1,13 @@
+{% load i18n %}
+
 <h3>Cannot transition to the requested status:</h3>
 
 {% for error in errors %}
-    <p>
-        {{error}}
-    </p>
+    {% for key, field_errors in error.items %}
+        {% for error in field_errors %}
+            <p>
+            {% trans key %}: {{error}}
+            </p>
+        {% endfor %}
+    {% endfor %}
 {% endfor %}

@@ -5,7 +5,8 @@ from rest_framework_json_api.serializers import (
     ModelSerializer, ValidationError, IntegerField)
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseContributionSerializer, ActivitySubmitSerializer
+    BaseActivitySerializer, BaseContributionSerializer,
+    ActivityValidationSerializer
 )
 from bluebottle.files.serializers import ImageField
 from bluebottle.funding.models import Funding, Donation, Payment, Fundraiser, Reward, BudgetLine, PaymentMethod
@@ -137,6 +138,19 @@ class PaymentMethodSerializer(serializers.Serializer):
         resource_name = 'payments/payment-methods'
 
 
+class FundingValidationSerializer(ActivityValidationSerializer):
+    target = MoneySerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = Funding
+        fields = ActivityValidationSerializer.Meta.fields + (
+            'target',
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'activities/funding-validations'
+
+
 class FundingSerializer(BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
 
@@ -182,16 +196,6 @@ class FundingSerializer(BaseActivitySerializer):
         'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
         'contributions': 'bluebottle.funding.serializers.DonationSerializer',
     }
-
-
-class FundingSubmitSerializer(ActivitySubmitSerializer):
-    target = MoneySerializer(required=True)
-
-    class Meta(ActivitySubmitSerializer.Meta):
-        model = Funding
-        fields = ActivitySubmitSerializer.Meta.fields + (
-            'target',
-        )
 
 
 class FundingTransitionSerializer(TransitionSerializer):

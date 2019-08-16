@@ -64,7 +64,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     fieldsets = (
         (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition', 'created', 'updated', 'highlight'
+            'title', 'slug', 'initiative', 'owner', 'status', 'transitions', 'created', 'updated', 'highlight'
         )}),
         (_('Details'), {'fields': (
             'description',

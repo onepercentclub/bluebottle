@@ -3,11 +3,12 @@ import datetime
 from django.db import models
 from django.db.models import Count, Sum
 from django.utils.translation import ugettext_lazy as _
+from django.utils.timezone import get_current_timezone
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
 from bluebottle.follow.models import follow
-from bluebottle.fsm import TransitionNotPossible, TransitionManager
+from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
 
 
@@ -22,7 +23,8 @@ class Event(Activity):
 
     start_date = models.DateField(_('start'), null=True, blank=True)
     start_time = models.TimeField(_('start'), null=True, blank=True)
-    duration = models.FloatField(_('end'), null=True, blank=True)
+    duration = models.FloatField(_('duration'), null=True, blank=True)
+    end = models.DateTimeField(_('end'), null=True, blank=True)
     registration_deadline = models.DateField(_('registration deadline'), null=True, blank=True)
 
     transitions = TransitionManager(EventTransitions, 'status')
@@ -53,17 +55,10 @@ class Event(Activity):
             ('api_delete_own_event', 'Can delete own event through the API'),
         )
 
+    complete_serializer = 'bluebottle.events.serializers.EventValidationSerializer'
+
     class JSONAPIMeta:
         resource_name = 'activities/events'
-
-    def save(self, *args, **kwargs):
-        if self.status == EventTransitions.values.draft:
-            try:
-                self.transitions.open()
-            except TransitionNotPossible:
-                pass
-
-        super(Event, self).save(*args, **kwargs)
 
     def check_capacity(self):
         if self.capacity and len(self.participants) >= self.capacity and self.status == EventTransitions.values.open:
@@ -74,11 +69,18 @@ class Event(Activity):
 
     @property
     def start(self):
-        return datetime.datetime.combine(self.start_date, self.start_time)
+        if self.start_time and self.start_date:
+            return datetime.datetime.combine(
+                self.start_date,
+                self.start_time.replace(tzinfo=get_current_timezone())
+            )
 
-    @property
-    def end(self):
-        return self.start + datetime.timedelta(hours=self.duration)
+    def save(self, *args, **kwargs):
+        if self.start and self.duration:
+            self.end = self.start + datetime.timedelta(hours=self.duration)
+
+        super(Event, self).save(*args, **kwargs)
+        return
 
     @property
     def participants(self):

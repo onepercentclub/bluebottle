@@ -341,12 +341,15 @@ class NonModelRelatedResourceField(ResourceRelatedField):
 
 
 class ValidationSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        super(ValidationSerializer, self).__init__(*args, **kwargs)
+
+        if self.instance:
+            self.initial_data = self.to_representation(self.instance)
+
     @property
     def data(self):
         data = {}
-
-        if not hasattr(self, 'initial_data') and self.instance:
-            self.initial_data = self.to_representation(self.instance)
 
         self.is_valid()
 

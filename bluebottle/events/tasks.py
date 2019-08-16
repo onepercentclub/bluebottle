@@ -41,8 +41,7 @@ def check_event_end():
         with LocalTenant(tenant, clear_tenant=True):
             # Close events that are over
             events = Event.objects.filter(
-                end_date__lte=now.date(),
-                end_time__lte=now.time(),
+                end__lte=now(),
                 status__in=['running']
             ).all()
 

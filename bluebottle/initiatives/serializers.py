@@ -82,9 +82,9 @@ class InitiativeValidationSerializer(ValidationSerializer):
     image = RelatedField(queryset=Image.objects.all())
     owner = RelatedField(queryset=Member.objects.all())
     theme = RelatedField(queryset=ProjectTheme.objects.all())
-    place = RelatedField(queryset=Geolocation.objects.all())
-    organization_id = RelatedField(queryset=Organization.objects.all())
-    organization = RelatedField(allow_null=True, queryset=Geolocation.objects.all())
+    place = RelatedField(allow_null=True, queryset=Geolocation.objects.all())
+    location = RelatedField(allow_null=True, queryset=Location.objects.all())
+    organization_id = RelatedField(allow_null=True, queryset=Organization.objects.all())
     story = SafeField()
     title = serializers.CharField(
         validators=[UniqueValidator(queryset=Initiative.objects.filter(status='approved'))]
@@ -100,13 +100,28 @@ class InitiativeValidationSerializer(ValidationSerializer):
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactValidationSerializer',
     }
 
+    def validate(self, data):
+        if data['has_organization'] and data.get('organization_id') is None:
+            raise serializers.ValidationError(
+                {'organization_id': _("This field is required")},
+                code='null'
+            )
+
+        if Location.objects.count():
+            if not data['location']:
+                raise serializers.ValidationError({'location': "Location is required"})
+        elif not data['place']:
+            raise serializers.ValidationError({'place': "Place is required"})
+
+        return data
+
     class Meta:
         model = Initiative
         fields = (
             'title', 'pitch', 'owner',
             'has_organization', 'story', 'video_url', 'image',
             'theme', 'place', 'video_html', 'organization_id', 'organization',
-            'organization_contact',
+            'organization_contact', 'location',
         )
 
     class JSONAPIMeta:

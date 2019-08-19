@@ -148,7 +148,6 @@ class EventAPITestCase(BluebottleTestCase):
         self.assertEqual(response.data['status'], 'draft')
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
 
-
     def test_create_event_not_initiator(self):
         another_user = BlueBottleUserFactory.create()
         data = {

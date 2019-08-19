@@ -117,6 +117,38 @@ class EventAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
 
+    def test_create_event_as_activity_manager(self):
+        activity_manager = BlueBottleUserFactory.create()
+        self.initiative.activity_manager = activity_manager
+        self.initiative.save()
+
+        data = {
+            'data': {
+                'type': 'activities/events',
+                'attributes': {
+                    'title': 'Beach clean-up Katwijk',
+                    'start_time': str(now() + timedelta(days=21)),
+                    'end_time': str(now() + timedelta(days=21, hours=4)),
+                    'registration_deadline': str(now() + timedelta(days=14)),
+                    'capacity': 10,
+                    'description': 'We will clean up the beach south of Katwijk'
+                },
+                'relationships': {
+                    'initiative': {
+                        'data': {
+                            'type': 'initiatives', 'id': self.initiative.id
+                        },
+                    },
+                }
+            }
+        }
+        response = self.client.post(self.url, json.dumps(data), user=activity_manager)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['status'], 'draft')
+        self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
+
+
     def test_create_event_not_initiator(self):
         another_user = BlueBottleUserFactory.create()
         data = {

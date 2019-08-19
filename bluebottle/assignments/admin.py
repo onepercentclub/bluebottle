@@ -29,7 +29,8 @@ class AssignmentAdmin(ActivityChildAdmin):
 
     fieldsets = (
         (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition', 'highlight'
+            'title', 'slug', 'initiative', 'owner', 'status', 'transitions', 'review_status',
+            'review_transitions', 'highlight'
         )}),
         (_('Details'), {'fields': (
             'description', 'capacity',

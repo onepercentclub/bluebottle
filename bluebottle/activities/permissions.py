@@ -23,7 +23,7 @@ class ActivityPermission(ResourcePermission):
         try:
             initiative_id = request.data['initiative']['id']
             initiative = Initiative.objects.get(id=initiative_id)
-            return perm and initiative.owner == request.user
+            return perm and initiative.owner == request.user or initiative.activity_manager == request.user
         except KeyError, Initiative.DoesNotExist:
             return False
 

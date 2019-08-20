@@ -200,7 +200,7 @@ class FundingSerializer(BaseActivitySerializer):
 
 class FundingTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Funding.objects.all())
-    field = 'status'
+    field = 'transitions'
     included_serializers = {
         'resource': 'bluebottle.funding.serializers.FundingSerializer',
     }
@@ -301,7 +301,7 @@ class PaymentSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     donation = ResourceRelatedField(queryset=Donation.objects.all())
 
-    transitions = AvailableTransitionsField(source='status')
+    transitions = AvailableTransitionsField()
 
     included_serializers = {
         'donation': 'bluebottle.funding.serializers.DonationSerializer',

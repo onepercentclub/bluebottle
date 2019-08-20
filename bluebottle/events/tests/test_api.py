@@ -87,6 +87,101 @@ class EventAPITestCase(BluebottleTestCase):
         response = self.client.post(self.url, json.dumps(data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_create_event_no_title(self):
+        start = now() + timedelta(days=21)
+        data = {
+            'data': {
+                'type': 'activities/events',
+                'attributes': {
+                    'start_date': str(start.date()),
+                    'start_time': str(start.time()),
+                    'duration': 4,
+                    'registration_deadline': str((now() + timedelta(days=14)).date()),
+                    'capacity': 10,
+                    'address': 'Zuid-Boulevard Katwijk aan Zee',
+                    'description': 'We will clean up the beach south of Katwijk'
+                },
+                'relationships': {
+                    'initiative': {
+                        'data': {
+                            'type': 'initiatives', 'id': self.initiative.id
+                        },
+                    },
+                }
+            }
+        }
+        response = self.client.post(self.url, json.dumps(data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        validations = get_included(response, 'activities/event-validations')
+        self.assertEqual(
+            validations['attributes']['title'][0]['title'],
+            u'This field may not be blank.'
+        )
+
+    def test_create_event_no_location(self):
+        start = now() + timedelta(days=21)
+        data = {
+            'data': {
+                'type': 'activities/events',
+                'attributes': {
+                    'start_date': str(start.date()),
+                    'start_time': str(start.time()),
+                    'is_online': False,
+                    'duration': 4,
+                    'registration_deadline': str((now() + timedelta(days=14)).date()),
+                    'capacity': 10,
+                    'description': 'We will clean up the beach south of Katwijk'
+                },
+                'relationships': {
+                    'initiative': {
+                        'data': {
+                            'type': 'initiatives', 'id': self.initiative.id
+                        },
+                    },
+                }
+            }
+        }
+        response = self.client.post(self.url, json.dumps(data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        validations = get_included(response, 'activities/event-validations')
+        self.assertEqual(
+            validations['attributes']['location'][0]['title'],
+            u"This field is required or select 'Online'"
+        )
+
+    def test_create_event_no_location_is_online(self):
+        start = now() + timedelta(days=21)
+        data = {
+            'data': {
+                'type': 'activities/events',
+                'attributes': {
+                    'start_date': str(start.date()),
+                    'start_time': str(start.time()),
+                    'is_online': True,
+                    'duration': 4,
+                    'registration_deadline': str((now() + timedelta(days=14)).date()),
+                    'capacity': 10,
+                    'description': 'We will clean up the beach south of Katwijk'
+                },
+                'relationships': {
+                    'initiative': {
+                        'data': {
+                            'type': 'initiatives', 'id': self.initiative.id
+                        },
+                    },
+                }
+            }
+        }
+        response = self.client.post(self.url, json.dumps(data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        validations = get_included(response, 'activities/event-validations')
+        self.assertIsNone(
+            validations['attributes']['location']
+        )
+
     def test_update_event(self):
         event = EventFactory.create(owner=self.user, title='Pollute Katwijk Beach')
         event_url = reverse('event-detail', args=(event.pk,))

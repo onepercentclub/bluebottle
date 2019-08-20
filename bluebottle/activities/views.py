@@ -2,11 +2,17 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.models import Activity
 from bluebottle.activities.filters import ActivitySearchFilter
-from bluebottle.activities.serializers import ActivitySerializer
+from bluebottle.activities.serializers import (
+    ActivitySerializer,
+    ActivityReviewTransitionSerializer
+)
+from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
-from bluebottle.utils.views import ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView
+from bluebottle.utils.views import (
+    ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView
+)
 
 
 class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
@@ -46,3 +52,8 @@ class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyA
         'owner': ['owner'],
         'contributions': ['contributions']
     }
+
+
+class ActivityReviewTransitionList(TransitionList):
+    serializer_class = ActivityReviewTransitionSerializer
+    queryset = Activity.objects.all()

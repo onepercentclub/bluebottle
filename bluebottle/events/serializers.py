@@ -1,6 +1,5 @@
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
 
@@ -46,7 +45,7 @@ class ParticipantSerializer(BaseContributionSerializer):
 
 class ParticipantTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Participant.objects.all())
-    field = 'status'
+    field = 'transitions'
     included_serializers = {
         'resource': 'bluebottle.events.serializers.ParticipantSerializer',
         'resource.activity': 'bluebottle.events.serializers.EventSerializer',
@@ -60,19 +59,37 @@ class ParticipantTransitionSerializer(TransitionSerializer):
         ]
 
 
-class LocationNotNull(object):
-    message = _("Location is required or select 'is online'")
-
-    def set_context(self, serializer_field):
-        """
-        This hook is called by the serializer instance,
-        prior to the validation call being made.
-        """
-        self.instance = getattr(serializer_field.parent, 'instance', None)
+class LocationValidator(object):
+    def set_context(self, field):
+        self.is_online = field.parent.initial_data['is_online']
 
     def __call__(self, value):
-        if not self.instance.is_online and value is None:
-            ValidationError(self.message, code='location')
+        if not self.is_online and not value:
+            raise serializers.ValidationError(
+                _("This field is required or select 'Online'"),
+                code='null'
+            )
+
+        return value
+
+
+class RegistrationDeadlineValidator(object):
+    def set_context(self, field):
+        self.state_date = field.parent.initial_data['start_date']
+
+    def __call__(self, value):
+        if value > self.start_date:
+            raise serializers.ValidationError(
+                _('Registration deadline should be before start time'),
+                code='registration_deadline'
+            )
+
+        return value
+
+
+class LocationField(RelatedField):
+    def validate_empty_values(self, data):
+        return (False, data)
 
 
 class EventValidationSerializer(ActivityValidationSerializer):
@@ -81,24 +98,11 @@ class EventValidationSerializer(ActivityValidationSerializer):
     duration = serializers.FloatField()
     registration_deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
-    location = RelatedField(
+    location = LocationField(
         queryset=Geolocation.objects.all(),
         allow_null=True,
-        validators=[LocationNotNull()]
+        validators=[LocationValidator()]
     )
-
-    def validate(self, data):
-        if not data['is_online'] and data['location'] is None:
-            raise serializers.ValidationError(
-                {'location': _("This field is required or select 'is online'")}
-            )
-
-        if data.get('registration_deadline') and data['registration_deadline'] > data['start_date']:
-            raise serializers.ValidationError(
-                {'registration_deadline': _('Registration deadline should be before start time')}
-            )
-
-        return data
 
     class Meta:
         model = Event
@@ -169,7 +173,7 @@ class EventSerializer(NoCommitMixin, EventListSerializer):
 
 class EventTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Event.objects.all())
-    field = 'status'
+    field = 'transitions'
     included_serializers = {
         'resource': 'bluebottle.events.serializers.EventSerializer',
     }

@@ -316,6 +316,9 @@ class RelatedField(serializers.Field):
         super(RelatedField, self).__init__(*args, **kwargs)
 
     def to_internal_value(self, data):
+        if not data:
+            return data
+
         try:
             data = data['id']
         except TypeError:

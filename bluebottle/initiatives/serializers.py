@@ -144,7 +144,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
     validations = NonModelRelatedResourceField(InitiativeValidationSerializer)
 
-    transitions = AvailableTransitionsField(source='status')
+    transitions = AvailableTransitionsField()
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -285,7 +285,7 @@ class InitiativeSubmitSerializer(ModelSerializer):
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Initiative.objects.all())
-    field = 'status'
+    field = 'transitions'
     included_serializers = {
         'resource': 'bluebottle.initiatives.serializers.InitiativeSerializer',
     }

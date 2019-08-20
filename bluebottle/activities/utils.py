@@ -16,10 +16,12 @@ from bluebottle.utils.serializers import (
 class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
+    review_status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
     contributions = ResourceRelatedField(many=True, read_only=True)
-    transitions = AvailableTransitionsField(source='status')
+    transitions = AvailableTransitionsField()
+    review_transitions = AvailableTransitionsField()
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
@@ -48,11 +50,12 @@ class BaseActivitySerializer(ModelSerializer):
             'description',
             'is_follower',
             'status',
+            'review_status',
             'contributions',
             'stats'
         )
 
-        meta_fields = ('permissions', 'transitions', 'created', 'updated')
+        meta_fields = ('permissions', 'transitions', 'review_transitions', 'created', 'updated')
 
     class JSONAPIMeta:
         included_resources = [
@@ -106,7 +109,7 @@ class BaseContributionSerializer(ModelSerializer):
     user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
     permissions = ResourcePermissionField('project_detail', view_args=('pk',))
-    transitions = AvailableTransitionsField(source='status')
+    transitions = AvailableTransitionsField()
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',

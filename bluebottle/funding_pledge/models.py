@@ -10,12 +10,8 @@ from bluebottle.funding_pledge.transitions import PledgePaymentTransitions
 class PledgePayment(Payment):
     transitions = TransitionManager(PledgePaymentTransitions, 'status')
 
-    def save(self, *args, **kwargs):
-        super(PledgePayment, self).save(*args, **kwargs)
-
 
 class PledgePaymentProvider(PaymentProvider):
-
     @property
     def payment_methods(self):
         return [

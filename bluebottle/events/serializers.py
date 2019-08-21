@@ -109,7 +109,9 @@ class EventValidationSerializer(ActivityValidationSerializer):
         Check that location is set if not online
         """
         if not self.initial_data['is_online'] and not data['location']:
-            raise serializers.ValidationError("Location is required or select 'is online'")
+            raise serializers.ValidationError(
+                {'location': "Location is required or select 'is online'"}
+            )
         if self.initial_data['registration_deadline'] and \
                 self.initial_data['registration_deadline'] > self.initial_data['start_date']:
             raise serializers.ValidationError(

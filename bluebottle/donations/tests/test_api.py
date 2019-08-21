@@ -216,6 +216,9 @@ class TestDonationPermissions(DonationApiTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Donation.objects.count(), 1)
+        donation.refresh_from_db()
+        self.assertEqual(donation.amount.amount, 50)
+        self.assertEqual(donation.payout_amount.amount, 50)
 
     def test_donation_update_order_not_new(self, mock_check_status_psp):
         """ Test that an update to a donation where the order does not have status CREATED produces 403 FORBIDDEN"""

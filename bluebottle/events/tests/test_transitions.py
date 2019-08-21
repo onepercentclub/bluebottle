@@ -487,7 +487,8 @@ class EventTransitionValidationTestCase(BluebottleTestCase):
             EventTransitions.values.in_review
         )
         errors = event.review_transitions.is_complete()
-        self.assertEqual(unicode(errors['location'][0]), u"This field is required or select 'is online'")
+        self.assertEqual(unicode(errors['location'][0]),
+                         u"This field is required or select 'Online'")
 
         self.assertRaises(
             TransitionNotPossible,

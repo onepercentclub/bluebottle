@@ -104,6 +104,18 @@ class EventValidationSerializer(ActivityValidationSerializer):
         validators=[LocationValidator()]
     )
 
+    def validate(self, data):
+        """
+        Check that location is set if not online
+        """
+        if not self.initial_data['is_online'] and not data['location']:
+            raise serializers.ValidationError("Location is required or select 'is online'")
+        if self.initial_data['registration_deadline'] and \
+                self.initial_data['registration_deadline'] > self.initial_data['start_date']:
+            raise serializers.ValidationError(
+                {'registration_deadline': "Registration deadline should be before start time"})
+        return data
+
     class Meta:
         model = Event
         fields = ActivityValidationSerializer.Meta.fields + (

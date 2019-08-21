@@ -78,6 +78,6 @@ class Donation(models.Model):
         return order_payment.payment.method_name
 
     def save(self, *args, **kwargs):
-        if not self.payout_amount:
+        if not self.payout_amount or self.payout_amount.currency == self.amount.currency:
             self.payout_amount = self.amount
         super(Donation, self).save(*args, **kwargs)

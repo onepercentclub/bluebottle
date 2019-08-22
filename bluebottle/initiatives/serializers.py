@@ -83,6 +83,7 @@ class InitiativeSerializer(ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     reviewer = ResourceRelatedField(read_only=True)
+    activity_manager = ResourceRelatedField(read_only=True)
     activities = PolymorphicResourceRelatedField(
         ActivitySerializer, many=True, read_only=True
     )
@@ -102,6 +103,7 @@ class InitiativeSerializer(ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
         'place': 'bluebottle.geo.serializers.GeolocationSerializer',
         'location': 'bluebottle.geo.serializers.LocationSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
@@ -115,8 +117,9 @@ class InitiativeSerializer(ModelSerializer):
         model = Initiative
         fsm_fields = ['status']
         fields = (
-            'id', 'title', 'pitch', 'categories', 'owner',
-            'reviewer', 'promoter', 'slug', 'has_organization', 'organization',
+            'id', 'title', 'pitch', 'categories',
+            'owner', 'reviewer', 'promoter', 'activity_manager',
+            'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_html', 'image',
             'theme', 'place', 'location', 'activities',
         )
@@ -125,7 +128,8 @@ class InitiativeSerializer(ModelSerializer):
 
     class JSONAPIMeta:
         included_resources = [
-            'owner', 'reviewer', 'promoter', 'categories', 'theme', 'place', 'location',
+            'owner', 'reviewer', 'promoter', 'activity_manager',
+            'categories', 'theme', 'place', 'location',
             'image', 'organization', 'organization_contact', 'activities', 'activities.location',
         ]
         resource_name = 'initiatives'

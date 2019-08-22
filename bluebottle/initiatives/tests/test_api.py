@@ -32,6 +32,7 @@ class InitiativeAPITestCase(TestCase):
         super(InitiativeAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory.create()
+        self.visitor = BlueBottleUserFactory.create()
 
 
 class InitiativeListAPITestCase(InitiativeAPITestCase):
@@ -407,8 +408,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['data'][0]['id'], unicode(approved.pk))
 
     def test_filter_owner(self):
-        InitiativeFactory.create(owner=self.owner)
-        InitiativeFactory.create(status='approved')
+        InitiativeFactory.create_batch(2, status='submitted', owner=self.owner)
+        InitiativeFactory.create_batch(4, status='submitted')
 
         response = self.client.get(
             self.url + '?filter[owner.id]={}'.format(self.owner.pk),
@@ -417,8 +418,60 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+
+    def test_filter_not_owner(self):
+        """
+        Non-owner should only see approved initiatives
+        """
+        InitiativeFactory.create_batch(2, status='submitted', owner=self.owner)
+        InitiativeFactory.create_batch(4, status='approved', owner=self.owner)
+        InitiativeFactory.create_batch(3, status='approved')
+
+        response = self.client.get(
+            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            user=self.visitor
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 4)
+        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+
+    def test_filter_activity_manager(self):
+        """
+        User should see initiatives where self activity manager when in submitted
+        """
+        InitiativeFactory.create_batch(2, status='submitted', activity_manager=self.owner)
+        InitiativeFactory.create_batch(4, status='approved')
+
+        response = self.client.get(
+            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['data'][0]['relationships']['activity-manager']['data']['id'], unicode(self.owner.pk))
+
+    def test_filter_owner_and_activity_manager(self):
+        """
+        User should see initiatives where self owner or activity manager when in submitted
+        """
+        InitiativeFactory.create_batch(2, status='submitted', activity_manager=self.owner)
+        InitiativeFactory.create_batch(3, status='submitted', owner=self.owner)
+        InitiativeFactory.create_batch(4, status='approved')
+
+        response = self.client.get(
+            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 5)
 
     def test_search(self):
         first = InitiativeFactory.create(title='Lorem ipsum dolor sit amet', pitch="Lorem ipsum", status='approved')

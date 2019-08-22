@@ -81,6 +81,33 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         )
         self.assertEqual(len(response_data['included']), 2)
 
+    def test_create_special_chars(self):
+        data = {
+            'data': {
+                'type': 'initiatives',
+                'attributes': {
+                    'title': ':)'
+                },
+                'relationships': {
+                    'theme': {
+                        'data': {
+                            'type': 'themes',
+                            'id': self.theme.pk
+                        },
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['data']['attributes']['title'], ':)')
+        self.assertNotEqual(response_data['data']['attributes']['slug'], '')
+
     def test_create_duplicate_title(self):
         InitiativeFactory.create(title='Some title')
         data = {

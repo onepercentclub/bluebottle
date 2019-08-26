@@ -2,13 +2,11 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import (ModificationDateTimeField,
-                                         CreationDateTimeField)
-from bluebottle.utils.fields import MoneyField
+from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from moneyed import Money
 
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.fields import ImageField
+from bluebottle.utils.fields import ImageField, MoneyField
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.wallposts.models import Wallpost
 

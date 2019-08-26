@@ -58,6 +58,10 @@ class PaymentProvider(PolymorphicModel):
         return str(self.polymorphic_ctype)
 
 
+class BankPaymentProvider(PaymentProvider):
+    currencies = ['EUR', 'USD', 'XOF', 'NGN', 'CFA', 'KES']
+
+
 class Funding(Activity):
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
@@ -341,3 +345,19 @@ class PayoutAccount(PolymorphicModel, TransitionsMixin):
     def payment_methods(self):
         provider = self.provider_class.objects.get()
         return provider.payment_methods
+
+
+class BankPayoutAccount(PayoutAccount):
+
+    provider_class = BankPaymentProvider
+
+    account_number = models.CharField(
+        _("bank account number"), max_length=100, null=True, blank=True)
+    account_holder_name = models.CharField(
+        _("account holder name"), max_length=100, null=True, blank=True)
+    account_holder_address = models.CharField(
+        _("account holder address"), max_length=500, null=True, blank=True)
+    account_bank_country = models.CharField(
+        _("bank country"), max_length=100, null=True, blank=True)
+    account_details = models.CharField(
+        _("account details"), max_length=500, null=True, blank=True)

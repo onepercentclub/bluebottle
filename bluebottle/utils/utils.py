@@ -1,13 +1,12 @@
-from collections import namedtuple
-
-import bleach
-from importlib import import_module
 import json
 import logging
-import pygeoip
 import socket
 import urllib
+from collections import namedtuple
+from importlib import import_module
 
+import bleach
+import pygeoip
 from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Permission, Group
@@ -15,12 +14,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.signing import TimestampSigner
 from django.core.urlresolvers import reverse
 from django.db import connection
-
 from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients import properties
-
 
 TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'ul', 'li', 'ol', 'a',
         'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u']

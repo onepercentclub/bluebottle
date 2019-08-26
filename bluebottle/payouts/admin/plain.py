@@ -5,7 +5,6 @@ from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
-
 from polymorphic.admin import PolymorphicChildModelAdmin
 
 from bluebottle.payouts.admin.utils import PayoutAccountProjectLinkMixin

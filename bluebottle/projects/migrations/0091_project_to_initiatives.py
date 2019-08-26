@@ -4,12 +4,14 @@ from __future__ import unicode_literals
 
 from django.db import migrations, connection
 from django.contrib.gis.geos import Point
+from django.dispatch import Signal
+from moneyed import Money
 
 from bluebottle.clients import properties
+from bluebottle.utils.utils import DisableSignals
 
 
 def map_status(status):
-
     mapping = {
         'plan-new': 'draft',
         'plan-submitted': 'submitted',
@@ -26,18 +28,42 @@ def map_status(status):
     return mapping[status.slug]
 
 
+def map_funding_status(status):
+    mapping = {
+        'plan-new': 'draft',
+        'plan-submitted': 'draft',
+        'plan-needs-work': 'draft',
+        'voting': 'draft',
+        'voting-done': 'draft',
+        'campaign': 'open',
+        'to-be-continued': 'draft',
+        'done-complete': 'succeeded',
+        'done-incomplete': 'succeeded',
+        'closed': 'closed',
+        'refunded': 'refunded',
+    }
+    return mapping[status.slug]
+
+
 def truncate(number, limit):
     return int(number * pow(10, limit)) / 10 ^ pow(10, limit)
 
 
 def migrate_projects(apps, schema_editor):
+
     Project = apps.get_model('projects', 'Project')
     Initiative = apps.get_model('initiatives', 'Initiative')
+    Funding = apps.get_model('funding', 'Funding')
     Geolocation = apps.get_model('geo', 'Geolocation')
     Country = apps.get_model('geo', 'Country')
     Image = apps.get_model('files', 'Image')
     Client = apps.get_model('clients', 'Client')
     OrganizationContact = apps.get_model('organizations', 'OrganizationContact')
+    OldStripePayoutAccount = apps.get_model('payouts', 'StripePayoutAccount')
+    PlainPayoutAccount = apps.get_model('payouts', 'PlainPayoutAccount')
+    StripePayoutAccount = apps.get_model('funding_stripe', 'StripePayoutAccount')
+    ExternalAccount = apps.get_model('funding_stripe', 'ExternalAccount')
+    BankPayoutAccount = apps.get_model('funding', 'BankPayoutAccount')
 
     # Clean-up previous migrations of projects to initiatives
     Initiative.objects.all().delete()
@@ -112,7 +138,6 @@ def migrate_projects(apps, schema_editor):
                 pass
 
         if project.organization:
-
             initiative.organization = project.organization
 
         contact = OrganizationContact.objects.filter(organization=project.organization).first()
@@ -123,11 +148,61 @@ def migrate_projects(apps, schema_editor):
         initiative.categories = project.categories.all()
         initiative.save()
 
+        # Create Funding event if we target amount is set
+        if project.amount_asked:
+            account = None
+            if isinstance(project.payout_account, OldStripePayoutAccount):
+                account = StripePayoutAccount.objects.create(
+                    owner=project.payout.account.user,
+                    account_id=project.payout_account.account_id,
+                    country=project.payout_account.country
+                )
+                ExternalAccount.objects.create(
+                    account=account,
+                    account_id=project.payout_account.bank_details.account
+                )
+            elif isinstance(project.payout_account, PlainPayoutAccount):
+                account = BankPayoutAccount.objects.create(
+                    owner=project.payout_account.user,
+                    account_number=project.payout_account.account_number,
+                    account_details=project.payout_account.account_details,
+
+                    account_holder_name=project.payout_account.account_holder_name,
+                    account_holder_address=project.payout_account.account_holder_address,
+                    account_bank_country=project.payout_account.account_bank_country,
+                )
+
+            funding = Funding.objects.create(
+                # Common activity fields
+                initiative=initiative,
+                owner=project.owner,
+                highlight=project.is_campaign,
+                created=project.created,
+                updated=project.updated,
+                status=map_funding_status(project.status),
+                title=project.title,
+                slug=project.slug,
+                description=project.pitch or '',
+
+                # Funding specific fields
+                deadline=project.deadline,
+                # ??? duration
+                target=project.amount_asked,
+                amount_matching=project.amount_extra,
+                country=project.country,
+                account=account
+            )
+
+            # TOTO: Add budget lines
+
+            # TODO: Migrate donations & payments
+
 
 class Migration(migrations.Migration):
 
     dependencies = [
         ('projects', '0090_merge_20190222_1101'),
+        ('funding', '0024_bankpaymentprovider'),
         ('initiatives', '0015_auto_20190708_1417'),
     ]
 

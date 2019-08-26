@@ -42,7 +42,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
                                  'created', 'updated')}),
         (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'location', 'place')}),
         (_('Organization'), {'fields': ('organization', 'organization_contact')}),
-        (_('Review'), {'fields': ('reviewer', 'activity_manager', 'promoter', 'status', 'status_transition')}),
+        (_('Review'), {'fields': ('reviewer', 'activity_manager', 'promoter', 'status', 'transitions')}),
     )
 
     def title_display(self, obj):

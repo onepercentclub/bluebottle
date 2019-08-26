@@ -25,14 +25,16 @@ class EventAPITestCase(BluebottleTestCase):
         self.initiative = InitiativeFactory(owner=self.user)
 
     def test_create_event(self):
+        start = now() + timedelta(days=21)
         data = {
             'data': {
                 'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start_time': str(now() + timedelta(days=21)),
-                    'end_time': str(now() + timedelta(days=21, hours=4)),
-                    'registration_deadline': str(now() + timedelta(days=14)),
+                    'start_date': str(start.date()),
+                    'start_time': str(start.time()),
+                    'duration': 4,
+                    'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
                     'description': 'We will clean up the beach south of Katwijk'
                 },
@@ -48,7 +50,7 @@ class EventAPITestCase(BluebottleTestCase):
         response = self.client.post(self.url, json.dumps(data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], 'draft')
+        self.assertEqual(response.data['status'], 'in_review')
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
 
         # Add an event with the same title should NOT return an error
@@ -59,14 +61,16 @@ class EventAPITestCase(BluebottleTestCase):
         self.settings.activity_types = ('funding', )
         self.settings.save()
 
+        start = now() + timedelta(days=21)
         data = {
             'data': {
                 'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start_time': str(now() + timedelta(days=21)),
-                    'end_time': str(now() + timedelta(days=21, hours=4)),
-                    'registration_deadline': str(now() + timedelta(days=14)),
+                    'start_date': str(start.date()),
+                    'start_time': str(start.time()),
+                    'duration': 4,
+                    'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
                     'address': 'Zuid-Boulevard Katwijk aan Zee',
                     'description': 'We will clean up the beach south of Katwijk'
@@ -83,6 +87,101 @@ class EventAPITestCase(BluebottleTestCase):
         response = self.client.post(self.url, json.dumps(data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_create_event_no_title(self):
+        start = now() + timedelta(days=21)
+        data = {
+            'data': {
+                'type': 'activities/events',
+                'attributes': {
+                    'start_date': str(start.date()),
+                    'start_time': str(start.time()),
+                    'duration': 4,
+                    'registration_deadline': str((now() + timedelta(days=14)).date()),
+                    'capacity': 10,
+                    'address': 'Zuid-Boulevard Katwijk aan Zee',
+                    'description': 'We will clean up the beach south of Katwijk'
+                },
+                'relationships': {
+                    'initiative': {
+                        'data': {
+                            'type': 'initiatives', 'id': self.initiative.id
+                        },
+                    },
+                }
+            }
+        }
+        response = self.client.post(self.url, json.dumps(data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        validations = get_included(response, 'activities/event-validations')
+        self.assertEqual(
+            validations['attributes']['title'][0]['title'],
+            u'This field may not be blank.'
+        )
+
+    def test_create_event_no_location(self):
+        start = now() + timedelta(days=21)
+        data = {
+            'data': {
+                'type': 'activities/events',
+                'attributes': {
+                    'start_date': str(start.date()),
+                    'start_time': str(start.time()),
+                    'is_online': False,
+                    'duration': 4,
+                    'registration_deadline': str((now() + timedelta(days=14)).date()),
+                    'capacity': 10,
+                    'description': 'We will clean up the beach south of Katwijk'
+                },
+                'relationships': {
+                    'initiative': {
+                        'data': {
+                            'type': 'initiatives', 'id': self.initiative.id
+                        },
+                    },
+                }
+            }
+        }
+        response = self.client.post(self.url, json.dumps(data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        validations = get_included(response, 'activities/event-validations')
+        self.assertEqual(
+            validations['attributes']['location'][0]['title'],
+            u"This field is required or select 'Online'"
+        )
+
+    def test_create_event_no_location_is_online(self):
+        start = now() + timedelta(days=21)
+        data = {
+            'data': {
+                'type': 'activities/events',
+                'attributes': {
+                    'start_date': str(start.date()),
+                    'start_time': str(start.time()),
+                    'is_online': True,
+                    'duration': 4,
+                    'registration_deadline': str((now() + timedelta(days=14)).date()),
+                    'capacity': 10,
+                    'description': 'We will clean up the beach south of Katwijk'
+                },
+                'relationships': {
+                    'initiative': {
+                        'data': {
+                            'type': 'initiatives', 'id': self.initiative.id
+                        },
+                    },
+                }
+            }
+        }
+        response = self.client.post(self.url, json.dumps(data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        validations = get_included(response, 'activities/event-validations')
+        self.assertIsNone(
+            validations['attributes']['location']
+        )
+
     def test_update_event(self):
         event = EventFactory.create(owner=self.user, title='Pollute Katwijk Beach')
         event_url = reverse('event-detail', args=(event.pk,))
@@ -90,15 +189,17 @@ class EventAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'Pollute Katwijk Beach')
 
+        start = now() + timedelta(days=21)
         data = {
             'data': {
                 'type': 'activities/events',
                 'id': event.id,
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start_time': str(now() + timedelta(days=21)),
-                    'end_time': str(now() + timedelta(days=21, hours=4)),
-                    'registration_deadline': str(now() + timedelta(days=14)),
+                    'start_date': str(start.date()),
+                    'start_time': str(start.time()),
+                    'duration': 4,
+                    'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
                     'address': 'Zuid-Boulevard Katwijk aan Zee',
                     'description': 'We will clean up the beach south of Katwijk'
@@ -122,14 +223,17 @@ class EventAPITestCase(BluebottleTestCase):
         self.initiative.activity_manager = activity_manager
         self.initiative.save()
 
+        start = now() + timedelta(days=21)
+        registration = now() + timedelta(days=14)
+
         data = {
             'data': {
                 'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start_time': str(now() + timedelta(days=21)),
-                    'end_time': str(now() + timedelta(days=21, hours=4)),
-                    'registration_deadline': str(now() + timedelta(days=14)),
+                    'start_date': str(start.date()),
+                    'start_time': str(start.time()),
+                    'registration_deadline': str(registration.date()),
                     'capacity': 10,
                     'description': 'We will clean up the beach south of Katwijk'
                 },
@@ -143,9 +247,8 @@ class EventAPITestCase(BluebottleTestCase):
             }
         }
         response = self.client.post(self.url, json.dumps(data), user=activity_manager)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], 'draft')
+        self.assertEqual(response.data['status'], 'in_review')
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
 
     def test_create_event_not_initiator(self):
@@ -207,6 +310,36 @@ class EventAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+class EventValidationTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(BluebottleTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.event = EventFactory.create(initiative=self.initiative, owner=self.owner)
+
+        self.url = reverse('event-detail', args=(self.event.pk,))
+
+    def get_data(self):
+        return self.client.get(self.url, user=self.owner).json()['data']
+
+    def test_missing_title(self):
+        data = self.get_data()
+        data['attributes']['title'] = ''
+
+        response = self.client.put(
+            self.url,
+            data=json.dumps({'data': data}),
+            user=self.owner,
+            HTTP_X_DO_NOT_COMMIT=True
+        )
+        validations = get_included(response, 'activities/event-validations')
+        self.assertEqual(
+            validations['attributes']['title'],
+            [{'title': 'This field may not be blank.', 'code': 'blank'}]
+        )
+
+
 class EventTransitionTestCase(BluebottleTestCase):
 
     def setUp(self):
@@ -261,6 +394,8 @@ class ParticipantTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
         self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)
+        self.event.review_transitions.submit()
+        self.event.save()
 
         self.participant_url = reverse('participant-list')
         self.event_url = reverse('event-detail', args=(self.event.pk, ))
@@ -333,7 +468,7 @@ class ParticipantTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(
-            'must make a unique set' in json.loads(response.content)['errors']['non_field_errors'][0]
+            'must make a unique set' in response.json()['errors'][0]['detail']
         )
 
     def test_follow(self):
@@ -368,10 +503,6 @@ class ParticipantTestCase(BluebottleTestCase):
             ],
             ['withdraw', 'close']
         )
-        self.assertEqual(
-            data['data']['meta']['transitions'][1]['conditions'],
-            {u'event_is_successful': u'The event is not successful'}
-        )
 
     def test_possible_transitions_other_user(self):
         response = self.client.post(
@@ -390,10 +521,6 @@ class ParticipantTestCase(BluebottleTestCase):
                 transition['name'] for transition in data['data']['meta']['transitions']
                 if transition['available']],
             ['close']
-        )
-        self.assertEqual(
-            data['data']['meta']['transitions'][1]['conditions'],
-            {u'event_is_successful': u'The event is not successful'}
         )
 
 
@@ -497,6 +624,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.initiative.save()
 
         self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)
+        self.event.review_transitions.submit()
         self.event.save()
         self.participant = ParticipantFactory.create(user=self.participant_user, activity=self.event)
 

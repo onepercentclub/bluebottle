@@ -23,8 +23,9 @@ class EventFactory(factory.DjangoModelFactory):
     automatically_accept = True
     is_online = False
 
-    start_time = now() + timedelta(weeks=4)
-    end_time = now() + timedelta(weeks=5)
+    start_date = (now() + timedelta(weeks=4)).date()
+    start_time = (now() + timedelta(weeks=4)).time()
+    duration = 100
 
     location = factory.SubFactory(GeolocationFactory)
 

@@ -18,6 +18,7 @@ from django_elasticsearch_dsl.search import Search
 from parler.utils.i18n import get_language
 from rest_framework import generics
 from rest_framework import views, response
+from rest_framework_json_api.exceptions import exception_handler
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
 from rest_framework_json_api.parsers import JSONParser
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -348,3 +349,6 @@ class JsonApiViewMixin(AutoPrefetchMixin):
     renderer_classes = (BluebottleJSONAPIRenderer,)
 
     authentication_classes = (JSONWebTokenAuthentication,)
+
+    def get_exception_handler(self):
+        return exception_handler

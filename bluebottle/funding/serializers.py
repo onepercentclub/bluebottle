@@ -5,7 +5,8 @@ from rest_framework_json_api.serializers import (
     ModelSerializer, ValidationError, IntegerField)
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseContributionSerializer, ActivitySubmitSerializer
+    BaseActivitySerializer, BaseContributionSerializer,
+    ActivityValidationSerializer
 )
 from bluebottle.files.serializers import ImageField
 from bluebottle.funding.models import Funding, Donation, Payment, Fundraiser, Reward, BudgetLine, PaymentMethod
@@ -137,6 +138,19 @@ class PaymentMethodSerializer(serializers.Serializer):
         resource_name = 'payments/payment-methods'
 
 
+class FundingValidationSerializer(ActivityValidationSerializer):
+    target = MoneySerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = Funding
+        fields = ActivityValidationSerializer.Meta.fields + (
+            'target',
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'activities/funding-validations'
+
+
 class FundingSerializer(BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
 
@@ -184,19 +198,9 @@ class FundingSerializer(BaseActivitySerializer):
     }
 
 
-class FundingSubmitSerializer(ActivitySubmitSerializer):
-    target = MoneySerializer(required=True)
-
-    class Meta(ActivitySubmitSerializer.Meta):
-        model = Funding
-        fields = ActivitySubmitSerializer.Meta.fields + (
-            'target',
-        )
-
-
 class FundingTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Funding.objects.all())
-    field = 'status'
+    field = 'transitions'
     included_serializers = {
         'resource': 'bluebottle.funding.serializers.FundingSerializer',
     }
@@ -297,7 +301,7 @@ class PaymentSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     donation = ResourceRelatedField(queryset=Donation.objects.all())
 
-    transitions = AvailableTransitionsField(source='status')
+    transitions = AvailableTransitionsField()
 
     included_serializers = {
         'donation': 'bluebottle.funding.serializers.DonationSerializer',

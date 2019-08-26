@@ -10,7 +10,6 @@ class PledgePayment(Payment):
 
 
 class PledgePaymentProvider(PaymentProvider):
-
     @property
     def payment_methods(self):
         return [

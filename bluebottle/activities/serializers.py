@@ -1,9 +1,12 @@
 from rest_framework_json_api.serializers import PolymorphicModelSerializer
+from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 
 from bluebottle.activities.models import Contribution, Activity
 from bluebottle.events.serializers import ParticipantSerializer, EventListSerializer
 from bluebottle.funding.serializers import FundingSerializer, DonationSerializer
 from bluebottle.assignments.serializers import AssignmentSerializer, AssignmentParticipantSerializer
+
+from bluebottle.transitions.serializers import TransitionSerializer
 
 
 class ActivitySerializer(PolymorphicModelSerializer):
@@ -44,3 +47,15 @@ class ContributionSerializer(PolymorphicModelSerializer):
 
     class Meta:
         model = Contribution
+
+
+class ActivityReviewTransitionSerializer(TransitionSerializer):
+    resource = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
+    field = 'review_transitions'
+    included_serializers = {
+        'resource': 'bluebottle.activities.serializers.ActivitySerializer',
+    }
+
+    class JSONAPIMeta:
+        included_resources = ['resource']
+        resource_name = 'activities/review-transitions'

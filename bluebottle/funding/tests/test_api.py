@@ -395,7 +395,7 @@ class DonationTestCase(BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(
-            data['errors']['non_field_errors'][0],
+            data['errors'][0]['detail'],
             u'User can only be set, not changed.'
         )
 

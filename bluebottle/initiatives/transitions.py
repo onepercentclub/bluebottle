@@ -1,85 +1,93 @@
-from django.forms.models import model_to_dict
-from django.utils.translation import ugettext_lazy as _
-
-from djchoices.choices import DjangoChoices, ChoiceItem
-
-from bluebottle.fsm import ModelTransitions, transition, TransitionNotPossible
+from bluebottle.fsm import transition, TransitionNotPossible
 from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
+from bluebottle.utils.transitions import ReviewTransitions
 
 
-class InitiativeTransitions(ModelTransitions):
-    class values(DjangoChoices):
-        draft = ChoiceItem('draft', _('draft'))
-        submitted = ChoiceItem('submitted', _('submitted'))
-        needs_work = ChoiceItem('needs_work', _('needs work'))
-        approved = ChoiceItem('approved', _('approved'))
-        closed = ChoiceItem('closed', _('closed'))
-
-    default = values.draft
-
+class InitiativeReviewTransitions(ReviewTransitions):
     def is_complete(self):
-        from bluebottle.initiatives.serializers import InitiativeSubmitSerializer
+        from bluebottle.initiatives.serializers import InitiativeValidationSerializer
+        from bluebottle.organizations.serializers import (
+            OrganizationContactValidationSerializer, OrganizationValidationSerializer
+        )
 
-        data = model_to_dict(self.instance)
-        if self.instance.organization:
-            data['organization'] = model_to_dict(self.instance.organization)
-        if self.instance.organization_contact:
-            data['organization_contact'] = model_to_dict(self.instance.organization_contact)
-
-        serializer = InitiativeSubmitSerializer(data=data)
+        serializer = InitiativeValidationSerializer(instance=self.instance)
         if not serializer.is_valid():
-            return [unicode(error) for errors in serializer.errors.values() for error in errors]
+            return serializer.errors
+
+        serializer = OrganizationValidationSerializer(instance=self.instance.organization)
+        if self.instance.organization and not serializer.is_valid():
+            return serializer.errors
+
+        serializer = OrganizationContactValidationSerializer(instance=self.instance.organization_contact)
+        if self.instance.organization_contact and not serializer.is_valid():
+            return serializer.errors
 
     @transition(
-        source=values.draft,
-        target=values.submitted,
-        conditions=[is_complete],
+        source=[ReviewTransitions.values.draft],
+        target=ReviewTransitions.values.submitted,
+        conditions=[is_complete]
     )
     def submit(self):
-        pass
-
-    @transition(
-        source=values.needs_work,
-        target=values.submitted,
-        conditions=[is_complete],
-    )
-    def resubmit(self):
-        pass
-
-    @transition(
-        source=values.submitted,
-        target=values.needs_work,
-    )
-    def needs_work(self):
-        pass
-
-    @transition(
-        source=values.submitted,
-        target=values.approved,
-        messages=[InitiativeApproveOwnerMessage],
-        conditions=[is_complete],
-    )
-    def approve(self):
-        for activity in self.instance.activities.filter(status='draft'):
-            activity.initiative = self.instance
+        for activity in self.instance.activities.all():
             try:
-                activity.transitions.open()
+                activity.review_transitions.submit(send_messages=False)
                 activity.save()
             except TransitionNotPossible:
                 pass
 
     @transition(
-        source=[values.approved, values.submitted, values.needs_work],
-        target=values.closed,
+        source=ReviewTransitions.values.needs_work,
+        target=ReviewTransitions.values.submitted,
+        conditions=[is_complete]
+    )
+    def resubmit(self):
+        for activity in self.instance.activities.all():
+            try:
+                activity.review_transitions.submit(send_messages=False)
+                activity.save()
+            except TransitionNotPossible:
+                pass
+
+    @transition(
+        source=ReviewTransitions.values.submitted,
+        target=ReviewTransitions.values.needs_work,
+    )
+    def needs_work(self):
+        for activity in self.instance.activities.all():
+            activity.review_transitions.needs_work(send_messages=False)
+            activity.save()
+
+    @transition(
+        source=ReviewTransitions.values.submitted,
+        target=ReviewTransitions.values.approved,
+        messages=[InitiativeApproveOwnerMessage],
+        conditions=[is_complete]
+    )
+    def approve(self):
+        for activity in self.instance.activities.all():
+            try:
+                activity.review_transitions.approve(send_messages=False)
+                activity.save()
+            except TransitionNotPossible:
+                pass
+
+    @transition(
+        source=[
+            ReviewTransitions.values.approved,
+            ReviewTransitions.values.submitted,
+            ReviewTransitions.values.needs_work
+        ],
+        target=ReviewTransitions.values.closed,
         messages=[InitiativeClosedOwnerMessage],
     )
     def close(self):
-        pass
+        for activity in self.instance.activities.all():
+            activity.review_transitions.close(send_messages=False)
+            activity.save()
 
     @transition(
-        source=[values.closed],
-        target=values.submitted,
-        conditions=[is_complete],
+        source=[ReviewTransitions.values.closed],
+        target=ReviewTransitions.values.submitted,
     )
     def reopen(self):
         pass

@@ -131,7 +131,7 @@ class DonationAdmin(FSMAdmin, PaymentLinkMixin):
     model = Donation
     list_display = ['user', 'status', 'amount']
 
-    fields = ['created', 'activity', 'user', 'amount', 'status', 'status_transition', 'payment_link']
+    fields = ['created', 'activity', 'user', 'amount', 'status', 'payment_link']
 
 
 class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):

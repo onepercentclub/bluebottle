@@ -2,11 +2,10 @@ from django.conf.urls import url
 
 from bluebottle.funding_stripe.views import (
     StripeSourcePaymentList, StripePaymentIntentList,
-    IntentWebHookView, SourceWebHookView,
-    WebHookView,
+    IntentWebHookView, SourceWebHookView, WebHookView,
     ConnectAccountDetails, ConnectWebHookView,
-    ExternalAccountsList, ExternalAccountsDetails
-)
+    ExternalAccountsList, ExternalAccountsDetails,
+    StripePaymentList)
 
 urlpatterns = [
 
@@ -17,13 +16,14 @@ urlpatterns = [
     url(r'^/external-account$',
         ExternalAccountsList.as_view(),
         name='stripe-external-account-list'),
-    url(
-        r'^/external-account/(?P<pk>[\d]+)$',
+    url(r'^/external-account/(?P<pk>[\d]+)$',
         ExternalAccountsDetails.as_view(),
-        name='stripe-external-account-details'
-    ),
+        name='stripe-external-account-details'),
 
     # Payments
+    url(r'^/payments$',
+        StripePaymentList.as_view(),
+        name='stripe-payment-list'),
     url(r'^/payment-intents$',
         StripePaymentIntentList.as_view(),
         name='stripe-payment-intent-list'),

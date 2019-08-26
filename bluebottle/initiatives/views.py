@@ -31,6 +31,7 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'owner': ['owner'],
         'reviewer': ['reviewer'],
         'promoter': ['promoter'],
+        'activity_manager': ['activity_manager'],
         'theme': ['theme'],
         'place': ['place'],
         'location': ['location'],

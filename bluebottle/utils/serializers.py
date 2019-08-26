@@ -1,18 +1,18 @@
-from HTMLParser import HTMLParser
 import json
-from moneyed import Money
 import re
+from HTMLParser import HTMLParser
 
 from django.core.urlresolvers import resolve, reverse
 from django.core.validators import BaseValidator
 from django.utils.translation import ugettext_lazy as _
-
+from moneyed import Money
 from rest_framework import serializers
+from rest_framework_json_api.relations import SerializerMethodResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer as JSONAPIModelSerializer
 
-from .validators import validate_postal_code
-from .models import Address, Language
 from bluebottle.utils.fields import FSMField
+from .models import Address, Language
+from .validators import validate_postal_code
 
 
 class MaxAmountValidator(BaseValidator):
@@ -279,3 +279,26 @@ class FSMSerializer(serializers.ModelSerializer):
             getattr(instance, transition.name)()
 
         return super(FSMSerializer, self).update(instance, validated_data)
+
+
+class FilteredRelatedField(SerializerMethodResourceRelatedField):
+    """
+    Filter a related queryset based on `filter_backend`.
+    Example:
+    `contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
+    Note: `many=True` is required
+    """
+    def __init__(self, **kwargs):
+        self.filter_backend = kwargs.pop('filter_backend', None)
+        kwargs['read_only'] = True
+        super(FilteredRelatedField, self).__init__(**kwargs)
+
+    def get_attribute(self, instance):
+        queryset = super(FilteredRelatedField, self).get_attribute(instance)
+        filter_backend = self.child_relation.filter_backend
+        queryset = filter_backend().filter_queryset(
+            request=self.context['request'],
+            queryset=queryset,
+            view=self.context['view']
+        )
+        return queryset

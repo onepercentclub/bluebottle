@@ -18,6 +18,7 @@ class InitiativeFactory(factory.DjangoModelFactory):
     pitch = factory.Faker('text')
     owner = factory.SubFactory(BlueBottleUserFactory)
     reviewer = factory.SubFactory(BlueBottleUserFactory)
+    activity_manager = factory.SubFactory(BlueBottleUserFactory)
 
     theme = factory.SubFactory(ProjectThemeFactory)
     image = factory.SubFactory(ImageFactory)

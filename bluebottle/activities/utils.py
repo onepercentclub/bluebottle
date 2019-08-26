@@ -17,10 +17,10 @@ class BaseActivitySerializer(ModelSerializer):
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
     contributions = ResourceRelatedField(many=True, read_only=True)
-
     transitions = AvailableTransitionsField(source='status')
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
+    stats = serializers.OrderedDict(read_only=True)
 
     slug = serializers.CharField(read_only=True)
 
@@ -46,10 +46,11 @@ class BaseActivitySerializer(ModelSerializer):
             'description',
             'is_follower',
             'status',
-            'contributions'
+            'contributions',
+            'stats'
         )
 
-        meta_fields = ('permissions', 'transitions', 'created', 'updated', )
+        meta_fields = ('permissions', 'transitions', 'created', 'updated')
 
     class JSONAPIMeta:
         included_resources = [

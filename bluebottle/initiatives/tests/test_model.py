@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.organizations import OrganizationFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory, OrganizationContactFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 
 
@@ -61,3 +61,19 @@ class InitiativeTestCase(TestCase):
 
         initiative = InitiativeFactory()
         self.assertFalse(initiative.has_organization)
+
+    def test_organization_contact_created(self):
+        initiative = InitiativeFactory(has_organization=True, organization=OrganizationFactory.create())
+        self.assertTrue(initiative.organization_contact.pk)
+
+    def test_organization_contact_already_set(self):
+        organization_contact = OrganizationContactFactory.create()
+        initiative = InitiativeFactory(
+            has_organization=True,
+            organization=OrganizationFactory.create(),
+            organization_contact=organization_contact
+        )
+        self.assertEqual(
+            initiative.organization_contact.pk,
+            organization_contact.pk
+        )

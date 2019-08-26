@@ -1,4 +1,6 @@
+
 from django.db import models
+from django.db.models import Count, Sum
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.models import Activity, Contribution
@@ -22,6 +24,17 @@ class Event(Activity):
     registration_deadline = models.DateTimeField(_('registration deadline'), null=True, blank=True)
 
     transitions = TransitionManager(EventTransitions, 'status')
+
+    @property
+    def stats(self):
+        stats = self.contributions.filter(
+            status=ParticipantTransitions.values.succeeded).\
+            aggregate(count=Count('user__id'), hours=Sum('participant__time_spent'))
+        committed = self.contributions.filter(
+            status=ParticipantTransitions.values.new).\
+            aggregate(committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent'))
+        stats.update(committed)
+        return stats
 
     class Meta:
         verbose_name = _("Event")
@@ -51,10 +64,10 @@ class Event(Activity):
         super(Event, self).save(*args, **kwargs)
 
     def check_capacity(self):
-        if len(self.participants) >= self.capacity and self.status == EventTransitions.values.open:
+        if self.capacity and len(self.participants) >= self.capacity and self.status == EventTransitions.values.open:
             self.transitions.full()
             self.save()
-        elif len(self.participants) < self.capacity and self.status == EventTransitions.values.full:
+        elif self.capacity and len(self.participants) < self.capacity and self.status == EventTransitions.values.full:
             self.transitions.reopen()
 
     @property

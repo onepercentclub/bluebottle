@@ -40,6 +40,10 @@ class Activity(TransitionsMixin, PolymorphicModel):
 
     followers = GenericRelation('follow.Follow', object_id_field='instance_id')
 
+    @property
+    def stats(self):
+        return {}
+
     class Meta:
         verbose_name = _("Activity")
         verbose_name_plural = _("Activities")
@@ -51,12 +55,8 @@ class Activity(TransitionsMixin, PolymorphicModel):
     def __unicode__(self):
         return self.title
 
-    @property
-    def contribution_count(self):
-        return self.contributions.count()
-
     def save(self, **kwargs):
-        if self.slug == 'new' and self.title:
+        if not self.slug or self.slug in ['new', ''] and self.title:
             self.slug = slugify(self.title)
 
         if not self.owner_id:

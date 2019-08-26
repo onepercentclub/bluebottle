@@ -32,6 +32,7 @@ class InitiativeAPITestCase(TestCase):
         super(InitiativeAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory.create()
+        self.visitor = BlueBottleUserFactory.create()
 
 
 class InitiativeListAPITestCase(InitiativeAPITestCase):
@@ -79,6 +80,33 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             unicode(initiative.theme.pk)
         )
         self.assertEqual(len(response_data['included']), 2)
+
+    def test_create_special_chars(self):
+        data = {
+            'data': {
+                'type': 'initiatives',
+                'attributes': {
+                    'title': ':)'
+                },
+                'relationships': {
+                    'theme': {
+                        'data': {
+                            'type': 'themes',
+                            'id': self.theme.pk
+                        },
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['data']['attributes']['title'], ':)')
+        self.assertNotEqual(response_data['data']['attributes']['slug'], '')
 
     def test_create_duplicate_title(self):
         InitiativeFactory.create(title='Some title')
@@ -303,7 +331,14 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
         self.assertEqual(data['meta']['status'], self.initiative.status)
-        self.assertEqual(data['meta']['transitions'], [{'name': 'submit', 'target': 'submitted'}])
+        self.assertEqual(
+            data['meta']['transitions'],
+            [{
+                u'available': True,
+                u'conditions': {},
+                u'name': u'submit',
+                u'target': u'submitted'
+            }])
         self.assertEqual(data['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
         self.assertEqual(data['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
 
@@ -327,6 +362,13 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             event.title
         )
         self.assertEqual(activity_data['type'], 'activities/events')
+        activity_location = activity_data['relationships']['location']['data']
+
+        self.assertTrue(
+            activity_location in (
+                {'type': included['type'], 'id': included['id']} for included in response.json()['included']
+            )
+        )
 
     def test_get_other(self):
         response = self.client.get(
@@ -393,8 +435,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['data'][0]['id'], unicode(approved.pk))
 
     def test_filter_owner(self):
-        InitiativeFactory.create(owner=self.owner)
-        InitiativeFactory.create(status='approved')
+        InitiativeFactory.create_batch(2, status='submitted', owner=self.owner)
+        InitiativeFactory.create_batch(4, status='submitted')
 
         response = self.client.get(
             self.url + '?filter[owner.id]={}'.format(self.owner.pk),
@@ -403,8 +445,60 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+
+    def test_filter_not_owner(self):
+        """
+        Non-owner should only see approved initiatives
+        """
+        InitiativeFactory.create_batch(2, status='submitted', owner=self.owner)
+        InitiativeFactory.create_batch(4, status='approved', owner=self.owner)
+        InitiativeFactory.create_batch(3, status='approved')
+
+        response = self.client.get(
+            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            user=self.visitor
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 4)
+        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+
+    def test_filter_activity_manager(self):
+        """
+        User should see initiatives where self activity manager when in submitted
+        """
+        InitiativeFactory.create_batch(2, status='submitted', activity_manager=self.owner)
+        InitiativeFactory.create_batch(4, status='approved')
+
+        response = self.client.get(
+            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['data'][0]['relationships']['activity-manager']['data']['id'], unicode(self.owner.pk))
+
+    def test_filter_owner_and_activity_manager(self):
+        """
+        User should see initiatives where self owner or activity manager when in submitted
+        """
+        InitiativeFactory.create_batch(2, status='submitted', activity_manager=self.owner)
+        InitiativeFactory.create_batch(3, status='submitted', owner=self.owner)
+        InitiativeFactory.create_batch(4, status='approved')
+
+        response = self.client.get(
+            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 5)
 
     def test_search(self):
         first = InitiativeFactory.create(title='Lorem ipsum dolor sit amet', pitch="Lorem ipsum", status='approved')

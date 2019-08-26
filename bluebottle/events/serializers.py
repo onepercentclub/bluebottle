@@ -1,20 +1,61 @@
 from django.utils.translation import ugettext_lazy as _
-
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer, ActivitySubmitSerializer
 )
+from bluebottle.events.filters import ParticipantListFilter
 from bluebottle.events.models import Event, Participant
 from bluebottle.geo.models import Geolocation
-from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.transitions.serializers import TransitionSerializer
+from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 
 
-class EventSerializer(BaseActivitySerializer):
+class ParticipantSerializer(BaseContributionSerializer):
+
+    class Meta(BaseContributionSerializer.Meta):
+        model = Participant
+        fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Participant.objects.all(),
+                fields=('activity', 'user')
+            )
+        ]
+
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        resource_name = 'contributions/participants'
+        included_resources = [
+            'user',
+            'activity'
+        ]
+
+    included_serializers = {
+        'activity': 'bluebottle.events.serializers.EventSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+
+class ParticipantTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=Participant.objects.all())
+    field = 'status'
+    included_serializers = {
+        'resource': 'bluebottle.events.serializers.ParticipantSerializer',
+        'resource.activity': 'bluebottle.events.serializers.EventSerializer',
+    }
+
+    class JSONAPIMeta:
+        resource_name = 'contributions/participant-transitions'
+        included_resources = [
+            'resource',
+            'resource.activity'
+        ]
+
+
+class EventListSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
 
     class Meta(BaseActivitySerializer.Meta):
@@ -36,7 +77,42 @@ class EventSerializer(BaseActivitySerializer):
             'initiative',
             'initiative.image',
             'location',
-            'contributions'
+        ]
+        resource_name = 'activities/events'
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+    }
+
+
+class EventSerializer(BaseActivitySerializer):
+    permissions = ResourcePermissionField('event-detail', view_args=('pk',))
+    contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Event
+        fields = BaseActivitySerializer.Meta.fields + (
+            'capacity',
+            'end_time',
+            'start_time',
+            'is_online',
+            'location',
+            'location_hint',
+            'permissions',
+            'registration_deadline',
+        )
+
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        included_resources = [
+            'owner',
+            'initiative',
+            'initiative.image',
+            'location',
+            'contributions',
+            'contributions.user'
         ]
         resource_name = 'activities/events'
 
@@ -82,6 +158,11 @@ class EventSubmitSerializer(ActivitySubmitSerializer):
         """
         if not self.initial_data['is_online'] and not data['location']:
             raise serializers.ValidationError("Location is required or select 'is online'")
+        if self.initial_data['start_time'] > self.initial_data['end_time']:
+            raise serializers.ValidationError("End time should be after start time")
+        if self.initial_data['registration_deadline'] and \
+                self.initial_data['registration_deadline'] > self.initial_data['start_time']:
+            raise serializers.ValidationError("Registration deadline should be before start time")
         return data
 
     class Meta(ActivitySubmitSerializer.Meta):
@@ -103,41 +184,3 @@ class EventTransitionSerializer(TransitionSerializer):
     class JSONAPIMeta:
         included_resources = ['resource', ]
         resource_name = 'event-transitions'
-
-
-class ParticipantSerializer(BaseContributionSerializer):
-    included_serializers = {
-        'activity': 'bluebottle.events.serializers.EventSerializer',
-        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-    }
-
-    class Meta(BaseContributionSerializer.Meta):
-        model = Participant
-        fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
-
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Participant.objects.all(),
-                fields=('activity', 'user')
-            )
-        ]
-
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/participants'
-        included_resources = [
-            'user',
-            'activity'
-        ]
-
-
-class ParticipantTransitionSerializer(TransitionSerializer):
-    resource = ResourceRelatedField(queryset=Participant.objects.all())
-    field = 'status'
-    included_serializers = {
-        'resource': 'bluebottle.events.serializers.ParticipantSerializer',
-        'resource.activity': 'bluebottle.events.serializers.EventSerializer',
-    }
-
-    class JSONAPIMeta:
-        included_resources = ['resource', 'resource.activity']
-        resource_name = 'contributions/participant-transitions'

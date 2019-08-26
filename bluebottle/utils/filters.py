@@ -84,5 +84,5 @@ class ElasticSearchFilter(filters.SearchFilter):
         sort = request.GET.get('sort')
         return self.sort_fields.get(sort)
 
-    def get_default_filters(self):
+    def get_default_filters(self, request):
         return []

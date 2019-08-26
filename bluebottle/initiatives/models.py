@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Max
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.html import format_html
@@ -124,6 +125,9 @@ class Initiative(TransitionsMixin, models.Model):
         if self.slug in ['', 'new']:
             if self.title:
                 self.slug = slugify(self.title)
+                if not self.slug:
+                    # If someone uses only special chars as title then construct a slug
+                    self.slug = 'in-{}'.format(self.__class__.objects.all().aggregate(Max('id'))['id__max'] or 0 + 1)
             else:
                 self.slug = 'new'
 
@@ -136,8 +140,12 @@ class Initiative(TransitionsMixin, models.Model):
         except InitiativePlatformSettings.DoesNotExist:
             pass
 
-        if self.has_organization and not self.organization and self.owner and self.owner.partner_organization:
-            self.organization = self.owner.partner_organization
+        if self.has_organization:
+            if not self.organization and self.owner and self.owner.partner_organization:
+                self.organization = self.owner.partner_organization
+
+            if not self.organization_contact:
+                self.organization_contact = OrganizationContact.objects.create(owner=self.owner)
 
         super(Initiative, self).save(**kwargs)
 

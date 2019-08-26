@@ -298,6 +298,23 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
             len(self.event.participants), 0
         )
 
+    def test_untreject(self):
+        self.participant.transitions.reject(self.event.initiative.activity_manager)
+        self.participant.save()
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.rejected
+        )
+        self.participant.transitions.unreject(self.event.initiative.activity_manager)
+        self.participant.save()
+        self.assertEqual(
+            self.participant.status,
+            ParticipantTransitions.values.new
+        )
+        self.assertEqual(
+            len(self.event.participants), 1
+        )
+
     def test_reject_no_owner(self):
         self.assertRaises(
             TransitionNotAllowed,
@@ -306,7 +323,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         )
 
     def test_success(self):
-        self.event.start_time = now() - timedelta(days=1)
+        self.event.start_time = now() - timedelta(days=2)
         self.event.end_time = now() - timedelta(days=1)
         self.event.transitions.start()
         self.event.transitions.succeed()
@@ -379,3 +396,67 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             len(self.event.participants), 0
         )
+
+
+class EventTransitionValidationTestCase(BluebottleTestCase):
+
+    def test_not_online_requires_location(self):
+        event = EventFactory.create(
+            location=None,
+            is_online=False
+        )
+        self.assertEqual(
+            event.status,
+            EventTransitions.values.draft
+        )
+        self.assertEqual(event.transitions.is_complete(), [u"Location is required or select 'is online'"])
+
+        self.assertRaises(
+            TransitionNotPossible,
+            event.transitions.open
+        )
+
+    def test_wrong_end_date(self):
+        event = EventFactory.create(
+            registration_deadline=now() + timedelta(weeks=3),
+            start_time=now() + timedelta(weeks=2),
+            end_time=now() + timedelta(weeks=1),
+        )
+        self.assertEqual(
+            event.status,
+            EventTransitions.values.draft
+        )
+        self.assertEqual(event.transitions.is_complete(), [u"End time should be after start time"])
+
+        self.assertRaises(
+            TransitionNotPossible,
+            event.transitions.open
+        )
+
+    def test_wrong_registration_deadline(self):
+        event = EventFactory.create(
+            registration_deadline=now() + timedelta(weeks=3),
+            start_time=now() + timedelta(weeks=2),
+        )
+        self.assertEqual(
+            event.status,
+            EventTransitions.values.draft
+        )
+        self.assertEqual(event.transitions.is_complete(), [u"Registration deadline should be before start time"])
+
+        self.assertRaises(
+            TransitionNotPossible,
+            event.transitions.open
+        )
+
+    def test_empty_registration_deadline(self):
+        # Test that validation doesn't trip if registration deadline isn't filled in
+        event = EventFactory.create(
+            registration_deadline=None,
+            start_time=now() + timedelta(weeks=2),
+        )
+        self.assertEqual(
+            event.status,
+            EventTransitions.values.draft
+        )
+        self.assertEqual(event.transitions.is_complete(), None)

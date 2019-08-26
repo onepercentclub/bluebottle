@@ -15,7 +15,7 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.utils.fields import SafeField
 from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.categories.models import Category
-from bluebottle.geo.models import Geolocation
+from bluebottle.geo.models import Geolocation, Location
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer, ImageField
@@ -83,6 +83,7 @@ class InitiativeSerializer(ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     reviewer = ResourceRelatedField(read_only=True)
+    activity_manager = ResourceRelatedField(read_only=True)
     activities = PolymorphicResourceRelatedField(
         ActivitySerializer, many=True, read_only=True
     )
@@ -102,20 +103,23 @@ class InitiativeSerializer(ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
         'place': 'bluebottle.geo.serializers.GeolocationSerializer',
         'location': 'bluebottle.geo.serializers.LocationSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
         'activities': 'bluebottle.activities.serializers.ActivitySerializer',
+        'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
 
     class Meta:
         model = Initiative
         fsm_fields = ['status']
         fields = (
-            'id', 'title', 'pitch', 'categories', 'owner',
-            'reviewer', 'promoter', 'slug', 'has_organization', 'organization',
+            'id', 'title', 'pitch', 'categories',
+            'owner', 'reviewer', 'promoter', 'activity_manager',
+            'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_html', 'image',
             'theme', 'place', 'location', 'activities',
         )
@@ -124,8 +128,9 @@ class InitiativeSerializer(ModelSerializer):
 
     class JSONAPIMeta:
         included_resources = [
-            'owner', 'reviewer', 'promoter', 'categories', 'theme', 'place', 'location',
-            'image', 'organization', 'organization_contact', 'activities'
+            'owner', 'reviewer', 'promoter', 'activity_manager',
+            'categories', 'theme', 'place', 'location',
+            'image', 'organization', 'organization_contact', 'activities', 'activities.location',
         ]
         resource_name = 'initiatives'
 
@@ -192,8 +197,9 @@ class InitiativeSubmitSerializer(ModelSerializer):
         error_messages={'null': _('Owner is required')}
     )
     place = serializers.PrimaryKeyRelatedField(
-        required=True, queryset=Geolocation.objects.all(),
-        error_messages={'null': _('Place is required')}
+        allow_null=True,
+        allow_empty=True,
+        queryset=Geolocation.objects.all()
     )
     organization = OrganizationSubmitSerializer(
         error_messages={'null': _('Organization is required')}
@@ -204,6 +210,17 @@ class InitiativeSubmitSerializer(ModelSerializer):
 
     # TODO add dependent fields: has_organization/organization/organization_contact and
     # place / location
+
+    def validate(self, data):
+        """
+        Check that location or place is set
+        """
+        if Location.objects.count():
+            if not self.initial_data['location']:
+                raise serializers.ValidationError("Location is required")
+        elif not self.initial_data['place']:
+            raise serializers.ValidationError("Place is required")
+        return data
 
     class Meta:
         model = Initiative

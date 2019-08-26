@@ -169,14 +169,13 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     twitter = models.CharField(_('twitter profile'), blank=True, max_length=15)
     skypename = models.CharField(_('skype profile'), blank=True, max_length=32)
 
-    partner_organization = models.ForeignKey('organizations.Organization',
-                                             blank=True,
-                                             help_text=_('When a partner is selected with the drop down or a new one is'
-                                                         ' added, that member profile is shown whenever that member '
-                                                         'does something on the platform.'),
-                                             null=True,
-                                             related_name='partner_organization_members',
-                                             verbose_name=_('Partner Organization'))
+    partner_organization = models.ForeignKey(
+        'organizations.Organization',
+        blank=True, null=True,
+        help_text=_('Users that are connected to a partner organisation '
+                    'will skip the organisation step in initiative create.'),
+        related_name='partner_organization_members',
+        verbose_name=_('Partner organisation'))
 
     is_anonymized = models.BooleanField(_('Is anonymized'), default=False)
     welcome_email_is_sent = models.BooleanField(_('Welcome email is sent'), default=False)

@@ -9,12 +9,13 @@ from bluebottle.activities.utils import (
     ActivityValidationSerializer
 )
 from bluebottle.files.serializers import ImageField
+from bluebottle.funding.filters import DonationListFilter
 from bluebottle.funding.models import Funding, Donation, Payment, Fundraiser, Reward, BudgetLine, PaymentMethod
 from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.fields import FSMField
-from bluebottle.utils.serializers import MoneySerializer
+from bluebottle.utils.serializers import MoneySerializer, FilteredRelatedField
 
 
 class FundingCurrencyValidator(object):
@@ -158,16 +159,18 @@ class FundingSerializer(BaseActivitySerializer):
     rewards = RewardSerializer(many=True, required=False)
     budgetlines = BudgetLineSerializer(many=True, required=False)
     payment_methods = PaymentMethodSerializer(many=True, read_only=True)
-
-    contributions = ResourceRelatedField(
-        read_only=True,
-        many=True
-    )
+    contributions = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
 
     class Meta:
         model = Funding
         fields = BaseActivitySerializer.Meta.fields + (
-            'deadline', 'duration', 'target', 'budgetlines', 'fundraisers', 'rewards', 'payment_methods'
+            'deadline',
+            'duration',
+            'target',
+            'budgetlines',
+            'fundraisers',
+            'rewards',
+            'payment_methods'
         )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):

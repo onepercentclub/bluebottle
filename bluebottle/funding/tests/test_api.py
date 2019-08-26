@@ -6,7 +6,7 @@ from django.utils.timezone import now
 from moneyed import Money
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory, RewardFactory
+from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory, RewardFactory, DonationFactory
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -186,6 +186,49 @@ class RewardListTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class FundingDetailTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(FundingDetailTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create()
+
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.initiative.save()
+
+        self.funding = FundingFactory.create(
+            initiative=self.initiative,
+            deadline=now() + timedelta(days=15)
+        )
+
+        self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
+
+    def test_view_funding(self):
+        DonationFactory.create_batch(3, activity=self.funding, status='succeeded')
+        DonationFactory.create_batch(2, activity=self.funding, status='new')
+
+        response = self.client.get(self.funding_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data['data']['attributes']['description'],
+            self.funding.description
+        )
+        self.assertEqual(
+            data['data']['attributes']['title'],
+            self.funding.title
+        )
+
+        # Should only see the three successful donations
+        self.assertEqual(
+            len(data['data']['relationships']['contributions']['data']),
+            3
+        )
 
 
 class FundraiserListTestCase(BluebottleTestCase):

@@ -171,7 +171,7 @@ class EventSerializer(NoCommitMixin, EventListSerializer):
     contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        included_resources = EventListSerializer.JSONAPIMeta.included_resources + [
+        included_resources = BaseContributionSerializer.JSONAPIMeta.included_resources + [
             'contributions',
             'contributions.user'
         ]

@@ -73,7 +73,9 @@ class FundraiserDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
 
     prefetch_for_includes = {
         'owner': ['owner'],
-        'activity': ['activity'],
+        'initiative': ['initiative'],
+        'location': ['location'],
+        'contributions': ['contributions']
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]

@@ -161,7 +161,7 @@ class FundingSerializer(BaseActivitySerializer):
     payment_methods = PaymentMethodSerializer(many=True, read_only=True)
     contributions = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
 
-    class Meta:
+    class Meta(BaseActivitySerializer.Meta):
         model = Funding
         fields = BaseActivitySerializer.Meta.fields + (
             'deadline',
@@ -174,7 +174,7 @@ class FundingSerializer(BaseActivitySerializer):
         )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        included_resources = [
+        included_resources = BaseContributionSerializer.JSONAPIMeta.included_resources + [
             'image',
             'owner',
             'initiative',

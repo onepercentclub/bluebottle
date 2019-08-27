@@ -177,7 +177,7 @@ class PasswordReset(views.APIView):
         except USER_MODEL.DoesNotExist:
             pass
 
-        return response.Response(status=status.HTTP_200_OK)
+        return response.Response({}, status=status.HTTP_200_OK)
 
 
 class PasswordProtectedMemberUpdateApiView(UpdateAPIView):

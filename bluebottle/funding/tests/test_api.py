@@ -10,7 +10,7 @@ from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
 
 
 class BudgetLineListTestCase(BluebottleTestCase):
@@ -292,6 +292,45 @@ class FundraiserListTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class FundingTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(FundingTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create(owner=self.user)
+
+        self.create_url = reverse('funding-list')
+
+        self.data = {
+            'data': {
+                'type': 'activities/fundings',
+                'attributes': {
+                    'title': 'test',
+                },
+                'relationships': {
+                    'initiative': {
+                        'data': {
+                            'type': 'initiatives',
+                            'id': self.initiative.pk,
+                        }
+                    }
+                }
+            }
+        }
+
+    def test_create(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+
+        data = response.json()
+
+        self.assertTrue(
+            data['data']['meta']['permissions']['PATCH']
+        )
+        self.assertTrue(
+            get_included(response, 'geolocations')
+        )
 
 
 class DonationTestCase(BluebottleTestCase):

@@ -14,7 +14,9 @@ from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.fields import FSMField
-from bluebottle.utils.serializers import MoneySerializer
+from bluebottle.utils.serializers import (
+    MoneySerializer, ResourcePermissionField
+)
 
 
 class FundingCurrencyValidator(object):
@@ -152,6 +154,7 @@ class FundingValidationSerializer(ActivityValidationSerializer):
 
 
 class FundingSerializer(BaseActivitySerializer):
+    permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
     target = MoneySerializer(required=False, allow_null=True)
 
     fundraisers = FundraiserSerializer(many=True, required=False)
@@ -164,21 +167,20 @@ class FundingSerializer(BaseActivitySerializer):
         many=True
     )
 
-    class Meta:
+    class Meta(BaseActivitySerializer.Meta):
         model = Funding
         fields = BaseActivitySerializer.Meta.fields + (
             'deadline', 'duration', 'target', 'budgetlines', 'fundraisers', 'rewards', 'payment_methods'
         )
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+    class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = [
-            'image',
             'owner',
             'initiative',
-            'place',
+            'initiative.location',
+            'initiative.place',
             'fundraisers',
             'budgetlines',
-            'payment_methods',
             'rewards',
             'contributions',
         ]

@@ -15,7 +15,8 @@ from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.fields import FSMField
-from bluebottle.utils.serializers import MoneySerializer, FilteredRelatedField
+from bluebottle.utils.serializers import MoneySerializer, FilteredRelatedField, NonModelRelatedResourceField, \
+    ResourcePermissionField
 
 
 class FundingCurrencyValidator(object):
@@ -150,6 +151,44 @@ class FundingValidationSerializer(ActivityValidationSerializer):
 
     class JSONAPIMeta:
         resource_name = 'activities/funding-validations'
+
+
+class FundingListSerializer(BaseActivitySerializer):
+    permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
+    validations = NonModelRelatedResourceField(FundingValidationSerializer)
+    payment_methods = PaymentMethodSerializer(many=True, read_only=True)
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Funding
+        fields = BaseActivitySerializer.Meta.fields + (
+            'deadline',
+            'duration',
+            'target',
+            'budgetlines',
+            'fundraisers',
+            'rewards',
+            'payment_methods',
+            'permissions',
+            'validations',
+        )
+
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        included_resources = [
+            'owner',
+            'initiative',
+            'initiative.image',
+            'location',
+            'validations',
+        ]
+        resource_name = 'activities/funding'
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'validations': 'bluebottle.events.serializers.EventValidationSerializer',
+    }
 
 
 class FundingSerializer(BaseActivitySerializer):

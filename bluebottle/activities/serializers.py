@@ -1,11 +1,10 @@
-from rest_framework_json_api.serializers import PolymorphicModelSerializer
 from rest_framework_json_api.relations import PolymorphicResourceRelatedField
+from rest_framework_json_api.serializers import PolymorphicModelSerializer
 
 from bluebottle.activities.models import Contribution, Activity
-from bluebottle.events.serializers import ParticipantSerializer, EventListSerializer
-from bluebottle.funding.serializers import FundingSerializer, DonationSerializer
 from bluebottle.assignments.serializers import AssignmentSerializer, AssignmentParticipantSerializer
-
+from bluebottle.events.serializers import ParticipantSerializer, EventListSerializer
+from bluebottle.funding.serializers import DonationSerializer, FundingListSerializer
 from bluebottle.transitions.serializers import TransitionSerializer
 
 
@@ -13,7 +12,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
 
     polymorphic_serializers = [
         EventListSerializer,
-        FundingSerializer,
+        FundingListSerializer,
         AssignmentSerializer
     ]
 

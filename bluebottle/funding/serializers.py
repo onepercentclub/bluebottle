@@ -177,6 +177,7 @@ class FundingSerializer(BaseActivitySerializer):
         included_resources = [
             'owner',
             'initiative',
+            'initiative.image',
             'initiative.location',
             'initiative.place',
             'fundraisers',

@@ -201,14 +201,18 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         self.funding = FundingFactory.create(
             initiative=self.initiative,
+            target=Money(5000, 'EUR'),
             deadline=now() + timedelta(days=15)
         )
 
         self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
 
     def test_view_funding(self):
-        DonationFactory.create_batch(3, activity=self.funding, status='succeeded')
-        DonationFactory.create_batch(2, activity=self.funding, status='new')
+        DonationFactory.create_batch(5, amount=Money(200, 'EUR'), activity=self.funding, status='succeeded')
+        DonationFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')
+
+        self.funding.amount_matching = Money(500, 'EUR')
+        self.funding.save()
 
         response = self.client.get(self.funding_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -223,11 +227,27 @@ class FundingDetailTestCase(BluebottleTestCase):
             data['data']['attributes']['title'],
             self.funding.title
         )
+        self.assertEqual(
+            data['data']['attributes']['target'],
+            {u'currency': u'EUR', u'amount': 5000.0}
+        )
+        self.assertEqual(
+            data['data']['attributes']['amount-donated'],
+            {u'currency': u'EUR', u'amount': 1000.0}
+        )
+        self.assertEqual(
+            data['data']['attributes']['amount-matching'],
+            {u'currency': u'EUR', u'amount': 500.0}
+        )
+        self.assertEqual(
+            data['data']['attributes']['amount-raised'],
+            {u'currency': u'EUR', u'amount': 1500.0}
+        )
 
         # Should only see the three successful donations
         self.assertEqual(
             len(data['data']['relationships']['contributions']['data']),
-            3
+            5
         )
 
 

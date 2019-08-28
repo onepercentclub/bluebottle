@@ -154,6 +154,10 @@ class FundingValidationSerializer(ActivityValidationSerializer):
 
 class FundingListSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
+    target = MoneySerializer(read_only=True)
+    amount_raised = MoneySerializer(read_only=True)
+    amount_donated = MoneySerializer(read_only=True)
+    amount_matching = MoneySerializer(read_only=True)
     # validations = NonModelRelatedResourceField(FundingValidationSerializer)
 
     class Meta(BaseActivitySerializer.Meta):
@@ -162,6 +166,9 @@ class FundingListSerializer(BaseActivitySerializer):
             'deadline',
             'duration',
             'target',
+            'amount_donated',
+            'amount_matching',
+            'amount_raised',
             'permissions',
             # 'validations',
         )
@@ -186,7 +193,7 @@ class FundingListSerializer(BaseActivitySerializer):
     }
 
 
-class FundingSerializer(BaseActivitySerializer):
+class FundingSerializer(FundingListSerializer):
     rewards = RewardSerializer(many=True, required=False)
     budgetlines = BudgetLineSerializer(many=True, required=False)
     payment_methods = PaymentMethodSerializer(many=True, read_only=True)

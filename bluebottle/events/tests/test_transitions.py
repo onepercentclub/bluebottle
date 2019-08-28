@@ -495,30 +495,6 @@ class EventTransitionValidationTestCase(BluebottleTestCase):
             event.review_transitions.submit
         )
 
-    def test_wrong_end_date(self):
-        start = now() - timedelta(weeks=2)
-
-        event = EventFactory.create(
-            registration_deadline=(now() + timedelta(weeks=3)).date(),
-            start_time=start.time(),
-            start_date=start.date(),
-            duration=24 * 7
-        )
-        self.assertEqual(
-            event.status,
-            EventTransitions.values.in_review
-        )
-        errors = event.review_transitions.is_complete()
-        self.assertEqual(
-            unicode(errors['registration_deadline'][0]),
-            u"Registration deadline should be before start time"
-        )
-
-        self.assertRaises(
-            TransitionNotPossible,
-            event.review_transitions.submit
-        )
-
     def test_wrong_registration_deadline(self):
         start = now() - timedelta(weeks=2)
         event = EventFactory.create(

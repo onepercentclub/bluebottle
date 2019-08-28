@@ -75,7 +75,7 @@ class LocationValidator(object):
 
 class RegistrationDeadlineValidator(object):
     def set_context(self, field):
-        self.state_date = field.parent.initial_data['start_date']
+        self.start_date = field.parent.instance.start_date
 
     def __call__(self, value):
         if value > self.start_date:
@@ -96,7 +96,10 @@ class EventValidationSerializer(ActivityValidationSerializer):
     start_date = serializers.DateField()
     start_time = serializers.TimeField()
     duration = serializers.FloatField()
-    registration_deadline = serializers.DateField(allow_null=True)
+    registration_deadline = serializers.DateField(
+        allow_null=True,
+        validators=[RegistrationDeadlineValidator()]
+    )
     is_online = serializers.BooleanField()
     location = LocationField(
         queryset=Geolocation.objects.all(),

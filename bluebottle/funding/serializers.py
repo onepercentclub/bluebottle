@@ -168,12 +168,13 @@ class FundingListSerializer(BaseActivitySerializer):
             # 'validations',
         )
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+    class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = [
             'owner',
             'initiative',
             'initiative.image',
-            'location',
+            'initiative.location',
+            'initiative.place',
             # 'validations',
         ]
         resource_name = 'activities/funding'

@@ -1,4 +1,5 @@
 from django import forms
+from django.core.urlresolvers import reverse
 from django.forms import CheckboxInput
 from django.forms.models import ModelFormMetaclass
 from django.utils.translation import ugettext_lazy as _
@@ -36,12 +37,16 @@ class FSMModelForm(forms.ModelForm):
             ]
             if isinstance(self.instance, Activity):
                 # Default polymorphic activities to base activity
-                self.fields[fsm_field].widget.attrs['action_url'] = 'admin:activities_activity_transition'
+                url_name = 'admin:activities_activity_transition'
             else:
-                self.fields[fsm_field].widget.attrs['action_url'] = 'admin:{}_{}_transition'.format(
+                url_name = 'admin:{}_{}_transition'.format(
                     self.instance._meta.app_label,
                     self.instance._meta.model_name
                 )
+
+            self.fields[fsm_field].widget.attrs['action_url'] = reverse(
+                url_name, args=(self.instance.pk, fsm_field, transition.name)
+            )
 
     def clean(self, *args, **kwargs):
         for field_name in self.fsm_fields:

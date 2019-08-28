@@ -39,12 +39,20 @@ class ActivityReviewTransitions(ReviewTransitions):
     @transition(
         source=[
             ReviewTransitions.values.approved,
+            ReviewTransitions.values.draft,
             ReviewTransitions.values.submitted,
             ReviewTransitions.values.needs_work
         ],
         target=ReviewTransitions.values.closed
     )
     def close(self):
+        pass
+
+    @transition(
+        source=[ReviewTransitions.values.closed],
+        target=ReviewTransitions.values.submitted,
+    )
+    def reopen(self):
         pass
 
 

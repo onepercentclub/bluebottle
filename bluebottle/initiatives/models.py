@@ -84,8 +84,12 @@ class Initiative(TransitionsMixin, models.Model):
         )
     )
 
-    place = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
-    location = models.ForeignKey('geo.Location', null=True, blank=True, on_delete=models.SET_NULL)
+    place = models.ForeignKey(
+        Geolocation, verbose_name=_('Impact location'),
+        null=True, blank=True, on_delete=SET_NULL)
+    location = models.ForeignKey(
+        'geo.Location', verbose_name=_('Office location'),
+        null=True, blank=True, on_delete=models.SET_NULL)
 
     has_organization = models.NullBooleanField(null=True, default=None)
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)

@@ -11,7 +11,7 @@ from bluebottle.funding.serializers import (
     FundingSerializer, DonationSerializer, FundingTransitionSerializer,
     FundraiserSerializer, RewardSerializer, BudgetLineSerializer,
     DonationCreateSerializer,
-)
+    FundingListSerializer)
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.permissions import DonationOwnerPermission, PaymentPermission
 from bluebottle.transitions.views import TransitionList
@@ -113,17 +113,13 @@ class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
 
 class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Funding.objects.all()
-    serializer_class = FundingSerializer
+    serializer_class = FundingListSerializer
 
     permission_classes = (ActivityTypePermission, ActivityPermission,)
 
     prefetch_for_includes = {
-        'activitiy': ['initiative'],
+        'initiative': ['initiative'],
         'owner': ['owner'],
-        'rewards': ['reward'],
-        'budgetlines': ['budgetlines'],
-        'payment_methods': ['payment_methods'],
-        'fundraisers': ['fundraisers']
     }
 
     def perform_create(self, serializer):
@@ -137,7 +133,7 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     permission_classes = []
 
     prefetch_for_includes = {
-        'activitiy': ['initiative'],
+        'initiative': ['initiative'],
         'owner': ['owner'],
         'rewards': ['reward'],
         'budgetlines': ['budgetlines'],

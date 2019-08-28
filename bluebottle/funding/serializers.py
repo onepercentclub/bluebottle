@@ -155,7 +155,6 @@ class FundingValidationSerializer(ActivityValidationSerializer):
 class FundingListSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
     # validations = NonModelRelatedResourceField(FundingValidationSerializer)
-    payment_methods = PaymentMethodSerializer(many=True, read_only=True)
 
     class Meta(BaseActivitySerializer.Meta):
         model = Funding
@@ -163,7 +162,6 @@ class FundingListSerializer(BaseActivitySerializer):
             'deadline',
             'duration',
             'target',
-            'fundraisers',
             'permissions',
             # 'validations',
         )

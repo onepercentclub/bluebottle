@@ -348,7 +348,7 @@ class FundingTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'activities/fundings',
+                'type': 'activities/funding',
                 'attributes': {
                     'title': 'test',
                 },
@@ -365,9 +365,7 @@ class FundingTestCase(BluebottleTestCase):
 
     def test_create(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
-
         data = response.json()
-
         self.assertTrue(
             data['data']['meta']['permissions']['PATCH']
         )

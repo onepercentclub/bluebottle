@@ -77,3 +77,21 @@ class InitiativeTestCase(TestCase):
             initiative.organization_contact.pk,
             organization_contact.pk
         )
+
+    def test_slug(self):
+        initiative = InitiativeFactory(title='Test Title')
+        self.assertEqual(
+            initiative.slug, 'test-title'
+        )
+
+    def test_slug_empty(self):
+        initiative = InitiativeFactory(title='')
+        self.assertEqual(
+            initiative.slug, 'new'
+        )
+
+    def test_slug_special_characters(self):
+        initiative = InitiativeFactory(title='!!! $$$$')
+        self.assertEqual(
+            initiative.slug, 'new'
+        )

@@ -12,7 +12,6 @@ from django.db.models.signals import post_init, post_save, pre_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
-from django.utils.functional import lazy
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
@@ -30,9 +29,10 @@ from bluebottle.bb_projects.models import (
 )
 from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.funding.models import PaymentProvider
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
@@ -40,6 +40,7 @@ from bluebottle.wallposts.models import (
     Wallpost, MediaWallpostPhoto, MediaWallpost, TextWallpost
 )
 from .mails import mail_project_complete, mail_project_incomplete
+
 from .signals import project_funded  # NOQA
 
 logger = logging.getLogger(__name__)
@@ -165,7 +166,10 @@ class Project(BaseProject, PreviousStatusMixin):
 
     currencies = MultiSelectField(
         max_length=100, default=[],
-        choices=lazy(get_currency_choices, tuple)()
+        choices=[
+            ('EUR', 'EUR'), ('USD', 'USD'), ('XOF', 'XOF'),
+            ('NGN', 'NGN'), ('UGX', 'UGX'), ('KES', 'KES')
+        ]
     )
 
     celebrate_results = models.BooleanField(
@@ -258,7 +262,7 @@ class Project(BaseProject, PreviousStatusMixin):
                 )
 
         if not self.amount_asked:
-            self.amount_asked = Money(0, get_default_currency())
+            self.amount_asked = Money(0, PaymentProvider.get_default_currency())
 
         if self.amount_asked.amount:
             self.update_amounts(False)

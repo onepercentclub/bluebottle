@@ -15,10 +15,11 @@ from bluebottle.utils.admin import FSMAdmin
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
+
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline, )
 
-    readonly_fields = ['status', 'created', 'updated', 'stats_data']
+    readonly_fields = ['status', 'review_status', 'created', 'updated', 'stats_data']
 
     def stats_data(self, obj):
         return format_html("<table>{}</table>", format_html("".join([
@@ -26,20 +27,24 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         ])))
     stats_data.short_description = _('Statistics')
 
+    def title_display(self, obj):
+        return obj.title or _('- empty -')
+    title_display.short_description = _('Title')
+
 
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
     readonly_fields = ['link']
-    list_filter = (PolymorphicChildModelFilter, 'status', 'highlight')
+    list_filter = (PolymorphicChildModelFilter, 'status', 'review_status', 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['title', 'created', 'type', 'status',
+    list_display = ['title', 'created', 'type', 'status', 'review_status',
                     'link', 'highlight']
 
     def link(self, obj):
-        return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title)
+        return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title)
     link.short_description = _("Show on site")
 
     def type(self, obj):
@@ -63,11 +68,11 @@ class ActivityAdminInline(StackedPolymorphicInline):
         activity_link.short_description = _('Edit activity')
 
         def link(self, obj):
-            return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title or '-empty-')
+            return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
         link.short_description = _('View on site')
 
     class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'link', 'start_time', 'end_time', 'status']
+        readonly_fields = ['activity_link', 'link', 'start_date', 'start_time', 'duration', 'status']
         fields = readonly_fields
         model = Event
 

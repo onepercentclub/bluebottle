@@ -6,12 +6,11 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
-    Payment, PaymentProvider, PaymentMethod, PayoutAccount
-)
+    Payment, PaymentProvider, PaymentMethod,
+    PayoutAccount)
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.transitions import StripeSourcePaymentTransitions
 from bluebottle.funding_stripe.utils import stripe
-from bluebottle.payouts.models import StripePayoutAccount
 
 
 class PaymentIntent(models.Model):
@@ -21,11 +20,13 @@ class PaymentIntent(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk:
+            # FIXME: First verify that the funding activity has a valid Stripe account connected.
+            account_id = self.donation.activity.account.account_id
             intent = stripe.PaymentIntent.create(
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
                 transfer_data={
-                    'destination': StripePayoutAccount.objects.all()[0].account_id,
+                    'destination': account_id,
                 },
                 metadata=self.metadata
             )
@@ -132,7 +133,6 @@ class StripePaymentProvider(PaymentProvider):
             code='direct-debit',
             name=_('Direct debit'),
             currencies=['EUR'],
-            countries=[]
         )
     ]
 
@@ -154,7 +154,7 @@ class StripePaymentProvider(PaymentProvider):
     @property
     def private_settings(self):
         return {
-            'secret_key': settings.STRIPE['secret_key'],
+            'api_key': settings.STRIPE['api_key'],
             'webhook_secret': settings.STRIPE['webhook_secret'],
             'webhook_secret_connect': settings.STRIPE['webhook_secret_connect'],
         }
@@ -175,9 +175,11 @@ class StripePaymentProvider(PaymentProvider):
         return methods
 
 
-class ConnectAccount(PayoutAccount):
+class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40)
     country = models.CharField(max_length=2)
+
+    provider_class = StripePaymentProvider
 
     @property
     def account(self):
@@ -192,13 +194,15 @@ class ConnectAccount(PayoutAccount):
                 country=self.country,
                 type='custom',
                 settings=self.account_settings,
-                business_type='individual',
+                # Loek 05-05-2019: Although this is in documentation https://stripe.com/docs/api/accounts/create
+                # adding business_type here will cause the request to fail :-o
+                # business_type='individual',
                 metadata=self.metadata
             )
             self.account_id = self._account.id
             self.transitions.submit()
 
-        super(ConnectAccount, self).save(*args, **kwargs)
+        super(StripePayoutAccount, self).save(*args, **kwargs)
 
     def update(self, token):
         self._account = stripe.Account.modify(
@@ -253,7 +257,7 @@ class ConnectAccount(PayoutAccount):
 
 
 class ExternalAccount(models.Model):
-    connect_account = models.ForeignKey(ConnectAccount, related_name='external_accounts')
+    connect_account = models.ForeignKey(StripePayoutAccount, related_name='external_accounts')
     account_id = models.CharField(max_length=40)
 
     @property

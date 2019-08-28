@@ -4,7 +4,7 @@ from rest_framework_json_api.relations import ResourceRelatedField
 from bluebottle.funding.models import Donation
 from bluebottle.funding.serializers import PaymentSerializer
 from bluebottle.funding_stripe.models import (
-    StripePayment, ConnectAccount, ExternalAccount
+    StripePayment, StripePayoutAccount, ExternalAccount
 )
 from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
 
@@ -39,7 +39,7 @@ class StripePaymentSerializer(PaymentSerializer):
 
 
 class ExternalAccountSerializer(serializers.ModelSerializer):
-    connect_account = ResourceRelatedField(queryset=ConnectAccount.objects.all())
+    connect_account = ResourceRelatedField(queryset=StripePayoutAccount.objects.all())
     token = serializers.CharField(write_only=True)
 
     account_holder_name = serializers.CharField(read_only=True, source='account.account_holder_name')
@@ -77,7 +77,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
     }
 
     class Meta:
-        model = ConnectAccount
+        model = StripePayoutAccount
 
         fields = (
             'id', 'token', 'country',

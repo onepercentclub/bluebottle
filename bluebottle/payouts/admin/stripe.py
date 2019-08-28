@@ -11,6 +11,7 @@ from bluebottle.payouts.admin.utils import PayoutAccountProjectLinkMixin
 from bluebottle.payouts.models import PayoutAccount, StripePayoutAccount
 
 
+@admin.register(StripePayoutAccount)
 class StripePayoutAccountAdmin(PayoutAccountProjectLinkMixin, PolymorphicChildModelAdmin):
     base_model = PayoutAccount
     model = StripePayoutAccount
@@ -52,6 +53,3 @@ class StripePayoutAccountAdmin(PayoutAccountProjectLinkMixin, PolymorphicChildMo
     def missing(self, obj):
         return format_html("<br/>".join(format_html(obj.fields_needed)))
     missing.short_description = _('Fields still needed')
-
-
-admin.site.register(StripePayoutAccount, StripePayoutAccountAdmin)

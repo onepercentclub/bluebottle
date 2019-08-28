@@ -9,7 +9,7 @@ from rest_framework import status
 from bluebottle.funding.models import Donation
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding.transitions import DonationTransitions, PayoutAccountTransitions
-from bluebottle.funding_stripe.models import ConnectAccount
+from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.funding_stripe.models import StripeSourcePayment
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentIntentFactory,
@@ -17,7 +17,7 @@ from bluebottle.funding_stripe.tests.factories import (
 )
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentProviderFactory,
-    ConnectAccountFactory
+    StripePayoutAccountFactory
 )
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.transitions import StripeSourcePaymentTransitions
@@ -41,7 +41,8 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
-        self.funding = FundingFactory.create(initiative=self.initiative)
+        self.account = StripePayoutAccountFactory.create()
+        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
         self.donation = DonationFactory.create(activity=self.funding)
 
         self.payment_intent = stripe.PaymentIntent('some intent id')
@@ -154,7 +155,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
-        self.funding = FundingFactory.create(initiative=self.initiative)
+        self.account = StripePayoutAccountFactory.create()
+        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
         self.donation = DonationFactory.create(activity=self.funding)
 
         self.payment = StripeSourcePaymentFactory.create(
@@ -376,7 +378,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         }))
 
         with mock.patch('stripe.Account.create', return_value=self.connect_account):
-            self.payout_account = ConnectAccountFactory.create(owner=self.user)
+            self.payout_account = StripePayoutAccountFactory.create(owner=self.user)
 
         self.webhook = reverse('stripe-payment-webhook')
 
@@ -398,7 +400,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                 )
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        payout_account = ConnectAccount.objects.get(pk=self.payout_account.pk)
+        payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
         self.assertEqual(payout_account.status, PayoutAccountTransitions.values.verified)
 
@@ -421,6 +423,6 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                 )
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        payout_account = ConnectAccount.objects.get(pk=self.payout_account.pk)
+        payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
         self.assertEqual(payout_account.status, PayoutAccountTransitions.values.rejected)

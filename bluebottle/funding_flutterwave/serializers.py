@@ -1,7 +1,7 @@
 from rest_framework import serializers
+
 from bluebottle.funding.serializers import PaymentSerializer
 from bluebottle.funding_flutterwave.models import FlutterwavePayment
-from bluebottle.funding_flutterwave.utils import check_payment_status
 
 
 class FlutterwavePaymentSerializer(PaymentSerializer):
@@ -13,8 +13,3 @@ class FlutterwavePaymentSerializer(PaymentSerializer):
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
         resource_name = 'payments/flutterwave-payments'
-
-    def create(self, validated_data):
-        payment = super(FlutterwavePaymentSerializer, self).create(validated_data)
-        payment = check_payment_status(payment)
-        return payment

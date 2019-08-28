@@ -10,12 +10,12 @@ from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.transitions import PayoutAccountTransitions
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
-    StripePayment, ConnectAccount, ExternalAccount
+    StripePayment, StripePayoutAccount, ExternalAccount
 )
 from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
 from bluebottle.funding_stripe.serializers import (
     ConnectAccountSerializer, ExternalAccountSerializer,
-)
+    StripePaymentSerializer)
 from bluebottle.funding_stripe.serializers import (
     StripeSourcePaymentSerializer, PaymentIntentSerializer
 )
@@ -49,8 +49,13 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
     permission_classes = (PaymentPermission, )
 
 
+class StripePaymentList(PaymentList):
+    queryset = StripePayment.objects.all()
+    serializer_class = StripePaymentSerializer
+
+
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixin, RetrieveUpdateAPIView):
-    queryset = ConnectAccount.objects.all()
+    queryset = StripePayoutAccount.objects.all()
     serializer_class = ConnectAccountSerializer
 
     prefetch_for_includes = {
@@ -65,8 +70,8 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
 
     def get_object(self):
         try:
-            obj = self.request.user.funding_stripe_payout_account
-        except Member.funding_stripe_payout_account.RelatedObjectDoesNotExist:
+            obj = self.request.user.funding_payout_account
+        except Member.funding_payout_account.RelatedObjectDoesNotExist:
             raise Http404
 
         self.check_object_permissions(self.request, obj)
@@ -331,8 +336,8 @@ class ConnectWebHookView(View):
             else:
                 return HttpResponse('Skipped event {}'.format(event.type))
 
-        except ConnectAccount.DoesNotExist:
+        except StripePayoutAccount.DoesNotExist:
             return HttpResponse('Payment not found', status=400)
 
     def get_account(self, account_id):
-        return ConnectAccount.objects.get(account_id=account_id)
+        return StripePayoutAccount.objects.get(account_id=account_id)

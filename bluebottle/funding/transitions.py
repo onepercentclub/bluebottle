@@ -20,7 +20,7 @@ class FundingTransitions(ActivityTransitions):
         refunded = ChoiceItem('refunded', _('refunded'))
 
     def deadline_in_future(self):
-        if not self.instance.deadline or self.instance.deadline < timezone.now().date():
+        if not self.instance.deadline or self.instance.deadline < timezone.now():
             return _("Please select a new deadline in the future before extending.")
 
     @transition(

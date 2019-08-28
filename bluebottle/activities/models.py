@@ -5,10 +5,11 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
 
-from bluebottle.fsm import FSMField, TransitionsMixin
+from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 
 from polymorphic.models import PolymorphicModel
 from bluebottle.initiatives.models import Initiative
+from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
 from bluebottle.utils.utils import get_current_host, get_current_language
 
@@ -27,7 +28,11 @@ class Activity(TransitionsMixin, PolymorphicModel):
     updated = models.DateTimeField(auto_now=True)
 
     status = FSMField(
-        default=ActivityTransitions.values.draft
+        default=ActivityTransitions.default
+    )
+
+    review_status = FSMField(
+        default=ActivityReviewTransitions.default
     )
 
     initiative = models.ForeignKey(Initiative, related_name='activities')
@@ -39,6 +44,10 @@ class Activity(TransitionsMixin, PolymorphicModel):
     )
 
     followers = GenericRelation('follow.Follow', object_id_field='instance_id')
+
+    review_transitions = TransitionManager(ActivityReviewTransitions, 'review_status')
+
+    needs_review = False
 
     @property
     def stats(self):
@@ -56,8 +65,11 @@ class Activity(TransitionsMixin, PolymorphicModel):
         return self.title
 
     def save(self, **kwargs):
-        if not self.slug or self.slug in ['new', ''] and self.title:
-            self.slug = slugify(self.title)
+        if self.slug in ['', 'new']:
+            if self.title and slugify(self.title):
+                self.slug = slugify(self.title)
+            else:
+                self.slug = 'new'
 
         if not self.owner_id:
             self.owner = self.initiative.owner
@@ -67,7 +79,7 @@ class Activity(TransitionsMixin, PolymorphicModel):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        link = format_html("{}/{}/initiatives/activities/{}/{}/{}",
+        link = format_html("{}/{}/initiatives/activities/details/{}/{}/{}",
                            domain, language,
                            self.__class__.__name__.lower(), self.pk, self.slug)
         return link
@@ -87,3 +99,6 @@ class Contribution(TransitionsMixin, PolymorphicModel):
     @property
     def owner(self):
         return self.user
+
+    class Meta:
+        ordering = ('-created',)

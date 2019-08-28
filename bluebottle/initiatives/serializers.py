@@ -2,7 +2,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-
 from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import (
     ResourceRelatedField, PolymorphicResourceRelatedField
@@ -25,7 +24,8 @@ from bluebottle.transitions.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
 from bluebottle.utils.serializers import (
-    ResourcePermissionField
+    ResourcePermissionField, RelatedField,
+    NonModelRelatedResourceField, ValidationSerializer, NoCommitMixin
 )
 
 
@@ -78,7 +78,58 @@ class InitiativeImageSerializer(ImageSerializer):
     relationship = 'initiative_set'
 
 
-class InitiativeSerializer(ModelSerializer):
+class InitiativeValidationSerializer(ValidationSerializer):
+    image = RelatedField(queryset=Image.objects.all())
+    owner = RelatedField(queryset=Member.objects.all())
+    theme = RelatedField(queryset=ProjectTheme.objects.all())
+    place = RelatedField(allow_null=True, queryset=Geolocation.objects.all())
+    location = RelatedField(allow_null=True, queryset=Location.objects.all())
+    organization_id = RelatedField(allow_null=True, queryset=Organization.objects.all())
+    story = SafeField()
+    title = serializers.CharField(
+        validators=[UniqueValidator(queryset=Initiative.objects.filter(status='approved'))]
+    )
+    pitch = serializers.CharField()
+    video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
+
+    organization = ResourceRelatedField(read_only=True)
+    organization_contact = ResourceRelatedField(read_only=True)
+
+    included_serializers = {
+        'organization': 'bluebottle.organizations.serializers.OrganizationValidationSerializer',
+        'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactValidationSerializer',
+    }
+
+    def validate(self, data):
+        if data['has_organization'] and data.get('organization_id') is None:
+            raise serializers.ValidationError(
+                {'organization_id': _("This field is required")},
+                code='null'
+            )
+
+        if Location.objects.count():
+            if not data['location']:
+                raise serializers.ValidationError({'location': "Location is required"})
+        elif not data['place']:
+            raise serializers.ValidationError({'place': "Place is required"})
+
+        return data
+
+    class Meta:
+        model = Initiative
+        fields = (
+            'title', 'pitch', 'owner',
+            'has_organization', 'story', 'video_url', 'image',
+            'theme', 'place', 'video_html', 'organization_id', 'organization',
+            'organization_contact', 'location',
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'initiative-validations'
+        included_resources = ['organization', 'organization_contact']
+
+
+class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     image = ImageField(required=False, allow_null=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
@@ -89,13 +140,12 @@ class InitiativeSerializer(ModelSerializer):
     )
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
-    title = serializers.CharField(
-        allow_blank=True,
-        validators=[UniqueValidator(queryset=Initiative.objects.all())]
-    )
+    title = serializers.CharField(allow_blank=True)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
 
-    transitions = AvailableTransitionsField(source='status')
+    validations = NonModelRelatedResourceField(InitiativeValidationSerializer)
+
+    transitions = AvailableTransitionsField()
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -111,6 +161,10 @@ class InitiativeSerializer(ModelSerializer):
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
         'activities': 'bluebottle.activities.serializers.ActivitySerializer',
         'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'validations': 'bluebottle.initiatives.serializers.InitiativeValidationSerializer',
+        'validations.organization': 'bluebottle.organizations.serializers.OrganizationValidationSerializer',
+        'validations.organization_contact':
+            'bluebottle.organizations.serializers.OrganizationContactValidationSerializer',
     }
 
     class Meta:
@@ -121,7 +175,7 @@ class InitiativeSerializer(ModelSerializer):
             'owner', 'reviewer', 'promoter', 'activity_manager',
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_html', 'image',
-            'theme', 'place', 'location', 'activities',
+            'theme', 'place', 'location', 'activities', 'validations',
         )
 
         meta_fields = ('permissions', 'transitions', 'status', 'created',)
@@ -131,6 +185,7 @@ class InitiativeSerializer(ModelSerializer):
             'owner', 'reviewer', 'promoter', 'activity_manager',
             'categories', 'theme', 'place', 'location',
             'image', 'organization', 'organization_contact', 'activities', 'activities.location',
+            'validations', 'validations.organization', 'validations.organization_contact',
         ]
         resource_name = 'initiatives'
 
@@ -234,7 +289,7 @@ class InitiativeSubmitSerializer(ModelSerializer):
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Initiative.objects.all())
-    field = 'status'
+    field = 'transitions'
     included_serializers = {
         'resource': 'bluebottle.initiatives.serializers.InitiativeSerializer',
     }

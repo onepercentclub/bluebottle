@@ -1,16 +1,20 @@
 import random
 import string
 
+from babel.numbers import get_currency_name
+from django.db import connection
 from django.db import models
+from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from moneyed import Money
 from polymorphic.models import PolymorphicModel
+from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.files.fields import ImageField
-from bluebottle.fsm import FSMField, TransitionNotPossible, TransitionManager, TransitionsMixin
+from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from bluebottle.funding.transitions import (
     FundingTransitions,
     DonationTransitions,
@@ -21,15 +25,51 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 
 
+class PaymentProvider(PolymorphicModel):
+
+    public_settings = {}
+    private_settings = {}
+
+    currencies = []
+    countries = []
+
+    @classmethod
+    def get_currency_choices(cls):
+        currencies = []
+        if isinstance(connection.tenant, FakeTenant):
+            currencies = [('EUR', 'Euro')]
+        else:
+            for provider in cls.objects.all():
+                for method in provider.payment_methods:
+                    currencies += [(cur, get_currency_name(cur)) for cur in method.currencies]
+        return list(set(currencies))
+
+    @classmethod
+    def get_default_currency(cls):
+        if len(cls.get_currency_choices()):
+            return cls.get_currency_choices()[0]
+        return 'EUR'
+
+    @property
+    def payment_methods(self):
+        return []
+
+    def __unicode__(self):
+        return str(self.polymorphic_ctype)
+
+
 class Funding(Activity):
-    deadline = models.DateField(_('deadline'), null=True, blank=True)
+    deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
-    target = MoneyField(null=True, blank=True)
-    account = models.ForeignKey('payouts.PayoutAccount', blank=True, null=True)
-    amount_matching = MoneyField(null=True, blank=True)
+    target = MoneyField()
+    amount_matching = MoneyField()
     country = models.ForeignKey('geo.Country', null=True, blank=True)
+    account = models.ForeignKey('funding.PayoutAccount', null=True, on_delete=SET_NULL)
     transitions = TransitionManager(FundingTransitions, 'status')
+
+    needs_review = True
+    complete_serializer = 'bluebottle.funding.serializers.FundingValidationSerializer'
 
     class JSONAPIMeta:
         resource_name = 'activities/fundings'
@@ -48,15 +88,6 @@ class Funding(Activity):
             ('api_change_own_funding', 'Can change own funding through the API'),
             ('api_delete_own_funding', 'Can delete own funding through the API'),
         )
-
-    def save(self, *args, **kwargs):
-        if self.status == FundingTransitions.values.draft:
-            try:
-                self.transitions.open()
-            except TransitionNotPossible:
-                pass
-
-        super(Funding, self).save(*args, **kwargs)
 
     @property
     def amount_donated(self):
@@ -87,14 +118,9 @@ class Funding(Activity):
 
     @property
     def payment_methods(self):
-        methods = []
-        if not self.target.currency:
+        if not self.account or not self.account.payment_methods:
             return []
-        for provider in PaymentProvider.objects.all():
-            for method in provider.payment_methods:
-                if str(self.target.currency) in method.currencies:
-                    methods.append(method)
-        return methods
+        return self.account.payment_methods
 
 
 class Reward(models.Model):
@@ -173,7 +199,7 @@ class Fundraiser(models.Model):
     image = ImageField(blank=True, null=True)
 
     amount = MoneyField(_("amount"))
-    deadline = models.DateField(_('deadline'), null=True, blank=True)
+    deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -206,6 +232,8 @@ class Donation(Contribution):
     client_secret = models.CharField(max_length=32, blank=True, null=True)
     reward = models.ForeignKey(Reward, null=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
+    name = models.CharField(max_length=100, null=True, blank=True,
+                            verbose_name=_('Override donor name / Name for guest donation'))
 
     transitions = TransitionManager(DonationTransitions, 'status')
 
@@ -282,33 +310,28 @@ class PaymentMethod(object):
         resource_name = 'payments/payment-methods'
 
 
-class PaymentProvider(PolymorphicModel):
-
-    public_settings = {}
-    private_settings = {}
-
-    currencies = []
-    countries = []
-
-    @property
-    def payment_methods(self):
-        return []
-
-    def __unicode__(self):
-        return str(self.polymorphic_ctype)
-
-
-class PayoutAccount(models.Model, TransitionsMixin):
+class PayoutAccount(PolymorphicModel, TransitionsMixin):
     status = FSMField(
         default=PayoutAccountTransitions.values.new
     )
+    provider_class = None
 
     owner = models.OneToOneField(
         'members.Member',
-        related_name='%(app_label)s_payout_account'
+        related_name='funding_payout_account'
     )
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    reviewed = models.BooleanField(default=False)
 
     transitions = TransitionManager(PayoutAccountTransitions, 'status')
 
-    class Meta:
-        abstract = True
+    @property
+    def funding(self):
+        return self.funding_set.order_by('-created').first()
+
+    @property
+    def payment_methods(self):
+        provider = self.provider_class.objects.get()
+        return provider.payment_methods

@@ -126,7 +126,7 @@ MERCHANT_ACCOUNTS = [
     {
         'merchant': 'stripe',
         'currency': 'EUR',
-        'secret_key': 'sk_test_secret_key',
+        'api_key': 'sk_test_api_key',
         'webhook_secret': 'whsec_test_webhook_secret',
         'webhook_secret_connect': 'whsec_test_webhook_secret_connect',
     }

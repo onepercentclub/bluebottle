@@ -1,50 +1,46 @@
 import mimetypes
-from babel.numbers import get_currency_name
+import xml.etree.cElementTree as et
 
-from rest_framework import serializers
-
+import sorl.thumbnail
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
-from django.conf import settings
-from django.utils.functional import lazy
 from django.utils.translation import ugettext as _
-
-import sorl.thumbnail
+from djmoney.forms import MoneyField as MoneyFormField
 from djmoney.models.fields import MoneyField as DjangoMoneyField
-
-import xml.etree.cElementTree as et
-
-from bluebottle.clients import properties
+from rest_framework import serializers
 
 from .utils import clean_html
-
-
-def get_currency_choices():
-    currencies = []
-    for method in properties.PAYMENT_METHODS:
-        currencies += method['currencies'].keys()
-
-    return [(currency, get_currency_name(currency, locale='en')) for currency in set(currencies)]
-
-
-def get_default_currency():
-    return getattr(properties, 'DEFAULT_CURRENCY')
 
 
 class MoneyField(DjangoMoneyField):
     def __init__(self, verbose_name=None, name=None,
                  max_digits=12, decimal_places=2, default=None,
-                 default_currency=lazy(get_default_currency, str)(),
-                 currency_choices=lazy(get_currency_choices, tuple)(),
+                 default_currency=None,
+                 currency_choices=None,
                  **kwargs):
+        default_currency = 'EUR'
+        currency_choices = [('EUR', 'Euro')]
         super(MoneyField, self).__init__(
             verbose_name=verbose_name, name=name,
             max_digits=max_digits, decimal_places=decimal_places, default=default,
             default_currency=default_currency,
             currency_choices=currency_choices,
             **kwargs)
+
+    def formfield(self, **kwargs):
+        from bluebottle.funding.models import PaymentProvider
+        # For the form load the actual available currencies from PaymentProviders
+        defaults = {'form_class': MoneyFormField}
+        defaults.update(kwargs)
+        defaults['choices'] = PaymentProvider.get_currency_choices()
+        defaults['currency_choices'] = PaymentProvider.get_currency_choices()
+        defaults['default_currency'] = PaymentProvider.get_default_currency()
+        if self.default is not None:
+            defaults['default_amount'] = self.default
+        return super(MoneyField, self).formfield(**defaults)
 
 
 # Validation references:

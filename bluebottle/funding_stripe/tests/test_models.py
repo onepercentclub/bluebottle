@@ -4,7 +4,7 @@ import stripe
 from django.db import ProgrammingError
 
 from bluebottle.funding_stripe.models import (
-    ConnectAccount, ExternalAccount
+    StripePayoutAccount, ExternalAccount
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -13,7 +13,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class ConnectAccountTestCase(BluebottleTestCase):
     def setUp(self):
         account_id = 'some-connect-id'
-        self.check = ConnectAccount(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
+        self.check = StripePayoutAccount(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
 
         self.connect_account = stripe.Account(account_id)
         self.connect_account.update({
@@ -47,7 +47,6 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 country=self.check.country,
                 metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},
                 settings={'payments': {'statement_descriptor': u''}, 'payouts': {'schedule': {'interval': 'manual'}}},
-                business_type='individual',
                 type='custom'
             )
 
@@ -132,7 +131,7 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
         account_id = 'some-connect-id'
         external_account_id = 'some-bank-token'
 
-        self.check = ConnectAccount(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
+        self.check = StripePayoutAccount(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
         self.check.save()
 
         self.external_account = ExternalAccount(connect_account=self.check, account_id=external_account_id)

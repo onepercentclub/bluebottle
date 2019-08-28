@@ -1,11 +1,10 @@
-from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
-
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
-
 from bluebottle.utils.fields import MoneyField
+
 from bluebottle.utils.models import MailLog
 from bluebottle.utils.utils import StatusDefinition
 

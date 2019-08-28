@@ -1,8 +1,10 @@
 import json
 
+from django.core import mail
 from django.urls import reverse
 
 from rest_framework import status
+
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -39,6 +41,7 @@ class PaymentTestCase(BluebottleTestCase):
                 }
             }
         }
+        mail.outbox = []
 
     def test_create_payment(self):
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
@@ -47,6 +50,8 @@ class PaymentTestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['attributes']['status'], 'succeeded')
         self.assertEqual(data['included'][0]['attributes']['status'], 'succeeded')
+        # Check that donation mails are send
+        self.assertEqual(len(mail.outbox), 2)
 
     def test_create_payment_other_user(self):
         response = self.client.post(

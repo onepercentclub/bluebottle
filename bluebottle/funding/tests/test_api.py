@@ -6,11 +6,11 @@ from django.utils.timezone import now
 from moneyed import Money
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory, RewardFactory
+from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory, RewardFactory, DonationFactory
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
 
 
 class BudgetLineListTestCase(BluebottleTestCase):
@@ -188,6 +188,69 @@ class RewardListTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
+class FundingDetailTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(FundingDetailTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create()
+
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.initiative.save()
+
+        self.funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=Money(5000, 'EUR'),
+            deadline=now() + timedelta(days=15)
+        )
+
+        self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
+
+    def test_view_funding(self):
+        DonationFactory.create_batch(5, amount=Money(200, 'EUR'), activity=self.funding, status='succeeded')
+        DonationFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')
+
+        self.funding.amount_matching = Money(500, 'EUR')
+        self.funding.save()
+
+        response = self.client.get(self.funding_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data['data']['attributes']['description'],
+            self.funding.description
+        )
+        self.assertEqual(
+            data['data']['attributes']['title'],
+            self.funding.title
+        )
+        self.assertEqual(
+            data['data']['attributes']['target'],
+            {u'currency': u'EUR', u'amount': 5000.0}
+        )
+        self.assertEqual(
+            data['data']['attributes']['amount-donated'],
+            {u'currency': u'EUR', u'amount': 1000.0}
+        )
+        self.assertEqual(
+            data['data']['attributes']['amount-matching'],
+            {u'currency': u'EUR', u'amount': 500.0}
+        )
+        self.assertEqual(
+            data['data']['attributes']['amount-raised'],
+            {u'currency': u'EUR', u'amount': 1500.0}
+        )
+
+        # Should only see the three successful donations
+        self.assertEqual(
+            len(data['data']['relationships']['contributions']['data']),
+            5
+        )
+
+
 class FundraiserListTestCase(BluebottleTestCase):
     def setUp(self):
         super(FundraiserListTestCase, self).setUp()
@@ -214,7 +277,7 @@ class FundraiserListTestCase(BluebottleTestCase):
                     'title': 'Test title',
                     'description': 'Test description',
                     'amount': {'amount': 100, 'currency': 'EUR'},
-                    'deadline': str((now() + timedelta(days=10)).date())
+                    'deadline': str(now() + timedelta(days=10))
                 },
                 'relationships': {
                     'activity': {
@@ -292,6 +355,43 @@ class FundraiserListTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class FundingTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(FundingTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create(owner=self.user)
+
+        self.create_url = reverse('funding-list')
+
+        self.data = {
+            'data': {
+                'type': 'activities/funding',
+                'attributes': {
+                    'title': 'test',
+                },
+                'relationships': {
+                    'initiative': {
+                        'data': {
+                            'type': 'initiatives',
+                            'id': self.initiative.pk,
+                        }
+                    }
+                }
+            }
+        }
+
+    def test_create(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+        data = response.json()
+        self.assertTrue(
+            data['data']['meta']['permissions']['PATCH']
+        )
+        self.assertTrue(
+            get_included(response, 'geolocations')
+        )
 
 
 class DonationTestCase(BluebottleTestCase):
@@ -395,7 +495,7 @@ class DonationTestCase(BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(
-            data['errors']['non_field_errors'][0],
+            data['errors'][0]['detail'],
             u'User can only be set, not changed.'
         )
 

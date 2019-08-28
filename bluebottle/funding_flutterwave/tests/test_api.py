@@ -13,13 +13,16 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 success_response = {
     'status': 'success',
-    'data': {}
+    'data': {
+        'status': 'successful'
+    }
 }
 
-
 failed_response = {
-    'status': 'failed',
-    'data': {}
+    'status': 'success',
+    'data': {
+        'status': 'failed'
+    }
 }
 
 
@@ -35,7 +38,6 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
 
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding, user=self.user)
 

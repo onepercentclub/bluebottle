@@ -27,9 +27,13 @@ class AssignmentAdmin(ActivityChildAdmin):
 
     base_model = Assignment
 
+    list_editable = ('highlight',)
+    list_display = ('title_display', 'created', 'status', 'highlight')
+
     fieldsets = (
         (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition', 'highlight'
+            'title', 'slug', 'initiative', 'owner', 'status', 'transitions', 'review_status',
+            'review_transitions', 'highlight'
         )}),
         (_('Details'), {'fields': (
             'description', 'capacity',

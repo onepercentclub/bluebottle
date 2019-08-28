@@ -15,6 +15,7 @@ from bluebottle.events.tests.factories import EventFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import JSONAPITestClient
 
 
@@ -79,7 +80,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             response_data['data']['relationships']['theme']['data']['id'],
             unicode(initiative.theme.pk)
         )
-        self.assertEqual(len(response_data['included']), 2)
+        self.assertEqual(len(response_data['included']), 3)
 
     def test_create_special_chars(self):
         data = {
@@ -108,8 +109,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response_data['data']['attributes']['title'], ':)')
         self.assertNotEqual(response_data['data']['attributes']['slug'], '')
 
-    def test_create_duplicate_title(self):
-        InitiativeFactory.create(title='Some title')
+    def test_create_missing_iamge(self):
         data = {
             'data': {
                 'type': 'initiatives',
@@ -131,8 +131,75 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             json.dumps(data),
             user=self.owner
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(), {u'errors': {u'title': [u'This field must be unique.']}})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        validations = get_include(response, 'initiative-validations')
+        self.assertEqual(
+            validations['attributes']['image'],
+            [{u'code': u'null', u'title': u'This field may not be null.'}],
+        )
+
+    def test_create_duplicate_title(self):
+        InitiativeFactory.create(title='Some title', status='approved')
+        data = {
+            'data': {
+                'type': 'initiatives',
+                'attributes': {
+                    'title': 'Some title'
+                },
+                'relationships': {
+                    'theme': {
+                        'data': {
+                            'type': 'themes',
+                            'id': self.theme.pk
+                        },
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        validations = get_include(response, 'initiative-validations')
+        self.assertEqual(
+            validations['attributes']['title'],
+            [{u'code': u'unique', u'title': u'This field must be unique.'}],
+        )
+
+    def test_create_validation_organization_website(self):
+        organization = OrganizationFactory.create(website='')
+
+        data = {
+            'data': {
+                'type': 'initiatives',
+                'attributes': {
+                    'title': 'Some title',
+                    'has_organization': True
+                },
+                'relationships': {
+                    'organization': {
+                        'data': {
+                            'type': 'organizations',
+                            'id': organization.pk
+                        },
+                    }
+                }
+
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        validations = get_include(response, 'organization-validations')
+        self.assertEqual(
+            validations['attributes']['website'],
+            [{u'code': u'blank', u'title': u'This field may not be blank.'}],
+        )
 
     def test_create_with_location(self):
         geolocation = GeolocationFactory.create(position=Point(23.6851594, 43.0579025))
@@ -322,6 +389,9 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_owner(self):
+        self.initiative.title = ''
+        self.initiative.save()
+
         response = self.client.get(
             self.url,
             user=self.owner
@@ -334,8 +404,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(
             data['meta']['transitions'],
             [{
-                u'available': True,
-                u'conditions': {},
+                u'available': False,
                 u'name': u'submit',
                 u'target': u'submitted'
             }])
@@ -344,6 +413,17 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         geolocation = get_include(response, 'geolocations')
         self.assertEqual(geolocation['attributes']['position'], {'latitude': 43.0579025, 'longitude': 23.6851594})
+
+        self.assertEqual(
+            data['relationships']['validations']['data'],
+            {u'type': u'initiative-validations', u'id': unicode(self.initiative.pk)}
+        )
+        validations = get_include(response, 'initiative-validations')
+
+        self.assertEqual(
+            validations['attributes']['title'],
+            [{u'code': u'blank', u'title': u'This field may not be blank.'}]
+        )
 
     def test_get_activities(self):
         event = EventFactory.create(initiative=self.initiative)

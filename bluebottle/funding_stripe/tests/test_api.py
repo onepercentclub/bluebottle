@@ -11,7 +11,7 @@ import stripe
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding_stripe.tests.factories import (
-    ConnectAccountFactory,
+    StripePayoutAccountFactory,
     ExternalAccountFactory,
     StripePaymentProviderFactory
 )
@@ -32,7 +32,9 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
-        self.funding = FundingFactory.create(initiative=self.initiative)
+        self.account = StripePayoutAccountFactory.create()
+
+        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
         self.donation = DonationFactory.create(activity=self.funding, user=None)
 
         self.intent_url = reverse('stripe-payment-intent-list')
@@ -132,7 +134,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
 
-        self.check = ConnectAccountFactory(owner=self.user, account_id='some-account-id')
+        self.check = StripePayoutAccountFactory(owner=self.user, account_id='some-account-id')
 
         self.url = reverse('connect-account-details')
 
@@ -192,7 +194,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                         'payments': {'statement_descriptor': u''},
                         'payouts': {'schedule': {'interval': 'manual'}}
                     },
-                    business_type='individual',
+                    # business_type='individual',
                     type='custom'
                 )
                 modify_account.assert_called_with(
@@ -341,7 +343,7 @@ class ExternalAccountsTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
 
-        self.check = ConnectAccountFactory.create(owner=self.user, account_id='some-account-id')
+        self.check = StripePayoutAccountFactory.create(owner=self.user, account_id='some-account-id')
         self.external_account = ExternalAccountFactory.create(
             connect_account=self.check,
             account_id='some-external-account-id'

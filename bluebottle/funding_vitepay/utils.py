@@ -15,11 +15,20 @@ def get_payment_url(payment):
     Get payment url from VitePay to redirect the user to.
     """
     from bluebottle.funding_vitepay.models import VitepayPaymentProvider
-    credentials = VitepayPaymentProvider.objects.get().private_settings
+    domain = connection.tenant.domain_url
+    if 'localhost' in domain:
+        # Use a mocked url that will always return the expected result
+        domain = 'https://{}.t.goodup.com'.format(connection.tenant.client_name)
 
-    return_url = "{}{}".format(
-        connection.tenant.domain_url,
-        reverse('funding-donation-detail', args=(payment.donation.id,)))
+    provider = VitepayPaymentProvider.objects.get()
+    credentials = provider.private_settings
+
+    return_url = "{}/initiatives/activities/details/funding/{}/{}?donation_id={}".format(
+        domain,
+        payment.donation.activity.id,
+        payment.donation.activity.slug,
+        payment.donation.id
+    )
 
     description = _('payment for {activity_title} on {tenant_name}').format(
         activity_title=payment.donation.activity.title,
@@ -27,7 +36,7 @@ def get_payment_url(payment):
 
     api_secret = credentials['api_secret']
     amount_100 = int(payment.donation.amount.amount * 100)
-    callback_url = "{}{}".format(connection.tenant.domain_url, reverse('vitepay-payment-webhook'))
+    callback_url = "{}{}".format(domain, reverse('vitepay-payment-webhook'))
 
     message = "{order_id};{amount_100};{currency};" \
               "{callback_url};{api_secret}".format(order_id=payment.unique_id,
@@ -61,6 +70,7 @@ def get_payment_url(payment):
     response = requests.post(url, data=json.dumps(data), headers=headers, verify=False)
     if response.status_code == 200:
         payment.payment_url = response.content
+        payment.save()
     else:
         raise PaymentException('Error creating payment: {0}'.format(response.content))
     return response.content

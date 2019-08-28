@@ -15,8 +15,7 @@ from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.fields import FSMField
-from bluebottle.utils.serializers import MoneySerializer, FilteredRelatedField, NonModelRelatedResourceField, \
-    ResourcePermissionField
+from bluebottle.utils.serializers import MoneySerializer, FilteredRelatedField, ResourcePermissionField
 
 
 class FundingCurrencyValidator(object):
@@ -155,7 +154,7 @@ class FundingValidationSerializer(ActivityValidationSerializer):
 
 class FundingListSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
-    validations = NonModelRelatedResourceField(FundingValidationSerializer)
+    # validations = NonModelRelatedResourceField(FundingValidationSerializer)
     payment_methods = PaymentMethodSerializer(many=True, read_only=True)
 
     class Meta(BaseActivitySerializer.Meta):
@@ -164,12 +163,9 @@ class FundingListSerializer(BaseActivitySerializer):
             'deadline',
             'duration',
             'target',
-            'budgetlines',
             'fundraisers',
-            'rewards',
-            'payment_methods',
             'permissions',
-            'validations',
+            # 'validations',
         )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
@@ -178,7 +174,7 @@ class FundingListSerializer(BaseActivitySerializer):
             'initiative',
             'initiative.image',
             'location',
-            'validations',
+            # 'validations',
         ]
         resource_name = 'activities/funding'
 
@@ -187,57 +183,46 @@ class FundingListSerializer(BaseActivitySerializer):
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-        'validations': 'bluebottle.events.serializers.EventValidationSerializer',
+        # 'validations': 'bluebottle.funding.serializers.FundingValidationSerializer',
     }
 
 
 class FundingSerializer(BaseActivitySerializer):
-    target = MoneySerializer(required=False, allow_null=True)
-
-    fundraisers = FundraiserSerializer(many=True, required=False)
     rewards = RewardSerializer(many=True, required=False)
     budgetlines = BudgetLineSerializer(many=True, required=False)
     payment_methods = PaymentMethodSerializer(many=True, read_only=True)
     contributions = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
 
-    class Meta(BaseActivitySerializer.Meta):
+    class Meta(FundingListSerializer.Meta):
         model = Funding
-        fields = BaseActivitySerializer.Meta.fields + (
-            'deadline',
-            'duration',
-            'target',
+        fields = FundingListSerializer.Meta.fields + (
+            'rewards',
+            'payment_methods',
             'budgetlines',
             'fundraisers',
             'rewards',
-            'payment_methods'
+            'contributions'
         )
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        included_resources = BaseContributionSerializer.JSONAPIMeta.included_resources + [
-            'image',
-            'owner',
-            'initiative',
-            'place',
-            'fundraisers',
-            'budgetlines',
-            'payment_methods',
+    class JSONAPIMeta(FundingListSerializer.JSONAPIMeta):
+        included_resources = FundingListSerializer.JSONAPIMeta.included_resources + [
             'rewards',
+            'payment_methods',
+            'budgetlines',
             'contributions',
+            'contributions.user'
         ]
         resource_name = 'activities/fundings'
 
-    included_serializers = {
-        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
-        'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
-        'place': 'bluebottle.geo.serializers.GeolocationSerializer',
-        'fundraisers': 'bluebottle.funding.serializers.FundraiserSerializer',
-        'rewards': 'bluebottle.funding.serializers.RewardSerializer',
-        'budgetlines': 'bluebottle.funding.serializers.BudgetLineSerializer',
-        'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
-        'contributions': 'bluebottle.funding.serializers.DonationSerializer',
-    }
+    included_serializers = dict(
+        FundingListSerializer.included_serializers,
+        **{
+            'rewards': 'bluebottle.funding.serializers.BudgetLineSerializer',
+            'budgetlines': 'bluebottle.funding.serializers.RewardSerializer',
+            'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
+            'contributions': 'bluebottle.funding.serializers.DonationSerializer',
+        }
+    )
 
 
 class FundingTransitionSerializer(TransitionSerializer):

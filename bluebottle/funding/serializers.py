@@ -60,8 +60,15 @@ class FundraiserSerializer(ModelSerializer):
     class Meta:
         model = Fundraiser
         fields = (
-            'id', 'owner', 'activity', 'title', 'description', 'image',
-            'amount', 'amount_donated', 'deadline'
+            'id',
+            'owner',
+            'activity',
+            'title',
+            'description',
+            'image',
+            'amount',
+            'amount_donated',
+            'deadline'
         )
 
     class JSONAPIMeta:
@@ -169,8 +176,18 @@ class FundingSerializer(BaseActivitySerializer):
 
     class Meta(BaseActivitySerializer.Meta):
         model = Funding
+        # Can't add amount_donated to the list of fields, not sure why
+        # Can't add amount_raised to the list of fields, not sure why
         fields = BaseActivitySerializer.Meta.fields + (
-            'deadline', 'duration', 'target', 'budgetlines', 'fundraisers', 'rewards', 'payment_methods'
+            'deadline',
+            'duration',
+            'target',
+            'amount_matching',
+            'country',
+            'budgetlines',
+            'fundraisers',
+            'rewards',
+            'payment_methods'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

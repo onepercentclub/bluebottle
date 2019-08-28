@@ -84,7 +84,6 @@ class Event(Activity):
 
 class Participant(Contribution):
     time_spent = models.FloatField(default=0)
-
     transitions = TransitionManager(ParticipantTransitions, 'status')
 
     class Meta:

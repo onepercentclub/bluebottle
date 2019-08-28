@@ -54,6 +54,7 @@ class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
     inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
     list_display = ['title', 'status', 'start_time', 'end_time']
+    search_fields = ['title', 'description']
     base_model = Event
 
     readonly_fields = ActivityChildAdmin.readonly_fields

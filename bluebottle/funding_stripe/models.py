@@ -60,16 +60,16 @@ class StripePayment(Payment):
         intent = self.payment_intent.intent
         if len(intent.charges) == 0:
             # No charge. Do we still need to charge?
-            self.fail()
+            self.transitions.fail()
             self.save()
-        elif intent.charges.data[0].refunded and self.status != Payment.Status.refunded:
-            self.refund()
+        elif intent.charges.data[0].refunded and self.status != StripePaymentTransitions.values.refunded:
+            self.transitions.refund()
             self.save()
-        elif intent.status == 'failed' and self.status != Payment.Status.failed:
-            self.fail()
+        elif intent.status == 'failed' and self.status != StripePaymentTransitions.values.failed:
+            self.transitions.fail()
             self.save()
-        elif intent.status == 'succeeded' and self.status != Payment.Status.success:
-            self.succeed()
+        elif intent.status == 'succeeded' and self.status != StripePaymentTransitions.values.succeeded:
+            self.transitions.succeed()
             self.save()
 
 

@@ -18,6 +18,7 @@ def map_event_status(task):
         'running': 'open',
         'realised': 'succeeded',
         'realized': 'succeeded',
+        'in progress': 'open',
         'closed': 'closed'
     }
     status = mapping[task.status]
@@ -84,8 +85,9 @@ def migrate_tasks(apps, schema_editor):
                 is_online=bool(not task.location),
                 location=geolocation,
                 location_hint=task.location,
-                start_time=task.deadline,
-                end_time=task.deadline + timedelta(hours=task.time_needed)
+                start_date=task.deadline.date(),
+                start_time=task.deadline.time(),
+                duration=task.time_needed
             )
             event.created = task.created
             event.updated = task.updated

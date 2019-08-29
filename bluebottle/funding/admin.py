@@ -43,8 +43,10 @@ class PayoutAccountFundingLinkMixin(object):
 class PaymentLinkMixin(object):
 
     def payment_link(self, obj):
-        url = reverse('admin:funding_payment_change', args=(obj.payment.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.payment)
+        payment_url = reverse('admin:{}_{}_change'.format(
+            obj.payment._meta.app_label, obj.payment._meta.model_name,
+        ), args=(obj.payment.id,))
+        return format_html('<a href="{}">{}</a>', payment_url, obj.payment)
 
     payment_link.short_description = _('Payment')
 
@@ -159,7 +161,9 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
                 'Error checking status {}'.format(e),
                 level='WARNING'
             )
-        payment_url = reverse('admin:funding_payment_change', args=(payment.id,))
+        payment_url = reverse('admin:{}_{}_change'.format(
+            payment._meta.app_label, payment._meta.model_name,
+        ), args=(payment.id,))
         response = HttpResponseRedirect(payment_url)
         return response
 

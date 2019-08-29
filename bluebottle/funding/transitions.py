@@ -118,7 +118,7 @@ class PaymentTransitions(ModelTransitions):
         failed = ChoiceItem('failed', _('failed'))
 
     @transition(
-        source=[values.new],
+        source=[values.new, values.failed],
         target=values.succeeded
     )
     def succeed(self):

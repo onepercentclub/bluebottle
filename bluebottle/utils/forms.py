@@ -32,21 +32,23 @@ class FSMModelForm(forms.ModelForm):
         for fsm_field in self.fsm_fields:
             transitions = getattr(self.instance, fsm_field).all_transitions
             self.fields[fsm_field].widget.attrs['obj'] = self.instance
-            self.fields[fsm_field].choices = [
-                (transition.name, transition.name) for transition in transitions
-            ]
-            if isinstance(self.instance, Activity):
-                # Default polymorphic activities to base activity
-                url_name = 'admin:activities_activity_transition'
-            else:
-                url_name = 'admin:{}_{}_transition'.format(
-                    self.instance._meta.app_label,
-                    self.instance._meta.model_name
+
+            def get_url(name):
+                if isinstance(self.instance, Activity):
+                    # Default polymorphic activities to base activity
+                    url_name = 'admin:activities_activity_transition'
+                else:
+                    url_name = 'admin:{}_{}_transition'.format(
+                        self.instance._meta.app_label,
+                        self.instance._meta.model_name
+                    )
+                return reverse(
+                    url_name, args=(self.instance.pk, fsm_field, name)
                 )
 
-            self.fields[fsm_field].widget.attrs['action_url'] = reverse(
-                url_name, args=(self.instance.pk, fsm_field, transition.name)
-            )
+            self.fields[fsm_field].choices = [
+                (get_url(transition.name), transition.name) for transition in transitions
+            ]
 
     def clean(self, *args, **kwargs):
         for field_name in self.fsm_fields:

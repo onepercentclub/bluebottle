@@ -53,7 +53,7 @@ class VitepayPayment(Payment):
 
 
 class VitepayPayoutAccount(PayoutAccount):
-    account_number = models.CharField(max_length=40)
+    account_name = models.CharField(max_length=40)
     provider_class = VitepayPaymentProvider
 
     def save(self, *args, **kwargs):

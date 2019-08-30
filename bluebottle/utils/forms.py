@@ -4,8 +4,6 @@ from django.forms import CheckboxInput
 from django.forms.models import ModelFormMetaclass
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.models import Activity
-
 
 class ButtonSelectWidget(forms.Select):
     template_name = 'admin/button_select.html'
@@ -34,14 +32,10 @@ class FSMModelForm(forms.ModelForm):
             self.fields[fsm_field].widget.attrs['obj'] = self.instance
 
             def get_url(name):
-                if isinstance(self.instance, Activity):
-                    # Default polymorphic activities to base activity
-                    url_name = 'admin:activities_activity_transition'
-                else:
-                    url_name = 'admin:{}_{}_transition'.format(
-                        self.instance._meta.app_label,
-                        self.instance._meta.model_name
-                    )
+                url_name = 'admin:{}_{}_transition'.format(
+                    self.instance._meta.app_label,
+                    self.instance._meta.model_name
+                )
                 return reverse(
                     url_name, args=(self.instance.pk, fsm_field, name)
                 )

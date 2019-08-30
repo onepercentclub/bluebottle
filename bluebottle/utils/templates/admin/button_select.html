@@ -2,7 +2,7 @@
     {% for group_name, group_choices, group_index in widget.optgroups %}
         {% for option in group_choices %}
             {% if option.value %}
-                {% include option.template_name with widget=option obj=widget.attrs.obj action_url=widget.attrs.action_url %}
+                {% include option.template_name with widget=option obj=widget.attrs.obj %}
             {% endif %}
         {% endfor %}
     {% endfor %}

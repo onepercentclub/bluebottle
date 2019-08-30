@@ -36,8 +36,8 @@ class MoneyField(DjangoMoneyField):
         defaults = {'form_class': MoneyFormField}
         defaults.update(kwargs)
         defaults['choices'] = PaymentProvider.get_currency_choices()
-        defaults['currency_choices'] = PaymentProvider.get_currency_choices()
-        defaults['default_currency'] = PaymentProvider.get_default_currency()
+        defaults['currency_choices'] = PaymentProvider.get_currency_choices() or [('EUR', 'Euro')]
+        defaults['default_currency'] = PaymentProvider.get_default_currency() or 'EUR'
         if self.default is not None:
             defaults['default_amount'] = self.default
         return super(MoneyField, self).formfield(**defaults)

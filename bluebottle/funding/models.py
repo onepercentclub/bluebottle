@@ -62,8 +62,8 @@ class Funding(Activity):
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
-    target = MoneyField()
-    amount_matching = MoneyField()
+    target = MoneyField(default=Money(0, 'EUR'))
+    amount_matching = MoneyField(default=Money(0, 'EUR'))
     country = models.ForeignKey('geo.Country', null=True, blank=True)
     account = models.ForeignKey('funding.PayoutAccount', null=True, on_delete=SET_NULL)
     transitions = TransitionManager(FundingTransitions, 'status')

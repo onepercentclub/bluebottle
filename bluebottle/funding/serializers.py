@@ -192,7 +192,7 @@ class FundingListSerializer(BaseActivitySerializer):
             'initiative.place',
             # 'validations',
         ]
-        resource_name = 'activities/funding'
+        resource_name = 'activities/fundings'
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',

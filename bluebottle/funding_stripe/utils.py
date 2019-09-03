@@ -12,5 +12,6 @@ def get_stripe_settings():
 
 
 stripe.api_key = settings.STRIPE['api_key']
+stripe.api_version = '2019-08-14'
 stripe.webhook_secret = settings.STRIPE['webhook_secret']
 stripe.webhook_secret_connect = settings.STRIPE['webhook_secret_connect']

@@ -189,18 +189,18 @@ class StripePayoutAccount(PayoutAccount):
         return self._account
 
     def save(self, *args, **kwargs):
+        if not self.country == self.account.country:
+            self.account_id = None
+
         if not self.account_id:
             self._account = stripe.Account.create(
                 country=self.country,
                 type='custom',
                 settings=self.account_settings,
-                # Loek 05-05-2019: Although this is in documentation https://stripe.com/docs/api/accounts/create
-                # adding business_type here will cause the request to fail :-o
-                # business_type='individual',
+                business_type='individual',
                 metadata=self.metadata
             )
             self.account_id = self._account.id
-            self.transitions.submit()
 
         super(StripePayoutAccount, self).save(*args, **kwargs)
 
@@ -227,7 +227,10 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def individual(self):
-        return self.account.individual
+        try:
+            return self.account.individual
+        except AttributeError:
+            return {}
 
     @property
     def tos_acceptance(self):

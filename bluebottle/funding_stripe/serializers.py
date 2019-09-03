@@ -61,7 +61,7 @@ class ExternalAccountSerializer(serializers.ModelSerializer):
         )
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
-        resource_name = 'payout-accounts/stripe/external-accounts'
+        resource_name = 'payout-accounts/stripe-external-accounts'
         included_resources = ['connect-account']
 
 
@@ -88,7 +88,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
         )
 
     class JSONAPIMeta():
-        resource_name = 'payout-accounts/stripe/connect-accounts'
+        resource_name = 'payout-accounts/stripes'
 
         included_resources = ['external_accounts', 'owner']
 

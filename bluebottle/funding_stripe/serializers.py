@@ -81,7 +81,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
 
         fields = (
             'id', 'token', 'country',
-            'verified', 'owner',
+            'verified', 'owner', 'verification',
             'required', 'disabled',
             'individual', 'external_accounts',
             'tos_acceptance'

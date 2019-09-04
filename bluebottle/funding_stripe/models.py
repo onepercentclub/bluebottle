@@ -3,6 +3,7 @@ from django.db import ProgrammingError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 
+from dotted.collection import DottedDict
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
@@ -182,6 +183,11 @@ class StripePayoutAccount(PayoutAccount):
     provider_class = StripePaymentProvider
 
     @property
+    def required(self):
+        specs = stripe.CountrySpec.retrieve(self.country).verification_fields.individual
+        return specs.additional + specs.minimum
+
+    @property
     def account(self):
         if not hasattr(self, '_account'):
             self._account = stripe.Account.retrieve(self.account_id)
@@ -212,25 +218,27 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def verified(self):
-        return (
-            not self.account.requirements.eventually_due and
-            self.account.individual.verification.status == 'verified'
-        )
-
-    @property
-    def required(self):
-        return self.account.requirements.eventually_due
+        return self.account.individual.verification.status == 'verified'
 
     @property
     def disabled(self):
         return self.account.requirements.disabled
 
     @property
+    def verification(self):
+        return self.account.individual.verification
+
+    @property
     def individual(self):
-        try:
-            return self.account.individual
-        except AttributeError:
-            return {}
+        account = DottedDict(self.account)
+        result = DottedDict({})
+        for field in self.required:
+            if field == 'individual.verification.document':
+                result[field] = {}
+            else:
+                result[field] = unicode(account.get(field, '') or '')
+
+        return result['individual']
 
     @property
     def tos_acceptance(self):

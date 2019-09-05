@@ -22,17 +22,19 @@ class EventTasksTestCase(BluebottleTestCase):
             activity_types=['event']
         )
         self.client = JSONAPITestClient()
-        self.initiative = InitiativeFactory.create()
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative = InitiativeFactory.create(status='approved')
         self.initiative.save()
 
     def test_event_start_task(self):
+        start = now() - timedelta(hours=1)
         event = EventFactory.create(
             initiative=self.initiative,
-            start_time=now() - timedelta(hours=1),
-            end_time=now() + timedelta(hours=3),
+            start_time=start.time(),
+            start_date=start.date(),
+            duration=3
         )
+        event.review_transitions.submit()
+        event.save()
         self.assertEqual(event.status, 'open')
         check_event_start()
         check_event_end()
@@ -41,20 +43,24 @@ class EventTasksTestCase(BluebottleTestCase):
 
     def test_event_end_task(self):
         user = BlueBottleUserFactory.create(first_name='Nono')
+        start = now() - timedelta(hours=5)
         event = EventFactory.create(
             owner=user,
             initiative=self.initiative,
-            start_time=now() - timedelta(hours=5),
-            end_time=now() - timedelta(hours=1)
+            start_time=start.time(),
+            start_date=start.date(),
+            duration=1
         )
+        event.review_transitions.submit()
         event.transitions.start()
         event.save()
+
         self.assertEqual(event.status, 'running')
         check_event_start()
         check_event_end()
         event = Event.objects.get(pk=event.pk)
         self.assertEqual(event.status, EventTransitions.values.succeeded)
 
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(mail.outbox[1].subject, "The status of your event was changed to successful")
-        self.assertTrue("Hi Nono,", mail.outbox[1].body)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, "The status of your event was changed to successful")
+        self.assertTrue("Hi Nono,", mail.outbox[0].body)

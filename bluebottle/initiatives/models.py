@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Max
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.html import format_html
@@ -9,7 +10,7 @@ from multiselectfield import MultiSelectField
 from bluebottle.files.fields import ImageField
 from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from bluebottle.geo.models import Geolocation
-from bluebottle.initiatives.transitions import InitiativeTransitions
+from bluebottle.initiatives.transitions import InitiativeReviewTransitions
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -17,8 +18,8 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 
 class Initiative(TransitionsMixin, models.Model):
     status = FSMField(
-        default=InitiativeTransitions.values.draft,
-        choices=InitiativeTransitions.values.choices,
+        default=InitiativeReviewTransitions.values.draft,
+        choices=InitiativeReviewTransitions.values.choices,
         protected=True
     )
 
@@ -83,8 +84,12 @@ class Initiative(TransitionsMixin, models.Model):
         )
     )
 
-    place = models.ForeignKey(Geolocation, null=True, blank=True, on_delete=SET_NULL)
-    location = models.ForeignKey('geo.Location', null=True, blank=True, on_delete=models.SET_NULL)
+    place = models.ForeignKey(
+        Geolocation, verbose_name=_('Impact location'),
+        null=True, blank=True, on_delete=SET_NULL)
+    location = models.ForeignKey(
+        'geo.Location', verbose_name=_('Office location'),
+        null=True, blank=True, on_delete=models.SET_NULL)
 
     has_organization = models.NullBooleanField(null=True, default=None)
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
@@ -106,7 +111,7 @@ class Initiative(TransitionsMixin, models.Model):
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
 
-    transitions = TransitionManager(InitiativeTransitions, 'status')
+    transitions = TransitionManager(InitiativeReviewTransitions, 'status')
 
     class JSONAPIMeta:
         resource_name = 'initiatives'
@@ -122,8 +127,11 @@ class Initiative(TransitionsMixin, models.Model):
 
     def save(self, **kwargs):
         if self.slug in ['', 'new']:
-            if self.title:
+            if self.title and slugify(self.title):
                 self.slug = slugify(self.title)
+                if not self.slug:
+                    # If someone uses only special chars as title then construct a slug
+                    self.slug = 'in-{}'.format(self.__class__.objects.all().aggregate(Max('id'))['id__max'] or 0 + 1)
             else:
                 self.slug = 'new'
 
@@ -136,8 +144,12 @@ class Initiative(TransitionsMixin, models.Model):
         except InitiativePlatformSettings.DoesNotExist:
             pass
 
-        if self.has_organization and not self.organization and self.owner and self.owner.partner_organization:
-            self.organization = self.owner.partner_organization
+        if self.has_organization:
+            if not self.organization and self.owner and self.owner.partner_organization:
+                self.organization = self.owner.partner_organization
+
+            if not self.organization_contact:
+                self.organization_contact = OrganizationContact.objects.create(owner=self.owner)
 
         super(Initiative, self).save(**kwargs)
 

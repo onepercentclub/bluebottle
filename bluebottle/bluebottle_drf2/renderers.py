@@ -115,6 +115,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                             resource_type,
                             getattr(serializer, '_poly_force_type_resolution', False)
                         )
+
                         # NEW: Add meta to included resource
                         meta = cls.extract_meta(serializer_class, serializer_resource)
                         if meta:
@@ -135,26 +136,25 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
 
                 # Get the serializer fields
                 serializer_fields = utils.get_serializer_fields(field)
-                if serializer_data:
-                    new_item = cls.build_json_resource_obj(
-                        serializer_fields,
-                        serializer_data,
-                        relation_instance,
-                        relation_type,
-                        getattr(field, '_poly_force_type_resolution', False)
-                    )
-                    # NEW: Add meta to included resource
-                    meta = cls.extract_meta(serializer_class, serializer_data)
-                    if meta:
-                        new_item.update({'meta': utils._format_object(meta)})
+                new_item = cls.build_json_resource_obj(
+                    serializer_fields,
+                    serializer_data,
+                    relation_instance,
+                    relation_type,
+                    getattr(field, '_poly_force_type_resolution', False)
+                )
+                # NEW: Add meta to included resource
+                meta = cls.extract_meta(serializer_class, serializer_data)
+                if meta:
+                    new_item.update({'meta': utils._format_object(meta)})
 
-                    included_cache[new_item['type']][new_item['id']] = utils._format_object(
-                        new_item
-                    )
-                    cls.extract_included(
-                        serializer_fields,
-                        serializer_data,
-                        relation_instance,
-                        new_included_resources,
-                        included_cache,
-                    )
+                included_cache[new_item['type']][new_item['id']] = utils._format_object(
+                    new_item
+                )
+                cls.extract_included(
+                    serializer_fields,
+                    serializer_data,
+                    relation_instance,
+                    new_included_resources,
+                    included_cache,
+                )

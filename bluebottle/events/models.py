@@ -1,10 +1,14 @@
+import datetime
+
 from django.db import models
+from django.db.models import Count, Sum
 from django.utils.translation import ugettext_lazy as _
+from django.utils.timezone import get_current_timezone
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
 from bluebottle.follow.models import follow
-from bluebottle.fsm import TransitionNotPossible, TransitionManager
+from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
 
 
@@ -17,11 +21,24 @@ class Event(Activity):
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
-    start_time = models.DateTimeField(_('start'), null=True, blank=True)
-    end_time = models.DateTimeField(_('end'), null=True, blank=True)
-    registration_deadline = models.DateTimeField(_('registration deadline'), null=True, blank=True)
+    start_date = models.DateField(_('start'), null=True, blank=True)
+    start_time = models.TimeField(_('start'), null=True, blank=True)
+    duration = models.FloatField(_('duration'), null=True, blank=True)
+    end = models.DateTimeField(_('end'), null=True, blank=True)
+    registration_deadline = models.DateField(_('registration deadline'), null=True, blank=True)
 
     transitions = TransitionManager(EventTransitions, 'status')
+
+    @property
+    def stats(self):
+        stats = self.contributions.filter(
+            status=ParticipantTransitions.values.succeeded).\
+            aggregate(count=Count('user__id'), hours=Sum('participant__time_spent'))
+        committed = self.contributions.filter(
+            status=ParticipantTransitions.values.new).\
+            aggregate(committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent'))
+        stats.update(committed)
+        return stats
 
     class Meta:
         verbose_name = _("Event")
@@ -38,28 +55,32 @@ class Event(Activity):
             ('api_delete_own_event', 'Can delete own event through the API'),
         )
 
+    complete_serializer = 'bluebottle.events.serializers.EventValidationSerializer'
+
     class JSONAPIMeta:
         resource_name = 'activities/events'
 
-    def save(self, *args, **kwargs):
-        if self.status == EventTransitions.values.draft:
-            try:
-                self.transitions.open()
-            except TransitionNotPossible:
-                pass
-
-        super(Event, self).save(*args, **kwargs)
-
     def check_capacity(self):
-        if len(self.participants) >= self.capacity and self.status == EventTransitions.values.open:
+        if self.capacity and len(self.participants) >= self.capacity and self.status == EventTransitions.values.open:
             self.transitions.full()
             self.save()
-        elif len(self.participants) < self.capacity and self.status == EventTransitions.values.full:
+        elif self.capacity and len(self.participants) < self.capacity and self.status == EventTransitions.values.full:
             self.transitions.reopen()
 
     @property
-    def duration(self):
-        return (self.end_time - self.start_time).seconds / 60
+    def start(self):
+        if self.start_time and self.start_date:
+            return datetime.datetime.combine(
+                self.start_date,
+                self.start_time.replace(tzinfo=get_current_timezone())
+            )
+
+    def save(self, *args, **kwargs):
+        if self.start and self.duration:
+            self.end = self.start + datetime.timedelta(hours=self.duration)
+
+        super(Event, self).save(*args, **kwargs)
+        return
 
     @property
     def participants(self):
@@ -71,7 +92,6 @@ class Event(Activity):
 
 class Participant(Contribution):
     time_spent = models.FloatField(default=0)
-
     transitions = TransitionManager(ParticipantTransitions, 'status')
 
     class Meta:

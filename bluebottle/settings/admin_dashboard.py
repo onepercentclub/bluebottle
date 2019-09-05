@@ -30,6 +30,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['organizations.organization']
             },
             {
+                'name': 'geo.location',
+                'permissions': ['geo.location']
+            },
+            {
                 'name': 'bb_projects.projecttheme',
                 'permissions': ['bb_projects.change_projecttheme']
             },

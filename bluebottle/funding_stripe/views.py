@@ -15,7 +15,7 @@ from bluebottle.funding_stripe.models import (
 from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
 from bluebottle.funding_stripe.serializers import (
     ConnectAccountSerializer, ExternalAccountSerializer,
-)
+    StripePaymentSerializer)
 from bluebottle.funding_stripe.serializers import (
     StripeSourcePaymentSerializer, PaymentIntentSerializer
 )
@@ -47,6 +47,11 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
     )
 
     permission_classes = (PaymentPermission, )
+
+
+class StripePaymentList(PaymentList):
+    queryset = StripePayment.objects.all()
+    serializer_class = StripePaymentSerializer
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixin, RetrieveUpdateAPIView):

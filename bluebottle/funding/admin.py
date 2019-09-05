@@ -22,7 +22,7 @@ from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPay
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment
-from bluebottle.funding_vitepay.models import VitepayPaymentProvider
+from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayPayoutAccount
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList
 
@@ -45,8 +45,10 @@ class PayoutAccountFundingLinkMixin(object):
 class PaymentLinkMixin(object):
 
     def payment_link(self, obj):
-        url = reverse('admin:funding_payment_change', args=(obj.payment.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.payment)
+        payment_url = reverse('admin:{}_{}_change'.format(
+            obj.payment._meta.app_label, obj.payment._meta.model_name,
+        ), args=(obj.payment.id,))
+        return format_html('<a href="{}">{}</a>', payment_url, obj.payment)
 
     payment_link.short_description = _('Payment')
 
@@ -71,6 +73,7 @@ class PayoutAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAd
         StripePayoutAccount,
         FlutterwavePayoutAccount,
         LipishaPayoutAccount,
+        VitepayPayoutAccount,
         BankPayoutAccount
     ]
 
@@ -120,7 +123,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     fieldsets = (
         (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner', 'status', 'status_transition', 'created', 'updated', 'highlight'
+            'title', 'slug', 'initiative', 'owner', 'status', 'transitions', 'created', 'updated', 'highlight'
         )}),
         (_('Details'), {'fields': (
             'description',
@@ -155,7 +158,7 @@ class DonationAdmin(FSMAdmin, PaymentLinkMixin):
         self.total_column = 'amount'
         return TotalAmountAdminChangeList
 
-    fields = ['created', 'activity', 'user', 'amount', 'status', 'status_transition', 'payment_link']
+    fields = ['created', 'activity', 'user', 'amount', 'status', 'payment_link']
 
 
 class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
@@ -182,7 +185,9 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
                 'Error checking status {}'.format(e),
                 level='WARNING'
             )
-        payment_url = reverse('admin:funding_payment_change', args=(payment.id,))
+        payment_url = reverse('admin:{}_{}_change'.format(
+            payment._meta.app_label, payment._meta.model_name,
+        ), args=(payment.id,))
         response = HttpResponseRedirect(payment_url)
         return response
 

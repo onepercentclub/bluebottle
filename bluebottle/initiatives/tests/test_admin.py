@@ -36,11 +36,13 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertContains(response, 'Show on site')
         self.assertContains(response, 'Activities')
         self.assertContains(response, 'Messages')
+        self.assertContains(response, 'Office location')
+        self.assertContains(response, 'Impact location')
 
     def test_review_initiative_send_mail(self):
         self.client.force_login(self.superuser)
         review_url = reverse('admin:initiatives_initiative_transition',
-                             args=(self.initiative.id, 'approve'))
+                             args=(self.initiative.id, 'transitions', 'approve'))
         response = self.client.get(review_url)
 
         # Should show confirmation page
@@ -58,7 +60,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
     def test_review_initiative_send_no_mail(self):
         self.client.force_login(self.superuser)
         review_url = reverse('admin:initiatives_initiative_transition',
-                             args=(self.initiative.id, 'approve'))
+                             args=(self.initiative.id, 'transitions', 'approve'))
         response = self.client.get(review_url)
 
         # Should show confirmation page
@@ -80,7 +82,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative.save()
 
         review_url = reverse('admin:initiatives_initiative_transition',
-                             args=(self.initiative.id, 'approve'))
+                             args=(self.initiative.id, 'transitions', 'approve'))
         response = self.client.get(review_url)
 
         self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
@@ -92,7 +94,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
 
     def test_review_initiative_unauthorized(self):
         review_url = reverse('admin:initiatives_initiative_transition',
-                             args=(self.initiative.id, 'approve'))
+                             args=(self.initiative.id, 'transitions', 'approve'))
         response = self.client.post(review_url, {'confirm': False})
         # Should redirect with message
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
@@ -104,7 +106,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.client.force_login(BlueBottleUserFactory.create(is_staff=True))
 
         review_url = reverse('admin:initiatives_initiative_transition',
-                             args=(self.initiative.id, 'approve'))
+                             args=(self.initiative.id, 'transitions', 'approve'))
         response = self.client.post(review_url, {'confirm': False})
         # Should redirect with message
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
@@ -116,7 +118,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create(status='created', pitch='')
         self.assertEqual(self.initiative.status, 'created')
         review_url = reverse('admin:initiatives_initiative_transition',
-                             args=(self.initiative.id, 'submit'))
+                             args=(self.initiative.id, 'transitions', 'submit'))
 
         response = self.client.post(review_url, {'confirm': True})
 
@@ -131,7 +133,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         self.initiative = InitiativeFactory.create(status='created', theme=None)
         review_url = reverse('admin:initiatives_initiative_transition',
-                             args=(self.initiative.id, 'submit'))
+                             args=(self.initiative.id, 'transitions', 'submit'))
         response = self.client.post(review_url, {'confirm': True})
 
         # Should redirect with error message

@@ -205,13 +205,13 @@ class FSMAdmin(admin.ModelAdmin):
 
     readonly_fields = ['status']
 
-    def get_transition(self, instance, name):
-        transitions = instance.transitions.all_transitions
+    def get_transition(self, instance, name, field_name):
+        transitions = getattr(instance, field_name).all_transitions
         for transition in transitions:
             if transition.name == name:
                 return transition
 
-    def transition(self, request, pk, transition_name, send_messages=True):
+    def transition(self, request, pk, field_name, transition_name, send_messages=True):
         link = reverse(
             'admin:{}_{}_change'.format(
                 self.model._meta.app_label, self.model._meta.model_name
@@ -225,7 +225,7 @@ class FSMAdmin(admin.ModelAdmin):
 
         instance = self.model.objects.get(pk=pk)
         form = TransitionConfirmationForm(request.POST)
-        transition = self.get_transition(instance, transition_name)
+        transition = self.get_transition(instance, transition_name, field_name)
 
         if not transition:
             messages.error(
@@ -239,7 +239,8 @@ class FSMAdmin(admin.ModelAdmin):
                 send_messages = form.cleaned_data['send_messages']
 
                 try:
-                    getattr(instance.transitions, transition.name)(
+                    transitions = getattr(instance, field_name)
+                    getattr(transitions, transition.name)(
                         send_messages=send_messages,
                     )
 
@@ -290,7 +291,7 @@ class FSMAdmin(admin.ModelAdmin):
         urls = super(FSMAdmin, self).get_urls()
         custom_urls = [
             url(
-                r'^(?P<pk>.+)/transition/(?P<transition_name>.+)$',
+                r'^(?P<pk>.+)/transition/(?P<field_name>.+)/(?P<transition_name>.+)$',
                 self.admin_site.admin_view(self.transition),
                 name='{}_{}_transition'.format(self.model._meta.app_label, self.model._meta.model_name),
             ),

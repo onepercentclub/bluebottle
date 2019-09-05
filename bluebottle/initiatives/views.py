@@ -1,6 +1,4 @@
-from rest_framework_json_api.exceptions import exception_handler
 from rest_framework_json_api.views import AutoPrefetchMixin
-
 
 from bluebottle.files.views import FileContentView
 from bluebottle.initiatives.filters import InitiativeSearchFilter
@@ -10,7 +8,9 @@ from bluebottle.initiatives.serializers import (
     InitiativeSerializer, InitiativeReviewTransitionSerializer
 )
 from bluebottle.transitions.views import TransitionList
-from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin
+from bluebottle.utils.views import (
+    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin
+)
 
 
 class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -31,6 +31,7 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'owner': ['owner'],
         'reviewer': ['reviewer'],
         'promoter': ['promoter'],
+        'activity_manager': ['activity_manager'],
         'theme': ['theme'],
         'place': ['place'],
         'location': ['location'],
@@ -49,9 +50,6 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
     queryset = Initiative.objects.all()
     serializer_class = InitiativeSerializer
     permission_classes = (InitiativePermission,)
-
-    def get_exception_handler(self):
-        return exception_handler
 
     prefetch_for_includes = {
         'owner': ['owner'],

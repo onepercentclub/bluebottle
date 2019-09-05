@@ -1,5 +1,5 @@
-<a href="{% url action_url obj.id widget.value|stringformat:'s' %}"
+<a href="{{ widget.value }}"
        class="button_select_option button" {% include "django/forms/widgets/attrs.html" %}>
-{{ widget.value|stringformat:'s' }}
+{{ widget.label|stringformat:'s' }}
 </a>
 

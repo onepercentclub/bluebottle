@@ -7,20 +7,24 @@ from bluebottle.activities.models import Activity, Contribution
 from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField
-from bluebottle.utils.serializers import ResourcePermissionField
+from bluebottle.utils.serializers import (
+    ResourcePermissionField, ValidationSerializer
+)
 
 
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
+    review_status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
     contributions = ResourceRelatedField(many=True, read_only=True)
-
-    transitions = AvailableTransitionsField(source='status')
+    transitions = AvailableTransitionsField()
+    review_transitions = AvailableTransitionsField()
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
+    stats = serializers.OrderedDict(read_only=True)
 
     slug = serializers.CharField(read_only=True)
 
@@ -46,10 +50,12 @@ class BaseActivitySerializer(ModelSerializer):
             'description',
             'is_follower',
             'status',
-            'contributions'
+            'review_status',
+            'contributions',
+            'stats'
         )
 
-        meta_fields = ('permissions', 'transitions', 'created', 'updated', )
+        meta_fields = ('permissions', 'transitions', 'review_transitions', 'created', 'updated')
 
     class JSONAPIMeta:
         included_resources = [
@@ -58,6 +64,23 @@ class BaseActivitySerializer(ModelSerializer):
             'contributions',
         ]
         resource_name = 'activities'
+
+
+class ActivityValidationSerializer(ValidationSerializer):
+    title = serializers.CharField()
+    description = serializers.CharField()
+
+    # TODO add dependent fields: has_organization/organization/organization_contact and
+    # place / location
+
+    class Meta:
+        model = Activity
+        fields = (
+            'title', 'description',
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'activity-validations'
 
 
 class ActivitySubmitSerializer(ModelSerializer):
@@ -86,7 +109,7 @@ class BaseContributionSerializer(ModelSerializer):
     user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
     permissions = ResourcePermissionField('project_detail', view_args=('pk',))
-    transitions = AvailableTransitionsField(source='status')
+    transitions = AvailableTransitionsField()
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',

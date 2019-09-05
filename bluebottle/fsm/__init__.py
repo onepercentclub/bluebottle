@@ -195,7 +195,9 @@ class TransitionManager(object):
         self.args = args
 
     def contribute_to_class(self, cls, name):
-        if not hasattr(cls, '_transitions'):
+        if hasattr(cls, '_transitions'):
+            cls._transitions = [t for t in cls._transitions]
+        else:
             cls._transitions = []
 
         cls._transitions.append((name, ) + self.args)

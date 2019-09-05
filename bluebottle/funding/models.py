@@ -15,7 +15,7 @@ from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.files.fields import ImageField
-from bluebottle.fsm import FSMField, TransitionNotPossible, TransitionManager, TransitionsMixin
+from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin, TransitionNotPossible
 from bluebottle.funding.transitions import (
     FundingTransitions,
     DonationTransitions,
@@ -67,11 +67,14 @@ class Funding(Activity):
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
-    target = MoneyField()
-    amount_matching = MoneyField()
+    target = MoneyField(default=Money(0, 'EUR'))
+    amount_matching = MoneyField(default=Money(0, 'EUR'))
     country = models.ForeignKey('geo.Country', null=True, blank=True)
     account = models.ForeignKey('funding.PayoutAccount', null=True, on_delete=SET_NULL)
     transitions = TransitionManager(FundingTransitions, 'status')
+
+    needs_review = True
+    complete_serializer = 'bluebottle.funding.serializers.FundingValidationSerializer'
 
     class JSONAPIMeta:
         resource_name = 'activities/fundings'

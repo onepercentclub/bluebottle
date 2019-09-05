@@ -1,18 +1,24 @@
-from HTMLParser import HTMLParser
 import json
-from moneyed import Money
 import re
+from HTMLParser import HTMLParser
 
 from django.core.urlresolvers import resolve, reverse
 from django.core.validators import BaseValidator
 from django.utils.translation import ugettext_lazy as _
 
-from rest_framework import serializers
-from rest_framework_json_api.serializers import ModelSerializer as JSONAPIModelSerializer
+from moneyed import Money
 
-from .validators import validate_postal_code
-from .models import Address, Language
+from rest_framework import serializers
+from rest_framework_json_api.relations import SerializerMethodResourceRelatedField
+from rest_framework_json_api.serializers import ModelSerializer as JSONAPIModelSerializer
+from rest_framework.utils.serializer_helpers import ReturnDict
+from rest_framework.utils import model_meta
+
+from rest_framework_json_api.relations import ResourceRelatedField
+
 from bluebottle.utils.fields import FSMField
+from .models import Address, Language
+from .validators import validate_postal_code
 
 
 class MaxAmountValidator(BaseValidator):
@@ -279,3 +285,108 @@ class FSMSerializer(serializers.ModelSerializer):
             getattr(instance, transition.name)()
 
         return super(FSMSerializer, self).update(instance, validated_data)
+
+
+class FilteredRelatedField(SerializerMethodResourceRelatedField):
+    """
+    Filter a related queryset based on `filter_backend`.
+    Example:
+    `contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
+    Note: `many=True` is required
+    """
+    def __init__(self, **kwargs):
+        self.filter_backend = kwargs.pop('filter_backend', None)
+        kwargs['read_only'] = True
+        super(FilteredRelatedField, self).__init__(**kwargs)
+
+    def get_attribute(self, instance):
+        queryset = super(FilteredRelatedField, self).get_attribute(instance)
+        filter_backend = self.child_relation.filter_backend
+        queryset = filter_backend().filter_queryset(
+            request=self.context['request'],
+            queryset=queryset,
+            view=self.context['view']
+        )
+        return queryset
+
+
+class RelatedField(serializers.Field):
+    def __init__(self, queryset, *args, **kwargs):
+        self.queryset = queryset
+        super(RelatedField, self).__init__(*args, **kwargs)
+
+    def to_internal_value(self, data):
+        if not data:
+            return data
+
+        try:
+            data = data['id']
+        except TypeError:
+            pass
+
+        return self.queryset.get(pk=data)
+
+    def to_representation(self, value):
+        if hasattr(value, 'pk'):
+            value = value.pk
+
+        return value
+
+
+class NonModelRelatedResourceField(ResourceRelatedField):
+    def __init__(self, serializer, read_only=True, source='*', *args, **kwargs):
+        super(NonModelRelatedResourceField, self).__init__(read_only=True, source='*', *args, **kwargs)
+
+        class JSONAPIMeta:
+            resource_name = serializer.JSONAPIMeta.resource_name
+
+        self.JSONAPIMeta = JSONAPIMeta
+
+
+class ValidationSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        super(ValidationSerializer, self).__init__(*args, **kwargs)
+
+        if self.instance:
+            self.initial_data = self.to_representation(self.instance)
+
+    @property
+    def data(self):
+        data = {}
+
+        self.is_valid()
+
+        for key, value in self.initial_data.items():
+            if isinstance(self.fields[key], ResourceRelatedField):
+                data[key] = value
+            else:
+                if key in self.errors:
+                    data[key] = (
+                        {'code': error.code, 'title': unicode(error)} for error in self.errors[key]
+                    )
+                else:
+                    data[key] = None
+
+        return ReturnDict(data, serializer=self)
+
+
+class NoCommitMixin():
+    def update(self, instance, validated_data):
+        serializers.raise_errors_on_nested_writes('update', self, validated_data)
+        info = model_meta.get_field_info(instance)
+
+        # Simply set each attribute on the instance, and then save it.
+        # Note that unlike `.create()` we don't need to treat many-to-many
+        # relationships as being a special case. During updates we already
+        # have an instance pk for the relationships to be associated with.
+        for attr, value in validated_data.items():
+            if attr in info.relations and info.relations[attr].to_many:
+                field = getattr(instance, attr)
+                field.set(value)
+            else:
+                setattr(instance, attr, value)
+
+        if not self.context['request'].META.get('HTTP_X_DO_NOT_COMMIT'):
+            instance.save()
+
+        return instance

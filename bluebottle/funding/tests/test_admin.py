@@ -25,3 +25,20 @@ class FundingTestCase(BluebottleAdminTestCase):
         response = self.client.get(self.admin_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
+        self.assertContains(response, 'reviewed')
+        reviewed_url = reverse('admin:funding_funding_transition',
+                               args=(self.funding.id, 'transitions', 'reviewed'))
+        self.assertContains(response, reviewed_url)
+
+    def test_funding_admin_review(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.admin_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, self.funding.title)
+        self.assertContains(response, 'reviewed')
+        reviewed_url = reverse('admin:funding_funding_transition',
+                               args=(self.funding.id, 'transitions', 'reviewed'))
+
+        self.assertContains(response, reviewed_url)
+        response = self.client.get(reviewed_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

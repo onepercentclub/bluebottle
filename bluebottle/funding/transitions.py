@@ -157,7 +157,7 @@ class PayoutAccountTransitions(ModelTransitions):
         pass
 
     @transition(
-        source=[values.pending, values.rejected],
+        source=[values.pending, values.rejected, values.new],
         target='verified'
     )
     def verify(self):

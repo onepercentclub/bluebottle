@@ -21,7 +21,7 @@ from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPay
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment
-from bluebottle.funding_vitepay.models import VitepayPaymentProvider
+from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayPayoutAccount
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin
 
@@ -71,7 +71,7 @@ class PayoutAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAd
         StripePayoutAccount,
         FlutterwavePayoutAccount,
         LipishaPayoutAccount,
-        # VitepayPayoutAccount
+        VitepayPayoutAccount
     ]
 
 

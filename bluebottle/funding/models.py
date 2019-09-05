@@ -6,6 +6,7 @@ from django.db import connection
 from django.db import models
 from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
+from django.utils.functional import cached_property
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from moneyed import Money
@@ -99,7 +100,7 @@ class Funding(Activity):
 
         super(Funding, self).save(*args, **kwargs)
 
-    @property
+    @cached_property
     def amount_donated(self):
         """
         The sum of all contributions (donations) converted to the targets currency
@@ -217,7 +218,7 @@ class Fundraiser(models.Model):
     def __unicode__(self):
         return self.title
 
-    @property
+    @cached_property
     def amount_donated(self):
         donations = self.donations.filter(
             status=[DonationTransitions.values.succeeded]
@@ -239,6 +240,7 @@ class Fundraiser(models.Model):
 
 class Donation(Contribution):
     amount = MoneyField()
+    payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
     reward = models.ForeignKey(Reward, null=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
@@ -287,6 +289,13 @@ class Payment(TransitionsMixin, PolymorphicModel):
         permissions = (
             ('refund_payment', 'Can refund payments'),
         )
+
+
+class LegacyPayment(Payment):
+    method = models.CharField(max_length=100)
+    data = models.TextField()
+
+    transitions = TransitionManager(PaymentTransitions, 'status')
 
 
 class PaymentMethod(object):

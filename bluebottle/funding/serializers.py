@@ -172,7 +172,6 @@ class FundingSerializer(BaseActivitySerializer):
 
     included_serializers = {
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
-        'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'place': 'bluebottle.geo.serializers.GeolocationSerializer',

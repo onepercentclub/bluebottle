@@ -87,14 +87,14 @@ class DonationTransitions(ContributionTransitions):
         ]
     )
     def refund(self):
-        pass
+        del self.instance.amount_donated
 
     @transition(
         source=[values.new, values.succeeded],
         target=values.failed,
     )
     def fail(self):
-        pass
+        del self.instance.amount_donated
 
     @transition(
         source=[values.new, values.failed],
@@ -105,7 +105,7 @@ class DonationTransitions(ContributionTransitions):
         ]
     )
     def succeed(self):
-        pass
+        del self.instance.amount_donated
 
 
 class PaymentTransitions(ModelTransitions):

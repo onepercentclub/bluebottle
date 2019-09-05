@@ -15,15 +15,16 @@ from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, BankPayoutAccount, BankPaymentProvider)
-from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwavePayoutAccount
+    BudgetLine, PayoutAccount, BankPayoutAccount, BankPaymentProvider, LegacyPayment)
+from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwavePayoutAccount, \
+    FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayoutAccount
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.utils.admin import FSMAdmin
+from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +110,8 @@ class FundingAdmin(ActivityChildAdmin):
     inlines = (BudgetLineInline, DonationInline, MessageAdminInline)
     base_model = Funding
 
+    search_fields = ['title', 'slug', 'description']
+
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['account']
 
     readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_donated', 'amount_raised']
@@ -135,9 +138,22 @@ class FundingAdmin(ActivityChildAdmin):
 @admin.register(Donation)
 class DonationAdmin(FSMAdmin, PaymentLinkMixin):
     raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'status']
+    readonly_fields = ['payment_link', 'status', 'user_full_name']
     model = Donation
-    list_display = ['user', 'status', 'amount']
+    list_display = ['created', 'payment_link', 'user_full_name', 'status', 'amount']
+    list_filter = ['status', 'amount_currency']
+    date_hierarchy = 'created'
+
+    def user_full_name(self, obj):
+        # if obj.anonymous:
+        #     format_html('<i style="color: #999">anonymous</i>')
+        if obj.user:
+            return obj.user.full_name
+        return format_html('<i style="color: #999">guest</i>')
+
+    def get_changelist(self, request, **kwargs):
+        self.total_column = 'amount'
+        return TotalAmountAdminChangeList
 
     fields = ['created', 'activity', 'user', 'amount', 'status', 'status_transition', 'payment_link']
 
@@ -185,11 +201,25 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         return response
 
 
+@admin.register(LegacyPayment)
+class LegacyPaymentPaymentAdmin(PaymentChildAdmin):
+    base_model = LegacyPayment
+
+
 @admin.register(Payment)
 class PaymentAdmin(PolymorphicParentModelAdmin):
     base_model = Payment
+    list_filter = (PolymorphicChildModelFilter, 'status')
+
+    list_display = ('created', 'type', 'status')
+
+    def type(self, obj):
+        return obj.get_real_instance_class().__name__
+
     child_models = (
         StripeSourcePayment,
+        FlutterwavePayment,
+        LegacyPayment,
         PledgePayment
     )
 

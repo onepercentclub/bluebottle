@@ -4,11 +4,9 @@ from __future__ import unicode_literals
 
 from django.db import migrations, connection
 from django.contrib.gis.geos import Point
-from django.dispatch import Signal
 from moneyed import Money
 
 from bluebottle.clients import properties
-from bluebottle.utils.utils import DisableSignals
 
 
 def map_status(status):
@@ -64,6 +62,7 @@ def migrate_projects(apps, schema_editor):
     StripePayoutAccount = apps.get_model('funding_stripe', 'StripePayoutAccount')
     ExternalAccount = apps.get_model('funding_stripe', 'ExternalAccount')
     BankPayoutAccount = apps.get_model('funding', 'BankPayoutAccount')
+    ContentType = apps.get_model('contenttypes', 'ContentType')
 
     # Clean-up previous migrations of projects to initiatives
     Initiative.objects.all().delete()
@@ -149,10 +148,12 @@ def migrate_projects(apps, schema_editor):
         initiative.save()
 
         # Create Funding event if we target amount is set
-        if project.amount_asked:
+        if project.project_type in ['both', 'funding']:
             account = None
             if isinstance(project.payout_account, OldStripePayoutAccount):
+                content_type = ContentType.objects.get_for_model(StripePayoutAccount)
                 account = StripePayoutAccount.objects.create(
+                    polymorphic_ctype=content_type,  # This does not get set automatically in migrations
                     owner=project.payout.account.user,
                     account_id=project.payout_account.account_id,
                     country=project.payout_account.country
@@ -162,7 +163,9 @@ def migrate_projects(apps, schema_editor):
                     account_id=project.payout_account.bank_details.account
                 )
             elif isinstance(project.payout_account, PlainPayoutAccount):
+                content_type = ContentType.objects.get_for_model(BankPayoutAccount)
                 account = BankPayoutAccount.objects.create(
+                    polymorphic_ctype=content_type,  # This does not get set automatically in migrations
                     owner=project.payout_account.user,
                     account_number=project.payout_account.account_number,
                     account_details=project.payout_account.account_details,
@@ -172,8 +175,10 @@ def migrate_projects(apps, schema_editor):
                     account_bank_country=project.payout_account.account_bank_country,
                 )
 
+            content_type = ContentType.objects.get_for_model(Funding)
             funding = Funding.objects.create(
                 # Common activity fields
+                polymorphic_ctype=content_type,  # This does not get set automatically in migrations
                 initiative=initiative,
                 owner=project.owner,
                 highlight=project.is_campaign,
@@ -193,19 +198,28 @@ def migrate_projects(apps, schema_editor):
                 account=account
             )
 
-            # TOTO: Add budget lines
+            # TODO: Add budget lines
+            # TODO: Add fundraisers
+            # TODO: Add rewards
 
-            # TODO: Migrate donations & payments
+
+def wipe_initiatives(apps, schema_editor):
+
+    Initiative = apps.get_model('initiatives', 'Initiative')
+    Funding = apps.get_model('funding', 'Funding')
+
+    Initiative.objects.all().delete()
+    Funding.objects.all().delete()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
         ('projects', '0090_merge_20190222_1101'),
-        ('funding', '0024_bankpaymentprovider'),
+        ('funding', '0026_auto_20190904_1200'),
         ('initiatives', '0015_auto_20190708_1417'),
     ]
 
     operations = [
-        migrations.RunPython(migrate_projects, migrations.RunPython.noop)
+        migrations.RunPython(migrate_projects, wipe_initiatives)
     ]

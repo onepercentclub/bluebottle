@@ -10,6 +10,7 @@ from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
 
 
@@ -193,7 +194,8 @@ class FundingDetailTestCase(BluebottleTestCase):
         super(FundingDetailTestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
-        self.initiative = InitiativeFactory.create()
+        self.geolocation = GeolocationFactory.create(locality='Barranquilla')
+        self.initiative = InitiativeFactory.create(place=self.geolocation)
 
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
@@ -249,6 +251,10 @@ class FundingDetailTestCase(BluebottleTestCase):
             len(data['data']['relationships']['contributions']['data']),
             5
         )
+
+        # Test that geolocation is included too
+        geolocation = get_included(response, 'geolocations')
+        self.assertEqual(geolocation['attributes']['locality'], 'Barranquilla')
 
 
 class FundraiserListTestCase(BluebottleTestCase):

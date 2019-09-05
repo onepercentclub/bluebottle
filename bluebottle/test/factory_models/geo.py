@@ -67,5 +67,6 @@ class GeolocationFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Geolocation
 
+    locality = factory.Faker('text')
     position = Point(13.4, 52.5)
     country = factory.SubFactory(CountryFactory)

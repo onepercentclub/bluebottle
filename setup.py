@@ -23,6 +23,7 @@ install_requires = [
     'bunch==1.0.1',
     'beyonic==0.1.14',
     'celery==3.1.24',
+    'dotted==0.1.8',
     'django-admin-sortable==2.1',
     'django-admin-tools==0.8.1',
     'django-adminfilters==0.3',

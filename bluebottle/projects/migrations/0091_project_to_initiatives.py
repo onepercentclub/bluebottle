@@ -148,7 +148,7 @@ def migrate_projects(apps, schema_editor):
         initiative.save()
 
         # Create Funding event if we target amount is set
-        if project.project_type in ['both', 'funding']:
+        if project.project_type in ['both', 'funding'] or project.donation_set.count():
             account = None
             if isinstance(project.payout_account, OldStripePayoutAccount):
                 content_type = ContentType.objects.get_for_model(StripePayoutAccount)

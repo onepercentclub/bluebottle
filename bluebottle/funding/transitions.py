@@ -1,10 +1,9 @@
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from bluebottle.fsm import transition, ModelTransitions
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.fsm import transition, ModelTransitions
 from bluebottle.funding.messages import (
     DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
     DonationRefundedDonorMessage, FundingRealisedOwnerMessage,

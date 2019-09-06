@@ -13,10 +13,11 @@ from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.filters import DonationAdminStatusFilter
+from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
     BudgetLine, PayoutAccount, BankPayoutAccount, BankPaymentProvider, LegacyPayment)
+from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwavePayoutAccount, \
     FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayoutAccount
@@ -87,22 +88,6 @@ class BankPayoutAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildMode
     fields = ('owner', 'account_holder_name', 'bank_country', 'account_number')
 
 
-class DonationInline(admin.TabularInline, PaymentLinkMixin):
-    model = Donation
-
-    raw_id_fields = ('user',)
-    readonly_fields = ('donation', 'user', 'amount', 'status', 'payment_link')
-    fields = readonly_fields
-    extra = 0
-
-    def donation(self, obj):
-        url = reverse('admin:funding_donation_change', args=(obj.id,))
-        return format_html('<a href="{}">{} {}</a>',
-                           url,
-                           obj.created.date(),
-                           obj.created.strftime('%H:%M'))
-
-
 class BudgetLineInline(admin.TabularInline):
     model = BudgetLine
 
@@ -111,14 +96,14 @@ class BudgetLineInline(admin.TabularInline):
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, DonationInline, MessageAdminInline)
+    inlines = (BudgetLineInline, MessageAdminInline)
     base_model = Funding
 
     search_fields = ['title', 'slug', 'description']
 
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['account']
 
-    readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_donated', 'amount_raised']
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_donated', 'amount_raised', 'donations_link']
 
     list_display = ['title_display', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
 
@@ -130,30 +115,45 @@ class FundingAdmin(ActivityChildAdmin):
             'description',
             'duration',
             'deadline',
+            'account',
             'target',
             'amount_matching',
             'amount_donated',
             'amount_raised',
-            'account'
+            'donations_link'
         )}),
     )
+
+    def donations_link(self, obj):
+        url = reverse('admin:funding_donation_changelist')
+        total = obj.contributions.filter(status=DonationTransitions.values.succeeded).count()
+        return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
+
+    donations_link.short_description = _("Donations")
 
 
 @admin.register(Donation)
 class DonationAdmin(FSMAdmin, PaymentLinkMixin):
     raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'status', 'user_full_name']
+    readonly_fields = ['payment_link', 'status', 'payment_link', 'funding_link']
     model = Donation
-    list_display = ['created', 'payment_link', 'user_full_name', 'status', 'amount']
-    list_filter = [DonationAdminStatusFilter, 'amount_currency']
+    list_display = ['created', 'payment_link', 'funding_link', 'user_link', 'status', 'amount']
+    list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
     date_hierarchy = 'created'
 
-    def user_full_name(self, obj):
+    def user_link(self, obj):
         # if obj.anonymous:
         #     format_html('<i style="color: #999">anonymous</i>')
         if obj.user:
-            return obj.user.full_name
+            user_url = reverse('admin:funding_funding_change', args=(obj.user.id,))
+            return format_html(u'<a href="{}">{}</a>', user_url, obj.user.full_name)
         return format_html('<i style="color: #999">guest</i>')
+    user_link.short_description = _('User')
+
+    def funding_link(self, obj):
+        funding_url = reverse('admin:funding_funding_change', args=(obj.activity.id,))
+        return format_html(u'<a href="{}">{}</a>', funding_url, obj.activity.title)
+    funding_link.short_description = _('Funding activity')
 
     def get_changelist(self, request, **kwargs):
         self.total_column = 'amount'

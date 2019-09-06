@@ -13,6 +13,7 @@ from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.funding.exception import PaymentException
+from bluebottle.funding.filters import DonationAdminStatusFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
     BudgetLine, PayoutAccount, BankPayoutAccount, BankPaymentProvider, LegacyPayment)
@@ -144,7 +145,7 @@ class DonationAdmin(FSMAdmin, PaymentLinkMixin):
     readonly_fields = ['payment_link', 'status', 'user_full_name']
     model = Donation
     list_display = ['created', 'payment_link', 'user_full_name', 'status', 'amount']
-    list_filter = ['status', 'amount_currency']
+    list_filter = [DonationAdminStatusFilter, 'amount_currency']
     date_hierarchy = 'created'
 
     def user_full_name(self, obj):

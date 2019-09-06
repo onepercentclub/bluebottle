@@ -179,6 +179,7 @@ class StripePaymentProvider(PaymentProvider):
 class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40)
     country = models.CharField(max_length=2)
+    document_type = models.CharField(max_length=12, blank=True)
 
     provider_class = StripePaymentProvider
 
@@ -218,7 +219,10 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def verified(self):
-        return self.account.individual.verification.status == 'verified'
+        return (
+            self.account.individual.verification.status == 'verified' and
+            not self.account.requirements.eventually_due
+        )
 
     @property
     def disabled(self):
@@ -237,6 +241,13 @@ class StripePayoutAccount(PayoutAccount):
                 result[field] = {}
             else:
                 result[field] = unicode(account.get(field, '') or '')
+
+        if 'dob' in result['individual'] and (
+            not result['individual']['dob'].get('day') or
+            not result['individual']['dob'].get('month') or
+            not result['individual']['dob'].get('year')
+        ):
+            del result['individual']['dob']
 
         return result['individual']
 

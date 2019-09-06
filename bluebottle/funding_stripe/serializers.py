@@ -80,7 +80,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
         model = StripePayoutAccount
 
         fields = (
-            'id', 'token', 'country',
+            'id', 'token', 'country', 'document_type',
             'verified', 'owner', 'verification',
             'required', 'disabled',
             'individual', 'external_accounts',

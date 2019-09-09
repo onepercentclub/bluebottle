@@ -91,8 +91,7 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
                 serializer.instance.update(token)
             except stripe.error.InvalidRequestError, e:
                 raise serializers.ValidationError(
-                    {'individual/address/postal_code': [e.message]},
-                    code=e.code
+                    {e.param.replace('[', '/').replace(']', ''): [{'details': e.message, 'code': e.code}]}
                 )
         serializer.save()
 

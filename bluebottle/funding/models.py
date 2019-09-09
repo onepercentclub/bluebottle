@@ -238,7 +238,7 @@ class Donation(Contribution):
     client_secret = models.CharField(max_length=32, blank=True, null=True)
     reward = models.ForeignKey(Reward, null=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
-    name = models.CharField(max_length=100, null=True, blank=True,
+    name = models.CharField(max_length=200, null=True, blank=True,
                             verbose_name=_('Override donor name / Name for guest donation'))
 
     transitions = TransitionManager(DonationTransitions, 'status')

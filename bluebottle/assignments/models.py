@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import SET_NULL
 from django.utils.translation import ugettext_lazy as _
+from djchoices import DjangoChoices, ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
@@ -9,15 +10,27 @@ from bluebottle.geo.models import Geolocation
 
 
 class Assignment(Activity):
+
+    class EndDateTypes(DjangoChoices):
+        deadline = ChoiceItem('deadline', label=_("Deadline"))
+        on_date = ChoiceItem('on_date', label=_("On specific date"))
+
     registration_deadline = models.DateField(_('registration deadline'), null=True, blank=True)
-    deadline = models.DateField(_('deadline'), null=True, blank=True)
+    end_date = models.DateField(
+        _('end date'), null=True, blank=True,
+        help_text=_('Either the deadline or the date it will take place.'))
     duration = models.FloatField(_('duration'), null=True, blank=True)
+    end_date_type = models.CharField(
+        _('end date'), max_length=50, null=True, default=None,
+        help_text=_('Whether the end date is a deadline or a specific date the assignment takes place.'),
+        choices=EndDateTypes.choices)
 
     capacity = models.PositiveIntegerField(_('Capacity'), null=True, blank=True)
     expertise = models.ForeignKey('tasks.Skill', verbose_name=_('expertise'), blank=True, null=True)
 
     is_online = models.NullBooleanField(null=True, default=None)
-    place = models.ForeignKey(
+
+    location = models.ForeignKey(
         Geolocation, verbose_name=_('Assignment location'),
         null=True, blank=True, on_delete=SET_NULL)
 

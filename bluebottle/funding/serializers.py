@@ -169,8 +169,6 @@ class FundingListSerializer(BaseActivitySerializer):
 
     class Meta(BaseActivitySerializer.Meta):
         model = Funding
-        # Can't add amount_donated to the list of fields, not sure why
-        # Can't add amount_raised to the list of fields, not sure why
         fields = BaseActivitySerializer.Meta.fields + (
             'country',
             'deadline',

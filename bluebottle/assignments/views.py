@@ -2,7 +2,8 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.assignments.serializers import AssignmentSerializer, ApplicantSerializer
+from bluebottle.assignments.serializers import AssignmentSerializer, ApplicantSerializer, AssignmentTransitionSerializer
+from bluebottle.transitions.views import TransitionList
 
 from bluebottle.utils.views import RetrieveUpdateAPIView, ListCreateAPIView, JsonApiViewMixin
 from bluebottle.utils.permissions import (
@@ -25,6 +26,15 @@ class AssignmentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
     serializer_class = AssignmentSerializer
 
     permission_classes = (ActivityTypePermission, ActivityPermission,)
+
+
+class AssignmentTransitionList(TransitionList):
+    serializer_class = AssignmentTransitionSerializer
+    queryset = Assignment.objects.all()
+
+    prefetch_for_includes = {
+        'resource': ['funding'],
+    }
 
 
 class ApplicantList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):

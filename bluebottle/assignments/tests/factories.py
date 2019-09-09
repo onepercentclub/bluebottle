@@ -21,7 +21,7 @@ class AssignmentFactory(factory.DjangoModelFactory):
     expertise = factory.SubFactory(SkillFactory)
 
     capacity = 3
-    deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=5))
+    end_date = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=5))
     registration_deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=2))
 
 

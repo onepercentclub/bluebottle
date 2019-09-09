@@ -1,23 +1,40 @@
 from rest_framework import serializers
+from rest_framework_json_api.relations import ResourceRelatedField
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.utils import BaseContributionSerializer, BaseActivitySerializer, ActivityValidationSerializer
 from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.events.serializers import RegistrationDeadlineValidator, LocationValidator, LocationField
+from bluebottle.events.serializers import LocationValidator, LocationField
 from bluebottle.geo.models import Geolocation
+from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import RelatedField, ResourcePermissionField, NonModelRelatedResourceField, \
     NoCommitMixin, FilteredRelatedField
 
 
+class RegistrationDeadlineValidator(object):
+    def set_context(self, field):
+        self.end_date = field.parent.instance.end_date
+
+    def __call__(self, value):
+        if not self.end_date or value > self.end_date:
+            raise serializers.ValidationError(
+                _('Registration deadline should be before end date'),
+                code='registration_deadline'
+            )
+
+        return value
+
+
 class AssignmentValidationSerializer(ActivityValidationSerializer):
-    start_date = serializers.DateField()
-    start_time = serializers.TimeField()
+    end_date = serializers.DateField()
     duration = serializers.FloatField()
     registration_deadline = serializers.DateField(
         allow_null=True,
         validators=[RegistrationDeadlineValidator()]
     )
     is_online = serializers.BooleanField()
+    end_date_type = serializers.CharField()
     location = LocationField(
         queryset=Geolocation.objects.all(),
         allow_null=True,
@@ -27,7 +44,8 @@ class AssignmentValidationSerializer(ActivityValidationSerializer):
     class Meta:
         model = Assignment
         fields = ActivityValidationSerializer.Meta.fields + (
-            'start_date', 'start_time', 'is_online', 'location', 'duration',
+            'end_date', 'end_date_type',
+            'is_online', 'location', 'duration',
             'registration_deadline',
         )
 
@@ -44,19 +62,33 @@ class AssignmentListSerializer(BaseActivitySerializer):
     class Meta:
         model = Assignment
         fields = BaseActivitySerializer.Meta.fields + (
-            'deadline', 'registration_deadline',
-            'capacity', 'expertise',
-            'duration', 'place'
-
+            'end_date',
+            'end_date_type',
+            'registration_deadline',
+            'capacity',
+            'expertise',
+            'duration',
+            'place',
+            'permissions',
+            'validations'
         )
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         included_resources = [
             'owner',
             'initiative',
-            'place'
+            'place',
+            'validations',
         ]
         resource_name = 'activities/assignments'
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'validations': 'bluebottle.assignments.serializers.AssignmentValidationSerializer',
+    }
 
 
 class AssignmentSerializer(NoCommitMixin, AssignmentListSerializer):
@@ -74,6 +106,18 @@ class AssignmentSerializer(NoCommitMixin, AssignmentListSerializer):
             'contributions': 'bluebottle.assignments.serializers.ApplicantSerializer',
         }
     )
+
+
+class AssignmentTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=Assignment.objects.all())
+    field = 'transitions'
+    included_serializers = {
+        'resource': 'bluebottle.assignment.serializers.AssignmentSerializer',
+    }
+
+    class JSONAPIMeta:
+        included_resources = ['resource', ]
+        resource_name = 'assignment-transitions'
 
 
 class ApplicantSerializer(BaseContributionSerializer):

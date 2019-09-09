@@ -77,6 +77,9 @@ urlpatterns = [
     url(r'^api/events',
         include('bluebottle.events.urls.api')),
 
+    url(r'^api/assignments',
+        include('bluebottle.assignments.urls.api')),
+
     url(r'^api/funding',
         include('bluebottle.funding.urls.api')),
     url(r'^api/funding',

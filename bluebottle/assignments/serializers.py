@@ -32,14 +32,14 @@ class AssignmentValidationSerializer(ActivityValidationSerializer):
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/event-validations'
+        resource_name = 'activities/assignment-validations'
 
 
 class AssignmentListSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('assignment-detail', view_args=('pk',))
     validations = NonModelRelatedResourceField(AssignmentValidationSerializer)
 
-    place = RelatedField(allow_null=True, queryset=Geolocation.objects.all())
+    place = RelatedField(allow_null=True, required=False, queryset=Geolocation.objects.all())
 
     class Meta:
         model = Assignment

@@ -1,13 +1,11 @@
 from django.conf.urls import url
 
-from bluebottle.events.views import (
-    EventList, EventDetail, ParticipantList, ParticipantDetail
-)
+from bluebottle.assignments.views import AssignmentList, AssignmentDetail, ApplicantList, ApplicantDetail
 
 urlpatterns = [
-    url(r'^$', EventList.as_view(), name='event-list'),
-    url(r'^(?P<slug>[\w-]+)$', EventDetail.as_view(), name='event-detail'),
+    url(r'^$', AssignmentList.as_view(), name='assignment-list'),
+    url(r'^(?P<slug>[\w-]+)$', AssignmentDetail.as_view(), name='assignment-detail'),
 
-    url(r'participants/^$', ParticipantList.as_view(), name='participant-list'),
-    url(r'^participants/(?P<id>[\d]+)$', ParticipantDetail.as_view(), name='participant-detail'),
+    url(r'^applicants/$', ApplicantList.as_view(), name='applicant-list'),
+    url(r'^applicants/(?P<id>[\d]+)$', ApplicantDetail.as_view(), name='applicant-detail'),
 ]

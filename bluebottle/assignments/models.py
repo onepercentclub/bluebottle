@@ -1,24 +1,25 @@
 from django.db import models
+from django.db.models import SET_NULL
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
 from bluebottle.fsm import TransitionManager
+from bluebottle.geo.models import Geolocation
 
 
 class Assignment(Activity):
     registration_deadline = models.DateTimeField(_('registration deadline'), null=True, blank=True)
-    deadline = models.DateField(_('Deadline'), null=True, blank=True)
+    deadline = models.DateField(_('deadline'), null=True, blank=True)
+    duration = models.FloatField(_('duration'), null=True, blank=True)
+
     capacity = models.PositiveIntegerField(_('Capacity'), null=True, blank=True)
+    expertise = models.ForeignKey('tasks.Skill', verbose_name=_('expertise'), blank=True, null=True)
 
-    expertise = models.ForeignKey('tasks.Skill', verbose_name=_('expertise'), null=True)
-
-    location = models.CharField(
-        help_text=_('Location the assignment takes place'),
-        max_length=200,
-        null=True,
-        blank=True
-    )  # TODO:  Make this a foreign key to an address
+    is_online = models.NullBooleanField(null=True, default=None)
+    place = models.ForeignKey(
+        Geolocation, verbose_name=_('Assignment location'),
+        null=True, blank=True, on_delete=SET_NULL)
 
     transitions = TransitionManager(AssignmentTransitions, 'status')
 

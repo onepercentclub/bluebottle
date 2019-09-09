@@ -1,33 +1,30 @@
 from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
+from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.assignments.serializers import AssignmentSerializer, ApplicantSerializer
 
 from bluebottle.utils.views import RetrieveUpdateAPIView, ListCreateAPIView
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
 
-from bluebottle.events.models import Event, Participant
-from bluebottle.events.serializers import EventSerializer, ParticipantSerializer
 
-
-class EventList(ListCreateAPIView):
-    queryset = Event.objects.all()
-    serializer_class = EventSerializer
+class AssignmentList(ListCreateAPIView):
+    queryset = Assignment.objects.all()
+    serializer_class = AssignmentSerializer
 
     permission_classes = (ActivityTypePermission, ActivityPermission,)
 
 
-class EventDetail(RetrieveUpdateAPIView):
-    queryset = Event.objects.all()
-    serializer_class = EventSerializer
-
-    lookup_field = 'slug'
+class AssignmentDetail(RetrieveUpdateAPIView):
+    queryset = Assignment.objects.all()
+    serializer_class = AssignmentSerializer
 
     permission_classes = (ActivityTypePermission, ActivityPermission,)
 
 
 class ParticipantList(ListCreateAPIView):
-    queryset = Participant.objects.all()
-    serializer_class = ParticipantSerializer
+    queryset = Applicant.objects.all()
+    serializer_class = ApplicantSerializer
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
@@ -35,10 +32,8 @@ class ParticipantList(ListCreateAPIView):
 
 
 class ParticipantDetail(RetrieveUpdateAPIView):
-    queryset = Participant.objects.all()
-    serializer_class = ParticipantSerializer
-
-    lookup_field = 'slug'
+    queryset = Applicant.objects.all()
+    serializer_class = ApplicantSerializer
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),

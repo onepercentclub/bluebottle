@@ -230,7 +230,10 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def verification(self):
-        return self.account.individual.verification
+        try:
+            return self.account.individual.verification
+        except AttributeError:
+            return {'document': {}}
 
     @property
     def individual(self):

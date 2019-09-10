@@ -21,6 +21,8 @@ class ActivitySerializer(PolymorphicModelSerializer):
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
+        'initiative.place': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
 
     class Meta:
@@ -31,7 +33,9 @@ class ActivitySerializer(PolymorphicModelSerializer):
             'owner',
             'initiative',
             'location',
-            'initiative.image'
+            'initiative.image',
+            'initiative.place',
+            'initiative.location',
         ]
 
 

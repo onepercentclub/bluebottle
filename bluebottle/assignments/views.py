@@ -17,6 +17,7 @@ from bluebottle.utils.permissions import (
 class AssignmentList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Assignment.objects.all()
     serializer_class = AssignmentListSerializer
+    filter_fields = ('owner__id', )
 
     permission_classes = (ActivityTypePermission, ActivityPermission,)
 

@@ -65,7 +65,6 @@ class AssignmentListSerializer(BaseActivitySerializer):
     class Meta(BaseActivitySerializer.Meta):
         model = Assignment
         fields = BaseActivitySerializer.Meta.fields + (
-            'owner',
             'is_online',
             'end_date',
             'end_date_type',
@@ -85,7 +84,7 @@ class AssignmentListSerializer(BaseActivitySerializer):
             'initiative.image',
             'initiative.location',
             'initiative.place',
-            # 'validations',
+            'validations',
         ]
         resource_name = 'activities/assignments'
 
@@ -102,7 +101,6 @@ class AssignmentSerializer(AssignmentListSerializer):
     contributions = FilteredRelatedField(many=True, filter_backend=ApplicantListFilter)
 
     class Meta(AssignmentListSerializer.Meta):
-        model = Assignment
         fields = AssignmentListSerializer.Meta.fields + (
             'contributions',
         )
@@ -112,7 +110,6 @@ class AssignmentSerializer(AssignmentListSerializer):
             'contributions',
             'contributions.user'
         ]
-        resource_name = 'activities/assignments'
 
     included_serializers = dict(
         AssignmentListSerializer.included_serializers,
@@ -136,7 +133,7 @@ class AssignmentTransitionSerializer(TransitionSerializer):
 
 class ApplicantSerializer(BaseContributionSerializer):
 
-    class Meta:
+    class Meta(BaseContributionSerializer.Meta):
         model = Applicant
         fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
 

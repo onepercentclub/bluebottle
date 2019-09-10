@@ -155,6 +155,9 @@ class Reward(models.Model):
         verbose_name = _("Gift")
         verbose_name_plural = _("Gifts")
 
+    class JSONAPIMeta:
+        resource_name = 'activities/rewards'
+
     def delete(self, *args, **kwargs):
         if self.count:
             raise ValueError(_('Not allowed to delete a reward with successful donations.'))

@@ -166,7 +166,7 @@ class BudgetLine(models.Model):
     """
     BudgetLine: Entries to the Activity Budget sheet.
     """
-    activity = models.ForeignKey('funding.Funding', related_name='budgetlines')
+    activity = models.ForeignKey('funding.Funding', related_name='budget_lines')
     description = models.CharField(_('description'), max_length=255, default='')
 
     amount = MoneyField()
@@ -175,7 +175,7 @@ class BudgetLine(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     class JSONAPIMeta:
-        resource_name = 'activities/funding/budgetlines'
+        resource_name = 'activities/budget-lines'
 
     class Meta:
         verbose_name = _('budget line')
@@ -234,6 +234,7 @@ class Donation(Contribution):
     fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
     name = models.CharField(max_length=100, null=True, blank=True,
                             verbose_name=_('Override donor name / Name for guest donation'))
+    anonymous = models.BooleanField(_('anonymous'), default=False)
 
     transitions = TransitionManager(DonationTransitions, 'status')
 

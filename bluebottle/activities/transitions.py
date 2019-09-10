@@ -17,7 +17,7 @@ class ActivityReviewTransitions(ReviewTransitions):
             return serializer.errors
 
     def is_activity_manager(self, user):
-        return self.instance.initiative.activity_manager == user
+        return not user or user in [self.instance.initiative.activity_manager, self.instance.owner]
 
     @transition(
         source=ReviewTransitions.values.draft,

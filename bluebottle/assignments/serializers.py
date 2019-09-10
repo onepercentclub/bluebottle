@@ -1,15 +1,18 @@
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
-from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.utils import BaseContributionSerializer, BaseActivitySerializer, ActivityValidationSerializer
+from bluebottle.activities.utils import (
+    BaseActivitySerializer, BaseContributionSerializer,
+    ActivityValidationSerializer
+)
 from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.events.serializers import LocationValidator, LocationField
 from bluebottle.geo.models import Geolocation
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import RelatedField, ResourcePermissionField, NonModelRelatedResourceField, \
-    NoCommitMixin, FilteredRelatedField
+    FilteredRelatedField
 
 
 class RegistrationDeadlineValidator(object):
@@ -57,11 +60,12 @@ class AssignmentListSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('assignment-detail', view_args=('pk',))
     validations = NonModelRelatedResourceField(AssignmentValidationSerializer)
 
-    place = RelatedField(allow_null=True, required=False, queryset=Geolocation.objects.all())
+    location = RelatedField(allow_null=True, required=False, queryset=Geolocation.objects.all())
 
-    class Meta:
+    class Meta(BaseActivitySerializer.Meta):
         model = Assignment
         fields = BaseActivitySerializer.Meta.fields + (
+            'owner',
             'is_online',
             'end_date',
             'end_date_type',
@@ -74,12 +78,14 @@ class AssignmentListSerializer(BaseActivitySerializer):
             'validations'
         )
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+    class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = [
             'owner',
             'initiative',
-            'place',
-            'validations',
+            'initiative.image',
+            'initiative.location',
+            'initiative.place',
+            # 'validations',
         ]
         resource_name = 'activities/assignments'
 
@@ -92,19 +98,26 @@ class AssignmentListSerializer(BaseActivitySerializer):
     }
 
 
-class AssignmentSerializer(NoCommitMixin, AssignmentListSerializer):
+class AssignmentSerializer(AssignmentListSerializer):
     contributions = FilteredRelatedField(many=True, filter_backend=ApplicantListFilter)
+
+    class Meta(AssignmentListSerializer.Meta):
+        model = Assignment
+        fields = AssignmentListSerializer.Meta.fields + (
+            'contributions',
+        )
 
     class JSONAPIMeta(AssignmentListSerializer.JSONAPIMeta):
         included_resources = AssignmentListSerializer.JSONAPIMeta.included_resources + [
             'contributions',
             'contributions.user'
         ]
+        resource_name = 'activities/assignments'
 
     included_serializers = dict(
         AssignmentListSerializer.included_serializers,
         **{
-            'contributions': 'bluebottle.assignments.serializers.ApplicantSerializer',
+            'contributions': 'bluebottle.funding.serializers.DonationSerializer',
         }
     )
 
@@ -126,3 +139,19 @@ class ApplicantSerializer(BaseContributionSerializer):
     class Meta:
         model = Applicant
         fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
+
+
+class ApplicantTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=Applicant.objects.all())
+    field = 'transitions'
+    included_serializers = {
+        'resource': 'bluebottle.assignments.serializers.ApplicantSerializer',
+        'resource.activity': 'bluebottle.assignments.serializers.AssignmentSerializer',
+    }
+
+    class JSONAPIMeta:
+        resource_name = 'contributions/applicant-transitions'
+        included_resources = [
+            'resource',
+            'resource.activity'
+        ]

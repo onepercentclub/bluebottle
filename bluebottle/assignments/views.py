@@ -2,10 +2,13 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.assignments.serializers import AssignmentSerializer, ApplicantSerializer, AssignmentTransitionSerializer
+from bluebottle.assignments.serializers import AssignmentSerializer, ApplicantSerializer, \
+    AssignmentTransitionSerializer, ApplicantTransitionSerializer, AssignmentListSerializer
 from bluebottle.transitions.views import TransitionList
 
-from bluebottle.utils.views import RetrieveUpdateAPIView, ListCreateAPIView, JsonApiViewMixin
+from bluebottle.utils.views import (
+    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin
+)
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
@@ -13,7 +16,7 @@ from bluebottle.utils.permissions import (
 
 class AssignmentList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Assignment.objects.all()
-    serializer_class = AssignmentSerializer
+    serializer_class = AssignmentListSerializer
 
     permission_classes = (ActivityTypePermission, ActivityPermission,)
 
@@ -26,6 +29,11 @@ class AssignmentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
     serializer_class = AssignmentSerializer
 
     permission_classes = (ActivityTypePermission, ActivityPermission,)
+
+    prefetch_for_includes = {
+        'initiative': ['initiative'],
+        'owner': ['owner'],
+    }
 
 
 class AssignmentTransitionList(TransitionList):
@@ -53,3 +61,11 @@ class ApplicantDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+
+
+class ApplicantTransitionList(TransitionList):
+    serializer_class = ApplicantTransitionSerializer
+    queryset = Applicant.objects.all()
+    prefetch_for_includes = {
+        'resource': ['participant', 'participant__activity'],
+    }

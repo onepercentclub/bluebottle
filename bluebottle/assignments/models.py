@@ -35,6 +35,7 @@ class Assignment(Activity):
         null=True, blank=True, on_delete=SET_NULL)
 
     transitions = TransitionManager(AssignmentTransitions, 'status')
+    complete_serializer = 'bluebottle.assignments.serializers.AssignmentValidationSerializer'
 
     class Meta:
         verbose_name = _("Assignment")

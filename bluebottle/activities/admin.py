@@ -82,7 +82,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
         model = Funding
 
     class AssignmentInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'link', 'deadline', 'status']
+        readonly_fields = ['activity_link', 'link', 'end_date', 'duration', 'status']
         fields = readonly_fields
         model = Assignment
 

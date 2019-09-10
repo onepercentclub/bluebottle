@@ -331,6 +331,16 @@ class DonationSerializer(BaseContributionSerializer):
             'fundraiser',
         ]
 
+    def get_fields(self):
+        """
+        If the donation is anonymous, we do not return the user.
+        """
+        fields = super(DonationSerializer, self).get_fields()
+        if isinstance(self.instance, Donation) and self.instance.anonymous:
+            del fields['user']
+
+        return fields
+
 
 class DonationCreateSerializer(DonationSerializer):
     amount = MoneySerializer()

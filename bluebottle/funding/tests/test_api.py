@@ -7,6 +7,7 @@ from moneyed import Money
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory, RewardFactory, DonationFactory
+from bluebottle.funding.models import Donation
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -446,6 +447,41 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
         self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
         self.assertIsNone(data['data']['attributes']['client-secret'])
+
+    def test_donate(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        donation = Donation.objects.get(pk=data['data']['id'])
+        donation.transitions.succeed()
+        donation.save()
+
+        response = self.client.get(self.funding_url, user=self.user)
+
+        donation = get_included(response, 'contributions/donations')
+        self.assertEqual(donation['relationships']['user']['data']['id'], unicode(self.user.pk))
+
+    def test_donate_anonymous(self):
+        self.data['data']['attributes']['anonymous'] = True
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['attributes']['status'], DonationTransitions.values.new)
+        self.assertEqual(data['data']['attributes']['anonymous'], True)
+        donation = Donation.objects.get(pk=data['data']['id'])
+        self.assertTrue(donation.user, self.user)
+
+        donation.transitions.succeed()
+        donation.save()
+
+        response = self.client.get(self.funding_url, user=self.user)
+
+        donation = get_included(response, 'contributions/donations')
+        self.assertFalse('user' in donation['relationships'])
 
     def test_update(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)

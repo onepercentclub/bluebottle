@@ -25,13 +25,13 @@ class Assignment(Activity):
         help_text=_('Whether the end date is a deadline or a specific date the assignment takes place.'),
         choices=EndDateTypes.choices)
 
-    capacity = models.PositiveIntegerField(_('Capacity'), null=True, blank=True)
+    capacity = models.PositiveIntegerField(_('capacity'), null=True, blank=True)
     expertise = models.ForeignKey('tasks.Skill', verbose_name=_('expertise'), blank=True, null=True)
 
     is_online = models.NullBooleanField(null=True, default=None)
 
     location = models.ForeignKey(
-        Geolocation, verbose_name=_('Assignment location'),
+        Geolocation, verbose_name=_('assignment location'),
         null=True, blank=True, on_delete=SET_NULL)
 
     transitions = TransitionManager(AssignmentTransitions, 'status')

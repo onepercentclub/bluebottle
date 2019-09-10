@@ -60,8 +60,6 @@ class AssignmentListSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('assignment-detail', view_args=('pk',))
     validations = NonModelRelatedResourceField(AssignmentValidationSerializer)
 
-    location = RelatedField(allow_null=True, required=False, queryset=Geolocation.objects.all())
-
     class Meta(BaseActivitySerializer.Meta):
         model = Assignment
         fields = BaseActivitySerializer.Meta.fields + (
@@ -80,6 +78,7 @@ class AssignmentListSerializer(BaseActivitySerializer):
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = [
             'owner',
+            'location',
             'initiative',
             'initiative.image',
             'initiative.location',
@@ -99,6 +98,7 @@ class AssignmentListSerializer(BaseActivitySerializer):
 
 class AssignmentSerializer(AssignmentListSerializer):
     contributions = FilteredRelatedField(many=True, filter_backend=ApplicantListFilter)
+    location = RelatedField(allow_null=True, required=False, queryset=Geolocation.objects.all())
 
     class Meta(AssignmentListSerializer.Meta):
         fields = AssignmentListSerializer.Meta.fields + (

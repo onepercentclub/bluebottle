@@ -9,7 +9,7 @@ urlpatterns = [
     url(r'^$',
         AssignmentList.as_view(),
         name='assignment-list'),
-    url(r'^(?P<slug>[\w-]+)$',
+    url(r'^/(?P<pk>[\d-]+)$',
         AssignmentDetail.as_view(),
         name='assignment-detail'),
     url(r'^/transitions$',

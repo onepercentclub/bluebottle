@@ -5,15 +5,16 @@ from django.urls import reverse
 from django.utils.timezone import now
 from rest_framework import status
 
+from bluebottle.assignments.tests.factories import AssignmentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
 
 
-class AssignementAPITestCase(BluebottleTestCase):
+class AssignmentCreateAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(AssignementAPITestCase, self).setUp()
+        super(AssignmentCreateAPITestCase, self).setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
             activity_types=['assignment']
         )
@@ -122,3 +123,25 @@ class AssignementAPITestCase(BluebottleTestCase):
             validations['attributes']['registration-deadline'][0]['title'],
             u'Registration deadline should be before end date'
         )
+
+
+class AssignmentDetailAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(AssignmentDetailAPITestCase, self).setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=['assignment']
+        )
+
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory(owner=self.user)
+        self.assignment = AssignmentFactory.create(initiative=self.initiative)
+
+        self.client = JSONAPITestClient()
+        self.url = reverse('assignment-detail', args=(self.assignment.id,))
+
+    def test_retrieve_assignment(self):
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'in_review')

@@ -62,13 +62,14 @@ class AssignmentListSerializer(BaseActivitySerializer):
     class Meta:
         model = Assignment
         fields = BaseActivitySerializer.Meta.fields + (
+            'is_online',
             'end_date',
             'end_date_type',
             'registration_deadline',
             'capacity',
             'expertise',
             'duration',
-            'place',
+            'location',
             'permissions',
             'validations'
         )

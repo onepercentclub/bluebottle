@@ -51,6 +51,7 @@ class FundraiserFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Fundraiser
 
+    amount = Money(3500, 'EUR')
     activity = factory.SubFactory(FundingFactory)
     owner = factory.SubFactory(BlueBottleUserFactory)
 

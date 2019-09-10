@@ -16,6 +16,8 @@ class EventFactory(factory.DjangoModelFactory):
 
     title = factory.Faker('sentence')
     description = factory.Faker('text')
+    status = 'in_review'
+    review_status = 'draft'
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)

@@ -14,6 +14,7 @@ from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import RelatedField, ResourcePermissionField, NonModelRelatedResourceField, \
     FilteredRelatedField
 
+
 class RegistrationDeadlineValidator(object):
     def set_context(self, field):
         self.end_date = field.parent.instance.end_date

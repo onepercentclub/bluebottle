@@ -20,7 +20,7 @@ class ActivityReviewTransitions(ReviewTransitions):
         return not user or user in [self.instance.initiative.activity_manager, self.instance.owner]
 
     def can_review(self, user):
-        # Make me smart
+        # TODO: Make me smart. Do we want to do this with a auth permission?
         return not user or user.is_staff
 
     @transition(
@@ -81,7 +81,7 @@ class ActivityTransitions(ModelTransitions):
             return _('Please make sure the initiative is approved')
 
     def can_approve(self, user):
-        # Make me smart
+        # TODO: Make me smart. Do we want to do this with a auth permission?
         return not user or user.is_staff
 
     @transition(

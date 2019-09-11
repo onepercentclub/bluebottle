@@ -247,6 +247,10 @@ class Donation(Contribution):
         if not self.user and not self.client_secret:
             self.client_secret = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
 
+        if not self.payout_amount or (
+                self.payout_amount.currency == self.amount.currency and
+                self.payout_amount.amount != self.amount.amount):
+            self.payout_amount = self.amount
         super(Donation, self).save(*args, **kwargs)
 
     @property

@@ -21,7 +21,7 @@ class Assignment(Activity):
         help_text=_('Either the deadline or the date it will take place.'))
     duration = models.FloatField(_('duration'), null=True, blank=True)
     end_date_type = models.CharField(
-        _('end date'), max_length=50, null=True, default=None,
+        _('end date'), max_length=50, null=True, default=None, blank=True,
         help_text=_('Whether the end date is a deadline or a specific date the assignment takes place.'),
         choices=EndDateTypes.choices)
 

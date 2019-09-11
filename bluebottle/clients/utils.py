@@ -223,6 +223,7 @@ def get_public_properties(request):
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
             'defaultAvatarUrl': "/images/default-avatar.png",
             'currencies': get_currencies(),
+            'defaultCurrency': getattr(properties, 'DEFAULT_CURRENCY', 'EUR'),
             'logoUrl': "/images/logo.svg",
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),

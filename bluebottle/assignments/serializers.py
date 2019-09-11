@@ -14,7 +14,6 @@ from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import RelatedField, ResourcePermissionField, NonModelRelatedResourceField, \
     FilteredRelatedField
 
-
 class RegistrationDeadlineValidator(object):
     def set_context(self, field):
         self.end_date = field.parent.instance.end_date
@@ -79,6 +78,7 @@ class AssignmentListSerializer(BaseActivitySerializer):
         included_resources = [
             'owner',
             'location',
+            'expertise',
             'initiative',
             'initiative.image',
             'initiative.location',
@@ -89,6 +89,7 @@ class AssignmentListSerializer(BaseActivitySerializer):
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'expertise': 'bluebottle.tasks.serializers.SkillSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',

@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 from rest_framework import status
 
-from bluebottle.assignments.tests.factories import AssignmentFactory
+from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
@@ -374,3 +374,100 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], 'new')
         self.assertEqual(response.data['motivation'], 'Pick me! Pick me!')
+
+    def test_accept_started_assignment(self):
+        # Applying to started assignment should fail
+        self.assignment.transitions.start()
+        response = self.client.post(self.url, json.dumps(self.apply_data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class ApplicantTransitionAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(ApplicantTransitionAPITestCase, self).setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=['assignment']
+        )
+
+        self.client = JSONAPITestClient()
+        self.url = reverse('applicant-transition-list')
+        self.user = BlueBottleUserFactory()
+        self.manager = BlueBottleUserFactory(first_name="Boss")
+        self.owner = BlueBottleUserFactory(first_name="Owner")
+        self.initiative = InitiativeFactory.create(activity_manager=self.manager)
+        self.assignment = AssignmentFactory.create(owner=self.owner, initiative=self.initiative)
+        self.assignment.review_transitions.submit()
+        self.assignment.review_transitions.approve()
+        self.assignment.save()
+        self.applicant = ApplicantFactory.create(activity=self.assignment, user=self.user)
+        self.transition_data = {
+            'data': {
+                'type': 'contributions/applicant-transitions',
+                'attributes': {
+                    'transition': 'accept',
+                },
+                'relationships': {
+                    'resource': {
+                        'data': {
+                            'type': 'contributions/applicants',
+                            'id': self.applicant.pk
+                        }
+                    }
+                }
+            }
+        }
+
+    def test_accept_open_assignment(self):
+        # Accept by activity manager
+        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.manager)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.applicant.refresh_from_db()
+        self.assertEqual(self.applicant.status, 'accepted')
+
+    def test_reject_open_assignment(self):
+        # Reject by activity manager
+        self.transition_data['data']['attributes']['transition'] = 'reject'
+        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.manager)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.applicant.refresh_from_db()
+        self.assertEqual(self.applicant.status, 'rejected')
+
+    def test_accept_by_owner_assignment(self):
+        # Accept by assignment owner
+        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.owner)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.applicant.refresh_from_db()
+        self.assertEqual(self.applicant.status, 'accepted')
+
+    def test_accept_by_self_assignment(self):
+        # Applicant should not be able to accept self
+        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_reject_by_self_assignment(self):
+        # Applicant should not be able to reject self
+        self.transition_data['data']['attributes']['transition'] = 'reject'
+        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_withdraw_by_self_assignment(self):
+        # Withdraw by applicant
+        self.transition_data['data']['attributes']['transition'] = 'withdraw'
+        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.applicant.refresh_from_db()
+        self.assertEqual(self.applicant.status, 'withdrawn')
+
+        # Reapply by applicant
+        self.transition_data['data']['attributes']['transition'] = 'reapply'
+        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.applicant.refresh_from_db()
+        self.assertEqual(self.applicant.status, 'new')
+
+    def test_withdraw_by_owner_assignment(self):
+        # Withdraw by owner should not be allowed
+        self.transition_data['data']['attributes']['transition'] = 'withdraw'
+        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.owner)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

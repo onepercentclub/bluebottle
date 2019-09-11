@@ -1,9 +1,9 @@
 from django.utils.translation import ugettext_lazy as _
-
 from djchoices.choices import ChoiceItem
 
-from bluebottle.fsm import transition
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.follow.models import unfollow, follow
+from bluebottle.fsm import transition
 
 
 class AssignmentTransitions(ActivityTransitions):
@@ -70,39 +70,55 @@ class ApplicantTransitions(ContributionTransitions):
         active = ChoiceItem('attending', _('attending'))
 
     def assignment_is_open(self):
-        return self.instance.activity.status == ActivityTransitions.values.open
+        if self.instance.activity.status != ActivityTransitions.values.open:
+            return _('The event is not open')
 
     @transition(
         field='status',
         source=[values.new, values.rejected],
         target=values.accepted,
-        conditions=[assignment_is_open]
+        conditions=[assignment_is_open],
+        permissions=[ContributionTransitions.is_activity_manager]
     )
     def accept(self):
-        self.activity.check_capcity()
+        self.instance.activity.check_capcity()
 
     @transition(
         field='status',
         source=[values.new, values.accepted],
         target=values.rejected,
-        conditions=[assignment_is_open]
+        conditions=[assignment_is_open],
+        permissions=[ContributionTransitions.is_activity_manager]
     )
     def reject(self):
-        self.activity.check_capcity()
+        unfollow(self.instance.user, self.instance.activity)
+        self.instance.activity.check_capcity()
 
     @transition(
         field='status',
         source=[values.new, values.accepted],
         target=values.withdrawn,
-        conditions=[assignment_is_open]
+        conditions=[assignment_is_open],
+        permissions=[ContributionTransitions.is_user]
     )
     def withdraw(self):
-        self.activity.check_capcity()
+        unfollow(self.instance.user, self.instance.activity)
+        self.instance.activity.check_capcity()
+
+    @transition(
+        source=values.withdrawn,
+        target=values.new,
+        conditions=[assignment_is_open],
+        permissions=[ContributionTransitions.is_user]
+    )
+    def reapply(self):
+        follow(self.instance.user, self.instance.activity)
 
     @transition(
         field='status',
         source=values.accepted,
         target=values.active,
+        permissions=[ContributionTransitions.is_activity_manager]
     )
     def activate(self):
         pass
@@ -111,6 +127,7 @@ class ApplicantTransitions(ContributionTransitions):
         field='status',
         source=[values.active, values.failed],
         target=values.succeeded,
+        permissions=[ContributionTransitions.is_activity_manager]
     )
     def succeed(self):
         pass
@@ -119,6 +136,8 @@ class ApplicantTransitions(ContributionTransitions):
         field='status',
         source=[values.succeeded, values.active],
         target=values.failed,
+        permissions=[ContributionTransitions.is_activity_manager]
     )
     def fail(self):
+        unfollow(self.instance.user, self.instance.activity)
         self.time_spent = None

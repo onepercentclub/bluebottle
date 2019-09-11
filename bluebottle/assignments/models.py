@@ -65,9 +65,9 @@ class Assignment(Activity):
         return self.contributions.filter(status__in=accepted_states)
 
     def check_capcity(self):
-        if len(self.accepted_applicants) >= self.capacity:
+        if len(self.accepted_applicants) >= self.capacity and self.status == 'open':
             self.transitions.full()
-        else:
+        elif self.status == 'full':
             self.transitions.reopen()
 
 

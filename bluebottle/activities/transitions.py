@@ -111,4 +111,4 @@ class ContributionTransitions(ModelTransitions):
         return self.instance.user == user
 
     def is_activity_manager(self, user):
-        return self.instance.activity.initiative.activity_manager == user
+        return user in [self.instance.activity.initiative.activity_manager, self.instance.activity.owner]

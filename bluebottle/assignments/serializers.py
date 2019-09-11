@@ -123,7 +123,7 @@ class AssignmentTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Assignment.objects.all())
     field = 'transitions'
     included_serializers = {
-        'resource': 'bluebottle.assignment.serializers.AssignmentSerializer',
+        'resource': 'bluebottle.assignments.serializers.AssignmentSerializer',
     }
 
     class JSONAPIMeta:

@@ -412,7 +412,7 @@ class EventTransitionTestCase(BluebottleTestCase):
 
     def test_submit_other_user(self):
 
-        # Other user can't submit the project
+        # Other user can't submit the event
         response = self.client.post(
             self.review_transition_url,
             json.dumps(self.review_data),
@@ -425,7 +425,7 @@ class EventTransitionTestCase(BluebottleTestCase):
 
     def test_submit_owner(self):
 
-        # Owner can submit the project
+        # Owner can submit the event
         response = self.client.post(
             self.review_transition_url,
             json.dumps(self.review_data),
@@ -439,7 +439,7 @@ class EventTransitionTestCase(BluebottleTestCase):
 
     def test_submit_manager(self):
 
-        # Activity manager can submit the project
+        # Activity manager can submit the event
         response = self.client.post(
             self.review_transition_url,
             json.dumps(self.review_data),

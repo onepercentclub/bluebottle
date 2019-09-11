@@ -78,6 +78,10 @@ class DonationTransitions(ContributionTransitions):
     def funding_is_open(self):
         return self.instance.activity.status == FundingTransitions.values.open
 
+    def update_funding(self):
+        # Invalidate cached amount_donated on funding
+        del self.instance.activity.amount_donated
+
     @transition(
         source=[values.new, values.succeeded],
         target=values.refunded,
@@ -86,14 +90,14 @@ class DonationTransitions(ContributionTransitions):
         ]
     )
     def refund(self):
-        del self.instance.amount_donated
+        self.update_funding()
 
     @transition(
         source=[values.new, values.succeeded],
         target=values.failed,
     )
     def fail(self):
-        del self.instance.amount_donated
+        self.update_funding()
 
     @transition(
         source=[values.new, values.failed],
@@ -104,7 +108,7 @@ class DonationTransitions(ContributionTransitions):
         ]
     )
     def succeed(self):
-        del self.instance.amount_donated
+        self.update_funding()
 
 
 class PaymentTransitions(ModelTransitions):

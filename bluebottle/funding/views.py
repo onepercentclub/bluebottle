@@ -18,7 +18,7 @@ from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView,
+    CreateAPIView, RetrieveUpdateDestroyAPIView
 )
 
 
@@ -37,7 +37,7 @@ class RewardList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
-class RewardDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+class RewardDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPIView):
     queryset = Reward.objects.all()
     serializer_class = RewardSerializer
 
@@ -96,7 +96,7 @@ class BudgetLineList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
-class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPIView):
     queryset = BudgetLine.objects.all()
     serializer_class = BudgetLineSerializer
 

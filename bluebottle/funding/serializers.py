@@ -132,7 +132,7 @@ class BudgetLineSerializer(ModelSerializer):
             'activity',
         ]
 
-        resource_name = 'activities/budgetlines'
+        resource_name = 'activities/budget-lines'
 
 
 class PaymentMethodSerializer(serializers.Serializer):
@@ -202,7 +202,7 @@ class FundingListSerializer(BaseActivitySerializer):
 
 class FundingSerializer(NoCommitMixin, FundingListSerializer):
     rewards = RewardSerializer(many=True, required=False)
-    budgetlines = BudgetLineSerializer(many=True, required=False)
+    budget_lines = BudgetLineSerializer(many=True, required=False)
     payment_methods = PaymentMethodSerializer(many=True, read_only=True)
     contributions = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
     validations = NonModelRelatedResourceField(FundingValidationSerializer)
@@ -211,7 +211,7 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
         fields = FundingListSerializer.Meta.fields + (
             'rewards',
             'payment_methods',
-            'budgetlines',
+            'budget_lines',
             'fundraisers',
             'rewards',
             'validations',
@@ -222,7 +222,7 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
         included_resources = FundingListSerializer.JSONAPIMeta.included_resources + [
             'rewards',
             'payment_methods',
-            'budgetlines',
+            'budget_lines',
             'validations',
             'contributions',
             'contributions.user'
@@ -232,7 +232,7 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
         FundingListSerializer.included_serializers,
         **{
             'rewards': 'bluebottle.funding.serializers.BudgetLineSerializer',
-            'budgetlines': 'bluebottle.funding.serializers.RewardSerializer',
+            'budget_lines': 'bluebottle.funding.serializers.RewardSerializer',
             'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
             'contributions': 'bluebottle.funding.serializers.DonationSerializer',
             'validations': 'bluebottle.funding.serializers.FundingValidationSerializer',
@@ -319,7 +319,7 @@ class DonationSerializer(BaseContributionSerializer):
 
     class Meta(BaseContributionSerializer.Meta):
         model = Donation
-        fields = BaseContributionSerializer.Meta.fields + ('amount', 'fundraiser', 'reward', )
+        fields = BaseContributionSerializer.Meta.fields + ('amount', 'fundraiser', 'reward', 'anonymous',)
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/donations'
@@ -329,6 +329,16 @@ class DonationSerializer(BaseContributionSerializer):
             'reward',
             'fundraiser',
         ]
+
+    def get_fields(self):
+        """
+        If the donation is anonymous, we do not return the user.
+        """
+        fields = super(DonationSerializer, self).get_fields()
+        if isinstance(self.instance, Donation) and self.instance.anonymous:
+            del fields['user']
+
+        return fields
 
 
 class DonationCreateSerializer(DonationSerializer):

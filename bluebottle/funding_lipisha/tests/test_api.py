@@ -5,9 +5,11 @@ from mock import patch
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding_lipisha.tests.factories import LipishaPaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+
 
 initiate_response_fail = {
     "status": {
@@ -40,6 +42,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(LipishaPaymentTestCase, self).setUp()
+        LipishaPaymentProviderFactory.create()
 
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()

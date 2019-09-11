@@ -35,7 +35,7 @@ class BudgetLineListTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'activities/budgetlines',
+                'type': 'activities/budget-lines',
                 'attributes': {
                     'description': 'test',
                     'amount': {'amount': 100, 'currency': 'EUR'},
@@ -65,10 +65,10 @@ class BudgetLineListTestCase(BluebottleTestCase):
         funding_data = json.loads(response.content)
 
         self.assertEqual(
-            len(funding_data['data']['relationships']['budgetlines']['data']), 1
+            len(funding_data['data']['relationships']['budget-lines']['data']), 1
         )
         self.assertEqual(
-            funding_data['data']['relationships']['budgetlines']['data'][0]['id'],
+            funding_data['data']['relationships']['budget-lines']['data'][0]['id'],
             data['data']['id']
         )
 

@@ -55,6 +55,15 @@ class Assignment(Activity):
     class JSONAPIMeta:
         resource_name = 'activities/assignments'
 
+    @property
+    def accepted_applicants(self):
+        accepted_states = [
+            ApplicantTransitions.values.accepted,
+            ApplicantTransitions.values.active,
+            ApplicantTransitions.values.succeeded
+        ]
+        return self.contributions.filter(status__in=accepted_states)
+
     def check_capcity(self):
         if len(self.accepted_applicants) >= self.capacity:
             self.transitions.full()
@@ -65,7 +74,7 @@ class Assignment(Activity):
 class Applicant(Contribution):
     motivation = models.TextField()
 
-    time_spent = models.FloatField(_('time spent'))
+    time_spent = models.FloatField(_('time spent'), null=True, blank=True)
 
     transitions = TransitionManager(ApplicantTransitions, 'status')
 

@@ -69,7 +69,6 @@ class ApplicantTransitions(ContributionTransitions):
         withdrawn = ChoiceItem('withdrawn', _('withdrawn'))
         active = ChoiceItem('attending', _('attending'))
 
-    @property
     def assignment_is_open(self):
         return self.instance.activity.status == ActivityTransitions.values.open
 

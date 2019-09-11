@@ -1,5 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
@@ -134,10 +135,34 @@ class AssignmentTransitionSerializer(TransitionSerializer):
 
 
 class ApplicantSerializer(BaseContributionSerializer):
+    time_spent = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta(BaseContributionSerializer.Meta):
         model = Applicant
-        fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
+        fields = BaseContributionSerializer.Meta.fields + (
+            'time_spent',
+            'motivation',
+        )
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Applicant.objects.all(),
+                fields=('activity', 'user')
+            )
+        ]
+
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        resource_name = 'contributions/applicants'
+        included_resources = [
+            'user',
+            'activity'
+        ]
+
+    included_serializers = {
+        'activity': 'bluebottle.assignments.serializers.AssignmentSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
 
 
 class ApplicantTransitionSerializer(TransitionSerializer):

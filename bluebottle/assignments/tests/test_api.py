@@ -159,15 +159,15 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.initiative = InitiativeFactory.create(activity_manager=self.manager)
         self.assignment_incomplete = AssignmentFactory.create(
             owner=self.owner,
-            initiative=self.initiative
+            initiative=self.initiative,
+            is_online=None,
+            duration=None,
+            end_date_type=None,
+            end_date=None
         )
         self.assignment = AssignmentFactory.create(
             owner=self.owner,
-            initiative=self.initiative,
-            is_online=True,
-            duration=4,
-            end_date_type='deadline',
-            end_date=(now() + timedelta(weeks=2)).date()
+            initiative=self.initiative
         )
 
         self.assignment_incomplete_url = reverse('assignment-detail', args=(self.assignment_incomplete.id,))
@@ -336,3 +336,41 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content)
         self.assertEqual(data['errors'][0], "Transition is not available")
+
+
+class ApplicantAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(ApplicantAPITestCase, self).setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=['assignment']
+        )
+
+        self.client = JSONAPITestClient()
+        self.url = reverse('applicant-list')
+        self.user = BlueBottleUserFactory()
+        self.assignment = AssignmentFactory.create()
+        self.assignment.review_transitions.submit()
+        self.assignment.review_transitions.approve()
+        self.apply_data = {
+            'data': {
+                'type': 'contributions/applicants',
+                'attributes': {
+                    'motivation': 'Pick me! Pick me!',
+                },
+                'relationships': {
+                    'activity': {
+                        'data': {
+                            'type': 'activities/assignments',
+                            'id': self.assignment.id
+                        },
+                    },
+                }
+            }
+        }
+
+    def test_apply(self):
+        response = self.client.post(self.url, json.dumps(self.apply_data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['status'], 'new')
+        self.assertEqual(response.data['motivation'], 'Pick me! Pick me!')

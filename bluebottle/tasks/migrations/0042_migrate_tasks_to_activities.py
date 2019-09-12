@@ -117,6 +117,9 @@ def migrate_tasks(apps, schema_editor):
             # geolocation = Geolocation.objects.create()
             geolocation = None
             status = map_event_status(task)
+            end_date_type = 'deadline'
+            if task.type == 'event':
+                end_date_type = 'on_date'
 
             assignment = Assignment.objects.create(
                 # activity fields
@@ -128,6 +131,7 @@ def migrate_tasks(apps, schema_editor):
                 owner=task.author,
 
                 # assignment fields
+                end_date_type=end_date_type,
                 registration_deadline=task.deadline_to_apply.date(),
                 end_date=task.deadline.date(),
                 capacity=task.people_needed,
@@ -146,7 +150,7 @@ def migrate_tasks(apps, schema_editor):
                 status = task.status
 
                 applicant = Applicant.objects.create(
-                    activity=event,
+                    activity=assignment,
                     user=task_member.member,
                     status=status,
                     time_spent=task_member.time_spent,

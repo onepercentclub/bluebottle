@@ -35,7 +35,7 @@ class ApplicantAdminForm(FSMModelForm):
 
 
 @admin.register(Applicant)
-class ParticipantAdmin(FSMAdmin):
+class ApplicantAdmin(FSMAdmin):
     model = Applicant
     form = ApplicantAdminForm
     list_display = ['user', 'status', 'time_spent']

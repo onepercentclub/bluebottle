@@ -17,10 +17,10 @@ urlpatterns = [
         name='assignment-transition-list'),
 
     # Applicants
-    url(r'^applicants/$',
+    url(r'^/applicants$',
         ApplicantList.as_view(),
         name='applicant-list'),
-    url(r'^applicants/(?P<pk>\d+)$',
+    url(r'^/applicants/(?P<pk>\d+)$',
         ApplicantDetail.as_view(),
         name='applicant-detail'),
     url(r'^/applicants/transitions$',

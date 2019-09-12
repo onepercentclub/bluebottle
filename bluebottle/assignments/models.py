@@ -5,6 +5,7 @@ from djchoices import DjangoChoices, ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
+from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
 
@@ -95,3 +96,10 @@ class Applicant(Contribution):
 
     class JSONAPIMeta:
         resource_name = 'contributions/applicants'
+
+    def save(self, *args, **kwargs):
+        created = self.pk is None
+        super(Applicant, self).save(*args, **kwargs)
+        if created:
+            follow(self.user, self.activity)
+        self.activity.check_capacity()

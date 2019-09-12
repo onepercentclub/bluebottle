@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import (CreationDateTimeField,
                                          ModificationDateTimeField)
 
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import LegacyMoneyField as MoneyField
 from bluebottle.utils.utils import StatusDefinition
 
 

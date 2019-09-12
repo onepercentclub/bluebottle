@@ -1,10 +1,11 @@
 from django.db import models
-from django.db.models import SET_NULL
+from django.db.models import SET_NULL, Count, Sum
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
+from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
 
@@ -37,6 +38,20 @@ class Assignment(Activity):
     transitions = TransitionManager(AssignmentTransitions, 'status')
     complete_serializer = 'bluebottle.assignments.serializers.AssignmentValidationSerializer'
 
+    @property
+    def stats(self):
+        stats = self.contributions.filter(
+            status=ApplicantTransitions.values.succeeded).\
+            aggregate(count=Count('user__id'), hours=Sum('applicant__time_spent'))
+        committed = self.contributions.filter(
+            status__in=[
+                ApplicantTransitions.values.new,
+                ApplicantTransitions.values.active,
+                ApplicantTransitions.values.accepted]).\
+            aggregate(committed_count=Count('user__id'), committed_hours=Sum('applicant__time_spent'))
+        stats.update(committed)
+        return stats
+
     class Meta:
         verbose_name = _("Assignment")
         verbose_name_plural = _("Assignments")
@@ -55,16 +70,19 @@ class Assignment(Activity):
     class JSONAPIMeta:
         resource_name = 'activities/assignments'
 
-    def check_capcity(self):
-        if len(self.accepted_applicants) >= self.capacity:
-            self.transitions.full()
-        else:
-            self.transitions.reopen()
+    @property
+    def accepted_applicants(self):
+        accepted_states = [
+            ApplicantTransitions.values.accepted,
+            ApplicantTransitions.values.active,
+            ApplicantTransitions.values.succeeded
+        ]
+        return self.contributions.filter(status__in=accepted_states)
 
 
 class Applicant(Contribution):
     motivation = models.TextField()
-    time_spent = models.FloatField(_('time spent'))
+    time_spent = models.FloatField(_('time spent'), null=True, blank=True)
     transitions = TransitionManager(ApplicantTransitions, 'status')
 
     class Meta:
@@ -84,3 +102,9 @@ class Applicant(Contribution):
 
     class JSONAPIMeta:
         resource_name = 'contributions/applicants'
+
+    def save(self, *args, **kwargs):
+        created = self.pk is None
+        super(Applicant, self).save(*args, **kwargs)
+        if created:
+            follow(self.user, self.activity)

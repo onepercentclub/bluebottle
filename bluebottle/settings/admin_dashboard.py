@@ -54,8 +54,18 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['events.event']
             },
             {
+                'url': '/admin/events/participant/',
+                'label': _('Participants'),
+                'permissions': ['events.event']
+            },
+            {
                 'url': '/admin/assignments/assignment/',
-                'label': _('Assignment'),
+                'label': _('Assignments'),
+                'permissions': ['assignments.assignment']
+            },
+            {
+                'url': '/admin/assignments/applicant/',
+                'label': _('Applicants'),
                 'permissions': ['assignments.assignment']
             },
         ]

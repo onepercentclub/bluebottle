@@ -48,7 +48,9 @@ class Transition(object):
         )
 
     def is_allowed(self, transitions, user):
-        """ Check if the initiative is allowed currently. """
+        """ Check if the transition is allowed currently. """
+        if not user:
+            return True
         return (
             all(permission(transitions, user) for permission in self.permissions)
         )

@@ -241,7 +241,7 @@ class FSMAdmin(admin.ModelAdmin):
                 try:
                     transitions = getattr(instance, field_name)
                     getattr(transitions, transition.name)(
-                        send_messages=send_messages,
+                        send_messages=send_messages
                     )
 
                     instance.save()

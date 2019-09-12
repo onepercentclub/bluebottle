@@ -81,7 +81,7 @@ class ApplicantTransitions(ContributionTransitions):
         permissions=[ContributionTransitions.is_activity_manager]
     )
     def accept(self):
-        self.instance.activity.check_capcity()
+        pass
 
     @transition(
         field='status',
@@ -92,7 +92,6 @@ class ApplicantTransitions(ContributionTransitions):
     )
     def reject(self):
         unfollow(self.instance.user, self.instance.activity)
-        self.instance.activity.check_capcity()
 
     @transition(
         field='status',
@@ -103,7 +102,6 @@ class ApplicantTransitions(ContributionTransitions):
     )
     def withdraw(self):
         unfollow(self.instance.user, self.instance.activity)
-        self.instance.activity.check_capcity()
 
     @transition(
         source=values.withdrawn,

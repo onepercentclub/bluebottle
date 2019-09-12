@@ -28,7 +28,7 @@ class ApplicantInline(admin.TabularInline):
         return format_html(u'<a href="{}">{}</a>', url, obj.user.full_name)
 
 
-class ParticipantAdminForm(FSMModelForm):
+class ApplicantAdminForm(FSMModelForm):
     class Meta:
         model = Applicant
         exclude = ['status', ]
@@ -37,7 +37,7 @@ class ParticipantAdminForm(FSMModelForm):
 @admin.register(Applicant)
 class ParticipantAdmin(FSMAdmin):
     model = Applicant
-    form = ParticipantAdminForm
+    form = ApplicantAdminForm
     list_display = ['user', 'status', 'time_spent']
     raw_id_fields = ('user', 'activity')
 

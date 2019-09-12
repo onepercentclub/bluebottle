@@ -44,7 +44,7 @@ class Assignment(Activity):
             status=ApplicantTransitions.values.succeeded).\
             aggregate(count=Count('user__id'), hours=Sum('applicant__time_spent'))
         committed = self.contributions.filter(
-            status=ApplicantTransitions.values.new).\
+            status__in=[ApplicantTransitions.values.new, ApplicantTransitions.values.accepted]).\
             aggregate(committed_count=Count('user__id'), committed_hours=Sum('applicant__time_spent'))
         stats.update(committed)
         return stats

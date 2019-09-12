@@ -80,7 +80,10 @@ class DonationTransitions(ContributionTransitions):
 
     def update_funding(self):
         # Invalidate cached amount_donated on funding
-        del self.instance.activity.amount_donated
+        try:
+            del self.instance.activity.amount_donated
+        except AttributeError:
+            pass
 
     @transition(
         source=[values.new, values.succeeded],

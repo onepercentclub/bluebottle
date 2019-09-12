@@ -1,13 +1,29 @@
 from django.conf.urls import url
 
-from bluebottle.events.views import (
-    EventList, EventDetail, ParticipantList, ParticipantDetail
-)
+from bluebottle.assignments.views import (
+    AssignmentList, AssignmentDetail, ApplicantList, ApplicantDetail,
+    AssignmentTransitionList, ApplicantTransitionList)
 
 urlpatterns = [
-    url(r'^$', EventList.as_view(), name='event-list'),
-    url(r'^(?P<slug>[\w-]+)$', EventDetail.as_view(), name='event-detail'),
+    # Assignments
+    url(r'^$',
+        AssignmentList.as_view(),
+        name='assignment-list'),
+    url(r'^/(?P<pk>\d+)$',
+        AssignmentDetail.as_view(),
+        name='assignment-detail'),
+    url(r'^/transitions$',
+        AssignmentTransitionList.as_view(),
+        name='assignment-transition-list'),
 
-    url(r'participants/^$', ParticipantList.as_view(), name='participant-list'),
-    url(r'^participants/(?P<id>[\d]+)$', ParticipantDetail.as_view(), name='participant-detail'),
+    # Applicants
+    url(r'^applicants/$',
+        ApplicantList.as_view(),
+        name='applicant-list'),
+    url(r'^applicants/(?P<pk>\d+)$',
+        ApplicantDetail.as_view(),
+        name='applicant-detail'),
+    url(r'^/applicants/transitions$',
+        ApplicantTransitionList.as_view(),
+        name='applicant-transition-list'),
 ]

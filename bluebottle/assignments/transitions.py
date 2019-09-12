@@ -47,7 +47,7 @@ class AssignmentTransitions(ActivityTransitions):
         ],
         target=values.open,
     )
-    def extend_deadline(self, **kwargs):
+    def extend_end_date(self, **kwargs):
         pass
 
     @transition(

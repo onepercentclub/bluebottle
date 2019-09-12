@@ -26,6 +26,7 @@ class AssignmentAdmin(ActivityChildAdmin):
     inlines = (ApplicantInline, )
 
     base_model = Assignment
+    raw_id_fields = ('owner', 'location')
 
     list_editable = ('highlight',)
     list_display = ('title_display', 'created', 'status', 'highlight')
@@ -37,6 +38,9 @@ class AssignmentAdmin(ActivityChildAdmin):
         )}),
         (_('Details'), {'fields': (
             'description', 'capacity',
-            'deadline'
+            'end_date', 'end_date_type',
+            'registration_deadline',
+            'duration', 'expertise',
+            'is_online', 'location'
         )}),
     )

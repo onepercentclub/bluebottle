@@ -75,7 +75,8 @@ class EventTransitions(ActivityTransitions):
     @transition(
         source='*',
         target=values.closed,
-        messages=[EventClosedOwnerMessage]
+        messages=[EventClosedOwnerMessage],
+        permissions=[ActivityTransitions.can_approve]
     )
     def close(self):
         pass

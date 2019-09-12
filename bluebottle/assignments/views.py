@@ -1,45 +1,79 @@
-from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
+from rest_framework_json_api.views import AutoPrefetchMixin
 
-from bluebottle.utils.views import RetrieveUpdateAPIView, ListCreateAPIView
+from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
+from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.assignments.serializers import ApplicantSerializer, \
+    AssignmentTransitionSerializer, ApplicantTransitionSerializer, AssignmentListSerializer
+from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
-
-from bluebottle.events.models import Event, Participant
-from bluebottle.events.serializers import EventSerializer, ParticipantSerializer
-
-
-class EventList(ListCreateAPIView):
-    queryset = Event.objects.all()
-    serializer_class = EventSerializer
-
-    permission_classes = (ActivityTypePermission, ActivityPermission,)
+from bluebottle.utils.views import (
+    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin
+)
 
 
-class EventDetail(RetrieveUpdateAPIView):
-    queryset = Event.objects.all()
-    serializer_class = EventSerializer
-
-    lookup_field = 'slug'
+class AssignmentList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
+    queryset = Assignment.objects.all()
+    serializer_class = AssignmentListSerializer
+    filter_fields = ('owner__id', )
 
     permission_classes = (ActivityTypePermission, ActivityPermission,)
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
-class ParticipantList(ListCreateAPIView):
-    queryset = Participant.objects.all()
-    serializer_class = ParticipantSerializer
+    prefetch_for_includes = {
+        'initiative': ['initiative'],
+        'location': ['location'],
+        'owner': ['owner'],
+    }
+
+
+class AssignmentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = Assignment.objects.all()
+    serializer_class = AssignmentListSerializer
+
+    permission_classes = (ActivityTypePermission, ActivityPermission,)
+
+    prefetch_for_includes = {
+        'initiative': ['initiative'],
+        'location': ['location'],
+        'owner': ['owner'],
+        'contributions': ['contributions']
+    }
+
+
+class AssignmentTransitionList(TransitionList):
+    serializer_class = AssignmentTransitionSerializer
+    queryset = Assignment.objects.all()
+
+    prefetch_for_includes = {
+        'resource': ['funding'],
+    }
+
+
+class ApplicantList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
+    queryset = Applicant.objects.all()
+    serializer_class = ApplicantSerializer
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
 
-class ParticipantDetail(RetrieveUpdateAPIView):
-    queryset = Participant.objects.all()
-    serializer_class = ParticipantSerializer
-
-    lookup_field = 'slug'
+class ApplicantDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = Applicant.objects.all()
+    serializer_class = ApplicantSerializer
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+
+
+class ApplicantTransitionList(TransitionList):
+    serializer_class = ApplicantTransitionSerializer
+    queryset = Applicant.objects.all()
+    prefetch_for_includes = {
+        'resource': ['participant', 'participant__activity'],
+    }

@@ -19,10 +19,12 @@ class AssignmentFactory(factory.DjangoModelFactory):
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
     expertise = factory.SubFactory(SkillFactory)
-
+    is_online = True
+    duration = 4
+    end_date_type = 'deadline'
+    end_date = (now() + timedelta(weeks=3)).date()
     capacity = 3
-    end_date = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=5))
-    registration_deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=2))
+    registration_deadline = (now() + timedelta(weeks=2)).date()
 
 
 class ApplicantFactory(factory.DjangoModelFactory):

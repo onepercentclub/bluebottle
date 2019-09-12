@@ -375,11 +375,11 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.data['status'], 'new')
         self.assertEqual(response.data['motivation'], 'Pick me! Pick me!')
 
-    def test_accept_started_assignment(self):
-        # Applying to started assignment should fail
-        self.assignment.transitions.start()
-        response = self.client.post(self.url, json.dumps(self.apply_data), user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    # def test_accept_started_assignment(self):
+    #     # Applying to started assignment should fail
+    #     self.assignment.transitions.start()
+    #     response = self.client.post(self.url, json.dumps(self.apply_data), user=self.user)
+    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class ApplicantTransitionAPITestCase(BluebottleTestCase):
@@ -443,6 +443,11 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
     def test_accept_by_self_assignment(self):
         # Applicant should not be able to accept self
         response = self.client.post(self.url, json.dumps(self.transition_data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_accept_by_guest_assignment(self):
+        # Applicant should not be able to accept self
+        response = self.client.post(self.url, json.dumps(self.transition_data))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_reject_by_self_assignment(self):

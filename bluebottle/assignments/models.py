@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import SET_NULL
+from django.db.models import SET_NULL, Count, Sum
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 
@@ -37,6 +37,17 @@ class Assignment(Activity):
 
     transitions = TransitionManager(AssignmentTransitions, 'status')
     complete_serializer = 'bluebottle.assignments.serializers.AssignmentValidationSerializer'
+
+    @property
+    def stats(self):
+        stats = self.contributions.filter(
+            status=ApplicantTransitions.values.succeeded).\
+            aggregate(count=Count('user__id'), hours=Sum('applicant__time_spent'))
+        committed = self.contributions.filter(
+            status=ApplicantTransitions.values.new).\
+            aggregate(committed_count=Count('user__id'), committed_hours=Sum('applicant__time_spent'))
+        stats.update(committed)
+        return stats
 
     class Meta:
         verbose_name = _("Assignment")

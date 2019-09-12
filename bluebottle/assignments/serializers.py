@@ -117,7 +117,7 @@ class AssignmentSerializer(AssignmentListSerializer):
     included_serializers = dict(
         AssignmentListSerializer.included_serializers,
         **{
-            'contributions': 'bluebottle.funding.serializers.DonationSerializer',
+            'contributions': 'bluebottle.assignments.serializers.ApplicantSerializer',
         }
     )
 

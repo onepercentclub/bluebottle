@@ -7,9 +7,11 @@ from moneyed import Money
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory, RewardFactory, DonationFactory
+from bluebottle.funding.models import Donation
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
 
 
@@ -33,7 +35,7 @@ class BudgetLineListTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'activities/budgetlines',
+                'type': 'activities/budget-lines',
                 'attributes': {
                     'description': 'test',
                     'amount': {'amount': 100, 'currency': 'EUR'},
@@ -63,10 +65,10 @@ class BudgetLineListTestCase(BluebottleTestCase):
         funding_data = json.loads(response.content)
 
         self.assertEqual(
-            len(funding_data['data']['relationships']['budgetlines']['data']), 1
+            len(funding_data['data']['relationships']['budget-lines']['data']), 1
         )
         self.assertEqual(
-            funding_data['data']['relationships']['budgetlines']['data'][0]['id'],
+            funding_data['data']['relationships']['budget-lines']['data'][0]['id'],
             data['data']['id']
         )
 
@@ -193,7 +195,8 @@ class FundingDetailTestCase(BluebottleTestCase):
         super(FundingDetailTestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
-        self.initiative = InitiativeFactory.create()
+        self.geolocation = GeolocationFactory.create(locality='Barranquilla')
+        self.initiative = InitiativeFactory.create(place=self.geolocation)
 
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
@@ -249,6 +252,10 @@ class FundingDetailTestCase(BluebottleTestCase):
             len(data['data']['relationships']['contributions']['data']),
             5
         )
+
+        # Test that geolocation is included too
+        geolocation = get_included(response, 'geolocations')
+        self.assertEqual(geolocation['attributes']['locality'], 'Barranquilla')
 
 
 class FundraiserListTestCase(BluebottleTestCase):
@@ -440,6 +447,41 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
         self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
         self.assertIsNone(data['data']['attributes']['client-secret'])
+
+    def test_donate(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        donation = Donation.objects.get(pk=data['data']['id'])
+        donation.transitions.succeed()
+        donation.save()
+
+        response = self.client.get(self.funding_url, user=self.user)
+
+        donation = get_included(response, 'contributions/donations')
+        self.assertEqual(donation['relationships']['user']['data']['id'], unicode(self.user.pk))
+
+    def test_donate_anonymous(self):
+        self.data['data']['attributes']['anonymous'] = True
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['attributes']['status'], DonationTransitions.values.new)
+        self.assertEqual(data['data']['attributes']['anonymous'], True)
+        donation = Donation.objects.get(pk=data['data']['id'])
+        self.assertTrue(donation.user, self.user)
+
+        donation.transitions.succeed()
+        donation.save()
+
+        response = self.client.get(self.funding_url, user=self.user)
+
+        donation = get_included(response, 'contributions/donations')
+        self.assertFalse('user' in donation['relationships'])
 
     def test_update(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)

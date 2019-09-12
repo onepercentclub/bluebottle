@@ -16,10 +16,14 @@ class ActivityReviewTransitions(ReviewTransitions):
         if not serializer.is_valid():
             return serializer.errors
 
+    def is_activity_manager(self, user):
+        return not user or user in [self.instance.initiative.activity_manager, self.instance.owner]
+
     @transition(
         source=ReviewTransitions.values.draft,
         target=ReviewTransitions.values.submitted,
-        conditions=[is_complete]
+        conditions=[is_complete],
+        permissions=[is_activity_manager]
     )
     def submit(self):
         if (

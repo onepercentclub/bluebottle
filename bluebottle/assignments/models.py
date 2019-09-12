@@ -102,4 +102,3 @@ class Applicant(Contribution):
         super(Applicant, self).save(*args, **kwargs)
         if created:
             follow(self.user, self.activity)
-        self.activity.check_capacity()

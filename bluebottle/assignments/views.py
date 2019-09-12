@@ -61,6 +61,9 @@ class ApplicantList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 
 class ApplicantDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Applicant.objects.all()

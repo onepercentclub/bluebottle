@@ -24,7 +24,10 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 'email': 'jhon@example.com',
                 'verification': {
                     'status': 'verified',
-                }
+                },
+                'requirements': bunch.bunchify({
+                    'eventually_due': ['external_accounts', 'individual.dob.month'],
+                }),
             }),
             'requirements': bunch.bunchify({
                 'eventually_due': ['external_accounts', 'individual.dob.month'],
@@ -35,6 +38,15 @@ class ConnectAccountTestCase(BluebottleTestCase):
             })
         })
 
+        self.country_spec = stripe.CountrySpec(self.check.country)
+        self.country_spec.update({
+            'verification_fields': bunch.bunchify({
+                'individual': bunch.bunchify({
+                    'additional': ['document'],
+                    'minimum': ['individual.first_name'],
+                })
+            })
+        })
         super(ConnectAccountTestCase, self).setUp()
 
     def test_save(self):
@@ -44,6 +56,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
         ) as create:
             self.check.save()
             create.assert_called_with(
+                business_type='individual',
                 country=self.check.country,
                 metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},
                 settings={'payments': {'statement_descriptor': u''}, 'payouts': {'schedule': {'interval': 'manual'}}},
@@ -61,15 +74,22 @@ class ConnectAccountTestCase(BluebottleTestCase):
         with mock.patch(
             'stripe.Account.create', return_value=self.connect_account
         ) as create:
-            self.check.save()
-            self.assertEqual(create.call_count, 0)
+            with mock.patch(
+                'stripe.Account.retrieve', return_value=self.connect_account
+            ):
+                self.check.save()
+                self.assertEqual(create.call_count, 0)
 
     def test_update(self):
-        self.check.save()
+        with mock.patch(
+            'stripe.Account.retrieve', return_value=self.connect_account
+        ):
+            self.check.save()
+
         token = 'some-token'
 
         with mock.patch(
-            'stripe.Account.modify', return_value=self.connect_account
+                'stripe.Account.modify', return_value=self.connect_account
         ) as modify:
             self.check.update(token)
             self.assertEqual(self.check.account.id, self.connect_account.id)
@@ -85,7 +105,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
             retrieve.assert_called_once_with(self.check.account_id)
 
     def test_verified(self):
-        self.connect_account.requirements.eventually_due = []
+        self.connect_account.individual.requirements.eventually_due = []
         with mock.patch(
             'stripe.Account.retrieve', return_value=self.connect_account
         ):
@@ -99,9 +119,12 @@ class ConnectAccountTestCase(BluebottleTestCase):
 
     def test_required(self):
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+            'stripe.CountrySpec.retrieve', return_value=self.country_spec
         ):
-            self.assertEqual(self.check.required, ['external_accounts', 'individual.dob.month'])
+            with mock.patch(
+                'stripe.Account.retrieve', return_value=self.connect_account
+            ):
+                self.assertEqual(self.check.required, ['document', 'individual.first_name'])
 
     def test_disabled(self):
         self.connect_account.requirements.disabled = True
@@ -118,21 +141,46 @@ class ConnectAccountTestCase(BluebottleTestCase):
 
     def test_individual(self):
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+            'stripe.CountrySpec.retrieve', return_value=self.country_spec
         ):
-            self.assertEqual(
-                self.check.individual,
-                self.connect_account.individual
-            )
+            with mock.patch(
+                'stripe.Account.retrieve', return_value=self.connect_account
+            ):
+                self.assertEqual(
+                    self.check.individual,
+                    {'first_name': 'Jhon'}
+                )
 
 
 class StripeExternalAccountTestCase(BluebottleTestCase):
     def setUp(self):
         account_id = 'some-connect-id'
         external_account_id = 'some-bank-token'
+        country = 'NL'
 
-        self.check = StripePayoutAccount(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
-        self.check.save()
+        self.connect_account = stripe.Account(account_id)
+
+        self.connect_account.update({
+            'country': country,
+            'individual': bunch.bunchify({
+                'first_name': 'Jhon',
+                'last_name': 'Example',
+                'email': 'jhon@example.com',
+            }),
+            'requirements': bunch.bunchify({
+                'eventually_due': ['external_accounts'],
+                'disabled': False
+            }),
+            'external_accounts': stripe.ListObject([])
+        })
+
+        with mock.patch(
+            'stripe.Account.retrieve', return_value=self.connect_account
+        ):
+            self.check = StripePayoutAccount(
+                owner=BlueBottleUserFactory.create(), country=country, account_id=account_id
+            )
+            self.check.save()
 
         self.external_account = ExternalAccount(connect_account=self.check, account_id=external_account_id)
 
@@ -153,21 +201,6 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
             'routing_number': '110000000',
             'status': 'new',
             'account': 'acct_1032D82eZvKYlo2C'
-        })
-
-        self.connect_account = stripe.Account(account_id)
-        self.connect_account.update({
-            'country': self.check.country,
-            'individual': bunch.bunchify({
-                'first_name': 'Jhon',
-                'last_name': 'Example',
-                'email': 'jhon@example.com',
-            }),
-            'requirements': bunch.bunchify({
-                'eventually_due': ['external_accounts'],
-                'disabled': False
-            }),
-            'external_accounts': stripe.ListObject([])
         })
 
         super(StripeExternalAccountTestCase, self).setUp()
@@ -203,7 +236,7 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
     def test_retrieve(self):
         with mock.patch(
             'stripe.Account.retrieve', return_value=self.connect_account
-        ) as retrieve_account:
+        ):
             with mock.patch(
                 'stripe.ListObject.retrieve', return_value=self.connect_external_account
             ) as retrieve_external_account:
@@ -217,9 +250,8 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
                 )
 
                 retrieve_external_account.assert_called_with(self.external_account.account_id)
-                retrieve_account.assert_called_with(self.check.account_id)
 
-    def test_retrieve_allready_in_account(self):
+    def test_retrieve_already_in_account(self):
         list_object = stripe.ListObject()
         list_object['data'] = [self.connect_external_account]
 
@@ -227,7 +259,7 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
 
         with mock.patch(
             'stripe.Account.retrieve', return_value=self.connect_account
-        ) as retrieve_account:
+        ):
             with mock.patch(
                 'stripe.ListObject.retrieve', return_value=self.connect_external_account
             ) as retrieve_external_account:
@@ -240,5 +272,4 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
                     self.connect_external_account.last4
                 )
 
-                retrieve_account.assert_called_with(self.check.account_id)
                 self.assertEqual(retrieve_external_account.call_count, 0)

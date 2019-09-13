@@ -3,6 +3,7 @@ from django.db import ProgrammingError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 
+from dotted.collection import DottedDict
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
@@ -178,8 +179,14 @@ class StripePaymentProvider(PaymentProvider):
 class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40)
     country = models.CharField(max_length=2)
+    document_type = models.CharField(max_length=12, blank=True)
 
     provider_class = StripePaymentProvider
+
+    @property
+    def required(self):
+        specs = stripe.CountrySpec.retrieve(self.country).verification_fields.individual
+        return specs.additional + specs.minimum
 
     @property
     def account(self):
@@ -189,18 +196,18 @@ class StripePayoutAccount(PayoutAccount):
         return self._account
 
     def save(self, *args, **kwargs):
+        if self.account_id and not self.country == self.account.country:
+            self.account_id = None
+
         if not self.account_id:
             self._account = stripe.Account.create(
                 country=self.country,
                 type='custom',
                 settings=self.account_settings,
-                # Loek 05-05-2019: Although this is in documentation https://stripe.com/docs/api/accounts/create
-                # adding business_type here will cause the request to fail :-o
-                # business_type='individual',
+                business_type='individual',
                 metadata=self.metadata
             )
             self.account_id = self._account.id
-            self.transitions.submit()
 
         super(StripePayoutAccount, self).save(*args, **kwargs)
 
@@ -213,21 +220,39 @@ class StripePayoutAccount(PayoutAccount):
     @property
     def verified(self):
         return (
-            not self.account.requirements.eventually_due and
-            self.account.individual.verification.status == 'verified'
+            self.account.individual.verification.status == 'verified' and
+            not self.account.individual.requirements.eventually_due
         )
-
-    @property
-    def required(self):
-        return self.account.requirements.eventually_due
 
     @property
     def disabled(self):
         return self.account.requirements.disabled
 
     @property
+    def verification(self):
+        try:
+            return self.account.individual.verification
+        except AttributeError:
+            return {'document': {}}
+
+    @property
     def individual(self):
-        return self.account.individual
+        account = DottedDict(self.account)
+        result = DottedDict({})
+        for field in self.required:
+            if field == 'individual.verification.document':
+                result[field] = {}
+            else:
+                result[field] = unicode(account.get(field, '') or '')
+
+        if 'dob' in result['individual'] and (
+            not result['individual']['dob'].get('day') or
+            not result['individual']['dob'].get('month') or
+            not result['individual']['dob'].get('year')
+        ):
+            del result['individual']['dob']
+
+        return result['individual']
 
     @property
     def tos_acceptance(self):

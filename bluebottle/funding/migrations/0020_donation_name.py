@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='donation',
             name='name',
-            field=models.CharField(blank=True, max_length=100, null=True, verbose_name='Override donor name / Name for guest donation'),
+            field=models.CharField(blank=True, max_length=200, null=True, verbose_name='Override donor name / Name for guest donation'),
         ),
     ]

@@ -99,9 +99,6 @@ class TestProjectAdmin(BluebottleAdminTestCase):
         project = ProjectFactory.create(project_type='funding')
         self.assertIn('payout_status', self.project_admin.get_fieldsets(request, project)[3][1]['fields'])
 
-    def test_search_fields(self):
-        self.assertIn('organization__contacts__email', self.project_admin.search_fields)
-
     def test_amount_needed(self):
         project = ProjectFactory(amount_asked=Money(100, 'EUR'))
         self.assertEqual(

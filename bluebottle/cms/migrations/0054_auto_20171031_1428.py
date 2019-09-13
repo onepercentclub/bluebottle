@@ -9,7 +9,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('cms', '0053_auto_20171030_1645'),
-        ('funding', '0023_add_permissions')
     ]
 
     operations = [

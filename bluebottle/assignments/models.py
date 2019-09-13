@@ -82,9 +82,7 @@ class Assignment(Activity):
 
 class Applicant(Contribution):
     motivation = models.TextField()
-
     time_spent = models.FloatField(_('time spent'), null=True, blank=True)
-
     transitions = TransitionManager(ApplicantTransitions, 'status')
 
     class Meta:

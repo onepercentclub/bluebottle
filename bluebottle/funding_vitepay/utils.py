@@ -93,7 +93,6 @@ def update_payment_status(payment, authenticity, success, failure):
     )
 
     update_hash = hashlib.sha1(message).hexdigest().upper()
-
     if authenticity != update_hash:
         raise PaymentException('Authenticity incorrect.')
     elif success and failure:

@@ -6,7 +6,7 @@ from django.utils.functional import cached_property
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import LegacyMoneyField as MoneyField
 from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 

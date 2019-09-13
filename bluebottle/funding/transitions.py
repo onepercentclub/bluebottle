@@ -1,10 +1,9 @@
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from bluebottle.fsm import transition, ModelTransitions
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.fsm import transition, ModelTransitions
 from bluebottle.funding.messages import (
     DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
     DonationRefundedDonorMessage, FundingRealisedOwnerMessage,
@@ -79,6 +78,13 @@ class DonationTransitions(ContributionTransitions):
     def funding_is_open(self):
         return self.instance.activity.status == FundingTransitions.values.open
 
+    def update_funding(self):
+        # Invalidate cached amount_donated on funding
+        try:
+            del self.instance.activity.amount_donated
+        except AttributeError:
+            pass
+
     @transition(
         source=[values.new, values.succeeded],
         target=values.refunded,
@@ -87,14 +93,14 @@ class DonationTransitions(ContributionTransitions):
         ]
     )
     def refund(self):
-        pass
+        self.update_funding()
 
     @transition(
         source=[values.new, values.succeeded],
         target=values.failed,
     )
     def fail(self):
-        pass
+        self.update_funding()
 
     @transition(
         source=[values.new, values.failed],
@@ -105,7 +111,7 @@ class DonationTransitions(ContributionTransitions):
         ]
     )
     def succeed(self):
-        pass
+        self.update_funding()
 
 
 class PaymentTransitions(ModelTransitions):

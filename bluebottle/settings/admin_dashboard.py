@@ -33,10 +33,14 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'geo.location',
                 'permissions': ['geo.location']
             },
+            {
+                'name': 'bb_projects.projecttheme',
+                'permissions': ['bb_projects.change_projecttheme']
+            },
         ]
     },
     {
-        'label': _('Activities'),
+        'label': _('Events & Assignments'),
         'app_label': 'activities',
         'permissions': ['activities.change_activity'],
         'items': [
@@ -64,6 +68,13 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'label': _('Applicants'),
                 'permissions': ['assignments.assignment']
             },
+        ]
+    },
+    {
+        'label': _('Funding'),
+        'app_label': 'funding',
+        'permissions': ['funding.change_activity'],
+        'items': [
             {
                 'url': '/admin/funding/funding/',
                 'label': _('Funding'),
@@ -72,12 +83,22 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             {
                 'url': '/admin/funding/donation/',
                 'label': _('Donations'),
-                'permissions': ['funding.funding']
+                'permissions': ['funding.donation']
+            },
+            {
+                'url': '/admin/funding/payment/',
+                'label': _('Payments'),
+                'permissions': ['funding.payment']
+            },
+            {
+                'url': '/admin/funding/paymentaccount/',
+                'label': _('Payment Accounts'),
+                'permissions': ['funding.paymentaccount']
             },
         ]
     },
     {
-        'label': _('Projects'),
+        'label': _('Legacy'),
         'app_label': 'projects',
         'permissions': ['projects.change_project'],
         'items': [
@@ -113,39 +134,18 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'votes.vote',
                 'permissions': ['votes.vote']
             },
-
-        ]
-    },
-    {
-        'label': _('Users'),
-        'app_label': 'members',
-        'permissions': ['members.change_member'],
-        'items': [
             {
-                'name': 'members.member',
-                'permissions': ['members.change_member']
+                'name': 'tasks.task',
+                'permissions': ['tasks.change_task']
             },
             {
-                'name': 'auth.group',
-                'permissions': ['auth.change_group']
+                'name': 'tasks.taskmember',
+                'permissions': ['tasks.change_task']
             },
-        ]
-    },
-    {
-        'label': _('Tasks'),
-        'app_label': 'tasks',
-        'permissions': ['tasks.change_task'],
-        'items': [
-            {'name': 'tasks.task', 'permissions': ['tasks.change_task']},
-            {'name': 'tasks.taskmember', 'permissions': ['tasks.change_task']},
-            {'name': 'tasks.skill', 'permissions': ['tasks.change_skill']},
-        ]
-    },
-    {
-        'label': _('Donations'),
-        'app_label': 'donations',
-        'permissions': ['donations.change_donation'],
-        'items': [
+            {
+                'name': 'tasks.skill',
+                'permissions': ['tasks.change_skill']
+            },
             {
                 'name': 'donations.donation',
                 'permissions': ['donations.change_donation']
@@ -165,6 +165,22 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             {
                 'name': 'payments.payment',
                 'permissions': ['payments.change_payment']
+            },
+
+        ]
+    },
+    {
+        'label': _('Users'),
+        'app_label': 'members',
+        'permissions': ['members.change_member'],
+        'items': [
+            {
+                'name': 'members.member',
+                'permissions': ['members.change_member']
+            },
+            {
+                'name': 'auth.group',
+                'permissions': ['auth.change_group']
             },
         ]
     },

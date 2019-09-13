@@ -233,7 +233,10 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
     def get_fields(self):
         fields = super(FundingSerializer, self).get_fields()
 
-        if self.context['request'].user == self.instance.owner:
+        if not self.context['request'].user in [
+            self.instance.initiative.owner,
+            self.instance.initiative.activity_manager
+        ]:
             del fields['bank_account']
 
         return fields

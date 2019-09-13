@@ -6,6 +6,7 @@ from django.db import connection
 from django.db import models
 from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
+from django.utils.functional import cached_property
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from moneyed import Money
@@ -58,14 +59,18 @@ class PaymentProvider(PolymorphicModel):
         return str(self.polymorphic_ctype)
 
 
+class BankPaymentProvider(PaymentProvider):
+    currencies = ['EUR', 'USD', 'XOF', 'NGN', 'CFA', 'KES']
+
+
 class Funding(Activity):
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
-    target = MoneyField(default=Money(0, 'EUR'))
-    amount_matching = MoneyField(default=Money(0, 'EUR'))
+    target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
+    amount_matching = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     country = models.ForeignKey('geo.Country', null=True, blank=True)
-    account = models.ForeignKey('funding.PayoutAccount', null=True, on_delete=SET_NULL)
+    account = models.ForeignKey('funding.PayoutAccount', null=True, blank=True, on_delete=SET_NULL)
     transitions = TransitionManager(FundingTransitions, 'status')
 
     needs_review = True
@@ -89,7 +94,7 @@ class Funding(Activity):
             ('api_delete_own_funding', 'Can delete own funding through the API'),
         )
 
-    @property
+    @cached_property
     def amount_donated(self):
         """
         The sum of all contributions (donations) converted to the targets currency
@@ -210,7 +215,7 @@ class Fundraiser(models.Model):
     def __unicode__(self):
         return self.title
 
-    @property
+    @cached_property
     def amount_donated(self):
         donations = self.donations.filter(
             status=[DonationTransitions.values.succeeded]
@@ -232,10 +237,11 @@ class Fundraiser(models.Model):
 
 class Donation(Contribution):
     amount = MoneyField()
+    payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
     reward = models.ForeignKey(Reward, null=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
-    name = models.CharField(max_length=100, null=True, blank=True,
+    name = models.CharField(max_length=200, null=True, blank=True,
                             verbose_name=_('Override donor name / Name for guest donation'))
     anonymous = models.BooleanField(_('anonymous'), default=False)
 
@@ -245,6 +251,10 @@ class Donation(Contribution):
         if not self.user and not self.client_secret:
             self.client_secret = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
 
+        if not self.payout_amount or (
+                self.payout_amount.currency == self.amount.currency and
+                self.payout_amount.amount != self.amount.amount):
+            self.payout_amount = self.amount
         super(Donation, self).save(*args, **kwargs)
 
     @property
@@ -281,6 +291,13 @@ class Payment(TransitionsMixin, PolymorphicModel):
         permissions = (
             ('refund_payment', 'Can refund payments'),
         )
+
+
+class LegacyPayment(Payment):
+    method = models.CharField(max_length=100)
+    data = models.TextField()
+
+    transitions = TransitionManager(PaymentTransitions, 'status')
 
 
 class PaymentMethod(object):
@@ -339,3 +356,19 @@ class PayoutAccount(PolymorphicModel, TransitionsMixin):
     def payment_methods(self):
         provider = self.provider_class.objects.get()
         return provider.payment_methods
+
+
+class BankPayoutAccount(PayoutAccount):
+
+    provider_class = BankPaymentProvider
+
+    account_number = models.CharField(
+        _("bank account number"), max_length=100, null=True, blank=True)
+    account_holder_name = models.CharField(
+        _("account holder name"), max_length=100, null=True, blank=True)
+    account_holder_address = models.CharField(
+        _("account holder address"), max_length=500, null=True, blank=True)
+    account_bank_country = models.CharField(
+        _("bank country"), max_length=100, null=True, blank=True)
+    account_details = models.CharField(
+        _("account details"), max_length=500, null=True, blank=True)

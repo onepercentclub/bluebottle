@@ -15,7 +15,7 @@ from django_fsm import FSMField, transition
 from bluebottle import clients
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.managers import PaymentManager
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import LegacyMoneyField as MoneyField
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 

@@ -18,11 +18,11 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 class FundingTestCase(BluebottleAdminTestCase):
     def setUp(self):
         super(FundingTestCase, self).setUp()
-        self.initiative = InitiativeFactory.create()
+        user = BlueBottleUserFactory.create(first_name='Jean Baptiste')
+        self.initiative = InitiativeFactory.create(activity_manager=user)
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
         self.initiative.save()
-        user = BlueBottleUserFactory.create(first_name='Jean Baptiste')
         self.funding = FundingFactory.create(
             owner=user,
             initiative=self.initiative,

@@ -19,6 +19,10 @@ class ActivityReviewTransitions(ReviewTransitions):
     def is_activity_manager(self, user):
         return not user or user in [self.instance.initiative.activity_manager, self.instance.owner]
 
+    def can_review(self, user):
+        # TODO: Make me smart. Do we want to do this with a auth permission?
+        return not user or user.is_staff
+
     @transition(
         source=ReviewTransitions.values.draft,
         target=ReviewTransitions.values.submitted,
@@ -35,7 +39,8 @@ class ActivityReviewTransitions(ReviewTransitions):
     @transition(
         source=[ReviewTransitions.values.submitted, ReviewTransitions.values.draft],
         target=ReviewTransitions.values.approved,
-        conditions=[is_complete]
+        conditions=[is_complete],
+        permissions=[can_review]
     )
     def approve(self):
         self.instance.transitions.reviewed()
@@ -47,7 +52,8 @@ class ActivityReviewTransitions(ReviewTransitions):
             ReviewTransitions.values.submitted,
             ReviewTransitions.values.needs_work
         ],
-        target=ReviewTransitions.values.closed
+        target=ReviewTransitions.values.closed,
+        permissions=[can_review]
     )
     def close(self):
         pass
@@ -55,6 +61,7 @@ class ActivityReviewTransitions(ReviewTransitions):
     @transition(
         source=[ReviewTransitions.values.closed],
         target=ReviewTransitions.values.submitted,
+        permissions=[can_review]
     )
     def reopen(self):
         pass
@@ -73,9 +80,14 @@ class ActivityTransitions(ModelTransitions):
         if not self.instance.initiative.status == 'approved':
             return _('Please make sure the initiative is approved')
 
+    def can_approve(self, user):
+        # TODO: Make me smart. Do we want to do this with a auth permission?
+        return not user or user.is_staff
+
     @transition(
         source=values.in_review,
         target=values.open,
+        permissions=[can_approve]
     )
     def reviewed(self):
         pass
@@ -83,6 +95,7 @@ class ActivityTransitions(ModelTransitions):
     @transition(
         source=values.closed,
         target=values.in_review,
+        permissions=[can_approve]
     )
     def reopen(self, **kwargs):
         pass
@@ -98,4 +111,4 @@ class ContributionTransitions(ModelTransitions):
         return self.instance.user == user
 
     def is_activity_manager(self, user):
-        return self.instance.activity.initiative.activity_manager == user
+        return user in [self.instance.activity.initiative.activity_manager, self.instance.activity.owner]

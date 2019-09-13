@@ -13,17 +13,20 @@ from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.funding.exception import PaymentException
+from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount)
-from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwavePayoutAccount
+    BudgetLine, PayoutAccount, BankPayoutAccount, BankPaymentProvider, LegacyPayment)
+from bluebottle.funding.transitions import DonationTransitions
+from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwavePayoutAccount, \
+    FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayoutAccount
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayPayoutAccount
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.utils.admin import FSMAdmin
+from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +36,11 @@ class PayoutAccountFundingLinkMixin(object):
         return format_html(", ".join([
             format_html(
                 u"<a href='{}'>{}</a>",
-                reverse('admin:funding_funding_change', args=(p.id, )),
+                reverse('admin:funding_funding_change', args=(p.id,)),
                 p.title
             ) for p in obj.funding_set.all()
         ]))
+
     funding_links.short_description = _('Funding activities')
 
 
@@ -53,7 +57,7 @@ class PaymentLinkMixin(object):
 
 class PayoutAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
     base_model = PayoutAccount
-    raw_id_fields = ('owner', )
+    raw_id_fields = ('owner',)
     readonly_fields = ('status', 'funding_links')
     fields = ('owner', 'status', 'funding_links')
 
@@ -63,7 +67,7 @@ class PayoutAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAd
     base_model = PayoutAccount
     list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
     list_filter = ('reviewed', PolymorphicChildModelFilter)
-    readonly_fields = ('funding_links', )
+    readonly_fields = ('funding_links',)
     raw_id_fields = ('owner',)
 
     ordering = ('-created',)
@@ -71,28 +75,20 @@ class PayoutAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAd
         StripePayoutAccount,
         FlutterwavePayoutAccount,
         LipishaPayoutAccount,
-        VitepayPayoutAccount
+        VitepayPayoutAccount,
+        BankPayoutAccount
     ]
 
 
-class DonationInline(admin.TabularInline, PaymentLinkMixin):
-    model = Donation
-
-    raw_id_fields = ('user',)
-    readonly_fields = ('donation', 'user', 'amount', 'status', 'payment_link')
-    fields = readonly_fields
-    extra = 0
-
-    def donation(self, obj):
-        url = reverse('admin:funding_donation_change', args=(obj.id,))
-        return format_html('<a href="{}">{} {}</a>',
-                           url,
-                           obj.created.date(),
-                           obj.created.strftime('%H:%M'))
+@admin.register(BankPayoutAccount)
+class BankPayoutAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
+    base_model = PayoutAccount
+    model = BankPayoutAccount
+    raw_id_fields = ('owner',)
+    fields = ('owner', 'account_holder_name', 'bank_country', 'account_number')
 
 
 class BudgetLineInline(admin.TabularInline):
-
     model = BudgetLine
 
     extra = 0
@@ -100,12 +96,14 @@ class BudgetLineInline(admin.TabularInline):
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, DonationInline, MessageAdminInline)
+    inlines = (BudgetLineInline, MessageAdminInline)
     base_model = Funding
+
+    search_fields = ['title', 'slug', 'description']
 
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['account']
 
-    readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_donated', 'amount_raised']
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_donated', 'amount_raised', 'donations_link']
 
     list_display = ['title_display', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
 
@@ -117,27 +115,54 @@ class FundingAdmin(ActivityChildAdmin):
             'description',
             'duration',
             'deadline',
+            'account',
             'target',
             'amount_matching',
             'amount_donated',
             'amount_raised',
-            'account'
+            'donations_link'
         )}),
     )
+
+    def donations_link(self, obj):
+        url = reverse('admin:funding_donation_changelist')
+        total = obj.contributions.filter(status=DonationTransitions.values.succeeded).count()
+        return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
+
+    donations_link.short_description = _("Donations")
 
 
 @admin.register(Donation)
 class DonationAdmin(FSMAdmin, PaymentLinkMixin):
     raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'status']
+    readonly_fields = ['payment_link', 'status', 'payment_link', 'funding_link']
     model = Donation
-    list_display = ['user', 'status', 'amount']
+    list_display = ['created', 'payment_link', 'funding_link', 'user_link', 'status', 'amount', 'payout_amount']
+    list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
+    date_hierarchy = 'created'
+
+    def user_link(self, obj):
+        # if obj.anonymous:
+        #     format_html('<i style="color: #999">anonymous</i>')
+        if obj.user:
+            user_url = reverse('admin:funding_funding_change', args=(obj.user.id,))
+            return format_html(u'<a href="{}">{}</a>', user_url, obj.user.full_name)
+        return format_html('<i style="color: #999">guest</i>')
+    user_link.short_description = _('User')
+
+    def funding_link(self, obj):
+        funding_url = reverse('admin:funding_funding_change', args=(obj.activity.id,))
+        return format_html(u'<a href="{}">{}</a>', funding_url, obj.activity.title)
+    funding_link.short_description = _('Funding activity')
+
+    def get_changelist(self, request, **kwargs):
+        self.total_column = 'amount'
+        return TotalAmountAdminChangeList
 
     fields = ['created', 'activity', 'user', 'amount', 'status', 'payment_link']
 
 
 class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
-
     model = Funding
 
     raw_id_fields = ['donation']
@@ -182,11 +207,25 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         return response
 
 
+@admin.register(LegacyPayment)
+class LegacyPaymentPaymentAdmin(PaymentChildAdmin):
+    base_model = LegacyPayment
+
+
 @admin.register(Payment)
 class PaymentAdmin(PolymorphicParentModelAdmin):
     base_model = Payment
+    list_filter = (PolymorphicChildModelFilter, 'status')
+
+    list_display = ('created', 'type', 'status')
+
+    def type(self, obj):
+        return obj.get_real_instance_class().__name__
+
     child_models = (
         StripeSourcePayment,
+        FlutterwavePayment,
+        LegacyPayment,
         PledgePayment
     )
 
@@ -208,5 +247,11 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
         StripePaymentProvider,
         VitepayPaymentProvider,
         FlutterwavePaymentProvider,
-        LipishaPaymentProvider
+        LipishaPaymentProvider,
+        BankPaymentProvider
     )
+
+
+@admin.register(BankPaymentProvider)
+class BankPaymentProviderAdmin(PaymentProviderChildAdmin):
+    base_model = BankPaymentProvider

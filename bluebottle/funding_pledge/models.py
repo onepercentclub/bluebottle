@@ -17,6 +17,6 @@ class PledgePaymentProvider(PaymentProvider):
                 provider='pledge',
                 code='pledge',
                 name=_('Pledge'),
-                currencies=['EUR', 'USD']
+                currencies=['EUR', 'USD', 'NGN', 'UGX', 'KES', 'XOF']
             )
         ]

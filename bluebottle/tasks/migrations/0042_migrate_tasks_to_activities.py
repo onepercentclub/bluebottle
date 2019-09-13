@@ -53,6 +53,7 @@ def migrate_tasks(apps, schema_editor):
 
     Contribution = apps.get_model('activities', 'Contribution')
     Participant = apps.get_model('events', 'Participant')
+    Applicant = apps.get_model('assignments', 'Applicant')
 
     Initiative = apps.get_model('initiatives', 'Initiative')
     ContentType = apps.get_model('contenttypes', 'ContentType')
@@ -60,11 +61,14 @@ def migrate_tasks(apps, schema_editor):
     # Clean-up previous migrations of projects to initiatives
     Event.objects.all().delete()
     Assignment.objects.all().delete()
+
     event_ctype = ContentType.objects.get_for_model(Event)
     participant_ctype= ContentType.objects.get_for_model(Participant)
+    assignment_ctype = ContentType.objects.get_for_model(Assignment)
+    applicant_ctype= ContentType.objects.get_for_model(Applicant)
 
     for task in Task.objects.all():
-        if task.type == 'event':
+        if task.type == 'event' and (not task.skill_id or not task.skill.expertise):
             initiative = Initiative.objects.get(slug=task.project.slug)
             # geolocation = Geolocation.objects.create()
             geolocation = None
@@ -91,6 +95,7 @@ def migrate_tasks(apps, schema_editor):
             )
             event.created = task.created
             event.updated = task.updated
+            event.polymorphic_ctype = event_ctype
             event.save()
 
             for task_member in task.members.all():
@@ -105,28 +110,57 @@ def migrate_tasks(apps, schema_editor):
                 )
                 participant.created = task.created
                 participant.updated = task.updated
+                participant.polymorphic_ctype = participant_ctype
                 participant.save()
-        Contribution.objects.filter(polymorphic_ctype__isnull=True).update(polymorphic_ctype=participant_ctype)
-        Activity.objects.filter(polymorphic_ctype__isnull=True).update(polymorphic_ctype=event_ctype)
+        else:
+            initiative = Initiative.objects.get(slug=task.project.slug)
+            # geolocation = Geolocation.objects.create()
+            geolocation = None
+            status = map_event_status(task)
+            end_date_type = 'deadline'
+            if task.type == 'event':
+                end_date_type = 'on_date'
 
-    # title
-    # description
-    # location / geolocation
-    # people_needed                                               )
-    # project
-    # author
-    # status
-    # type
-    # accepting
-    # needs_motivation
-    # deadline
-    # deadline_to_apply
-    # places / place
-    # time_needed
-    # skill
-    #
-    # created
-    # updated
+            assignment = Assignment.objects.create(
+                # activity fields
+                initiative=initiative,
+                title=task.title,
+                slug=slugify(task.title),
+                description=task.description,
+                status=status,
+                owner=task.author,
+
+                # assignment fields
+                end_date_type=end_date_type,
+                registration_deadline=task.deadline_to_apply.date(),
+                end_date=task.deadline.date(),
+                capacity=task.people_needed,
+                is_online=bool(not task.location),
+                location=geolocation,
+                duration=task.time_needed,
+                expertise=task.skill
+            )
+
+            assignment.created = task.created
+            assignment.updated = task.updated
+            assignment.polymorphic_ctype = assignment_ctype
+            assignment.save()
+
+            for task_member in task.members.all():
+                status = task.status
+
+                applicant = Applicant.objects.create(
+                    activity=assignment,
+                    user=task_member.member,
+                    status=status,
+                    time_spent=task_member.time_spent,
+                    motivation=task_member.motivation
+
+                )
+                applicant.created = task.created
+                applicant.updated = task.updated
+                applicant.polymorphic_ctype = applicant_ctype
+                applicant.save()
 
 
 class Migration(migrations.Migration):

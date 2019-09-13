@@ -305,6 +305,10 @@ class SkillSerializer(serializers.ModelSerializer):
         model = Skill
         fields = ('id', 'name', 'expertise')
 
+    class JSONAPIMeta:
+        included_resources = ['resource', ]
+        resource_name = 'skills'
+
 
 class TaskPreviewSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()

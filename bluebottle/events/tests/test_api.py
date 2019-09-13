@@ -400,19 +400,19 @@ class EventTransitionTestCase(BluebottleTestCase):
         data = json.loads(response.content)
         review_transitions = [
             {u'available': True, u'name': u'submit', u'target': u'submitted'},
-            {u'available': True, u'name': u'close', u'target': u'closed'},
-            {u'available': True, u'name': u'approve', u'target': u'approved'}
+            {u'available': False, u'name': u'close', u'target': u'closed'},
+            {u'available': False, u'name': u'approve', u'target': u'approved'}
         ]
         transitions = [
-            {u'available': True, u'name': u'reviewed', u'target': u'open'},
-            {u'available': True, u'name': u'close', u'target': u'closed'}
+            {u'available': False, u'name': u'reviewed', u'target': u'open'},
+            {u'available': False, u'name': u'close', u'target': u'closed'}
         ]
         self.assertEqual(data['data']['meta']['review-transitions'], review_transitions)
         self.assertEqual(data['data']['meta']['transitions'], transitions)
 
     def test_submit_other_user(self):
 
-        # Other user can't submit the project
+        # Other user can't submit the event
         response = self.client.post(
             self.review_transition_url,
             json.dumps(self.review_data),
@@ -425,7 +425,7 @@ class EventTransitionTestCase(BluebottleTestCase):
 
     def test_submit_owner(self):
 
-        # Owner can submit the project
+        # Owner can submit the event
         response = self.client.post(
             self.review_transition_url,
             json.dumps(self.review_data),
@@ -439,7 +439,7 @@ class EventTransitionTestCase(BluebottleTestCase):
 
     def test_submit_manager(self):
 
-        # Activity manager can submit the project
+        # Activity manager can submit the event
         response = self.client.post(
             self.review_transition_url,
             json.dumps(self.review_data),
@@ -460,11 +460,9 @@ class EventTransitionTestCase(BluebottleTestCase):
             user=self.owner
         )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content)
-
-        self.assertEqual(data['included'][0]['type'], 'activities/events')
-        self.assertEqual(data['included'][0]['attributes']['status'], 'closed')
+        self.assertEqual(data['errors'][0], "Transition is not available")
 
     def test_approve(self):
         self.data['data']['attributes']['transition'] = 'approve'

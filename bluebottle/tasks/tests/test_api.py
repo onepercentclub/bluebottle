@@ -1,8 +1,8 @@
-from datetime import timedelta
-import mock
 import time
 import urllib
+from datetime import timedelta
 
+import mock
 from django.contrib.auth.models import Group, Permission
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -10,20 +10,17 @@ from django.core.signing import TimestampSigner
 from django.core.urlresolvers import reverse
 from django.test import tag
 from django.test.utils import override_settings
-
-from django_elasticsearch_dsl.test import ESTestCase
 from django.utils import timezone
-
+from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.geo.models import Country
 from bluebottle.tasks.models import Task, TaskMember
-from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 
 @override_settings(
@@ -548,42 +545,6 @@ class TaskApiTestcase(ESTestCase, BluebottleTestCase):
                 'type': task.type,
                 'place': {
                     'country': task.place.country.pk,
-                    'locality': 'Amsterdam',
-                    'street': 'Roggeveenstraat',
-                    'position': (52.0, 43.4)
-                }
-            },
-            token=self.some_token
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        task.place.refresh_from_db()
-        self.assertEqual(
-            task.place.locality, 'Amsterdam'
-        )
-
-    def test_update_task_without_place(self):
-        task = TaskFactory.create(
-            author=self.some_user,
-            project=self.some_project
-        )
-
-        task_detail_url = reverse('task_detail', kwargs={'pk': task.pk})
-        response = self.client.put(
-            task_detail_url,
-            {
-                'id': task.pk,
-                'people_needed': task.people_needed,
-                'deadline': task.deadline,
-                'deadline_to_apply': task.deadline_to_apply,
-                'title': task.title,
-                'description': task.description,
-                'project': self.some_project.slug,
-                'location': task.location,
-                'skill': task.skill.pk,
-                'time_needed': task.time_needed,
-                'type': task.type,
-                'place': {
-                    'country': Country.objects.first().pk,
                     'locality': 'Amsterdam',
                     'street': 'Roggeveenstraat',
                     'position': (52.0, 43.4)

@@ -22,7 +22,7 @@ class DonationStatusFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         choises = (('all', _('All')),
-                   ('pending_or_success', _('Pending/Success')))
+                   ('pending_or_success', _('Pending/Success/Pledged')))
         return choises + Order.STATUS_CHOICES
 
     def choices(self, cl):
@@ -39,7 +39,9 @@ class DonationStatusFilter(SimpleListFilter):
         if self.value() is None or self.value() == 'pending_or_success':
             return queryset.filter(
                 order__status__in=[StatusDefinition.PENDING,
-                                   StatusDefinition.SUCCESS])
+                                   StatusDefinition.SUCCESS,
+                                   StatusDefinition.PLEDGED,
+                                   ])
         elif self.value() != 'all':
             return queryset.filter(order__status=self.value())
         return queryset
@@ -102,8 +104,10 @@ class DonationAdmin(admin.ModelAdmin):
 
     form = DonationAdminForm
     date_hierarchy = 'created'
-    list_display = ('created', 'completed', 'order_payment_links', 'admin_project', 'fundraiser',
-                    'user_full_name', 'amount',
+    list_display = ('created', 'order_payment_links',
+                    'admin_project', 'fundraiser',
+                    'user_full_name',
+                    'amount', 'payout_amount',
                     'related_payment_method', 'status')
     list_filter = (DonationStatusFilter, DonationUserFilter, 'amount_currency')
     ordering = ('-created',)

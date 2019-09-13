@@ -27,7 +27,6 @@ class EventList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'initiative': ['initiative'],
         'location': ['location'],
         'owner': ['owner'],
-        'contributions': ['contributions']
     }
 
     def perform_create(self, serializer):
@@ -44,7 +43,7 @@ class EventDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
         'initiative': ['initiative'],
         'location': ['location'],
         'owner': ['owner'],
-        'contributions': ['contributions']
+        'contributions': ['contributions'],
     }
 
 

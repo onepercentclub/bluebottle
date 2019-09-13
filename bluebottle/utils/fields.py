@@ -30,17 +30,41 @@ class MoneyField(DjangoMoneyField):
             currency_choices=currency_choices,
             **kwargs)
 
-    def formfield(self, **kwargs):
+    def get_default_currency(self):
         from bluebottle.funding.models import PaymentProvider
+        return PaymentProvider.get_default_currency()
+
+    def get_currency_choices(self):
+        from bluebottle.funding.models import PaymentProvider
+        return PaymentProvider.get_currency_choices()
+
+    def deconstruct(self):
+        name, path, args, kwargs = super(MoneyField, self).deconstruct()
+
+        if self.default is not None:
+            kwargs['default'] = self.default.amount
+        if self.default_currency != self.get_default_currency():
+            kwargs['default_currency'] = str(self.default_currency)
+        if self.currency_choices != self.get_currency_choices():
+            kwargs['currency_choices'] = self.currency_choices
+        return name, path, args, kwargs
+
+    def formfield(self, **kwargs):
         # For the form load the actual available currencies from PaymentProviders
         defaults = {'form_class': MoneyFormField}
         defaults.update(kwargs)
-        defaults['choices'] = PaymentProvider.get_currency_choices()
-        defaults['currency_choices'] = PaymentProvider.get_currency_choices() or [('EUR', 'Euro')]
-        defaults['default_currency'] = PaymentProvider.get_default_currency() or 'EUR'
-        if self.default is not None:
-            defaults['default_amount'] = self.default
-        return super(MoneyField, self).formfield(**defaults)
+        self.default_currency = self.get_default_currency()
+        self.currency_choices = self.get_currency_choices()
+        return super(MoneyField, self).formfield(**kwargs)
+
+
+class LegacyMoneyField(MoneyField):
+
+    def get_default_currency(self):
+        return 'EUR'
+
+    def get_currency_choices(self):
+        return [('EUR', 'Euro')]
 
 
 # Validation references:

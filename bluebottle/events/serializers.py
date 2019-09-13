@@ -159,12 +159,16 @@ class EventListSerializer(BaseActivitySerializer):
 class EventSerializer(NoCommitMixin, EventListSerializer):
     contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
 
+    class Meta(EventListSerializer.Meta):
+        fields = EventListSerializer.Meta.fields + (
+            'contributions',
+        )
+
     class JSONAPIMeta(EventListSerializer.JSONAPIMeta):
         included_resources = EventListSerializer.JSONAPIMeta.included_resources + [
             'contributions',
             'contributions.user'
         ]
-        resource_name = 'activities/events'
 
     included_serializers = dict(
         EventListSerializer.included_serializers,

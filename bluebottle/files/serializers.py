@@ -8,12 +8,12 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.files.models import Document, Image
 
 
-class FileField(ResourceRelatedField):
+class DocumentField(ResourceRelatedField):
     def get_queryset(self):
         return Document.objects.all()
 
 
-class FileSerializer(ModelSerializer):
+class DocumentSerializer(ModelSerializer):
     file = serializers.FileField(write_only=True)
     filename = serializers.SerializerMethodField()
     links = serializers.SerializerMethodField()
@@ -44,7 +44,7 @@ class ImageField(ResourceRelatedField):
         return Image.objects.all()
 
 
-class ImageSerializer(FileSerializer):
+class ImageSerializer(DocumentSerializer):
 
     def get_links(self, obj):
         if hasattr(self, 'sizes'):

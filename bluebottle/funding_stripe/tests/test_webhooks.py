@@ -365,6 +365,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         self.connect_account = stripe.Account('some-account-id')
         self.connect_account.update(bunch.bunchify({
+            'country': 'NL',
             'requirements': {
                 'disabled': False,
                 'eventually_due': [],
@@ -372,7 +373,10 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             'individual': {
                 'verification': {
                     'status': 'verified',
-                }
+                },
+                'requirements': {
+                    'eventually_due': [],
+                },
             },
 
         }))

@@ -25,7 +25,7 @@ class DocumentSerializer(ModelSerializer):
     }
 
     def get_links(self, obj):
-        return 'Not implemented'
+        return {}
 
     def get_filename(self, instance):
         return os.path.basename(instance.file.name)

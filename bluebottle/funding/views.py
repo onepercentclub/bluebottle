@@ -130,7 +130,7 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Funding.objects.all()
     serializer_class = FundingSerializer
 
-    permission_classes = []
+    permission_classes = (ActivityPermission,)
 
     prefetch_for_includes = {
         'initiative': ['initiative'],

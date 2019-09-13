@@ -328,6 +328,23 @@ class FundingDetailTestCase(BluebottleTestCase):
             bank_account['type'], 'payout-accounts/stripe-external-accounts'
         )
 
+    def test_update_other_user(self):
+        response = self.client.patch(
+            self.funding_url,
+            data=json.dumps({
+                'data': {
+                    'id': self.funding.pk,
+                    'type': 'activities/fundings',
+                    'attributes': {
+                        'title': 'new title',
+                    }
+
+                }
+            }),
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, 403)
+
 
 class FundraiserListTestCase(BluebottleTestCase):
     def setUp(self):

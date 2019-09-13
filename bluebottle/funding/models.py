@@ -70,7 +70,7 @@ class Funding(Activity):
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     amount_matching = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     country = models.ForeignKey('geo.Country', null=True, blank=True)
-    account = models.ForeignKey('funding.PayoutAccount', null=True, blank=True, on_delete=SET_NULL)
+    bank_account = models.ForeignKey('funding.BankAccount', null=True, blank=True, on_delete=SET_NULL)
     transitions = TransitionManager(FundingTransitions, 'status')
 
     needs_review = True
@@ -372,3 +372,7 @@ class BankPayoutAccount(PayoutAccount):
         _("bank country"), max_length=100, null=True, blank=True)
     account_details = models.CharField(
         _("account details"), max_length=500, null=True, blank=True)
+
+
+class BankAccount(PolymorphicModel):
+    pass

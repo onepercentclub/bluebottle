@@ -1,8 +1,12 @@
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
-from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework_json_api.relations import (
+    ResourceRelatedField, PolymorphicResourceRelatedField
+)
 from rest_framework_json_api.serializers import (
-    ModelSerializer, ValidationError, IntegerField)
+    ModelSerializer, ValidationError, IntegerField,
+    PolymorphicModelSerializer
+)
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer,
@@ -10,7 +14,12 @@ from bluebottle.activities.utils import (
 )
 from bluebottle.files.serializers import ImageField
 from bluebottle.funding.filters import DonationListFilter
-from bluebottle.funding.models import Funding, Donation, Payment, Fundraiser, Reward, BudgetLine, PaymentMethod
+from bluebottle.funding.models import (
+    Funding, Donation, Payment,
+    Fundraiser, Reward, BudgetLine, PaymentMethod,
+    BankAccount
+)
+from bluebottle.funding_stripe.polymorphic_serializers import ExternalAccountSerializer
 from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.transitions.serializers import TransitionSerializer
@@ -200,12 +209,34 @@ class FundingListSerializer(BaseActivitySerializer):
     }
 
 
+class BankAccountSerializer(PolymorphicModelSerializer):
+    polymorphic_serializers = [
+        ExternalAccountSerializer,
+    ]
+
+    class Meta:
+        model = BankAccount
+
+
 class FundingSerializer(NoCommitMixin, FundingListSerializer):
     rewards = RewardSerializer(many=True, required=False)
     budget_lines = BudgetLineSerializer(many=True, required=False)
-    payment_methods = PaymentMethodSerializer(many=True, read_only=True)
+#    payment_methods = PaymentMethodSerializer(many=True, read_only=True)
     contributions = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
     validations = NonModelRelatedResourceField(FundingValidationSerializer)
+
+    bank_account = PolymorphicResourceRelatedField(
+        BankAccountSerializer,
+        queryset=BankAccount.objects.all()
+    )
+
+    def get_fields(self):
+        fields = super(FundingSerializer, self).get_fields()
+
+        if self.context['request'].user == self.instance.owner:
+            del fields['bank_account']
+
+        return fields
 
     class Meta(FundingListSerializer.Meta):
         fields = FundingListSerializer.Meta.fields + (
@@ -215,7 +246,8 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
             'fundraisers',
             'rewards',
             'validations',
-            'contributions'
+            'contributions',
+            'bank_account'
         )
 
     class JSONAPIMeta(FundingListSerializer.JSONAPIMeta):
@@ -225,7 +257,8 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
             'budget_lines',
             'validations',
             'contributions',
-            'contributions.user'
+            'contributions.user',
+            'bank_account',
         ]
 
     included_serializers = dict(
@@ -236,6 +269,7 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
             'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
             'contributions': 'bluebottle.funding.serializers.DonationSerializer',
             'validations': 'bluebottle.funding.serializers.FundingValidationSerializer',
+            'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
         }
     )
 

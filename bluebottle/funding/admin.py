@@ -100,8 +100,7 @@ class FundingAdmin(ActivityChildAdmin):
     base_model = Funding
 
     search_fields = ['title', 'slug', 'description']
-
-    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['account']
+    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
 
     readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_donated', 'amount_raised', 'donations_link']
 
@@ -115,12 +114,12 @@ class FundingAdmin(ActivityChildAdmin):
             'description',
             'duration',
             'deadline',
-            'account',
             'target',
             'amount_matching',
             'amount_donated',
             'amount_raised',
-            'donations_link'
+            'donations_link',
+            'bank_account'
         )}),
     )
 

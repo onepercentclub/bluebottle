@@ -8,7 +8,7 @@ from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
-    PayoutAccount)
+    PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.transitions import StripeSourcePaymentTransitions
 from bluebottle.funding_stripe.utils import stripe
@@ -281,7 +281,7 @@ class StripePayoutAccount(PayoutAccount):
         }
 
 
-class ExternalAccount(models.Model):
+class ExternalAccount(BankAccount):
     connect_account = models.ForeignKey(StripePayoutAccount, related_name='external_accounts')
     account_id = models.CharField(max_length=40)
 
@@ -314,3 +314,6 @@ class ExternalAccount(models.Model):
             "tenant_name": connection.tenant.client_name,
             "tenant_domain": connection.tenant.domain_url,
         }
+
+    class JSONAPIMeta:
+        resource_name = 'payout-accounts/stripe-external-accounts'

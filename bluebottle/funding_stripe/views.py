@@ -15,11 +15,11 @@ from bluebottle.funding_stripe.models import (
 )
 from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
 from bluebottle.funding_stripe.serializers import (
-    ConnectAccountSerializer, ExternalAccountSerializer,
-    StripePaymentSerializer)
-from bluebottle.funding_stripe.serializers import (
-    StripeSourcePaymentSerializer, PaymentIntentSerializer
+    StripeSourcePaymentSerializer, PaymentIntentSerializer,
+    ConnectAccountSerializer,
+    StripePaymentSerializer
 )
+from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding_stripe.utils import stripe
 from bluebottle.members.models import Member
 from bluebottle.utils.permissions import IsOwner
@@ -100,7 +100,7 @@ class ExternalAccountsList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     permission_classes = []
 
     queryset = ExternalAccount.objects.all()
-    serializer_class = ExternalAccountSerializer
+    serializer_class = BankAccountSerializer
 
     prefetch_for_includes = {
         'connect_account': ['connect_account'],
@@ -118,7 +118,7 @@ class ExternalAccountsList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
 
 class ExternalAccountsDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = ExternalAccount.objects.all()
-    serializer_class = ExternalAccountSerializer
+    serializer_class = BankAccountSerializer
 
     prefetch_for_includes = {
         'connect_account': ['connect_account'],

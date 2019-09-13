@@ -10,7 +10,7 @@ from bluebottle.funding_stripe.views import (
 urlpatterns = [
 
     # Payout accounts
-    url(r'^/connect-accounts$',
+    url(r'^/payout-account$',
         ConnectAccountDetails.as_view(),
         name='connect-account-details'),
     url(r'^/external-account$',

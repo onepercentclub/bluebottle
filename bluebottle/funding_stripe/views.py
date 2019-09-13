@@ -1,5 +1,6 @@
 from django.http import HttpResponse, Http404
 from django.views.generic import View
+from rest_framework import serializers
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -86,7 +87,12 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')
         if token:
-            serializer.instance.update(token)
+            try:
+                serializer.instance.update(token)
+            except stripe.error.InvalidRequestError, e:
+                raise serializers.ValidationError(
+                    {e.param.replace('[', '/').replace(']', ''): [{'details': e.message, 'code': e.code}]}
+                )
         serializer.save()
 
 

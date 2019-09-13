@@ -2,8 +2,8 @@ import mimetypes
 
 import magic
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.http import HttpResponse
+from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -66,5 +66,4 @@ class ImageList(FileList):
         uploaded_file = self.request.FILES['file']
         if not mime.from_buffer(uploaded_file.read()) == uploaded_file.content_type:
             raise ValidationError('Mime-type does not match Content-Type')
-
         serializer.save(owner=self.request.user)

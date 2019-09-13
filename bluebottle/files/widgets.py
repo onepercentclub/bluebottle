@@ -1,6 +1,6 @@
 from django.forms import Select
 
-from bluebottle.files.models import Image
+from bluebottle.files.models import Image, Document
 
 
 class ImageWidget(Select):
@@ -21,7 +21,7 @@ class DocumentWidget(Select):
     def get_context(self, name, value, attrs):
         context = super(DocumentWidget, self).get_context(name, value, attrs)
         if value:
-            context['file'] = Image.objects.get(pk=value).file
+            context['file'] = Document.objects.get(pk=value).file
         else:
             context['file'] = None
         return context

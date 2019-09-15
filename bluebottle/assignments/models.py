@@ -55,6 +55,7 @@ class Assignment(Activity):
     class Meta:
         verbose_name = _("Assignment")
         verbose_name_plural = _("Assignments")
+        ordering = ('-created',)
         permissions = (
             ('api_read_assignment', 'Can view assignment through the API'),
             ('api_add_assignment', 'Can add assignment through the API'),

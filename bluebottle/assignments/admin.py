@@ -50,7 +50,6 @@ class AssignmentAdmin(ActivityChildAdmin):
     base_model = Assignment
     raw_id_fields = ('owner', 'location')
 
-    list_editable = ('highlight',)
     list_display = ('title_display', 'created', 'status', 'highlight')
 
     fieldsets = (

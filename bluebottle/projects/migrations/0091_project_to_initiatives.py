@@ -195,7 +195,7 @@ def migrate_projects(apps, schema_editor):
                 target=project.amount_asked,
                 amount_matching=project.amount_extra,
                 country=project.country,
-                account=account
+                bank_account=account.external_accounts[0] if account else None
             )
 
             # TODO: Add budget lines

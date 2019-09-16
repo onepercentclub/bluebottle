@@ -1,3 +1,5 @@
+import json
+
 from django.conf import settings
 from django.db import ProgrammingError
 from django.db import models, connection
@@ -176,17 +178,38 @@ class StripePaymentProvider(PaymentProvider):
         return methods
 
 
+with open('bluebottle/funding_stripe/data/document_spec.json') as file:
+    DOCUMENT_SPEC = json.load(file)
+
+
 class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40)
     country = models.CharField(max_length=2)
-    document_type = models.CharField(max_length=12, blank=True)
+    document_type = models.CharField(max_length=20, blank=True)
 
     provider_class = StripePaymentProvider
 
     @property
+    def document_spec(self):
+        for spec in DOCUMENT_SPEC:
+            if spec['id'] == self.country:
+                return spec
+
+    @property
     def required(self):
         specs = stripe.CountrySpec.retrieve(self.country).verification_fields.individual
-        return specs.additional + specs.minimum
+        fields = specs.additional + specs.minimum
+
+        if 'individual.verification.document' in fields:
+            fields.remove('individual.verification.document')
+
+            fields.append('documentType')
+            fields.append('individual.verification.document.front')
+
+            if self.document_type in self.document_spec['document_types_requiring_back']:
+                fields.append('individual.verification.document.back')
+
+        return fields
 
     @property
     def account(self):

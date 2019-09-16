@@ -227,7 +227,9 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
 
     bank_account = PolymorphicResourceRelatedField(
         BankAccountSerializer,
-        queryset=BankAccount.objects.all()
+        queryset=BankAccount.objects.all(),
+        required=False,
+        allow_null=True
     )
 
     def get_fields(self):

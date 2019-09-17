@@ -1,0 +1,307 @@
+[
+    {
+        "document_types_requiring_back": [
+            "id-card",
+            "drivers-license"
+        ],
+        "id": "AT",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card",
+            "drivers-license"
+        ],
+        "id": "AU",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card"
+        ],
+        "id": "BE",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card",
+            "drivers-license"
+        ],
+        "id": "BR",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card",
+            "drivers-license"
+        ],
+        "id": "CA",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card"
+        ],
+        "id": "CH",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card"
+        ],
+        "id": "DE",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card"
+        ],
+        "id": "DK",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card"
+        ],
+        "id": "ES",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card"
+        ],
+        "id": "FI",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card",
+            "drivers-license"
+        ],
+        "id": "FR",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card"
+        ],
+        "id": "GB",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [],
+        "id": "HK",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card"
+        ],
+        "id": "IE",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card"
+        ],
+        "id": "IT",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card",
+            "drivers-license"
+        ],
+        "id": "ID",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card",
+            "drivers-license",
+            "juki-card",
+            "foreign-nationals-residence-card",
+            "health-insurance-card"
+        ],
+        "id": "JP",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license",
+            "juki-card",
+            "foreign-nationals-residence-card",
+            "health-insurance-card"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card"
+        ],
+        "id": "LU",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card",
+            "drivers-license"
+        ],
+        "id": "NL",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [],
+        "id": "NO",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "drivers-license"
+        ],
+        "id": "NZ",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card"
+        ],
+        "id": "PT",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [],
+        "id": "SE",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "id-card",
+            "drivers-license"
+        ],
+        "id": "SG",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
+        "document_types_requiring_back": [
+            "drivers-license"
+        ],
+        "id": "US",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    }
+]

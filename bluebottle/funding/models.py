@@ -350,10 +350,6 @@ class PayoutAccount(PolymorphicModel, TransitionsMixin):
     transitions = TransitionManager(PayoutAccountTransitions, 'status')
 
     @property
-    def funding(self):
-        return self.funding_set.order_by('-created').first()
-
-    @property
     def payment_methods(self):
         provider = self.provider_class.objects.get()
         return provider.payment_methods
@@ -390,6 +386,10 @@ class BankAccount(PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
+
+    @property
+    def funding(self):
+        return self.funding_set.order_by('-created').first()
 
 
 class PlainBankAccount(BankAccount):

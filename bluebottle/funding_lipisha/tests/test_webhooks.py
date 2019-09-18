@@ -6,9 +6,9 @@ from rest_framework.status import HTTP_200_OK
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding.transitions import PaymentTransitions
-from bluebottle.funding_lipisha.models import LipishaPayment
+from bluebottle.funding_lipisha.models import LipishaPayment, LipishaPaymentProvider
 from bluebottle.funding_lipisha.tests.factories import LipishaPaymentFactory, LipishaPaymentProviderFactory, \
-    LipishaPayoutAccountFactory
+    LipishaBankAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -53,13 +53,14 @@ class LipishaPaymentInitiateTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(LipishaPaymentInitiateTestCase, self).setUp()
+        LipishaPaymentProvider.objects.all().delete()
         self.provider = LipishaPaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
 
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.account = LipishaPayoutAccountFactory.create()
+        self.account = LipishaBankAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.account)
         self.donation = DonationFactory.create(activity=self.funding)
         self.webhook = reverse('lipisha-payment-webhook')
@@ -140,13 +141,14 @@ class LipishaPaymentAcknowledgeTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(LipishaPaymentAcknowledgeTestCase, self).setUp()
+        LipishaPaymentProvider.objects.all().delete()
         self.provider = LipishaPaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
 
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.account = LipishaPayoutAccountFactory.create()
+        self.account = LipishaBankAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.account)
         self.donation = DonationFactory.create(activity=self.funding)
         self.webhook = reverse('lipisha-payment-webhook')

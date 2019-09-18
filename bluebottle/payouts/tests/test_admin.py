@@ -2,6 +2,7 @@ import os
 
 from django.contrib.admin import AdminSite
 from django.contrib.auth.models import Permission, Group
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.test import override_settings
 from mock import patch
@@ -130,8 +131,11 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
 
     def test_permissions_granted_user(self):
         # Check user has permission when added specific permission
+        ctype = ContentType.objects.get(app_label="payouts", model="plainpayoutaccount")
         self.user.user_permissions.add(
-            Permission.objects.get(codename='change_plainpayoutaccount')
+            Permission.objects.get(
+                codename='change_plainpayoutaccount',
+                content_type=ctype)
         )
         self.client.force_login(self.user)
         response = self.client.get(self.payout_url)

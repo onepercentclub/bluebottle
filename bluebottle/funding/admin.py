@@ -16,15 +16,15 @@ from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, BankPayoutAccount, BankPaymentProvider, LegacyPayment)
+    BudgetLine, PayoutAccount, PlainBankAccount, BankPaymentProvider, LegacyPayment, BankAccount)
 from bluebottle.funding.transitions import DonationTransitions
-from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwavePayoutAccount, \
+from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
-from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayoutAccount
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
-    StripeSourcePayment
-from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayPayoutAccount
+    StripeSourcePayment, ExternalAccount
+from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList
 
@@ -55,15 +55,38 @@ class PaymentLinkMixin(object):
     payment_link.short_description = _('Payment')
 
 
-class PayoutAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
+class PayoutAccountChildAdmin(PolymorphicChildModelAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner',)
-    readonly_fields = ('status', 'funding_links')
-    fields = ('owner', 'status', 'funding_links')
+    readonly_fields = ('status',)
+    fields = ('owner', 'status',)
 
 
 @admin.register(PayoutAccount)
-class PayoutAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
+class PayoutAccountAdmin(PolymorphicParentModelAdmin):
+    base_model = PayoutAccount
+    list_display = ('created', 'polymorphic_ctype', 'reviewed', )
+    list_filter = ('reviewed', PolymorphicChildModelFilter)
+    raw_id_fields = ('owner',)
+
+    ordering = ('-created',)
+    child_models = [
+        StripePayoutAccount,
+        FlutterwaveBankAccount,
+        LipishaBankAccount,
+        VitepayBankAccount
+    ]
+
+
+class BankAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
+    base_model = PayoutAccount
+    raw_id_fields = ('owner',)
+    readonly_fields = ('funding_links',)
+    fields = ('owner', 'funding_links')
+
+
+@admin.register(BankAccount)
+class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
     base_model = PayoutAccount
     list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
     list_filter = ('reviewed', PolymorphicChildModelFilter)
@@ -72,20 +95,18 @@ class PayoutAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAd
 
     ordering = ('-created',)
     child_models = [
-        StripePayoutAccount,
-        FlutterwavePayoutAccount,
-        LipishaPayoutAccount,
-        VitepayPayoutAccount,
-        BankPayoutAccount
+        ExternalAccount,
+        PlainBankAccount,
     ]
 
 
-@admin.register(BankPayoutAccount)
-class BankPayoutAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
-    base_model = PayoutAccount
-    model = BankPayoutAccount
+@admin.register(PlainBankAccount)
+class PlainBankAccountAdmin(BankAccountChildAdmin):
+    base_model = BankAccount
+    model = PlainBankAccount
     raw_id_fields = ('owner',)
-    fields = ('owner', 'account_holder_name', 'bank_country', 'account_number')
+    readonly_fields = ('funding_links',)
+    fields = BankAccountChildAdmin.fields + ('account_holder_name', 'bank_country', 'account_number')
 
 
 class BudgetLineInline(admin.TabularInline):

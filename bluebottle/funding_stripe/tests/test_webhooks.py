@@ -9,12 +9,12 @@ from rest_framework import status
 from bluebottle.funding.models import Donation
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.funding.transitions import DonationTransitions, PayoutAccountTransitions
-from bluebottle.funding_stripe.models import StripePayoutAccount
+from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
 from bluebottle.funding_stripe.models import StripeSourcePayment
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentIntentFactory,
-    StripeSourcePaymentFactory
-)
+    StripeSourcePaymentFactory,
+    ExternalAccountFactory)
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentProviderFactory,
     StripePayoutAccountFactory
@@ -36,13 +36,14 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(IntentWebhookTestCase, self).setUp()
+        StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create()
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
-        self.account = StripePayoutAccountFactory.create()
-        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
+        self.bank_account = ExternalAccountFactory.create()
+        self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonationFactory.create(activity=self.funding)
 
         self.payment_intent = stripe.PaymentIntent('some intent id')
@@ -149,14 +150,15 @@ class IntentWebhookTestCase(BluebottleTestCase):
 class SourcePaymentWebhookTestCase(BluebottleTestCase):
     def setUp(self):
         super(SourcePaymentWebhookTestCase, self).setUp()
+        StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
-        self.account = StripePayoutAccountFactory.create()
-        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
+        self.bank_account = ExternalAccountFactory.create()
+        self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonationFactory.create(activity=self.funding)
 
         self.payment = StripeSourcePaymentFactory.create(

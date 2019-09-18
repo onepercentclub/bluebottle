@@ -18,13 +18,13 @@ from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
     BudgetLine, PayoutAccount, PlainBankAccount, BankPaymentProvider, LegacyPayment, BankAccount)
 from bluebottle.funding.transitions import DonationTransitions
-from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwavePayoutAccount, \
+from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
-from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayoutAccount
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount
-from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayPayoutAccount
+from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList
 
@@ -72,9 +72,9 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     ordering = ('-created',)
     child_models = [
         StripePayoutAccount,
-        FlutterwavePayoutAccount,
-        LipishaPayoutAccount,
-        VitepayPayoutAccount
+        FlutterwaveBankAccount,
+        LipishaBankAccount,
+        VitepayBankAccount
     ]
 
 

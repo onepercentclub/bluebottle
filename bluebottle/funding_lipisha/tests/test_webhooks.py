@@ -60,7 +60,7 @@ class LipishaPaymentInitiateTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
         self.account = LipishaPayoutAccountFactory.create()
-        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
+        self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.account)
         self.donation = DonationFactory.create(activity=self.funding)
         self.webhook = reverse('lipisha-payment-webhook')
 
@@ -147,7 +147,7 @@ class LipishaPaymentAcknowledgeTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
         self.account = LipishaPayoutAccountFactory.create()
-        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
+        self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.account)
         self.donation = DonationFactory.create(activity=self.funding)
         self.webhook = reverse('lipisha-payment-webhook')
         self.payment = LipishaPaymentFactory.create(

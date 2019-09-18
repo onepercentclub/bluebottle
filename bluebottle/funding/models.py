@@ -23,7 +23,8 @@ from bluebottle.funding.transitions import (
     PayoutAccountTransitions
 )
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import MoneyField, PrivateFileField
+from bluebottle.utils.utils import reverse_signed
 
 
 class PaymentProvider(PolymorphicModel):
@@ -356,6 +357,27 @@ class PayoutAccount(PolymorphicModel, TransitionsMixin):
     def payment_methods(self):
         provider = self.provider_class.objects.get()
         return provider.payment_methods
+
+
+class PlainPayoutAccount(PayoutAccount):
+    document = PrivateFileField(
+        max_length=110,
+        upload_to='funding/documents'
+    )
+
+    ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
+
+    class Meta:
+        verbose_name = _('payout document')
+        verbose_name_plural = _('payout documents')
+
+    @property
+    def document_url(self):
+        # pk may be unset if not saved yet, in which case no url can be
+        # generated.
+        if self.pk is not None and self.file:
+            return reverse_signed('payout-document-file', args=(self.pk,))
+        return None
 
 
 class BankAccount(PolymorphicModel):

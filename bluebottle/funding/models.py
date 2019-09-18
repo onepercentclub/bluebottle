@@ -358,7 +358,19 @@ class PayoutAccount(PolymorphicModel, TransitionsMixin):
         return provider.payment_methods
 
 
-class BankPayoutAccount(PayoutAccount):
+class BankAccount(PolymorphicModel):
+    owner = models.OneToOneField(
+        'members.Member',
+        related_name='funding_bank_account',
+        null=True,
+        blank=True
+    )
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    reviewed = models.BooleanField(default=False)
+
+
+class PlainBankAccount(BankAccount):
 
     provider_class = BankPaymentProvider
 
@@ -372,7 +384,3 @@ class BankPayoutAccount(PayoutAccount):
         _("bank country"), max_length=100, null=True, blank=True)
     account_details = models.CharField(
         _("account details"), max_length=500, null=True, blank=True)
-
-
-class BankAccount(PolymorphicModel):
-    pass

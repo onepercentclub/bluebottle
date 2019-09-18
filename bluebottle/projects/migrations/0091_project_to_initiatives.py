@@ -61,7 +61,7 @@ def migrate_projects(apps, schema_editor):
     PlainPayoutAccount = apps.get_model('payouts', 'PlainPayoutAccount')
     StripePayoutAccount = apps.get_model('funding_stripe', 'StripePayoutAccount')
     ExternalAccount = apps.get_model('funding_stripe', 'ExternalAccount')
-    BankPayoutAccount = apps.get_model('funding', 'BankPayoutAccount')
+    PlainBankAccount = apps.get_model('funding', 'PlainBankAccount')
     ContentType = apps.get_model('contenttypes', 'ContentType')
 
     # Clean-up previous migrations of projects to initiatives
@@ -163,8 +163,8 @@ def migrate_projects(apps, schema_editor):
                     account_id=project.payout_account.bank_details.account
                 )
             elif isinstance(project.payout_account, PlainPayoutAccount):
-                content_type = ContentType.objects.get_for_model(BankPayoutAccount)
-                account = BankPayoutAccount.objects.create(
+                content_type = ContentType.objects.get_for_model(PlainBankAccount)
+                account = PlainBankAccount.objects.create(
                     polymorphic_ctype=content_type,  # This does not get set automatically in migrations
                     owner=project.payout_account.user,
                     account_number=project.payout_account.account_number,

@@ -19,7 +19,6 @@ class BaseActivitySerializer(ModelSerializer):
     review_status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
-    contributions = ResourceRelatedField(many=True, read_only=True)
     transitions = AvailableTransitionsField()
     review_transitions = AvailableTransitionsField()
     is_follower = serializers.SerializerMethodField()
@@ -31,7 +30,6 @@ class BaseActivitySerializer(ModelSerializer):
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'contributions': 'bluebottle.activities.serializers.ContributionSerializer',
     }
 
     def get_is_follower(self, instance):
@@ -51,7 +49,6 @@ class BaseActivitySerializer(ModelSerializer):
             'is_follower',
             'status',
             'review_status',
-            'contributions',
             'stats'
         )
 
@@ -61,7 +58,6 @@ class BaseActivitySerializer(ModelSerializer):
         included_resources = [
             'owner',
             'initiative',
-            'contributions',
         ]
         resource_name = 'activities'
 

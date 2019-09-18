@@ -27,7 +27,6 @@ class Migration(migrations.Migration):
         ('wallposts', '0014_set_owner_permissions'),
         ('rewards', '0006_set_owner_permissions'),
         ('bb_projects', '0006_add_group_permissions'),
-        ('cms', '0066_auto_20180709_1657'),
         ('orders', '0004_add_group_permissions'),
     ]
 

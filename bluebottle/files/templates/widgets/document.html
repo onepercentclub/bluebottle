@@ -1,0 +1,13 @@
+<!-- We need this to show the select icons properly -->
+<select name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
+    {% for group_name, group_choices, group_index in widget.optgroups %}
+        {% for option in group_choices %}
+            {% if option.selected %}
+                {% include option.template_name with widget=option %}
+                {{ option }}
+                {{ option.value }}
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+</select>
+<br>

@@ -61,6 +61,11 @@ class ApplicantList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
+    prefetch_for_includes = {
+        'assignment': ['assignment'],
+        'document': ['document'],
+    }
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 

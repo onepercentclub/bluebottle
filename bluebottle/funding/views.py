@@ -1,3 +1,5 @@
+from django.http import Http404
+from rest_framework.mixins import CreateModelMixin
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
@@ -5,17 +7,18 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
 from bluebottle.funding.models import (
     Funding, Donation, Reward, Fundraiser,
-    BudgetLine
-)
+    BudgetLine,
+    PlainPayoutAccount, PlainBankAccount)
 from bluebottle.funding.serializers import (
     FundingSerializer, DonationSerializer, FundingTransitionSerializer,
     FundraiserSerializer, RewardSerializer, BudgetLineSerializer,
     DonationCreateSerializer,
-    FundingListSerializer)
+    FundingListSerializer, PlainPayoutAccountSerializer, PlainBankAccountSerializer)
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.permissions import DonationOwnerPermission, PaymentPermission
+from bluebottle.members.models import Member
 from bluebottle.transitions.views import TransitionList
-from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.permissions import IsOwner, IsAuthenticated
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
     CreateAPIView, RetrieveUpdateDestroyAPIView
@@ -192,3 +195,52 @@ class PaymentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'donation': ['donation'],
         'user': ['user']
     }
+
+
+# Payout accounts
+
+class PlainPayoutAccountView(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixin, RetrieveUpdateAPIView):
+    queryset = PlainPayoutAccount.objects.all()
+    serializer_class = PlainPayoutAccountSerializer
+
+    prefetch_for_includes = {
+        'owner': ['owner'],
+        'external_accounts': ['external_accounts'],
+    }
+
+    permission_classes = (IsAuthenticated, IsOwner, )
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def get_object(self):
+        try:
+            obj = self.request.user.funding_payout_account
+        except Member.funding_payout_account.RelatedObjectDoesNotExist:
+            raise Http404
+
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+
+class PlainBankAccountView(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixin, RetrieveUpdateAPIView):
+    queryset = PlainBankAccount.objects.all()
+    serializer_class = PlainBankAccountSerializer
+
+    prefetch_for_includes = {
+        'owner': ['owner'],
+    }
+
+    permission_classes = (IsAuthenticated, IsOwner, )
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def get_object(self):
+        try:
+            obj = self.request.user.funding_payout_account
+        except Member.funding_payout_account.RelatedObjectDoesNotExist:
+            raise Http404
+
+        self.check_object_permissions(self.request, obj)
+        return obj

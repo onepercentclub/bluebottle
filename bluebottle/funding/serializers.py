@@ -17,8 +17,8 @@ from bluebottle.funding.filters import DonationListFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment,
     Fundraiser, Reward, BudgetLine, PaymentMethod,
-    BankAccount
-)
+    BankAccount,
+    PlainPayoutAccount, PlainBankAccount)
 from bluebottle.funding_stripe.polymorphic_serializers import ExternalAccountSerializer
 from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
@@ -408,3 +408,41 @@ class PaymentSerializer(ModelSerializer):
             'donation',
         ]
         resource_name = 'payments'
+
+
+class PlainPayoutAccountSerializer(ModelSerializer):
+    owner = ResourceRelatedField(read_only=True)
+    external_accounts = ResourceRelatedField(read_only=True, many=True)
+
+    included_serializers = {
+        'external_accounts': 'bluebottle.funding.serializers.PlainBankAccountSerializer',
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+    class Meta:
+        model = PlainPayoutAccount
+
+        fields = (
+            'id',
+            'document',
+            'reviewed'
+        )
+
+    class JSONAPIMeta():
+        resource_name = 'payout-accounts/plains'
+
+        included_resources = ['external_accounts', 'owner']
+
+
+class PlainBankAccountSerializer(ModelSerializer):
+
+    class Meta:
+        model = PlainBankAccount
+        fields = (
+            'account_number',
+            'account_holder_name',
+            'account_holder_address',
+            'account_bank_country',
+            'account_details',
+            'reviewed'
+        )

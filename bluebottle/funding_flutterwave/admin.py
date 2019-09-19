@@ -7,10 +7,11 @@ from django.utils.translation import ugettext_lazy as _
 from rave_python import Rave
 from rave_python.rave_exceptions import SubaccountCreationError
 
-from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin
+from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin, \
+    BankAccountChildAdmin
 from bluebottle.funding.models import PayoutAccount
 from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwavePaymentProvider, \
-    FlutterwavePayoutAccount
+    FlutterwaveBankAccount
 
 
 @admin.register(FlutterwavePayment)
@@ -23,17 +24,17 @@ class FlutterwavePaymentProviderAdmin(PaymentProviderChildAdmin):
     base_model = FlutterwavePaymentProvider
 
 
-@admin.register(FlutterwavePayoutAccount)
-class FlutterwavePayoutAccountAdmin(PayoutAccountChildAdmin):
+@admin.register(FlutterwaveBankAccount)
+class FlutterwaveBankAccountAdmin(BankAccountChildAdmin):
     base_model = PayoutAccount
-    model = FlutterwavePayoutAccount
+    model = FlutterwaveBankAccount
 
     fields = PayoutAccountChildAdmin.fields + (
         'account_holder_name', 'bank_country_code',
         'bank_code', 'account_number', 'account')
 
     def get_urls(self):
-        urls = super(FlutterwavePayoutAccountAdmin, self).get_urls()
+        urls = super(FlutterwaveBankAccountAdmin, self).get_urls()
         custom_urls = [
             url(
                 r'^(?P<account_id>.+)/generate-account/$',
@@ -44,7 +45,7 @@ class FlutterwavePayoutAccountAdmin(PayoutAccountChildAdmin):
         return custom_urls + urls
 
     def generate_account(self, request, account_id):
-        account = FlutterwavePayoutAccount.objects.get(id=account_id)
+        account = FlutterwaveBankAccount.objects.get(id=account_id)
         details = {
             "account_bank": account.bank_code,
             "account_number": account.account_number,

@@ -1,5 +1,8 @@
 import json
 from datetime import timedelta
+import mock
+
+import stripe
 
 from django.urls import reverse
 from django.utils.timezone import now
@@ -9,6 +12,7 @@ from rest_framework import status
 from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory, RewardFactory, DonationFactory
 from bluebottle.funding.models import Donation
 from bluebottle.funding.transitions import DonationTransitions
+from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
@@ -196,7 +200,10 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.geolocation = GeolocationFactory.create(locality='Barranquilla')
-        self.initiative = InitiativeFactory.create(place=self.geolocation)
+        self.initiative = InitiativeFactory.create(
+            owner=self.user,
+            place=self.geolocation
+        )
 
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
@@ -204,6 +211,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         self.funding = FundingFactory.create(
             initiative=self.initiative,
+            owner=self.initiative.owner,
             target=Money(5000, 'EUR'),
             deadline=now() + timedelta(days=15)
         )
@@ -256,6 +264,141 @@ class FundingDetailTestCase(BluebottleTestCase):
         # Test that geolocation is included too
         geolocation = get_included(response, 'geolocations')
         self.assertEqual(geolocation['attributes']['locality'], 'Barranquilla')
+
+    def test_get_bank_account(self):
+        self.funding.bank_account = ExternalAccountFactory.create(
+            account_id='some-external-account-id'
+        )
+        self.funding.save()
+
+        connect_account = stripe.Account('some-connect-id')
+        connect_account.update({
+            'country': 'NL',
+            'external_accounts': stripe.ListObject({
+                'data': [connect_account]
+            })
+        })
+
+        with mock.patch(
+            'stripe.Account.retrieve', return_value=connect_account
+        ):
+            with mock.patch(
+                'stripe.ListObject.retrieve', return_value=connect_account
+            ):
+                response = self.client.get(self.funding_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        bank_account = response.json()['data']['relationships']['bank-account']['data']
+        self.assertEqual(
+            bank_account['id'], unicode(self.funding.bank_account.pk)
+        )
+
+    def test_get_bank_account_other_user(self):
+        self.funding.bank_account = ExternalAccountFactory.create(
+            account_id='some-external-account-id'
+        )
+        self.funding.save()
+        connect_account = stripe.Account('some-connect-id')
+        connect_account.update({
+            'country': 'NL',
+            'external_accounts': stripe.ListObject({
+                'data': [connect_account]
+            })
+        })
+
+        with mock.patch(
+            'stripe.Account.retrieve', return_value=connect_account
+        ):
+            with mock.patch(
+                'stripe.ListObject.retrieve', return_value=connect_account
+            ):
+                response = self.client.get(self.funding_url, user=BlueBottleUserFactory.create())
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('bank_account' not in response.json()['data']['relationships'])
+
+    def test_update(self):
+        new_title = 'New title'
+        response = self.client.patch(
+            self.funding_url,
+            data=json.dumps({
+                'data': {
+                    'id': self.funding.pk,
+                    'type': 'activities/fundings',
+                    'attributes': {
+                        'title': new_title,
+                    }
+                }
+            }),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['data']['attributes']['title'],
+            new_title
+        )
+
+    def test_update_bank_account(self):
+        external_account = ExternalAccountFactory.create(
+            account_id='some-external-account-id'
+        )
+        connect_account = stripe.Account('some-connect-id')
+        connect_account.update({
+            'country': 'NL',
+            'external_accounts': stripe.ListObject({
+                'data': [connect_account]
+            })
+        })
+
+        with mock.patch(
+            'stripe.Account.retrieve', return_value=connect_account
+        ):
+            with mock.patch(
+                'stripe.ListObject.retrieve', return_value=connect_account
+            ):
+                response = self.client.patch(
+                    self.funding_url,
+                    data=json.dumps({
+                        'data': {
+                            'id': self.funding.pk,
+                            'type': 'activities/fundings',
+                            'relationships': {
+                                'bank_account': {
+                                    'data': {
+                                        'id': external_account.pk,
+                                        'type': 'payout-accounts/stripe-external-accounts'
+                                    }
+                                }
+                            }
+                        }
+                    }),
+                    user=self.user
+                )
+        self.assertEqual(response.status_code, 200)
+
+        bank_account = response.json()['data']['relationships']['bank-account']['data']
+        self.assertEqual(
+            bank_account['id'], unicode(external_account.pk)
+        )
+        self.assertEqual(
+            bank_account['type'], 'payout-accounts/stripe-external-accounts'
+        )
+
+    def test_update_other_user(self):
+        response = self.client.patch(
+            self.funding_url,
+            data=json.dumps({
+                'data': {
+                    'id': self.funding.pk,
+                    'type': 'activities/fundings',
+                    'attributes': {
+                        'title': 'new title',
+                    }
+
+                }
+            }),
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, 403)
 
 
 class FundraiserListTestCase(BluebottleTestCase):
@@ -401,6 +544,10 @@ class FundingTestCase(BluebottleTestCase):
         self.assertTrue(
             get_included(response, 'geolocations')
         )
+
+    def test_create_other_user(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=BlueBottleUserFactory.create())
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class DonationTestCase(BluebottleTestCase):

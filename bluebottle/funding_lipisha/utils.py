@@ -6,7 +6,7 @@ from moneyed import Money
 from bluebottle.clients import properties
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donation, Funding
-from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayment, LipishaPayoutAccount
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayment, LipishaBankAccount
 
 
 def get_credentials():
@@ -214,9 +214,9 @@ def initiate_payment(data):
     if not payment:
         # If we haven't found a payment by now we should create a new donation
         try:
-            account = LipishaPayoutAccount.objects.get(account_number=account_number)
+            account = LipishaBankAccount.objects.get(account_number=account_number)
             funding = account.funding
-        except LipishaPayoutAccount.DoesNotExist:
+        except LipishaBankAccount.DoesNotExist:
             return generate_error_response(transaction_reference)
 
         name = data['transaction_name'].replace('+', ' ').title()

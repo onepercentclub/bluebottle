@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin
-from bluebottle.funding_lipisha.models import LipishaPayment, LipishaPaymentProvider, LipishaPayoutAccount
+from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, BankAccountChildAdmin
+from bluebottle.funding_lipisha.models import LipishaPayment, LipishaPaymentProvider, LipishaBankAccount
 
 
 @admin.register(LipishaPayment)
@@ -14,7 +14,7 @@ class LipishaPaymentProviderAdmin(PaymentProviderChildAdmin):
     base_model = LipishaPaymentProvider
 
 
-@admin.register(LipishaPayoutAccount)
-class LipishaPayoutAccountAdmin(PayoutAccountChildAdmin):
-    model = LipishaPayoutAccount
-    fields = PayoutAccountChildAdmin.fields + ('account_number',)
+@admin.register(LipishaBankAccount)
+class LipishaBankAccountAdmin(BankAccountChildAdmin):
+    model = LipishaBankAccount
+    fields = BankAccountChildAdmin.fields + ('account_number',)

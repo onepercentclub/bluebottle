@@ -1,3 +1,5 @@
+import json
+
 from django.conf import settings
 from django.db import ProgrammingError
 from django.db import models, connection
@@ -8,7 +10,7 @@ from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
-    PayoutAccount)
+    PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.transitions import StripeSourcePaymentTransitions
 from bluebottle.funding_stripe.utils import stripe
@@ -22,7 +24,7 @@ class PaymentIntent(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             # FIXME: First verify that the funding activity has a valid Stripe account connected.
-            account_id = self.donation.activity.account.account_id
+            account_id = self.donation.activity.bank_account.connect_account.account_id
             intent = stripe.PaymentIntent.create(
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
@@ -81,12 +83,13 @@ class StripeSourcePayment(Payment):
     transitions = TransitionManager(StripeSourcePaymentTransitions, 'status')
 
     def charge(self):
+        account_id = self.donation.activity.bank_account.connect_account.account_id
         charge = stripe.Charge.create(
             amount=self.donation.amount,
             currency=self.donation.amount.currency,
             source=self.source_token,
             destination={
-                'destination': StripePayoutAccount.objects.all()[0].account_id,
+                'destination': account_id,
             },
             metadata=self.metadata
         )
@@ -176,17 +179,38 @@ class StripePaymentProvider(PaymentProvider):
         return methods
 
 
+with open('bluebottle/funding_stripe/data/document_spec.json') as file:
+    DOCUMENT_SPEC = json.load(file)
+
+
 class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40)
     country = models.CharField(max_length=2)
-    document_type = models.CharField(max_length=12, blank=True)
+    document_type = models.CharField(max_length=20, blank=True)
 
     provider_class = StripePaymentProvider
 
     @property
+    def document_spec(self):
+        for spec in DOCUMENT_SPEC:
+            if spec['id'] == self.country:
+                return spec
+
+    @property
     def required(self):
         specs = stripe.CountrySpec.retrieve(self.country).verification_fields.individual
-        return specs.additional + specs.minimum
+        fields = specs.additional + specs.minimum
+
+        if 'individual.verification.document' in fields:
+            fields.remove('individual.verification.document')
+
+            fields.append('documentType')
+            fields.append('individual.verification.document.front')
+
+            if self.document_type in self.document_spec['document_types_requiring_back']:
+                fields.append('individual.verification.document.back')
+
+        return fields
 
     @property
     def account(self):
@@ -281,7 +305,7 @@ class StripePayoutAccount(PayoutAccount):
         }
 
 
-class ExternalAccount(models.Model):
+class ExternalAccount(BankAccount):
     connect_account = models.ForeignKey(StripePayoutAccount, related_name='external_accounts')
     account_id = models.CharField(max_length=40)
 
@@ -314,3 +338,6 @@ class ExternalAccount(models.Model):
             "tenant_name": connection.tenant.client_name,
             "tenant_domain": connection.tenant.domain_url,
         }
+
+    class JSONAPIMeta:
+        resource_name = 'payout-accounts/stripe-external-accounts'

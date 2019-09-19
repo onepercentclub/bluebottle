@@ -23,7 +23,8 @@ from bluebottle.funding.transitions import (
     PayoutAccountTransitions
 )
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import MoneyField, PrivateFileField
+from bluebottle.utils.utils import reverse_signed
 
 
 class PaymentProvider(PolymorphicModel):
@@ -70,7 +71,7 @@ class Funding(Activity):
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     amount_matching = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     country = models.ForeignKey('geo.Country', null=True, blank=True)
-    account = models.ForeignKey('funding.PayoutAccount', null=True, blank=True, on_delete=SET_NULL)
+    bank_account = models.ForeignKey('funding.BankAccount', null=True, blank=True, on_delete=SET_NULL)
     transitions = TransitionManager(FundingTransitions, 'status')
 
     needs_review = True
@@ -349,16 +350,49 @@ class PayoutAccount(PolymorphicModel, TransitionsMixin):
     transitions = TransitionManager(PayoutAccountTransitions, 'status')
 
     @property
-    def funding(self):
-        return self.funding_set.order_by('-created').first()
-
-    @property
     def payment_methods(self):
         provider = self.provider_class.objects.get()
         return provider.payment_methods
 
 
-class BankPayoutAccount(PayoutAccount):
+class PlainPayoutAccount(PayoutAccount):
+    document = PrivateFileField(
+        max_length=110,
+        upload_to='funding/documents'
+    )
+
+    ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
+
+    class Meta:
+        verbose_name = _('payout document')
+        verbose_name_plural = _('payout documents')
+
+    @property
+    def document_url(self):
+        # pk may be unset if not saved yet, in which case no url can be
+        # generated.
+        if self.pk is not None and self.file:
+            return reverse_signed('payout-document-file', args=(self.pk,))
+        return None
+
+
+class BankAccount(PolymorphicModel):
+    owner = models.OneToOneField(
+        'members.Member',
+        related_name='funding_bank_account',
+        null=True,
+        blank=True
+    )
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    reviewed = models.BooleanField(default=False)
+
+    @property
+    def funding(self):
+        return self.funding_set.order_by('-created').first()
+
+
+class PlainBankAccount(BankAccount):
 
     provider_class = BankPaymentProvider
 

@@ -10,6 +10,7 @@ from rest_framework import status
 import stripe
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
     ExternalAccountFactory,
@@ -24,6 +25,7 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(StripePaymentIntentTestCase, self).setUp()
+        StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
@@ -32,9 +34,9 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
-        self.account = StripePayoutAccountFactory.create()
+        self.bank_account = ExternalAccountFactory.create()
 
-        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
+        self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonationFactory.create(activity=self.funding, user=None)
 
         self.intent_url = reverse('stripe-payment-intent-list')
@@ -140,9 +142,9 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
-        self.account = StripePayoutAccountFactory.create()
+        self.bank_account = ExternalAccountFactory.create()
 
-        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
+        self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonationFactory.create(activity=self.funding, user=None)
 
         self.payment_url = reverse('stripe-source-payment-list')

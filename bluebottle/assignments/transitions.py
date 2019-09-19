@@ -2,6 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
 
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.assignments.messages import ApplicantRejectedMessage, ApplicantAcceptedMessage
 from bluebottle.follow.models import unfollow, follow
 from bluebottle.fsm import transition
 
@@ -78,7 +79,8 @@ class ApplicantTransitions(ContributionTransitions):
         source=[values.new, values.rejected],
         target=values.accepted,
         conditions=[assignment_is_open],
-        permissions=[ContributionTransitions.is_activity_manager]
+        permissions=[ContributionTransitions.is_activity_manager],
+        messages=[ApplicantAcceptedMessage]
     )
     def accept(self):
         pass
@@ -88,7 +90,8 @@ class ApplicantTransitions(ContributionTransitions):
         source=[values.new, values.accepted],
         target=values.rejected,
         conditions=[assignment_is_open],
-        permissions=[ContributionTransitions.is_activity_manager]
+        permissions=[ContributionTransitions.is_activity_manager],
+        messages=[ApplicantRejectedMessage]
     )
     def reject(self):
         unfollow(self.instance.user, self.instance.activity)

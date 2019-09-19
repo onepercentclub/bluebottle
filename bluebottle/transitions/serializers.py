@@ -6,8 +6,9 @@ from rest_framework.fields import ReadOnlyField
 
 
 class Transition(object):
-    def __init__(self, resource, transition):
+    def __init__(self, resource, transition, message=None):
         self.resource = resource
+        self.message = message
         self.transition = transition
         self.pk = str(uuid.uuid4())
 
@@ -35,10 +36,12 @@ class AvailableTransitionsField(ReadOnlyField):
 
 class TransitionSerializer(serializers.Serializer):
     transition = serializers.CharField()
+    message = serializers.CharField(required=True)
 
     def save(self):
         resource = self.validated_data['resource']
         transition = self.validated_data['transition']
+        message = self.validated_data['message']
 
         available_transitions = getattr(resource, self.field).available_transitions(user=self.context['request'].user)
 
@@ -47,11 +50,14 @@ class TransitionSerializer(serializers.Serializer):
 
         self.instance = Transition(resource, transition)
 
-        getattr(getattr(resource, self.field), transition)(send_messages=True, user=self.context['request'].user)
+        getattr(getattr(resource, self.field), transition)(
+            message=message,
+            send_messages=True,
+            user=self.context['request'].user)
         resource.save()
 
     class Meta:
-        fields = ('id', 'transition', 'resource')
+        fields = ('id', 'transition', 'message', 'resource')
 
     class JSONAPIMeta:
         resource_name = 'transitions'

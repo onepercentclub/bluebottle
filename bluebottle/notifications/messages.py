@@ -48,7 +48,8 @@ class TransitionMessage(object):
     def get_recipients(self):
         return [self.obj.owner]
 
-    def compose_and_send(self):
+    def compose_and_send(self, custom_message=None):
         for message in self.get_messages():
+            message.custome_message = custom_message
             message.save()
             message.send()

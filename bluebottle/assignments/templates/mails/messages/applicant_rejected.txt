@@ -1,0 +1,17 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+    {% if custom_message %}
+        {{ custom_message }}
+    {% else %}
+        {% blocktrans with recipient_name=obj.user.first_name assignment_title=obj.activity.title context 'email' %}
+        Hi {{ recipient_name }},
+        Unfortunately, you have not been selected for the assignment "{{ assignment_title }}".
+    {% endif %}
+{% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+   {% trans 'View initiative' context 'email' %}: {{ obj.get_absolute_url }}
+{% endblock %}`

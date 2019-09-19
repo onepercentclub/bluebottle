@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta
 
+from django.core import mail
 from django.urls import reverse
 from django.utils.timezone import now
 from rest_framework import status
@@ -439,6 +440,16 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'accepted')
+
+    def test_accept_by_owner_assignment_custom_message(self):
+        # Accept by assignment owner
+        self.transition_data['data']['attributes']['message'] = "Great that you're joining!"
+        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.owner)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.applicant.refresh_from_db()
+        self.assertEqual(self.applicant.status, 'accepted')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertTrue("Great that you're joining!", mail.outbox[0].body)
 
     def test_accept_by_self_assignment(self):
         # Applicant should not be able to accept self

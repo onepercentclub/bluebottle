@@ -130,6 +130,88 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
+class StripeSourcePaymentTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(StripeSourcePaymentTestCase, self).setUp()
+        StripePaymentProviderFactory.create()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create()
+
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+
+        self.account = StripePayoutAccountFactory.create()
+
+        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
+        self.donation = DonationFactory.create(activity=self.funding, user=None)
+
+        self.payment_url = reverse('stripe-source-payment-list')
+
+        self.data = {
+            'data': {
+                'type': 'payments/stripe-source-payments',
+                'attributes': {
+                    'source-token': 'test-token',
+                },
+                'relationships': {
+                    'donation': {
+                        'data': {
+                            'type': 'contributions/donations',
+                            'id': self.donation.pk,
+                        }
+                    }
+                }
+            }
+        }
+
+    def test_create_payment(self):
+        self.donation.user = self.user
+        self.donation.save()
+
+        response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['attributes']['source-token'], 'test-token')
+        self.assertEqual(data['included'][0]['attributes']['status'], 'new')
+
+    def test_create_payment_anonymous(self):
+        response = self.client.post(
+            self.payment_url,
+            data=json.dumps(self.data),
+            HTTP_AUTHORIZATION='Donation {}'.format(self.donation.client_secret)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['attributes']['source-token'], 'test-token')
+        self.assertEqual(data['included'][0]['attributes']['status'], 'new')
+
+    def test_create_intent_other_user(self):
+        self.donation.user = self.user
+        self.donation.save()
+
+        response = self.client.post(
+            self.payment_url,
+            data=json.dumps(self.data),
+            user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_intent_no_user(self):
+        response = self.client.post(
+            self.payment_url,
+            data=json.dumps(self.data),
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
 class ConnectAccountDetailsTestCase(BluebottleTestCase):
     def setUp(self):
         super(ConnectAccountDetailsTestCase, self).setUp()

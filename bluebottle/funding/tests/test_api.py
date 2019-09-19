@@ -749,6 +749,90 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
         self.assertEqual(data['data']['relationships']['user']['data'], None)
 
+    def test_claim(self):
+        response = self.client.post(self.create_url, json.dumps(self.data))
+        data = response.json()
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        patch_data = {
+            'data': {
+                'type': 'contributions/donations',
+                'id': data['data']['id'],
+                'relationships': {
+                    'user': {
+                        'data': {
+                            'id': self.user.pk,
+                            'type': 'members',
+                        }
+                    }
+                },
+            }
+        }
+
+        response = self.client.patch(
+            update_url,
+            json.dumps(patch_data),
+            HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
+        )
+        data = response.json()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(data['data']['attributes']['status'], DonationTransitions.values.new)
+        self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertTrue('client-secret' not in data['data']['attributes'])
+
+        patch_data = {
+            'data': {
+                'type': 'contributions/donations',
+                'id': data['data']['id'],
+                'attributes': {
+                    'amount': {'amount': 200, 'currency': 'EUR'},
+                },
+            }
+        }
+
+        response = self.client.patch(
+            update_url,
+            json.dumps(patch_data),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_claim_authorized(self):
+        response = self.client.post(self.create_url, json.dumps(self.data))
+        data = response.json()
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        patch_data = {
+            'data': {
+                'type': 'contributions/donations',
+                'id': data['data']['id'],
+                'relationships': {
+                    'user': {
+                        'data': {
+                            'id': self.user.pk,
+                            'type': 'members',
+                        }
+                    }
+                },
+            }
+        }
+
+        response = self.client.patch(
+            update_url,
+            json.dumps(patch_data),
+            user=self.user
+        )
+        data = response.json()
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_update_no_user(self):
         response = self.client.post(self.create_url, json.dumps(self.data))
 

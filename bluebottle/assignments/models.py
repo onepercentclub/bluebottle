@@ -5,6 +5,7 @@ from djchoices import DjangoChoices, ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
+from bluebottle.files.fields import DocumentField
 from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
@@ -55,6 +56,7 @@ class Assignment(Activity):
     class Meta:
         verbose_name = _("Assignment")
         verbose_name_plural = _("Assignments")
+        ordering = ('-created',)
         permissions = (
             ('api_read_assignment', 'Can view assignment through the API'),
             ('api_add_assignment', 'Can add assignment through the API'),
@@ -84,6 +86,8 @@ class Applicant(Contribution):
     motivation = models.TextField()
     time_spent = models.FloatField(_('time spent'), null=True, blank=True)
     transitions = TransitionManager(ApplicantTransitions, 'status')
+
+    document = DocumentField(blank=True, null=True)
 
     class Meta:
         verbose_name = _("Applicant")

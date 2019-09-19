@@ -301,7 +301,7 @@ class IsRelatedToActivity(object):
         self.field = field
 
     def __call__(self, data):
-        if self.field in data and not data[self.field].activity == data['activity']:
+        if data.get(self.field) and not data[self.field].activity == data['activity']:
             raise ValidationError(self.message)
 
 
@@ -309,7 +309,7 @@ def reward_amount_matches(data):
     """
     Validates that the reward activity is the same as the donation activity
     """
-    if 'reward' in data and not data['reward'].amount == data['amount']:
+    if data.get('reward') and not data['reward'].amount == data['amount']:
         raise ValidationError(
             _('The amount does not match the selected reward.')
         )

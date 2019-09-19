@@ -3,7 +3,7 @@ import json
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
-from bluebottle.files.models import Image
+from bluebottle.files.models import Image, Document
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import JSONAPITestClient
 
@@ -30,6 +30,13 @@ class FileListAPITestCase(TestCase):
             )
 
         self.assertEqual(response.status_code, 201)
+        data = json.loads(response.content)
+        self.assertEqual(data['data']['type'], 'documents')
+        self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+        self.assertEqual(data['data']['meta']['size'], 39109)
+
+        file_field = Document.objects.get(pk=data['data']['id'])
+        self.assertTrue(file_field.file.name.endswith(data['data']['meta']['filename']))
 
     def test_create_image(self):
         with open(self.image_path) as test_file:

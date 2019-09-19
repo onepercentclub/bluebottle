@@ -32,7 +32,6 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
         'initiative': ['initiative'],
         'location': ['location'],
         'owner': ['owner'],
-        'contributions': ['contributions']
     }
 
 

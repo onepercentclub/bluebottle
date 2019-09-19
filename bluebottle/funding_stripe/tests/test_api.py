@@ -142,9 +142,9 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
 
-        self.account = StripePayoutAccountFactory.create()
+        self.bank_account = ExternalAccountFactory.create()
 
-        self.funding = FundingFactory.create(initiative=self.initiative, account=self.account)
+        self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonationFactory.create(activity=self.funding, user=None)
 
         self.payment_url = reverse('stripe-source-payment-list')

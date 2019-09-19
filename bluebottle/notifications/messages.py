@@ -50,6 +50,6 @@ class TransitionMessage(object):
 
     def compose_and_send(self, custom_message=None):
         for message in self.get_messages():
-            message.custome_message = custom_message
+            message.custom_message = custom_message
             message.save()
             message.send()

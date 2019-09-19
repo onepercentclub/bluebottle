@@ -440,6 +440,8 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'accepted')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertTrue("you have been accepted", mail.outbox[0].body)
 
     def test_accept_by_owner_assignment_custom_message(self):
         # Accept by assignment owner

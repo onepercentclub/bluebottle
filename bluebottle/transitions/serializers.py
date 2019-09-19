@@ -36,12 +36,12 @@ class AvailableTransitionsField(ReadOnlyField):
 
 class TransitionSerializer(serializers.Serializer):
     transition = serializers.CharField()
-    message = serializers.CharField(required=True)
+    message = serializers.CharField(required=False)
 
     def save(self):
         resource = self.validated_data['resource']
         transition = self.validated_data['transition']
-        message = self.validated_data['message']
+        message = getattr(self.validated_data, 'message', '')
 
         available_transitions = getattr(resource, self.field).available_transitions(user=self.context['request'].user)
 

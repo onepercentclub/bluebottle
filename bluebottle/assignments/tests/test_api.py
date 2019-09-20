@@ -429,10 +429,13 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
     def test_reject_open_assignment(self):
         # Reject by activity manager
         self.transition_data['data']['attributes']['transition'] = 'reject'
+        self.transition_data['data']['attributes']['message'] = "Go away!"
         response = self.client.post(self.url, json.dumps(self.transition_data), user=self.manager)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'rejected')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertTrue("Go away!", mail.outbox[0].body)
 
     def test_accept_by_owner_assignment(self):
         # Accept by assignment owner
@@ -441,17 +444,17 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'accepted')
         self.assertEqual(len(mail.outbox), 1)
-        self.assertTrue("you have been accepted", mail.outbox[0].body)
+        self.assertTrue("you have been accepted" in mail.outbox[0].body)
 
     def test_accept_by_owner_assignment_custom_message(self):
         # Accept by assignment owner
-        self.transition_data['data']['attributes']['message'] = "Great that you're joining!"
+        self.transition_data['data']['attributes']['message'] = "See you there!"
         response = self.client.post(self.url, json.dumps(self.transition_data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'accepted')
         self.assertEqual(len(mail.outbox), 1)
-        self.assertTrue("Great that you're joining!", mail.outbox[0].body)
+        self.assertTrue("See you there!" in mail.outbox[0].body)
 
     def test_accept_by_self_assignment(self):
         # Applicant should not be able to accept self

@@ -17,8 +17,9 @@ class TransitionMessage(object):
     template = 'messages/base'
     context = {}
 
-    def __init__(self, obj):
+    def __init__(self, obj, **options):
         self.obj = obj
+        self.options = options
 
     def __unicode__(self):
         return self.subject
@@ -36,20 +37,21 @@ class TransitionMessage(object):
             return self.subject.format(**context)
 
     def get_messages(self):
+        custom_message = self.options.get('custom_message', '')
         return [
             Message(
                 template=self.get_template(),
                 subject=self.get_subject(recipient.primary_language),
                 content_object=self.obj,
-                recipient=recipient
+                recipient=recipient,
+                custom_message=custom_message
             ) for recipient in self.get_recipients()
         ]
 
     def get_recipients(self):
         return [self.obj.owner]
 
-    def compose_and_send(self, custom_message=None):
+    def compose_and_send(self):
         for message in self.get_messages():
-            message.custom_message = custom_message
             message.save()
             message.send()

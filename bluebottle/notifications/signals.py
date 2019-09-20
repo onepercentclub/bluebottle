@@ -8,4 +8,4 @@ def transition_messages(sender, instance, transition, send_messages=True, messag
     # Only try to send messages if 'send_messages' is not False.
     if send_messages:
         for msg in transition.options.get('messages', []):
-            msg(instance).compose_and_send()
+            msg(instance, custom_message=message).compose_and_send()

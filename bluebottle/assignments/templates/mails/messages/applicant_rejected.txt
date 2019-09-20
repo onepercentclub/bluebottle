@@ -8,8 +8,8 @@
         {% blocktrans with recipient_name=obj.user.first_name assignment_title=obj.activity.title context 'email' %}
         Hi {{ recipient_name }},
         Unfortunately, you have not been selected for the assignment "{{ assignment_title }}".
+        {% endblocktrans %}
     {% endif %}
-{% endblocktrans %}
 {% endblock %}
 
 {% block action %}

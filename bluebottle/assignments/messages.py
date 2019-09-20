@@ -9,4 +9,4 @@ class ApplicantAcceptedMessage(TransitionMessage):
 
 class ApplicantRejectedMessage(TransitionMessage):
     subject = _('You not been selected for the assignment')
-    template = 'messages/applicant_reject4d'
+    template = 'messages/applicant_rejected'

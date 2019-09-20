@@ -41,7 +41,7 @@ class TransitionSerializer(serializers.Serializer):
     def save(self):
         resource = self.validated_data['resource']
         transition = self.validated_data['transition']
-        message = getattr(self.validated_data, 'message', '')
+        message = self.validated_data.get('message', '')
 
         available_transitions = getattr(resource, self.field).available_transitions(user=self.context['request'].user)
 

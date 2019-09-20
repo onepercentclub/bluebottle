@@ -36,7 +36,7 @@ class AvailableTransitionsField(ReadOnlyField):
 
 class TransitionSerializer(serializers.Serializer):
     transition = serializers.CharField()
-    message = serializers.CharField(required=False)
+    message = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     def save(self):
         resource = self.validated_data['resource']

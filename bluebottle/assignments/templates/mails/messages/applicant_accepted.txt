@@ -7,7 +7,7 @@
 {% else %}
     {% blocktrans with recipient_name=obj.user.first_name assignment_title=obj.activity.title context 'email' %}
     Hi {{ recipient_name }},
-    Good news, you have been accepted for assignment "{{ initiative_title }}"!
+    Good news, you have been accepted for assignment "{{ assignment_title }}"!
     {% endblocktrans %}
 {% endif %}
 {% endblock %}

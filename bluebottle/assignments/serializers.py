@@ -10,7 +10,7 @@ from bluebottle.activities.utils import (
 from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.events.serializers import LocationValidator, LocationField
-from bluebottle.files.serializers import DocumentField
+from bluebottle.files.serializers import DocumentField, DocumentSerializer
 from bluebottle.geo.models import Geolocation
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import RelatedField, ResourcePermissionField, NonModelRelatedResourceField, \
@@ -29,6 +29,11 @@ class RegistrationDeadlineValidator(object):
             )
 
         return value
+
+
+class ApplicantDocumentSerializer(DocumentSerializer):
+    content_view_name = 'initiative-image'
+    relationship = 'applicant_set'
 
 
 class AssignmentValidationSerializer(ActivityValidationSerializer):
@@ -95,6 +100,7 @@ class AssignmentListSerializer(BaseActivitySerializer):
         'expertise': 'bluebottle.tasks.serializers.SkillSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'document': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'validations': 'bluebottle.assignments.serializers.AssignmentValidationSerializer',
     }

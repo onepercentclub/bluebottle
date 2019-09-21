@@ -39,6 +39,30 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
 
 
 class FileContentView(RetrieveAPIView):
+
+    def retrieve(self, *args, **kwargs):
+        instance = self.get_object()
+        self.check_object_permissions(
+            self.request,
+            instance
+        )
+
+        file = getattr(instance, self.field).file
+        content_type = mimetypes.guess_type(file.name)[0]
+
+        if settings.DEBUG:
+            response = HttpResponse(content=file.read())
+        else:
+            response = HttpResponse()
+            response['X-Accel-Redirect'] = file.url
+
+        response['Content-Type'] = content_type
+
+        return response
+
+
+class ImageContentView(FileContentView):
+
     def retrieve(self, *args, **kwargs):
         instance = self.get_object()
 

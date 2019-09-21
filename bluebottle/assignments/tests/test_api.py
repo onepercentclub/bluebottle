@@ -7,6 +7,7 @@ from django.utils.timezone import now
 from rest_framework import status
 
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
+from bluebottle.files.tests.factories import DocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
@@ -376,11 +377,44 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.data['status'], 'new')
         self.assertEqual(response.data['motivation'], 'Pick me! Pick me!')
 
-    # def test_accept_started_assignment(self):
-    #     # Applying to started assignment should fail
-    #     self.assignment.transitions.start()
-    #     response = self.client.post(self.url, json.dumps(self.apply_data), user=self.user)
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+class ApplicantDocumentAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(ApplicantDocumentAPITestCase, self).setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=['assignment']
+        )
+
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.owner = BlueBottleUserFactory()
+        self.manager = BlueBottleUserFactory()
+        self.someone_else = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create(activity_manager=self.manager)
+        self.assignment = AssignmentFactory.create(owner=self.owner, initiative=self.initiative)
+        self.assignment.review_transitions.submit()
+        self.assignment.review_transitions.approve()
+        self.applicant = ApplicantFactory.create(activity=self.assignment, user=self.user)
+        self.url = reverse('applicant-document', args=(self.applicant.id,))
+        self.applicant.document = DocumentFactory()
+        self.applicant.save()
+
+    def test_retrieve_document_by_user(self):
+        response = self.client.get(self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_retrieve_document_by_someone_else(self):
+        response = self.client.get(self.url, user=self.someone_else)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_retrieve_document_by_assignment_owner(self):
+        response = self.client.get(self.url, user=self.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_retrieve_document_by_activity_manager(self):
+        response = self.client.get(self.url, user=self.manager)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class ApplicantTransitionAPITestCase(BluebottleTestCase):

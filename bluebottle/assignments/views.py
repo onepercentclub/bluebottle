@@ -2,15 +2,15 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
 from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.assignments.permissions import ApplicantDocumentPermission
 from bluebottle.assignments.serializers import ApplicantSerializer, \
     AssignmentTransitionSerializer, ApplicantTransitionSerializer, AssignmentListSerializer, AssignmentSerializer
+from bluebottle.files.views import FileContentView
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission
-)
+    OneOf, ResourcePermission, ResourceOwnerPermission)
 from bluebottle.utils.views import (
-    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin
-)
+    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin)
 
 
 class AssignmentList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -78,6 +78,11 @@ class ApplicantDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
+    prefetch_for_includes = {
+        'assignment': ['assignment'],
+        'document': ['document'],
+    }
+
 
 class ApplicantTransitionList(TransitionList):
     serializer_class = ApplicantTransitionSerializer
@@ -85,3 +90,12 @@ class ApplicantTransitionList(TransitionList):
     prefetch_for_includes = {
         'resource': ['participant', 'participant__activity'],
     }
+
+
+class ApplicantDocumentDetail(FileContentView):
+    queryset = Applicant.objects
+    field = 'document'
+
+    permission_classes = (
+        ApplicantDocumentPermission,
+    )

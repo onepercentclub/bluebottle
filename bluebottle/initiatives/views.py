@@ -1,6 +1,6 @@
 from rest_framework_json_api.views import AutoPrefetchMixin
 
-from bluebottle.files.views import FileContentView
+from bluebottle.files.views import ImageContentView
 from bluebottle.initiatives.filters import InitiativeSearchFilter
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.permissions import InitiativePermission
@@ -66,7 +66,7 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
     }
 
 
-class InitiativeImage(FileContentView):
+class InitiativeImage(ImageContentView):
     queryset = Initiative.objects
     field = 'image'
 

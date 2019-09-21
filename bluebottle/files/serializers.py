@@ -25,7 +25,12 @@ class DocumentSerializer(ModelSerializer):
     }
 
     def get_links(self, obj):
-        return {}
+        parent_id = getattr(obj, self.relationship).get().pk
+        return dict(
+            (
+                'main', reverse(self.content_view_name, args=(parent_id, 'main'))
+            )
+        )
 
     def get_filename(self, instance):
         return os.path.basename(instance.file.name)

@@ -375,12 +375,6 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.data['status'], 'new')
         self.assertEqual(response.data['motivation'], 'Pick me! Pick me!')
 
-    # def test_accept_started_assignment(self):
-    #     # Applying to started assignment should fail
-    #     self.assignment.transitions.start()
-    #     response = self.client.post(self.url, json.dumps(self.apply_data), user=self.user)
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
 
 class ApplicantTransitionAPITestCase(BluebottleTestCase):
 

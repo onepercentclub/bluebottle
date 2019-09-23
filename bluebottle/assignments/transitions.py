@@ -9,6 +9,7 @@ from bluebottle.fsm import transition
 class AssignmentTransitions(ActivityTransitions):
     class values(ActivityTransitions.values):
         running = ChoiceItem('running', _('running'))
+        full = ChoiceItem('full', _('full'))
 
     @transition(
         field='status',
@@ -16,6 +17,22 @@ class AssignmentTransitions(ActivityTransitions):
         target=values.running,
     )
     def start(self, **kwargs):
+        pass
+
+    @transition(
+        field='status',
+        source=values.open,
+        target=values.full,
+    )
+    def lock(self, **kwargs):
+        pass
+
+    @transition(
+        field='status',
+        source=values.full,
+        target=values.open,
+    )
+    def reopen(self, **kwargs):
         pass
 
     @transition(
@@ -30,7 +47,7 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=values.running,
+        source=[values.running, values.in_review, values.succeeded, values.open],
         target=values.closed,
     )
     def close(self, **kwargs):

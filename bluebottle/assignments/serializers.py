@@ -12,7 +12,7 @@ from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.events.serializers import LocationValidator, LocationField
 from bluebottle.geo.models import Geolocation
 from bluebottle.transitions.serializers import TransitionSerializer
-from bluebottle.utils.serializers import RelatedField, ResourcePermissionField, NonModelRelatedResourceField, \
+from bluebottle.utils.serializers import ResourcePermissionField, NonModelRelatedResourceField, \
     FilteredRelatedField
 
 
@@ -101,7 +101,6 @@ class AssignmentListSerializer(BaseActivitySerializer):
 
 class AssignmentSerializer(AssignmentListSerializer):
     contributions = FilteredRelatedField(many=True, filter_backend=ApplicantListFilter)
-    location = RelatedField(allow_null=True, required=False, queryset=Geolocation.objects.all())
 
     class Meta(AssignmentListSerializer.Meta):
         fields = AssignmentListSerializer.Meta.fields + (

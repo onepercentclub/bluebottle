@@ -11,7 +11,7 @@ from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ImageSerializer as OldImageSerializer, SorlImageField
 )
-from bluebottle.utils.fields import SafeField
+from bluebottle.utils.fields import SafeField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Geolocation, Location
@@ -145,6 +145,9 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
     validations = NonModelRelatedResourceField(InitiativeValidationSerializer)
 
+    errors = ValidationErrorsField()
+    required = RequiredErrorsField()
+
     transitions = AvailableTransitionsField()
 
     included_serializers = {
@@ -176,9 +179,10 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_html', 'image',
             'theme', 'place', 'location', 'activities', 'validations',
+            'errors', 'required',
         )
 
-        meta_fields = ('permissions', 'transitions', 'status', 'created',)
+        meta_fields = ('permissions', 'transitions', 'status', 'created', 'required', 'errors', )
 
     class JSONAPIMeta:
         included_resources = [

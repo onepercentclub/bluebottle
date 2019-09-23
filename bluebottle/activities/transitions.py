@@ -1,4 +1,3 @@
-from django.utils.module_loading import import_string
 from django.utils.translation import ugettext_lazy as _
 from bluebottle.utils.transitions import ReviewTransitions
 
@@ -9,12 +8,15 @@ from bluebottle.fsm import ModelTransitions, transition
 
 class ActivityReviewTransitions(ReviewTransitions):
     def is_complete(self):
-        serializer_class = import_string(self.instance.complete_serializer)
+        errors = []
+        if self.instance.errors:
+            errors += self.instance.errors
 
-        serializer = serializer_class(instance=self.instance)
+        if self.instance.required:
+            errors += self.instance.required
 
-        if not serializer.is_valid():
-            return serializer.errors
+        if errors:
+            return errors
 
     def is_activity_manager(self, user):
         return not user or user in [self.instance.initiative.activity_manager, self.instance.owner]

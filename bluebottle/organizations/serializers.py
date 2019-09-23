@@ -4,6 +4,7 @@ from bluebottle.organizations.models import Organization, OrganizationContact
 
 from rest_framework_json_api.serializers import ModelSerializer
 
+from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import (
     NonModelRelatedResourceField, ValidationSerializer, NoCommitMixin
 )
@@ -42,6 +43,9 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
     name = serializers.CharField(required=True)
     website = serializers.CharField(allow_blank=True, required=False)
 
+    errors = ValidationErrorsField()
+    required = RequiredErrorsField()
+
     validations = NonModelRelatedResourceField(OrganizationValidationSerializer)
 
     included_serializers = {
@@ -53,9 +57,10 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
         model = Organization
         fields = (
             'id', 'name', 'slug', 'description', 'website', 'owner', 'validations',
+            'required', 'errors',
         )
 
-        meta_fields = ['created', 'updated']
+        meta_fields = ['created', 'updated', 'errors', 'required']
 
     class JSONAPIMeta:
         resource_name = 'organizations'
@@ -66,6 +71,9 @@ class OrganizationContactSerializer(NoCommitMixin, ModelSerializer):
     name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     email = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     phone = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+    errors = ValidationErrorsField()
+    required = RequiredErrorsField()
 
     validations = NonModelRelatedResourceField(OrganizationContactValidationSerializer)
 
@@ -78,9 +86,10 @@ class OrganizationContactSerializer(NoCommitMixin, ModelSerializer):
         model = OrganizationContact
         fields = (
             'id', 'name', 'email', 'phone', 'validations',
+            'required', 'errors',
         )
 
-        meta_fields = ['created', 'updated']
+        meta_fields = ['created', 'updated', 'errors', 'required']
 
     class JSONAPIMeta:
         resource_name = 'organization-contacts'

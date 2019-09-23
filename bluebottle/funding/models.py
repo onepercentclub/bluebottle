@@ -24,6 +24,7 @@ from bluebottle.funding.transitions import (
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.models import Validator, ValidatedModelMixin
 
 
 class PaymentProvider(PolymorphicModel):
@@ -63,6 +64,15 @@ class BankPaymentProvider(PaymentProvider):
     currencies = ['EUR', 'USD', 'XOF', 'NGN', 'CFA', 'KES']
 
 
+class KYCPassedValidator(Validator):
+    code = 'kyc'
+    message = _('Make sure your account is verified')
+    field = 'kyc'
+
+    def is_valid(self):
+        return self.instance.bank_account and self.instance.bank_account.connect_account.verified
+
+
 class Funding(Activity):
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
@@ -75,6 +85,17 @@ class Funding(Activity):
 
     needs_review = True
     complete_serializer = 'bluebottle.funding.serializers.FundingValidationSerializer'
+
+    validators = [KYCPassedValidator]
+
+    @property
+    def required_fields(self):
+        fields = ['title', 'description', 'target', 'bank_account', 'budget_lines']
+
+        if not self.duration:
+            fields.append('deadline')
+
+        return fields
 
     class JSONAPIMeta:
         resource_name = 'activities/fundings'
@@ -331,7 +352,7 @@ class PaymentMethod(object):
         resource_name = 'payments/payment-methods'
 
 
-class PayoutAccount(PolymorphicModel, TransitionsMixin):
+class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
     status = FSMField(
         default=PayoutAccountTransitions.values.new
     )

@@ -215,3 +215,29 @@ class FSMField(serializers.CharField):
         super(FSMField, self).__init__(**kwargs)
         validator = FSMStatusValidator()
         self.validators.append(validator)
+
+
+class ValidationErrorsField(serializers.ReadOnlyField):
+    def to_representation(self, value):
+        return [
+            {
+                'title': error.message,
+                'code': error.code,
+                'source': {
+                    'pointer': '/data/attributes/{}'.format(error.field.replace('.', '/'))
+                }
+            } for error in value
+        ]
+
+
+class RequiredErrorsField(serializers.ReadOnlyField):
+    def to_representation(self, value):
+        return [
+            {
+                'title': _('This field is required'),
+                'code': 'required',
+                'source': {
+                    'pointer': '/data/attributes/{}'.format(field.replace('.', '/'))
+                }
+            } for field in value
+        ]

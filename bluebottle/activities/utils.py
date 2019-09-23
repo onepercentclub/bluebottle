@@ -6,7 +6,8 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
-from bluebottle.utils.fields import FSMField
+from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
+
 from bluebottle.utils.serializers import (
     ResourcePermissionField, ValidationSerializer
 )
@@ -27,6 +28,9 @@ class BaseActivitySerializer(ModelSerializer):
     stats = serializers.OrderedDict(read_only=True)
 
     slug = serializers.CharField(read_only=True)
+
+    errors = ValidationErrorsField()
+    required = RequiredErrorsField()
 
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
@@ -52,10 +56,12 @@ class BaseActivitySerializer(ModelSerializer):
             'status',
             'review_status',
             'contributions',
-            'stats'
+            'stats',
+            'errors',
+            'required',
         )
 
-        meta_fields = ('permissions', 'transitions', 'review_transitions', 'created', 'updated')
+        meta_fields = ('permissions', 'transitions', 'review_transitions', 'created', 'updated', 'errors', 'required', )
 
     class JSONAPIMeta:
         included_resources = [

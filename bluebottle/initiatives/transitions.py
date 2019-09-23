@@ -5,22 +5,24 @@ from bluebottle.utils.transitions import ReviewTransitions
 
 class InitiativeReviewTransitions(ReviewTransitions):
     def is_complete(self):
-        from bluebottle.initiatives.serializers import InitiativeValidationSerializer
-        from bluebottle.organizations.serializers import (
-            OrganizationContactValidationSerializer, OrganizationValidationSerializer
-        )
+        errors = []
+        if self.instance.errors:
+            errors += self.instance.errors
 
-        serializer = InitiativeValidationSerializer(instance=self.instance)
-        if not serializer.is_valid():
-            return serializer.errors
+        if self.instance.required:
+            errors += self.instance.required
 
-        serializer = OrganizationValidationSerializer(instance=self.instance.organization)
-        if self.instance.organization and not serializer.is_valid():
-            return serializer.errors
+        if self.instance.organization:
+            errors += [error for error in self.instance.organization.required]
+            errors += [error for error in self.instance.organization.errors]
 
-        serializer = OrganizationContactValidationSerializer(instance=self.instance.organization_contact)
-        if self.instance.organization_contact and not serializer.is_valid():
-            return serializer.errors
+        if self.instance.organization_contact:
+            errors += [error for error in self.instance.organization_contact.required]
+            errors += [error for error in self.instance.organization_contact.errors]
+
+        print errors
+        if errors:
+            return errors
 
     @transition(
         source=[ReviewTransitions.values.draft],

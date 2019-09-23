@@ -8,6 +8,16 @@ from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantT
 from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
+from bluebottle.utils.models import Validator
+
+
+class LocationValidator(Validator):
+    field = 'location'
+    code = 'location'
+    message = _('This field is required or select \'Online\''),
+
+    def is_valid(self):
+        return not self.instance.is_online or not self.instance.location
 
 
 class Assignment(Activity):
@@ -37,6 +47,21 @@ class Assignment(Activity):
 
     transitions = TransitionManager(AssignmentTransitions, 'status')
     complete_serializer = 'bluebottle.assignments.serializers.AssignmentValidationSerializer'
+
+    validators = [LocationValidator]
+
+    @property
+    def required_fields(self):
+        fields = [
+            'title', 'description', 'end_date_type', 'end_date',
+            'registration_deadline', 'capacity', 'duration', 'is_online',
+            'expertise'
+        ]
+
+        if not self.is_online:
+            fields.append('location')
+
+        return fields
 
     @property
     def stats(self):

@@ -1,3 +1,5 @@
+from django.utils.translation import ugettext_lazy as _
+
 from bluebottle.fsm import transition, TransitionNotPossible
 from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
 from bluebottle.utils.transitions import ReviewTransitions
@@ -5,20 +7,42 @@ from bluebottle.utils.transitions import ReviewTransitions
 
 class InitiativeReviewTransitions(ReviewTransitions):
     def is_complete(self):
-        errors = []
-        if self.instance.errors:
-            errors += self.instance.errors
-
-        if self.instance.required:
-            errors += self.instance.required
+        errors = [
+            _('{} is required').format(self.instance._meta.get_field(field).verbose_name)
+            for field in self.instance.required
+        ]
 
         if self.instance.organization:
-            errors += [error for error in self.instance.organization.required]
-            errors += [error for error in self.instance.organization.errors]
+            errors += [
+                _('Organization {} is required').format(
+                    self.instance.organization._meta.get_field(field).verbose_name
+                ) for field in self.instance.organization.required
+            ]
 
         if self.instance.organization_contact:
-            errors += [error for error in self.instance.organization_contact.required]
-            errors += [error for error in self.instance.organization_contact.errors]
+            errors += [
+                _('Organization Contact {} is required').format(
+                    self.instance.organization_contact._meta.get_field(field).verbose_name
+                ) for field in self.instance.organization_contact.required
+            ]
+
+        if errors:
+            return errors
+
+    def is_valid(self):
+        errors = [
+            error.message for error in self.instance.errors
+        ]
+
+        if self.instance.organization:
+            errors += [
+                error.message for error in self.instance.organization.errors
+            ]
+
+        if self.instance.organization_contact:
+            errors += [
+                error.message for error in self.instance.organization_contact.errors
+            ]
 
         if errors:
             return errors
@@ -26,7 +50,7 @@ class InitiativeReviewTransitions(ReviewTransitions):
     @transition(
         source=[ReviewTransitions.values.draft],
         target=ReviewTransitions.values.submitted,
-        conditions=[is_complete]
+        conditions=[is_complete, is_valid]
     )
     def submit(self):
         for activity in self.instance.activities.all():

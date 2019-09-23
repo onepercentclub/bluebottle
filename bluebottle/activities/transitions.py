@@ -8,12 +8,18 @@ from bluebottle.fsm import ModelTransitions, transition
 
 class ActivityReviewTransitions(ReviewTransitions):
     def is_complete(self):
-        errors = []
-        if self.instance.errors:
-            errors += self.instance.errors
+        errors = [
+            _('{} is required').format(self.instance._meta.get_field(field).verbose_name)
+            for field in self.instance.required
+        ]
 
-        if self.instance.required:
-            errors += self.instance.required
+        if errors:
+            return errors
+
+    def is_valid(self):
+        errors = [
+            error.message for error in self.instance.errors
+        ]
 
         if errors:
             return errors
@@ -28,7 +34,7 @@ class ActivityReviewTransitions(ReviewTransitions):
     @transition(
         source=ReviewTransitions.values.draft,
         target=ReviewTransitions.values.submitted,
-        conditions=[is_complete],
+        conditions=[is_complete, is_valid],
         permissions=[is_activity_manager]
     )
     def submit(self):

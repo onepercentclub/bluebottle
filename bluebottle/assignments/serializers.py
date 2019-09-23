@@ -11,7 +11,7 @@ from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.permissions import ApplicantDocumentPermission
 from bluebottle.events.serializers import LocationValidator, LocationField
-from bluebottle.files.serializers import DocumentField, DocumentSerializer
+from bluebottle.files.serializers import DocumentField, PrivateDocumentSerializer
 from bluebottle.geo.models import Geolocation
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import RelatedField, ResourcePermissionField, NonModelRelatedResourceField, \
@@ -32,7 +32,7 @@ class RegistrationDeadlineValidator(object):
         return value
 
 
-class ApplicantDocumentSerializer(DocumentSerializer):
+class ApplicantDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'applicant-document'
     relationship = 'applicant_set'
 

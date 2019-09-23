@@ -1,11 +1,12 @@
 import os
-from django.core.urlresolvers import reverse
 
+from django.core.urlresolvers import reverse
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.files.models import Document, Image
+from bluebottle.utils.utils import reverse_signed
 
 
 class DocumentField(ResourceRelatedField):
@@ -60,6 +61,13 @@ class DocumentSerializer(ModelSerializer):
 
     class JSONAPIMeta:
         included_resources = ['owner', ]
+
+
+class PrivateDocumentSerializer(DocumentSerializer):
+
+    def get_link(self, obj):
+        parent_id = getattr(obj, self.relationship).get().pk
+        return reverse_signed(self.content_view_name, args=(parent_id, ))
 
 
 class ImageField(ResourceRelatedField):

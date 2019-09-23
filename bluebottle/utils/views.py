@@ -268,6 +268,7 @@ class RetrieveUpdateDestroyAPIView(ViewPermissionsMixin, generics.RetrieveUpdate
 class PrivateFileView(DetailView):
     """ Serve private files using X-sendfile header. """
     field = None  # Field on the model that is the actual file
+    relation = None  # If the file is in a related object (e.g. Document)
     signer = TimestampSigner()
     max_age = 6 * 60 * 60
     query_pk_and_slug = True
@@ -284,7 +285,10 @@ class PrivateFileView(DetailView):
         return super(PrivateFileView, self).get_object()
 
     def get(self, request, *args, **kwargs):
-        field = getattr(self.get_object(), self.field)
+        if self.relation:
+            field = getattr(getattr(self.get_object(), self.relation), self.field)
+        else:
+            field = getattr(self.get_object(), self.field)
         filename = os.path.basename(field.name)
         content_type = mimetypes.guess_type(filename)[0]
         response = HttpResponse()

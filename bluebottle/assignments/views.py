@@ -61,6 +61,7 @@ class ApplicantList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
 
     prefetch_for_includes = {
         'assignment': ['assignment'],
+        'user': ['user'],
         'document': ['document'],
     }
 
@@ -77,7 +78,8 @@ class ApplicantDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView
     )
 
     prefetch_for_includes = {
-        'assignment': ['assignment'],
+        'activity': ['activity'],
+        'user': ['user'],
         'document': ['document'],
     }
 
@@ -91,6 +93,7 @@ class ApplicantTransitionList(TransitionList):
 
 
 class ApplicantDocumentDetail(PrivateFileView):
+    max_age = 15 * 60  # 15 minutes
     queryset = Applicant.objects
     relation = 'document'
     field = 'file'

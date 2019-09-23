@@ -270,7 +270,7 @@ class PrivateFileView(DetailView):
     field = None  # Field on the model that is the actual file
     relation = None  # If the file is in a related object (e.g. Document)
     signer = TimestampSigner()
-    max_age = 6 * 60 * 60
+    max_age = 6 * 60 * 60  # 6 hours
     query_pk_and_slug = True
 
     def get_object(self):

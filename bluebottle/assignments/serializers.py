@@ -156,6 +156,12 @@ class ApplicantDocumentField(DocumentField):
             return queryset.none()
         return queryset
 
+    def to_representation(self, value):
+        # Return None if queryset is empty. Permission is denied.
+        if not self.get_queryset():
+            return None
+        return super(ApplicantDocumentField, self).to_representation(value)
+
 
 class ApplicantSerializer(BaseContributionSerializer):
     time_spent = serializers.CharField(required=False, allow_null=True, allow_blank=True)
@@ -181,7 +187,8 @@ class ApplicantSerializer(BaseContributionSerializer):
         resource_name = 'contributions/applicants'
         included_resources = [
             'user',
-            'activity'
+            'activity',
+            'document'
         ]
 
     included_serializers = {

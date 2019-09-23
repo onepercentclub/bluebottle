@@ -20,7 +20,6 @@ class InitiativeReviewTransitions(ReviewTransitions):
             errors += [error for error in self.instance.organization_contact.required]
             errors += [error for error in self.instance.organization_contact.errors]
 
-        print errors
         if errors:
             return errors
 

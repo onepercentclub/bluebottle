@@ -138,7 +138,7 @@ class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
         fields = [
             'title', 'pitch', 'owner',
             'has_organization', 'story', 'image',
-            'theme', 'has_organization',
+            'theme',
         ]
 
         if self.has_organization:

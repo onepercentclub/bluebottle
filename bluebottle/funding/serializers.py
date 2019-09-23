@@ -9,8 +9,7 @@ from rest_framework_json_api.serializers import (
 )
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseContributionSerializer,
-    ActivityValidationSerializer
+    BaseActivitySerializer, BaseContributionSerializer
 )
 from bluebottle.files.serializers import ImageField
 from bluebottle.funding.filters import DonationListFilter
@@ -26,7 +25,6 @@ from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import (
     MoneySerializer, FilteredRelatedField, ResourcePermissionField, NoCommitMixin,
-    NonModelRelatedResourceField
 )
 
 
@@ -158,19 +156,6 @@ class PaymentMethodSerializer(serializers.Serializer):
         resource_name = 'payments/payment-methods'
 
 
-class FundingValidationSerializer(ActivityValidationSerializer):
-    target = MoneySerializer(required=False, allow_null=True)
-
-    class Meta:
-        model = Funding
-        fields = ActivityValidationSerializer.Meta.fields + (
-            'target',
-        )
-
-    class JSONAPIMeta:
-        resource_name = 'activities/funding-validations'
-
-
 class FundingListSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
     target = MoneySerializer(read_only=True)
@@ -223,7 +208,6 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
     budget_lines = BudgetLineSerializer(many=True, required=False)
 #    payment_methods = PaymentMethodSerializer(many=True, read_only=True)
     contributions = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
-    validations = NonModelRelatedResourceField(FundingValidationSerializer)
 
     bank_account = PolymorphicResourceRelatedField(
         BankAccountSerializer,
@@ -250,7 +234,6 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
             'budget_lines',
             'fundraisers',
             'rewards',
-            'validations',
             'contributions',
             'bank_account'
         )
@@ -260,7 +243,6 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
             'rewards',
             'payment_methods',
             'budget_lines',
-            'validations',
             'contributions',
             'contributions.user',
             'bank_account',
@@ -273,7 +255,6 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
             'budget_lines': 'bluebottle.funding.serializers.RewardSerializer',
             'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
             'contributions': 'bluebottle.funding.serializers.DonationSerializer',
-            'validations': 'bluebottle.funding.serializers.FundingValidationSerializer',
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
         }
     )

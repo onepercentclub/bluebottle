@@ -33,7 +33,7 @@ class LocationValidator(Validator):
     message = _('This field is required or select \'Online\''),
 
     def is_valid(self):
-        return not self.instance.is_online or not self.instance.location
+        return self.instance.is_online or self.instance.location
 
 
 class Event(Activity):
@@ -89,8 +89,6 @@ class Event(Activity):
             ('api_change_own_event', 'Can change own event through the API'),
             ('api_delete_own_event', 'Can delete own event through the API'),
         )
-
-    complete_serializer = 'bluebottle.events.serializers.EventValidationSerializer'
 
     class JSONAPIMeta:
         resource_name = 'activities/events'

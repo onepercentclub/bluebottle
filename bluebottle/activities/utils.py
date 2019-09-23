@@ -8,9 +8,7 @@ from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 
-from bluebottle.utils.serializers import (
-    ResourcePermissionField, ValidationSerializer
-)
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 # This can't be in serializers because of circular imports
@@ -70,23 +68,6 @@ class BaseActivitySerializer(ModelSerializer):
             'contributions',
         ]
         resource_name = 'activities'
-
-
-class ActivityValidationSerializer(ValidationSerializer):
-    title = serializers.CharField()
-    description = serializers.CharField()
-
-    # TODO add dependent fields: has_organization/organization/organization_contact and
-    # place / location
-
-    class Meta:
-        model = Activity
-        fields = (
-            'title', 'description',
-        )
-
-    class JSONAPIMeta:
-        resource_name = 'activity-validations'
 
 
 class ActivitySubmitSerializer(ModelSerializer):

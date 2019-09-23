@@ -17,7 +17,20 @@ class LocationValidator(Validator):
     message = _('This field is required or select \'Online\''),
 
     def is_valid(self):
-        return not self.instance.is_online or not self.instance.location
+        return self.instance.is_online or self.instance.location
+
+
+class RegistrationDeadlineValidator(Validator):
+    field = 'registration_deadline'
+    code = 'registration_deadline'
+    message = _('The registration deadline must be before the end'),
+
+    def is_valid(self):
+        return (
+            not self.instance.registration_deadline or
+            not self.instance.end_date or
+            self.instance.registration_deadline < self.instance.end_date
+        )
 
 
 class Assignment(Activity):
@@ -46,9 +59,8 @@ class Assignment(Activity):
         null=True, blank=True, on_delete=SET_NULL)
 
     transitions = TransitionManager(AssignmentTransitions, 'status')
-    complete_serializer = 'bluebottle.assignments.serializers.AssignmentValidationSerializer'
 
-    validators = [LocationValidator]
+    validators = [LocationValidator, RegistrationDeadlineValidator]
 
     @property
     def required_fields(self):

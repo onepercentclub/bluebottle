@@ -84,7 +84,6 @@ class Funding(Activity):
     transitions = TransitionManager(FundingTransitions, 'status')
 
     needs_review = True
-    complete_serializer = 'bluebottle.funding.serializers.FundingValidationSerializer'
 
     validators = [KYCPassedValidator]
 

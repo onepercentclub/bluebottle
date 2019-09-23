@@ -1,65 +1,18 @@
-from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer,
-    ActivityValidationSerializer
 )
 from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.events.serializers import LocationValidator, LocationField
-from bluebottle.geo.models import Geolocation
 from bluebottle.transitions.serializers import TransitionSerializer
-from bluebottle.utils.serializers import ResourcePermissionField, NonModelRelatedResourceField, \
-    FilteredRelatedField
-
-
-class RegistrationDeadlineValidator(object):
-    def set_context(self, field):
-        self.end_date = field.parent.instance.end_date
-
-    def __call__(self, value):
-        if not self.end_date or value > self.end_date:
-            raise serializers.ValidationError(
-                _('Registration deadline should be before end date'),
-                code='registration_deadline'
-            )
-
-        return value
-
-
-class AssignmentValidationSerializer(ActivityValidationSerializer):
-    end_date = serializers.DateField()
-    duration = serializers.FloatField()
-    registration_deadline = serializers.DateField(
-        allow_null=True,
-        validators=[RegistrationDeadlineValidator()]
-    )
-    is_online = serializers.BooleanField()
-    end_date_type = serializers.CharField()
-    location = LocationField(
-        queryset=Geolocation.objects.all(),
-        allow_null=True,
-        validators=[LocationValidator()]
-    )
-
-    class Meta:
-        model = Assignment
-        fields = ActivityValidationSerializer.Meta.fields + (
-            'end_date', 'end_date_type',
-            'is_online', 'location', 'duration',
-            'registration_deadline',
-        )
-
-    class JSONAPIMeta:
-        resource_name = 'activities/assignment-validations'
+from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 
 
 class AssignmentListSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('assignment-detail', view_args=('pk',))
-    validations = NonModelRelatedResourceField(AssignmentValidationSerializer)
 
     class Meta(BaseActivitySerializer.Meta):
         model = Assignment
@@ -73,7 +26,6 @@ class AssignmentListSerializer(BaseActivitySerializer):
             'duration',
             'location',
             'permissions',
-            'validations'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -85,7 +37,6 @@ class AssignmentListSerializer(BaseActivitySerializer):
             'initiative.image',
             'initiative.location',
             'initiative.place',
-            'validations',
         ]
         resource_name = 'activities/assignments'
 
@@ -95,7 +46,6 @@ class AssignmentListSerializer(BaseActivitySerializer):
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-        'validations': 'bluebottle.assignments.serializers.AssignmentValidationSerializer',
     }
 
 

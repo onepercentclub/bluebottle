@@ -9,6 +9,7 @@ from bluebottle.activities.utils import (
 )
 from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.assignments.permissions import ApplicantDocumentPermission
 from bluebottle.events.serializers import LocationValidator, LocationField
 from bluebottle.files.serializers import DocumentField, DocumentSerializer
 from bluebottle.geo.models import Geolocation
@@ -32,7 +33,7 @@ class RegistrationDeadlineValidator(object):
 
 
 class ApplicantDocumentSerializer(DocumentSerializer):
-    content_view_name = 'initiative-image'
+    content_view_name = 'applicant-document'
     relationship = 'applicant_set'
 
 
@@ -118,7 +119,8 @@ class AssignmentSerializer(AssignmentListSerializer):
     class JSONAPIMeta(AssignmentListSerializer.JSONAPIMeta):
         included_resources = AssignmentListSerializer.JSONAPIMeta.included_resources + [
             'contributions',
-            'contributions.user'
+            'contributions.user',
+            'contributions.document'
         ]
 
     included_serializers = dict(
@@ -141,10 +143,24 @@ class AssignmentTransitionSerializer(TransitionSerializer):
         resource_name = 'assignment-transitions'
 
 
+class ApplicantDocumentField(DocumentField):
+
+    def get_queryset(self):
+        # Filter by permission
+        # TODO: We might want to do this in a nicer way
+        queryset = super(ApplicantDocumentField, self).get_queryset()
+        request = self.context['request']
+        applicant = self.parent.instance
+        permission = ApplicantDocumentPermission()
+        if not permission.has_object_permission(request, self, applicant):
+            return queryset.none()
+        return queryset
+
+
 class ApplicantSerializer(BaseContributionSerializer):
     time_spent = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    document = DocumentField(required=False, allow_null=True)
+    document = ApplicantDocumentField(required=False, allow_null=True)
 
     class Meta(BaseContributionSerializer.Meta):
         model = Applicant
@@ -171,7 +187,7 @@ class ApplicantSerializer(BaseContributionSerializer):
     included_serializers = {
         'activity': 'bluebottle.assignments.serializers.AssignmentSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'document': 'bluebottle.files.serializers.DocumentSerializer',
+        'document': 'bluebottle.assignments.serializers.ApplicantDocumentSerializer',
     }
 
 

@@ -13,10 +13,9 @@ class DocumentField(ResourceRelatedField):
         return Document.objects.all()
 
 
-class DocumentSerializer(ModelSerializer):
+class FileSerializer(ModelSerializer):
     file = serializers.FileField(write_only=True)
     filename = serializers.SerializerMethodField()
-    links = serializers.SerializerMethodField()
     owner = ResourceRelatedField(read_only=True)
     size = serializers.IntegerField(read_only=True, source='file.size')
 
@@ -24,20 +23,39 @@ class DocumentSerializer(ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    def get_links(self, obj):
+    class Meta:
+        model = Document
+        fields = ('id', 'file', 'filename', 'size', 'owner', )
+        meta_fields = ['size', 'filename']
+
+    class JSONAPIMeta:
+        included_resources = ['owner', ]
+
+    def get_filename(self, instance):
+        return os.path.basename(instance.file.name)
+
+
+class DocumentSerializer(ModelSerializer):
+    file = serializers.FileField(write_only=True)
+    filename = serializers.SerializerMethodField()
+    link = serializers.SerializerMethodField()
+    owner = ResourceRelatedField(read_only=True)
+    size = serializers.IntegerField(read_only=True, source='file.size')
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+    def get_link(self, obj):
         parent_id = getattr(obj, self.relationship).get().pk
-        return dict(
-            (
-                'main', reverse(self.content_view_name, args=(parent_id, 'main'))
-            )
-        )
+        return reverse(self.content_view_name, args=(parent_id,))
 
     def get_filename(self, instance):
         return os.path.basename(instance.file.name)
 
     class Meta:
         model = Document
-        fields = ('id', 'file', 'filename', 'size', 'owner', 'links',)
+        fields = ('id', 'file', 'filename', 'size', 'owner', 'link',)
         meta_fields = ['size', 'filename']
 
     class JSONAPIMeta:
@@ -50,6 +68,7 @@ class ImageField(ResourceRelatedField):
 
 
 class ImageSerializer(DocumentSerializer):
+    links = serializers.SerializerMethodField()
 
     def get_links(self, obj):
         if hasattr(self, 'sizes'):

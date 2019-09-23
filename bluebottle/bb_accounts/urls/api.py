@@ -3,7 +3,7 @@ from django.conf.urls import url
 from ..views import (
     ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
     PasswordReset, PasswordSet, UserVerification, UserDataExport, EmailSetView,
-    PasswordSetView, TokenLogin, Logout
+    PasswordSetView, TokenLogin, Logout, MemberDetail
 )
 
 # Public User API:
@@ -27,6 +27,7 @@ urlpatterns = [
     url(r'^password$', PasswordSetView.as_view(), name='user-set-password'),
     url(r'^logout$', Logout.as_view(), name='user-logout'),
     url(r'^passwordreset$', PasswordReset.as_view(), name='password-reset'),
+    url(r'^member/(?P<pk>\d+)$', MemberDetail.as_view(), name='member-detail'),
     url(
         r'^passwordset/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})$',
         PasswordSet.as_view(), name='password-set'),

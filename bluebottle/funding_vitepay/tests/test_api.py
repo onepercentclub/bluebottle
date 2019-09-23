@@ -5,6 +5,7 @@ from mock import patch
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import VitepayPaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -15,6 +16,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(VitepayPaymentTestCase, self).setUp()
+        VitepayPaymentProvider.objects.all().delete()
         VitepayPaymentProviderFactory.create()
 
         self.client = JSONAPITestClient()

@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm import TransitionManager
-from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, PayoutAccount
+from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, BankAccount
 from bluebottle.funding.transitions import PaymentTransitions
 
 
@@ -46,7 +46,7 @@ class FlutterwavePaymentProvider(PaymentProvider):
         }
 
 
-class FlutterwavePayoutAccount(PayoutAccount):
+class FlutterwaveBankAccount(BankAccount):
 
     type = 'flutterwave'
     providers = [

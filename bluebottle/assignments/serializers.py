@@ -7,6 +7,7 @@ from bluebottle.activities.utils import (
 )
 from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.files.serializers import DocumentField
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 
@@ -86,12 +87,14 @@ class AssignmentTransitionSerializer(TransitionSerializer):
 class ApplicantSerializer(BaseContributionSerializer):
     time_spent = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    document = DocumentField(required=False, allow_null=True)
 
     class Meta(BaseContributionSerializer.Meta):
         model = Applicant
         fields = BaseContributionSerializer.Meta.fields + (
             'time_spent',
             'motivation',
+            'document'
         )
 
         validators = [
@@ -111,6 +114,7 @@ class ApplicantSerializer(BaseContributionSerializer):
     included_serializers = {
         'activity': 'bluebottle.assignments.serializers.AssignmentSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'document': 'bluebottle.files.serializers.DocumentSerializer',
     }
 
 
@@ -126,5 +130,5 @@ class ApplicantTransitionSerializer(TransitionSerializer):
         resource_name = 'contributions/applicant-transitions'
         included_resources = [
             'resource',
-            'resource.activity'
+            'resource.activity',
         ]

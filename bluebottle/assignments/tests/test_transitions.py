@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 from django.core import mail
 
-from bluebottle.assignments.tests.factories import AssignmentFactory
+from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -42,5 +43,12 @@ class AssignmentTransitionMessagesTestCase(BluebottleTestCase):
         self.assignment.transitions.succeed()
         self.assignment.save()
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your task Nice things has been completed')
+        self.assertEqual(mail.outbox[0].subject, 'Your task Nice things has been completed!')
         self.assertTrue('Great news!' in mail.outbox[0].body)
+
+    def test_applied(self):
+        someone = BlueBottleUserFactory.create(first_name='Henk')
+        ApplicantFactory.create(activity=self.assignment, user=someone, status='draft')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Someone applied to your task!')
+        self.assertTrue('Henk applied to join your task' in mail.outbox[0].body)

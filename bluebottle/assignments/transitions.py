@@ -2,6 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
 
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.assignments.messages import AssignmentApplicationMessage
 from bluebottle.assignments.messages import AssignmentCompletedMessage, AssignmentExpiredMessage, \
     AssignmentClosedMessage
 from bluebottle.follow.models import unfollow, follow
@@ -80,14 +81,26 @@ class AssignmentTransitions(ActivityTransitions):
 
 class ApplicantTransitions(ContributionTransitions):
     class values(ContributionTransitions.values):
+        draft = ChoiceItem('draft', _('draft'))
         accepted = ChoiceItem('accepted', _('accepted'))
         rejected = ChoiceItem('rejected', _('rejected'))
         withdrawn = ChoiceItem('withdrawn', _('withdrawn'))
         active = ChoiceItem('attending', _('attending'))
 
+    default = values.draft
+
     def assignment_is_open(self):
         if self.instance.activity.status != ActivityTransitions.values.open:
             return _('The event is not open')
+
+    @transition(
+        source=values.draft,
+        target=ContributionTransitions.values.new,
+        permissions=[ContributionTransitions.is_system],
+        messages=[AssignmentApplicationMessage]
+    )
+    def submit(self):
+        pass
 
     @transition(
         field='status',

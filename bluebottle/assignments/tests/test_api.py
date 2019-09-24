@@ -268,7 +268,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(
             '/data/attributes/location' in (
-                error['source']['pointer'] for error in response.json()['data']['meta']['errors']
+                error['source']['pointer'] for error in response.json()['data']['meta']['required']
             )
         )
 

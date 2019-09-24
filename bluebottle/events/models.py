@@ -27,15 +27,6 @@ class RegistrationDeadlineValidator(Validator):
         )
 
 
-class LocationValidator(Validator):
-    field = 'location'
-    code = 'location'
-    message = _('This field is required or select \'Online\''),
-
-    def is_valid(self):
-        return self.instance.is_online or self.instance.location
-
-
 class Event(Activity):
     capacity = models.PositiveIntegerField(null=True, blank=True)
     automatically_accept = models.BooleanField(default=True)
@@ -53,7 +44,7 @@ class Event(Activity):
 
     transitions = TransitionManager(EventTransitions, 'status')
 
-    validators = [RegistrationDeadlineValidator, LocationValidator]
+    validators = [RegistrationDeadlineValidator]
 
     @property
     def required_fields(self):

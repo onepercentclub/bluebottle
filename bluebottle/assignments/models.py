@@ -117,6 +117,14 @@ class Assignment(Activity):
         ]
         return self.contributions.filter(status__in=accepted_states)
 
+    def deadline_passed(self):
+        if self.status in [AssignmentTransitions.values.running,
+                           AssignmentTransitions.values.open]:
+            if len(self.accepted_applicants):
+                self.transitions.expire()
+            else:
+                self.transitions.succeed()
+
 
 class Applicant(Contribution):
     motivation = models.TextField()

@@ -1,0 +1,19 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+    {% if custom_message %}
+        {{ custom_message }}
+    {% else %}
+        {% blocktrans with recipient_name=obj.user.first_name assignment_title=obj.activity.title context 'email' %}
+        Hi {{ recipient_name }},
+        Great news! Your task {{ assignment_title }} has been completed.
+        Go to your activity page to review the hours people spent on the task.
+        And while you're there, why not post an update to celebrate with the people who helped you out?
+        {% endblocktrans %}
+    {% endif %}
+{% endblock %}
+
+{% block action %}
+   {% trans 'View task' context 'email' %}: {{ obj.get_absolute_url }}
+{% endblock %}`

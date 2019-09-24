@@ -88,6 +88,10 @@ class ActivityTransitions(ModelTransitions):
         if not self.instance.initiative.status == 'approved':
             return _('Please make sure the initiative is approved')
 
+    def is_system(self, user):
+        # Don't allow api users.
+        return not user
+
     def can_approve(self, user):
         # TODO: Make me smart. Do we want to do this with a auth permission?
         return not user or user.is_staff

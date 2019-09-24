@@ -11,16 +11,16 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
-from bluebottle.files.serializers import DocumentSerializer, ImageSerializer
-from bluebottle.initiatives.models import Initiative
+from bluebottle.files.models import Document, Image
+from bluebottle.files.serializers import FileSerializer, ImageSerializer
 from bluebottle.utils.views import CreateAPIView, RetrieveAPIView
 
 mime = magic.Magic(mime=True)
 
 
 class FileList(AutoPrefetchMixin, CreateAPIView):
-    queryset = Initiative.objects.all()
-    serializer_class = DocumentSerializer
+    queryset = Document.objects.all()
+    serializer_class = FileSerializer
 
     renderer_classes = (BluebottleJSONAPIRenderer, )
     parser_classes = (FileUploadParser,)
@@ -40,13 +40,10 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
 
 class FileContentView(RetrieveAPIView):
 
+    permission_classes = []
+
     def retrieve(self, *args, **kwargs):
         instance = self.get_object()
-        self.check_object_permissions(
-            self.request,
-            instance
-        )
-
         file = getattr(instance, self.field).file
         content_type = mimetypes.guess_type(file.name)[0]
 
@@ -83,7 +80,7 @@ class ImageContentView(FileContentView):
 
 
 class ImageList(FileList):
-    queryset = Initiative.objects.all()
+    queryset = Image.objects.all()
     serializer_class = ImageSerializer
 
     def perform_create(self, serializer):

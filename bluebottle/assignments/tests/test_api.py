@@ -10,7 +10,7 @@ from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantF
 from bluebottle.files.tests.factories import DocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
 
 
 class AssignmentCreateAPITestCase(BluebottleTestCase):
@@ -377,45 +377,6 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.data['motivation'], 'Pick me! Pick me!')
 
 
-class ApplicantDocumentAPITestCase(BluebottleTestCase):
-
-    def setUp(self):
-        super(ApplicantDocumentAPITestCase, self).setUp()
-        self.settings = InitiativePlatformSettingsFactory.create(
-            activity_types=['assignment']
-        )
-
-        self.client = JSONAPITestClient()
-        self.user = BlueBottleUserFactory()
-        self.owner = BlueBottleUserFactory()
-        self.manager = BlueBottleUserFactory()
-        self.someone_else = BlueBottleUserFactory()
-        self.initiative = InitiativeFactory.create(activity_manager=self.manager)
-        self.assignment = AssignmentFactory.create(owner=self.owner, initiative=self.initiative)
-        self.assignment.review_transitions.submit()
-        self.assignment.review_transitions.approve()
-        self.applicant = ApplicantFactory.create(activity=self.assignment, user=self.user)
-        self.url = reverse('applicant-document', args=(self.applicant.id,))
-        self.applicant.document = DocumentFactory()
-        self.applicant.save()
-
-    def test_retrieve_document_by_user(self):
-        response = self.client.get(self.url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_retrieve_document_by_someone_else(self):
-        response = self.client.get(self.url, user=self.someone_else)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_retrieve_document_by_assignment_owner(self):
-        response = self.client.get(self.url, user=self.owner)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_retrieve_document_by_activity_manager(self):
-        response = self.client.get(self.url, user=self.manager)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-
 class ApplicantTransitionAPITestCase(BluebottleTestCase):
 
     def setUp(self):
@@ -425,8 +386,9 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         )
 
         self.client = JSONAPITestClient()
-        self.url = reverse('applicant-transition-list')
+        self.transition_url = reverse('applicant-transition-list')
         self.user = BlueBottleUserFactory()
+        self.someone_else = BlueBottleUserFactory()
         self.manager = BlueBottleUserFactory(first_name="Boss")
         self.owner = BlueBottleUserFactory(first_name="Owner")
         self.initiative = InitiativeFactory.create(activity_manager=self.manager)
@@ -434,7 +396,9 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.assignment.review_transitions.submit()
         self.assignment.review_transitions.approve()
         self.assignment.save()
-        self.applicant = ApplicantFactory.create(activity=self.assignment, user=self.user)
+        document = DocumentFactory.create()
+        self.applicant = ApplicantFactory.create(activity=self.assignment, document=document, user=self.user)
+        self.participant_url = reverse('applicant-detail', args=(self.applicant.id,))
         self.transition_data = {
             'data': {
                 'type': 'contributions/applicant-transitions',
@@ -452,9 +416,31 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
             }
         }
 
+    def test_applicant_document_by_user(self):
+        response = self.client.get(self.participant_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['document']['id'], str(self.applicant.document.id))
+        document = get_included(response, 'documents')
+        document_url = document['attributes']['link']
+
+        response = self.client.get(document_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_applicant_document_by_someone_else(self):
+        response = self.client.get(self.participant_url, user=self.someone_else)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['document'], None)
+        with self.assertRaises(IndexError):
+            get_included(response, 'documents')
+
+    def test_retrieve_document_without_signature(self):
+        document_url = reverse('applicant-document', args=(self.applicant.id,))
+        response = self.client.get(document_url, user=self.someone_else)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_accept_open_assignment(self):
         # Accept by activity manager
-        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.manager)
+        response = self.client.post(self.transition_url, json.dumps(self.transition_data), user=self.manager)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'accepted')
@@ -463,7 +449,7 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         # Reject by activity manager
         self.transition_data['data']['attributes']['transition'] = 'reject'
         self.transition_data['data']['attributes']['message'] = "Go away!"
-        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.manager)
+        response = self.client.post(self.transition_url, json.dumps(self.transition_data), user=self.manager)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'rejected')
@@ -472,7 +458,7 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
 
     def test_accept_by_owner_assignment(self):
         # Accept by assignment owner
-        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.owner)
+        response = self.client.post(self.transition_url, json.dumps(self.transition_data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'accepted')
@@ -482,7 +468,7 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
     def test_accept_by_owner_assignment_custom_message(self):
         # Accept by assignment owner
         self.transition_data['data']['attributes']['message'] = "See you there!"
-        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.owner)
+        response = self.client.post(self.transition_url, json.dumps(self.transition_data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'accepted')
@@ -491,31 +477,31 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
 
     def test_accept_by_self_assignment(self):
         # Applicant should not be able to accept self
-        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.user)
+        response = self.client.post(self.transition_url, json.dumps(self.transition_data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_accept_by_guest_assignment(self):
         # Applicant should not be able to accept self
-        response = self.client.post(self.url, json.dumps(self.transition_data))
+        response = self.client.post(self.transition_url, json.dumps(self.transition_data))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_reject_by_self_assignment(self):
         # Applicant should not be able to reject self
         self.transition_data['data']['attributes']['transition'] = 'reject'
-        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.user)
+        response = self.client.post(self.transition_url, json.dumps(self.transition_data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_withdraw_by_self_assignment(self):
         # Withdraw by applicant
         self.transition_data['data']['attributes']['transition'] = 'withdraw'
-        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.user)
+        response = self.client.post(self.transition_url, json.dumps(self.transition_data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'withdrawn')
 
         # Reapply by applicant
         self.transition_data['data']['attributes']['transition'] = 'reapply'
-        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.user)
+        response = self.client.post(self.transition_url, json.dumps(self.transition_data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'new')
@@ -523,5 +509,5 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
     def test_withdraw_by_owner_assignment(self):
         # Withdraw by owner should not be allowed
         self.transition_data['data']['attributes']['transition'] = 'withdraw'
-        response = self.client.post(self.url, json.dumps(self.transition_data), user=self.owner)
+        response = self.client.post(self.transition_url, json.dumps(self.transition_data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

@@ -2,15 +2,13 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.assignments.permissions import ApplicantDocumentPermission
 from bluebottle.assignments.serializers import ApplicantSerializer, \
     AssignmentTransitionSerializer, ApplicantTransitionSerializer, AssignmentListSerializer, AssignmentSerializer
-from bluebottle.files.views import FileContentView
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission)
 from bluebottle.utils.views import (
-    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin)
+    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, PrivateFileView)
 
 
 class AssignmentList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -63,6 +61,7 @@ class ApplicantList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
 
     prefetch_for_includes = {
         'assignment': ['assignment'],
+        'user': ['user'],
         'document': ['document'],
     }
 
@@ -79,7 +78,8 @@ class ApplicantDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView
     )
 
     prefetch_for_includes = {
-        'assignment': ['assignment'],
+        'activity': ['activity'],
+        'user': ['user'],
         'document': ['document'],
     }
 
@@ -92,10 +92,8 @@ class ApplicantTransitionList(TransitionList):
     }
 
 
-class ApplicantDocumentDetail(FileContentView):
+class ApplicantDocumentDetail(PrivateFileView):
+    max_age = 15 * 60  # 15 minutes
     queryset = Applicant.objects
-    field = 'document'
-
-    permission_classes = (
-        ApplicantDocumentPermission,
-    )
+    relation = 'document'
+    field = 'file'

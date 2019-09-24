@@ -80,7 +80,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             response_data['data']['relationships']['theme']['data']['id'],
             unicode(initiative.theme.pk)
         )
-        self.assertEqual(len(response_data['included']), 3)
+        self.assertEqual(len(response_data['included']), 2)
 
     def test_create_special_chars(self):
         data = {
@@ -132,10 +132,10 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        validations = get_include(response, 'initiative-validations')
-        self.assertEqual(
-            validations['attributes']['image'],
-            [{u'code': u'null', u'title': u'This field may not be null.'}],
+        self.assertTrue(
+            '/data/attributes/image' in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['required']
+            )
         )
 
     def test_create_duplicate_title(self):
@@ -162,10 +162,10 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        validations = get_include(response, 'initiative-validations')
-        self.assertEqual(
-            validations['attributes']['title'],
-            [{u'code': u'unique', u'title': u'This field must be unique.'}],
+
+        data = response.json()
+        self.assertTrue(
+            '/data/attributes/title' in (error['source']['pointer'] for error in data['data']['meta']['errors'])
         )
 
     def test_create_validation_organization_website(self):
@@ -195,10 +195,9 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        validations = get_include(response, 'organization-validations')
-        self.assertEqual(
-            validations['attributes']['website'],
-            [{u'code': u'blank', u'title': u'This field may not be blank.'}],
+        organization = get_include(response, 'organizations')
+        self.assertTrue(
+            '/data/attributes/website' in (error['source']['pointer'] for error in organization['meta']['required'])
         )
 
     def test_create_with_location(self):
@@ -414,15 +413,8 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         geolocation = get_include(response, 'geolocations')
         self.assertEqual(geolocation['attributes']['position'], {'latitude': 43.0579025, 'longitude': 23.6851594})
 
-        self.assertEqual(
-            data['relationships']['validations']['data'],
-            {u'type': u'initiative-validations', u'id': unicode(self.initiative.pk)}
-        )
-        validations = get_include(response, 'initiative-validations')
-
-        self.assertEqual(
-            validations['attributes']['title'],
-            [{u'code': u'blank', u'title': u'This field may not be blank.'}]
+        self.assertTrue(
+            '/data/attributes/title' in (error['source']['pointer'] for error in data['meta']['required'])
         )
 
     def test_get_activities(self):
@@ -661,6 +653,7 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
         self.url = reverse('initiative-review-transition-list')
 
         self.initiative = InitiativeFactory(
+            has_organization=False,
             owner=self.owner
         )
 

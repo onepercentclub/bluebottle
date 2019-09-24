@@ -7,6 +7,7 @@ from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount
 )
 from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
+from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField
 
 
 class PaymentIntentSerializer(serializers.ModelSerializer):
@@ -41,8 +42,12 @@ class StripePaymentSerializer(PaymentSerializer):
 class ConnectAccountSerializer(serializers.ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     token = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    account = serializers.DictField(read_only=True)
 
     external_accounts = ResourceRelatedField(read_only=True, many=True)
+
+    errors = ValidationErrorsField()
+    required = RequiredErrorsField()
 
     included_serializers = {
         'external_accounts': 'bluebottle.funding_stripe.polymorphic_serializers.ExternalAccountSerializer',
@@ -54,11 +59,11 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
 
         fields = (
             'id', 'token', 'country', 'document_type',
-            'verified', 'owner', 'verification',
-            'required', 'disabled',
-            'individual', 'external_accounts',
-            'tos_acceptance'
+            'verified', 'owner', 'disabled', 'account',
+            'external_accounts', 'required', 'errors',
+            'required_fields',
         )
+        meta_fields = ('required', 'errors', 'required_fields',)
 
     class JSONAPIMeta():
         resource_name = 'payout-accounts/stripes'

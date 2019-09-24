@@ -10,7 +10,7 @@ from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantF
 from bluebottle.files.tests.factories import DocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
 class AssignmentCreateAPITestCase(BluebottleTestCase):
@@ -77,23 +77,21 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
         response = self.client.post(self.url, json.dumps(data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        validations = get_included(response, 'activities/assignment-validations')
+        self.assertTrue(
+            '/data/attributes/title' in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['required']
+            )
+        )
+        self.assertTrue(
+            '/data/attributes/end-date-type' in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['required']
+            )
+        )
 
-        self.assertEqual(
-            validations['attributes']['title'][0]['title'],
-            u'This field may not be blank.'
-        )
-        self.assertEqual(
-            validations['attributes']['end-date-type'][0]['title'],
-            u'This field may not be null.'
-        )
-        self.assertEqual(
-            validations['attributes']['is-online'][0]['title'],
-            u'This field may not be null.'
-        )
-        self.assertEqual(
-            validations['attributes']['location'][0]['title'],
-            u"This field is required or select 'Online'"
+        self.assertTrue(
+            '/data/attributes/is-online' in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['required']
+            )
         )
 
     def test_create_registration_deadline(self):
@@ -118,12 +116,10 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
 
         response = self.client.post(self.url, json.dumps(data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        validations = get_included(response, 'activities/assignment-validations')
-
-        self.assertEqual(
-            validations['attributes']['registration-deadline'][0]['title'],
-            u'Registration deadline should be before end date'
+        self.assertTrue(
+            '/data/attributes/registration-deadline' in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['errors']
+            )
         )
 
 
@@ -229,15 +225,16 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['meta']['review-transitions'], review_transitions)
         self.assertEqual(data['data']['meta']['transitions'], transitions)
 
-        validations = get_included(response, 'activities/assignment-validations')
-        self.assertEqual(validations['attributes']['is-online'][0]['title'],
-                         u'This field may not be null.')
-        self.assertEqual(validations['attributes']['end-date-type'][0]['title'],
-                         u'This field may not be null.')
-        self.assertEqual(validations['attributes']['duration'][0]['title'],
-                         u'This field may not be null.')
-        self.assertEqual(validations['attributes']['location'][0]['title'],
-                         u"This field is required or select 'Online'")
+        self.assertTrue(
+            '/data/attributes/is-online' in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['required']
+            )
+        )
+        self.assertTrue(
+            '/data/attributes/end-date-type' in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['required']
+            )
+        )
 
     def test_check_validations_complete(self):
         response = self.client.get(
@@ -257,23 +254,25 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         ]
         self.assertEqual(data['data']['meta']['review-transitions'], review_transitions)
         self.assertEqual(data['data']['meta']['transitions'], transitions)
-        validations = get_included(response, 'activities/assignment-validations')
-        self.assertEqual(validations['attributes']['is-online'], None)
-        self.assertEqual(validations['attributes']['duration'], None)
-        self.assertEqual(validations['attributes']['location'], None)
+        self.assertEqual(data['data']['meta']['required'], [])
+        self.assertEqual(data['data']['meta']['errors'], [])
 
     def test_check_validations_require_location(self):
         self.assignment.is_online = False
+        self.assignment.location = None
         self.assignment.save()
+
         response = self.client.get(
             self.assignment_url,
             user=self.owner
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        validations = get_included(response, 'activities/assignment-validations')
-        self.assertEqual(validations['attributes']['location'][0]['title'],
-                         u"This field is required or select 'Online'")
+        self.assertTrue(
+            '/data/attributes/location' in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['errors']
+            )
+        )
 
     def test_submit_owner(self):
         # Owner can submit the assignment

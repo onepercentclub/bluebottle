@@ -11,10 +11,11 @@ from polymorphic.models import PolymorphicModel
 from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
 
 
-class Activity(TransitionsMixin, PolymorphicModel):
+class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('owner'),

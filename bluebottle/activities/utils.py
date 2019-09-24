@@ -6,10 +6,9 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
-from bluebottle.utils.fields import FSMField
-from bluebottle.utils.serializers import (
-    ResourcePermissionField, ValidationSerializer
-)
+from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
+
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 # This can't be in serializers because of circular imports
@@ -26,6 +25,9 @@ class BaseActivitySerializer(ModelSerializer):
     stats = serializers.OrderedDict(read_only=True)
 
     slug = serializers.CharField(read_only=True)
+
+    errors = ValidationErrorsField()
+    required = RequiredErrorsField()
 
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
@@ -49,10 +51,12 @@ class BaseActivitySerializer(ModelSerializer):
             'is_follower',
             'status',
             'review_status',
-            'stats'
+            'stats',
+            'errors',
+            'required',
         )
 
-        meta_fields = ('permissions', 'transitions', 'review_transitions', 'created', 'updated')
+        meta_fields = ('permissions', 'transitions', 'review_transitions', 'created', 'updated', 'errors', 'required', )
 
     class JSONAPIMeta:
         included_resources = [
@@ -60,23 +64,6 @@ class BaseActivitySerializer(ModelSerializer):
             'initiative',
         ]
         resource_name = 'activities'
-
-
-class ActivityValidationSerializer(ValidationSerializer):
-    title = serializers.CharField()
-    description = serializers.CharField()
-
-    # TODO add dependent fields: has_organization/organization/organization_contact and
-    # place / location
-
-    class Meta:
-        model = Activity
-        fields = (
-            'title', 'description',
-        )
-
-    class JSONAPIMeta:
-        resource_name = 'activity-validations'
 
 
 class ActivitySubmitSerializer(ModelSerializer):

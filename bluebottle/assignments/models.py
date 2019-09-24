@@ -9,6 +9,29 @@ from bluebottle.files.fields import DocumentField
 from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
+from bluebottle.utils.models import Validator
+
+
+class LocationValidator(Validator):
+    field = 'location'
+    code = 'location'
+    message = _('This field is required or select \'Online\''),
+
+    def is_valid(self):
+        return self.instance.is_online or self.instance.location
+
+
+class RegistrationDeadlineValidator(Validator):
+    field = 'registration_deadline'
+    code = 'registration_deadline'
+    message = _('The registration deadline must be before the end'),
+
+    def is_valid(self):
+        return (
+            not self.instance.registration_deadline or
+            not self.instance.end_date or
+            self.instance.registration_deadline < self.instance.end_date
+        )
 
 
 class Assignment(Activity):
@@ -37,7 +60,21 @@ class Assignment(Activity):
         null=True, blank=True, on_delete=SET_NULL)
 
     transitions = TransitionManager(AssignmentTransitions, 'status')
-    complete_serializer = 'bluebottle.assignments.serializers.AssignmentValidationSerializer'
+
+    validators = [LocationValidator, RegistrationDeadlineValidator]
+
+    @property
+    def required_fields(self):
+        fields = [
+            'title', 'description', 'end_date_type', 'end_date',
+            'registration_deadline', 'capacity', 'duration', 'is_online',
+            'expertise'
+        ]
+
+        if not self.is_online:
+            fields.append('location')
+
+        return fields
 
     @property
     def stats(self):
@@ -46,7 +83,6 @@ class Assignment(Activity):
             aggregate(count=Count('user__id'), hours=Sum('applicant__time_spent'))
         committed = self.contributions.filter(
             status__in=[
-                ApplicantTransitions.values.new,
                 ApplicantTransitions.values.active,
                 ApplicantTransitions.values.accepted]).\
             aggregate(committed_count=Count('user__id'), committed_hours=Sum('applicant__time_spent'))

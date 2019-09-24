@@ -2,7 +2,8 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
 
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
-from bluebottle.assignments.messages import ApplicantRejectedMessage, ApplicantAcceptedMessage
+from bluebottle.assignments.messages import ApplicantRejectedMessage, ApplicantAcceptedMessage, \
+    AssignmentCompletedMessage, AssignmentExpiredMessage, AssignmentClosedMessage
 from bluebottle.follow.models import unfollow, follow
 from bluebottle.fsm import transition
 
@@ -23,6 +24,8 @@ class AssignmentTransitions(ActivityTransitions):
         field='status',
         source=values.running,
         target=values.succeeded,
+        permissions=[ActivityTransitions.is_system],
+        messages=[AssignmentCompletedMessage]
     )
     def succeed(self, **kwargs):
         for member in self.instance.accepted_applicants:
@@ -33,11 +36,23 @@ class AssignmentTransitions(ActivityTransitions):
         field='status',
         source=values.running,
         target=values.closed,
+        permissions=[ActivityTransitions.is_system],
+        messages=[AssignmentClosedMessage]
     )
     def close(self, **kwargs):
         for member in self.instance.accepted_applicants:
             member.fail()
             member.save()
+
+    @transition(
+        field='status',
+        source=[values.open, values.running],
+        target=values.closed,
+        permissions=[ActivityTransitions.is_system],
+        messages=[AssignmentExpiredMessage]
+    )
+    def expire(self, **kwargs):
+        pass
 
     @transition(
         field='status',

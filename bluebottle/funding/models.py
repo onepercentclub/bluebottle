@@ -71,7 +71,7 @@ class KYCPassedValidator(Validator):
     field = 'kyc'
 
     def is_valid(self):
-        return self.instance.bank_account and self.instance.bank_account.connect_account.verified
+        return self.instance.bank_account and self.instance.bank_account.verified
 
 
 class Funding(Activity):

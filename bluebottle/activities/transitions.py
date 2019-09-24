@@ -18,7 +18,7 @@ class ActivityReviewTransitions(ReviewTransitions):
 
     def is_valid(self):
         errors = [
-            error.message for error in self.instance.errors
+            error.message[0] for error in self.instance.errors
         ]
 
         if errors:

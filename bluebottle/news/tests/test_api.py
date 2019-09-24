@@ -47,12 +47,14 @@ class NewsItemsApiTest(NewsItemApiTestCase):
                                    {'language': 'nl'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 3)
+        self.assertEqual(response.data['results'][0]['language'], 'nl')
 
         # Check that we have 2 english news items
         response = self.client.get(reverse('news_item_list'),
                                    {'language': 'en'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 2)
+        self.assertEqual(response.data['results'][0]['language'], 'en')
 
     def test_news_post_details(self):
         """

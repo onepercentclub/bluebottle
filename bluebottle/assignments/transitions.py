@@ -47,8 +47,9 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=[values.running, values.in_review, values.succeeded, values.open],
+        source=[values.running, values.in_review, values.open],
         target=values.closed,
+        permissions=[ActivityTransitions.can_approve]
     )
     def close(self, **kwargs):
         for member in self.instance.accepted_applicants:

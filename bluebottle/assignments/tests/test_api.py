@@ -222,7 +222,8 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             {u'available': False, u'name': u'approve', u'target': u'approved'}
         ]
         transitions = [
-            {u'available': False, u'name': u'reviewed', u'target': u'open'}
+            {u'available': False, u'name': u'reviewed', u'target': u'open'},
+            {u'available': False, u'name': u'close', u'target': u'closed'}
         ]
         self.assertEqual(data['data']['meta']['review-transitions'], review_transitions)
         self.assertEqual(data['data']['meta']['transitions'], transitions)
@@ -251,7 +252,8 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             {u'available': False, u'name': u'approve', u'target': u'approved'}
         ]
         transitions = [
-            {u'available': False, u'name': u'reviewed', u'target': u'open'}
+            {u'available': False, u'name': u'reviewed', u'target': u'open'},
+            {u'available': False, u'name': u'close', u'target': u'closed'}
         ]
         self.assertEqual(data['data']['meta']['review-transitions'], review_transitions)
         self.assertEqual(data['data']['meta']['transitions'], transitions)

@@ -62,10 +62,6 @@ class InitiativeTestCase(TestCase):
         initiative = InitiativeFactory()
         self.assertFalse(initiative.has_organization)
 
-    def test_organization_contact_created(self):
-        initiative = InitiativeFactory(has_organization=True, organization=OrganizationFactory.create())
-        self.assertTrue(initiative.organization_contact.pk)
-
     def test_organization_contact_already_set(self):
         organization_contact = OrganizationContactFactory.create()
         initiative = InitiativeFactory(

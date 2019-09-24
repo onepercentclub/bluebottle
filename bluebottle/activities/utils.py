@@ -51,7 +51,6 @@ class BaseActivitySerializer(ModelSerializer):
             'is_follower',
             'status',
             'review_status',
-            'contributions',
             'stats',
             'errors',
             'required',

@@ -34,6 +34,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 'disabled': False
             }),
             'external_accounts': bunch.bunchify({
+                'total_count': 0,
                 'data': []
             })
         })
@@ -42,7 +43,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
         self.country_spec.update({
             'verification_fields': bunch.bunchify({
                 'individual': bunch.bunchify({
-                    'additional': ['document'],
+                    'additional': ['individual.verification.document'],
                     'minimum': ['individual.first_name'],
                 })
             })
@@ -124,7 +125,10 @@ class ConnectAccountTestCase(BluebottleTestCase):
             with mock.patch(
                 'stripe.Account.retrieve', return_value=self.connect_account
             ):
-                self.assertEqual(self.check.required, ['document', 'individual.first_name'])
+                self.assertEqual(
+                    list(self.check.required),
+                    ['document_type', 'individual.verification.document.front', 'external_account']
+                )
 
     def test_disabled(self):
         self.connect_account.requirements.disabled = True
@@ -138,18 +142,6 @@ class ConnectAccountTestCase(BluebottleTestCase):
             'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.assertFalse(self.check.disabled)
-
-    def test_individual(self):
-        with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
-        ):
-            with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
-            ):
-                self.assertEqual(
-                    self.check.individual,
-                    {'first_name': 'Jhon'}
-                )
 
 
 class StripeExternalAccountTestCase(BluebottleTestCase):

@@ -9,14 +9,27 @@ from multiselectfield import MultiSelectField
 
 from bluebottle.files.fields import ImageField
 from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
-from bluebottle.geo.models import Geolocation
+from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.transitions import InitiativeReviewTransitions
 from bluebottle.organizations.models import Organization, OrganizationContact
-from bluebottle.utils.models import BasePlatformSettings
+from bluebottle.utils.models import BasePlatformSettings, Validator, ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
 
 
-class Initiative(TransitionsMixin, models.Model):
+class UniqueTitleValidator(Validator):
+    field = 'title'
+    code = 'required'
+    message = _('The title must be unique')
+
+    def is_valid(self):
+        return not Initiative.objects.exclude(
+            pk=self.instance.pk
+        ).filter(
+            status='approved', title=self.instance.title
+        )
+
+
+class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
     status = FSMField(
         default=InitiativeReviewTransitions.values.draft,
         choices=InitiativeReviewTransitions.values.choices,
@@ -120,6 +133,26 @@ class Initiative(TransitionsMixin, models.Model):
     def __unicode__(self):
         return self.title
 
+    @property
+    def required_fields(self):
+        fields = [
+            'title', 'pitch', 'owner',
+            'has_organization', 'story', 'image',
+            'theme',
+        ]
+
+        if self.has_organization:
+            fields += ['organization', 'organization_contact']
+
+        if Location.objects.count():
+            fields.append('location')
+        else:
+            fields.append('place')
+
+        return fields
+
+    validators = [UniqueTitleValidator]
+
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
@@ -148,9 +181,6 @@ class Initiative(TransitionsMixin, models.Model):
         if self.has_organization:
             if not self.organization and self.owner and self.owner.partner_organization:
                 self.organization = self.owner.partner_organization
-
-            if not self.organization_contact:
-                self.organization_contact = OrganizationContact.objects.create(owner=self.owner)
 
         super(Initiative, self).save(**kwargs)
 

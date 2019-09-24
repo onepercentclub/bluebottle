@@ -113,10 +113,10 @@ class EventAPITestCase(BluebottleTestCase):
         response = self.client.post(self.url, json.dumps(data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        validations = get_included(response, 'activities/event-validations')
-        self.assertEqual(
-            validations['attributes']['title'][0]['title'],
-            u'This field may not be blank.'
+        self.assertTrue(
+            '/data/attributes/title' in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['required']
+            )
         )
 
     def test_create_event_no_location(self):
@@ -145,10 +145,10 @@ class EventAPITestCase(BluebottleTestCase):
         response = self.client.post(self.url, json.dumps(data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        validations = get_included(response, 'activities/event-validations')
-        self.assertEqual(
-            validations['attributes']['location'][0]['title'],
-            u"This field is required or select 'Online'"
+        self.assertTrue(
+            '/data/attributes/location' in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['errors']
+            )
         )
 
     def test_create_event_no_location_is_online(self):
@@ -176,10 +176,10 @@ class EventAPITestCase(BluebottleTestCase):
         }
         response = self.client.post(self.url, json.dumps(data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        validations = get_included(response, 'activities/event-validations')
-        self.assertIsNone(
-            validations['attributes']['location']
+        self.assertTrue(
+            '/data/attributes/location' not in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['errors']
+            )
         )
 
     def test_update_event(self):
@@ -333,10 +333,10 @@ class EventValidationTestCase(BluebottleTestCase):
             user=self.owner,
             HTTP_X_DO_NOT_COMMIT=True
         )
-        validations = get_included(response, 'activities/event-validations')
-        self.assertEqual(
-            validations['attributes']['title'],
-            [{'title': 'This field may not be blank.', 'code': 'blank'}]
+        self.assertTrue(
+            '/data/attributes/title' in (
+                error['source']['pointer'] for error in response.json()['data']['meta']['required']
+            )
         )
 
 

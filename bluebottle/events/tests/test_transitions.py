@@ -486,9 +486,11 @@ class EventTransitionValidationTestCase(BluebottleTestCase):
             event.status,
             EventTransitions.values.in_review
         )
-        errors = event.review_transitions.is_complete()
-        self.assertEqual(unicode(errors['location'][0]),
-                         u"This field is required or select 'Online'")
+        errors = event.review_transitions.is_valid()
+        self.assertEqual(
+            unicode(errors[0]),
+            u"This field is required or select 'Online'"
+        )
 
         self.assertRaises(
             TransitionNotPossible,
@@ -506,10 +508,10 @@ class EventTransitionValidationTestCase(BluebottleTestCase):
             event.status,
             EventTransitions.values.in_review
         )
-        errors = event.review_transitions.is_complete()
+        errors = event.review_transitions.is_valid()
         self.assertEqual(
-            unicode(errors['registration_deadline'][0]),
-            u"Registration deadline should be before start time"
+            unicode(errors[0]),
+            u"Registration deadline should be before the start time"
         )
 
         self.assertRaises(

@@ -1,3 +1,5 @@
+from django.utils.translation import ugettext_lazy as _
+
 from bluebottle.fsm import transition, TransitionNotPossible
 from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
 from bluebottle.utils.transitions import ReviewTransitions
@@ -5,27 +7,50 @@ from bluebottle.utils.transitions import ReviewTransitions
 
 class InitiativeReviewTransitions(ReviewTransitions):
     def is_complete(self):
-        from bluebottle.initiatives.serializers import InitiativeValidationSerializer
-        from bluebottle.organizations.serializers import (
-            OrganizationContactValidationSerializer, OrganizationValidationSerializer
-        )
+        errors = [
+            _('{} is required').format(self.instance._meta.get_field(field).verbose_name)
+            for field in self.instance.required
+        ]
 
-        serializer = InitiativeValidationSerializer(instance=self.instance)
-        if not serializer.is_valid():
-            return serializer.errors
+        if self.instance.organization:
+            errors += [
+                _('Organization {} is required').format(
+                    self.instance.organization._meta.get_field(field).verbose_name
+                ) for field in self.instance.organization.required
+            ]
 
-        serializer = OrganizationValidationSerializer(instance=self.instance.organization)
-        if self.instance.organization and not serializer.is_valid():
-            return serializer.errors
+        if self.instance.organization_contact:
+            errors += [
+                _('Organization Contact {} is required').format(
+                    self.instance.organization_contact._meta.get_field(field).verbose_name
+                ) for field in self.instance.organization_contact.required
+            ]
 
-        serializer = OrganizationContactValidationSerializer(instance=self.instance.organization_contact)
-        if self.instance.organization_contact and not serializer.is_valid():
-            return serializer.errors
+        if errors:
+            return errors
+
+    def is_valid(self):
+        errors = [
+            error.message for error in self.instance.errors
+        ]
+
+        if self.instance.organization:
+            errors += [
+                error.message for error in self.instance.organization.errors
+            ]
+
+        if self.instance.organization_contact:
+            errors += [
+                error.message for error in self.instance.organization_contact.errors
+            ]
+
+        if errors:
+            return errors
 
     @transition(
         source=[ReviewTransitions.values.draft],
         target=ReviewTransitions.values.submitted,
-        conditions=[is_complete]
+        conditions=[is_complete, is_valid]
     )
     def submit(self):
         for activity in self.instance.activities.all():

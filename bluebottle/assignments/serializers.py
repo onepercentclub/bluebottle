@@ -11,7 +11,7 @@ from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.permissions import ApplicantDocumentPermission
 from bluebottle.events.serializers import LocationValidator, LocationField
-from bluebottle.files.serializers import DocumentField, PrivateDocumentSerializer
+from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
 from bluebottle.geo.models import Geolocation
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import RelatedField, ResourcePermissionField, NonModelRelatedResourceField, \
@@ -146,7 +146,7 @@ class AssignmentTransitionSerializer(TransitionSerializer):
 class ApplicantSerializer(BaseContributionSerializer):
     time_spent = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    document = DocumentField(required=False, allow_null=True, permissions=[ApplicantDocumentPermission])
+    document = PrivateDocumentField(required=False, allow_null=True, permissions=[ApplicantDocumentPermission])
 
     class Meta(BaseContributionSerializer.Meta):
         model = Applicant

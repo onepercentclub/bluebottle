@@ -12,11 +12,18 @@ from bluebottle.utils.utils import reverse_signed
 
 class DocumentField(ResourceRelatedField):
     model = Document
+
+
+class PrivateDocumentField(DocumentField):
+    """
+    Only users with right permissions can view these documents.
+    """
+    queryset = Document.objects
     permissions = []
 
-    def __init__(self, **kwargs):
-        self.permissions = kwargs.pop('permissions', [])
-        super(DocumentField, self).__init__(**kwargs)
+    def __init__(self, permissions, **kwargs):
+        self.permissions = permissions
+        super(PrivateDocumentField, self).__init__(**kwargs)
 
     def has_parent_permissions(self, parent):
         request = self.context['request']
@@ -26,7 +33,7 @@ class DocumentField(ResourceRelatedField):
         return True
 
     def get_queryset(self):
-        queryset = super(DocumentField, self).get_queryset()
+        queryset = super(PrivateDocumentField, self).get_queryset()
         parent = self.parent.instance
         if not self.has_parent_permissions(parent):
             return queryset.none()
@@ -42,7 +49,7 @@ class DocumentField(ResourceRelatedField):
         else:
             if not self.has_parent_permissions(parent):
                 return None
-        return super(DocumentField, self).to_representation(value)
+        return super(PrivateDocumentField, self).to_representation(value)
 
 
 class FileSerializer(ModelSerializer):
@@ -102,8 +109,7 @@ class PrivateDocumentSerializer(DocumentSerializer):
 
 
 class ImageField(ResourceRelatedField):
-    def get_queryset(self):
-        return Image.objects.all()
+    queryset = Image.objects
 
 
 class ImageSerializer(DocumentSerializer):

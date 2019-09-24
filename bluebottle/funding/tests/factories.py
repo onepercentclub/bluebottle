@@ -2,7 +2,9 @@ import factory.fuzzy
 from moneyed import Money
 from pytz import UTC
 
-from bluebottle.funding.models import Funding, Donation, Reward, Fundraiser, BudgetLine, Payment
+from bluebottle.funding.models import (
+    Funding, Donation, Reward, Fundraiser, BudgetLine, Payment, BankAccount
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -61,3 +63,8 @@ class BudgetLineFactory(factory.DjangoModelFactory):
         model = BudgetLine
 
     activity = factory.SubFactory(FundingFactory)
+
+
+class BankAccountFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = BankAccount

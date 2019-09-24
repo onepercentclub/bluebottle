@@ -10,6 +10,30 @@ from bluebottle.events.transitions import EventTransitions, ParticipantTransitio
 from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
+from bluebottle.utils.models import Validator
+
+
+class RegistrationDeadlineValidator(Validator):
+    field = 'registration_deadline'
+    code = 'registration-deadline'
+    message = _('Registration deadline should be before the start time'),
+
+    def is_valid(self):
+        return (
+            not self.instance.registration_deadline or (
+                self.instance.start_date and
+                self.instance.registration_deadline < self.instance.start_date
+            )
+        )
+
+
+class LocationValidator(Validator):
+    field = 'location'
+    code = 'location'
+    message = _('This field is required or select \'Online\''),
+
+    def is_valid(self):
+        return self.instance.is_online or self.instance.location
 
 
 class Event(Activity):
@@ -28,6 +52,14 @@ class Event(Activity):
     registration_deadline = models.DateField(_('registration deadline'), null=True, blank=True)
 
     transitions = TransitionManager(EventTransitions, 'status')
+
+    validators = [RegistrationDeadlineValidator, LocationValidator]
+
+    @property
+    def required_fields(self):
+        fields = ['title', 'description', 'start_date', 'start_time', 'duration', 'is_online', ]
+
+        return fields
 
     @property
     def stats(self):
@@ -54,8 +86,6 @@ class Event(Activity):
             ('api_change_own_event', 'Can change own event through the API'),
             ('api_delete_own_event', 'Can delete own event through the API'),
         )
-
-    complete_serializer = 'bluebottle.events.serializers.EventValidationSerializer'
 
     class JSONAPIMeta:
         resource_name = 'activities/events'

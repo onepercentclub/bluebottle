@@ -238,6 +238,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 'disabled': False
             }),
             'external_accounts': bunch.bunchify({
+                'total_count': 0,
                 'data': []
             })
         })
@@ -291,6 +292,10 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 'eventually_due': ['external_accounts', 'individual.dob.month'],
                 'disabled': False
             }),
+            'external_accounts': bunch.bunchify({
+                'total_count': 0,
+                'data': []
+            })
         })
         with mock.patch(
             'stripe.CountrySpec.retrieve', return_value=self.country_spec
@@ -329,11 +334,11 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
             data['data']['attributes']['verified'], False
         )
         self.assertEqual(
-            data['data']['attributes']['required'],
-            ['external_accounts', 'individual.first_name']
+            data['data']['meta']['required-fields'],
+            ['country', 'external_accounts', 'individual.first_name']
         )
         self.assertEqual(
-            data['data']['attributes']['individual']['first_name'],
+            data['data']['attributes']['account']['individual']['first_name'],
             'Jhon',
         )
 
@@ -376,11 +381,11 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
             data['data']['attributes']['verified'], False
         )
         self.assertEqual(
-            data['data']['attributes']['required'],
-            ['external_accounts', 'individual.first_name']
+            data['data']['meta']['required-fields'],
+            ['country', 'external_accounts', 'individual.first_name']
         )
         self.assertEqual(
-            data['data']['attributes']['individual']['first_name'],
+            data['data']['attributes']['account']['individual']['first_name'],
             'Jhon',
         )
 
@@ -455,7 +460,7 @@ class ExternalAccountsTestCase(BluebottleTestCase):
         country = 'NU'
 
         self.connect_external_account = stripe.BankAccount('some-bank-token')
-        self.connect_external_account.update({
+        self.connect_external_account.update(bunch.bunchify({
             'object': 'bank_account',
             'account_holder_name': 'Jane Austen',
             'account_holder_type': 'individual',
@@ -470,21 +475,25 @@ class ExternalAccountsTestCase(BluebottleTestCase):
             'routing_number': '110000000',
             'status': 'new',
             'account': 'acct_1032D82eZvKYlo2C'
+        }))
+
+        external_accounts = stripe.ListObject()
+        external_accounts.data = [self.connect_external_account]
+        external_accounts.update({
+            'total_count': 1,
         })
 
         self.connect_account = stripe.Account(account_id)
         self.connect_account.update({
             'country': country,
-            'external_accounts': stripe.ListObject({
-                'data': [self.connect_external_account]
-            }),
+            'external_accounts': external_accounts,
         })
 
         self.country_spec = stripe.CountrySpec(country)
         self.country_spec.update({
             'verification_fields': bunch.bunchify({
                 'individual': bunch.bunchify({
-                    'additional': ['document'],
+                    'additional': ['individual.verification.document'],
                     'minimum': ['individual.first_name'],
                 })
             })

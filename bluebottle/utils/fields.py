@@ -1,6 +1,8 @@
 import mimetypes
 import xml.etree.cElementTree as et
 
+import inflection
+
 import sorl.thumbnail
 from django import forms
 from django.conf import settings
@@ -215,3 +217,29 @@ class FSMField(serializers.CharField):
         super(FSMField, self).__init__(**kwargs)
         validator = FSMStatusValidator()
         self.validators.append(validator)
+
+
+class ValidationErrorsField(serializers.ReadOnlyField):
+    def to_representation(self, value):
+        return [
+            {
+                'title': error.message,
+                'code': error.code,
+                'source': {
+                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(error.field))
+                }
+            } for error in value
+        ]
+
+
+class RequiredErrorsField(serializers.ReadOnlyField):
+    def to_representation(self, value):
+        return [
+            {
+                'title': _('This field is required'),
+                'code': 'required',
+                'source': {
+                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(field))
+                }
+            } for field in value
+        ]

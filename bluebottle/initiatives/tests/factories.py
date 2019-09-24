@@ -19,6 +19,7 @@ class InitiativeFactory(factory.DjangoModelFactory):
     owner = factory.SubFactory(BlueBottleUserFactory)
     reviewer = factory.SubFactory(BlueBottleUserFactory)
     activity_manager = factory.SubFactory(BlueBottleUserFactory)
+    has_organization = False
 
     theme = factory.SubFactory(ProjectThemeFactory)
     image = factory.SubFactory(ImageFactory)

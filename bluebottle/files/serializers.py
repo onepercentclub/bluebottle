@@ -81,13 +81,17 @@ class DocumentSerializer(ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     size = serializers.IntegerField(read_only=True, source='file.size')
 
+    relationship = None
+    content_view_name = None
+
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
     def get_link(self, obj):
-        parent_id = getattr(obj, self.relationship).get().pk
-        return reverse(self.content_view_name, args=(parent_id,))
+        if self.relationship and self.content_view_name:
+            parent_id = getattr(obj, self.relationship).get().pk
+            return reverse(self.content_view_name, args=(parent_id, 'main'))
 
     def get_filename(self, instance):
         return os.path.basename(instance.file.name)

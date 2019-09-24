@@ -186,7 +186,6 @@ with open('bluebottle/funding_stripe/data/document_spec.json') as file:
 
 @memoize(timeout=60 * 60 * 24)
 def get_specs(country):
-    print '1111'
     return stripe.CountrySpec.retrieve(country)
 
 

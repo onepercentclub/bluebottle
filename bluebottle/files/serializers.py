@@ -1,6 +1,7 @@
 import os
 
 from django.core.urlresolvers import reverse
+from django.db.models import QuerySet
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
@@ -10,8 +11,38 @@ from bluebottle.utils.utils import reverse_signed
 
 
 class DocumentField(ResourceRelatedField):
+    model = Document
+    permissions = []
+
+    def __init__(self, **kwargs):
+        self.permissions = kwargs.pop('permissions', [])
+        super(DocumentField, self).__init__(**kwargs)
+
+    def has_parent_permissions(self, parent):
+        request = self.context['request']
+        for permission in self.permissions:
+            if not permission().has_object_permission(request, None, parent):
+                return False
+        return True
+
     def get_queryset(self):
-        return Document.objects.all()
+        queryset = super(DocumentField, self).get_queryset()
+        parent = self.parent.instance
+        if not self.has_parent_permissions(parent):
+            return queryset.none()
+        return queryset
+
+    def to_representation(self, value):
+        parent = self.parent.instance
+        # We might have a list when getting this for included serializers
+        if isinstance(parent, QuerySet):
+            for par in parent:
+                if not self.has_parent_permissions(par):
+                    return None
+        else:
+            if not self.has_parent_permissions(parent):
+                return None
+        return super(DocumentField, self).to_representation(value)
 
 
 class FileSerializer(ModelSerializer):

@@ -1,5 +1,4 @@
 from django.utils.translation import ugettext_lazy as _
-from polymorphic.query import PolymorphicQuerySet
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
@@ -144,33 +143,10 @@ class AssignmentTransitionSerializer(TransitionSerializer):
         resource_name = 'assignment-transitions'
 
 
-class ApplicantDocumentField(DocumentField):
-
-    def get_queryset(self):
-        # Filter by permission
-        # TODO: We might want to do this in a nicer way
-        queryset = super(ApplicantDocumentField, self).get_queryset()
-        request = self.context['request']
-        permission = ApplicantDocumentPermission()
-        parent = self.parent.instance
-        # TODO: This is hideous! Please fix me.
-        if isinstance(parent, PolymorphicQuerySet):
-            parent = parent[0]
-        if not permission.has_object_permission(request, self, parent):
-            return queryset.none()
-        return queryset
-
-    def to_representation(self, value):
-        # Return None if queryset is empty. Permission is denied.
-        if not self.get_queryset():
-            return None
-        return super(ApplicantDocumentField, self).to_representation(value)
-
-
 class ApplicantSerializer(BaseContributionSerializer):
     time_spent = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    document = ApplicantDocumentField(required=False, allow_null=True)
+    document = DocumentField(required=False, allow_null=True, permissions=[ApplicantDocumentPermission])
 
     class Meta(BaseContributionSerializer.Meta):
         model = Applicant

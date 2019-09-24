@@ -2,6 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
 
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.assignments.messages import ApplicantRejectedMessage, ApplicantAcceptedMessage
 from bluebottle.assignments.messages import AssignmentApplicationMessage
 from bluebottle.assignments.messages import AssignmentCompletedMessage, AssignmentExpiredMessage, \
     AssignmentClosedMessage
@@ -12,6 +13,7 @@ from bluebottle.fsm import transition
 class AssignmentTransitions(ActivityTransitions):
     class values(ActivityTransitions.values):
         running = ChoiceItem('running', _('running'))
+        full = ChoiceItem('full', _('full'))
 
     @transition(
         field='status',
@@ -19,6 +21,22 @@ class AssignmentTransitions(ActivityTransitions):
         target=values.running,
     )
     def start(self, **kwargs):
+        pass
+
+    @transition(
+        field='status',
+        source=values.open,
+        target=values.full,
+    )
+    def lock(self, **kwargs):
+        pass
+
+    @transition(
+        field='status',
+        source=values.full,
+        target=values.open,
+    )
+    def reopen(self, **kwargs):
         pass
 
     @transition(
@@ -35,7 +53,7 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=values.running,
+        source=[values.running, values.in_review, values.open],
         target=values.closed,
         permissions=[ActivityTransitions.is_system],
         messages=[AssignmentClosedMessage]
@@ -107,7 +125,8 @@ class ApplicantTransitions(ContributionTransitions):
         source=[values.new, values.rejected],
         target=values.accepted,
         conditions=[assignment_is_open],
-        permissions=[ContributionTransitions.is_activity_manager]
+        permissions=[ContributionTransitions.is_activity_manager],
+        messages=[ApplicantAcceptedMessage]
     )
     def accept(self):
         pass
@@ -117,7 +136,8 @@ class ApplicantTransitions(ContributionTransitions):
         source=[values.new, values.accepted],
         target=values.rejected,
         conditions=[assignment_is_open],
-        permissions=[ContributionTransitions.is_activity_manager]
+        permissions=[ContributionTransitions.is_activity_manager],
+        messages=[ApplicantRejectedMessage]
     )
     def reject(self):
         unfollow(self.instance.user, self.instance.activity)

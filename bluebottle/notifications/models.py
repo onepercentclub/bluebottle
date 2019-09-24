@@ -15,6 +15,7 @@ class Message(models.Model):
     adapter = models.CharField(max_length=30, default='email')
     template = models.CharField(max_length=100)
     subject = models.CharField(max_length=200)
+    custom_message = models.TextField(blank=True, null=True)
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()

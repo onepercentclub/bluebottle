@@ -33,7 +33,6 @@ class Transition(object):
         self.name = name
         if not isinstance(source, list):
             source = [source]
-
         self.source = source
         self.target = target
         self.method = method

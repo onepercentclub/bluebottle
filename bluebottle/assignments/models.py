@@ -125,6 +125,17 @@ class Assignment(Activity):
             else:
                 self.transitions.succeed()
 
+    def check_capacity(self):
+        if self.capacity \
+                and len(self.accepted_applicants) >= self.capacity \
+                and self.status == AssignmentTransitions.values.open:
+            self.transitions.lock()
+            self.save()
+        elif self.capacity \
+                and len(self.accepted_applicants) < self.capacity \
+                and self.status == AssignmentTransitions.values.full:
+            self.transitions.reopen()
+
 
 class Applicant(Contribution):
     motivation = models.TextField()
@@ -157,3 +168,4 @@ class Applicant(Contribution):
         if created:
             follow(self.user, self.activity)
             self.transitions.submit()
+        self.activity.check_capacity()

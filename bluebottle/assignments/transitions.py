@@ -39,6 +39,7 @@ class AssignmentTransitions(ActivityTransitions):
         field='status',
         source=values.running,
         target=values.succeeded,
+        permissions=[ActivityTransitions.can_approve]
     )
     def succeed(self, **kwargs):
         for member in self.instance.accepted_applicants:

@@ -126,6 +126,10 @@ class ModelTransitions():
         self.instance = instance
         self.field = field
 
+    def is_system(self, user):
+        # Only system and admin users, no api users.
+        return not user
+
     def transition_to(self, transition, user=None, **kwargs):
         original_source = getattr(self.instance, self.field)  # Keep current status so we can revert
 

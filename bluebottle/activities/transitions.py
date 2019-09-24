@@ -69,7 +69,7 @@ class ActivityReviewTransitions(ReviewTransitions):
 
 class ActivityTransitions(ModelTransitions):
     class values(DjangoChoices):
-        in_review = ChoiceItem('in_review', _('In review'))
+        in_review = ChoiceItem('in_review', _('in review'))
         open = ChoiceItem('open', _('open'))
         succeeded = ChoiceItem('succeeded', _('succeeded'))
         closed = ChoiceItem('closed', _('closed'))
@@ -79,10 +79,6 @@ class ActivityTransitions(ModelTransitions):
     def initiative_is_approved(self):
         if not self.instance.initiative.status == 'approved':
             return _('Please make sure the initiative is approved')
-
-    def is_system(self, user):
-        # Don't allow api users.
-        return not user
 
     def can_approve(self, user):
         # TODO: Make me smart. Do we want to do this with a auth permission?

@@ -120,5 +120,6 @@ class Participant(Contribution):
 
         if created:
             follow(self.user, self.activity)
+            self.transitions.submit()
 
         self.activity.check_capacity()

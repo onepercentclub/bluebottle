@@ -15,5 +15,5 @@
 {% endblock %}
 
 {% block action %}
-   {% trans 'View task' context 'email' %}: {{ obj.get_absolute_url }}
+   {% trans 'Review hours' context 'email' %}: {{ obj.get_absolute_url }}
 {% endblock %}`

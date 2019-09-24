@@ -7,9 +7,14 @@ from bluebottle.activities.utils import (
 )
 from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.files.serializers import DocumentField
+from bluebottle.files.serializers import DocumentField, DocumentSerializer
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
+
+
+class ApplicantDocumentSerializer(DocumentSerializer):
+    content_view_name = 'initiative-image'
+    relationship = 'applicant_set'
 
 
 class AssignmentListSerializer(BaseActivitySerializer):
@@ -108,7 +113,8 @@ class ApplicantSerializer(BaseContributionSerializer):
         resource_name = 'contributions/applicants'
         included_resources = [
             'user',
-            'activity'
+            'activity',
+            'document'
         ]
 
     included_serializers = {

@@ -13,5 +13,6 @@ class EmailMessageAdapter(BaseMessageAdapter):
             template_name=self.template_name,
             subject=self.message.subject,
             to=self.message.recipient,
-            obj=self.message.content_object
+            obj=self.message.content_object,
+            custom_message=self.message.custom_message
         )

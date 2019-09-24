@@ -1,4 +1,5 @@
 from django.utils.translation import ugettext_lazy as _
+from polymorphic.query import PolymorphicQuerySet
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
@@ -150,9 +151,12 @@ class ApplicantDocumentField(DocumentField):
         # TODO: We might want to do this in a nicer way
         queryset = super(ApplicantDocumentField, self).get_queryset()
         request = self.context['request']
-        applicant = self.parent.instance
         permission = ApplicantDocumentPermission()
-        if not permission.has_object_permission(request, self, applicant):
+        parent = self.parent.instance
+        # TODO: This is hideous! Please fix me.
+        if isinstance(parent, PolymorphicQuerySet):
+            parent = parent[0]
+        if not permission.has_object_permission(request, self, parent):
             return queryset.none()
         return queryset
 

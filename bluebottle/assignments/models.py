@@ -12,15 +12,6 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import Validator
 
 
-class LocationValidator(Validator):
-    field = 'location'
-    code = 'location'
-    message = _('This field is required or select \'Online\''),
-
-    def is_valid(self):
-        return self.instance.is_online or self.instance.location
-
-
 class RegistrationDeadlineValidator(Validator):
     field = 'registration_deadline'
     code = 'registration_deadline'
@@ -61,7 +52,7 @@ class Assignment(Activity):
 
     transitions = TransitionManager(AssignmentTransitions, 'status')
 
-    validators = [LocationValidator, RegistrationDeadlineValidator]
+    validators = [RegistrationDeadlineValidator]
 
     @property
     def required_fields(self):

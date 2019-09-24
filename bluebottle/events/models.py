@@ -59,6 +59,9 @@ class Event(Activity):
     def required_fields(self):
         fields = ['title', 'description', 'start_date', 'start_time', 'duration', 'is_online', ]
 
+        if not self.is_online:
+            fields.append('location')
+
         return fields
 
     @property

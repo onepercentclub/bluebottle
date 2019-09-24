@@ -1,11 +1,12 @@
 import json
+from memoize import memoize
+from operator import attrgetter
 
 from django.conf import settings
 from django.db import ProgrammingError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 
-from dotted.collection import DottedDict
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
@@ -183,6 +184,11 @@ with open('bluebottle/funding_stripe/data/document_spec.json') as file:
     DOCUMENT_SPEC = json.load(file)
 
 
+@memoize(timeout=60 * 60 * 24)
+def get_specs(country):
+    return stripe.CountrySpec.retrieve(country)
+
+
 class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40)
     country = models.CharField(max_length=2)
@@ -191,26 +197,65 @@ class StripePayoutAccount(PayoutAccount):
     provider_class = StripePaymentProvider
 
     @property
+    def country_spec(self):
+        return get_specs(self.country).verification_fields.individual
+
+    @property
     def document_spec(self):
         for spec in DOCUMENT_SPEC:
             if spec['id'] == self.country:
                 return spec
 
     @property
-    def required(self):
-        specs = stripe.CountrySpec.retrieve(self.country).verification_fields.individual
-        fields = specs.additional + specs.minimum
+    def required_fields(self):
+        fields = ['country', ]
 
-        if 'individual.verification.document' in fields:
-            fields.remove('individual.verification.document')
+        if self.account_id:
+            fields += [
+                field for field in self.country_spec['additional'] + self.country_spec['minimum'] if
+                field not in ['business_type', 'external_account', 'tos_acceptance.date', 'tos_acceptance.ip', ]
+            ]
 
-            fields.append('documentType')
-            fields.append('individual.verification.document.front')
+            if 'individual.verification.document' in fields:
+                fields.remove('individual.verification.document')
 
-            if self.document_type in self.document_spec['document_types_requiring_back']:
-                fields.append('individual.verification.document.back')
+                fields.append('document_type')
+                fields.append('individual.verification.document.front')
+
+                if self.document_type in self.document_spec['document_types_requiring_back']:
+                    fields.append('individual.verification.document.back')
+
+            dob_fields = [field for field in fields if '.dob' in field]
+            if dob_fields:
+                fields.append('individual.dob')
+                for field in dob_fields:
+                    fields.remove(field)
 
         return fields
+
+    @property
+    def required(self):
+        for field in self.required_fields:
+            if field.startswith('individual'):
+                if field == 'individual.dob':
+                    try:
+                        if not self.account.individual.dob.year:
+                            yield 'individual.dob'
+                    except AttributeError:
+                        yield 'individual.dob'
+                else:
+                    try:
+                        if attrgetter(field)(self.account) in (None, ''):
+                            yield field
+                    except AttributeError:
+                        yield field
+            else:
+                value = attrgetter(field)(self)
+                if value in (None, ''):
+                    yield field
+
+        if not self.account.external_accounts.total_count > 0:
+            yield 'external_account'
 
     @property
     def account(self):
@@ -244,6 +289,7 @@ class StripePayoutAccount(PayoutAccount):
     @property
     def verified(self):
         return (
+            'individual' in self.account and
             self.account.individual.verification.status == 'verified' and
             not self.account.individual.requirements.eventually_due
         )
@@ -251,36 +297,6 @@ class StripePayoutAccount(PayoutAccount):
     @property
     def disabled(self):
         return self.account.requirements.disabled
-
-    @property
-    def verification(self):
-        try:
-            return self.account.individual.verification
-        except AttributeError:
-            return {'document': {}}
-
-    @property
-    def individual(self):
-        account = DottedDict(self.account)
-        result = DottedDict({})
-        for field in self.required:
-            if field == 'individual.verification.document':
-                result[field] = {}
-            else:
-                result[field] = unicode(account.get(field, '') or '')
-
-        if 'dob' in result['individual'] and (
-            not result['individual']['dob'].get('day') or
-            not result['individual']['dob'].get('month') or
-            not result['individual']['dob'].get('year')
-        ):
-            del result['individual']['dob']
-
-        return result['individual']
-
-    @property
-    def tos_acceptance(self):
-        return self.account.tos_acceptance
 
     @property
     def account_settings(self):
@@ -331,6 +347,10 @@ class ExternalAccount(BankAccount):
         )
         self.account_id = self._account.id
         self.save()
+
+    @property
+    def verified(self):
+        return self.connect_account.verified
 
     @property
     def metadata(self):

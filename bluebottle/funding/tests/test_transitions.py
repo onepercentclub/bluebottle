@@ -7,7 +7,7 @@ from moneyed import Money
 
 from bluebottle.funding.tasks import check_funding_end
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, \
-    BudgetLineFactory
+    BudgetLineFactory, BankAccountFactory
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -27,8 +27,11 @@ class FundingTestCase(BluebottleAdminTestCase):
             owner=user,
             initiative=self.initiative,
             target=Money(500, 'EUR'),
-            deadline=now() + timedelta(weeks=2)
+            deadline=now() + timedelta(weeks=2),
+            bank_account=BankAccountFactory.create()
         )
+        self.funding.bank_account.verified = True
+
         self.funding.review_transitions.submit()
         self.funding.review_transitions.approve()
         BudgetLineFactory.create_batch(4, activity=self.funding, amount=Money(125, 'EUR'))

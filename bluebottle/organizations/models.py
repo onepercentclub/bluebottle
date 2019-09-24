@@ -6,10 +6,12 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import (
     CreationDateTimeField, ModificationDateTimeField
 )
+
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.models import ValidatedModelMixin
 
 
-class Organization(models.Model):
+class Organization(ValidatedModelMixin, models.Model):
     """
     Organizations can run Projects. An organization has one or more members.
     """
@@ -30,6 +32,8 @@ class Organization(models.Model):
                       null=True,
                       upload_to='partner_organization_logos/')
 
+    required_fields = ['name', 'website']
+
     def __unicode__(self):
         return self.name
 
@@ -44,7 +48,7 @@ class Organization(models.Model):
         verbose_name_plural = _("partner organizations")
 
 
-class OrganizationContact(models.Model):
+class OrganizationContact(ValidatedModelMixin, models.Model):
     """
     Basic details for an organization contact
     """
@@ -58,6 +62,8 @@ class OrganizationContact(models.Model):
         help_text=_('When this contact was created.')
     )
     updated = ModificationDateTimeField(_('updated'))
+
+    required_fields = ['name', 'email']
 
     class Meta:
         verbose_name = _('Partner Organization Contact')

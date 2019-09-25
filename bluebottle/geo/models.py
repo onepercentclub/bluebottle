@@ -2,7 +2,6 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
 from django.db import models
-from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from geoposition.fields import GeopositionField
 from sorl.thumbnail import ImageField
@@ -178,12 +177,5 @@ class Geolocation(models.Model):
     class JSONAPIMeta:
         resource_name = 'locations'
 
-    @property
-    def short(self):
-        if self.locality:
-            return format_html(u"{}, {}", self.locality, self.country.name)
-        else:
-            return self.country.name
-
     def __unicode__(self):
-        return self.short
+        return self.formatted_address

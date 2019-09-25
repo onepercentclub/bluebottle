@@ -11,8 +11,16 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'alphabetical': ('title_keyword', ),
         'popularity': 'popularity',
     }
+    filters = (
+        'owner.id',
+        'theme.id',
+        'country',
+        'categories.slug',
+        'expertise.id',
+        'type',
+        'status',
+    )
 
-    filters = ('owner.id', )
     search_fields = (
         'status', 'title', 'description', 'owner.name',
     )
@@ -26,6 +34,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
                 SF(
                     'field_value_factor',
                     field='contribution_count',
+                    missing=0
                 ),
                 SF(
                     'gauss',
@@ -40,4 +49,4 @@ class ActivitySearchFilter(ElasticSearchFilter):
         )
 
     def get_default_filters(self, request):
-        return [~Terms(status=['draft', 'closed'])]
+        return [~Terms(status=['in_review', 'closed'])]

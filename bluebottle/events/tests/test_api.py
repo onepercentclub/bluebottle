@@ -147,7 +147,7 @@ class EventAPITestCase(BluebottleTestCase):
 
         self.assertTrue(
             '/data/attributes/location' in (
-                error['source']['pointer'] for error in response.json()['data']['meta']['errors']
+                error['source']['pointer'] for error in response.json()['data']['meta']['required']
             )
         )
 

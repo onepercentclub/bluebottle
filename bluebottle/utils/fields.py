@@ -226,7 +226,7 @@ class ValidationErrorsField(serializers.ReadOnlyField):
                 'title': error.message,
                 'code': error.code,
                 'source': {
-                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(error.field))
+                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(error.field).replace('.', '/'))
                 }
             } for error in value
         ]
@@ -239,7 +239,7 @@ class RequiredErrorsField(serializers.ReadOnlyField):
                 'title': _('This field is required'),
                 'code': 'required',
                 'source': {
-                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(field))
+                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(field).replace('.', '/'))
                 }
             } for field in value
         ]

@@ -104,12 +104,14 @@ class ApplicantTransitions(ContributionTransitions):
         withdrawn = ChoiceItem('withdrawn', _('withdrawn'))
         active = ChoiceItem('attending', _('attending'))
 
+    default = ContributionTransitions.values.new
+
     def assignment_is_open(self):
         if self.instance.activity.status != ActivityTransitions.values.open:
             return _('The event is not open')
 
     @transition(
-        source=['draft', ContributionTransitions.values.new],
+        source=[ContributionTransitions.values.new],
         target=ContributionTransitions.values.new,
         messages=[AssignmentApplicationMessage]
     )

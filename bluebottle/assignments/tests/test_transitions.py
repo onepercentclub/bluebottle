@@ -55,7 +55,7 @@ class AssignmentTransitionMessagesTestCase(BluebottleTestCase):
 
     def test_applied(self):
         someone = BlueBottleUserFactory.create(first_name='Henk')
-        ApplicantFactory.create(activity=self.assignment, user=someone, status='draft')
+        ApplicantFactory.create(activity=self.assignment, user=someone)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Someone applied to your task!')
         self.assertTrue('Henk applied to join your task' in mail.outbox[0].body)

@@ -115,7 +115,7 @@ class ApplicantTransitions(ContributionTransitions):
         target=ContributionTransitions.values.new,
         messages=[AssignmentApplicationMessage]
     )
-    def first(self):
+    def initiate(self):
         pass
 
     @transition(

@@ -167,4 +167,5 @@ class Applicant(Contribution):
         super(Applicant, self).save(*args, **kwargs)
         if created:
             follow(self.user, self.activity)
+            self.transitions.initiate()
         self.activity.check_capacity()

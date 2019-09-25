@@ -14,11 +14,13 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=values.open,
+        source=[values.open, values.full],
         target=values.running,
     )
     def start(self, **kwargs):
-        pass
+        for member in self.instance.accepted_applicants:
+            member.transitions.activate()
+            member.save()
 
     @transition(
         field='status',
@@ -30,7 +32,7 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=values.full,
+        source=[values.full, values.open],
         target=values.open,
     )
     def reopen(self, **kwargs):
@@ -38,7 +40,7 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=values.running,
+        source=[values.running, values.open],
         target=values.succeeded,
         permissions=[ActivityTransitions.is_system]
     )
@@ -145,7 +147,7 @@ class ApplicantTransitions(ContributionTransitions):
 
     @transition(
         field='status',
-        source=[values.active, values.failed],
+        source=[values.active, values.failed, values.accepted],
         target=values.succeeded,
         permissions=[ContributionTransitions.is_activity_manager]
     )
@@ -154,7 +156,7 @@ class ApplicantTransitions(ContributionTransitions):
 
     @transition(
         field='status',
-        source=[values.succeeded, values.active],
+        source=[values.succeeded, values.accepted, values.active],
         target=values.failed,
         permissions=[ContributionTransitions.is_activity_manager]
     )

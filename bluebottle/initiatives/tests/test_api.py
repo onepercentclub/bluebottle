@@ -555,6 +555,23 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 2)
         self.assertEqual(data['data'][0]['relationships']['activity-manager']['data']['id'], unicode(self.owner.pk))
 
+    def test_filter_promoter(self):
+        """
+        User should see initiatives where self activity manager when in submitted
+        """
+        InitiativeFactory.create_batch(2, status='submitted', promoter=self.owner)
+        InitiativeFactory.create_batch(4, status='approved')
+
+        response = self.client.get(
+            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['data'][0]['relationships']['promoter']['data']['id'], unicode(self.owner.pk))
+
     def test_filter_owner_and_activity_manager(self):
         """
         User should see initiatives where self owner or activity manager when in submitted

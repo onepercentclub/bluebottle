@@ -44,6 +44,8 @@ class InitiativeSearchFilter(ElasticSearchFilter):
             value = request.GET['filter[{}]'.format(field)]
             return Q(
                 Nested(path='owner', query=Term(**{field: value})) |
-                Nested(path='activity_manager', query=Term(activity_manager__id=value)))
+                Nested(path='promoter', query=Term(**{field: value})) |
+                Nested(path='activity_manager', query=Term(activity_manager__id=value))
+            )
 
         return super(InitiativeSearchFilter, self).get_filter(request, field)

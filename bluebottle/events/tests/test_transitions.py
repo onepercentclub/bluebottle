@@ -486,10 +486,10 @@ class EventTransitionValidationTestCase(BluebottleTestCase):
             event.status,
             EventTransitions.values.in_review
         )
-        errors = event.review_transitions.is_valid()
+        errors = event.review_transitions.is_complete()
         self.assertEqual(
-            unicode(errors[0]),
-            u"This field is required or select 'Online'"
+            errors[0],
+            u"location is required"
         )
 
         self.assertRaises(

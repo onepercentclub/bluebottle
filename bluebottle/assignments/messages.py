@@ -30,7 +30,7 @@ class AssignmentClosedMessage(TransitionMessage):
 
 
 class AssignmentCompletedMessage(TransitionMessage):
-    subject = _('Your task {assignment_title} has been completed!')
+    subject = _(u'Your task {assignment_title} has been completed! 🎉')
     template = 'messages/assignment_completed'
     context = {
         'assignment_title': 'title'
@@ -38,5 +38,8 @@ class AssignmentCompletedMessage(TransitionMessage):
 
 
 class AssignmentApplicationMessage(TransitionMessage):
-    subject = _('Someone applied to your task!')
+    subject = _(u'Someone applied to your task {assignment_title}! 🙌')
     template = 'messages/assignment_application'
+    context = {
+        'assignment_title': 'activity.title'
+    }

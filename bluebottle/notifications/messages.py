@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from operator import attrgetter
+
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients import properties
@@ -33,7 +36,7 @@ class TransitionMessage(object):
         with TenantLanguage(language):
             context = {}
             for key, item in self.context.items():
-                context[key] = getattr(self.obj, item)
+                context[key] = attrgetter(item)(self.obj)
             return self.subject.format(**context)
 
     def get_messages(self):

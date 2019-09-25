@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 from datetime import timedelta
 
@@ -352,7 +353,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.url = reverse('applicant-list')
         self.user = BlueBottleUserFactory()
-        self.assignment = AssignmentFactory.create()
+        self.assignment = AssignmentFactory.create(title="Make coffee")
         self.assignment.review_transitions.submit()
         self.assignment.review_transitions.approve()
         self.apply_data = {
@@ -377,6 +378,9 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], 'new')
         self.assertEqual(response.data['motivation'], 'Pick me! Pick me!')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, u'Someone applied to your task Make coffee! 🙌')
+        self.assertTrue("Review the application and decide", mail.outbox[0].body)
 
 
 class ApplicantTransitionAPITestCase(BluebottleTestCase):
@@ -455,8 +459,8 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'rejected')
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertTrue("Go away!", mail.outbox[0].body)
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertTrue("Go away!", mail.outbox[1].body)
 
     def test_accept_by_owner_assignment(self):
         # Accept by assignment owner
@@ -464,8 +468,8 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'accepted')
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertTrue("you have been accepted" in mail.outbox[0].body)
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertTrue("you have been accepted" in mail.outbox[1].body)
 
     def test_accept_by_owner_assignment_custom_message(self):
         # Accept by assignment owner
@@ -474,8 +478,8 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'accepted')
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertTrue("See you there!" in mail.outbox[0].body)
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertTrue("See you there!" in mail.outbox[1].body)
 
     def test_accept_by_self_assignment(self):
         # Applicant should not be able to accept self

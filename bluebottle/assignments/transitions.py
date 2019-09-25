@@ -99,25 +99,21 @@ class AssignmentTransitions(ActivityTransitions):
 
 class ApplicantTransitions(ContributionTransitions):
     class values(ContributionTransitions.values):
-        draft = ChoiceItem('draft', _('draft'))
         accepted = ChoiceItem('accepted', _('accepted'))
         rejected = ChoiceItem('rejected', _('rejected'))
         withdrawn = ChoiceItem('withdrawn', _('withdrawn'))
         active = ChoiceItem('attending', _('attending'))
-
-    default = values.draft
 
     def assignment_is_open(self):
         if self.instance.activity.status != ActivityTransitions.values.open:
             return _('The event is not open')
 
     @transition(
-        source=values.draft,
+        source=['draft', ContributionTransitions.values.new],
         target=ContributionTransitions.values.new,
-        permissions=[ContributionTransitions.is_system],
         messages=[AssignmentApplicationMessage]
     )
-    def submit(self):
+    def first(self):
         pass
 
     @transition(
@@ -187,4 +183,4 @@ class ApplicantTransitions(ContributionTransitions):
     )
     def fail(self):
         unfollow(self.instance.user, self.instance.activity)
-        self.time_spent = None
+        self.instance.time_spent = None

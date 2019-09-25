@@ -54,7 +54,7 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
         self.assertEqual(response.data['status'], 'in_review')
         self.assertEqual(response.data['title'], 'Business plan Young Freddy')
 
-    def test_create_event_missing_data(self):
+    def test_create_assignment_missing_data(self):
         data = {
             'data': {
                 'type': 'activities/assignments',

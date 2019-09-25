@@ -213,7 +213,6 @@ class FSMField(models.CharField):
 
     def __init__(self, protected=True, max_length=20, *args, **kwargs):
         self.protected = protected
-
         super(FSMField, self).__init__(
             max_length=max_length,
             *args,
@@ -228,3 +227,12 @@ class TransitionsMixin(object):
                 setattr(self, name, cls(self, field))
 
         super(TransitionsMixin, self).__init__(*args, **kwargs)
+
+    def save(self, **kwargs):
+        created = self.pk is None
+        super(TransitionsMixin, self).save(**kwargs)
+        if created:
+            # Check if there is a transition called `first` and run it.
+            for (name, cls, field) in self._transitions:
+                if hasattr(getattr(self, name), 'first'):
+                    getattr(getattr(self, name), 'first')()

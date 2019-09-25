@@ -40,22 +40,22 @@ class AssignmentTransitions(ActivityTransitions):
         field='status',
         source=values.running,
         target=values.succeeded,
-        permissions=[ActivityTransitions.can_approve]
+        permissions=[ActivityTransitions.is_system]
     )
     def succeed(self, **kwargs):
         for member in self.instance.accepted_applicants:
-            member.succeed()
+            member.transitions.succeed()
             member.save()
 
     @transition(
         field='status',
         source=[values.running, values.in_review, values.open],
         target=values.closed,
-        permissions=[ActivityTransitions.can_approve]
+        permissions=[ActivityTransitions.is_system]
     )
     def close(self, **kwargs):
         for member in self.instance.accepted_applicants:
-            member.fail()
+            member.transitions.fail()
             member.save()
 
     @transition(

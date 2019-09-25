@@ -46,7 +46,7 @@ class Transition(object):
             all(condition(transitions) is None for condition in self.conditions)
         )
 
-    def is_allowed(self, transitions, user):
+    def is_allowed(self, transitions, user=None):
         """ Check if the transition is allowed currently. """
         if not user:
             return True
@@ -186,8 +186,7 @@ class ModelTransitions():
     def available_transitions(self, user=None):
         return [
             transition for transition in self.all_transitions if
-            transition.is_possible(self) and
-            (user and transition.is_allowed(self, user))
+            transition.is_possible(self) and transition.is_allowed(self, user)
         ]
 
 

@@ -92,6 +92,10 @@ class ActivityTransitions(ModelTransitions):
         # TODO: Make me smart. Do we want to do this with a auth permission?
         return not user or user.is_staff
 
+    def is_system(self, user):
+        # Only system and admin users. Not api users.
+        return not user
+
     @transition(
         source=values.in_review,
         target=values.open,

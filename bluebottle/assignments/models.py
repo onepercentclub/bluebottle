@@ -108,6 +108,14 @@ class Assignment(Activity):
         ]
         return self.contributions.filter(status__in=accepted_states)
 
+    def deadline_passed(self):
+        if self.status in [AssignmentTransitions.values.running,
+                           AssignmentTransitions.values.open]:
+            if len(self.accepted_applicants):
+                self.transitions.expire()
+            else:
+                self.transitions.succeed()
+
     def check_capacity(self):
         if self.capacity \
                 and len(self.accepted_applicants) >= self.capacity \
@@ -150,4 +158,5 @@ class Applicant(Contribution):
         super(Applicant, self).save(*args, **kwargs)
         if created:
             follow(self.user, self.activity)
+            self.transitions.initiate()
         self.activity.check_capacity()

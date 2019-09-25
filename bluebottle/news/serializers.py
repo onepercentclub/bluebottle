@@ -34,4 +34,4 @@ class NewsItemPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NewsItem
-        fields = ('id', 'title', 'publication_date')
+        fields = ('id', 'title', 'publication_date', 'language')

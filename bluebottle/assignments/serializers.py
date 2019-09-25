@@ -7,9 +7,15 @@ from bluebottle.activities.utils import (
 )
 from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.files.serializers import DocumentField
+from bluebottle.assignments.permissions import ApplicantDocumentPermission
+from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
+
+
+class ApplicantDocumentSerializer(PrivateDocumentSerializer):
+    content_view_name = 'applicant-document'
+    relationship = 'applicant_set'
 
 
 class AssignmentListSerializer(BaseActivitySerializer):
@@ -61,7 +67,8 @@ class AssignmentSerializer(AssignmentListSerializer):
     class JSONAPIMeta(AssignmentListSerializer.JSONAPIMeta):
         included_resources = AssignmentListSerializer.JSONAPIMeta.included_resources + [
             'contributions',
-            'contributions.user'
+            'contributions.user',
+            'contributions.document'
         ]
 
     included_serializers = dict(
@@ -87,7 +94,7 @@ class AssignmentTransitionSerializer(TransitionSerializer):
 class ApplicantSerializer(BaseContributionSerializer):
     time_spent = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    document = DocumentField(required=False, allow_null=True)
+    document = PrivateDocumentField(required=False, allow_null=True, permissions=[ApplicantDocumentPermission])
 
     class Meta(BaseContributionSerializer.Meta):
         model = Applicant
@@ -108,13 +115,14 @@ class ApplicantSerializer(BaseContributionSerializer):
         resource_name = 'contributions/applicants'
         included_resources = [
             'user',
-            'activity'
+            'activity',
+            'document'
         ]
 
     included_serializers = {
         'activity': 'bluebottle.assignments.serializers.AssignmentSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'document': 'bluebottle.files.serializers.DocumentSerializer',
+        'document': 'bluebottle.assignments.serializers.ApplicantDocumentSerializer',
     }
 
 

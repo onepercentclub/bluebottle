@@ -6,11 +6,9 @@ from bluebottle.assignments.serializers import ApplicantSerializer, \
     AssignmentTransitionSerializer, ApplicantTransitionSerializer, AssignmentListSerializer, AssignmentSerializer
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission
-)
+    OneOf, ResourcePermission, ResourceOwnerPermission)
 from bluebottle.utils.views import (
-    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin
-)
+    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, PrivateFileView)
 
 
 class AssignmentList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -63,6 +61,7 @@ class ApplicantList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
 
     prefetch_for_includes = {
         'assignment': ['assignment'],
+        'user': ['user'],
         'document': ['document'],
     }
 
@@ -78,6 +77,12 @@ class ApplicantDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
+    prefetch_for_includes = {
+        'activity': ['activity'],
+        'user': ['user'],
+        'document': ['document'],
+    }
+
 
 class ApplicantTransitionList(TransitionList):
     serializer_class = ApplicantTransitionSerializer
@@ -85,3 +90,10 @@ class ApplicantTransitionList(TransitionList):
     prefetch_for_includes = {
         'resource': ['participant', 'participant__activity'],
     }
+
+
+class ApplicantDocumentDetail(PrivateFileView):
+    max_age = 15 * 60  # 15 minutes
+    queryset = Applicant.objects
+    relation = 'document'
+    field = 'file'

@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from bluebottle.assignments.views import (
     AssignmentList, AssignmentDetail, ApplicantList, ApplicantDetail,
-    AssignmentTransitionList, ApplicantTransitionList)
+    AssignmentTransitionList, ApplicantTransitionList, ApplicantDocumentDetail)
 
 urlpatterns = [
     # Assignments
@@ -26,4 +26,8 @@ urlpatterns = [
     url(r'^/applicants/transitions$',
         ApplicantTransitionList.as_view(),
         name='applicant-transition-list'),
+
+    url(r'^/applicants/(?P<pk>\d+)/document$',
+        ApplicantDocumentDetail.as_view(),
+        name='applicant-document')
 ]

@@ -110,12 +110,12 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
         language = kwargs['language']
 
     with TenantLanguage(language):
-        c = ClientContext(kwargs)
-        c['to'] = to  # Add the recipient to the context
+        ctx = ClientContext(kwargs)
+        ctx['to'] = to  # Add the recipient to the context
         text_content = get_template(
-            '{0}.txt'.format(template_name)).render(c.flatten())
+            '{0}.txt'.format(template_name)).render(ctx.flatten())
         html_content = get_template(
-            '{0}.html'.format(template_name)).render(c.flatten())
+            '{0}.html'.format(template_name)).render(ctx.flatten())
 
         args = dict(subject=subject, body=text_content, to=[to.email])
         if cc:
@@ -160,7 +160,6 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
     kwargs.update({
         'settings': MailPlatformSettings.load()
     })
-
     try:
         msg = create_message(template_name=template_name,
                              to=to,

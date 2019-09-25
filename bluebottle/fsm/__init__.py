@@ -126,6 +126,10 @@ class ModelTransitions():
         self.instance = instance
         self.field = field
 
+    def is_system(self, user):
+        # Only system and admin users, no api users.
+        return not user
+
     def transition_to(self, transition, user=None, **kwargs):
         original_source = getattr(self.instance, self.field)  # Keep current status so we can revert
 
@@ -208,7 +212,6 @@ class FSMField(models.CharField):
 
     def __init__(self, protected=True, max_length=20, *args, **kwargs):
         self.protected = protected
-
         super(FSMField, self).__init__(
             max_length=max_length,
             *args,

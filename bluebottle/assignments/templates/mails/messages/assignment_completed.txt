@@ -7,11 +7,13 @@
     {% else %}
         {% blocktrans with recipient_name=obj.user.first_name assignment_title=obj.activity.title context 'email' %}
         Hi {{ recipient_name }},
-        Unfortunately, you have not been selected for the assignment "{{ assignment_title }}".
+        Great news! Your task {{ assignment_title }} has been completed.
+        Go to your activity page to review the hours people spent on the task.
+        And while you're there, why not post an update to celebrate with the people who helped you out?
         {% endblocktrans %}
     {% endif %}
 {% endblock %}
 
 {% block action %}
-   {% trans 'View assignment' context 'email' %}: {{ obj.activity.get_absolute_url }}
+   {% trans 'Review hours' context 'email' %}: {{ obj.get_absolute_url }}
 {% endblock %}`

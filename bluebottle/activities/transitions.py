@@ -77,7 +77,7 @@ class ActivityReviewTransitions(ReviewTransitions):
 
 class ActivityTransitions(ModelTransitions):
     class values(DjangoChoices):
-        in_review = ChoiceItem('in_review', _('In review'))
+        in_review = ChoiceItem('in_review', _('in review'))
         open = ChoiceItem('open', _('open'))
         succeeded = ChoiceItem('succeeded', _('succeeded'))
         closed = ChoiceItem('closed', _('closed'))

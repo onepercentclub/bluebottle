@@ -202,9 +202,13 @@ class TaskStatusLogInline(admin.TabularInline):
 
 class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'deadline'
-
     inlines = (TaskMemberAdminInline, TaskFileAdminInline, TaskStatusLogInline, PlaceInline)
     save_as = True
+
+    def lookup_allowed(self, key, value):
+        if key in ('members__member_id', ):
+            return True
+        return super(TaskAdmin, self).lookup_allowed(key, value)
 
     raw_id_fields = ('author', 'project')
     list_filter = (

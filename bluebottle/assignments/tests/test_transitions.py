@@ -145,3 +145,10 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             assignment.status, AssignmentTransitions.values.full
         )
+        # After withdrawal it should open again
+        applicants[0].transitions.withdraw()
+        applicants[0].save()
+        assignment.refresh_from_db()
+        self.assertEqual(
+            assignment.status, AssignmentTransitions.values.open
+        )

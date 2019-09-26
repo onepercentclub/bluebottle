@@ -108,13 +108,28 @@ class Assignment(Activity):
         ]
         return self.contributions.filter(status__in=accepted_states)
 
-    def deadline_passed(self):
-        if self.status in [AssignmentTransitions.values.running,
+    def registration_deadline_passed(self):
+        # If registration deadline passed
+        # got applicants -> start
+        # no applicants -> expire
+        if self.status in [AssignmentTransitions.values.full,
                            AssignmentTransitions.values.open]:
             if len(self.accepted_applicants):
-                self.transitions.expire()
+                self.transitions.start()
             else:
+                self.transitions.expire()
+
+    def end_date_passed(self):
+        # If end date passed
+        # got applicants -> succeed
+        # no applicants -> expire
+        if self.status in [AssignmentTransitions.values.running,
+                           AssignmentTransitions.values.full,
+                           AssignmentTransitions.values.open]:
+            if len(self.accepted_applicants):
                 self.transitions.succeed()
+            else:
+                self.transitions.expire()
 
     def check_capacity(self):
         if self.capacity \
@@ -126,6 +141,7 @@ class Assignment(Activity):
                 and len(self.accepted_applicants) < self.capacity \
                 and self.status == AssignmentTransitions.values.full:
             self.transitions.reopen()
+            self.save()
 
 
 class Applicant(Contribution):

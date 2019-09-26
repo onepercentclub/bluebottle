@@ -7,7 +7,7 @@ from django.utils.timezone import now
 from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.assignments.models import Assignment
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
-from bluebottle.assignments.transitions import AssignmentTransitions
+from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -122,16 +122,34 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             assignment.status, AssignmentTransitions.values.open
         )
 
-    def test_start(self):
+    def test_happy_life_cycle(self):
         self.assignment.review_transitions.approve()
         self.assignment.save()
-        ApplicantFactory.create(activity=self.assignment)
-        ApplicantFactory.create(activity=self.assignment)
+        applicant = ApplicantFactory.create(activity=self.assignment)
+        self.assertEqual(
+            applicant.status, ApplicantTransitions.values.new
+        )
+        applicant.transitions.accept()
+        applicant.save()
+
         self.assignment.transitions.start()
         self.assignment.save()
-        assignment = Assignment.objects.get(pk=self.assignment.pk)
+        applicant.refresh_from_db()
         self.assertEqual(
-            assignment.status, AssignmentTransitions.values.running
+            self.assignment.status, AssignmentTransitions.values.running
+        )
+        self.assertEqual(
+            applicant.status, ApplicantTransitions.values.active
+        )
+
+        self.assignment.transitions.succeed()
+        self.assignment.save()
+        applicant.refresh_from_db()
+        self.assertEqual(
+            self.assignment.status, AssignmentTransitions.values.succeeded
+        )
+        self.assertEqual(
+            applicant.status, ApplicantTransitions.values.succeeded
         )
 
     def test_full(self):

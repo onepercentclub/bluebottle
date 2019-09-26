@@ -50,12 +50,12 @@ class AssignmentAdmin(ActivityChildAdmin):
     base_model = Assignment
     raw_id_fields = ('owner', 'location')
 
-    list_display = ('title_display', 'created', 'status', 'highlight')
+    list_display = ('created', 'title_display', 'status', 'highlight')
 
     fieldsets = (
         (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner', 'status', 'transitions', 'review_status',
-            'review_transitions', 'highlight', 'stats_data'
+            'title', 'slug', 'initiative', 'owner', 'status', 'transitions',
+            'highlight', 'stats_data'
         )}),
         (_('Details'), {'fields': (
             'description', 'capacity',

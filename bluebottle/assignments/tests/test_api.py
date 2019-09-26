@@ -352,8 +352,9 @@ class ApplicantAPITestCase(BluebottleTestCase):
 
         self.client = JSONAPITestClient()
         self.url = reverse('applicant-list')
+        self.owner = BlueBottleUserFactory()
         self.user = BlueBottleUserFactory()
-        self.assignment = AssignmentFactory.create(title="Make coffee")
+        self.assignment = AssignmentFactory.create(owner=self.owner, title="Make coffee")
         self.assignment.review_transitions.submit()
         self.assignment.review_transitions.approve()
         self.apply_data = {
@@ -372,6 +373,8 @@ class ApplicantAPITestCase(BluebottleTestCase):
                 }
             }
         }
+        self.document_url = reverse('document-list')
+        self.document_path = './bluebottle/files/tests/files/test.rtf'
 
     def test_apply(self):
         response = self.client.post(self.url, json.dumps(self.apply_data), user=self.user)
@@ -381,6 +384,32 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, u'Someone applied to your task Make coffee! 🙌')
         self.assertTrue("Review the application and decide", mail.outbox[0].body)
+
+    def test_apply_with_document(self):
+        with open(self.document_path) as test_file:
+            response = self.client.post(
+                self.document_url,
+                test_file.read(),
+                content_type="text/rtf",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="test.rtf"',
+                user=self.user
+            )
+
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.content)
+        document_id = data['data']['id']
+        self.apply_data['data']['relationships']['document'] = {
+            'data': {
+                'type': 'documents',
+                'id': document_id
+            }
+        }
+        response = self.client.post(self.url, json.dumps(self.apply_data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+        self.assertEqual(data['data']['relationships']['document']['data']['id'], document_id)
+        document = get_included(response, 'documents')
+        self.assertEqual(document['meta']['size'], 39109)
 
 
 class ApplicantTransitionAPITestCase(BluebottleTestCase):

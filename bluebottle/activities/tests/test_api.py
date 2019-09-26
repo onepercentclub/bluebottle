@@ -1,12 +1,12 @@
 import datetime
 import json
 
-from django.urls import reverse
 from django.test import tag
 from django.test.utils import override_settings
+from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
-
 from django_elasticsearch_dsl.test import ESTestCase
+
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -32,12 +32,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         EventFactory.create(status='draft')
         EventFactory.create(status='closed')
 
-        response = self.client.get(
-            self.url,
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
-        )
+        response = self.client.get(self.url, user=self.owner)
         data = json.loads(response.content)
-
         self.assertEqual(data['meta']['pagination']['count'], 2)
         self.assertEqual(data['data'][1]['id'], unicode(succeeded.pk))
         self.assertEqual(data['data'][0]['id'], unicode(open.pk))

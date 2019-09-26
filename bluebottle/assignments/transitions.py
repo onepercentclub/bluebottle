@@ -43,7 +43,7 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=[values.running, values.open],
+        source=[values.running, values.open, values.full],
         target=values.succeeded,
         permissions=[ActivityTransitions.is_system],
         messages=[AssignmentCompletedMessage]
@@ -55,7 +55,7 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=[values.running, values.in_review, values.open],
+        source=[values.running, values.open],
         target=values.closed,
         permissions=[ActivityTransitions.is_system],
         messages=[AssignmentClosedMessage]
@@ -112,6 +112,13 @@ class ApplicantTransitions(ContributionTransitions):
         if self.instance.activity.status != ActivityTransitions.values.open:
             return _('The event is not open')
 
+    def assignment_is_open_or_full(self):
+        if self.instance.activity.status not in [
+            ActivityTransitions.values.open,
+            AssignmentTransitions.values.full
+        ]:
+            return _('The event is not open')
+
     @transition(
         source=[ContributionTransitions.values.new],
         target=ContributionTransitions.values.new,
@@ -146,7 +153,7 @@ class ApplicantTransitions(ContributionTransitions):
         field='status',
         source=[values.new, values.accepted],
         target=values.withdrawn,
-        conditions=[assignment_is_open],
+        conditions=[assignment_is_open_or_full],
         permissions=[ContributionTransitions.is_user]
     )
     def withdraw(self):

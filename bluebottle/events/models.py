@@ -102,9 +102,7 @@ class Event(Activity):
     def save(self, *args, **kwargs):
         if self.start and self.duration:
             self.end = self.start + datetime.timedelta(hours=self.duration)
-
-        super(Event, self).save(*args, **kwargs)
-        return
+        return super(Event, self).save(*args, **kwargs)
 
     @property
     def participants(self):

@@ -46,7 +46,7 @@ class Transition(object):
             all(condition(transitions) is None for condition in self.conditions)
         )
 
-    def is_allowed(self, transitions, user):
+    def is_allowed(self, transitions, user=None):
         """ Check if the transition is allowed currently. """
         if not user:
             return True
@@ -126,6 +126,10 @@ class ModelTransitions():
         self.instance = instance
         self.field = field
 
+    def is_system(self, user):
+        # Only system and admin users, no api users.
+        return not user
+
     def transition_to(self, transition, user=None, **kwargs):
         original_source = getattr(self.instance, self.field)  # Keep current status so we can revert
 
@@ -186,8 +190,7 @@ class ModelTransitions():
     def available_transitions(self, user=None):
         return [
             transition for transition in self.all_transitions if
-            transition.is_possible(self) and
-            (user and transition.is_allowed(self, user))
+            transition.is_possible(self) and transition.is_allowed(self, user)
         ]
 
 
@@ -209,7 +212,6 @@ class FSMField(models.CharField):
 
     def __init__(self, protected=True, max_length=20, *args, **kwargs):
         self.protected = protected
-
         super(FSMField, self).__init__(
             max_length=max_length,
             *args,

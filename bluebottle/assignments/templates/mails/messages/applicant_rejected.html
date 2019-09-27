@@ -13,6 +13,6 @@
 {% endblock %}
 
 {% block action %}
-    <a href="{{ obj.get_absolute_url }}"
-       class="action-email">{% trans 'View initiative' context 'email' %}</a>
+    <a href="{{ obj.activity.get_absolute_url }}"
+       class="action-email">{% trans 'View assignment' context 'email' %}</a>
 {% endblock %}`

@@ -53,7 +53,7 @@ class ParticipantAdmin(FSMAdmin):
 class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
     inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
-    list_display = ['title_display', 'status', 'review_status', 'start_date', 'start_time', 'duration']
+    list_display = ['created', 'title_display', 'status', 'start_date', 'start_time', 'duration']
     search_fields = ['title', 'description']
 
     base_model = Event
@@ -64,7 +64,7 @@ class EventAdmin(ActivityChildAdmin):
     fieldsets = (
         (_('Basic'), {'fields': (
             'title', 'slug', 'initiative', 'owner',
-            'status', 'transitions', 'review_status', 'review_transitions',
+            'status', 'transitions',
             'highlight', 'stats_data'
         )}),
         (_('Details'), {'fields': (

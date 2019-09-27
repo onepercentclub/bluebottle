@@ -3,6 +3,9 @@ from djchoices.choices import ChoiceItem
 
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
 from bluebottle.assignments.messages import ApplicantRejectedMessage, ApplicantAcceptedMessage
+from bluebottle.assignments.messages import AssignmentApplicationMessage
+from bluebottle.assignments.messages import AssignmentCompletedMessage, AssignmentExpiredMessage, \
+    AssignmentClosedMessage
 from bluebottle.follow.models import unfollow, follow
 from bluebottle.fsm import transition
 
@@ -14,11 +17,13 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=values.open,
+        source=[values.open, values.full],
         target=values.running,
     )
     def start(self, **kwargs):
-        pass
+        for member in self.instance.accepted_applicants:
+            member.transitions.activate()
+            member.save()
 
     @transition(
         field='status',
@@ -30,7 +35,7 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=values.full,
+        source=[values.full, values.open],
         target=values.open,
     )
     def reopen(self, **kwargs):
@@ -38,25 +43,37 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=values.running,
+        source=[values.running, values.open, values.full],
         target=values.succeeded,
-        permissions=[ActivityTransitions.can_approve]
+        permissions=[ActivityTransitions.is_system],
+        messages=[AssignmentCompletedMessage]
     )
     def succeed(self, **kwargs):
         for member in self.instance.accepted_applicants:
-            member.succeed()
+            member.transitions.succeed()
             member.save()
 
     @transition(
         field='status',
-        source=[values.running, values.in_review, values.open],
+        source=[values.running, values.open],
         target=values.closed,
-        permissions=[ActivityTransitions.can_approve]
+        permissions=[ActivityTransitions.is_system],
+        messages=[AssignmentClosedMessage]
     )
     def close(self, **kwargs):
         for member in self.instance.accepted_applicants:
-            member.fail()
+            member.transitions.fail()
             member.save()
+
+    @transition(
+        field='status',
+        source=[values.open, values.running],
+        target=values.closed,
+        permissions=[ActivityTransitions.is_system],
+        messages=[AssignmentExpiredMessage]
+    )
+    def expire(self, **kwargs):
+        pass
 
     @transition(
         field='status',
@@ -89,9 +106,26 @@ class ApplicantTransitions(ContributionTransitions):
         withdrawn = ChoiceItem('withdrawn', _('withdrawn'))
         active = ChoiceItem('attending', _('attending'))
 
+    default = ContributionTransitions.values.new
+
     def assignment_is_open(self):
         if self.instance.activity.status != ActivityTransitions.values.open:
             return _('The event is not open')
+
+    def assignment_is_open_or_full(self):
+        if self.instance.activity.status not in [
+            ActivityTransitions.values.open,
+            AssignmentTransitions.values.full
+        ]:
+            return _('The event is not open')
+
+    @transition(
+        source=[ContributionTransitions.values.new],
+        target=ContributionTransitions.values.new,
+        messages=[AssignmentApplicationMessage]
+    )
+    def initiate(self):
+        pass
 
     @transition(
         field='status',
@@ -119,7 +153,7 @@ class ApplicantTransitions(ContributionTransitions):
         field='status',
         source=[values.new, values.accepted],
         target=values.withdrawn,
-        conditions=[assignment_is_open],
+        conditions=[assignment_is_open_or_full],
         permissions=[ContributionTransitions.is_user]
     )
     def withdraw(self):
@@ -145,7 +179,7 @@ class ApplicantTransitions(ContributionTransitions):
 
     @transition(
         field='status',
-        source=[values.active, values.failed],
+        source=[values.active, values.failed, values.accepted],
         target=values.succeeded,
         permissions=[ContributionTransitions.is_activity_manager]
     )
@@ -154,10 +188,10 @@ class ApplicantTransitions(ContributionTransitions):
 
     @transition(
         field='status',
-        source=[values.succeeded, values.active],
+        source=[values.succeeded, values.accepted, values.active],
         target=values.failed,
         permissions=[ContributionTransitions.is_activity_manager]
     )
     def fail(self):
         unfollow(self.instance.user, self.instance.activity)
-        self.time_spent = None
+        self.instance.time_spent = None

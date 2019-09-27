@@ -77,7 +77,7 @@ class ActivityReviewTransitions(ReviewTransitions):
 
 class ActivityTransitions(ModelTransitions):
     class values(DjangoChoices):
-        in_review = ChoiceItem('in_review', _('In review'))
+        in_review = ChoiceItem('in_review', _('in review'))
         open = ChoiceItem('open', _('open'))
         succeeded = ChoiceItem('succeeded', _('succeeded'))
         closed = ChoiceItem('closed', _('closed'))
@@ -91,6 +91,10 @@ class ActivityTransitions(ModelTransitions):
     def can_approve(self, user):
         # TODO: Make me smart. Do we want to do this with a auth permission?
         return not user or user.is_staff
+
+    def is_system(self, user):
+        # Only system and admin users. Not api users.
+        return not user
 
     @transition(
         source=values.in_review,
@@ -119,4 +123,6 @@ class ContributionTransitions(ModelTransitions):
         return self.instance.user == user
 
     def is_activity_manager(self, user):
-        return user in [self.instance.activity.initiative.activity_manager, self.instance.activity.owner]
+        return user in [
+            self.instance.activity.initiative.activity_manager,
+            self.instance.activity.owner]

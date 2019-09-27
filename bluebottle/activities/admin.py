@@ -40,7 +40,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     list_filter = (PolymorphicChildModelFilter, 'status', 'review_status', 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['title', 'created', 'type', 'status', 'review_status',
+    list_display = ['created', 'title_display', 'type', 'status', 'review_status',
                     'link', 'highlight']
 
     list_search = ('title', 'description', 'owner__first_name', 'owner__last_name')
@@ -51,6 +51,10 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
 
     def type(self, obj):
         return obj.get_real_instance_class().__name__
+
+    def title_display(self, obj):
+        return obj.title or _('- empty -')
+    title_display.short_description = _('Title')
 
 
 class ActivityAdminInline(StackedPolymorphicInline):

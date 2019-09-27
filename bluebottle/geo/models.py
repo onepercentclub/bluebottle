@@ -3,6 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.utils.html import format_html
+
 from geoposition.fields import GeopositionField
 from sorl.thumbnail import ImageField
 from parler.models import TranslatedFields
@@ -178,4 +180,7 @@ class Geolocation(models.Model):
         resource_name = 'locations'
 
     def __unicode__(self):
-        return self.formatted_address or ''
+        if self.locality:
+            return format_html(u"{}, {}", self.locality, self.country.name)
+        else:
+            return self.country.name

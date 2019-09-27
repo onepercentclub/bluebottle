@@ -32,7 +32,7 @@ class AssignmentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
 
-    permission_classes = (ActivityTypePermission, ActivityPermission,)
+    permission_classes = (ActivityPermission,)
 
     prefetch_for_includes = {
         'initiative': ['initiative'],

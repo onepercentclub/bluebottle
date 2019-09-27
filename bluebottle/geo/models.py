@@ -178,4 +178,4 @@ class Geolocation(models.Model):
         resource_name = 'locations'
 
     def __unicode__(self):
-        return self.formatted_address
+        return self.formatted_address or ''

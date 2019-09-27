@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.activities.admin import ActivityChildAdmin
@@ -61,15 +60,14 @@ class EventAdmin(ActivityChildAdmin):
     readonly_fields = ActivityChildAdmin.readonly_fields
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
 
-    fieldsets = (
-        (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner',
-            'status', 'transitions', 'review_status', 'review_transitions',
-            'highlight', 'stats_data'
-        )}),
-        (_('Details'), {'fields': (
-            'description', 'capacity',
-            'start_date', 'start_time', 'duration', 'registration_deadline',
-            'is_online', 'location', 'location_hint'
-        )}),
+    detail_fields = (
+        'description',
+        'capacity',
+        'start_date',
+        'start_time',
+        'duration',
+        'registration_deadline',
+        'is_online',
+        'location',
+        'location_hint'
     )

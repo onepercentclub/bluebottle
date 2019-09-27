@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.assignments.models import Assignment, Applicant
@@ -52,16 +51,14 @@ class AssignmentAdmin(ActivityChildAdmin):
 
     list_display = ('title_display', 'created', 'status', 'highlight')
 
-    fieldsets = (
-        (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner', 'status', 'transitions', 'review_status',
-            'review_transitions', 'highlight', 'stats_data'
-        )}),
-        (_('Details'), {'fields': (
-            'description', 'capacity',
-            'end_date', 'end_date_type',
-            'registration_deadline',
-            'duration', 'expertise',
-            'is_online', 'location'
-        )}),
+    detail_fields = (
+        'description',
+        'capacity',
+        'end_date',
+        'end_date_type',
+        'registration_deadline',
+        'duration',
+        'expertise',
+        'is_online',
+        'location'
     )

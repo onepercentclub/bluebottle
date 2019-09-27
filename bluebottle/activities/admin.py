@@ -15,21 +15,76 @@ from bluebottle.utils.admin import FSMAdmin
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
-
     raw_id_fields = ['owner', 'initiative']
-    inlines = (FollowAdminInline, )
+    inlines = (FollowAdminInline,)
 
-    readonly_fields = ['status', 'review_status', 'created', 'updated', 'stats_data']
+    readonly_fields = [
+        'created',
+        'updated',
+        'status',
+        'review_status',
+        'valid',
+        'complete',
+        'stats_data']
+
+    basic_fields = (
+        'title',
+        'slug',
+        'initiative',
+        'owner',
+        'created',
+        'updated',
+        'stats_data'
+    )
+
+    status_fields = (
+        'complete',
+        'valid',
+        'status',
+        'transitions',
+    )
+
+    detail_fields = (
+        'description',
+        'highlight'
+    )
+
+    def get_fieldsets(self, request, obj=None):
+        return (
+            (_('Basic'), {'fields': self.basic_fields}),
+            (_('Details'), {'fields': self.detail_fields}),
+            (_('Status'), {'fields': self.status_fields}),
+        )
 
     def stats_data(self, obj):
         return format_html("<table>{}</table>", format_html("".join([
             format_html(u"<tr><th>{}</th><td>{}</td></tr>", key, value) for key, value in obj.stats.items()
         ])))
+
     stats_data.short_description = _('Statistics')
 
     def title_display(self, obj):
         return obj.title or _('- empty -')
+
     title_display.short_description = _('Title')
+
+    def valid(self, obj):
+        if not obj.review_transitions.is_valid():
+            return '-'
+        return format_html("<ul>{}</ul>", format_html("".join([
+            format_html(u"<li>{}</li>", value) for value in obj.review_transitions.is_valid()
+        ])))
+
+    valid.short_description = _('Validation errors')
+
+    def complete(self, obj):
+        if not obj.review_transitions.is_complete():
+            return '-'
+        return format_html("<ul>{}</ul>", format_html("".join([
+            format_html(u"<li>{}</li>", value) for value in obj.review_transitions.is_complete()
+        ])))
+
+    complete.short_description = _('Missing data')
 
 
 @admin.register(Activity)
@@ -47,6 +102,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
 
     def link(self, obj):
         return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title)
+
     link.short_description = _("Show on site")
 
     def type(self, obj):
@@ -67,10 +123,12 @@ class ActivityAdminInline(StackedPolymorphicInline):
                 args=(obj.id,)
             )
             return format_html("<a href='{}'>{}</a>", url, obj.title or '-empty-')
+
         activity_link.short_description = _('Edit activity')
 
         def link(self, obj):
             return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
+
         link.short_description = _('View on site')
 
     class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):

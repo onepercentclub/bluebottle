@@ -13,17 +13,35 @@ logger = logging.getLogger('bluebottle')
 
 @periodic_task(
     run_every=(crontab(minute='*/15')),
-    name="check_assignment_end",
+    name="check_assignment_registration_deadline",
     ignore_result=True
 )
-def check_assignment_end():
+def check_assignment_registration_deadline():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            # Close assignments passed deadline
+            # Close assignments passed registration_deadline
             assignments = Assignment.objects.filter(
                 end_date__lte=now(),
-                status__in=['running']
+                status__in=['full', 'open']
             ).all()
 
             for assignment in assignments:
-                assignment.deadline_passed()
+                assignment.registration_deadline_passed()
+
+
+@periodic_task(
+    run_every=(crontab(minute='*/15')),
+    name="check_assignment_end_date",
+    ignore_result=True
+)
+def check_assignment_end_date():
+    for tenant in Client.objects.all():
+        with LocalTenant(tenant, clear_tenant=True):
+            # Close assignments passed end_date
+            assignments = Assignment.objects.filter(
+                end_date__lte=now(),
+                status__in=['full', 'open', 'running']
+            ).all()
+
+            for assignment in assignments:
+                assignment.end_date_passed()

@@ -961,8 +961,21 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['relationships']['reward']['data']['id'], unicode(reward.pk))
 
-    def test_create_reward_wrong_amount(self):
+    def test_create_reward_higher_amount(self):
         reward = RewardFactory.create(amount=Money(50, 'EUR'), activity=self.funding)
+        self.data['data']['relationships']['reward'] = {
+            'data': {'id': reward.pk, 'type': 'activities/rewards'}
+        }
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['relationships']['reward']['data']['id'], unicode(reward.pk))
+
+    def test_create_reward_lower_amount(self):
+        reward = RewardFactory.create(amount=Money(150, 'EUR'), activity=self.funding)
         self.data['data']['relationships']['reward'] = {
             'data': {'id': reward.pk, 'type': 'activities/rewards'}
         }

@@ -14,8 +14,10 @@ class ApplicantListFilter(DjangoFilterBackend):
             queryset = queryset.filter(
                 Q(user=request.user) |
                 Q(activity__owner=request.user) |
+                Q(activity__initiative__activity_manager=request.user) |
                 Q(status__in=[
-                    ApplicantTransitions.values.new,
+                    ApplicantTransitions.values.active,
+                    ApplicantTransitions.values.accepted,
                     ApplicantTransitions.values.succeeded
                 ])
             )

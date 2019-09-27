@@ -290,9 +290,9 @@ def reward_amount_matches(data):
     """
     Validates that the reward activity is the same as the donation activity
     """
-    if data.get('reward') and not data['reward'].amount == data['amount']:
+    if data.get('reward') and data['reward'].amount > data['amount']:
         raise ValidationError(
-            _('The amount does not match the selected reward.')
+            _('The amount must be higher or equal to the amount of the reward.')
         )
 
 

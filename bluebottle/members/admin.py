@@ -363,8 +363,7 @@ class MemberAdmin(UserAdmin):
         if applied:
             links.append(
                 format_html(
-                    '<a href="{}?members__member_id={}&members__status[]=applied'
-                    '&members__status[]=accepted">{} {}</a>',
+                    '<a href="{}?members__member_id={}">{} {}</a>',
                     url, obj.id, applied, _('applied')
                 )
             )

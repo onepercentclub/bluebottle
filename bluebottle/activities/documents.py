@@ -25,6 +25,8 @@ class ActivityDocument(DocType):
     status = fields.KeywordField()
     created = fields.DateField()
 
+    type = fields.KeywordField()
+
     owner = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'full_name': fields.TextField()
@@ -35,6 +37,30 @@ class ActivityDocument(DocType):
         'pitch': fields.TextField(),
         'story': fields.TextField(),
     })
+
+    theme = fields.NestedField(
+        attr='initiative.theme',
+        properties={
+            'id': fields.KeywordField(),
+        }
+    )
+
+    categories = fields.NestedField(
+        attr='initiative.theme',
+        properties={
+            'id': fields.LongField(),
+            'slug': fields.KeywordField(),
+        }
+    )
+
+    country = fields.KeywordField()
+
+    expertise = fields.NestedField(
+        attr='expertise',
+        properties={
+            'id': fields.KeywordField(),
+        }
+    )
 
     contributions = fields.DateField()
     contribution_count = fields.IntegerField()
@@ -72,5 +98,16 @@ class ActivityDocument(DocType):
             in instance.contributions.filter(status__in=('new', 'success'))
         ]
 
+    def prepare_type(self, instance):
+        return unicode(instance.__class__.__name__.lower())
+
     def prepare_contribution_count(self, instance):
         return len(instance.contributions.filter(status__in=('new', 'success')))
+
+    def prepare_country(self, instance):
+        if hasattr(instance, 'location') and instance.location:
+            return instance.location.country_id
+
+    def prepare_expertise(self, instance):
+        if hasattr(instance, 'expertise') and instance.expertise:
+            return {'id': instance.expertise_id}

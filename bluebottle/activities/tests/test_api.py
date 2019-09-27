@@ -29,7 +29,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_no_filter(self):
         succeeded = EventFactory.create(owner=self.owner, status='succeeded')
         open = EventFactory.create(status='open')
-        EventFactory.create(status='draft')
+        EventFactory.create(status='in_review')
         EventFactory.create(status='closed')
 
         response = self.client.get(self.url, user=self.owner)

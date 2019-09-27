@@ -6,7 +6,7 @@ from bluebottle.members.models import Member
 
 
 @activity.doc_type
-class FundingDocument(ActivityDocument):
+class AssignmentDocument(ActivityDocument):
     class Meta:
         model = Assignment
         related_models = (Initiative, Member, Contribution)

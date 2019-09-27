@@ -33,6 +33,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
             return [
                 Term(owner_id=request.user.id) |
                 Term(activity_manager_id=request.user.id) |
+                Term(promoter_id=request.user.id) |
                 Term(status='approved')
             ]
         else:
@@ -44,7 +45,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
             value = request.GET['filter[{}]'.format(field)]
             return Q(
                 Nested(path='owner', query=Term(**{field: value})) |
-                Nested(path='promoter', query=Term(**{field: value})) |
+                Nested(path='promoter', query=Term(promoter__id=value)) |
                 Nested(path='activity_manager', query=Term(activity_manager__id=value))
             )
 

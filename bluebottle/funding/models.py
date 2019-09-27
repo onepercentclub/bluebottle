@@ -148,6 +148,19 @@ class Funding(Activity):
             return []
         return self.account.payment_methods
 
+    def save(self, *args, **kwargs):
+        for reward in self.rewards.all():
+            if not reward.amount.currency == self.target.currency:
+                reward.amount = Money(reward.amount.amount, self.target.currency)
+                reward.save()
+
+        for line in self.budget_lines.all():
+            if not line.amount.currency == self.target.currency:
+                line.amount = Money(line.amount.amount, self.target.currency)
+                line.save()
+
+        super(Funding, self).save(*args, **kwargs)
+
 
 class Reward(models.Model):
     """

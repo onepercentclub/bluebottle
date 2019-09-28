@@ -1,6 +1,5 @@
 from django import forms
 from django.core.urlresolvers import reverse
-from django.forms import CheckboxInput
 from django.forms.models import ModelFormMetaclass
 from django.utils.translation import ugettext_lazy as _
 
@@ -61,7 +60,7 @@ class TransitionConfirmationForm(forms.Form):
     send_messages = forms.BooleanField(
         initial=True,
         required=False,
-        widget=CheckboxInput,
+        widget=forms.CheckboxInput(attrs={'checked': True}),
         label=_('Send messages'),
         help_text=_('Should messages be send or should we transition without notifying users?')
     )

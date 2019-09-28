@@ -49,4 +49,4 @@ class ActivitySearchFilter(ElasticSearchFilter):
         )
 
     def get_default_filters(self, request):
-        return [~Terms(status=['in_review', 'closed'])]
+        return [Terms(review_status=['approved'])]

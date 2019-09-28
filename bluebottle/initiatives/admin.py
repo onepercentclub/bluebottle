@@ -5,6 +5,7 @@ from django_summernote.widgets import SummernoteWidget
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityAdminInline
+from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, BasePlatformSettingsAdmin
@@ -36,14 +37,22 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
                      'owner__first_name', 'owner__last_name', 'owner__email']
     readonly_fields = ['status', 'link', 'created', 'updated']
 
-    fieldsets = (
-        (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner',
-                                 'image', 'video_url',
-                                 'created', 'updated')}),
-        (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'location', 'place')}),
-        (_('Organization'), {'fields': ('organization', 'organization_contact')}),
-        (_('Review'), {'fields': ('reviewer', 'activity_manager', 'promoter', 'status', 'transitions')}),
-    )
+    def get_fieldsets(self, request, obj=None):
+        details = ['pitch', 'story', 'theme', 'categories']
+
+        if Location.objects.count():
+            details.append('location')
+        else:
+            details.append('place')
+
+        return (
+            (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner',
+                                     'image', 'video_url',
+                                     'created', 'updated')}),
+            (_('Details'), {'fields': details}),
+            (_('Organization'), {'fields': ('organization', 'organization_contact')}),
+            (_('Review'), {'fields': ('reviewer', 'activity_manager', 'promoter', 'status', 'transitions')}),
+        )
 
     def title_display(self, obj):
         return obj.title or _('- empty -')

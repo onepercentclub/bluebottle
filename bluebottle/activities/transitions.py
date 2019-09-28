@@ -47,11 +47,19 @@ class ActivityReviewTransitions(ReviewTransitions):
     @transition(
         source=[ReviewTransitions.values.submitted, ReviewTransitions.values.draft],
         target=ReviewTransitions.values.approved,
-        conditions=[is_complete],
+        conditions=[is_complete, is_valid],
         permissions=[can_review]
     )
     def approve(self):
         self.instance.transitions.reviewed()
+
+    @transition(
+        source=[ReviewTransitions.values.submitted],
+        target=ReviewTransitions.values.needs_work,
+        permissions=[can_review]
+    )
+    def needs_work(self):
+        pass
 
     @transition(
         source=[

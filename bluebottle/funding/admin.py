@@ -65,7 +65,7 @@ class PayoutAccountChildAdmin(PolymorphicChildModelAdmin):
 @admin.register(PayoutAccount)
 class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     base_model = PayoutAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed', )
+    list_display = ('created', 'polymorphic_ctype', 'reviewed',)
     list_filter = ('reviewed', PolymorphicChildModelFilter)
     raw_id_fields = ('owner',)
 
@@ -127,23 +127,25 @@ class FundingAdmin(ActivityChildAdmin):
 
     list_display = ['title_display', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
 
-    fieldsets = (
-        (_('Basic'), {'fields': (
-            'title', 'slug', 'initiative', 'owner', 'status',
-            'transitions', 'review_status', 'review_transitions',
-            'created', 'updated', 'highlight'
-        )}),
-        (_('Details'), {'fields': (
-            'description',
-            'duration',
-            'deadline',
-            'target',
-            'amount_matching',
-            'amount_donated',
-            'amount_raised',
-            'donations_link',
-            'bank_account'
-        )}),
+    detail_fields = (
+        'description',
+        'duration',
+        'deadline',
+        'target',
+        'amount_matching',
+        'amount_donated',
+        'amount_raised',
+        'donations_link',
+        'bank_account'
+    )
+
+    status_fields = (
+        'complete',
+        'valid',
+        'review_status',
+        'review_transitions',
+        'status',
+        'transitions',
     )
 
     def donations_link(self, obj):
@@ -170,11 +172,13 @@ class DonationAdmin(FSMAdmin, PaymentLinkMixin):
             user_url = reverse('admin:funding_funding_change', args=(obj.user.id,))
             return format_html(u'<a href="{}">{}</a>', user_url, obj.user.full_name)
         return format_html('<i style="color: #999">guest</i>')
+
     user_link.short_description = _('User')
 
     def funding_link(self, obj):
         funding_url = reverse('admin:funding_funding_change', args=(obj.activity.id,))
         return format_html(u'<a href="{}">{}</a>', funding_url, obj.activity.title)
+
     funding_link.short_description = _('Funding activity')
 
     def get_changelist(self, request, **kwargs):

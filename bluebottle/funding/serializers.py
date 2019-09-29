@@ -158,7 +158,7 @@ class PaymentMethodSerializer(serializers.Serializer):
 
 class FundingListSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
-    target = MoneySerializer(required=False)
+    target = MoneySerializer(required=False, allow_null=True)
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)

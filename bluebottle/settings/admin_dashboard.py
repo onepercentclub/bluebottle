@@ -18,6 +18,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['initiatives.change_initiative']
             },
             {
+                'name': 'activities.activity',
+                'permissions': ['activities.activity']
+            },
+            {
                 'name': 'categories.category',
                 'permissions': ['categories.change_category']
             },
@@ -40,14 +44,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         ]
     },
     {
-        'label': _('Events & Assignments'),
-        'app_label': 'activities',
+        'label': _('Events'),
+        'app_label': 'events',
         'permissions': ['activities.change_activity'],
         'items': [
-            {
-                'name': 'activities.activity',
-                'permissions': ['activities.activity']
-            },
             {
                 'url': '/admin/events/event/',
                 'label': _('Events'),
@@ -58,6 +58,13 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'label': _('Participants'),
                 'permissions': ['events.event']
             },
+        ]
+    },
+    {
+        'label': _('Assignments'),
+        'app_label': 'assignments',
+        'permissions': ['activities.change_activity'],
+        'items': [
             {
                 'url': '/admin/assignments/assignment/',
                 'label': _('Assignments'),
@@ -70,6 +77,7 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             },
         ]
     },
+
     {
         'label': _('Funding'),
         'app_label': 'funding',

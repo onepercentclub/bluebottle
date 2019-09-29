@@ -415,6 +415,10 @@ class BankAccount(PolymorphicModel):
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
 
+    @property
+    def verified(self):
+        return self.reviewed
+
     provider_class = None
 
     @property

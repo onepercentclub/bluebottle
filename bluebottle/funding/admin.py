@@ -96,7 +96,7 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
     ordering = ('-created',)
     child_models = [
         ExternalAccount,
-        PlainBankAccount,
+        FlutterwaveBankAccount,
     ]
 
 

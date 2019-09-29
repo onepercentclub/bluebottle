@@ -206,7 +206,7 @@ class BankAccountSerializer(PolymorphicModelSerializer):
 class FundingSerializer(NoCommitMixin, FundingListSerializer):
     rewards = RewardSerializer(many=True, required=False)
     budget_lines = BudgetLineSerializer(many=True, required=False)
-#    payment_methods = PaymentMethodSerializer(many=True, read_only=True)
+    payment_methods = PaymentMethodSerializer(many=True, read_only=True)
     contributions = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
 
     bank_account = PolymorphicResourceRelatedField(

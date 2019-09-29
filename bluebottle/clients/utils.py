@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-import itertools
 import logging
 import re
 from collections import namedtuple, defaultdict
@@ -17,6 +16,7 @@ from djmoney_rates.utils import get_rate
 from tenant_extras.utils import get_tenant_properties
 
 from bluebottle.clients import properties
+from bluebottle.funding.models import PaymentProvider
 from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
 from bluebottle.funding_stripe.utils import get_stripe_settings
 from bluebottle.payouts.utils import get_payout_settings
@@ -83,23 +83,18 @@ def get_min_amounts(methods):
 
 
 def get_currencies():
-    properties = get_tenant_properties()
-
-    currencies = set(itertools.chain(*[
-        method['currencies'].keys() for method in properties.PAYMENT_METHODS
-    ]))
-    min_amounts = get_min_amounts(properties.PAYMENT_METHODS)
+    curs = []
+    for provider in PaymentProvider.objects.all():
+        curs += provider.get_currency_choices()
 
     currencies = [{
         'code': code,
         'name': get_currency_name(code),
-        'symbol': get_currency_symbol(code).replace('US$', '$')
-    } for code in currencies]
+        'symbol': get_currency_symbol(code).replace('US$', '$'),
+        'minAmount': 5,
+    } for code, name in curs]
 
     for currency in currencies:
-        if currency['code'] in min_amounts:
-            currency['minAmount'] = min_amounts[currency['code']]
-
         try:
             currency['rate'] = get_rate(currency['code'])
         except (CurrencyConversionException, ProgrammingError):

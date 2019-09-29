@@ -2,6 +2,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core import mail
 from django.utils.translation import ugettext as _
 
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -17,6 +18,8 @@ class TestDonationEmails(BluebottleTestCase):
 
     def setUp(self):
         super(TestDonationEmails, self).setUp()
+        StripePaymentProviderFactory.create()
+
         self.init_projects()
 
         self.user = BlueBottleUserFactory.create(first_name='Michael', last_name='Jackson')

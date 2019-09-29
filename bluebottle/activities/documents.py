@@ -23,6 +23,7 @@ class ActivityDocument(DocType):
     title = fields.TextField(fielddata=True)
     description = fields.TextField()
     status = fields.KeywordField()
+    review_status = fields.KeywordField()
     created = fields.DateField()
 
     type = fields.KeywordField()

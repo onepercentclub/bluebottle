@@ -1,19 +1,21 @@
-import mock
 from decimal import Decimal
 
+import mock
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
-
 from rest_framework import status
 
 from bluebottle.analytics.models import AnalyticsPlatformSettings, AnalyticsAdapter
 from bluebottle.clients import properties
 from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
+from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentProviderFactory
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
+from bluebottle.funding_vitepay.tests.factories import VitepayPaymentProviderFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 
 class ClientSettingsTestCase(BluebottleTestCase):
@@ -55,37 +57,11 @@ class ClientSettingsTestCase(BluebottleTestCase):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['readOnlyFields'], {'user': ['first_name']})
 
-    @override_settings(PAYMENT_METHODS=[{
-        'provider': 'docdata',
-        'id': 'docdata-ideal',
-        'profile': 'ideal',
-        'name': 'iDEAL',
-        'restricted_countries': ('NL', ),
-        'currencies': {
-            'EUR': {'max_amount': 100}
-        }
-    }, {
-        'provider': 'docdata',
-        'id': 'docdata-directdebit',
-        'profile': 'directdebit',
-        'name': 'Direct Debit',
-        'restricted_countries': ('NL', 'BE', ),
-        'currencies': {
-            'EUR': {'min_amount': 10, 'max_amount': 100}
-        }
-
-    }, {
-        'provider': 'docdata',
-        'id': 'docdata-creditcard',
-        'profile': 'creditcard',
-        'name': 'CreditCard',
-        'currencies': {
-            'USD': {'min_amount': 5, 'max_amount': 100},
-            'NGN': {'min_amount': 3000, 'max_amount': 100},
-            'XOF': {'min_amount': 5000, 'max_amount': 100},
-        }
-    }])
     def test_settings_currencies(self):
+        StripePaymentProviderFactory.create()
+        FlutterwavePaymentProviderFactory.create()
+        VitepayPaymentProviderFactory.create()
+
         # Check that exposed property is in settings api, and other settings are not shown
         response = self.client.get(self.settings_url)
 
@@ -93,32 +69,39 @@ class ClientSettingsTestCase(BluebottleTestCase):
             response.data['currencies'],
             [
                 {
+                    'minAmount': 5,
                     'symbol': u'CFA',
                     'code': 'XOF',
                     'name': u'West African CFA Franc',
-                    'rate': Decimal(1000.0),
-                    'minAmount': 5000
+                    'rate': Decimal('1000.000000')
                 },
                 {
+                    'minAmount': 5,
                     'symbol': u'\u20a6',
                     'code': 'NGN',
                     'name': u'Nigerian Naira',
-                    'rate': Decimal(500.0),
-                    'minAmount': 3000
+                    'rate': Decimal('500.000000')
                 },
                 {
+                    'minAmount': 5,
                     'symbol': u'$',
                     'code': 'USD',
                     'name': u'US Dollar',
-                    'rate': Decimal(1.0),
-                    'minAmount': 5
+                    'rate': Decimal('1.000000')
                 },
                 {
+                    'minAmount': 5,
+                    'symbol': 'KES',
+                    'code': 'KES',
+                    'name': u'Kenyan Shilling',
+                    'rate': Decimal('100.000000')
+                },
+                {
+                    'minAmount': 5,
                     'symbol': u'\u20ac',
                     'code': 'EUR',
                     'name': u'Euro',
-                    'rate': Decimal(1.5),
-                    'minAmount': 0
+                    'rate': Decimal('1.500000')
                 }
             ]
         )

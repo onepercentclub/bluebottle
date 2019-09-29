@@ -85,14 +85,16 @@ def get_min_amounts(methods):
 def get_currencies():
     curs = []
     for provider in PaymentProvider.objects.all():
-        curs += provider.get_currency_choices()
+        for cur in provider.get_currency_choices():
+            curs.append(cur[0])
+    curs = set(curs)
 
     currencies = [{
         'code': code,
         'name': get_currency_name(code),
         'symbol': get_currency_symbol(code).replace('US$', '$'),
         'minAmount': 5,
-    } for code, name in curs]
+    } for code in curs]
 
     for currency in currencies:
         try:

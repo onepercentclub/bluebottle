@@ -194,8 +194,6 @@ class StripePayoutAccount(PayoutAccount):
     country = models.CharField(max_length=2)
     document_type = models.CharField(max_length=20, blank=True)
 
-    provider_class = StripePaymentProvider
-
     @property
     def country_spec(self):
         return get_specs(self.country).verification_fields.individual
@@ -324,6 +322,8 @@ class StripePayoutAccount(PayoutAccount):
 class ExternalAccount(BankAccount):
     connect_account = models.ForeignKey(StripePayoutAccount, related_name='external_accounts')
     account_id = models.CharField(max_length=40)
+
+    provider_class = StripePaymentProvider
 
     @property
     def account(self):

@@ -45,6 +45,7 @@ class PaymentProvider(PolymorphicModel):
             for provider in cls.objects.all():
                 for method in provider.payment_methods:
                     currencies += [(cur, get_currency_name(cur)) for cur in method.currencies]
+
         return list(set(currencies))
 
     @classmethod
@@ -144,9 +145,9 @@ class Funding(Activity):
 
     @property
     def payment_methods(self):
-        if not self.account or not self.account.payment_methods:
+        if not self.bank_account or not self.bank_account.payment_methods:
             return []
-        return self.account.payment_methods
+        return self.bank_account.payment_methods
 
     def save(self, *args, **kwargs):
         for reward in self.rewards.all():
@@ -369,7 +370,6 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
     status = FSMField(
         default=PayoutAccountTransitions.values.new
     )
-    provider_class = None
 
     owner = models.OneToOneField(
         'members.Member',
@@ -381,11 +381,6 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
     reviewed = models.BooleanField(default=False)
 
     transitions = TransitionManager(PayoutAccountTransitions, 'status')
-
-    @property
-    def payment_methods(self):
-        provider = self.provider_class.objects.get()
-        return provider.payment_methods
 
 
 class PlainPayoutAccount(PayoutAccount):
@@ -420,9 +415,16 @@ class BankAccount(PolymorphicModel):
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
 
+    provider_class = None
+
     @property
     def funding(self):
         return self.funding_set.order_by('-created').first()
+
+    @property
+    def payment_methods(self):
+        provider = self.provider_class.objects.get()
+        return provider.payment_methods
 
 
 class PlainBankAccount(BankAccount):

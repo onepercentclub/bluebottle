@@ -7,9 +7,8 @@ from django.utils.translation import ugettext_lazy as _
 from rave_python import Rave
 from rave_python.rave_exceptions import SubaccountCreationError
 
-from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin, \
-    BankAccountChildAdmin
-from bluebottle.funding.models import PayoutAccount
+from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, BankAccountChildAdmin
+from bluebottle.funding.models import BankAccount
 from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwavePaymentProvider, \
     FlutterwaveBankAccount
 
@@ -26,10 +25,10 @@ class FlutterwavePaymentProviderAdmin(PaymentProviderChildAdmin):
 
 @admin.register(FlutterwaveBankAccount)
 class FlutterwaveBankAccountAdmin(BankAccountChildAdmin):
-    base_model = PayoutAccount
+    base_model = BankAccount
     model = FlutterwaveBankAccount
 
-    fields = PayoutAccountChildAdmin.fields + (
+    fields = BankAccountChildAdmin.fields + (
         'account_holder_name', 'bank_country_code',
         'bank_code', 'account_number', 'account')
 

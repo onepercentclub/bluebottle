@@ -361,3 +361,7 @@ class ExternalAccount(BankAccount):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/stripe-external-accounts'
+
+    class Meta:
+        verbose_name = _('Stripe external account')
+        verbose_name_plural = _('Stripe exterrnal account')

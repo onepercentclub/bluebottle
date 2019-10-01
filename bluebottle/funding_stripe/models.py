@@ -116,7 +116,7 @@ class StripePaymentProvider(PaymentProvider):
             provider='stripe',
             code='credit-card',
             name=_('Credit card'),
-            currencies=['EUR', 'USD'],
+            currencies=['EUR', 'USD', 'GBP', 'AUD'],
             countries=[]
         ),
         PaymentMethod(
@@ -140,11 +140,6 @@ class StripePaymentProvider(PaymentProvider):
             currencies=['EUR'],
         )
     ]
-
-    currencies = ['EUR', 'USD']
-    countries = ['AU', 'AT', 'BE', 'BR', 'CA', 'DK', 'FI', 'FR',
-                 'DE', 'IE', 'LU', 'MX', 'NL', 'NZ', 'NO', 'PT',
-                 'ES', 'SE', 'CH', 'GB', 'US']
 
     @property
     def public_settings(self):
@@ -179,6 +174,9 @@ class StripePaymentProvider(PaymentProvider):
                         methods.append(method)
         return methods
 
+    class Meta:
+        verbose_name = 'Stripe payment provider'
+
 
 with open('bluebottle/funding_stripe/data/document_spec.json') as file:
     DOCUMENT_SPEC = json.load(file)
@@ -193,8 +191,6 @@ class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40)
     country = models.CharField(max_length=2)
     document_type = models.CharField(max_length=20, blank=True)
-
-    provider_class = StripePaymentProvider
 
     @property
     def country_spec(self):
@@ -325,6 +321,8 @@ class ExternalAccount(BankAccount):
     connect_account = models.ForeignKey(StripePayoutAccount, related_name='external_accounts')
     account_id = models.CharField(max_length=40)
 
+    provider_class = StripePaymentProvider
+
     @property
     def account(self):
         if self.account_id:
@@ -361,3 +359,7 @@ class ExternalAccount(BankAccount):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/stripe-external-accounts'
+
+    class Meta:
+        verbose_name = _('Stripe external account')
+        verbose_name_plural = _('Stripe exterrnal account')

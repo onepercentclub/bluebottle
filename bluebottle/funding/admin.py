@@ -1,9 +1,10 @@
 import logging
 
+from django import forms
 from django.conf.urls import url
 from django.contrib import admin
+from django.db import models
 from django.http import HttpResponseRedirect
-from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -16,7 +17,7 @@ from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, PlainBankAccount, BankPaymentProvider, LegacyPayment, BankAccount)
+    BudgetLine, PayoutAccount, PlainBankAccount, BankPaymentProvider, LegacyPayment, BankAccount, PaymentCurrency)
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
@@ -96,7 +97,7 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
     ordering = ('-created',)
     child_models = [
         ExternalAccount,
-        PlainBankAccount,
+        FlutterwaveBankAccount,
     ]
 
 
@@ -236,6 +237,7 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 @admin.register(LegacyPayment)
 class LegacyPaymentPaymentAdmin(PaymentChildAdmin):
     base_model = LegacyPayment
+    show_in_index = True
 
 
 @admin.register(Payment)
@@ -256,12 +258,27 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
     )
 
 
-class PaymentProviderChildAdmin(PolymorphicChildModelAdmin):
-    def response_add(self, request, obj, post_url_continue=None):
-        return redirect(reverse('admin:funding_paymentprovider_changelist'))
+class PaymentCurrencyInline(admin.TabularInline):
+    model = PaymentCurrency
+    extra = 0
 
-    def response_change(self, request, obj):
-        return redirect(reverse('admin:funding_paymentprovider_changelist'))
+    formfield_overrides = {
+        models.CharField: {'widget': forms.TextInput(attrs={'class': 'vIntegerField'})},
+        models.DecimalField: {'widget': forms.TextInput(attrs={'class': 'vIntegerField'})},
+    }
+
+
+class PaymentProviderChildAdmin(PolymorphicChildModelAdmin):
+    inlines = [PaymentCurrencyInline]
+    show_in_index = True
+
+    def get_fieldsets(self, request, obj=None):
+        provider = obj._meta.verbose_name
+        return (
+            (provider, {
+                'fields': self.get_fields(request, obj),
+            }),
+        )
 
 
 @admin.register(PaymentProvider)
@@ -273,8 +290,7 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
         StripePaymentProvider,
         VitepayPaymentProvider,
         FlutterwavePaymentProvider,
-        LipishaPaymentProvider,
-        BankPaymentProvider
+        LipishaPaymentProvider
     )
 
 

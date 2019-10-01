@@ -17,6 +17,7 @@ from bluebottle.utils.admin import FSMAdmin
 class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline,)
+    show_in_index = True
 
     readonly_fields = [
         'created',

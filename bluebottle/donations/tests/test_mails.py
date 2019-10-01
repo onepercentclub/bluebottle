@@ -2,13 +2,12 @@ from django.contrib.auth.models import Group, Permission
 from django.core import mail
 from django.utils.translation import ugettext as _
 
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.fundraisers import FundraiserFactory
-from bluebottle.test.factory_models.donations import DonationFactory
-
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.fundraisers import FundraiserFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -17,6 +16,7 @@ class TestDonationEmails(BluebottleTestCase):
 
     def setUp(self):
         super(TestDonationEmails, self).setUp()
+
         self.init_projects()
 
         self.user = BlueBottleUserFactory.create(first_name='Michael', last_name='Jackson')

@@ -13,9 +13,6 @@ class LipishaPaymentProvider(PaymentProvider):
     prefix = models.CharField(max_length=100, default='goodup')
     paybill = models.CharField(max_length=10)
 
-    currencies = ['KES']
-    countries = ['KE']
-
     @property
     def payment_methods(self):
         return [
@@ -33,6 +30,9 @@ class LipishaPaymentProvider(PaymentProvider):
             'api_key': self.api_key,
             'api_signature': self.api_signature
         }
+
+    class Meta:
+        verbose_name = 'Lipisha payment provider'
 
 
 class LipishaPayment(Payment):

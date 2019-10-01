@@ -18,9 +18,6 @@ class FlutterwavePaymentProvider(PaymentProvider):
     sec_key = models.CharField(max_length=100)
     prefix = models.CharField(max_length=100, default='goodup')
 
-    currencies = ['NGN']
-    countries = ['NG']
-
     @property
     def payment_methods(self):
         return [
@@ -45,6 +42,9 @@ class FlutterwavePaymentProvider(PaymentProvider):
             'prefix': self.prefix
         }
 
+    class Meta:
+        verbose_name = 'Flutterwave payment provider'
+
 
 class FlutterwaveBankAccount(BankAccount):
 
@@ -65,3 +65,7 @@ class FlutterwaveBankAccount(BankAccount):
         _("bank code"), max_length=100, null=True, blank=True)
     account_number = models.CharField(
         _("account number"), max_length=255, null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('Flutterwave bank account')
+        verbose_name_plural = _('Flutterwave bank accounts')

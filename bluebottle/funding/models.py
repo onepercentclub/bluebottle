@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import random
 import string
 
@@ -28,13 +29,36 @@ from bluebottle.utils.models import Validator, ValidatedModelMixin
 from bluebottle.utils.utils import reverse_signed
 
 
+class PaymentCurrency(models.Model):
+
+    provider = models.ForeignKey('funding.PaymentProvider')
+    code = models.CharField(max_length=3, default='EUR')
+    min_amount = models.DecimalField(default=5.0, decimal_places=2, max_digits=10)
+    max_amount = models.DecimalField(null=True, blank=True, decimal_places=2, max_digits=10)
+
+    default1 = models.DecimalField(decimal_places=2, max_digits=10)
+    default2 = models.DecimalField(decimal_places=2, max_digits=10)
+    default3 = models.DecimalField(decimal_places=2, max_digits=10)
+    default4 = models.DecimalField(decimal_places=2, max_digits=10)
+
+    class Meta:
+        verbose_name = _('Payment currency')
+        verbose_name_plural = _('Payment currencies')
+
+
 class PaymentProvider(PolymorphicModel):
 
     public_settings = {}
     private_settings = {}
 
-    currencies = []
-    countries = []
+    @property
+    def available_currencies(self):
+        currencies = []
+        for method in self.payment_methods:
+            for cur in method.currencies:
+                if cur not in currencies:
+                    currencies.append(cur)
+        return currencies
 
     @classmethod
     def get_currency_choices(cls):
@@ -43,9 +67,11 @@ class PaymentProvider(PolymorphicModel):
             currencies = [('EUR', 'Euro')]
         else:
             for provider in cls.objects.all():
-                for method in provider.payment_methods:
-                    currencies += [(cur, get_currency_name(cur)) for cur in method.currencies]
-        return list(set(currencies))
+                for cur in provider.paymentcurrency_set.all():
+                    currency = (cur.code, get_currency_name(cur.code))
+                    if currency not in currencies:
+                        currencies.append(currency)
+        return currencies
 
     @classmethod
     def get_default_currency(cls):
@@ -59,6 +85,28 @@ class PaymentProvider(PolymorphicModel):
 
     def __unicode__(self):
         return str(self.polymorphic_ctype)
+
+    @property
+    def name(self):
+        return self.__class__.__name__.replace('PaymentProvider', '').lower()
+
+    def save(self, **kwargs):
+        created = False
+        if self.pk is None:
+            created = True
+        model = super(PaymentProvider, self).save(**kwargs)
+        if created:
+            for currency in self.available_currencies:
+                PaymentCurrency.objects.create(
+                    provider=self,
+                    code=currency,
+                    min_amount=5,
+                    default1=10,
+                    default2=20,
+                    default3=50,
+                    default4=100,
+                )
+        return model
 
 
 class BankPaymentProvider(PaymentProvider):
@@ -144,9 +192,9 @@ class Funding(Activity):
 
     @property
     def payment_methods(self):
-        if not self.account or not self.account.payment_methods:
+        if not self.bank_account or not self.bank_account.payment_methods:
             return []
-        return self.account.payment_methods
+        return self.bank_account.payment_methods
 
     def save(self, *args, **kwargs):
         for reward in self.rewards.all():
@@ -369,7 +417,6 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
     status = FSMField(
         default=PayoutAccountTransitions.values.new
     )
-    provider_class = None
 
     owner = models.OneToOneField(
         'members.Member',
@@ -381,11 +428,6 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
     reviewed = models.BooleanField(default=False)
 
     transitions = TransitionManager(PayoutAccountTransitions, 'status')
-
-    @property
-    def payment_methods(self):
-        provider = self.provider_class.objects.get()
-        return provider.payment_methods
 
 
 class PlainPayoutAccount(PayoutAccount):
@@ -421,8 +463,19 @@ class BankAccount(PolymorphicModel):
     reviewed = models.BooleanField(default=False)
 
     @property
+    def verified(self):
+        return self.reviewed
+
+    provider_class = None
+
+    @property
     def funding(self):
         return self.funding_set.order_by('-created').first()
+
+    @property
+    def payment_methods(self):
+        provider = self.provider_class.objects.get()
+        return provider.payment_methods
 
 
 class PlainBankAccount(BankAccount):

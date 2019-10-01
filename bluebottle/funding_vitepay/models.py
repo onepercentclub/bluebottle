@@ -13,9 +13,6 @@ class VitepayPaymentProvider(PaymentProvider):
     api_key = models.CharField(max_length=100)
     api_url = models.CharField(max_length=100, default='https://api.vitepay.com/v1/prod/payments')
 
-    currencies = ['XOF']
-    countries = ['ML']
-
     @property
     def payment_methods(self):
         return [
@@ -34,6 +31,9 @@ class VitepayPaymentProvider(PaymentProvider):
             'api_key': self.api_key,
             'api_url': self.api_url
         }
+
+    class Meta:
+        verbose_name = 'Vitepay payment provider'
 
 
 class VitepayPayment(Payment):

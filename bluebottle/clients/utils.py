@@ -17,6 +17,7 @@ from djmoney_rates.utils import get_rate
 from tenant_extras.utils import get_tenant_properties
 
 from bluebottle.clients import properties
+from bluebottle.funding.utils import get_currency_settings
 from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
 from bluebottle.funding_stripe.utils import get_stripe_settings
 from bluebottle.payouts.utils import get_payout_settings
@@ -99,7 +100,6 @@ def get_currencies():
     for currency in currencies:
         if currency['code'] in min_amounts:
             currency['minAmount'] = min_amounts[currency['code']]
-
         try:
             currency['rate'] = get_rate(currency['code'])
         except (CurrencyConversionException, ProgrammingError):
@@ -236,6 +236,7 @@ def get_public_properties(request):
                 'content': get_platform_settings('cms.SitePlatformSettings'),
                 'projects': get_platform_settings('projects.ProjectPlatformSettings'),
                 'initiatives': get_platform_settings('initiatives.InitiativePlatformSettings'),
+                'currencies': get_currency_settings(),
                 'analytics': get_platform_settings('analytics.AnalyticsPlatformSettings'),
                 'members': get_platform_settings('members.MemberPlatformSettings'),
             }

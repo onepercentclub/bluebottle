@@ -17,7 +17,7 @@ from bluebottle.funding.models import (
     Funding, Donation, Payment,
     Fundraiser, Reward, BudgetLine, PaymentMethod,
     BankAccount,
-    PlainPayoutAccount, PlainBankAccount)
+    PlainPayoutAccount, PlainBankAccount, PaymentProvider)
 from bluebottle.funding_stripe.polymorphic_serializers import ExternalAccountSerializer
 from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import AvailableTransitionsField
@@ -145,7 +145,7 @@ class BudgetLineSerializer(ModelSerializer):
 class PaymentMethodSerializer(serializers.Serializer):
     code = serializers.CharField()
     name = serializers.CharField()
-    currencies = serializers.ListField()
+    currencies = serializers.SerializerMethodField()
     countries = serializers.ListField()
 
     class Meta():
@@ -154,6 +154,13 @@ class PaymentMethodSerializer(serializers.Serializer):
 
     class JSONAPIMeta:
         resource_name = 'payments/payment-methods'
+
+    def get_currencies(self, obj):
+        currencies = []
+        for enabled_currencies in PaymentProvider.get_currency_choices():
+            if enabled_currencies.code in obj.currencies:
+                currencies.append(enabled_currencies.code)
+        return currencies
 
 
 class FundingListSerializer(BaseActivitySerializer):

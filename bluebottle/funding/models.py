@@ -61,8 +61,8 @@ class PaymentProvider(PolymorphicModel):
             currencies = [('EUR', 'Euro')]
         else:
             for provider in cls.objects.all():
-                for method in provider.payment_methods:
-                    currencies += [(cur, get_currency_name(cur)) for cur in method.currencies]
+                for cur in provider.paymentcurrency_set.all():
+                    currencies += (cur, get_currency_name(cur))
 
         return list(set(currencies))
 

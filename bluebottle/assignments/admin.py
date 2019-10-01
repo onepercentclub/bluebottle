@@ -49,7 +49,7 @@ class AssignmentAdmin(ActivityChildAdmin):
     base_model = Assignment
     raw_id_fields = ('owner', 'location')
 
-    list_display = ('created', 'title_display', 'status', 'highlight')
+    list_display = ('created', 'title', 'status', 'highlight')
 
     detail_fields = (
         'description',

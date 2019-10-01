@@ -17,15 +17,15 @@ from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, PlainBankAccount, BankPaymentProvider, LegacyPayment, BankAccount, PaymentCurrency)
+    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency)
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
-from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount, LipishaPayment
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount
-from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount
+from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList
 
@@ -61,6 +61,7 @@ class PayoutAccountChildAdmin(PolymorphicChildModelAdmin):
     raw_id_fields = ('owner',)
     readonly_fields = ('status',)
     fields = ('owner', 'status',)
+    show_in_index = True
 
 
 @admin.register(PayoutAccount)
@@ -69,45 +70,39 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     list_display = ('created', 'polymorphic_ctype', 'reviewed',)
     list_filter = ('reviewed', PolymorphicChildModelFilter)
     raw_id_fields = ('owner',)
+    show_in_index = True
 
     ordering = ('-created',)
     child_models = [
         StripePayoutAccount,
-        FlutterwaveBankAccount,
-        LipishaBankAccount,
-        VitepayBankAccount
     ]
 
 
 class BankAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
-    base_model = PayoutAccount
+    base_model = BankAccount
     raw_id_fields = ('owner',)
-    readonly_fields = ('funding_links',)
-    fields = ('owner', 'funding_links')
+    readonly_fields = ('verified', 'funding_links', 'created', 'updated')
+    fields = ('owner', 'reviewed') + readonly_fields
+    show_in_index = True
 
 
 @admin.register(BankAccount)
 class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
-    base_model = PayoutAccount
+    base_model = BankAccount
     list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
     list_filter = ('reviewed', PolymorphicChildModelFilter)
-    readonly_fields = ('funding_links',)
+    readonly_fields = ('funding_links', )
+
     raw_id_fields = ('owner',)
+    show_in_index = True
 
     ordering = ('-created',)
     child_models = [
         ExternalAccount,
         FlutterwaveBankAccount,
+        LipishaBankAccount,
+        VitepayBankAccount
     ]
-
-
-@admin.register(PlainBankAccount)
-class PlainBankAccountAdmin(BankAccountChildAdmin):
-    base_model = BankAccount
-    model = PlainBankAccount
-    raw_id_fields = ('owner',)
-    readonly_fields = ('funding_links',)
-    fields = BankAccountChildAdmin.fields + ('account_holder_name', 'bank_country', 'account_number')
 
 
 class BudgetLineInline(admin.TabularInline):
@@ -120,13 +115,14 @@ class BudgetLineInline(admin.TabularInline):
 class FundingAdmin(ActivityChildAdmin):
     inlines = (BudgetLineInline, MessageAdminInline)
     base_model = Funding
+    list_filter = ['status', 'review_status', 'target_currency']
 
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
 
     readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_donated', 'amount_raised', 'donations_link']
 
-    list_display = ['title_display', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
+    list_display = ['title', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
 
     detail_fields = (
         'description',
@@ -253,6 +249,8 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
     child_models = (
         StripeSourcePayment,
         FlutterwavePayment,
+        LipishaPayment,
+        VitepayPayment,
         LegacyPayment,
         PledgePayment
     )
@@ -292,8 +290,3 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
         FlutterwavePaymentProvider,
         LipishaPaymentProvider
     )
-
-
-@admin.register(BankPaymentProvider)
-class BankPaymentProviderAdmin(PaymentProviderChildAdmin):
-    base_model = BankPaymentProvider

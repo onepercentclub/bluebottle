@@ -53,8 +53,15 @@ class LipishaPayment(Payment):
 
 
 class LipishaBankAccount(BankAccount):
-    account_number = models.CharField(max_length=40)
     provider_class = LipishaPaymentProvider
+
+    account_number = models.CharField(max_length=50, blank=True, null=True)
+    account_name = models.CharField(max_length=200, blank=True, null=True)
+    bank_code = models.CharField(max_length=50, blank=True, null=True)
+    branch_name = models.CharField(max_length=200, blank=True, null=True)
+    branch_code = models.CharField(max_length=200, blank=True, null=True)
+    address = models.CharField(max_length=500, blank=True, null=True)
+    swift = models.CharField('SWIFT/Routing Code', max_length=50, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         super(LipishaBankAccount, self).save(*args, **kwargs)

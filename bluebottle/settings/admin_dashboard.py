@@ -92,8 +92,12 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['funding.payment']
             },
             {
-                'name': 'funding.paymentaccount',
-                'permissions': ['funding.paymentaccount']
+                'name': 'funding.payoutaccount',
+                'permissions': ['funding.payoutaccount']
+            },
+            {
+                'name': 'funding.bankaccount',
+                'permissions': ['funding.payoutaccount']
             },
         ]
     },

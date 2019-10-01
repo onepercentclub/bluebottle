@@ -63,7 +63,7 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
         )
 
     def __unicode__(self):
-        return self.title
+        return self.title or str(_('-empty-'))
 
     def save(self, **kwargs):
         if self.slug in ['', 'new']:

@@ -1,4 +1,4 @@
-from bluebottle.funding.serializers import PaymentSerializer
+from bluebottle.funding.base_serializers import PaymentSerializer
 from bluebottle.funding_pledge.models import PledgePayment
 
 

@@ -109,10 +109,6 @@ class PaymentProvider(PolymorphicModel):
         return model
 
 
-class BankPaymentProvider(PaymentProvider):
-    currencies = ['EUR', 'USD', 'XOF', 'NGN', 'CFA', 'KES']
-
-
 class KYCPassedValidator(Validator):
     code = 'kyc'
     message = _('Make sure your account is verified')
@@ -208,6 +204,9 @@ class Funding(Activity):
                 line.save()
 
         super(Funding, self).save(*args, **kwargs)
+
+    def __unicode__(self):
+        return self.title or str(_('-empty-'))
 
 
 class Reward(models.Model):
@@ -476,19 +475,3 @@ class BankAccount(PolymorphicModel):
     def payment_methods(self):
         provider = self.provider_class.objects.get()
         return provider.payment_methods
-
-
-class PlainBankAccount(BankAccount):
-
-    provider_class = BankPaymentProvider
-
-    account_number = models.CharField(
-        _("bank account number"), max_length=100, null=True, blank=True)
-    account_holder_name = models.CharField(
-        _("account holder name"), max_length=100, null=True, blank=True)
-    account_holder_address = models.CharField(
-        _("account holder address"), max_length=500, null=True, blank=True)
-    account_bank_country = models.CharField(
-        _("bank country"), max_length=100, null=True, blank=True)
-    account_details = models.CharField(
-        _("account details"), max_length=500, null=True, blank=True)

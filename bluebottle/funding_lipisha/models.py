@@ -13,9 +13,6 @@ class LipishaPaymentProvider(PaymentProvider):
     prefix = models.CharField(max_length=100, default='goodup')
     paybill = models.CharField(max_length=10)
 
-    currencies = ['KES']
-    countries = ['KE']
-
     @property
     def payment_methods(self):
         return [

@@ -1001,8 +1001,10 @@ class CurrencySettingsTestCase(BluebottleTestCase):
     def setUp(self):
         super(CurrencySettingsTestCase, self).setUp()
         self.settings_url = reverse('settings')
-        StripePaymentProviderFactory.create()
+        stripe = StripePaymentProviderFactory.create()
+        stripe.paymentcurrency_set.filter(code__in=['AUD', 'GBP']).all().delete()
         flutterwave_provider = FlutterwavePaymentProviderFactory.create()
+
         cur = flutterwave_provider.paymentcurrency_set.first()
         cur.min_amount = 1000
         cur.default1 = 1000
@@ -1014,6 +1016,7 @@ class CurrencySettingsTestCase(BluebottleTestCase):
     def test_create(self):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print response.data['platform']['currencies']
 
         self.assertEqual(
             response.data['platform']['currencies'],
@@ -1021,28 +1024,28 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                 {
                     'code': 'EUR',
                     'name': 'Euro',
-                    'max_amount': None,
+                    'maxAmount': None,
                     'symbol': u'\u20ac',
-                    'min_amount': 5.00,
-                    'default_amounts': [10.00, 20.00, 50.00, 100.00],
+                    'minAmount': 5.00,
+                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
                     'provider': 'stripe'
                 },
                 {
                     'code': 'USD',
                     'name': 'US Dollar',
-                    'max_amount': None,
+                    'maxAmount': None,
                     'symbol': '$',
-                    'min_amount': 5.00,
-                    'default_amounts': [10.00, 20.00, 50.00, 100.00],
+                    'minAmount': 5.00,
+                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
                     'provider': 'stripe'
                 },
                 {
                     'code': 'NGN',
                     'name': 'Nigerian Naira',
-                    'max_amount': None,
+                    'maxAmount': None,
                     'symbol': u'\u20a6',
-                    'min_amount': 1000.00,
-                    'default_amounts': [1000.00, 2000.00, 5000.00, 10000.00],
+                    'minAmount': 1000.00,
+                    'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
                     'provider': 'flutterwave'
                 }
             ]

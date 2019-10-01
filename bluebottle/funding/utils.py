@@ -12,13 +12,13 @@ def get_currency_settings():
                 'code': cur.code,
                 'name': get_currency_name(cur.code),
                 'symbol': get_currency_symbol(cur.code).replace('US$', '$'),
-                'default_amounts': [
+                'defaultAmounts': [
                     cur.default1,
                     cur.default2,
                     cur.default3,
                     cur.default4,
                 ],
-                'min_amount': cur.min_amount,
-                'max_amount': cur.max_amount
+                'minAmount': cur.min_amount,
+                'maxAmount': cur.max_amount
             })
     return result

@@ -18,9 +18,6 @@ class FlutterwavePaymentProvider(PaymentProvider):
     sec_key = models.CharField(max_length=100)
     prefix = models.CharField(max_length=100, default='goodup')
 
-    currencies = ['NGN']
-    countries = ['NG']
-
     @property
     def payment_methods(self):
         return [

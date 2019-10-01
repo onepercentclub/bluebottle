@@ -156,6 +156,7 @@ class PaymentMethodSerializer(serializers.Serializer):
         resource_name = 'payments/payment-methods'
 
     def get_currencies(self, obj):
+        # Only return payment method currencies that are enabled in back office
         currencies = []
         for enabled_currencies in PaymentProvider.get_currency_choices():
             if enabled_currencies.code in obj.currencies:

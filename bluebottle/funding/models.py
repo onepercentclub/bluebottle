@@ -51,8 +51,14 @@ class PaymentProvider(PolymorphicModel):
     public_settings = {}
     private_settings = {}
 
-    currencies = []
-    countries = []
+    @property
+    def available_currencies(self):
+        currencies = []
+        for method in self.payment_methods:
+            for cur in method.currencies:
+                if cur not in currencies:
+                    currencies.append(cur)
+        return currencies
 
     @classmethod
     def get_currency_choices(cls):
@@ -89,7 +95,7 @@ class PaymentProvider(PolymorphicModel):
             created = True
         model = super(PaymentProvider, self).save(**kwargs)
         if created:
-            for currency in self.currencies:
+            for currency in self.available_currencies:
                 PaymentCurrency.objects.create(
                     provider=self,
                     code=currency,

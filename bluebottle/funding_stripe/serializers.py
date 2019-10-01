@@ -50,7 +50,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
     required = RequiredErrorsField()
 
     included_serializers = {
-        'external_accounts': 'bluebottle.funding_stripe.polymorphic_serializers.ExternalAccountSerializer',
+        'external_accounts': 'bluebottle.funding_stripe.serializers.ExternalAccountSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 

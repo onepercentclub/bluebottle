@@ -131,7 +131,7 @@ class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
         resource_name = 'initiatives'
 
     def __unicode__(self):
-        return self.title
+        return self.title or str(_('-empty-'))
 
     @property
     def required_fields(self):

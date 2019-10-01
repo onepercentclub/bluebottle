@@ -14,15 +14,15 @@ from bluebottle.activities.utils import (
 from bluebottle.files.serializers import ImageField
 from bluebottle.funding.filters import DonationListFilter
 from bluebottle.funding.models import (
-    Funding, Donation, Payment,
-    Fundraiser, Reward, BudgetLine, PaymentMethod,
+    Funding, Donation, Fundraiser, Reward, BudgetLine, PaymentMethod,
     BankAccount,
-    PlainPayoutAccount, PlainBankAccount, PaymentProvider)
-from bluebottle.funding_stripe.polymorphic_serializers import ExternalAccountSerializer
+    PaymentProvider)
+from bluebottle.funding_flutterwave.serializers import FlutterwaveBankAccountSerializer
+from bluebottle.funding_lipisha.serializers import LipishaBankAccountSerializer
+from bluebottle.funding_stripe.serializers import ExternalAccountSerializer
+from bluebottle.funding_vitepay.serializers import VitepayBankAccountSerializer
 from bluebottle.members.models import Member
-from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.transitions.serializers import TransitionSerializer
-from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import (
     MoneySerializer, FilteredRelatedField, ResourcePermissionField, NoCommitMixin,
 )
@@ -205,6 +205,9 @@ class FundingListSerializer(BaseActivitySerializer):
 class BankAccountSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         ExternalAccountSerializer,
+        FlutterwaveBankAccountSerializer,
+        LipishaBankAccountSerializer,
+        VitepayBankAccountSerializer
     ]
 
     class Meta:
@@ -375,63 +378,3 @@ class DonationCreateSerializer(DonationSerializer):
     class Meta(DonationSerializer.Meta):
         model = Donation
         fields = DonationSerializer.Meta.fields + ('client_secret', )
-
-
-class PaymentSerializer(ModelSerializer):
-    status = FSMField(read_only=True)
-    donation = ResourceRelatedField(queryset=Donation.objects.all())
-
-    transitions = AvailableTransitionsField()
-
-    included_serializers = {
-        'donation': 'bluebottle.funding.serializers.DonationSerializer',
-    }
-
-    class Meta:
-        model = Payment
-        fields = ('donation', 'status', )
-        meta_fields = ('transitions', 'created', 'updated', )
-
-    class JSONAPIMeta:
-        included_resources = [
-            'donation',
-        ]
-        resource_name = 'payments'
-
-
-class PlainPayoutAccountSerializer(ModelSerializer):
-    owner = ResourceRelatedField(read_only=True)
-    external_accounts = ResourceRelatedField(read_only=True, many=True)
-
-    included_serializers = {
-        'external_accounts': 'bluebottle.funding.serializers.PlainBankAccountSerializer',
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-    }
-
-    class Meta:
-        model = PlainPayoutAccount
-
-        fields = (
-            'id',
-            'document',
-            'reviewed'
-        )
-
-    class JSONAPIMeta():
-        resource_name = 'payout-accounts/plains'
-
-        included_resources = ['external_accounts', 'owner']
-
-
-class PlainBankAccountSerializer(ModelSerializer):
-
-    class Meta:
-        model = PlainBankAccount
-        fields = (
-            'account_number',
-            'account_holder_name',
-            'account_holder_address',
-            'account_bank_country',
-            'account_details',
-            'reviewed'
-        )

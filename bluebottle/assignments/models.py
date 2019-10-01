@@ -81,19 +81,19 @@ class Assignment(Activity):
         return stats
 
     class Meta:
-        verbose_name = _("Assignment")
-        verbose_name_plural = _("Assignments")
+        verbose_name = _("Task")
+        verbose_name_plural = _("Tasks")
         ordering = ('-created',)
         permissions = (
-            ('api_read_assignment', 'Can view assignment through the API'),
-            ('api_add_assignment', 'Can add assignment through the API'),
-            ('api_change_assignment', 'Can change assignment through the API'),
-            ('api_delete_assignment', 'Can delete assignment through the API'),
+            ('api_read_assignment', 'Can view task through the API'),
+            ('api_add_assignment', 'Can add task through the API'),
+            ('api_change_assignment', 'Can change task through the API'),
+            ('api_delete_assignment', 'Can delete task through the API'),
 
-            ('api_read_own_assignment', 'Can view own assignment through the API'),
-            ('api_add_own_assignment', 'Can add own assignment through the API'),
-            ('api_change_own_assignment', 'Can change own assignment through the API'),
-            ('api_delete_own_assignment', 'Can delete own assignment through the API'),
+            ('api_read_own_assignment', 'Can view own task through the API'),
+            ('api_add_own_assignment', 'Can add own task through the API'),
+            ('api_change_own_assignment', 'Can change own task through the API'),
+            ('api_delete_own_assignment', 'Can delete own task through the API'),
         )
 
     class JSONAPIMeta:

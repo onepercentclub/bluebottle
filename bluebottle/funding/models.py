@@ -79,6 +79,10 @@ class PaymentProvider(PolymorphicModel):
     def __unicode__(self):
         return str(self.polymorphic_ctype)
 
+    @property
+    def name(self):
+        return self.__class__.__name__.replace('PaymentProvider', '').lower()
+
     def save(self, **kwargs):
         created = False
         if self.pk is None:

@@ -68,9 +68,10 @@ class PaymentProvider(PolymorphicModel):
         else:
             for provider in cls.objects.all():
                 for cur in provider.paymentcurrency_set.all():
-                    currencies += (cur, get_currency_name(cur))
-
-        return list(set(currencies))
+                    currency = (cur.code, get_currency_name(cur.code))
+                    if currency not in currencies:
+                        currencies.append(currency)
+        return currencies
 
     @classmethod
     def get_default_currency(cls):

@@ -12,7 +12,8 @@ from rest_framework import status
 from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory, RewardFactory, DonationFactory
 from bluebottle.funding.models import Donation
 from bluebottle.funding.transitions import DonationTransitions
-from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory
+from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentProviderFactory
+from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
@@ -991,3 +992,55 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class CurrencySettingsTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(CurrencySettingsTestCase, self).setUp()
+        self.settings_url = reverse('settings')
+        StripePaymentProviderFactory.create()
+        flutterwave_provider = FlutterwavePaymentProviderFactory.create()
+        cur = flutterwave_provider.paymentcurrency_set.first()
+        cur.min_amount = 1000
+        cur.default1 = 1000
+        cur.default2 = 2000
+        cur.default3 = 5000
+        cur.default4 = 10000
+        cur.save()
+
+    def test_create(self):
+        response = self.client.get(self.settings_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            response.data['platform']['currencies'],
+            [
+                {
+                    'code': 'EUR',
+                    'name': 'Euro',
+                    'max_amount': None,
+                    'symbol': u'\u20ac',
+                    'min_amount': 5.00,
+                    'default_amounts': [10.00, 20.00, 50.00, 100.00],
+                    'provider': 'stripe'
+                },
+                {
+                    'code': 'USD',
+                    'name': 'US Dollar',
+                    'max_amount': None,
+                    'symbol': '$',
+                    'min_amount': 5.00,
+                    'default_amounts': [10.00, 20.00, 50.00, 100.00],
+                    'provider': 'stripe'
+                },
+                {
+                    'code': 'NGN',
+                    'name': 'Nigerian Naira',
+                    'max_amount': None,
+                    'symbol': u'\u20a6',
+                    'min_amount': 1000.00,
+                    'default_amounts': [1000.00, 2000.00, 5000.00, 10000.00],
+                    'provider': 'flutterwave'
+                }
+            ]
+        )

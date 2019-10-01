@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin, \
     BankAccountChildAdmin
-from bluebottle.funding.models import BankAccount
+from bluebottle.funding.models import BankAccount, Payment, PaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount
 
@@ -14,12 +14,12 @@ class StripePaymentAdmin(PaymentChildAdmin):
 
 @admin.register(StripeSourcePayment)
 class StripeSourcePaymentAdmin(PaymentChildAdmin):
-    base_model = StripeSourcePayment
+    base_model = Payment
 
 
 @admin.register(StripePaymentProvider)
 class PledgePaymentProviderAdmin(PaymentProviderChildAdmin):
-    base_model = StripePaymentProvider
+    base_model = PaymentProvider
 
 
 @admin.register(StripePayoutAccount)

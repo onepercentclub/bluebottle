@@ -30,7 +30,7 @@ class FundingTestCase(BluebottleAdminTestCase):
             deadline=now() + timedelta(weeks=2),
             bank_account=BankAccountFactory.create()
         )
-        self.funding.bank_account.verified = True
+        self.funding.bank_account.reviewed = True
 
         self.funding.review_transitions.submit()
         self.funding.review_transitions.approve()

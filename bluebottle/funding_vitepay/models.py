@@ -35,6 +35,9 @@ class VitepayPaymentProvider(PaymentProvider):
             'api_url': self.api_url
         }
 
+    class Meta:
+        verbose_name = 'Vitepay payment provider'
+
 
 class VitepayPayment(Payment):
     mobile_number = models.CharField(max_length=30, blank=True, null=True)

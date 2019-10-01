@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import random
 import string
 
@@ -26,6 +27,23 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.models import Validator, ValidatedModelMixin
 from bluebottle.utils.utils import reverse_signed
+
+
+class PaymentCurrency(models.Model):
+
+    provider = models.ForeignKey('funding.PaymentProvider')
+    code = models.CharField(max_length=3, default='EUR')
+    min_amount = models.DecimalField(default=5.0, decimal_places=2, max_digits=10)
+    max_amount = models.DecimalField(null=True, blank=True, decimal_places=2, max_digits=10)
+
+    default1 = models.DecimalField(decimal_places=2, max_digits=10)
+    default2 = models.DecimalField(decimal_places=2, max_digits=10)
+    default3 = models.DecimalField(decimal_places=2, max_digits=10)
+    default4 = models.DecimalField(decimal_places=2, max_digits=10)
+
+    class Meta:
+        verbose_name = _('Payment currency')
+        verbose_name_plural = _('Payment currencies')
 
 
 class PaymentProvider(PolymorphicModel):
@@ -60,6 +78,24 @@ class PaymentProvider(PolymorphicModel):
 
     def __unicode__(self):
         return str(self.polymorphic_ctype)
+
+    def save(self, **kwargs):
+        created = False
+        if self.pk is None:
+            created = True
+        model = super(PaymentProvider, self).save(**kwargs)
+        if created:
+            for currency in self.currencies:
+                PaymentCurrency.objects.create(
+                    provider=self,
+                    code=currency,
+                    min_amount=5,
+                    default1=10,
+                    default2=20,
+                    default3=50,
+                    default4=100,
+                )
+        return model
 
 
 class BankPaymentProvider(PaymentProvider):

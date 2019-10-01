@@ -64,11 +64,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 
     stats_data.short_description = _('Statistics')
 
-    def title_display(self, obj):
-        return obj.title or str(_('-empty-'))
-
-    title_display.short_description = _('Title')
-
     def valid(self, obj):
         if not obj.review_transitions.is_valid():
             return '-'

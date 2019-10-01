@@ -116,7 +116,7 @@ class StripePaymentProvider(PaymentProvider):
             provider='stripe',
             code='credit-card',
             name=_('Credit card'),
-            currencies=['EUR', 'USD'],
+            currencies=['EUR', 'USD', 'GBP', 'AUD'],
             countries=[]
         ),
         PaymentMethod(
@@ -140,11 +140,6 @@ class StripePaymentProvider(PaymentProvider):
             currencies=['EUR'],
         )
     ]
-
-    currencies = ['EUR', 'USD']
-    countries = ['AU', 'AT', 'BE', 'BR', 'CA', 'DK', 'FI', 'FR',
-                 'DE', 'IE', 'LU', 'MX', 'NL', 'NZ', 'NO', 'PT',
-                 'ES', 'SE', 'CH', 'GB', 'US']
 
     @property
     def public_settings(self):

@@ -13,6 +13,7 @@ from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory
 from bluebottle.funding.models import Donation
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentProviderFactory
+from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -198,6 +199,8 @@ class RewardListTestCase(BluebottleTestCase):
 class FundingDetailTestCase(BluebottleTestCase):
     def setUp(self):
         super(FundingDetailTestCase, self).setUp()
+        StripePaymentProvider.objects.all().delete()
+        StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.geolocation = GeolocationFactory.create(locality='Barranquilla')

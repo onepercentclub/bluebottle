@@ -59,7 +59,7 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         ]
     },
     {
-        'label': _('Assignments'),
+        'label': _('Tasks'),
         'app_label': 'assignments',
         'permissions': ['activities.change_activity'],
         'items': [

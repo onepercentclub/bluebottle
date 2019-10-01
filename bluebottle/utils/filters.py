@@ -36,7 +36,7 @@ class ElasticSearchFilter(filters.SearchFilter):
         sort = self.get_sort(request)
         if sort:
             try:
-                scoring = getattr(self, 'get_sort_{}'.format(sort))()
+                scoring = getattr(self, 'get_sort_{}'.format(sort))(request)
                 search = search.query(scoring)
             except AttributeError:
                 search = search.sort(*sort)

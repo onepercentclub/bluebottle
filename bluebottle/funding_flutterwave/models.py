@@ -45,6 +45,9 @@ class FlutterwavePaymentProvider(PaymentProvider):
             'prefix': self.prefix
         }
 
+    class Meta:
+        verbose_name = 'Flutterwave payment provider'
+
 
 class FlutterwaveBankAccount(BankAccount):
 

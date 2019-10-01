@@ -179,6 +179,9 @@ class StripePaymentProvider(PaymentProvider):
                         methods.append(method)
         return methods
 
+    class Meta:
+        verbose_name = 'Stripe payment provider'
+
 
 with open('bluebottle/funding_stripe/data/document_spec.json') as file:
     DOCUMENT_SPEC = json.load(file)

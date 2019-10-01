@@ -1,17 +1,18 @@
 from django.contrib import admin
 
 from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, BankAccountChildAdmin
+from bluebottle.funding.models import PaymentProvider, Payment
 from bluebottle.funding_lipisha.models import LipishaPayment, LipishaPaymentProvider, LipishaBankAccount
 
 
 @admin.register(LipishaPayment)
 class LipishaPaymentAdmin(PaymentChildAdmin):
-    base_model = LipishaPayment
+    base_model = Payment
 
 
 @admin.register(LipishaPaymentProvider)
 class LipishaPaymentProviderAdmin(PaymentProviderChildAdmin):
-    base_model = LipishaPaymentProvider
+    base_model = PaymentProvider
 
 
 @admin.register(LipishaBankAccount)

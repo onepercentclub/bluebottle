@@ -34,6 +34,9 @@ class LipishaPaymentProvider(PaymentProvider):
             'api_signature': self.api_signature
         }
 
+    class Meta:
+        verbose_name = 'Lipisha payment provider'
+
 
 class LipishaPayment(Payment):
     mobile_number = models.CharField(max_length=30, blank=True, null=True)

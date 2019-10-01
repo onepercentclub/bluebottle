@@ -20,3 +20,6 @@ class PledgePaymentProvider(PaymentProvider):
                 currencies=['EUR', 'USD', 'NGN', 'UGX', 'KES', 'XOF']
             )
         ]
+
+    class Meta:
+        verbose_name = 'Pledge payment provider'

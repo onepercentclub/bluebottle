@@ -49,13 +49,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         'permissions': ['activities.change_activity'],
         'items': [
             {
-                'url': '/admin/events/event/',
-                'label': _('Events'),
+                'name': 'events.event',
                 'permissions': ['events.event']
             },
             {
-                'url': '/admin/events/participant/',
-                'label': _('Participants'),
+                'name': 'events.participant',
                 'permissions': ['events.event']
             },
         ]
@@ -66,13 +64,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         'permissions': ['activities.change_activity'],
         'items': [
             {
-                'url': '/admin/assignments/assignment/',
-                'label': _('Assignments'),
+                'name': 'assignments.assignment',
                 'permissions': ['assignments.assignment']
             },
             {
-                'url': '/admin/assignments/applicant/',
-                'label': _('Applicants'),
+                'name': 'assignments.applicant',
                 'permissions': ['assignments.assignment']
             },
         ]
@@ -84,23 +80,19 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         'permissions': ['funding.change_activity'],
         'items': [
             {
-                'url': '/admin/funding/funding/',
-                'label': _('Funding'),
+                'name': 'funding.funding',
                 'permissions': ['funding.funding']
             },
             {
-                'url': '/admin/funding/donation/',
-                'label': _('Donations'),
+                'name': 'funding.donation',
                 'permissions': ['funding.donation']
             },
             {
-                'url': '/admin/funding/payment/',
-                'label': _('Payments'),
+                'name': 'funding.payment',
                 'permissions': ['funding.payment']
             },
             {
-                'url': '/admin/funding/paymentaccount/',
-                'label': _('Payment Accounts'),
+                'name': 'funding.paymentaccount',
                 'permissions': ['funding.paymentaccount']
             },
         ]
@@ -233,7 +225,7 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['wallposts.change_wallpost']
             },
             {
-                'url': '/admin/wallposts/mediawallpost/',
+                'url': 'wallposts.mediawallpost',
                 'label': _('Media wall posts'),
                 'permissions': ['wallposts.change_wallpost']
             },

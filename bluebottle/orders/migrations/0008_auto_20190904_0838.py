@@ -168,7 +168,8 @@ class Migration(migrations.Migration):
     dependencies = [
         ('orders', '0007_auto_20180509_1437'),
         ('projects', '0091_project_to_initiatives'),
-        ('funding_flutterwave', '0003_flutterwavepayoutaccount')
+        ('funding_flutterwave', '0003_flutterwavepayoutaccount'),
+        ('funding_stripe', '0001_initial')
     ]
 
     operations = [

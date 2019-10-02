@@ -316,6 +316,10 @@ class StripePayoutAccount(PayoutAccount):
             "member_id": self.owner.pk,
         }
 
+    class Meta:
+        verbose_name = _('stripe payout account')
+        verbose_name_plural = _('stripe payout accounts')
+
 
 class ExternalAccount(BankAccount):
     account_id = models.CharField(max_length=40)

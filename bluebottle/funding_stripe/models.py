@@ -318,9 +318,7 @@ class StripePayoutAccount(PayoutAccount):
 
 
 class ExternalAccount(BankAccount):
-    connect_account = models.ForeignKey(StripePayoutAccount, related_name='external_accounts')
     account_id = models.CharField(max_length=40)
-
     provider_class = StripePaymentProvider
 
     @property

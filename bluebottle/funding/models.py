@@ -430,6 +430,7 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
 
 
 class PlainPayoutAccount(PayoutAccount):
+
     document = PrivateFileField(
         max_length=110,
         upload_to='funding/documents'
@@ -438,28 +439,31 @@ class PlainPayoutAccount(PayoutAccount):
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
 
     class Meta:
-        verbose_name = _('payout document')
-        verbose_name_plural = _('payout documents')
+        verbose_name = _('plain payout account')
+        verbose_name_plural = _('plain payout accounts')
 
     @property
     def document_url(self):
         # pk may be unset if not saved yet, in which case no url can be
         # generated.
-        if self.pk is not None and self.file:
+        if self.pk is not None and self.document.file:
             return reverse_signed('payout-document-file', args=(self.pk,))
         return None
 
+    @property
+    def required_fields(self):
+        return ['document', ]
+
 
 class BankAccount(PolymorphicModel):
-    owner = models.OneToOneField(
-        'members.Member',
-        related_name='funding_bank_account',
-        null=True,
-        blank=True
-    )
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
+
+    connect_account = models.ForeignKey(
+        'funding.PayoutAccount',
+        null=True, blank=True,
+        related_name='external_accounts')
 
     @property
     def verified(self):

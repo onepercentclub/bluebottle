@@ -3,6 +3,7 @@ import logging
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.admin import TabularInline
 from django.db import models
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -17,7 +18,7 @@ from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency)
+    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount)
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
@@ -32,19 +33,6 @@ from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList
 logger = logging.getLogger(__name__)
 
 
-class PayoutAccountFundingLinkMixin(object):
-    def funding_links(self, obj):
-        return format_html(", ".join([
-            format_html(
-                u"<a href='{}'>{}</a>",
-                reverse('admin:funding_funding_change', args=(p.id,)),
-                p.title
-            ) for p in obj.funding_set.all()
-        ]))
-
-    funding_links.short_description = _('Funding activities')
-
-
 class PaymentLinkMixin(object):
 
     def payment_link(self, obj):
@@ -54,55 +42,6 @@ class PaymentLinkMixin(object):
         return format_html('<a href="{}">{}</a>', payment_url, obj.payment)
 
     payment_link.short_description = _('Payment')
-
-
-class PayoutAccountChildAdmin(PolymorphicChildModelAdmin):
-    base_model = PayoutAccount
-    raw_id_fields = ('owner',)
-    readonly_fields = ('status',)
-    fields = ('owner', 'status',)
-    show_in_index = True
-
-
-@admin.register(PayoutAccount)
-class PayoutAccountAdmin(PolymorphicParentModelAdmin):
-    base_model = PayoutAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed',)
-    list_filter = ('reviewed', PolymorphicChildModelFilter)
-    raw_id_fields = ('owner',)
-    show_in_index = True
-
-    ordering = ('-created',)
-    child_models = [
-        StripePayoutAccount,
-    ]
-
-
-class BankAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
-    base_model = BankAccount
-    raw_id_fields = ('owner',)
-    readonly_fields = ('verified', 'funding_links', 'created', 'updated')
-    fields = ('owner', 'reviewed') + readonly_fields
-    show_in_index = True
-
-
-@admin.register(BankAccount)
-class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
-    base_model = BankAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
-    list_filter = ('reviewed', PolymorphicChildModelFilter)
-    readonly_fields = ('funding_links', )
-
-    raw_id_fields = ('owner',)
-    show_in_index = True
-
-    ordering = ('-created',)
-    child_models = [
-        ExternalAccount,
-        FlutterwaveBankAccount,
-        LipishaBankAccount,
-        VitepayBankAccount
-    ]
 
 
 class BudgetLineInline(admin.TabularInline):
@@ -271,7 +210,7 @@ class PaymentProviderChildAdmin(PolymorphicChildModelAdmin):
     show_in_index = True
 
     def get_fieldsets(self, request, obj=None):
-        provider = obj._meta.verbose_name
+        provider = self.model._meta.verbose_name
         return (
             (provider, {
                 'fields': self.get_fields(request, obj),
@@ -290,3 +229,84 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
         FlutterwavePaymentProvider,
         LipishaPaymentProvider
     )
+
+
+class PayoutAccountFundingLinkMixin(object):
+    def funding_links(self, obj):
+        return format_html(", ".join([
+            format_html(
+                u"<a href='{}'>{}</a>",
+                reverse('admin:funding_funding_change', args=(p.id,)),
+                p.title
+            ) for p in obj.funding_set.all()
+        ]))
+
+    funding_links.short_description = _('Funding activities')
+
+
+class PayoutAccountChildAdmin(PolymorphicChildModelAdmin):
+    base_model = PayoutAccount
+    raw_id_fields = ('owner',)
+    readonly_fields = ('status',)
+    fields = ('owner', 'status',)
+    show_in_index = True
+
+
+@admin.register(PayoutAccount)
+class PayoutAccountAdmin(PolymorphicParentModelAdmin):
+    base_model = PayoutAccount
+    list_display = ('created', 'polymorphic_ctype', 'reviewed',)
+    list_filter = ('reviewed', PolymorphicChildModelFilter)
+    raw_id_fields = ('owner',)
+    show_in_index = True
+
+    ordering = ('-created',)
+    child_models = [
+        StripePayoutAccount,
+        PlainPayoutAccount
+    ]
+
+
+class BankAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
+    base_model = BankAccount
+    raw_id_fields = ('connect_account',)
+    readonly_fields = ('verified', 'funding_links', 'created', 'updated')
+    fields = ('owner', 'connect_account', 'reviewed') + readonly_fields
+    show_in_index = True
+
+
+@admin.register(BankAccount)
+class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
+    base_model = BankAccount
+    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
+    list_filter = ('reviewed', PolymorphicChildModelFilter)
+    raw_id_fields = ('connect_account',)
+    show_in_index = True
+
+    ordering = ('-created',)
+    child_models = [
+        ExternalAccount,
+        FlutterwaveBankAccount,
+        LipishaBankAccount,
+        VitepayBankAccount
+    ]
+
+
+class BankAccountInline(TabularInline):
+    model = BankAccount
+    readonly_fields = ('link', 'created', 'reviewed')
+    fields = readonly_fields
+    extra = 0
+    can_delete = False
+
+    def link(self, obj):
+        url = reverse('admin:funding_bankaccount_change', args=(obj.connect_account.id,))
+        return format_html('<a href="{}">{}</a>', url, obj.connect_account)
+
+
+@admin.register(PlainPayoutAccount)
+class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
+    model = PlainPayoutAccount
+    inlines = [BankAccountInline]
+
+    fields = PayoutAccountChildAdmin.fields + ('document',)

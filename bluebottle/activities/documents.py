@@ -23,6 +23,7 @@ class ActivityDocument(DocType):
     title = fields.TextField(fielddata=True)
     description = fields.TextField()
     status = fields.KeywordField()
+    status_score = fields.FloatField()
     review_status = fields.KeywordField()
     created = fields.DateField()
 
@@ -53,11 +54,11 @@ class ActivityDocument(DocType):
             'slug': fields.KeywordField(),
         }
     )
+    position = fields.GeoPointField()
 
     country = fields.KeywordField()
 
     expertise = fields.NestedField(
-        attr='expertise',
         properties={
             'id': fields.KeywordField(),
         }
@@ -68,7 +69,6 @@ class ActivityDocument(DocType):
 
     class Meta:
         model = Activity
-        related_models = (Initiative, Member, Contribution)
 
     def get_queryset(self):
         return super(ActivityDocument, self).get_queryset().select_related(
@@ -112,3 +112,8 @@ class ActivityDocument(DocType):
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:
             return {'id': instance.expertise_id}
+
+    def prepare_position(self, instance):
+        if hasattr(instance, 'location') and instance.location:
+            position = instance.location.position
+            return {'lat': position.get_x(), 'lon': position.get_y()}

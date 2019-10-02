@@ -247,6 +247,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
 class MyTaskPreviewSerializer(serializers.ModelSerializer):
     project = ProjectPreviewSerializer()
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
+    place = PlaceSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Task

@@ -69,8 +69,9 @@ class MemberSerializer(ModelSerializer):
 
 class InitiativeImageSerializer(ImageSerializer):
     sizes = {
-        'preview': '200x300',
-        'large': '400x500'
+        'preview': '300x168',
+        'large': '600x337',
+        'cover': '960x540'
     }
     content_view_name = 'initiative-image'
     relationship = 'initiative_set'

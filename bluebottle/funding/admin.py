@@ -271,7 +271,7 @@ class BankAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModel
     base_model = BankAccount
     raw_id_fields = ('connect_account',)
     readonly_fields = ('verified', 'funding_links', 'created', 'updated')
-    fields = ('owner', 'connect_account', 'reviewed') + readonly_fields
+    fields = ('connect_account', 'reviewed') + readonly_fields
     show_in_index = True
 
 

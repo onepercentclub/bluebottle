@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations, connection
 from django.contrib.gis.geos import Point
-from moneyed import Money
 
 from bluebottle.clients import properties
 
@@ -28,13 +27,13 @@ def map_status(status):
 
 def map_funding_status(status):
     mapping = {
-        'plan-new': 'draft',
-        'plan-submitted': 'draft',
-        'plan-needs-work': 'draft',
-        'voting': 'draft',
-        'voting-done': 'draft',
+        'plan-new': 'in_review',
+        'plan-submitted': 'in_review',
+        'plan-needs-work': 'in_review',
+        'voting': 'open',
+        'voting-done': 'open',
         'campaign': 'open',
-        'to-be-continued': 'draft',
+        'to-be-continued': 'open',
         'done-complete': 'succeeded',
         'done-incomplete': 'succeeded',
         'closed': 'closed',
@@ -43,11 +42,92 @@ def map_funding_status(status):
     return mapping[status.slug]
 
 
+def map_funding_review_status(status):
+    mapping = {
+        'plan-new': 'draft',
+        'plan-submitted': 'submitted',
+        'plan-needs-work': 'needs_work',
+        'voting': 'approved',
+        'voting-done': 'approved',
+        'campaign': 'approved',
+        'to-be-continued': 'approved',
+        'done-complete': 'approved',
+        'done-incomplete': 'approved',
+        'closed': 'approved',
+        'refunded': 'approved',
+    }
+    return mapping[status.slug]
+
+
 def truncate(number, limit):
     return int(number * pow(10, limit)) / 10 ^ pow(10, limit)
 
 
+def migrate_payment_providers(apps):
+
+    PledgePaymentProvider = apps.get_model('funding_pledge', 'PledgePaymentProvider')
+    StripePaymentProvider = apps.get_model('funding_stripe', 'StripePaymentProvider')
+    FlutterwavePaymentProvider = apps.get_model('funding_flutterwave', 'FlutterwavePaymentProvider')
+    VitepayPaymentProvider = apps.get_model('funding_vitepay', 'VitepayPaymentProvider')
+    LipishaPaymentProvider = apps.get_model('funding_lipisha', 'LipishaPaymentProvider')
+
+    Client = apps.get_model('clients', 'Client')
+    ContentType = apps.get_model('contenttypes', 'ContentType')
+
+    tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
+    properties.set_tenant(tenant)
+
+    for provider in properties.MERCHANT_ACCOUNTS:
+        if provider['merchant'] == 'stripe':
+            content_type = ContentType.objects.get_for_model(StripePaymentProvider)
+            stripe = StripePaymentProvider.objects.create(
+                polymorphic_ctype=content_type,
+            )
+            for payment_methods in properties.PAYMENT_METHODS:
+                if payment_methods['id'] == 'stripe-creditcard':
+                    stripe.credit_card = True
+                elif payment_methods['id'] == 'stripe-ideal':
+                    stripe.ideal = True
+                elif payment_methods['id'] == 'stripe-directdebit':
+                    stripe.direct_debit = True
+                elif payment_methods['id'] == 'stripe-bancontact':
+                    stripe.bancontact = True
+            stripe.save()
+        elif provider['merchant'] == 'vitepay':
+            content_type = ContentType.objects.get_for_model(VitepayPaymentProvider)
+            VitepayPaymentProvider.objects.create(
+                polymorphic_ctype=content_type,
+                api_secret=provider['api_secret'],
+                api_key=provider['api_key'],
+                api_url=provider['api_url'],
+                prefix='ne'
+            )
+        elif provider['merchant'] == 'lipisha':
+            content_type = ContentType.objects.get_for_model(LipishaPaymentProvider)
+            LipishaPaymentProvider.objects.create(
+                polymorphic_ctype=content_type,
+                api_key=provider['api_key'],
+                api_signature=provider['api_signature'],
+                paybill=provider['business_number'],
+                prefix='ne'
+            )
+        elif provider['merchant'] == 'flutterwave':
+            content_type = ContentType.objects.get_for_model(FlutterwavePaymentProvider)
+            FlutterwavePaymentProvider.objects.create(
+                polymorphic_ctype=content_type,
+                pub_key=provider['pub_key'],
+                sec_key=provider['sec_key'],
+                prefix='ne'
+            )
+        elif provider['merchant'] == 'pledge':
+            content_type = ContentType.objects.get_for_model(PledgePaymentProvider)
+            PledgePaymentProvider.objects.create(
+                polymorphic_ctype=content_type,
+            )
+
+
 def migrate_projects(apps, schema_editor):
+    migrate_payment_providers(apps)
 
     Project = apps.get_model('projects', 'Project')
     Initiative = apps.get_model('initiatives', 'Initiative')
@@ -57,12 +137,11 @@ def migrate_projects(apps, schema_editor):
     Image = apps.get_model('files', 'Image')
     Client = apps.get_model('clients', 'Client')
     OrganizationContact = apps.get_model('organizations', 'OrganizationContact')
-    OldStripePayoutAccount = apps.get_model('payouts', 'StripePayoutAccount')
-
     StripePayoutAccount = apps.get_model('funding_stripe', 'StripePayoutAccount')
     ExternalAccount = apps.get_model('funding_stripe', 'ExternalAccount')
     PlainPayoutAccount = apps.get_model('funding', 'PlainPayoutAccount')
-
+    PayoutAccount = apps.get_model('funding', 'PayoutAccount')
+    OldPayoutAccount = apps.get_model('payouts', 'PayoutAccount')
     FlutterwaveBankAccount = apps.get_model('funding_flutterwave', 'FlutterwaveBankAccount')
     VitepayBankAccount = apps.get_model('funding_vitepay', 'VitepayBankAccount')
     LipishaBankAccount = apps.get_model('funding_lipisha', 'LipishaBankAccount')
@@ -161,37 +240,41 @@ def migrate_projects(apps, schema_editor):
                 try:
                     stripe_account = project.payout_account.stripepayoutaccount
                     content_type = ContentType.objects.get_for_model(StripePayoutAccount)
-                    account = StripePayoutAccount.objects.create(
+                    payout_account = StripePayoutAccount.objects.create(
                         polymorphic_ctype=content_type,
-                        owner=project.payout_account.user,
-                        account_id=stripe_account.account_id,
-                        country=stripe_account.country.code
+                        account_id=stripe_account.account_id or 'unknown',
+                        owner=stripe_account.user,
+                        # country=stripe_account.country.alpha2_code
                     )
-                    ExternalAccount.objects.create(
-                        connect_account=account,
-                        account_id=stripe_account.bank_details.account
+                    content_type = ContentType.objects.get_for_model(ExternalAccount)
+                    account = ExternalAccount.objects.create(
+                        polymorphic_ctype=content_type,
+                        connect_account=payout_account,
+                        # account_id=stripe_account.bank_details.account
                     )
-                except OldStripePayoutAccount.DoesNotExist:
+                except OldPayoutAccount.DoesNotExist:
                     content_type = ContentType.objects.get_for_model(PlainPayoutAccount)
-                    plain_account =  project.payout_account.plainpayoutaccount
+                    plain_account = project.payout_account.plainpayoutaccount
                     payout_account = PlainPayoutAccount.objects.create(
                         polymorphic_ctype=content_type,
-                        owner=project.payout_account.user,
+                        owner=plain_account.user,
                         reviewed=plain_account.reviewed
                     )
 
-                    if project.amount_asked.currency == 'NGN':
+                    if str(project.amount_asked.currency) == 'NGN':
                         content_type = ContentType.objects.get_for_model(FlutterwaveBankAccount)
+                        country = None
+                        if plain_account.account_bank_country:
+                            country = plain_account.account_bank_country.alpha2_code
                         account = FlutterwaveBankAccount.objects.create(
                             polymorphic_ctype=content_type,
                             connect_account=payout_account,
                             account_holder_name=plain_account.account_holder_name,
-                            bank_country_code=plain_account.account_details,
-                            account_number=plain_account.account_number,
-                            account_bank_country=plain_account.account_bank_country.code,
+                            bank_country_code=country,
+                            account_number=plain_account.account_number
                         )
 
-                    if project.amount_asked.currency == 'KES':
+                    if str(project.amount_asked.currency) == 'KES':
                         content_type = ContentType.objects.get_for_model(LipishaBankAccount)
                         account = LipishaBankAccount.objects.create(
                             polymorphic_ctype=content_type,
@@ -199,11 +282,9 @@ def migrate_projects(apps, schema_editor):
                             account_number=plain_account.account_number,
                             account_name=plain_account.account_holder_name,
                             address=plain_account.account_holder_address
-                                    + ' | '
-                                    + plain_account.account_details
                         )
 
-                    if project.amount_asked.currency == 'CFA':
+                    if str(project.amount_asked.currency) == 'CFA':
                         content_type = ContentType.objects.get_for_model(VitepayBankAccount)
                         account = VitepayBankAccount.objects.create(
                             polymorphic_ctype=content_type,
@@ -221,6 +302,7 @@ def migrate_projects(apps, schema_editor):
                 created=project.created,
                 updated=project.updated,
                 status=map_funding_status(project.status),
+                review_status=map_funding_review_status(project.status),
                 title=project.title,
                 slug=project.slug,
                 description=project.pitch or '',
@@ -231,7 +313,7 @@ def migrate_projects(apps, schema_editor):
                 target=project.amount_asked,
                 amount_matching=project.amount_extra,
                 country=project.country,
-                bank_account=account.external_accounts[0] if account else None
+                bank_account=account
             )
 
             # TODO: Add budget lines
@@ -243,7 +325,9 @@ def wipe_initiatives(apps, schema_editor):
 
     Initiative = apps.get_model('initiatives', 'Initiative')
     Funding = apps.get_model('funding', 'Funding')
+    PaymentProvider = apps.get_model('funding', 'PaymentProvider')
 
+    PaymentProvider.objects.all().delete()
     Initiative.objects.all().delete()
     Funding.objects.all().delete()
 
@@ -253,8 +337,11 @@ class Migration(migrations.Migration):
     dependencies = [
         ('projects', '0090_merge_20190222_1101'),
         ('funding', '0035_auto_20191002_1415'),
-        ('funding_stripe', '0015_auto_20191002_0903'),
-        ('initiatives', '0015_auto_20190708_1417'),
+        ('funding_lipisha', '0006_auto_20191001_2251'),
+        ('funding_vitepay', '0007_auto_20191002_0903'),
+        ('funding_flutterwave', '0005_auto_20191002_0903'),
+        ('funding_stripe', '0001_initial'),
+        ('funding_pledge', '0002_pledgepaymentprovider'),
     ]
 
     operations = [

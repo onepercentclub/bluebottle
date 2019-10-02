@@ -8,6 +8,7 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.permissions import PaymentPermission
+from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.transitions import PayoutAccountTransitions
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
@@ -19,9 +20,7 @@ from bluebottle.funding_stripe.serializers import (
     ConnectAccountSerializer,
     StripePaymentSerializer
 )
-from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding_stripe.utils import stripe
-from bluebottle.members.models import Member
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView,
@@ -70,9 +69,9 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
         return self.create(request, *args, **kwargs)
 
     def get_object(self):
-        try:
-            obj = self.request.user.funding_payout_account
-        except Member.funding_payout_account.RelatedObjectDoesNotExist:
+        # Make this smarter
+        obj = self.request.user.funding_payout_account.first()
+        if not obj:
             raise Http404
 
         self.check_object_permissions(self.request, obj)

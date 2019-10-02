@@ -469,6 +469,10 @@ class BankAccount(PolymorphicModel):
     def verified(self):
         return self.reviewed
 
+    @property
+    def owner(self):
+        return self.connect_account.owner
+
     provider_class = None
 
     @property

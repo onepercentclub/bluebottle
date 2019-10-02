@@ -95,6 +95,10 @@ class Country(GeoBaseModel):
             "Whether a country is a recipient of Official Development"
             "Assistance from the OECD's Development Assistance Committee."))
 
+    @property
+    def code(self):
+        return self.alpha2_code
+
     class Meta(GeoBaseModel.Meta):
         ordering = ['translations__name']
         verbose_name = _("country")

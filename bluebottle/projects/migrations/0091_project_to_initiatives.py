@@ -27,17 +27,34 @@ def map_status(status):
 
 def map_funding_status(status):
     mapping = {
-        'plan-new': 'draft',
-        'plan-submitted': 'draft',
-        'plan-needs-work': 'draft',
-        'voting': 'draft',
-        'voting-done': 'draft',
+        'plan-new': 'in_review',
+        'plan-submitted': 'in_review',
+        'plan-needs-work': 'in_review',
+        'voting': 'open',
+        'voting-done': 'open',
         'campaign': 'open',
-        'to-be-continued': 'draft',
+        'to-be-continued': 'open',
         'done-complete': 'succeeded',
         'done-incomplete': 'succeeded',
         'closed': 'closed',
         'refunded': 'refunded',
+    }
+    return mapping[status.slug]
+
+
+def map_funding_rewiew_status(status):
+    mapping = {
+        'plan-new': 'draft',
+        'plan-submitted': 'submitted',
+        'plan-needs-work': 'needs_work',
+        'voting': 'approved',
+        'voting-done': 'approved',
+        'campaign': 'approved',
+        'to-be-continued': 'approved',
+        'done-complete': 'approved',
+        'done-incomplete': 'approved',
+        'closed': 'approved',
+        'refunded': 'approved',
     }
     return mapping[status.slug]
 
@@ -285,6 +302,7 @@ def migrate_projects(apps, schema_editor):
                 created=project.created,
                 updated=project.updated,
                 status=map_funding_status(project.status),
+                rewiew_status=map_funding_review_status(project.status),
                 title=project.title,
                 slug=project.slug,
                 description=project.pitch or '',

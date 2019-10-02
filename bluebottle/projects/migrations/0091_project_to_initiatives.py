@@ -147,13 +147,15 @@ def migrate_projects(apps, schema_editor):
         initiative.categories = project.categories.all()
         initiative.save()
 
-        # Create Funding event if we target amount is set
-        if project.project_type in ['both', 'funding'] or project.donation_set.count():
+        # Create Funding event if there are donations
+        if project.project_type in ['both', 'funding'] \
+                or project.donation_set.count() \
+                or project.amount_asked.amount:
             account = None
             if isinstance(project.payout_account, OldStripePayoutAccount):
                 content_type = ContentType.objects.get_for_model(StripePayoutAccount)
                 account = StripePayoutAccount.objects.create(
-                    polymorphic_ctype=content_type,  # This does not get set automatically in migrations
+                    polymorphic_ctype=content_type,
                     owner=project.payout.account.user,
                     account_id=project.payout_account.account_id,
                     country=project.payout_account.country
@@ -165,7 +167,7 @@ def migrate_projects(apps, schema_editor):
             elif isinstance(project.payout_account, PlainPayoutAccount):
                 content_type = ContentType.objects.get_for_model(PlainBankAccount)
                 account = PlainBankAccount.objects.create(
-                    polymorphic_ctype=content_type,  # This does not get set automatically in migrations
+                    polymorphic_ctype=content_type,
                     owner=project.payout_account.user,
                     account_number=project.payout_account.account_number,
                     account_details=project.payout_account.account_details,
@@ -216,7 +218,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('projects', '0090_merge_20190222_1101'),
-        ('funding', '0026_auto_20190904_1200'),
+        ('funding', '0034_auto_20191002_1150'),
         ('initiatives', '0015_auto_20190708_1417'),
     ]
 

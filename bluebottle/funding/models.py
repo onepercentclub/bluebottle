@@ -417,7 +417,7 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
         default=PayoutAccountTransitions.values.new
     )
 
-    owner = models.OneToOneField(
+    owner = models.ForeignKey(
         'members.Member',
         related_name='funding_payout_account'
     )

@@ -58,10 +58,15 @@ def migrate_projects(apps, schema_editor):
     Client = apps.get_model('clients', 'Client')
     OrganizationContact = apps.get_model('organizations', 'OrganizationContact')
     OldStripePayoutAccount = apps.get_model('payouts', 'StripePayoutAccount')
-    PlainPayoutAccount = apps.get_model('payouts', 'PlainPayoutAccount')
+
     StripePayoutAccount = apps.get_model('funding_stripe', 'StripePayoutAccount')
     ExternalAccount = apps.get_model('funding_stripe', 'ExternalAccount')
-    PlainBankAccount = apps.get_model('funding', 'PlainBankAccount')
+    PlainPayoutAccount = apps.get_model('funding', 'PlainPayoutAccount')
+
+    FlutterwaveBankAccount = apps.get_model('funding_flutterwave', 'FlutterwaveBankAccount')
+    VitepayBankAccount = apps.get_model('funding_vitepay', 'VitepayBankAccount')
+    LipishaBankAccount = apps.get_model('funding_lipisha', 'LipishaBankAccount')
+
     ContentType = apps.get_model('contenttypes', 'ContentType')
 
     # Clean-up previous migrations of projects to initiatives
@@ -152,30 +157,59 @@ def migrate_projects(apps, schema_editor):
                 or project.donation_set.count() \
                 or project.amount_asked.amount:
             account = None
-            if isinstance(project.payout_account, OldStripePayoutAccount):
-                content_type = ContentType.objects.get_for_model(StripePayoutAccount)
-                account = StripePayoutAccount.objects.create(
-                    polymorphic_ctype=content_type,
-                    owner=project.payout.account.user,
-                    account_id=project.payout_account.account_id,
-                    country=project.payout_account.country
-                )
-                ExternalAccount.objects.create(
-                    account=account,
-                    account_id=project.payout_account.bank_details.account
-                )
-            elif isinstance(project.payout_account, PlainPayoutAccount):
-                content_type = ContentType.objects.get_for_model(PlainBankAccount)
-                account = PlainBankAccount.objects.create(
-                    polymorphic_ctype=content_type,
-                    owner=project.payout_account.user,
-                    account_number=project.payout_account.account_number,
-                    account_details=project.payout_account.account_details,
+            if project.payout_account:
+                try:
+                    stripe_account = project.payout_account.stripepayoutaccount
+                    content_type = ContentType.objects.get_for_model(StripePayoutAccount)
+                    account = StripePayoutAccount.objects.create(
+                        polymorphic_ctype=content_type,
+                        owner=project.payout_account.user,
+                        account_id=stripe_account.account_id,
+                        country=stripe_account.country.code
+                    )
+                    ExternalAccount.objects.create(
+                        connect_account=account,
+                        account_id=stripe_account.bank_details.account
+                    )
+                except OldStripePayoutAccount.DoesNotExist:
+                    content_type = ContentType.objects.get_for_model(PlainPayoutAccount)
+                    plain_account =  project.payout_account.plainpayoutaccount
+                    payout_account = PlainPayoutAccount.objects.create(
+                        polymorphic_ctype=content_type,
+                        owner=project.payout_account.user,
+                        reviewed=plain_account.reviewed
+                    )
 
-                    account_holder_name=project.payout_account.account_holder_name,
-                    account_holder_address=project.payout_account.account_holder_address,
-                    account_bank_country=project.payout_account.account_bank_country,
-                )
+                    if project.amount_asked.currency == 'NGN':
+                        content_type = ContentType.objects.get_for_model(FlutterwaveBankAccount)
+                        account = FlutterwaveBankAccount.objects.create(
+                            polymorphic_ctype=content_type,
+                            connect_account=payout_account,
+                            account_holder_name=plain_account.account_holder_name,
+                            bank_country_code=plain_account.account_details,
+                            account_number=plain_account.account_number,
+                            account_bank_country=plain_account.account_bank_country.code,
+                        )
+
+                    if project.amount_asked.currency == 'KES':
+                        content_type = ContentType.objects.get_for_model(LipishaBankAccount)
+                        account = LipishaBankAccount.objects.create(
+                            polymorphic_ctype=content_type,
+                            connect_account=payout_account,
+                            account_number=plain_account.account_number,
+                            account_name=plain_account.account_holder_name,
+                            address=plain_account.account_holder_address
+                                    + ' | '
+                                    + plain_account.account_details
+                        )
+
+                    if project.amount_asked.currency == 'CFA':
+                        content_type = ContentType.objects.get_for_model(VitepayBankAccount)
+                        account = VitepayBankAccount.objects.create(
+                            polymorphic_ctype=content_type,
+                            connect_account=payout_account,
+                            account_name=plain_account.account_holder_name,
+                        )
 
             content_type = ContentType.objects.get_for_model(Funding)
             funding = Funding.objects.create(
@@ -218,7 +252,8 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('projects', '0090_merge_20190222_1101'),
-        ('funding', '0034_auto_20191002_1150'),
+        ('funding', '0035_auto_20191002_1415'),
+        ('funding_stripe', '0015_auto_20191002_0903'),
         ('initiatives', '0015_auto_20190708_1417'),
     ]
 

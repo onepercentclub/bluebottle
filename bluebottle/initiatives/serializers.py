@@ -70,6 +70,7 @@ class MemberSerializer(ModelSerializer):
 class InitiativeImageSerializer(ImageSerializer):
     sizes = {
         'preview': '300x168',
+        'small': '320x180',
         'large': '600x337',
         'cover': '960x540'
     }

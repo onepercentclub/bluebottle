@@ -42,7 +42,7 @@ def map_funding_status(status):
     return mapping[status.slug]
 
 
-def map_funding_rewiew_status(status):
+def map_funding_review_status(status):
     mapping = {
         'plan-new': 'draft',
         'plan-submitted': 'submitted',
@@ -244,7 +244,7 @@ def migrate_projects(apps, schema_editor):
                         polymorphic_ctype=content_type,
                         account_id=stripe_account.account_id or 'unknown',
                         owner=stripe_account.user,
-                        # country=stripe_account.country.code
+                        # country=stripe_account.country.alpha2_code
                     )
                     content_type = ContentType.objects.get_for_model(ExternalAccount)
                     account = ExternalAccount.objects.create(
@@ -263,13 +263,15 @@ def migrate_projects(apps, schema_editor):
 
                     if str(project.amount_asked.currency) == 'NGN':
                         content_type = ContentType.objects.get_for_model(FlutterwaveBankAccount)
+                        country = None
+                        if plain_account.account_bank_country:
+                            country = plain_account.account_bank_country.alpha2_code
                         account = FlutterwaveBankAccount.objects.create(
                             polymorphic_ctype=content_type,
                             connect_account=payout_account,
                             account_holder_name=plain_account.account_holder_name,
-                            bank_country_code=plain_account.account_details,
-                            account_number=plain_account.account_number,
-                            account_bank_country=plain_account.account_bank_country.code,
+                            bank_country_code=country,
+                            account_number=plain_account.account_number
                         )
 
                     if str(project.amount_asked.currency) == 'KES':
@@ -280,8 +282,6 @@ def migrate_projects(apps, schema_editor):
                             account_number=plain_account.account_number,
                             account_name=plain_account.account_holder_name,
                             address=plain_account.account_holder_address
-                                    + ' | '
-                                    + plain_account.account_details
                         )
 
                     if str(project.amount_asked.currency) == 'CFA':
@@ -302,7 +302,7 @@ def migrate_projects(apps, schema_editor):
                 created=project.created,
                 updated=project.updated,
                 status=map_funding_status(project.status),
-                rewiew_status=map_funding_review_status(project.status),
+                review_status=map_funding_review_status(project.status),
                 title=project.title,
                 slug=project.slug,
                 description=project.pitch or '',

@@ -323,6 +323,9 @@ class StripePayoutAccount(PayoutAccount):
         verbose_name = _('stripe payout account')
         verbose_name_plural = _('stripe payout accounts')
 
+    class JSONAPIMeta:
+        resource_name = 'payout-accounts/stripes'
+
 
 class ExternalAccount(BankAccount):
     account_id = models.CharField(max_length=40)

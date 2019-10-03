@@ -1,4 +1,4 @@
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
@@ -6,16 +6,19 @@ from bluebottle.activities.permissions import ActivityPermission, ActivityTypePe
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.models import (
     Funding, Donation, Reward, Fundraiser,
-    BudgetLine)
+    BudgetLine, PayoutAccount
+)
 from bluebottle.funding.permissions import DonationOwnerPermission, PaymentPermission
 from bluebottle.funding.serializers import (
     FundingSerializer, DonationSerializer, FundingTransitionSerializer,
     FundraiserSerializer, RewardSerializer, BudgetLineSerializer,
-    DonationCreateSerializer, FundingListSerializer)
+    DonationCreateSerializer, FundingListSerializer,
+    PayoutAccountSerializer
+)
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
-    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
+    ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
     CreateAPIView, RetrieveUpdateDestroyAPIView
 )
 
@@ -147,6 +150,18 @@ class FundingTransitionList(TransitionList):
     prefetch_for_includes = {
         'resource': ['funding'],
     }
+
+
+class PayoutAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
+    queryset = PayoutAccount.objects.all()
+    serializer_class = PayoutAccountSerializer
+
+    permission_classes = (
+        IsAuthenticated,
+    )
+
+    def get_queryset(self):
+        return self.queryset.filter(owner=self.request.user)
 
 
 class DonationList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):

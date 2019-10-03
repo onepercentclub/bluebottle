@@ -1,6 +1,5 @@
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
-from rest_framework.permissions import IsAdminUser
 from rest_framework_json_api.relations import (
     ResourceRelatedField, PolymorphicResourceRelatedField
 )
@@ -12,19 +11,19 @@ from rest_framework_json_api.serializers import (
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer
 )
-from bluebottle.files.serializers import ImageField, PrivateDocumentSerializer, PrivateDocumentField
+from bluebottle.files.serializers import ImageField, PrivateDocumentSerializer
 from bluebottle.funding.filters import DonationListFilter
 from bluebottle.funding.models import (
     Funding, Donation, Fundraiser, Reward, BudgetLine, PaymentMethod,
-    BankAccount,
-    PaymentProvider, PlainPayoutAccount)
+    BankAccount, PayoutAccount, PaymentProvider
+)
+from bluebottle.funding.polymorphic_serializers import PlainPayoutAccountSerializer
 from bluebottle.funding_flutterwave.serializers import FlutterwaveBankAccountSerializer
 from bluebottle.funding_lipisha.serializers import LipishaBankAccountSerializer
-from bluebottle.funding_stripe.serializers import ExternalAccountSerializer
+from bluebottle.funding_stripe.serializers import ExternalAccountSerializer, ConnectAccountSerializer
 from bluebottle.funding_vitepay.serializers import VitepayBankAccountSerializer
 from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import TransitionSerializer
-from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import (
     MoneySerializer, FilteredRelatedField, ResourcePermissionField, NoCommitMixin,
 )
@@ -387,33 +386,11 @@ class KycDocumentSerializer(PrivateDocumentSerializer):
     relationship = 'plainpayoutaccount_set'
 
 
-class PlainPayoutAccountSerializer(serializers.ModelSerializer):
-    document = PrivateDocumentField(required=False, allow_null=True, permissions=[IsAdminUser])
-
-    errors = ValidationErrorsField()
-    required = RequiredErrorsField()
-
-    included_serializers = {
-        'external_accounts': 'bluebottle.funding.serializers.BankAccountSerializer',
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'document': 'bluebottle.assignments.serializers.KycDocumentSerializer',
-    }
+class PayoutAccountSerializer(PolymorphicModelSerializer):
+    polymorphic_serializers = [
+        PlainPayoutAccountSerializer,
+        ConnectAccountSerializer,
+    ]
 
     class Meta:
-        model = PlainPayoutAccount
-
-        fields = (
-            'id',
-            'owner',
-            'document',
-            'required_fields',
-        )
-        meta_fields = ('required', 'errors', )
-
-    class JSONAPIMeta():
-        resource_name = 'payout-accounts/plain'
-        included_resources = [
-            'external_accounts',
-            'owner',
-            'document'
-        ]
+        model = PayoutAccount

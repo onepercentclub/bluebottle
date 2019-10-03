@@ -6,7 +6,8 @@ from bluebottle.funding.views import (
     FundraiserList, FundraiserDetail,
     FundingList, FundingDetail,
     DonationList, DonationDetail,
-    FundingTransitionList)
+    FundingTransitionList, PayoutAccountList
+)
 
 
 urlpatterns = [
@@ -26,5 +27,7 @@ urlpatterns = [
     url(r'^$', FundingList.as_view(), name='funding-list'),
     url(r'^/(?P<pk>[\d]+)$', FundingDetail.as_view(), name='funding-detail'),
     url(r'^/transitions$', FundingTransitionList.as_view(), name='funding-transition-list'),
+
+    url(r'^/payout-accounts$', PayoutAccountList.as_view(), name='payout-account-list'),
 
 ]

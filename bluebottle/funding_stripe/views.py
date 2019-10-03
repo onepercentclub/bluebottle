@@ -1,4 +1,5 @@
 from django.http import HttpResponse, Http404
+
 from django.views.generic import View
 from rest_framework import serializers
 from rest_framework.mixins import CreateModelMixin
@@ -91,7 +92,7 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
             except stripe.error.InvalidRequestError, e:
                 field = e.param.replace('[', '/').replace(']', '')
                 raise serializers.ValidationError(
-                    {'account/{}'.format(field): [{'details': e.message, 'code': e.code}]}
+                    {field: [e.message]}
                 )
         serializer.save()
 

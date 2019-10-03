@@ -209,7 +209,10 @@ class StripePayoutAccount(PayoutAccount):
         if self.account_id:
             fields += [
                 field for field in self.country_spec['additional'] + self.country_spec['minimum'] if
-                field not in ['business_type', 'external_account', 'tos_acceptance.date', 'tos_acceptance.ip', ]
+                field not in [
+                    'business_type', 'external_account', 'tos_acceptance.date',
+                    'tos_acceptance.ip', 'business_profile.url', 'business_profile.mcc',
+                ]
             ]
 
             if 'individual.verification.document' in fields:

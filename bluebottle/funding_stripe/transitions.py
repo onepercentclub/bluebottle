@@ -2,7 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
 
 from bluebottle.fsm import transition
-from bluebottle.funding.transitions import PaymentTransitions
+from bluebottle.funding.transitions import PaymentTransitions, PayoutAccountTransitions
 from bluebottle.funding_stripe.utils import stripe
 
 
@@ -79,3 +79,30 @@ class StripeSourcePaymentTransitions(PaymentTransitions):
     def dispute(self):
         self.instance.donation.transitions.refund()
         self.instance.donation.save()
+
+
+class StripePayoutAccountTransitions(PayoutAccountTransitions):
+    @transition(
+        source=[PayoutAccountTransitions.values.new, PayoutAccountTransitions.values.rejected],
+        target=PayoutAccountTransitions.values.pending
+    )
+    def submit(self):
+        pass
+
+    @transition(
+        source=[
+            PayoutAccountTransitions.values.pending,
+            PayoutAccountTransitions.values.rejected,
+            PayoutAccountTransitions.values.new
+        ],
+        target='verified'
+    )
+    def verify(self):
+        pass
+
+    @transition(
+        source=[PayoutAccountTransitions.values.pending, PayoutAccountTransitions.values.verified],
+        target=PayoutAccountTransitions.values.rejected
+    )
+    def reject(self):
+        pass

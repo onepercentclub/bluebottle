@@ -155,23 +155,33 @@ class PayoutAccountTransitions(ModelTransitions):
         verified = ChoiceItem('verified', _('verified'))
         rejected = ChoiceItem('rejected', _('rejected'))
 
+
+class PlainPayoutAccountTransitions(PayoutAccountTransitions):
     @transition(
-        source=[values.new, values.rejected],
-        target=values.pending
+        source=[PayoutAccountTransitions.values.new, PayoutAccountTransitions.values.rejected],
+        target=PayoutAccountTransitions.values.pending
     )
     def submit(self):
         pass
 
     @transition(
-        source=[values.pending, values.rejected, values.new],
+        source=[
+            PayoutAccountTransitions.values.pending,
+            PayoutAccountTransitions.values.rejected,
+            PayoutAccountTransitions.values.new
+        ],
         target='verified'
     )
     def verify(self):
-        pass
+        self.instance.document.delete()
+        self.instance.document = None
+        self.instance.save()
 
     @transition(
-        source=[values.pending, values.verified],
-        target=values.rejected
+        source=[PayoutAccountTransitions.values.pending, PayoutAccountTransitions.values.verified],
+        target=PayoutAccountTransitions.values.rejected
     )
     def reject(self):
-        pass
+        self.instance.document.delete()
+        self.instance.document = None
+        self.instance.save()

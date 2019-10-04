@@ -244,11 +244,11 @@ class PayoutAccountFundingLinkMixin(object):
     funding_links.short_description = _('Funding activities')
 
 
-class PayoutAccountChildAdmin(PolymorphicChildModelAdmin):
+class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner',)
     readonly_fields = ('status',)
-    fields = ('owner', 'status',)
+    fields = ('owner', 'status', 'transitions')
     show_in_index = True
 
 
@@ -271,7 +271,7 @@ class BankAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModel
     base_model = BankAccount
     raw_id_fields = ('connect_account',)
     readonly_fields = ('verified', 'funding_links', 'created', 'updated')
-    fields = ('connect_account', 'reviewed') + readonly_fields
+    fields = ('connect_account', 'reviewed', ) + readonly_fields
     show_in_index = True
 
 

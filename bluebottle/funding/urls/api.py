@@ -6,7 +6,9 @@ from bluebottle.funding.views import (
     FundraiserList, FundraiserDetail,
     FundingList, FundingDetail,
     DonationList, DonationDetail,
-    FundingTransitionList, PayoutAccountList
+    FundingTransitionList, PayoutAccountList,
+    PlainPayoutAccountDetail, PlainPayoutAccountList,
+    PlainPayoutAccountDocumentDetail
 )
 
 
@@ -29,5 +31,14 @@ urlpatterns = [
     url(r'^/transitions$', FundingTransitionList.as_view(), name='funding-transition-list'),
 
     url(r'^/payout-accounts$', PayoutAccountList.as_view(), name='payout-account-list'),
+    url(r'^/payout-accounts/plain$', PlainPayoutAccountList.as_view(), name='plain-payout-account-list'),
+    url(
+        r'^/payout-accounts/plain/(?P<pk>[\d]+)$',
+        PlainPayoutAccountDetail.as_view(),
+        name='plain-payout-account-detail'
+    ),
+    url(r'^/payout-accounts/plain/(?P<pk>\d+)/document$',
+        PlainPayoutAccountDocumentDetail.as_view(),
+        name='kyc-document')
 
 ]

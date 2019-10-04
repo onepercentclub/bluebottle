@@ -6,7 +6,7 @@ from bluebottle.activities.permissions import ActivityPermission, ActivityTypePe
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.models import (
     Funding, Donation, Reward, Fundraiser,
-    BudgetLine, PayoutAccount
+    BudgetLine, PayoutAccount, PlainPayoutAccount
 )
 from bluebottle.funding.permissions import DonationOwnerPermission, PaymentPermission
 from bluebottle.funding.serializers import (
@@ -15,12 +15,14 @@ from bluebottle.funding.serializers import (
     DonationCreateSerializer, FundingListSerializer,
     PayoutAccountSerializer
 )
+
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView, RetrieveUpdateDestroyAPIView
+    CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView
 )
+from bluebottle.funding.polymorphic_serializers import PlainPayoutAccountSerializer
 
 
 class RewardList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
@@ -162,6 +164,44 @@ class PayoutAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
 
     def get_queryset(self):
         return self.queryset.filter(owner=self.request.user)
+
+
+class PlainPayoutAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+    queryset = PlainPayoutAccount.objects.all()
+    serializer_class = PlainPayoutAccountSerializer
+
+    permission_classes = (
+        IsAuthenticated,
+    )
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+        serializer.instance.transitions.submit()
+        serializer.instance.save()
+
+
+class PlainPayoutAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = PlainPayoutAccount.objects.all()
+    serializer_class = PlainPayoutAccountSerializer
+
+    permission_classes = (
+        IsAuthenticated,
+    )
+
+    def get_queryset(self):
+        return self.queryset.filter(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(owner=self.request.user)
+        serializer.instance.transitions.submit()
+        serializer.instance.save()
+
+
+class PlainPayoutAccountDocumentDetail(PrivateFileView):
+    max_age = 15 * 60  # 15 minutes
+    queryset = PlainPayoutAccount.objects
+    relation = 'document'
+    field = 'file'
 
 
 class DonationList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):

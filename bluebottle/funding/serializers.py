@@ -394,3 +394,5 @@ class PayoutAccountSerializer(PolymorphicModelSerializer):
 
     class Meta:
         model = PayoutAccount
+
+        meta_fields = ('required', 'errors', 'required_fields', 'status',)

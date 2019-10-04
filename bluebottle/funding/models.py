@@ -15,18 +15,18 @@ from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.files.fields import ImageField
+from bluebottle.files.fields import ImageField, DocumentField
 from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from bluebottle.funding.transitions import (
     FundingTransitions,
     DonationTransitions,
     PaymentTransitions,
-    PayoutAccountTransitions
+    PayoutAccountTransitions,
+    PlainPayoutAccountTransitions
 )
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.fields import MoneyField, PrivateFileField
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import Validator, ValidatedModelMixin
-from bluebottle.utils.utils import reverse_signed
 
 
 class PaymentCurrency(models.Model):
@@ -426,29 +426,20 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
 
-    transitions = TransitionManager(PayoutAccountTransitions, 'status')
-
 
 class PlainPayoutAccount(PayoutAccount):
-
-    document = PrivateFileField(
-        max_length=110,
-        upload_to='funding/documents'
-    )
+    document = DocumentField(blank=True, null=True)
 
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
+
+    transitions = TransitionManager(PlainPayoutAccountTransitions, 'status')
 
     class Meta:
         verbose_name = _('plain payout account')
         verbose_name_plural = _('plain payout accounts')
 
-    @property
-    def document_url(self):
-        # pk may be unset if not saved yet, in which case no url can be
-        # generated.
-        if self.pk is not None and self.document.file:
-            return reverse_signed('payout-document-file', args=(self.pk,))
-        return None
+    class JSONAPIMeta:
+        resource_name = 'payout-accounts/plains'
 
     @property
     def required_fields(self):

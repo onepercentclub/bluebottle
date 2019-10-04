@@ -12,8 +12,11 @@ from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount, BankAccount)
-from bluebottle.funding_stripe.transitions import StripePaymentTransitions
-from bluebottle.funding_stripe.transitions import StripeSourcePaymentTransitions
+from bluebottle.funding_stripe.transitions import (
+    StripePaymentTransitions,
+    StripeSourcePaymentTransitions,
+    StripePayoutAccountTransitions
+)
 from bluebottle.funding_stripe.utils import stripe
 
 
@@ -191,6 +194,8 @@ class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40)
     country = models.CharField(max_length=2)
     document_type = models.CharField(max_length=20, blank=True)
+
+    transitions = TransitionManager(StripePayoutAccountTransitions, 'status')
 
     @property
     def country_spec(self):

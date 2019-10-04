@@ -47,6 +47,10 @@ def get_payment_url(payment):
 
     payment_hash = hashlib.sha1(message.upper()).hexdigest()
 
+    email = ''
+    if payment.donation.user:
+        email = payment.donation.user.email
+
     data = {
         "payment": {
             "language_code": "fr",
@@ -54,6 +58,7 @@ def get_payment_url(payment):
             "country_code": "ML",
             "order_id": payment.unique_id,
             "description": description,
+            "email": email,
             "amount_100": int(payment.donation.amount.amount * 100),
             "return_url": return_url,
             "decline_url": return_url,

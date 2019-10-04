@@ -1,5 +1,4 @@
 from django.utils.translation import ugettext_lazy as _
-
 from djchoices.choices import ChoiceItem
 
 from bluebottle.fsm import transition

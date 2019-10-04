@@ -1,11 +1,11 @@
 import json
-from memoize import memoize
 from operator import attrgetter
 
 from django.conf import settings
 from django.db import ProgrammingError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
+from memoize import memoize
 
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation

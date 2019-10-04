@@ -9,7 +9,7 @@ class VitepayPaymentSerializer(PaymentSerializer):
 
     class Meta(PaymentSerializer.Meta):
         model = VitepayPayment
-        fields = PaymentSerializer.Meta.fields + ('payment_url', )
+        fields = PaymentSerializer.Meta.fields + ('payment_url', 'mobile_number')
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
         resource_name = 'payments/vitepay-payments'

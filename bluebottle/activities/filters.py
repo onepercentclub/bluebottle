@@ -1,4 +1,4 @@
-from elasticsearch_dsl.query import FunctionScore, SF, Terms, Nested, Q
+from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q
 from bluebottle.utils.filters import ElasticSearchFilter
 from bluebottle.activities.documents import ActivityDocument
 
@@ -135,4 +135,4 @@ class ActivitySearchFilter(ElasticSearchFilter):
         return score
 
     def get_default_filters(self, request):
-        return [Terms(review_status=['approved'])]
+        return [Terms(review_status=['approved']), ~Term(status='closed')]

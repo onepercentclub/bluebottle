@@ -41,7 +41,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         open = EventFactory.create(review_status='approved', status='open')
         EventFactory.create(status='in_review')
-        EventFactory.create(status='closed')
+        EventFactory.create(review_status='approved', status='closed')
 
         response = self.client.get(self.url, user=self.owner)
         data = json.loads(response.content)

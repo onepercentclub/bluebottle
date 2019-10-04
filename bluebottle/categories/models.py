@@ -65,11 +65,10 @@ class CategoryContent(SortableMixin):
                                             "are accepted. Max: %(chars)s characters.") % {'chars': 100})
     link_text = models.CharField(_("link name"),
                                  max_length=60,
-                                 blank=True,
                                  default=_("Read more"),
                                  help_text=_("The link will only be displayed if an URL is provided. "
                                              "Max: %(chars)s characters.") % {'chars': 60})
-    link_url = models.URLField(_("link url"), blank=True)
+    link_url = models.URLField(_("link url"))
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:

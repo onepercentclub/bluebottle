@@ -9,7 +9,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
     sort_fields = {
         'date': ('-created', ),
         'alphabetical': ('title_keyword', ),
-        'matching': 'matching',
+        'popularity': 'popularity',
     }
 
     filters = (
@@ -28,7 +28,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
     boost = {'title': 2}
 
-    def get_sort_matching(self, request):
+    def get_sort_popularity(self, request):
         score = FunctionScore(
             score_mode='sum',
             functions=[

@@ -187,7 +187,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         response = self.client.get(
-            self.url + '?sort=matching',
+            self.url + '?sort=popularity',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -208,7 +208,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         fifth = EventFactory.create(review_status='approved', status='open')
 
         response = self.client.get(
-            self.url + '?sort=matching',
+            self.url + '?sort=popularity',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -233,7 +233,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         fourth = AssignmentFactory.create(review_status='approved', status='open', expertise=skill)
 
         response = self.client.get(
-            self.url + '?sort=matching',
+            self.url + '?sort=popularity',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -259,7 +259,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         fourth = EventFactory.create(review_status='approved', status='open', initiative=initiative)
 
         response = self.client.get(
-            self.url + '?sort=matching',
+            self.url + '?sort=popularity',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -293,7 +293,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         response = self.client.get(
-            self.url + '?sort=matching',
+            self.url + '?sort=popularity',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -330,7 +330,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         response = self.client.get(
-            self.url + '?sort=matching',
+            self.url + '?sort=popularity',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -354,7 +354,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         third = EventFactory.create(review_status='approved', status='open', created=now() - datetime.timedelta(days=1))
 
         response = self.client.get(
-            self.url + '?sort=matching',
+            self.url + '?sort=popularity',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -394,7 +394,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         response = self.client.get(
-            self.url + '?sort=matching',
+            self.url + '?sort=popularity',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 

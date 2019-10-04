@@ -1,10 +1,10 @@
 from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q
 from bluebottle.utils.filters import ElasticSearchFilter
-from bluebottle.activities.documents import ActivityDocument
+from bluebottle.activities.documents import activity
 
 
 class ActivitySearchFilter(ElasticSearchFilter):
-    document = ActivityDocument
+    document = activity
 
     sort_fields = {
         'date': ('-created', ),

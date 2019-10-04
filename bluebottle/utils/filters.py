@@ -1,3 +1,5 @@
+from django.db.models import Case, When, IntegerField
+
 from elasticsearch_dsl.query import MatchPhrasePrefix, Term, Nested, Bool
 from rest_framework import filters
 
@@ -41,7 +43,16 @@ class ElasticSearchFilter(filters.SearchFilter):
             except AttributeError:
                 search = search.sort(*sort)
 
-        return search
+        pks = [result._id for result in search]
+
+        queryset = queryset.filter(pk__in=pks)
+        preserved_order = Case(
+            *[When(pk=pk, then=pos) for pos, pk in enumerate(pks)],
+            output_field=IntegerField()
+        )
+        queryset = queryset.annotate(search_order=preserved_order).order_by('search_order')
+
+        return queryset
 
     def get_filter_fields(self, request):
         return [

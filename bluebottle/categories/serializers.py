@@ -9,8 +9,8 @@ class CategoryContentSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False)
     image = ImageSerializer(required=False)
     video_url = serializers.URLField(required=False)
-    link_text = serializers.CharField(required=False)
-    link_url = serializers.URLField(required=False)
+    link_text = serializers.CharField(required=True)
+    link_url = serializers.URLField(required=True)
     sequence = serializers.IntegerField(read_only=True)
 
     class Meta:

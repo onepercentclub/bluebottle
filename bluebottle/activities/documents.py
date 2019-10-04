@@ -17,7 +17,6 @@ activity.settings(
 )
 
 
-@activity.doc_type
 class ActivityDocument(DocType):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
@@ -48,7 +47,7 @@ class ActivityDocument(DocType):
     )
 
     categories = fields.NestedField(
-        attr='initiative.theme',
+        attr='initiative.categories',
         properties={
             'id': fields.LongField(),
             'slug': fields.KeywordField(),

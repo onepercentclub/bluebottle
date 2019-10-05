@@ -77,6 +77,8 @@ class InitiativeImageSerializer(ImageSerializer):
 
 
 class InitiativeMapSerializer(serializers.ModelSerializer):
+    # Use a standard serializer and tinypoint serializer to keep this request tiny
+    # No need to repeat `type` and `latitude`, `longitude` for every record.
     position = TinyPointSerializer()
 
     class Meta:

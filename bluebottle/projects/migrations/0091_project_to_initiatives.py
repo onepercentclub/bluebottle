@@ -63,6 +63,26 @@ def truncate(number, limit):
     return int(number * pow(10, limit)) / 10 ^ pow(10, limit)
 
 
+def set_currencies(apps, provider, name):
+    PaymentCurrency = apps.get_model('funding', 'PaymentCurrency')
+    defaults = properties.DONATION_AMOUNTS
+    for method in properties.PAYMENT_METHODS:
+        if method['provider'] == name:
+            for cur in method['currencies']:
+                val = method['currencies'][cur]
+                PaymentCurrency.objects.get_or_create(
+                    provider=provider,
+                    code=cur,
+                    defaults={
+                        'min_amount': getattr(val, 'min_amount', 5.0),
+                        'default1': defaults[cur][0],
+                        'default2': defaults[cur][1],
+                        'default3': defaults[cur][2],
+                        'default4': defaults[cur][3],
+                    }
+                )
+
+
 def migrate_payment_providers(apps):
 
     PledgePaymentProvider = apps.get_model('funding_pledge', 'PledgePaymentProvider')
@@ -78,52 +98,59 @@ def migrate_payment_providers(apps):
     properties.set_tenant(tenant)
 
     for provider in properties.MERCHANT_ACCOUNTS:
+        pp = None
         if provider['merchant'] == 'stripe':
             content_type = ContentType.objects.get_for_model(StripePaymentProvider)
-            stripe = StripePaymentProvider.objects.create(
+            pp = StripePaymentProvider.objects.create(
                 polymorphic_ctype=content_type,
             )
             for payment_methods in properties.PAYMENT_METHODS:
                 if payment_methods['id'] == 'stripe-creditcard':
-                    stripe.credit_card = True
+                    pp.credit_card = True
                 elif payment_methods['id'] == 'stripe-ideal':
-                    stripe.ideal = True
+                    pp.ideal = True
                 elif payment_methods['id'] == 'stripe-directdebit':
-                    stripe.direct_debit = True
+                    pp.direct_debit = True
                 elif payment_methods['id'] == 'stripe-bancontact':
-                    stripe.bancontact = True
-            stripe.save()
+                    pp.bancontact = True
+            pp.save()
+            set_currencies(apps, pp, 'stripe')
+
         elif provider['merchant'] == 'vitepay':
             content_type = ContentType.objects.get_for_model(VitepayPaymentProvider)
-            VitepayPaymentProvider.objects.create(
+            pp = VitepayPaymentProvider.objects.create(
                 polymorphic_ctype=content_type,
                 api_secret=provider['api_secret'],
                 api_key=provider['api_key'],
                 api_url=provider['api_url'],
-                prefix='ne'
+                prefix='new'
             )
+            set_currencies(apps, pp, 'vitepay')
         elif provider['merchant'] == 'lipisha':
             content_type = ContentType.objects.get_for_model(LipishaPaymentProvider)
-            LipishaPaymentProvider.objects.create(
+            pp = LipishaPaymentProvider.objects.create(
                 polymorphic_ctype=content_type,
                 api_key=provider['api_key'],
                 api_signature=provider['api_signature'],
                 paybill=provider['business_number'],
-                prefix='ne'
+                prefix='new'
             )
+            set_currencies(apps, pp, 'lipisha')
         elif provider['merchant'] == 'flutterwave':
             content_type = ContentType.objects.get_for_model(FlutterwavePaymentProvider)
-            FlutterwavePaymentProvider.objects.create(
+            pp = FlutterwavePaymentProvider.objects.create(
                 polymorphic_ctype=content_type,
                 pub_key=provider['pub_key'],
                 sec_key=provider['sec_key'],
-                prefix='ne'
+                prefix='new'
             )
+            set_currencies(apps, pp, 'flutterwave')
         elif provider['merchant'] == 'pledge':
             content_type = ContentType.objects.get_for_model(PledgePaymentProvider)
-            PledgePaymentProvider.objects.create(
+            pp = PledgePaymentProvider.objects.create(
                 polymorphic_ctype=content_type,
             )
+            set_currencies(apps, pp, 'pledge')
 
 
 def migrate_projects(apps, schema_editor):

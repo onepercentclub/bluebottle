@@ -134,6 +134,13 @@ class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
         return self.title
 
     @property
+    def position(self):
+        if self.place and self.place.position:
+            return self.place.position
+        if self.location and self.location.position:
+            return self.location.position
+
+    @property
     def required_fields(self):
         fields = [
             'title', 'pitch', 'owner',

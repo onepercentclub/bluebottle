@@ -1,27 +1,27 @@
 from django.utils.translation import ugettext_lazy as _
-
 from rest_framework import serializers
-from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import (
     ResourceRelatedField, PolymorphicResourceRelatedField
 )
+from rest_framework_json_api.serializers import ModelSerializer
 
+from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ImageSerializer as OldImageSerializer, SorlImageField
 )
-from bluebottle.utils.fields import SafeField, ValidationErrorsField, RequiredErrorsField
-from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.categories.models import Category
-from bluebottle.geo.models import Geolocation, Location
-from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer, ImageField
+from bluebottle.geo.models import Geolocation, Location
+from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.members.models import Member
+from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.transitions.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
+from bluebottle.utils.fields import SafeField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import (
     ResourcePermissionField, NoCommitMixin
 )
@@ -74,6 +74,16 @@ class InitiativeImageSerializer(ImageSerializer):
     }
     content_view_name = 'initiative-image'
     relationship = 'initiative_set'
+
+
+class InitiativeMapSerializer(serializers.ModelSerializer):
+    position = TinyPointSerializer()
+
+    class Meta:
+        model = Initiative
+        fields = (
+            'id', 'title', 'slug', 'position',
+        )
 
 
 class InitiativeSerializer(NoCommitMixin, ModelSerializer):

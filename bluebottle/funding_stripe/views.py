@@ -66,9 +66,12 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
 
     permission_classes = (IsAuthenticated, IsOwner, )
 
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
     def get_object(self):
         # Make this smarter
-        obj = self.request.user.funding_payout_account.first()
+        obj = self.queryset.filter(owner=self.request.user).first()
         if not obj:
             raise Http404
 

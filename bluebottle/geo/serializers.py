@@ -87,6 +87,12 @@ class PointSerializer(serializers.CharField):
         return point
 
 
+class TinyPointSerializer(serializers.CharField):
+
+    def to_representation(self, instance):
+        return [instance.coords[1], instance.coords[0]]
+
+
 class GeolocationSerializer(ModelSerializer):
     position = PointSerializer()
 

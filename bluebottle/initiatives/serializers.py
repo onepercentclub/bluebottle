@@ -8,7 +8,7 @@ from rest_framework_json_api.relations import (
 
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import (
-    OEmbedField, ImageSerializer as OldImageSerializer, SorlImageField
+    ImageSerializer as OldImageSerializer, SorlImageField
 )
 from bluebottle.utils.fields import SafeField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.activities.serializers import ActivitySerializer
@@ -88,9 +88,9 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         ActivitySerializer, many=True, read_only=True
     )
     slug = serializers.CharField(read_only=True)
+    slug = serializers.CharField(required=False, allow_blank=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
-    video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
 
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
@@ -120,7 +120,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'id', 'title', 'pitch', 'categories',
             'owner', 'reviewer', 'promoter', 'activity_manager',
             'slug', 'has_organization', 'organization',
-            'organization_contact', 'story', 'video_html', 'image',
+            'organization_contact', 'story', 'video_html', 'video_url', 'image',
             'theme', 'place', 'location', 'activities',
             'errors', 'required',
         )

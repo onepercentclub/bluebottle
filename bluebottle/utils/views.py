@@ -341,7 +341,7 @@ class ESPaginator(Paginator):
         if isinstance(self.object_list, tuple):
             _, object_list = self.object_list
         else:
-            object_list = object_list
+            object_list = self.object_list
 
         try:
             return object_list.count()

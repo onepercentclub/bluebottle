@@ -3,18 +3,18 @@ from django.conf.urls import url
 from bluebottle.funding_stripe.views import (
     StripeSourcePaymentList, StripePaymentIntentList,
     IntentWebHookView, SourceWebHookView, WebHookView,
-    ConnectAccountDetails, ConnectWebHookView,
+    ConnectWebHookView,
     ExternalAccountsList, ExternalAccountsDetails,
-    StripePaymentList)
+    StripePaymentList, ConnectAccountDetail, ConnectAccountList)
 
 urlpatterns = [
 
     # Payout accounts
     url(r'^/payout-account$',
-        ConnectAccountDetails.as_view(),
+        ConnectAccountList.as_view(),
         name='connect-account-details'),
     url(r'^/payout-account/(?P<pk>[\d]+)$',
-        ConnectAccountDetails.as_view(),
+        ConnectAccountDetail.as_view(),
         name='connect-account-details'),
     url(r'^/external-account$',
         ExternalAccountsList.as_view(),

@@ -1,8 +1,6 @@
 from django.http import HttpResponse, Http404
-
 from django.views.generic import View
 from rest_framework import serializers
-from rest_framework.mixins import CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
@@ -55,7 +53,7 @@ class StripePaymentList(PaymentList):
     serializer_class = StripePaymentSerializer
 
 
-class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixin, RetrieveUpdateAPIView):
+class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     queryset = StripePayoutAccount.objects.all()
     serializer_class = ConnectAccountSerializer
 
@@ -66,8 +64,23 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
 
     permission_classes = (IsAuthenticated, IsOwner, )
 
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+    def perform_create(self, serializer):
+        token = serializer.validated_data.pop('token')
+        serializer.save(owner=self.request.user)
+        if token:
+            serializer.instance.update(token)
+
+
+class ConnectAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = StripePayoutAccount.objects.all()
+    serializer_class = ConnectAccountSerializer
+
+    prefetch_for_includes = {
+        'owner': ['owner'],
+        'external_accounts': ['external_accounts'],
+    }
+
+    permission_classes = (IsAuthenticated, IsOwner, )
 
     def get_object(self):
         # Make this smarter
@@ -77,12 +90,6 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
 
         self.check_object_permissions(self.request, obj)
         return obj
-
-    def perform_create(self, serializer):
-        token = serializer.validated_data.pop('token')
-        serializer.save(owner=self.request.user)
-        if token:
-            serializer.instance.update(token)
 
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')

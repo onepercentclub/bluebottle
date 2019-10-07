@@ -164,7 +164,6 @@ class PayoutAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
 
     prefetch_for_includes = {
         'owner': ['owner'],
-        'external_accounts': ['external_accounts'],
     }
 
     def get_queryset(self):
@@ -216,7 +215,6 @@ class PlainPayoutAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpda
         return self.queryset.filter(owner=self.request.user)
 
     def perform_update(self, serializer):
-        serializer.save(owner=self.request.user)
         serializer.instance.transitions.submit()
         serializer.instance.save()
 

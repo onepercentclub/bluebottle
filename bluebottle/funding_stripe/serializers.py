@@ -100,8 +100,14 @@ class ExternalAccountSerializer(serializers.ModelSerializer):
         model = ExternalAccount
 
         fields = (
-            'id', 'token', 'connect_account', 'account_holder_name',
-            'country', 'last4', 'currency', 'routing_number'
+            'id',
+            'token',
+            'connect_account',
+            'account_holder_name',
+            'country',
+            'last4',
+            'currency',
+            'routing_number'
         )
 
     class JSONAPIMeta(object):

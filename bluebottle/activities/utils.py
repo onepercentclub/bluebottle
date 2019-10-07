@@ -56,7 +56,15 @@ class BaseActivitySerializer(ModelSerializer):
             'required',
         )
 
-        meta_fields = ('permissions', 'transitions', 'review_transitions', 'created', 'updated', 'errors', 'required', )
+        meta_fields = (
+            'permissions',
+            'transitions',
+            'review_transitions',
+            'created',
+            'updated',
+            'errors',
+            'required',
+        )
 
     class JSONAPIMeta:
         included_resources = [

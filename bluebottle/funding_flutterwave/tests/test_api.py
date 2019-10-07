@@ -118,8 +118,10 @@ class FlutterwavePayoutAccountTestCase(BluebottleTestCase):
                 },
                 'relationships': {
                     'connect-account': {
-                        'id': self.payout_account.id,
-                        'type': 'payout-account/plain-payout-account'
+                        'data': {
+                            'id': self.payout_account.id,
+                            'type': 'payout-accounts/plains'
+                        }
                     }
                 }
             }
@@ -135,7 +137,5 @@ class FlutterwavePayoutAccountTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEqual(data['data'][0]['attributes']['status'], 'verified')
-        bank_account = data['data'][0]['relationships']['external-accounts']['data'][0]
-        self.assertEqual(bank_account['data']['type'], '044')
         bank_details = get_included(response, 'payout-accounts/flutterwave-external-accounts')
         self.assertEqual(bank_details['attributes']['bank-code'], '044')

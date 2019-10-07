@@ -17,18 +17,18 @@ class FlutterwavePaymentSerializer(PaymentSerializer):
 
 class FlutterwaveBankAccountSerializer(BaseBankAccountSerializer):
 
-    class Meta:
+    class Meta(BaseBankAccountSerializer.Meta):
         model = FlutterwaveBankAccount
 
-        fields = (
-            'id',
+        fields = BaseBankAccountSerializer.Meta.fields + (
             'account_holder_name',
             'bank_code',
             'account_number',
         )
 
-    class JSONAPIMeta:
-        included_resources = [
-            'owner',
-        ]
+    included_serializers = {
+        'connect_account': 'bluebottle.funding.serializers.PlainPayoutAccountSerializer',
+    }
+
+    class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
         resource_name = 'payout-accounts/flutterwave-external-accounts'

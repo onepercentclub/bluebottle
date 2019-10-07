@@ -218,6 +218,12 @@ class BankAccountSerializer(PolymorphicModelSerializer):
     class Meta:
         model = BankAccount
 
+    class JSONAPIMeta:
+        included_resources = [
+            'owner',
+        ]
+        resource_name = 'payout-accounts/external-accounts'
+
 
 class FundingSerializer(NoCommitMixin, FundingListSerializer):
     rewards = RewardSerializer(many=True, required=False)
@@ -394,7 +400,11 @@ class PlainPayoutAccountSerializer(serializers.ModelSerializer):
     document = PrivateDocumentField(required=False, allow_null=True, permissions=[IsAdminUser])
     owner = ResourceRelatedField(read_only=True)
     status = FSMField(read_only=True)
-    external_accounts = BankAccountSerializer(many=True)
+    external_accounts = PolymorphicResourceRelatedField(
+        BankAccountSerializer,
+        read_only=True,
+        many=True
+    )
 
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
@@ -417,7 +427,7 @@ class PlainPayoutAccountSerializer(serializers.ModelSerializer):
             'errors',
             'external_accounts'
         )
-        # meta_fields = ('required', 'errors', 'status')
+        meta_fields = ('required', 'errors', 'status')
 
     class JSONAPIMeta():
         resource_name = 'payout-accounts/plains'
@@ -429,6 +439,12 @@ class PlainPayoutAccountSerializer(serializers.ModelSerializer):
 
 
 class PayoutAccountSerializer(PolymorphicModelSerializer):
+
+    external_accounts = PolymorphicResourceRelatedField(
+        BankAccountSerializer,
+        read_only=True,
+        many=True
+    )
 
     polymorphic_serializers = [
         PlainPayoutAccountSerializer,

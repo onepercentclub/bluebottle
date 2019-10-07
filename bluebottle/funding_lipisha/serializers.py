@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from bluebottle.funding.base_serializers import PaymentSerializer
+from bluebottle.funding.base_serializers import PaymentSerializer, BaseBankAccountSerializer
 from bluebottle.funding_lipisha.models import LipishaPayment, LipishaBankAccount
 
 
@@ -15,7 +15,7 @@ class LipishaPaymentSerializer(PaymentSerializer):
         resource_name = 'payments/lipisha-payments'
 
 
-class LipishaBankAccountSerializer(serializers.ModelSerializer):
+class LipishaBankAccountSerializer(BaseBankAccountSerializer):
 
     class Meta:
         model = LipishaBankAccount

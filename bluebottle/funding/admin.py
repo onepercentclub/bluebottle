@@ -300,8 +300,8 @@ class BankAccountInline(TabularInline):
     can_delete = False
 
     def link(self, obj):
-        url = reverse('admin:funding_bankaccount_change', args=(obj.connect_account.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.connect_account)
+        url = reverse('admin:funding_bankaccount_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
 
 
 @admin.register(PlainPayoutAccount)

@@ -88,7 +88,6 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         ActivitySerializer, many=True, read_only=True
     )
     slug = serializers.CharField(read_only=True)
-    slug = serializers.CharField(required=False, allow_blank=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
 

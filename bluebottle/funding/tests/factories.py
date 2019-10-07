@@ -9,6 +9,13 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
+class BankAccountFactory(factory.DjangoModelFactory):
+    reviewed = True
+
+    class Meta(object):
+        model = BankAccount
+
+
 class FundingFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Funding
@@ -19,6 +26,7 @@ class FundingFactory(factory.DjangoModelFactory):
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
+    bank_account = factory.SubFactory(BankAccountFactory)
     deadline = factory.Faker('future_datetime', tzinfo=UTC)
     target = Money(5000, 'EUR')
     amount_matching = Money(0, 'EUR')
@@ -63,8 +71,3 @@ class BudgetLineFactory(factory.DjangoModelFactory):
         model = BudgetLine
 
     activity = factory.SubFactory(FundingFactory)
-
-
-class BankAccountFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = BankAccount

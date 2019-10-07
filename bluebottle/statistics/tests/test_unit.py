@@ -1,24 +1,19 @@
+
 import datetime
 
-import pendulum
 from django.test.utils import override_settings
 from django.utils import timezone
 from moneyed.classes import Money
 
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.members.models import Member
-from bluebottle.statistics.participation import Statistics as ParticipationStatistics
 from bluebottle.statistics.views import Statistics
-from bluebottle.tasks.models import Task
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.geo import LocationFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
-from bluebottle.test.factory_models.votes import VoteFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
+from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
+from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.utils.utils import StatusDefinition
 
 
 class InitialStatisticsTest(BluebottleTestCase):
@@ -27,18 +22,18 @@ class InitialStatisticsTest(BluebottleTestCase):
         self.stats = Statistics()
         Member.objects.all().delete()
 
-        # Required by Project model save method
-        self.init_projects()
-
         self.some_user = BlueBottleUserFactory.create()
 
-        self.some_project = ProjectFactory.create(amount_asked=5000,
-                                                  owner=self.some_user)
+        self.some_initiative = InitiativeFactory.create(
+            owner=self.some_user
+        )
 
     def test_initial_stats(self):
-        self.assertEqual(self.stats.projects_online, 0)
-        self.assertEqual(self.stats.projects_realized, 0)
-        self.assertEqual(self.stats.tasks_realized, 0)
+        self.assertEqual(self.stats.activities_online, 0)
+        self.assertEqual(self.stats.activities_succeeded, 0)
+        self.assertEqual(self.stats.assignments_succeeded, 0)
+        self.assertEqual(self.stats.events_succeeded, 0)
+        self.assertEqual(self.stats.fundings_succeeded, 0)
         self.assertEqual(self.stats.people_involved, 0)
         self.assertEqual(self.stats.donated_total, Money(0, 'EUR'))
 
@@ -56,276 +51,683 @@ class StatisticsTest(BluebottleTestCase):
         self.stats = Statistics()
         Member.objects.all().delete()
 
-        # Required by Project model save method
-        self.init_projects()
-
         self.some_user = BlueBottleUserFactory.create()
-        self.another_user = BlueBottleUserFactory.create()
+        self.other_user = BlueBottleUserFactory.create()
 
-        self.campaign_status = ProjectPhase.objects.get(slug='campaign')
-
-        self.some_project = ProjectFactory.create(amount_asked=5000,
-                                                  owner=self.some_user)
-        self.task = None
-        self.donation = None
-        self.order = None
-
-    def _test_project_stats(self, status, online, involved):
-        self.some_project.status = status
-        self.some_project.save()
-
-        self.assertEqual(self.stats.projects_online, online)
-        # People involved:
-        # - campaigner
-        self.assertEqual(self.stats.people_involved, involved)
-
-    def test_project_campaign_stats(self):
-        self._test_project_stats(
-            self.campaign_status,
-            online=1,
-            involved=1
+        self.initiative = InitiativeFactory.create(
+            owner=self.some_user
         )
 
-    def test_project_complete_stats_changed(self):
-        self.some_project.status = ProjectPhase.objects.get(slug='done-complete')
-        self.some_project.save()
-        self._test_project_stats(
-            ProjectPhase.objects.get(
-                slug='closed'
-            ),
-            online=0,
-            involved=0
-        )
-        self.assertEqual(self.stats.projects_realized, 0)
-        self.assertEqual(self.stats.projects_complete, 0)
 
-    def test_project_complete_stats(self):
-        self._test_project_stats(
-            ProjectPhase.objects.get(
-                slug='done-complete'
-            ),
-            online=0,
-            involved=1
-        )
-        self.assertEqual(self.stats.projects_realized, 1)
-        self.assertEqual(self.stats.projects_complete, 1)
-
-    def test_project_incomplete_stats(self):
-        self._test_project_stats(
-            ProjectPhase.objects.get(
-                slug='done-incomplete'
-            ),
-            online=0,
-            involved=1
-        )
-        self.assertEqual(self.stats.projects_realized, 1)
-        self.assertEqual(self.stats.projects_complete, 0)
-
-    def test_project_voting_stats(self):
-        self._test_project_stats(
-            ProjectPhase.objects.get(
-                slug='voting'
-            ),
-            online=1,
-            involved=1
-        )
-
-    def test_project_voting_done_stats(self):
-        self._test_project_stats(
-            ProjectPhase.objects.get(
-                slug='voting-done'
-            ),
-            online=0,
-            involved=1
-        )
-
-    def test_project_to_be_continued_stats(self):
-        self._test_project_stats(
-            ProjectPhase.objects.get(
-                slug='to-be-continued'
-            ),
-            online=0,
-            involved=1
-        )
-
-    def test_project_draft_stats(self):
-        self._test_project_stats(
-            ProjectPhase.objects.get(
-                slug='plan-new'
-            ),
-            online=0,
-            involved=0
-        )
-
-    def test_task_stats(self):
-        # project is in campaign phase
-        self.some_project.status = self.campaign_status
-        self.some_project.save()
-
-        # Create a task and add other user as member
-        self.task = TaskFactory.create(author=self.some_user,
-                                       project=self.some_project,
-                                       status=Task.TaskStatuses.realized)
-        TaskMemberFactory.create(task=self.task, member=self.another_user, status='realized')
-
-        self.assertEqual(self.stats.tasks_realized, 1)
-        self.assertEqual(self.stats.task_members, 1)
-        self.assertEqual(self.stats.time_spent, 4)
-        # People involved:
-        # - campaigner
-        # - task member (another_user)
-        self.assertEqual(self.stats.people_involved, 2)
-        self.assertEqual(self.stats.participants, 2)
-
-    def test_task_stats_user_both_owner_and_member(self):
-        # project is in campaign phase
-        self.some_project.status = self.campaign_status
-        self.some_project.save()
-
-        # Create a task and add other user as member
-        self.task = TaskFactory.create(author=self.some_user,
-                                       project=self.some_project,
-                                       status=Task.TaskStatuses.realized)
-        TaskMemberFactory.create(task=self.task, member=self.some_user, status='realized')
-
-        self.assertEqual(self.stats.tasks_realized, 1)
-        self.assertEqual(self.stats.task_members, 1)
-        self.assertEqual(self.stats.time_spent, 4)
-        # People involved:
-        # - campaigner as both owner and member
-        self.assertEqual(self.stats.people_involved, 1)
-        self.assertEqual(self.stats.people_involved, 1)
-
-    def test_donation_stats(self):
-        self.some_project.status = self.campaign_status
-        self.some_project.save()
-
-        self.order = OrderFactory.create(user=self.another_user,
-                                         status=StatusDefinition.SUCCESS)
-        self.donation = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order,
-                                               project=self.some_project,
-                                               fundraiser=None)
-
-        self.assertEqual(self.stats.donated_total, Money(1000, 'EUR'))
-        # People involved:
-        # - campaigner
-        # - donator (another_user)
-        self.assertEqual(self.stats.people_involved, 2)
-        self.assertEqual(self.stats.participants, 1)
-
-    def test_donation_stats_named_donation(self):
-        self.some_project.status = self.campaign_status
-        self.some_project.save()
-
-        order = OrderFactory.create(
-            user=self.another_user,
-            status=StatusDefinition.SUCCESS)
-        self.donation = DonationFactory.create(amount=Money(1000, 'EUR'), order=order,
-                                               project=self.some_project,
-                                               fundraiser=None)
-        order = OrderFactory.create(
-            user=self.another_user,
-            status=StatusDefinition.SUCCESS)
-        self.donation = DonationFactory.create(amount=Money(1000, 'EUR'), order=order,
-                                               project=self.some_project,
-                                               name='test-name',
-                                               fundraiser=None)
-
-        self.assertEqual(self.stats.donated_total, Money(2000, 'EUR'))
-        # People involved:
-        # - campaigner
-        # - donator (another_user)
-        # - donator (another_user on behalve of somebody else)
-        self.assertEqual(self.stats.people_involved, 3)
-        self.assertEqual(self.stats.participants, 1)
-
-    def test_donation_pledged_stats(self):
-        self.some_project.status = self.campaign_status
-        self.some_project.save()
-
-        self.order = OrderFactory.create(user=self.another_user,
-                                         status=StatusDefinition.PLEDGED)
-        self.donation = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order,
-                                               project=self.some_project,
-                                               fundraiser=None)
-
-        self.assertEqual(self.stats.donated_total, Money(1000, 'EUR'))
-        self.assertEqual(self.stats.pledged_total, Money(1000, 'EUR'))
-
-    def test_donation_total_stats(self):
-        self.some_project.status = self.campaign_status
-        self.some_project.save()
-
-        self.order1 = OrderFactory.create(user=self.another_user,
-                                          status=StatusDefinition.SUCCESS)
-        self.donation1 = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order1,
-                                                project=self.some_project,
-                                                fundraiser=None)
-
-        self.order2 = OrderFactory.create(user=None,
-                                          status=StatusDefinition.SUCCESS)
-        self.donation2 = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order2,
-                                                project=self.some_project,
-                                                fundraiser=None)
-
-        self.assertEqual(self.stats.donated_total, Money(2000, 'EUR'))
-        # People involved:
-        # - campaigner
-        # - donator (another_user)
-        # - donator (anon)
-        self.assertEqual(self.stats.people_involved, 3)
-
-    def test_donation_total_stats_convert_currencies(self):
-        self.some_project.status = self.campaign_status
-        self.some_project.save()
-
-        self.order1 = OrderFactory.create(user=self.another_user,
-                                          status=StatusDefinition.SUCCESS)
-        self.donation1 = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order1,
-                                                project=self.some_project,
-                                                fundraiser=None)
-
-        self.order2 = OrderFactory.create(user=None,
-                                          status=StatusDefinition.SUCCESS)
-        self.donation2 = DonationFactory.create(amount=Money(1000, 'USD'), order=self.order2,
-                                                project=self.some_project,
-                                                fundraiser=None)
-
-        self.assertEqual(self.stats.donated_total, Money(2500, 'EUR'))
-        # People involved:
-        # - campaigner
-        # - donator (another_user)
-        # - donator (anon)
-        self.assertEqual(self.stats.people_involved, 3)
-
-    def test_matched_stats(self):
-        complete_status = ProjectPhase.objects.get(slug='done-complete')
-        ProjectFactory.create(
-            amount_asked=Money(1000, 'EUR'),
-            amount_extra=Money(100, 'EUR'),
+class EventStatisticsTest(StatisticsTest):
+    def setUp(self):
+        super(EventStatisticsTest, self).setUp()
+        self.event = EventFactory.create(
             owner=self.some_user,
-            status=complete_status
+            initiative=self.initiative,
+            start_date=timezone.now() - datetime.timedelta(hours=1),
+            duration=0.1
         )
 
-        ProjectFactory.create(
-            amount_asked=Money(1000, 'USD'),
-            amount_extra=Money(100, 'USD'),
+    def test_open(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.event.review_transitions.submit()
+
+        self.initiative.save()
+        self.event.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 1
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.events_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_succeeded(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.event.review_transitions.submit()
+        self.event.transitions.start()
+        self.event.transitions.succeed()
+
+        self.initiative.save()
+        self.event.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.events_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_closed(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.event.review_transitions.submit()
+        self.event.transitions.start()
+        self.event.transitions.succeed()
+        self.event.transitions.close()
+
+        self.initiative.save()
+        self.event.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.events_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_participant(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.event.review_transitions.submit()
+        ParticipantFactory.create(activity=self.event, user=self.other_user)
+        self.event.transitions.start()
+        self.event.transitions.succeed()
+
+        self.initiative.save()
+        self.event.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.events_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.time_spent, 0.1
+        )
+        self.assertEqual(
+            self.stats.event_members, 1
+        )
+        self.assertEqual(
+            self.stats.people_involved, 2
+        )
+
+    def test_participant_withdrawn(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.event.review_transitions.submit()
+        contribution = ParticipantFactory.create(activity=self.event, user=self.other_user)
+        contribution.transitions.withdraw()
+        contribution.save()
+        self.event.transitions.start()
+        self.event.transitions.succeed()
+
+        self.initiative.save()
+        self.event.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.events_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.time_spent, 0
+        )
+        self.assertEqual(
+            self.stats.event_members, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_participant_noshow(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.event.review_transitions.submit()
+        contribution = ParticipantFactory.create(activity=self.event, user=self.other_user)
+        self.event.transitions.start()
+        self.event.transitions.succeed()
+        contribution.transitions.succeed()
+        contribution.transitions.no_show()
+        contribution.save()
+
+        self.initiative.save()
+        self.event.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.events_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.time_spent, 0
+        )
+        self.assertEqual(
+            self.stats.event_members, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+
+class AssignmentStatisticsTest(StatisticsTest):
+    def setUp(self):
+        super(AssignmentStatisticsTest, self).setUp()
+        self.assignment = AssignmentFactory.create(
             owner=self.some_user,
-            status=complete_status
+            initiative=self.initiative,
+            registration_deadline=(timezone.now() + datetime.timedelta(hours=24)).date(),
+            end_date=(timezone.now() + datetime.timedelta(hours=48)).date(),
+            duration=0.1
         )
 
-        self.assertEqual(self.stats.amount_matched, Money(250, 'EUR'))
+    def test_open(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.assignment.review_transitions.submit()
 
-    def test_votes_stats(self):
-        VoteFactory.create(voter=self.some_user)
-        VoteFactory.create(voter=self.some_user)
-        VoteFactory.create(voter=self.another_user)
+        self.initiative.save()
+        self.assignment.save()
 
-        self.assertEqual(self.stats.votes_cast, 3)
+        self.assertEqual(
+            self.stats.activities_online, 1
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.assignments_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
 
-    def test_members_stats(self):
-        BlueBottleUserFactory.create(is_active=False)
-        self.assertEqual(self.stats.members, 3)
+    def test_succeeded(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.assignment.review_transitions.submit()
+        self.assignment.transitions.start()
+        self.assignment.transitions.succeed()
+
+        self.initiative.save()
+        self.assignment.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.assignments_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_closed(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.assignment.review_transitions.submit()
+        self.assignment.transitions.start()
+        self.assignment.transitions.succeed()
+        self.assignment.transitions.close()
+
+        self.initiative.save()
+        self.assignment.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.assignments_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_participant(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.assignment.review_transitions.submit()
+        contribution = ApplicantFactory.create(activity=self.assignment, user=self.other_user)
+        contribution.transitions.accept()
+        contribution.save()
+        self.assignment.transitions.start()
+        self.assignment.transitions.succeed()
+        contribution.refresh_from_db()
+        contribution.time_spent = 0.1
+        contribution.save()
+
+        self.initiative.save()
+        self.assignment.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.assignments_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.time_spent, 0.1
+        )
+        self.assertEqual(
+            self.stats.assignment_members, 1
+        )
+        self.assertEqual(
+            self.stats.people_involved, 2
+        )
+
+    def test_participant_withdrawn(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.assignment.review_transitions.submit()
+        contribution = ApplicantFactory.create(activity=self.assignment, user=self.other_user)
+        contribution.transitions.withdraw()
+        contribution.save()
+        self.assignment.transitions.start()
+        self.assignment.transitions.succeed()
+
+        self.initiative.save()
+        self.assignment.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.assignments_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.time_spent, 0
+        )
+        self.assertEqual(
+            self.stats.assignment_members, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_participant_rejected(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.assignment.review_transitions.submit()
+        contribution = ApplicantFactory.create(activity=self.assignment, user=self.other_user)
+        contribution.transitions.reject()
+        self.assignment.transitions.start()
+        self.assignment.transitions.succeed()
+        contribution.save()
+
+        self.initiative.save()
+        self.assignment.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.assignments_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.time_spent, 0
+        )
+        self.assertEqual(
+            self.stats.assignment_members, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+
+class FundingStatisticsTest(StatisticsTest):
+    def setUp(self):
+        super(FundingStatisticsTest, self).setUp()
+        self.funding = FundingFactory.create(
+            owner=self.some_user,
+            initiative=self.initiative,
+            target=Money(100, 'EUR')
+        )
+
+    def test_open(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+
+        self.initiative.save()
+        self.funding.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 1
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.fundings_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_succeeded(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+        self.funding.transitions.succeed()
+
+        self.initiative.save()
+        self.funding.amount_matching = Money(100, 'EUR')
+        self.funding.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.fundings_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.amount_matched, Money(100, 'EUR')
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+
+    def test_closed(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+        self.funding.transitions.succeed()
+        self.funding.transitions.close()
+
+        self.initiative.save()
+        self.funding.amount_matching = Money(100, 'EUR')
+        self.funding.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.fundings_succeeded, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
+        self.assertEqual(
+            self.stats.amount_matched, Money(0, 'EUR')
+        )
+
+    def test_donation(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+        self.funding.transitions.succeed()
+
+        contribution = DonationFactory.create(
+            activity=self.funding,
+            user=self.other_user,
+            amount=Money(50, 'EUR')
+        )
+        contribution.transitions.succeed()
+        contribution.save()
+
+        self.initiative.save()
+        self.funding.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.fundings_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.donated_total, Money(50, 'EUR')
+        )
+        self.assertEqual(
+            self.stats.donations, 1
+        )
+        self.assertEqual(
+            self.stats.people_involved, 2
+        )
+
+    def test_donation_many(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+        self.funding.transitions.succeed()
+
+        for i in range(4):
+            contribution = DonationFactory.create(
+                activity=self.funding,
+                user=self.other_user,
+                amount=Money(50, 'EUR')
+            )
+            contribution.transitions.succeed()
+            contribution.save()
+
+        self.initiative.save()
+        self.funding.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.fundings_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.donated_total, Money(200, 'EUR')
+        )
+        self.assertEqual(
+            self.stats.donations, 4
+        )
+        self.assertEqual(
+            self.stats.people_involved, 2
+        )
+
+    def test_pledge(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+        self.funding.transitions.succeed()
+
+        contribution = DonationFactory.create(
+            activity=self.funding,
+            user=self.other_user,
+            amount=Money(50, 'EUR')
+        )
+        PledgePaymentFactory.create(
+            donation=contribution
+        )
+        contribution.save()
+
+        self.initiative.save()
+        self.funding.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.fundings_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.pledged_total, Money(50, 'EUR')
+        )
+        self.assertEqual(
+            self.stats.donated_total, Money(50, 'EUR')
+        )
+        self.assertEqual(
+            self.stats.donations, 1
+        )
+        self.assertEqual(
+            self.stats.people_involved, 2
+        )
+
+    def test_donation_other_currency(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+        self.funding.transitions.succeed()
+
+        contribution = DonationFactory.create(
+            activity=self.funding,
+            user=self.other_user,
+            amount=Money(50, 'USD')
+        )
+        contribution.transitions.succeed()
+        contribution.save()
+
+        self.initiative.save()
+        self.funding.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.fundings_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.donated_total, Money(75, 'EUR')
+        )
+        self.assertEqual(
+            self.stats.donations, 1
+        )
+        self.assertEqual(
+            self.stats.people_involved, 2
+        )
+
+    def test_donation_multiple_currencies(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+        self.funding.transitions.succeed()
+
+        for currency in ('EUR', 'USD'):
+            contribution = DonationFactory.create(
+                activity=self.funding,
+                user=self.other_user,
+                amount=Money(50, currency)
+            )
+            contribution.transitions.succeed()
+            contribution.save()
+
+        self.initiative.save()
+        self.funding.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.fundings_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.donated_total, Money(125, 'EUR')
+        )
+        self.assertEqual(
+            self.stats.donations, 2
+        )
+        self.assertEqual(
+            self.stats.people_involved, 2
+        )
+
+    def test_donation_failed(self):
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+
+        contribution = DonationFactory.create(
+            activity=self.funding,
+            user=self.other_user,
+            amount=Money(50, 'EUR')
+        )
+
+        contribution.transitions.fail()
+        contribution.save()
+
+        self.funding.transitions.succeed()
+
+        self.initiative.save()
+        self.funding.save()
+
+        self.assertEqual(
+            self.stats.activities_online, 0
+        )
+        self.assertEqual(
+            self.stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.fundings_succeeded, 1
+        )
+        self.assertEqual(
+            self.stats.donated_total, Money(0, 'EUR')
+        )
+        self.assertEqual(
+            self.stats.donations, 0
+        )
+        self.assertEqual(
+            self.stats.people_involved, 1
+        )
 
 
 @override_settings(
@@ -339,251 +741,74 @@ class StatisticsDateTest(BluebottleTestCase):
     def setUp(self):
         super(StatisticsDateTest, self).setUp()
 
-        self.init_projects()
+        user = BlueBottleUserFactory.create()
+        other_user = BlueBottleUserFactory.create()
 
-        new_user = BlueBottleUserFactory.create()
-        old_user = BlueBottleUserFactory.create()
+        for diff in (10, 5, 1):
+            initiative = InitiativeFactory.create(status='approved', owner=user)
 
-        status_realized = ProjectPhase.objects.get(slug='done-complete')
-        status_campaign = ProjectPhase.objects.get(slug='campaign')
+            past_date = timezone.now() - datetime.timedelta(days=diff)
+            initiative.created = past_date
+            initiative.save()
 
-        now = timezone.now()
-        last_year = timezone.now() - datetime.timedelta(days=365)
+            event = EventFactory(status='succeeded', transition_date=past_date)
 
-        new_project = ProjectFactory.create(
-            amount_asked=5000, status=status_realized, owner=old_user,
-            campaign_ended=now, campaign_started=now, amount_extra=100
-        )
-        ProjectFactory.create(
-            amount_asked=5000, status=status_campaign, owner=old_user,
-            campaign_started=now
-        )
-        old_project = ProjectFactory.create(
-            amount_asked=5000, status=status_realized, owner=old_user,
-            campaign_ended=last_year, campaign_started=last_year,
-            amount_extra=200
-        )
-        ProjectFactory.create(
-            amount_asked=5000, status=status_campaign, owner=old_user,
-            campaign_started=last_year, amount_extra=1000
-        )
-
-        VoteFactory.create(voter=old_user, created=now)
-        vote = VoteFactory.create(voter=old_user)
-        vote.created = last_year
-        vote.save()
-
-        old_task = TaskFactory.create(
-            author=old_user, project=old_project, status=Task.TaskStatuses.realized,
-            deadline=last_year
-        )
-        TaskMemberFactory.create(task=old_task, member=old_user, status='realized')
-
-        new_task = TaskFactory.create(
-            author=old_user, project=new_project, status=Task.TaskStatuses.realized,
-            deadline=now
-        )
-        TaskMemberFactory.create(task=new_task, member=new_user, status='realized')
-
-        order1 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS)
-        order1.created = now
-        order1.save()
-
-        DonationFactory.create(
-            amount=Money(1000, 'EUR'), order=order1, project=old_project,
-            fundraiser=None
-        )
-
-        order2 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS)
-        order2.created = last_year
-        order2.save()
-
-        DonationFactory.create(
-            amount=Money(1000, 'EUR'), order=order2, project=old_project,
-            fundraiser=None
-        )
+            ParticipantFactory.create(
+                status='succeeded',
+                activity=event,
+                transition_date=past_date,
+                time_spent=1,
+                user=other_user
+            )
 
     def test_all(self):
         stats = Statistics()
 
-        self.assertEqual(stats.people_involved, 2)
-        self.assertEqual(stats.donated_total, Money(2000, 'EUR'))
-        self.assertEqual(stats.projects_online, 2)
-        self.assertEqual(stats.projects_realized, 2)
-        self.assertEqual(stats.tasks_realized, 2)
-        self.assertEqual(stats.votes_cast, 2)
-        self.assertEqual(stats.amount_matched, Money(1300, 'EUR'))
-
-    def test_since_yesterday(self):
-        stats = Statistics(start=timezone.now() - datetime.timedelta(days=1))
-
-        self.assertEqual(stats.people_involved, 2)
-        self.assertEqual(stats.donated_total, Money(1000, 'EUR'))
-        self.assertEqual(stats.projects_online, 1)
-        self.assertEqual(stats.projects_realized, 2)
-        self.assertEqual(stats.tasks_realized, 1)
-        self.assertEqual(stats.votes_cast, 1)
-        self.assertEqual(stats.amount_matched, Money(100, 'EUR'))
-
-    def test_last_year(self):
-        stats = Statistics(
-            start=timezone.now() - datetime.timedelta(days=2 * 365),
-            end=timezone.now() - datetime.timedelta(days=364),
-
+        self.assertEqual(
+            stats.activities_succeeded, 3
+        )
+        self.assertEqual(
+            stats.events_succeeded, 3
+        )
+        self.assertEqual(
+            stats.people_involved, 2
         )
 
-        self.assertEqual(stats.people_involved, 1)
-        self.assertEqual(stats.donated_total, Money(1000, 'EUR'))
-        self.assertEqual(stats.projects_online, 1)
-        self.assertEqual(stats.projects_realized, 0)
-        self.assertEqual(stats.tasks_realized, 1)
-        self.assertEqual(stats.votes_cast, 1)
-        self.assertEqual(stats.amount_matched, Money(200, 'EUR'))
-
-    def test_since_last_year(self):
-        stats = Statistics(
-            start=timezone.now() - datetime.timedelta(days=366),
+    def test_end(self):
+        stats = Statistics(end=timezone.now() - datetime.timedelta(days=2))
+        self.assertEqual(
+            stats.activities_succeeded, 2
+        )
+        self.assertEqual(
+            stats.events_succeeded, 2
+        )
+        self.assertEqual(
+            stats.people_involved, 2
         )
 
-        self.assertEqual(stats.people_involved, 2)
-        self.assertEqual(stats.donated_total, Money(2000, 'EUR'))
-        self.assertEqual(stats.projects_online, 2)
-        self.assertEqual(stats.projects_realized, 2)
-        self.assertEqual(stats.tasks_realized, 2)
-        self.assertEqual(stats.votes_cast, 2)
-        self.assertEqual(stats.amount_matched, Money(300, 'EUR'))
+    def test_start(self):
+        stats = Statistics(start=timezone.now() - datetime.timedelta(days=9))
+        self.assertEqual(
+            stats.activities_succeeded, 2
+        )
+        self.assertEqual(
+            stats.events_succeeded, 2
+        )
+        self.assertEqual(
+            stats.people_involved, 2
+        )
 
-
-@override_settings(
-    CACHES={
-        'default': {
-            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-        }
-    }
-)
-class ParticipationStatisticsTest(BluebottleTestCase):
-    def setUp(self):
-        super(ParticipationStatisticsTest, self).setUp()
-
-        # Required by Project model save method
-        self.init_projects()
-
-        self.user_1 = BlueBottleUserFactory.create()
-        self.user_2 = BlueBottleUserFactory.create()
-        self.user_3 = BlueBottleUserFactory.create()
-
-        self.location = LocationFactory.create()
-
-        self.project_status_plan_new = ProjectPhase.objects.get(slug='plan-new')
-        self.project_status_plan_submitted = ProjectPhase.objects.get(slug='plan-submitted')
-        self.project_status_voting = ProjectPhase.objects.get(slug='voting')
-        self.project_status_voting_done = ProjectPhase.objects.get(slug='voting-done')
-        self.project_status_campaign = ProjectPhase.objects.get(slug='campaign')
-        self.project_status_done_complete = ProjectPhase.objects.get(slug='done-complete')
-        self.project_status_done_incomplete = ProjectPhase.objects.get(slug='done-incomplete')
-        self.project_status_closed = ProjectPhase.objects.get(slug='closed')
-
-        self.some_project = ProjectFactory.create(owner=self.user_1,
-                                                  status=self.project_status_done_complete,
-                                                  location=self.location)
-        self.another_project = ProjectFactory.create(owner=self.user_2)
-
-        self.some_task = TaskFactory.create(project=self.some_project,
-                                            author=self.user_1)
-        self.another_task = TaskFactory.create(project=self.another_project,
-                                               author=self.user_2)
-
-        self.some_task_member = TaskMemberFactory.create(member=self.user_1, task=self.some_task)
-        self.another_task_member = TaskMemberFactory.create(member=self.user_2, task=self.another_task)
-
-        start = pendulum.create().subtract(days=7)
-        end = pendulum.create().add(days=7)
-
-        # TODO: Create atleast one project, task and task member outside the time range
-
-        self.statistics = ParticipationStatistics(start=start,
-                                                  end=end)
-
-    def test_participant_details(self):
-        participant_count = self.statistics.participants_count
-
-        # NOTE: Participants : One project creator with project status done complete and one task creator
-        self.assertEqual(participant_count, 2)
-
-    def test_projects_total(self):
-        count = self.statistics.projects_total
-        self.assertEqual(count, 2)
-
-    def test_projects_count_by_theme(self):
-        count = self.statistics.get_projects_count_by_theme(theme='education')
-        self.assertEqual(count, 2)
-
-    def test_projects_count_by_last_status(self):
-        count = self.statistics.get_projects_count_by_last_status(statuses=['done-complete'])
-        self.assertEqual(count, 1)
-
-    def test_projects_status_count_by_location_group(self):
-        count = self.statistics.get_projects_status_count_by_location_group(location_group=self.location.group.name,
-                                                                            statuses=['done-complete'])
-        self.assertEqual(count, 1)
-
-    def test_projects_status_count_by_theme(self):
-        count = self.statistics.get_projects_status_count_by_theme(theme='education', statuses=['done-complete'])
-        self.assertEqual(count, 1)
-
-    def test_projects_by_location_group(self):
-        count = len(self.statistics.get_projects_by_location_group(location_group=self.location.group.name))
-        self.assertEqual(count, 1)
-
-    def test_project_successful(self):
-        count = self.statistics.projects_successful
-        self.assertEqual(count, 1)
-
-    def test_project_running(self):
-        count = self.statistics.projects_running
-        self.assertEqual(count, 0)
-
-    def test_project_complete(self):
-        count = self.statistics.projects_complete
-        self.assertEqual(count, 1)
-
-    def test_project_online(self):
-        count = self.statistics.projects_online
-        self.assertEqual(count, 0)
-
-    def test_tasks_total(self):
-        count = self.statistics.tasks_total
-        self.assertEqual(count, 2)
-
-    def test_tasks_count_by_last_status(self):
-        count = self.statistics.get_tasks_count_by_last_status(statuses=['in progress'])
-        self.assertEqual(count, 2)
-
-    def test_tasks_status_count_by_location_group(self):
-        count = self.statistics.get_tasks_status_count_by_location_group(location_group=self.location.group.name,
-                                                                         statuses=['in progress'])
-        self.assertEqual(count, 1)
-
-    def test_tasks_status_count_by_theme(self):
-        count = self.statistics.get_tasks_status_count_by_theme(theme='education', statuses=['in progress'])
-        self.assertEqual(count, 2)
-
-    def test_task_members_total(self):
-        count = self.statistics.task_members_total
-        self.assertEqual(count, 2)
-
-    def test_get_task_members_count_by_last_status(self):
-        count = self.statistics.get_task_members_count_by_last_status(['accepted'])
-        self.assertEqual(count, 2)
-
-    def test_task_members(self):
-        count = self.statistics.task_members
-        self.assertEqual(count, 0)
-
-    def test_unconfirmed_task_members(self):
-        count = self.statistics.unconfirmed_task_members
-        self.assertEqual(count, 0)
-
-    def test_unconfirmed_task_members_task_count(self):
-        count = self.statistics.unconfirmed_task_members_task_count
-        self.assertEqual(count, 0)
+    def test_both(self):
+        stats = Statistics(
+            start=timezone.now() - datetime.timedelta(days=9),
+            end=timezone.now() - datetime.timedelta(days=2)
+        )
+        self.assertEqual(
+            stats.activities_succeeded, 1
+        )
+        self.assertEqual(
+            stats.events_succeeded, 1
+        )
+        self.assertEqual(
+            stats.people_involved, 2
+        )

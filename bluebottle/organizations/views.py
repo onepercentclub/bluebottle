@@ -1,8 +1,7 @@
 from rest_framework import generics
 from rest_framework import filters
 
-from rest_framework.permissions import IsAuthenticated
-from bluebottle.utils.permissions import IsOwnerOrReadOnly
+from bluebottle.utils.permissions import IsOwnerOrReadOnly, IsAuthenticated
 
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
 from rest_framework_json_api.parsers import JSONParser
@@ -87,7 +86,7 @@ class OrganizationDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIView):
     model = Organization
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly,)
     renderer_classes = (BluebottleJSONAPIRenderer, )
     parser_classes = (JSONParser, )
     authentication_classes = (

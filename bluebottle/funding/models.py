@@ -443,7 +443,10 @@ class PlainPayoutAccount(PayoutAccount):
 
     @property
     def required_fields(self):
-        return ['document', ]
+        required = []
+        if self.status == 'new':
+            required.append('document')
+        return required
 
 
 class BankAccount(PolymorphicModel):
@@ -455,6 +458,10 @@ class BankAccount(PolymorphicModel):
         'funding.PayoutAccount',
         null=True, blank=True,
         related_name='external_accounts')
+
+    @property
+    def parent(self):
+        return self.connect_account
 
     @property
     def verified(self):
@@ -474,3 +481,6 @@ class BankAccount(PolymorphicModel):
     def payment_methods(self):
         provider = self.provider_class.objects.get()
         return provider.payment_methods
+
+    class JSONAPIMeta:
+        resource_name = 'payout-accounts/external-accounts'

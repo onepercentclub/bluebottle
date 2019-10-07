@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from bluebottle.funding.base_serializers import PaymentSerializer
+from bluebottle.funding.base_serializers import PaymentSerializer, BaseBankAccountSerializer
 from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwaveBankAccount
 
 
@@ -15,15 +15,20 @@ class FlutterwavePaymentSerializer(PaymentSerializer):
         resource_name = 'payments/flutterwave-payments'
 
 
-class FlutterwaveBankAccountSerializer(serializers.ModelSerializer):
+class FlutterwaveBankAccountSerializer(BaseBankAccountSerializer):
 
     class Meta:
         model = FlutterwaveBankAccount
 
         fields = (
-            'id', 'account_holder_name', 'bank_code', 'account_number',
-
+            'id',
+            'account_holder_name',
+            'bank_code',
+            'account_number',
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
+        included_resources = [
+            'owner',
+        ]
         resource_name = 'payout-accounts/flutterwave-external-accounts'

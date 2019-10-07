@@ -1,8 +1,10 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework_json_api.relations import ResourceRelatedField
 
+from rest_framework import serializers
+
 from bluebottle.utils.fields import FSMField
-from bluebottle.funding.models import Donation, Payment
+from bluebottle.funding.models import Donation, Payment, BankAccount, PayoutAccount
 from bluebottle.transitions.serializers import AvailableTransitionsField
 
 
@@ -26,3 +28,20 @@ class PaymentSerializer(ModelSerializer):
             'donation',
         ]
         resource_name = 'payments'
+
+
+class BaseBankAccountSerializer(serializers.ModelSerializer):
+    connect_account = ResourceRelatedField(queryset=PayoutAccount.objects.all())
+
+    class Meta:
+        model = BankAccount
+
+        fields = (
+            'id',
+        )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'connect_account',
+        ]
+        resource_name = 'payout-accounts/external-accounts'

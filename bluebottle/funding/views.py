@@ -1,4 +1,5 @@
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.status import HTTP_404_NOT_FOUND
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
@@ -13,7 +14,7 @@ from bluebottle.funding.serializers import (
     FundingSerializer, DonationSerializer, FundingTransitionSerializer,
     FundraiserSerializer, RewardSerializer, BudgetLineSerializer,
     DonationCreateSerializer, FundingListSerializer,
-    PayoutAccountSerializer
+    PayoutAccountSerializer, PlainPayoutAccountSerializer
 )
 
 from bluebottle.transitions.views import TransitionList
@@ -22,7 +23,6 @@ from bluebottle.utils.views import (
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
     CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView
 )
-from bluebottle.funding.polymorphic_serializers import PlainPayoutAccountSerializer
 
 
 class RewardList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
@@ -155,15 +155,20 @@ class FundingTransitionList(TransitionList):
 
 
 class PayoutAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
-    queryset = PayoutAccount.objects.all()
+    queryset = PayoutAccount.objects
     serializer_class = PayoutAccountSerializer
 
     permission_classes = (
         IsAuthenticated,
     )
 
+    prefetch_for_includes = {
+        'owner': ['owner'],
+        'external_accounts': ['external_accounts'],
+    }
+
     def get_queryset(self):
-        return self.queryset.filter(owner=self.request.user)
+        return self.queryset.order_by('-created').filter(owner=self.request.user)
 
 
 class PlainPayoutAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
@@ -184,9 +189,28 @@ class PlainPayoutAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpda
     queryset = PlainPayoutAccount.objects.all()
     serializer_class = PlainPayoutAccountSerializer
 
-    permission_classes = (
-        IsAuthenticated,
-    )
+    prefetch_for_includes = {
+        'owner': ['owner'],
+        'external_accounts': ['external_accounts'],
+    }
+
+    permission_classes = (IsAuthenticated, IsOwner, )
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def get_object(self):
+        # Make this smarter
+        obj = self.request.user.funding_payout_account.first()
+        if not obj:
+            raise HTTP_404_NOT_FOUND
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+        serializer.instance.transitions.submit()
+        serializer.instance.save()
 
     def get_queryset(self):
         return self.queryset.filter(owner=self.request.user)

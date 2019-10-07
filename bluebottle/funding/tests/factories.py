@@ -3,8 +3,8 @@ from moneyed import Money
 from pytz import UTC
 
 from bluebottle.funding.models import (
-    Funding, Donation, Reward, Fundraiser, BudgetLine, Payment, BankAccount
-)
+    Funding, Donation, Reward, Fundraiser, BudgetLine, Payment, BankAccount,
+    PlainPayoutAccount)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -68,3 +68,10 @@ class BudgetLineFactory(factory.DjangoModelFactory):
 class BankAccountFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = BankAccount
+
+
+class PlainPayoutAccountFactory(factory.DjangoModelFactory):
+    owner = factory.SubFactory(BlueBottleUserFactory)
+
+    class Meta(object):
+        model = PlainPayoutAccount

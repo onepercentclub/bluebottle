@@ -69,3 +69,6 @@ class FlutterwaveBankAccount(BankAccount):
     class Meta:
         verbose_name = _('Flutterwave bank account')
         verbose_name_plural = _('Flutterwave bank accounts')
+
+    class JSONAPIMeta:
+        resource_name = 'payout-accounts/flutterwave-external-accounts'

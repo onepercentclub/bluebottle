@@ -4,12 +4,12 @@ from django.urls import reverse
 from mock import patch
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, PlainPayoutAccountFactory
 from bluebottle.funding.transitions import DonationTransitions, PaymentTransitions
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
 
 success_response = {
     'status': 'success',
@@ -85,3 +85,57 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['attributes']['tx-ref'], self.tx_ref)
         self.donation.refresh_from_db()
         self.assertEqual(self.donation.status, DonationTransitions.values.failed)
+
+
+class FlutterwavePayoutAccountTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(FlutterwavePayoutAccountTestCase, self).setUp()
+
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create()
+        FlutterwavePaymentProviderFactory.create()
+
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.funding = FundingFactory.create(initiative=self.initiative)
+        self.payout_account = PlainPayoutAccountFactory.create(
+            status='verified',
+            owner=self.user
+        )
+
+        self.payout_account_url = reverse('payout-account-list')
+        self.bank_account_url = reverse('flutterwave-external-account-list')
+
+        self.data = {
+            'data': {
+                'type': 'payout-accounts/flutterwave-external-accounts',
+                'attributes': {
+                    'bank-code': '044',
+                    'account-number': '123456789',
+                    'account-holder-name': 'Jolof Rice'
+                },
+                'relationships': {
+                    'connect-account': {
+                        'id': self.payout_account.id,
+                        'type': 'payout-account/plain-payout-account'
+                    }
+                }
+            }
+        }
+
+    def test_create_bank_account(self):
+        response = self.client.post(self.bank_account_url, data=json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+        self.assertEqual(data['data']['attributes']['bank-code'], '044')
+
+        response = self.client.get(self.payout_account_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(data['data'][0]['attributes']['status'], 'verified')
+        bank_account = data['data'][0]['relationships']['external-accounts']['data'][0]
+        self.assertEqual(bank_account['data']['type'], '044')
+        bank_details = get_included(response, 'payout-accounts/flutterwave-external-accounts')
+        self.assertEqual(bank_details['attributes']['bank-code'], '044')

@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
 from bluebottle.funding_flutterwave.views import FlutterwavePaymentList, FlutterwaveWebhookView, \
-    FlutterwaveBankAccountAccountList
+    FlutterwaveBankAccountAccountList, FlutterwaveBankAccountAccountDetail
 
 urlpatterns = [
     url(r'^/payments/$',
@@ -13,4 +13,7 @@ urlpatterns = [
     url(r'^/bank-accounts/$',
         FlutterwaveBankAccountAccountList.as_view(),
         name='flutterwave-external-account-list'),
+    url(r'^/bank-accounts/(?P<pk>[\d]+)$',
+        FlutterwaveBankAccountAccountDetail.as_view(),
+        name='flutterwave-external-account-detail'),
 ]

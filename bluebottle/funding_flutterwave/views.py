@@ -10,7 +10,7 @@ from bluebottle.funding_flutterwave.models import FlutterwavePayment, Flutterwav
 from bluebottle.funding_flutterwave.serializers import FlutterwavePaymentSerializer, FlutterwaveBankAccountSerializer
 from bluebottle.funding_flutterwave.utils import check_payment_status
 from bluebottle.utils.permissions import IsOwner
-from bluebottle.utils.views import ListCreateAPIView, JsonApiViewMixin
+from bluebottle.utils.views import ListCreateAPIView, JsonApiViewMixin, RetrieveUpdateAPIView
 
 
 class FlutterwavePaymentList(PaymentList):
@@ -43,6 +43,16 @@ class FlutterwaveWebhookView(View):
 
 
 class FlutterwaveBankAccountAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
+    queryset = FlutterwaveBankAccount.objects.all()
+    serializer_class = FlutterwaveBankAccountSerializer
+    permission_classes = []
+
+    related_permission_classes = {
+        'connect_account': [IsOwner]
+    }
+
+
+class FlutterwaveBankAccountAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = FlutterwaveBankAccount.objects.all()
     serializer_class = FlutterwaveBankAccountSerializer
     permission_classes = []

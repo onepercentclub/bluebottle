@@ -120,7 +120,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'id', 'title', 'pitch', 'categories',
             'owner', 'reviewer', 'promoter', 'activity_manager',
             'slug', 'has_organization', 'organization',
-            'organization_contact', 'story', 'video_html', 'video_url', 'image',
+            'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'location', 'activities',
             'errors', 'required',
         )

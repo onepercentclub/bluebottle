@@ -115,6 +115,23 @@ class BasePermission(permissions.BasePermission):
         raise NotImplementedError(message)
 
 
+class IsOwnerOrReadOnly(BasePermission):
+    def has_action_permission(self, request, view, obj):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return (request.method in permissions.SAFE_METHODS) or obj.owner == request.user
+
+    def has_object_action_permission(self, action, user, obj):
+        return (action in permissions.SAFE_METHODS) or obj.owner == user
+
+
 class ResourcePermission(BasePermission, permissions.DjangoModelPermissions):
     perms_map = {
         'GET': ['%(app_label)s.api_read_%(model_name)s'],

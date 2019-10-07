@@ -2,6 +2,7 @@ from rest_framework import generics
 from rest_framework import filters
 
 from rest_framework.permissions import IsAuthenticated
+from bluebottle.utils.permissions import IsOwnerOrReadOnly
 
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
 from rest_framework_json_api.parsers import JSONParser
@@ -57,6 +58,7 @@ class OrganizationSearchFilter(filters.SearchFilter):
 
 
 class OrganizationList(AutoPrefetchMixin, generics.ListCreateAPIView):
+    model = Organization
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     pagination_class = OrganizationPagination
@@ -82,9 +84,10 @@ class OrganizationList(AutoPrefetchMixin, generics.ListCreateAPIView):
 
 
 class OrganizationDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIView):
+    model = Organization
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsOwnerOrReadOnly,)
     renderer_classes = (BluebottleJSONAPIRenderer, )
     parser_classes = (JSONParser, )
     authentication_classes = (

@@ -5,7 +5,7 @@ from bluebottle.organizations.models import Organization, OrganizationContact
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField
-from bluebottle.utils.serializers import NoCommitMixin
+from bluebottle.utils.serializers import NoCommitMixin, ResourcePermissionField
 
 
 class OrganizationSerializer(NoCommitMixin, ModelSerializer):
@@ -13,6 +13,8 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
     slug = serializers.SlugField(allow_null=True, required=False)
     name = serializers.CharField(required=True)
     website = serializers.CharField(allow_blank=True, required=False)
+
+    permissions = ResourcePermissionField('organization_detail', view_args=('pk',))
 
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
@@ -28,7 +30,7 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
             'required', 'errors',
         )
 
-        meta_fields = ['created', 'updated', 'errors', 'required']
+        meta_fields = ['created', 'updated', 'errors', 'required', 'permissions']
 
     class JSONAPIMeta:
         resource_name = 'organizations'

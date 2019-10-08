@@ -1,5 +1,6 @@
-from datetime import timedelta
+from datetime import timedelta, date, time
 
+from django.core import mail
 from django.utils.timezone import now
 
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
@@ -75,3 +76,39 @@ class EventTestCase(BluebottleTestCase):
         self.assertEqual(
             initiative.slug, 'new'
         )
+
+    def test_date_changed(self):
+        event = EventFactory(
+            title='Test Title',
+            status='open',
+            start_date=date.today() + timedelta(days=4),
+            start_time=time(10, 0)
+        )
+        ParticipantFactory.create_batch(3, activity=event, status='new')
+        ParticipantFactory.create(activity=event, status='withdrawn')
+
+        event.start_date = event.start_date + timedelta(days=1)
+        event.save()
+
+        recipients = [message.to[0] for message in mail.outbox]
+
+        for participant in event.contributions.all():
+            if participant.status == 'new':
+                self.assertTrue(participant.user.email in recipients)
+            else:
+                self.assertFalse(participant.user.email in recipients)
+
+    def test_date_not_changed(self):
+        event = EventFactory(
+            title='Test Title',
+            status='open',
+            start_date=date.today() + timedelta(days=4),
+            start_time=time(10, 0)
+        )
+        ParticipantFactory.create_batch(3, activity=event, status='new')
+        ParticipantFactory.create(activity=event, status='withdrawn')
+
+        event.title = 'New title'
+        event.save()
+
+        self.assertEqual(len(mail.outbox), 0)

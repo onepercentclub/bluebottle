@@ -2,17 +2,22 @@ from django.conf.urls import url
 
 from bluebottle.initiatives.views import (
     InitiativeList, InitiativeDetail, InitiativeImage,
-    InitiativeReviewTransitionList
-)
+    InitiativeReviewTransitionList,
+    InitiativeMapList)
 
 
 urlpatterns = [
+
     url(r'^$',
         InitiativeList.as_view(),
         name='initiative-list'),
     url(r'^/(?P<pk>\d+)$',
         InitiativeDetail.as_view(),
         name='initiative-detail'),
+    url(r'^/map/$',
+        InitiativeMapList.as_view(),
+        name='initiative-map-list'),
+
     url(r'^/transitions$',
         InitiativeReviewTransitionList.as_view(),
         name='initiative-review-transition-list'),

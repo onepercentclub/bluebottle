@@ -64,11 +64,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 
     stats_data.short_description = _('Statistics')
 
-    def title_display(self, obj):
-        return obj.title or _('- empty -')
-
-    title_display.short_description = _('Title')
-
     def valid(self, obj):
         if not obj.review_transitions.is_valid():
             return '-'
@@ -96,7 +91,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     list_filter = (PolymorphicChildModelFilter, 'status', 'review_status', 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['created', 'title_display', 'type', 'status', 'review_status',
+    list_display = ['created', 'title', 'type', 'status', 'review_status',
                     'link', 'highlight']
 
     list_search = ('title', 'description', 'owner__first_name', 'owner__last_name')
@@ -109,16 +104,13 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     def type(self, obj):
         return obj.get_real_instance_class().__name__
 
-    def title_display(self, obj):
-        return obj.title or _('- empty -')
-    title_display.short_description = _('Title')
-
 
 class ActivityAdminInline(StackedPolymorphicInline):
     model = Activity
     readonly_fields = ['title', 'created', 'status', 'owner']
     fields = readonly_fields
     extra = 0
+    can_delete = False
 
     class ActivityLinkMixin(object):
         def activity_link(self, obj):

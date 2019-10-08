@@ -15,18 +15,18 @@ from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.files.fields import ImageField
+from bluebottle.files.fields import ImageField, DocumentField
 from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from bluebottle.funding.transitions import (
     FundingTransitions,
     DonationTransitions,
     PaymentTransitions,
-    PayoutAccountTransitions
+    PayoutAccountTransitions,
+    PlainPayoutAccountTransitions
 )
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.fields import MoneyField, PrivateFileField
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import Validator, ValidatedModelMixin
-from bluebottle.utils.utils import reverse_signed
 
 
 class PaymentCurrency(models.Model):
@@ -107,10 +107,6 @@ class PaymentProvider(PolymorphicModel):
                     default4=100,
                 )
         return model
-
-
-class BankPaymentProvider(PaymentProvider):
-    currencies = ['EUR', 'USD', 'XOF', 'NGN', 'CFA', 'KES']
 
 
 class KYCPassedValidator(Validator):
@@ -208,6 +204,9 @@ class Funding(Activity):
                 line.save()
 
         super(Funding, self).save(*args, **kwargs)
+
+    def __unicode__(self):
+        return self.title or str(_('-empty-'))
 
 
 class Reward(models.Model):
@@ -418,7 +417,7 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
         default=PayoutAccountTransitions.values.new
     )
 
-    owner = models.OneToOneField(
+    owner = models.ForeignKey(
         'members.Member',
         related_name='funding_payout_account'
     )
@@ -427,44 +426,50 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
 
-    transitions = TransitionManager(PayoutAccountTransitions, 'status')
-
 
 class PlainPayoutAccount(PayoutAccount):
-    document = PrivateFileField(
-        max_length=110,
-        upload_to='funding/documents'
-    )
+    document = DocumentField(blank=True, null=True)
 
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
 
+    transitions = TransitionManager(PlainPayoutAccountTransitions, 'status')
+
     class Meta:
-        verbose_name = _('payout document')
-        verbose_name_plural = _('payout documents')
+        verbose_name = _('plain payout account')
+        verbose_name_plural = _('plain payout accounts')
+
+    class JSONAPIMeta:
+        resource_name = 'payout-accounts/plains'
 
     @property
-    def document_url(self):
-        # pk may be unset if not saved yet, in which case no url can be
-        # generated.
-        if self.pk is not None and self.file:
-            return reverse_signed('payout-document-file', args=(self.pk,))
-        return None
+    def required_fields(self):
+        required = []
+        if self.status == 'new':
+            required.append('document')
+        return required
 
 
 class BankAccount(PolymorphicModel):
-    owner = models.OneToOneField(
-        'members.Member',
-        related_name='funding_bank_account',
-        null=True,
-        blank=True
-    )
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
 
+    connect_account = models.ForeignKey(
+        'funding.PayoutAccount',
+        null=True, blank=True,
+        related_name='external_accounts')
+
+    @property
+    def parent(self):
+        return self.connect_account
+
     @property
     def verified(self):
         return self.reviewed
+
+    @property
+    def owner(self):
+        return self.connect_account.owner
 
     provider_class = None
 
@@ -477,18 +482,5 @@ class BankAccount(PolymorphicModel):
         provider = self.provider_class.objects.get()
         return provider.payment_methods
 
-
-class PlainBankAccount(BankAccount):
-
-    provider_class = BankPaymentProvider
-
-    account_number = models.CharField(
-        _("bank account number"), max_length=100, null=True, blank=True)
-    account_holder_name = models.CharField(
-        _("account holder name"), max_length=100, null=True, blank=True)
-    account_holder_address = models.CharField(
-        _("account holder address"), max_length=500, null=True, blank=True)
-    account_bank_country = models.CharField(
-        _("bank country"), max_length=100, null=True, blank=True)
-    account_details = models.CharField(
-        _("account details"), max_length=500, null=True, blank=True)
+    class JSONAPIMeta:
+        resource_name = 'payout-accounts/external-accounts'

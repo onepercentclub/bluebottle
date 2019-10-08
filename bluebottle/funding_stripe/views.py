@@ -1,13 +1,13 @@
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse
 from django.views.generic import View
 from rest_framework import serializers
-from rest_framework.mixins import CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.permissions import PaymentPermission
+from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.transitions import PayoutAccountTransitions
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
@@ -19,9 +19,7 @@ from bluebottle.funding_stripe.serializers import (
     ConnectAccountSerializer,
     StripePaymentSerializer
 )
-from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding_stripe.utils import stripe
-from bluebottle.members.models import Member
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView,
@@ -55,7 +53,7 @@ class StripePaymentList(PaymentList):
     serializer_class = StripePaymentSerializer
 
 
-class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixin, RetrieveUpdateAPIView):
+class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     queryset = StripePayoutAccount.objects.all()
     serializer_class = ConnectAccountSerializer
 
@@ -66,23 +64,23 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
 
     permission_classes = (IsAuthenticated, IsOwner, )
 
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-
-    def get_object(self):
-        try:
-            obj = self.request.user.funding_payout_account
-        except Member.funding_payout_account.RelatedObjectDoesNotExist:
-            raise Http404
-
-        self.check_object_permissions(self.request, obj)
-        return obj
-
     def perform_create(self, serializer):
         token = serializer.validated_data.pop('token')
         serializer.save(owner=self.request.user)
         if token:
             serializer.instance.update(token)
+
+
+class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = StripePayoutAccount.objects.all()
+    serializer_class = ConnectAccountSerializer
+
+    permission_classes = (IsAuthenticated, IsOwner, )
+
+    prefetch_for_includes = {
+        'owner': ['owner'],
+        'external_accounts': ['external_accounts'],
+    }
 
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')
@@ -92,12 +90,12 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, CreateModelMixi
             except stripe.error.InvalidRequestError, e:
                 field = e.param.replace('[', '/').replace(']', '')
                 raise serializers.ValidationError(
-                    {'account/{}'.format(field): [{'details': e.message, 'code': e.code}]}
+                    {field: [e.message]}
                 )
         serializer.save()
 
 
-class ExternalAccountsList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     permission_classes = []
 
     queryset = ExternalAccount.objects.all()
@@ -117,7 +115,7 @@ class ExternalAccountsList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         serializer.instance.create(token)
 
 
-class ExternalAccountsDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+class ExternalAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = ExternalAccount.objects.all()
     serializer_class = BankAccountSerializer
 

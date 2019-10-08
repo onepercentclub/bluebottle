@@ -2,10 +2,10 @@ from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.funding.models import Donation
-from bluebottle.funding.serializers import PaymentSerializer
+from bluebottle.funding.base_serializers import PaymentSerializer, BaseBankAccountSerializer
 from bluebottle.funding_stripe.models import (
-    StripePayment, StripePayoutAccount
-)
+    StripePayment, StripePayoutAccount,
+    ExternalAccount)
 from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField
 
@@ -50,7 +50,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
     required = RequiredErrorsField()
 
     included_serializers = {
-        'external_accounts': 'bluebottle.funding_stripe.polymorphic_serializers.ExternalAccountSerializer',
+        'external_accounts': 'bluebottle.funding_stripe.serializers.ExternalAccountSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
@@ -80,3 +80,34 @@ class StripeSourcePaymentSerializer(PaymentSerializer):
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
         resource_name = 'payments/stripe-source-payments'
+
+
+class ExternalAccountSerializer(BaseBankAccountSerializer):
+    connect_account = ResourceRelatedField(queryset=StripePayoutAccount.objects.all())
+    token = serializers.CharField(write_only=True)
+
+    account_holder_name = serializers.CharField(read_only=True, source='account.account_holder_name')
+    country = serializers.CharField(read_only=True, source='account.country')
+    last4 = serializers.CharField(read_only=True, source='account.last4')
+    currency = serializers.CharField(read_only=True, source='account.currency')
+    routing_number = serializers.CharField(read_only=True, source='account.routing_number')
+
+    included_serializers = {
+        'connect_account': 'bluebottle.funding_stripe.serializers.ConnectAccountSerializer',
+    }
+
+    class Meta(BaseBankAccountSerializer.Meta):
+        model = ExternalAccount
+
+        fields = BaseBankAccountSerializer.Meta.fields + (
+            'token',
+            'account_holder_name',
+            'country',
+            'last4',
+            'currency',
+            'routing_number'
+        )
+
+    class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
+        resource_name = 'payout-accounts/stripe-external-accounts'
+        included_resources = ['connect-account']

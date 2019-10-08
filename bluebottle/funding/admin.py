@@ -3,6 +3,7 @@ import logging
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.admin import TabularInline
 from django.db import models
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -17,32 +18,19 @@ from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, PlainBankAccount, BankPaymentProvider, LegacyPayment, BankAccount, PaymentCurrency)
+    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount)
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
-from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount, LipishaPayment
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount
-from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount
+from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList
 
 logger = logging.getLogger(__name__)
-
-
-class PayoutAccountFundingLinkMixin(object):
-    def funding_links(self, obj):
-        return format_html(", ".join([
-            format_html(
-                u"<a href='{}'>{}</a>",
-                reverse('admin:funding_funding_change', args=(p.id,)),
-                p.title
-            ) for p in obj.funding_set.all()
-        ]))
-
-    funding_links.short_description = _('Funding activities')
 
 
 class PaymentLinkMixin(object):
@@ -56,60 +44,6 @@ class PaymentLinkMixin(object):
     payment_link.short_description = _('Payment')
 
 
-class PayoutAccountChildAdmin(PolymorphicChildModelAdmin):
-    base_model = PayoutAccount
-    raw_id_fields = ('owner',)
-    readonly_fields = ('status',)
-    fields = ('owner', 'status',)
-
-
-@admin.register(PayoutAccount)
-class PayoutAccountAdmin(PolymorphicParentModelAdmin):
-    base_model = PayoutAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed',)
-    list_filter = ('reviewed', PolymorphicChildModelFilter)
-    raw_id_fields = ('owner',)
-
-    ordering = ('-created',)
-    child_models = [
-        StripePayoutAccount,
-        FlutterwaveBankAccount,
-        LipishaBankAccount,
-        VitepayBankAccount
-    ]
-
-
-class BankAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
-    base_model = PayoutAccount
-    raw_id_fields = ('owner',)
-    readonly_fields = ('funding_links',)
-    fields = ('owner', 'funding_links')
-
-
-@admin.register(BankAccount)
-class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
-    base_model = PayoutAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
-    list_filter = ('reviewed', PolymorphicChildModelFilter)
-    readonly_fields = ('funding_links',)
-    raw_id_fields = ('owner',)
-
-    ordering = ('-created',)
-    child_models = [
-        ExternalAccount,
-        FlutterwaveBankAccount,
-    ]
-
-
-@admin.register(PlainBankAccount)
-class PlainBankAccountAdmin(BankAccountChildAdmin):
-    base_model = BankAccount
-    model = PlainBankAccount
-    raw_id_fields = ('owner',)
-    readonly_fields = ('funding_links',)
-    fields = BankAccountChildAdmin.fields + ('account_holder_name', 'bank_country', 'account_number')
-
-
 class BudgetLineInline(admin.TabularInline):
     model = BudgetLine
 
@@ -120,13 +54,14 @@ class BudgetLineInline(admin.TabularInline):
 class FundingAdmin(ActivityChildAdmin):
     inlines = (BudgetLineInline, MessageAdminInline)
     base_model = Funding
+    list_filter = ['status', 'review_status', 'target_currency']
 
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
 
     readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_donated', 'amount_raised', 'donations_link']
 
-    list_display = ['title_display', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
+    list_display = ['title', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
 
     detail_fields = (
         'description',
@@ -253,6 +188,8 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
     child_models = (
         StripeSourcePayment,
         FlutterwavePayment,
+        LipishaPayment,
+        VitepayPayment,
         LegacyPayment,
         PledgePayment
     )
@@ -273,7 +210,7 @@ class PaymentProviderChildAdmin(PolymorphicChildModelAdmin):
     show_in_index = True
 
     def get_fieldsets(self, request, obj=None):
-        provider = obj._meta.verbose_name
+        provider = self.model._meta.verbose_name
         return (
             (provider, {
                 'fields': self.get_fields(request, obj),
@@ -294,6 +231,82 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
     )
 
 
-@admin.register(BankPaymentProvider)
-class BankPaymentProviderAdmin(PaymentProviderChildAdmin):
-    base_model = BankPaymentProvider
+class PayoutAccountFundingLinkMixin(object):
+    def funding_links(self, obj):
+        return format_html(", ".join([
+            format_html(
+                u"<a href='{}'>{}</a>",
+                reverse('admin:funding_funding_change', args=(p.id,)),
+                p.title
+            ) for p in obj.funding_set.all()
+        ]))
+
+    funding_links.short_description = _('Funding activities')
+
+
+class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
+    base_model = PayoutAccount
+    raw_id_fields = ('owner',)
+    readonly_fields = ('status',)
+    fields = ('owner', 'status', 'transitions')
+    show_in_index = True
+
+
+@admin.register(PayoutAccount)
+class PayoutAccountAdmin(PolymorphicParentModelAdmin):
+    base_model = PayoutAccount
+    list_display = ('created', 'polymorphic_ctype', 'reviewed',)
+    list_filter = ('reviewed', PolymorphicChildModelFilter)
+    raw_id_fields = ('owner',)
+    show_in_index = True
+
+    ordering = ('-created',)
+    child_models = [
+        StripePayoutAccount,
+        PlainPayoutAccount
+    ]
+
+
+class BankAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
+    base_model = BankAccount
+    raw_id_fields = ('connect_account',)
+    readonly_fields = ('verified', 'funding_links', 'created', 'updated')
+    fields = ('connect_account', 'reviewed', ) + readonly_fields
+    show_in_index = True
+
+
+@admin.register(BankAccount)
+class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
+    base_model = BankAccount
+    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
+    list_filter = ('reviewed', PolymorphicChildModelFilter)
+    raw_id_fields = ('connect_account',)
+    show_in_index = True
+
+    ordering = ('-created',)
+    child_models = [
+        ExternalAccount,
+        FlutterwaveBankAccount,
+        LipishaBankAccount,
+        VitepayBankAccount
+    ]
+
+
+class BankAccountInline(TabularInline):
+    model = BankAccount
+    readonly_fields = ('link', 'created', 'reviewed')
+    fields = readonly_fields
+    extra = 0
+    can_delete = False
+
+    def link(self, obj):
+        url = reverse('admin:funding_bankaccount_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
+
+
+@admin.register(PlainPayoutAccount)
+class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
+    model = PlainPayoutAccount
+    inlines = [BankAccountInline]
+
+    fields = PayoutAccountChildAdmin.fields + ('document',)

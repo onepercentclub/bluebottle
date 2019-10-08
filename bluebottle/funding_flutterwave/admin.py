@@ -8,7 +8,7 @@ from rave_python import Rave
 from rave_python.rave_exceptions import SubaccountCreationError
 
 from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, BankAccountChildAdmin
-from bluebottle.funding.models import BankAccount, Payment, PaymentProvider
+from bluebottle.funding.models import Payment, PaymentProvider
 from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwavePaymentProvider, \
     FlutterwaveBankAccount
 
@@ -25,7 +25,6 @@ class FlutterwavePaymentProviderAdmin(PaymentProviderChildAdmin):
 
 @admin.register(FlutterwaveBankAccount)
 class FlutterwaveBankAccountAdmin(BankAccountChildAdmin):
-    base_model = BankAccount
     model = FlutterwaveBankAccount
 
     fields = BankAccountChildAdmin.fields + (
@@ -38,7 +37,7 @@ class FlutterwaveBankAccountAdmin(BankAccountChildAdmin):
             url(
                 r'^(?P<account_id>.+)/generate-account/$',
                 self.admin_site.admin_view(self.generate_account),
-                name='flutterwave-payout-generate-account',
+                name='funding_flutterwave_flutterwavebankaccount_generate',
             ),
         ]
         return custom_urls + urls
@@ -49,9 +48,9 @@ class FlutterwaveBankAccountAdmin(BankAccountChildAdmin):
             "account_bank": account.bank_code,
             "account_number": account.account_number,
             "business_name": account.account_holder_name,
-            "business_email": account.owner.email,
+            "business_email": account.connect_account.owner.email,
             "country": account.bank_country_code,
-            "business_contact": account.owner.full_name,
+            "business_contact": account.connect_account.owner.full_name,
             "business_contact_mobile": "",
             "business_mobile": "",
             "split_type": "flat",
@@ -73,7 +72,7 @@ class FlutterwaveBankAccountAdmin(BankAccountChildAdmin):
         except SubaccountCreationError as e:
             message = 'Error creating Flutterwave sub account: {}'.format(e.err["errMsg"])
             self.message_user(request, message, level='ERROR')
-        payout_url = reverse('admin:funding_flutterwave_flutterwavepayoutaccount_change', args=(account_id,))
+        payout_url = reverse('admin:funding_flutterwave_flutterwavebankaccount_change', args=(account_id,))
         return HttpResponseRedirect(payout_url)
 
     generate_account.short_description = _('Generate account at Flutterwave')

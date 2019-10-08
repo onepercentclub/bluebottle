@@ -22,9 +22,18 @@ class PledgePaymentProviderAdmin(PaymentProviderChildAdmin):
     base_model = PaymentProvider
 
 
+class StripeBankAccountInline(admin.TabularInline):
+    model = ExternalAccount
+    readonly_fields = ['created', 'verified', 'account_id', ]
+    fields = readonly_fields
+    extra = 0
+    can_delete = False
+
+
 @admin.register(StripePayoutAccount)
 class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     model = StripePayoutAccount
+    inlines = [StripeBankAccountInline]
 
     fields = PayoutAccountChildAdmin.fields + ('account_id', 'country')
 
@@ -33,5 +42,4 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
 class StripeBankAccountAdmin(BankAccountChildAdmin):
     base_model = BankAccount
     model = ExternalAccount
-
-    fields = BankAccountChildAdmin.fields + ('account_id', 'country')
+    fields = ('connect_account', 'account_id') + BankAccountChildAdmin.readonly_fields

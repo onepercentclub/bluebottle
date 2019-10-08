@@ -49,6 +49,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], unicode(succeeded.pk))
         self.assertEqual(data['data'][0]['id'], unicode(open.pk))
 
+        self.assertTrue('meta' in data['data'][0])
+
     def test_filter_owner(self):
         EventFactory.create(owner=self.owner, review_status='approved')
         EventFactory.create(review_status='approved')

@@ -6,6 +6,7 @@ from moneyed import Money
 from bluebottle.clients import properties
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donation, Funding
+from bluebottle.funding.transitions import PaymentTransitions
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayment, LipishaBankAccount
 
 
@@ -232,7 +233,8 @@ def initiate_payment(data):
         )
 
     if data['transaction_status'] in ['Success', 'Completed']:
-        payment.transitions.succeed()
+        if payment.status != PaymentTransitions.values.succeeded:
+            payment.transitions.succeed()
     else:
         payment.transitions.fail()
     payment.save()
@@ -262,7 +264,8 @@ def acknowledge_payment(data):
     payment.mobile_number = data['transaction_mobile']
 
     if data['transaction_status'] in ['Success', 'Completed']:
-        payment.transitions.succeed()
+        if payment.status != PaymentTransitions.values.succeeded:
+            payment.transitions.succeed()
     else:
         payment.transitions.fail()
     payment.save()

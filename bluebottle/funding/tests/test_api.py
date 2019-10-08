@@ -1014,9 +1014,10 @@ class CurrencySettingsTestCase(BluebottleTestCase):
         cur.default4 = 10000
         cur.save()
 
-    def test_create(self):
+    def test_currency_settings(self):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         self.assertEqual(
             response.data['platform']['currencies'],
             [

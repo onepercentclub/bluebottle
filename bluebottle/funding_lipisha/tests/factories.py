@@ -3,7 +3,6 @@ import factory.fuzzy
 from bluebottle.funding.tests.factories import DonationFactory
 from bluebottle.funding_lipisha.models import LipishaPayment
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
 class LipishaPaymentFactory(factory.DjangoModelFactory):
@@ -24,7 +23,6 @@ class LipishaPaymentProviderFactory(factory.DjangoModelFactory):
 class LipishaBankAccountFactory(factory.DjangoModelFactory):
 
     account_number = factory.fuzzy.FuzzyInteger(10000, 99999)
-    owner = factory.SubFactory(BlueBottleUserFactory)
 
     class Meta(object):
         model = LipishaBankAccount

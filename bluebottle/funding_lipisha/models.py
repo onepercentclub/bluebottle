@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, BankAccount
@@ -53,8 +54,23 @@ class LipishaPayment(Payment):
 
 
 class LipishaBankAccount(BankAccount):
-    account_number = models.CharField(max_length=40)
     provider_class = LipishaPaymentProvider
+
+    account_number = models.CharField(max_length=50, blank=True, null=True)
+    account_name = models.CharField(max_length=200, blank=True, null=True)
+    bank_name = models.CharField(max_length=50, blank=True, null=True)
+    bank_code = models.CharField(max_length=50, blank=True, null=True)
+    branch_name = models.CharField(max_length=200, blank=True, null=True)
+    branch_code = models.CharField(max_length=200, blank=True, null=True)
+    address = models.CharField(max_length=500, blank=True, null=True)
+    swift = models.CharField('SWIFT/Routing Code', max_length=50, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         super(LipishaBankAccount, self).save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = _('Lipisha bank account')
+        verbose_name_plural = _('Lipisha bank accounts')
+
+    class JSONAPIMeta:
+        resource_name = 'payout-accounts/lipisha-external-accounts'

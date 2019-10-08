@@ -1,19 +1,22 @@
 import json
-from memoize import memoize
 from operator import attrgetter
 
 from django.conf import settings
 from django.db import ProgrammingError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
+from memoize import memoize
 
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount, BankAccount)
-from bluebottle.funding_stripe.transitions import StripePaymentTransitions
-from bluebottle.funding_stripe.transitions import StripeSourcePaymentTransitions
+from bluebottle.funding_stripe.transitions import (
+    StripePaymentTransitions,
+    StripeSourcePaymentTransitions,
+    StripePayoutAccountTransitions
+)
 from bluebottle.funding_stripe.utils import stripe
 
 
@@ -192,6 +195,8 @@ class StripePayoutAccount(PayoutAccount):
     country = models.CharField(max_length=2)
     document_type = models.CharField(max_length=20, blank=True)
 
+    transitions = TransitionManager(StripePayoutAccountTransitions, 'status')
+
     @property
     def country_spec(self):
         return get_specs(self.country).verification_fields.individual
@@ -209,7 +214,10 @@ class StripePayoutAccount(PayoutAccount):
         if self.account_id:
             fields += [
                 field for field in self.country_spec['additional'] + self.country_spec['minimum'] if
-                field not in ['business_type', 'external_account', 'tos_acceptance.date', 'tos_acceptance.ip', ]
+                field not in [
+                    'business_type', 'external_account', 'tos_acceptance.date',
+                    'tos_acceptance.ip', 'business_profile.url', 'business_profile.mcc',
+                ]
             ]
 
             if 'individual.verification.document' in fields:
@@ -316,11 +324,16 @@ class StripePayoutAccount(PayoutAccount):
             "member_id": self.owner.pk,
         }
 
+    class Meta:
+        verbose_name = _('stripe payout account')
+        verbose_name_plural = _('stripe payout accounts')
+
+    class JSONAPIMeta:
+        resource_name = 'payout-accounts/stripes'
+
 
 class ExternalAccount(BankAccount):
-    connect_account = models.ForeignKey(StripePayoutAccount, related_name='external_accounts')
     account_id = models.CharField(max_length=40)
-
     provider_class = StripePaymentProvider
 
     @property

@@ -70,6 +70,8 @@ class EventListSerializer(BaseActivitySerializer):
             'registration_deadline',
         )
 
+        meta_fields = ('permissions', 'transitions', 'review_transitions', 'created', 'updated', 'errors', 'required', )
+
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         included_resources = [
             'owner',

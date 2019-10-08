@@ -18,4 +18,13 @@ class LipishaPaymentProviderAdmin(PaymentProviderChildAdmin):
 @admin.register(LipishaBankAccount)
 class LipishaBankAccountAdmin(BankAccountChildAdmin):
     model = LipishaBankAccount
-    fields = BankAccountChildAdmin.fields + ('account_number',)
+    fields = BankAccountChildAdmin.fields + (
+        'account_number',
+        'account_name',
+        'bank_name',
+        'bank_code',
+        'branch_name',
+        'branch_code',
+        'address',
+        'swift'
+    )

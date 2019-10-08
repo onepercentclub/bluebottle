@@ -1,10 +1,7 @@
 from django_elasticsearch_dsl import DocType, fields
 
 from bluebottle.utils.documents import MultiTenantIndex
-
-from bluebottle.initiatives.models import Initiative
-from bluebottle.activities.models import Activity, Contribution
-from bluebottle.members.models import Member
+from bluebottle.activities.models import Activity
 from bluebottle.utils.search import Search
 
 
@@ -25,6 +22,9 @@ class ActivityDocument(DocType):
     status_score = fields.FloatField()
     review_status = fields.KeywordField()
     created = fields.DateField()
+
+    date = fields.DateField()
+    deadline = fields.DateField()
 
     type = fields.KeywordField()
 
@@ -84,14 +84,6 @@ class ActivityDocument(DocType):
             model=cls._doc_type.model
         )
 
-    def get_instances_from_related(self, related_instance):
-        if isinstance(related_instance, Initiative):
-            return related_instance.activities.all()
-        if isinstance(related_instance, Member):
-            return related_instance.activities.all()
-        if isinstance(related_instance, Contribution):
-            return related_instance.activity
-
     def prepare_contributions(self, instance):
         return [
             contribution.created for contribution
@@ -116,3 +108,9 @@ class ActivityDocument(DocType):
         if hasattr(instance, 'location') and instance.location:
             position = instance.location.position
             return {'lat': position.get_x(), 'lon': position.get_y()}
+
+    def prepare_deadline(self, instance):
+        return None
+
+    def prepare_date(self, instance):
+        return None

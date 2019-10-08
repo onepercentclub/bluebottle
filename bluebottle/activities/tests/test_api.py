@@ -62,6 +62,46 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
 
+    def test_deadline(self):
+        event = EventFactory.create(
+            review_status='approved',
+            start_date=datetime.date(2019, 1, 14)
+        )
+        EventFactory.create(
+            review_status='approved',
+            start_date=datetime.date(2019, 4, 14)
+        )
+        date_assignment = AssignmentFactory.create(
+            review_status='approved',
+            end_date=datetime.date(2019, 1, 14),
+            end_date_type='on_date'
+        )
+        AssignmentFactory.create(
+            review_status='approved',
+            end_date=datetime.date(2019, 4, 14),
+            end_date_type='on_date'
+        )
+        deadline_assignment = AssignmentFactory.create(
+            review_status='approved',
+            end_date=datetime.date(2019, 4, 14),
+            end_date_type='deadline'
+        )
+        FundingFactory.create(review_status='approved')
+
+        response = self.client.get(
+            self.url + '?filter[date]=2019-01-01',
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 3)
+
+        found = [item['id'] for item in data['data']]
+
+        self.assertTrue(unicode(event.pk) in found)
+        self.assertTrue(unicode(date_assignment.pk) in found)
+        self.assertTrue(unicode(deadline_assignment.pk) in found)
+
     def test_search(self):
         first = EventFactory.create(
             title='Lorem ipsum dolor sit amet',

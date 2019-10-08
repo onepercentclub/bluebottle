@@ -1,4 +1,6 @@
-from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q
+import dateutil
+
+from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, Range
 from bluebottle.utils.filters import ElasticSearchFilter
 from bluebottle.activities.documents import activity
 
@@ -20,6 +22,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'expertise.id',
         'type',
         'status',
+        'date',
     )
 
     search_fields = (
@@ -133,6 +136,12 @@ class ActivitySearchFilter(ElasticSearchFilter):
                 )
 
         return score
+
+    def get_date_filter(self, value, request):
+        date = dateutil.parser.parse(value).date()
+        start = date.replace(date.year, date.month, 1)
+        end = start + dateutil.relativedelta.relativedelta(day=31)
+        return Range(date={'gt': start, 'lt': end}) | Range(deadline={'gt': start})
 
     def get_default_filters(self, request):
         return [Terms(review_status=['approved']), ~Term(status='closed')]

@@ -248,7 +248,8 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         ):
             self.check = StripePayoutAccountFactory(owner=self.user, country=country, account_id='some-account-id')
 
-        self.url = reverse('connect-account-details')
+        self.account_list_url = reverse('connect-account-list')
+        self.account_url = reverse('connect-account-details', args=(self.check.id,))
 
         self.country_spec = stripe.CountrySpec(country)
         self.country_spec.update({
@@ -303,7 +304,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
             with mock.patch('stripe.Account.create', return_value=connect_account) as create_account:
                 with mock.patch('stripe.Account.modify', return_value=connect_account) as modify_account:
                     response = self.client.post(
-                        self.url, data=json.dumps(self.data), user=self.user
+                        self.account_list_url, data=json.dumps(self.data), user=self.user
                     )
                     create_account.assert_called_with(
                         business_type='individual',
@@ -350,7 +351,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
     def test_create_no_user(self):
         self.check.delete()
         response = self.client.post(
-            self.url,
+            self.account_url,
             data=json.dumps(self.data)
         )
 
@@ -364,7 +365,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 'stripe.Account.retrieve', return_value=self.connect_account
             ) as retrieve:
                 response = self.client.get(
-                    self.url, user=self.user
+                    self.account_url, user=self.user
                 )
                 retrieve.assert_called_with(self.check.account_id)
 
@@ -396,18 +397,18 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
 
     def test_get_no_user(self):
         response = self.client.get(
-            self.url,
+            self.account_url,
         )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_wrong_user(self):
         response = self.client.get(
-            self.url,
+            self.account_url,
             user=BlueBottleUserFactory.create()
         )
 
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_patch(self):
         with mock.patch(
@@ -417,7 +418,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 'stripe.Account.modify', return_value=self.connect_account
             ) as modify_account:
                 response = self.client.patch(
-                    self.url,
+                    self.account_url,
                     data=json.dumps(self.data),
                     user=self.user
                 )
@@ -435,16 +436,16 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
 
     def test_patch_wrong_user(self):
         response = self.client.patch(
-            self.url,
+            self.account_url,
             data=json.dumps(self.data),
             user=BlueBottleUserFactory.create()
         )
 
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_patch_no_user(self):
         response = self.client.patch(
-            self.url,
+            self.account_url,
             data=json.dumps(self.data),
         )
 
@@ -508,7 +509,7 @@ class ExternalAccountsTestCase(BluebottleTestCase):
             account_id='some-external-account-id'
         )
 
-        self.url = reverse('connect-account-details')
+        self.url = reverse('connect-account-details', args=(self.check.id, ))
         self.external_account_url = reverse('stripe-external-account-list')
 
     def test_get(self):

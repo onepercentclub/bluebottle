@@ -8,7 +8,7 @@ from rave_python import Rave
 from rave_python.rave_exceptions import SubaccountCreationError
 
 from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, BankAccountChildAdmin
-from bluebottle.funding.models import BankAccount, Payment, PaymentProvider
+from bluebottle.funding.models import Payment, PaymentProvider
 from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwavePaymentProvider, \
     FlutterwaveBankAccount
 
@@ -25,7 +25,6 @@ class FlutterwavePaymentProviderAdmin(PaymentProviderChildAdmin):
 
 @admin.register(FlutterwaveBankAccount)
 class FlutterwaveBankAccountAdmin(BankAccountChildAdmin):
-    base_model = BankAccount
     model = FlutterwaveBankAccount
 
     fields = BankAccountChildAdmin.fields + (

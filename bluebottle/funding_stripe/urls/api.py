@@ -4,23 +4,23 @@ from bluebottle.funding_stripe.views import (
     StripeSourcePaymentList, StripePaymentIntentList,
     IntentWebHookView, SourceWebHookView, WebHookView,
     ConnectWebHookView,
-    ExternalAccountsList, ExternalAccountsDetails,
-    StripePaymentList, ConnectAccountDetail, ConnectAccountList)
+    ExternalAccountList, ExternalAccountDetails,
+    StripePaymentList, ConnectAccountDetails, ConnectAccountList)
 
 urlpatterns = [
 
     # Payout accounts
     url(r'^/payout-account$',
         ConnectAccountList.as_view(),
-        name='connect-account-details'),
+        name='connect-account-list'),
     url(r'^/payout-account/(?P<pk>[\d]+)$',
-        ConnectAccountDetail.as_view(),
+        ConnectAccountDetails.as_view(),
         name='connect-account-details'),
     url(r'^/external-account$',
-        ExternalAccountsList.as_view(),
+        ExternalAccountList.as_view(),
         name='stripe-external-account-list'),
     url(r'^/external-account/(?P<pk>[\d]+)$',
-        ExternalAccountsDetails.as_view(),
+        ExternalAccountDetails.as_view(),
         name='stripe-external-account-details'),
 
     # Payments

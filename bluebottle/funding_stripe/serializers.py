@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.funding.models import Donation
-from bluebottle.funding.base_serializers import PaymentSerializer
+from bluebottle.funding.base_serializers import PaymentSerializer, BaseBankAccountSerializer
 from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount,
     ExternalAccount)
@@ -82,7 +82,7 @@ class StripeSourcePaymentSerializer(PaymentSerializer):
         resource_name = 'payments/stripe-source-payments'
 
 
-class ExternalAccountSerializer(serializers.ModelSerializer):
+class ExternalAccountSerializer(BaseBankAccountSerializer):
     connect_account = ResourceRelatedField(queryset=StripePayoutAccount.objects.all())
     token = serializers.CharField(write_only=True)
 
@@ -96,13 +96,11 @@ class ExternalAccountSerializer(serializers.ModelSerializer):
         'connect_account': 'bluebottle.funding_stripe.serializers.ConnectAccountSerializer',
     }
 
-    class Meta:
+    class Meta(BaseBankAccountSerializer.Meta):
         model = ExternalAccount
 
-        fields = (
-            'id',
+        fields = BaseBankAccountSerializer.Meta.fields + (
             'token',
-            'connect_account',
             'account_holder_name',
             'country',
             'last4',
@@ -110,6 +108,6 @@ class ExternalAccountSerializer(serializers.ModelSerializer):
             'routing_number'
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
         resource_name = 'payout-accounts/stripe-external-accounts'
         included_resources = ['connect-account']

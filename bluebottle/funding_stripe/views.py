@@ -1,4 +1,4 @@
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse
 from django.views.generic import View
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
@@ -71,25 +71,16 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
             serializer.instance.update(token)
 
 
-class ConnectAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = StripePayoutAccount.objects.all()
     serializer_class = ConnectAccountSerializer
+
+    permission_classes = (IsAuthenticated, IsOwner, )
 
     prefetch_for_includes = {
         'owner': ['owner'],
         'external_accounts': ['external_accounts'],
     }
-
-    permission_classes = (IsAuthenticated, IsOwner, )
-
-    def get_object(self):
-        # Make this smarter
-        obj = self.queryset.filter(owner=self.request.user).first()
-        if not obj:
-            raise Http404
-
-        self.check_object_permissions(self.request, obj)
-        return obj
 
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')
@@ -104,7 +95,7 @@ class ConnectAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAP
         serializer.save()
 
 
-class ExternalAccountsList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     permission_classes = []
 
     queryset = ExternalAccount.objects.all()
@@ -124,7 +115,7 @@ class ExternalAccountsList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         serializer.instance.create(token)
 
 
-class ExternalAccountsDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+class ExternalAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = ExternalAccount.objects.all()
     serializer_class = BankAccountSerializer
 

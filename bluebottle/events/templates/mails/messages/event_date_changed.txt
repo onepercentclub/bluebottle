@@ -2,10 +2,8 @@
 {% load i18n %}
 
 {% block content %}
-{{obj}}!{{obj.start}}
 {% blocktrans with recipient_name=obj.owner.first_name event_title=obj.title event_date=obj.start|date event_time=obj.start|time  context 'email' %}
 Hi {{ recipient_name }},
-{{event_date}}
 The date and time for "{{ event_title }}" has been changed to {{ event_date }} {{ event_time }}
 
 If this means you can’t make it anymore, please let your activity manager know so they can prepare accordingly.

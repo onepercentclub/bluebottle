@@ -135,6 +135,5 @@ class FlutterwavePayoutAccountTestCase(BluebottleTestCase):
 
         response = self.client.get(self.payout_account_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.content)
         bank_details = get_included(response, 'payout-accounts/flutterwave-external-accounts')
         self.assertEqual(bank_details['attributes']['bank-code'], '044')

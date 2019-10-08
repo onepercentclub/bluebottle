@@ -1,0 +1,18 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=obj.owner.first_name event_title=obj.title url=obj.get_absolute_url context 'email' %}
+Hi {{ recipient_name }},
+<br><br>
+"{{ event_title }}" will take place in 5 days. 
+<br><br>
+Want to know about the latest updates? Check out the <a href="{{url}}">event</a> to stay informed.
+{% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ site }}{{ obj.get_absolute_url }}" class="action-email">
+       {% trans 'Goto event' context 'email' %}:
+    </a>
+{% endblock %}`

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from operator import attrgetter
 
+from django.contrib.admin.options import get_content_type_for_model
+
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients import properties
@@ -39,22 +41,34 @@ class TransitionMessage(object):
                 context[key] = attrgetter(item)(self.obj)
             return self.subject.format(**context)
 
-    def get_messages(self):
+    def get_messages(self, once):
         custom_message = self.options.get('custom_message', '')
-        return [
-            Message(
+
+        for recipient in self.get_recipients():
+            if once:
+                try:
+                    Message.objects.get(
+                        template=self.get_template(),
+                        recipient=recipient,
+                        content_type=get_content_type_for_model(self.obj),
+                        object_id=self.obj.pk
+                    )
+                    continue
+                except Message.DoesNotExist:
+                    pass
+
+            yield Message(
                 template=self.get_template(),
                 subject=self.get_subject(recipient.primary_language),
                 content_object=self.obj,
                 recipient=recipient,
                 custom_message=custom_message
-            ) for recipient in self.get_recipients()
-        ]
+            )
 
     def get_recipients(self):
         return [self.obj.owner]
 
-    def compose_and_send(self):
-        for message in self.get_messages():
+    def compose_and_send(self, once=False):
+        for message in self.get_messages(once=once):
             message.save()
             message.send()

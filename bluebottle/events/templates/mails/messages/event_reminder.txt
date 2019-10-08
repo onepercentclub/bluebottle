@@ -1,0 +1,16 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=obj.owner.first_name event_title=obj.title url=obj.get_absolute_url context 'email' %}
+Hi {{ recipient_name }},
+"{{ event_title }}" will take place in 5 days. 
+
+Want to know about the latest updates? Check out the event on {{url}} to stay informed.
+{% endblocktrans %}
+
+{% endblock %}
+
+{% block action %}
+   {% trans 'Goto event' context 'email' %}: {{ obj.get_absolute_url }}
+{% endblock %}`

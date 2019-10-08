@@ -21,3 +21,14 @@ class EventDateChanged(TransitionMessage):
             contribution.user for contribution
             in self.obj.contributions.filter(status='new')
         ]
+
+
+class EventReminder(TransitionMessage):
+    subject = _('Your event will take place in 5 days!')
+    template = 'messages/event_reminder'
+
+    def get_recipients(self):
+        return [
+            contribution.user for contribution
+            in self.obj.contributions.filter(status='new')
+        ]

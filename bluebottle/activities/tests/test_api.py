@@ -41,7 +41,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         open = EventFactory.create(review_status='approved', status='open')
         EventFactory.create(status='in_review')
-        EventFactory.create(status='closed')
+        EventFactory.create(review_status='approved', status='closed')
 
         response = self.client.get(self.url, user=self.owner)
         data = json.loads(response.content)
@@ -201,7 +201,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][3]['id'], unicode(first.pk))
 
     def test_sort_matching_status(self):
-        first = EventFactory.create(review_status='approved', status='closed')
+        EventFactory.create(review_status='approved', status='closed')
         second = EventFactory.create(review_status='approved', status='succeeded')
         third = EventFactory.create(review_status='approved', status='full')
         fourth = EventFactory.create(review_status='approved', status='running')
@@ -214,13 +214,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['meta']['pagination']['count'], 5)
+        self.assertEqual(data['meta']['pagination']['count'], 4)
 
         self.assertEqual(data['data'][0]['id'], unicode(fifth.pk))
         self.assertEqual(data['data'][1]['id'], unicode(fourth.pk))
         self.assertEqual(data['data'][2]['id'], unicode(third.pk))
         self.assertEqual(data['data'][3]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][4]['id'], unicode(first.pk))
 
     def test_sort_matching_skill(self):
         skill = SkillFactory.create()

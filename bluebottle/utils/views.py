@@ -3,9 +3,12 @@ import os
 from collections import namedtuple
 
 import magic
+
+from django.db.models import Case, When, IntegerField
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.core.signing import TimestampSigner, BadSignature
+from django.utils.functional import cached_property
 from django.http import Http404, HttpResponse
 from django.http.response import HttpResponseNotFound
 from django.template.loader import render_to_string
@@ -14,7 +17,6 @@ from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
-from django_elasticsearch_dsl.search import Search
 from parler.utils.i18n import get_language
 from rest_framework import generics
 from rest_framework import views, response
@@ -331,11 +333,47 @@ class TranslatedApiViewMixin(object):
 
 
 class ESPaginator(Paginator):
-    def page(self, *args, **kwargs):
-        page = super(ESPaginator, self).page(*args, **kwargs)
+    @cached_property
+    def count(self):
+        """
+        Returns the total number of objects, across all pages.
+        """
+        if isinstance(self.object_list, tuple):
+            _, object_list = self.object_list
+        else:
+            object_list = self.object_list
 
-        if isinstance(page.object_list, Search):
-            page.object_list = page.object_list.to_queryset()
+        try:
+            return object_list.count()
+        except (AttributeError, TypeError):
+            # AttributeError if object_list has no count() method.
+            # TypeError if object_list.count() requires arguments
+            # (i.e. is of type list).
+            return len(object_list)
+
+    def page(self, number):
+        number = self.validate_number(number)
+        bottom = (number - 1) * self.per_page
+        top = bottom + self.per_page
+
+        if top + self.orphans >= self.count:
+            top = self.count
+
+        if isinstance(self.object_list, tuple):
+            queryset, search = self.object_list
+            page = self._get_page(search[bottom:top], number, self)
+
+            pks = [result._id for result in search[bottom:top]]
+
+            queryset = queryset.filter(pk__in=pks)
+            preserved_order = Case(
+                *[When(pk=pk, then=pos) for pos, pk in enumerate(pks)],
+                output_field=IntegerField()
+            )
+            page.object_list = queryset.annotate(search_order=preserved_order).order_by('search_order')
+        else:
+            page = self._get_page(self.object_list[bottom:top], number, self)
+
         return page
 
 

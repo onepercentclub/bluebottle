@@ -41,7 +41,7 @@ class ElasticSearchFilter(filters.SearchFilter):
             except AttributeError:
                 search = search.sort(*sort)
 
-        return search
+        return (queryset, search)
 
     def get_filter_fields(self, request):
         return [

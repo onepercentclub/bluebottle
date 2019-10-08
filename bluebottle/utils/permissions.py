@@ -115,6 +115,40 @@ class BasePermission(permissions.BasePermission):
         raise NotImplementedError(message)
 
 
+class IsOwnerOrReadOnly(BasePermission):
+    def has_action_permission(self, action, user, model_cls):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return (request.method in permissions.SAFE_METHODS) or obj.owner == request.user
+
+    def has_object_action_permission(self, action, user, obj):
+        return (action in permissions.SAFE_METHODS) or obj.owner == user
+
+
+class IsAuthenticated(BasePermission):
+    def has_action_permission(self, action, user, obj):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return request.user.is_authenticated
+
+    def has_object_action_permission(self, action, user, obj):
+        return user.is_authenticated
+
+
 class ResourcePermission(BasePermission, permissions.DjangoModelPermissions):
     perms_map = {
         'GET': ['%(app_label)s.api_read_%(model_name)s'],
@@ -180,16 +214,6 @@ class TenantConditionalOpenClose(BasePermission):
         except AttributeError:
             pass
         return True
-
-
-class IsAuthenticated(BasePermission):
-    """ Allow access if the user is authenticated. """
-
-    def has_object_action_permission(self, action, user):
-        return self.has_action_permission(action, user, None)
-
-    def has_action_permission(self, action, user, model_cls):
-        return user and user.is_authenticated
 
 
 class AuthenticatedOrReadOnlyPermission(IsAuthenticated):

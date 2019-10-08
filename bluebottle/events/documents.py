@@ -17,5 +17,16 @@ class EventDocument(ActivityDocument):
         model = Event
         related_models = (Initiative, Member, Participant)
 
+    def get_instances_from_related(self, related_instance):
+        if isinstance(related_instance, Initiative):
+            return Event.objects.filter(initiative=related_instance)
+        if isinstance(related_instance, Member):
+            return Event.objects.filter(owner=related_instance)
+        if isinstance(related_instance, Participant):
+            return Event.objects.filter(contributions=related_instance)
+
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)
+
+    def prepare_date(self, instance):
+        return instance.start_date

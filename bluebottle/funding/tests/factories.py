@@ -26,7 +26,6 @@ class FundingFactory(factory.DjangoModelFactory):
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
-    bank_account = factory.SubFactory(BankAccountFactory)
     deadline = factory.Faker('future_datetime', tzinfo=UTC)
     target = Money(5000, 'EUR')
     amount_matching = Money(0, 'EUR')

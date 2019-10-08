@@ -30,10 +30,9 @@ from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory, StepFactory,
     QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory,
 )
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.news import NewsItemFactory
-from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.pages import PageFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -70,17 +69,22 @@ class ResultPageTestCase(BluebottleTestCase):
         yesterday = now() - timedelta(days=1)
         long_ago = now() - timedelta(days=365 * 2)
         user = BlueBottleUserFactory(is_co_financer=False)
-        project = ProjectFactory(owner=user)
-        order1 = OrderFactory(user=user, confirmed=yesterday, status='success')
-        order1.created = yesterday
-        order1.save()
-        order2 = OrderFactory(user=user, confirmed=long_ago, status='success')
-        order1.created = long_ago
-        order1.save()
+        funding = FundingFactory(status='open', owner=user)
 
-        DonationFactory(order=order1, amount=Money(50, 'EUR'), project=project)
-        DonationFactory(order=order2, amount=Money(50, 'EUR'), project=project)
-
+        DonationFactory.create(
+            activity=funding,
+            status='succeeded',
+            transition_date=yesterday,
+            user=user,
+            amount=Money(50, 'EUR')
+        )
+        DonationFactory.create(
+            activity=funding,
+            status='succeeded',
+            transition_date=long_ago,
+            user=user,
+            amount=Money(50, 'EUR')
+        )
         block = StatsContent.objects.create_for_placeholder(self.placeholder, title='Look at us!')
         self.stat1 = StatFactory(type='manual', title='Poffertjes', value=3500, block=block)
         self.stat2 = StatFactory(type='donated_total', title='Donations', value=None, block=block)
@@ -104,17 +108,22 @@ class ResultPageTestCase(BluebottleTestCase):
         long_ago = now() - timedelta(days=365 * 2)
         yesterday = now() - timedelta(days=1)
         user = BlueBottleUserFactory(is_co_financer=False)
-        project = ProjectFactory(created=yesterday, owner=user)
-        project = ProjectFactory(owner=user)
-        order1 = OrderFactory(user=user, confirmed=yesterday, status='success')
-        order1.created = yesterday
-        order1.save()
-        order2 = OrderFactory(user=user, confirmed=long_ago, status='success')
-        order1.created = long_ago
-        order1.save()
+        funding = FundingFactory(status='open', owner=user)
 
-        DonationFactory(order=order1, amount=Money(50, 'EUR'), project=project)
-        DonationFactory(order=order2, amount=Money(50, 'EUR'), project=project)
+        DonationFactory.create(
+            activity=funding,
+            status='succeeded',
+            transition_date=yesterday,
+            user=user,
+            amount=Money(50, 'EUR')
+        )
+        DonationFactory.create(
+            activity=funding,
+            status='succeeded',
+            transition_date=long_ago,
+            user=user,
+            amount=Money(50, 'EUR')
+        )
 
         block = StatsContent.objects.create_for_placeholder(self.placeholder, title='Look at us!')
         self.stat1 = StatFactory(type='manual', title='Poffertjes', value=3500, block=block)
@@ -197,7 +206,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(share['title'], 'Share')
         self.assertEqual(share['share_text'], share_text)
 
-        for key in ['people', 'amount', 'hours', 'projects', 'tasks', 'votes']:
+        for key in ['people', 'amount', 'hours', 'events', 'assignments', 'fundings', 'votes']:
             self.assertTrue(key in share['statistics'])
 
     def test_results_survey(self):
@@ -249,13 +258,29 @@ class ResultPageTestCase(BluebottleTestCase):
         yesterday = now() - timedelta(days=1)
         co_financer = BlueBottleUserFactory(is_co_financer=True)
         user = BlueBottleUserFactory(is_co_financer=False)
-        project = ProjectFactory(created=yesterday, owner=user)
-        order1 = OrderFactory(user=co_financer, confirmed=yesterday, status='success')
-        order2 = OrderFactory(user=co_financer, confirmed=yesterday, status='success')
-        order3 = OrderFactory(user=user, confirmed=yesterday, status='success')
-        DonationFactory(order=order1, amount=Money(50, 'EUR'), project=project)
-        DonationFactory(order=order2, amount=Money(50, 'EUR'), project=project)
-        DonationFactory(order=order3, amount=Money(50, 'EUR'), project=project)
+        funding = FundingFactory(status='open', owner=user)
+
+        DonationFactory.create(
+            activity=funding,
+            status='succeeded',
+            transition_date=yesterday,
+            user=user,
+            amount=Money(50, 'EUR')
+        )
+        DonationFactory.create(
+            activity=funding,
+            status='succeeded',
+            transition_date=yesterday,
+            user=co_financer,
+            amount=Money(50, 'EUR')
+        )
+        DonationFactory.create(
+            activity=funding,
+            status='succeeded',
+            transition_date=yesterday,
+            user=co_financer,
+            amount=Money(50, 'EUR')
+        )
 
         SupporterTotalContent.objects.create_for_placeholder(self.placeholder)
 

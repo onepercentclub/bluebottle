@@ -1,27 +1,27 @@
 from django.utils.translation import ugettext_lazy as _
-
 from rest_framework import serializers
-from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import (
     ResourceRelatedField, PolymorphicResourceRelatedField
 )
+from rest_framework_json_api.serializers import ModelSerializer
 
+from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import (
-    OEmbedField, ImageSerializer as OldImageSerializer, SorlImageField
+    ImageSerializer as OldImageSerializer, SorlImageField
 )
-from bluebottle.utils.fields import SafeField, ValidationErrorsField, RequiredErrorsField
-from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.categories.models import Category
-from bluebottle.geo.models import Geolocation, Location
-from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer, ImageField
+from bluebottle.geo.models import Geolocation, Location
+from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.members.models import Member
+from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.transitions.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
+from bluebottle.utils.fields import SafeField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import (
     ResourcePermissionField, NoCommitMixin
 )
@@ -60,7 +60,7 @@ class MemberSerializer(ModelSerializer):
         model = Member
         fields = (
             'id', 'first_name', 'last_name', 'initials', 'avatar',
-            'full_name', 'short_name', 'is_active', 'date_joined'
+            'full_name', 'short_name', 'is_active', 'date_joined', 'about_me'
         )
 
     class JSONAPIMeta:
@@ -69,11 +69,25 @@ class MemberSerializer(ModelSerializer):
 
 class InitiativeImageSerializer(ImageSerializer):
     sizes = {
-        'preview': '200x300',
-        'large': '400x500'
+        'preview': '300x168',
+        'small': '320x180',
+        'large': '600x337',
+        'cover': '960x540'
     }
     content_view_name = 'initiative-image'
     relationship = 'initiative_set'
+
+
+class InitiativeMapSerializer(serializers.ModelSerializer):
+    # Use a standard serializer and tinypoint serializer to keep this request tiny
+    # No need to repeat `type` and `latitude`, `longitude` for every record.
+    position = TinyPointSerializer()
+
+    class Meta:
+        model = Initiative
+        fields = (
+            'id', 'title', 'slug', 'position',
+        )
 
 
 class InitiativeSerializer(NoCommitMixin, ModelSerializer):
@@ -88,7 +102,6 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
-    video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
 
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
@@ -118,7 +131,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'id', 'title', 'pitch', 'categories',
             'owner', 'reviewer', 'promoter', 'activity_manager',
             'slug', 'has_organization', 'organization',
-            'organization_contact', 'story', 'video_html', 'image',
+            'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'location', 'activities',
             'errors', 'required',
         )

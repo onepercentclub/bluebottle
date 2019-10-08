@@ -1,10 +1,7 @@
 from django_elasticsearch_dsl import DocType, fields
 
 from bluebottle.utils.documents import MultiTenantIndex
-
-from bluebottle.initiatives.models import Initiative
-from bluebottle.activities.models import Activity, Contribution
-from bluebottle.members.models import Member
+from bluebottle.activities.models import Activity
 from bluebottle.utils.search import Search
 
 
@@ -17,14 +14,17 @@ activity.settings(
 )
 
 
-@activity.doc_type
 class ActivityDocument(DocType):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
     description = fields.TextField()
     status = fields.KeywordField()
+    status_score = fields.FloatField()
     review_status = fields.KeywordField()
     created = fields.DateField()
+
+    date = fields.DateField()
+    deadline = fields.DateField()
 
     type = fields.KeywordField()
 
@@ -47,17 +47,17 @@ class ActivityDocument(DocType):
     )
 
     categories = fields.NestedField(
-        attr='initiative.theme',
+        attr='initiative.categories',
         properties={
             'id': fields.LongField(),
             'slug': fields.KeywordField(),
         }
     )
+    position = fields.GeoPointField()
 
     country = fields.KeywordField()
 
     expertise = fields.NestedField(
-        attr='expertise',
         properties={
             'id': fields.KeywordField(),
         }
@@ -68,7 +68,6 @@ class ActivityDocument(DocType):
 
     class Meta:
         model = Activity
-        related_models = (Initiative, Member, Contribution)
 
     def get_queryset(self):
         return super(ActivityDocument, self).get_queryset().select_related(
@@ -84,14 +83,6 @@ class ActivityDocument(DocType):
             doc_type=[cls],
             model=cls._doc_type.model
         )
-
-    def get_instances_from_related(self, related_instance):
-        if isinstance(related_instance, Initiative):
-            return related_instance.activities.all()
-        if isinstance(related_instance, Member):
-            return related_instance.activities.all()
-        if isinstance(related_instance, Contribution):
-            return related_instance.activity
 
     def prepare_contributions(self, instance):
         return [
@@ -112,3 +103,14 @@ class ActivityDocument(DocType):
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:
             return {'id': instance.expertise_id}
+
+    def prepare_position(self, instance):
+        if hasattr(instance, 'location') and instance.location:
+            position = instance.location.position
+            return {'lat': position.get_x(), 'lon': position.get_y()}
+
+    def prepare_deadline(self, instance):
+        return None
+
+    def prepare_date(self, instance):
+        return None

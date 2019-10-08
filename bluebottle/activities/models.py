@@ -27,6 +27,7 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
+    transition_date = models.DateTimeField(null=True)
 
     status = FSMField(
         default=ActivityTransitions.default
@@ -93,6 +94,7 @@ class Contribution(TransitionsMixin, PolymorphicModel):
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
+    transition_date = models.DateTimeField(null=True)
 
     activity = models.ForeignKey(Activity, related_name='contributions')
     user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True)
@@ -103,3 +105,6 @@ class Contribution(TransitionsMixin, PolymorphicModel):
 
     class Meta:
         ordering = ('-created',)
+
+
+from bluebottle.activities.signals import *  # noqa

@@ -66,6 +66,8 @@ class BudgetLineFactory(factory.DjangoModelFactory):
 
 
 class BankAccountFactory(factory.DjangoModelFactory):
+    reviewed = True
+
     class Meta(object):
         model = BankAccount
 

@@ -186,8 +186,8 @@ def migrate_projects(apps, schema_editor):
         if hasattr(project, 'projectlocation') and project.projectlocation.country:
             if project.projectlocation.latitude and project.projectlocation.longitude:
                 point = Point(
-                    truncate(project.projectlocation.longitude, 12),
-                    truncate(project.projectlocation.latitude, 12)
+                    float(project.projectlocation.longitude),
+                    float(project.projectlocation.latitude)
                 )
             else:
                 point = Point(0, 0)

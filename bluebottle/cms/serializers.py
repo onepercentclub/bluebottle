@@ -15,7 +15,6 @@ from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.news.models import NewsItem
-from bluebottle.orders.models import Order
 from bluebottle.pages.models import Page, DocumentItem, ImageTextItem
 from bluebottle.projects.models import Project
 from bluebottle.statistics.statistics import Statistics
@@ -396,8 +395,9 @@ class ShareResultsContentSerializer(serializers.ModelSerializer):
                 'currency': str(stats.donated_total.currency)
             },
             'hours': stats.time_spent,
-            'projects': stats.projects_realized,
-            'tasks': stats.tasks_realized,
+            'fundings': stats.fundings_succeeded,
+            'assignments': stats.assignments_succeeded,
+            'events': stats.events_succeeded,
             'votes': stats.votes_cast,
         }
 
@@ -413,18 +413,18 @@ class CoFinancerSerializer(serializers.Serializer):
     id = serializers.SerializerMethodField()
 
     def get_user(self, obj):
-        user = Member.objects.get(pk=obj['user'])
+        user = Member.objects.get(pk=obj['pk'])
         return UserPreviewSerializer(
             user, context=self.context
         ).to_representation(user)
 
     def get_id(self, obj):
-        return obj['user']
+        return obj['pk']
 
     def get_total(self, obj):
         return {
             'amount': obj['total'],
-            'currency': obj['total_currency']
+            'currency': obj['contribution__donation__amount_currency']
         }
 
     class Meta:
@@ -443,18 +443,21 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
         return stats.people_involved
 
     def get_co_financers(self, instance):
-        totals = Order.objects.filter(
-            status__in=['pending', 'success'],
-            user__is_co_financer=True
-        ).values(
-            'user', 'total_currency'
-        ).annotate(total=Sum('total'))
+        filters = {'is_co_financer': True}
 
         if 'start_date' in self.context:
-            totals = totals.filter(confirmed__gte=self.context['start_date'])
+            filters['contribution__transition_date__gte'] = self.context['start_date']
 
         if 'end_date' in self.context:
-            totals = totals.filter(confirmed__lte=self.context['end_date'])
+            filters['contribution__transition_date__lte'] = self.context['end_date']
+
+        totals = Member.objects.filter(**filters)
+
+        totals = totals.values(
+            'pk', 'contribution__donation__amount_currency'
+        ).annotate(
+            total=Sum('contribution__donation__amount', distinct=True)
+        )
 
         return CoFinancerSerializer(
             totals, many=True, context=self.context

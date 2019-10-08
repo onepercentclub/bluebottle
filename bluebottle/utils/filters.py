@@ -36,12 +36,12 @@ class ElasticSearchFilter(filters.SearchFilter):
         sort = self.get_sort(request)
         if sort:
             try:
-                scoring = getattr(self, 'get_sort_{}'.format(sort))()
+                scoring = getattr(self, 'get_sort_{}'.format(sort))(request)
                 search = search.query(scoring)
             except AttributeError:
                 search = search.sort(*sort)
 
-        return search
+        return (queryset, search)
 
     def get_filter_fields(self, request):
         return [
@@ -78,7 +78,10 @@ class ElasticSearchFilter(filters.SearchFilter):
             return Nested(path=path, query=Term(**{field: value}))
 
         else:
-            return Term(**{field: value})
+            try:
+                return getattr(self, 'get_{}_filter'.format(field))(value, request)
+            except AttributeError:
+                return Term(**{field: value})
 
     def get_sort(self, request):
         sort = request.GET.get('sort')

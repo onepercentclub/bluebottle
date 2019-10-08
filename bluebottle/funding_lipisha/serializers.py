@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from bluebottle.funding.base_serializers import PaymentSerializer
+from bluebottle.funding.base_serializers import PaymentSerializer, BaseBankAccountSerializer
 from bluebottle.funding_lipisha.models import LipishaPayment, LipishaBankAccount
 
 
@@ -9,21 +9,29 @@ class LipishaPaymentSerializer(PaymentSerializer):
 
     class Meta(PaymentSerializer.Meta):
         model = LipishaPayment
-        fields = PaymentSerializer.Meta.fields + ('mobile_number', 'transaction')
+        fields = PaymentSerializer.Meta.fields + (
+            'mobile_number',
+            'transaction')
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
         resource_name = 'payments/lipisha-payments'
 
 
-class LipishaBankAccountSerializer(serializers.ModelSerializer):
+class LipishaBankAccountSerializer(BaseBankAccountSerializer):
 
-    class Meta:
+    class Meta(BaseBankAccountSerializer.Meta):
         model = LipishaBankAccount
 
-        fields = (
-            'id', 'account_holder_name', 'bank_code', 'account_number',
-
+        fields = BaseBankAccountSerializer.Meta.fields + (
+            'account_name',
+            'account_number',
+            'bank_name',
+            'swift',
         )
 
-    class JSONAPIMeta(object):
+    included_serializers = {
+        'connect_account': 'bluebottle.funding.serializers.PlainPayoutAccountSerializer',
+    }
+
+    class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
         resource_name = 'payout-accounts/lipisha-external-accounts'

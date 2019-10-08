@@ -2,12 +2,15 @@ import json
 
 from django.http import HttpResponse, HttpResponseNotFound
 from django.views.generic import View
+from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.funding.models import Donation
 from bluebottle.funding.views import PaymentList
-from bluebottle.funding_flutterwave.models import FlutterwavePayment
-from bluebottle.funding_flutterwave.serializers import FlutterwavePaymentSerializer
+from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwaveBankAccount
+from bluebottle.funding_flutterwave.serializers import FlutterwavePaymentSerializer, FlutterwaveBankAccountSerializer
 from bluebottle.funding_flutterwave.utils import check_payment_status
+from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.views import ListCreateAPIView, JsonApiViewMixin, RetrieveUpdateAPIView
 
 
 class FlutterwavePaymentList(PaymentList):
@@ -37,3 +40,23 @@ class FlutterwaveWebhookView(View):
                 return HttpResponseNotFound()
         check_payment_status(payment)
         return HttpResponse(status=200)
+
+
+class FlutterwaveBankAccountAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
+    queryset = FlutterwaveBankAccount.objects.all()
+    serializer_class = FlutterwaveBankAccountSerializer
+    permission_classes = []
+
+    related_permission_classes = {
+        'connect_account': [IsOwner]
+    }
+
+
+class FlutterwaveBankAccountAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = FlutterwaveBankAccount.objects.all()
+    serializer_class = FlutterwaveBankAccountSerializer
+    permission_classes = []
+
+    related_permission_classes = {
+        'connect_account': [IsOwner]
+    }

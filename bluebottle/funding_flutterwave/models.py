@@ -48,6 +48,35 @@ class FlutterwavePaymentProvider(PaymentProvider):
 
 class FlutterwaveBankAccount(BankAccount):
 
+    BANK_CHOICES = (
+        ("", "Select bank"),
+        ("044", "Access Bank"),
+        ("063", "Access Bank PLC (Diamond)"),
+        ("023", "Citi Bank"),
+        ("050", "EcoBank PLC"),
+        ("070", "Fidelity Bank"),
+        ("608", "FINATRUST MICROFINANCE BANK"),
+        ("011", "First Bank PLC"),
+        ("214", "First City Monument Bank"),
+        ("058", "Guaranty Trust Bank"),
+        ("030", "Heritage Bank"),
+        ("090175", "Highstreet Microfinance Bank"),
+        ("301", "Jaiz Bank"),
+        ("082", "Keystone Bank"),
+        ("090267", "Kudimoney MF Bank"),
+        ("076", "Polaris bank"),
+        ("101", "ProvidusBank PLC"),
+        ("221", "Stanbic IBTC Bank"),
+        ("068", "Standard Chaterted bank PLC"),
+        ("232", "Sterling Bank PLC"),
+        ("100", "Suntrust Bank"),
+        ("032", "Union Bank PLC"),
+        ("033", "United Bank for Africa"),
+        ("215", "Unity Bank PLC"),
+        ("035", "Wema Bank PLC"),
+        ("057", "Zenith bank PLC")
+    )
+
     type = 'flutterwave'
     providers = [
         'flutterwave', 'pledge'
@@ -62,10 +91,13 @@ class FlutterwaveBankAccount(BankAccount):
     bank_country_code = models.CharField(
         _("bank country code"), max_length=2, default='NG', null=True, blank=True)
     bank_code = models.CharField(
-        _("bank code"), max_length=100, null=True, blank=True)
+        _("bank"), choices=BANK_CHOICES, max_length=100, null=True, blank=True)
     account_number = models.CharField(
         _("account number"), max_length=255, null=True, blank=True)
 
     class Meta:
         verbose_name = _('Flutterwave bank account')
         verbose_name_plural = _('Flutterwave bank accounts')
+
+    class JSONAPIMeta:
+        resource_name = 'payout-accounts/flutterwave-external-accounts'

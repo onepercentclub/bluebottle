@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, BankAccount
@@ -53,8 +54,16 @@ class VitepayPayment(Payment):
 
 
 class VitepayBankAccount(BankAccount):
-    account_name = models.CharField(max_length=40)
+    account_name = models.CharField(max_length=200, null=True, blank=True)
+    mobile_number = models.CharField(max_length=40, null=True, blank=True)
     provider_class = VitepayPaymentProvider
 
     def save(self, *args, **kwargs):
         super(VitepayBankAccount, self).save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = _('Vitepay bank account')
+        verbose_name_plural = _('Vitepay bank accounts')
+
+    class JSONAPIMeta:
+        resource_name = 'payout-accounts/vitepay-external-accounts'

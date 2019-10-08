@@ -117,7 +117,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                         )
 
                         # NEW: Add meta to included resource
-                        meta = cls.extract_meta(serializer_class, serializer_resource)
+                        meta = cls.extract_meta(serializer.__class__, serializer_resource)
                         if meta:
                             new_item.update({'meta': utils._format_object(meta)})
 

@@ -18,4 +18,4 @@ class VitepayPaymentProviderAdmin(PaymentProviderChildAdmin):
 @admin.register(VitepayBankAccount)
 class VitepayBankAccountAdmin(BankAccountChildAdmin):
     model = VitepayBankAccount
-    fields = BankAccountChildAdmin.fields + ('account_name', )
+    fields = BankAccountChildAdmin.fields + ('account_name', 'mobile_number')

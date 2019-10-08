@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from bluebottle.funding.base_serializers import PaymentSerializer
+from bluebottle.funding.base_serializers import PaymentSerializer, BaseBankAccountSerializer
 from bluebottle.funding_vitepay.models import VitepayPayment, VitepayBankAccount
 from bluebottle.funding_vitepay.utils import get_payment_url
 
@@ -20,15 +20,18 @@ class VitepayPaymentSerializer(PaymentSerializer):
         return payment
 
 
-class VitepayBankAccountSerializer(serializers.ModelSerializer):
+class VitepayBankAccountSerializer(BaseBankAccountSerializer):
 
-    class Meta:
+    class Meta(BaseBankAccountSerializer.Meta):
         model = VitepayBankAccount
 
-        fields = (
-            'id', 'account_name',
-
+        fields = BaseBankAccountSerializer.Meta.fields + (
+            'account_name',
+            'mobile_number',
         )
+    included_serializers = {
+        'connect_account': 'bluebottle.funding.serializers.PlainPayoutAccountSerializer',
+    }
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
         resource_name = 'payout-accounts/vitepay-external-accounts'

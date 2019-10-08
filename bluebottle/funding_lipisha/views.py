@@ -2,12 +2,15 @@ import logging
 
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.generic import View
+from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.views import PaymentList
-from bluebottle.funding_lipisha.models import LipishaPayment
-from bluebottle.funding_lipisha.serializers import LipishaPaymentSerializer
+from bluebottle.funding_lipisha.models import LipishaPayment, LipishaBankAccount
+from bluebottle.funding_lipisha.serializers import LipishaPaymentSerializer, LipishaBankAccountSerializer
 from bluebottle.funding_lipisha.utils import initiate_push_payment, acknowledge_payment, initiate_payment
+from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.views import JsonApiViewMixin, ListCreateAPIView, RetrieveUpdateAPIView
 
 logger = logging.getLogger(__name__)
 
@@ -47,3 +50,23 @@ class LipishaWebHookView(View):
         else:
             logger.error('Could not parse Lipisha Paymnent update: '
                          'Unknown api_type {}'.format(request.POST['api_type']))
+
+
+class LipishaBankAccountAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
+    queryset = LipishaBankAccount.objects.all()
+    serializer_class = LipishaBankAccountSerializer
+    permission_classes = []
+
+    related_permission_classes = {
+        'connect_account': [IsOwner]
+    }
+
+
+class LipishaBankAccountAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = LipishaBankAccount.objects.all()
+    serializer_class = LipishaBankAccountSerializer
+    permission_classes = []
+
+    related_permission_classes = {
+        'connect_account': [IsOwner]
+    }

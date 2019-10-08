@@ -1,13 +1,17 @@
 import logging
 
+from rest_framework_json_api.views import AutoPrefetchMixin
+
 from bluebottle.funding.exception import PaymentException
 from django.http import HttpResponse
 from django.views.generic.base import View
 
 from bluebottle.funding.views import PaymentList
-from bluebottle.funding_vitepay.models import VitepayPayment
-from bluebottle.funding_vitepay.serializers import VitepayPaymentSerializer
+from bluebottle.funding_vitepay.models import VitepayPayment, VitepayBankAccount
+from bluebottle.funding_vitepay.serializers import VitepayPaymentSerializer, VitepayBankAccountSerializer
 from bluebottle.funding_vitepay.utils import update_payment_status
+from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.views import JsonApiViewMixin, ListCreateAPIView, RetrieveUpdateAPIView
 
 logger = logging.getLogger(__name__)
 
@@ -34,3 +38,23 @@ class VitepayWebhookView(View):
             return HttpResponse('{"status": "1"}')
         except PaymentException as e:
             return HttpResponse('{"status": "0", "message": "%s"}' % e)
+
+
+class VitepayBankAccountAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
+    queryset = VitepayBankAccount.objects.all()
+    serializer_class = VitepayBankAccountSerializer
+    permission_classes = []
+
+    related_permission_classes = {
+        'connect_account': [IsOwner]
+    }
+
+
+class VitepayBankAccountAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = VitepayBankAccount.objects.all()
+    serializer_class = VitepayBankAccountSerializer
+    permission_classes = []
+
+    related_permission_classes = {
+        'connect_account': [IsOwner]
+    }

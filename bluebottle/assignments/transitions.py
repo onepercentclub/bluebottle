@@ -55,7 +55,7 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=[values.running, values.open],
+        source=[values.running, values.open, values.succeeded],
         target=values.closed,
         permissions=[ActivityTransitions.is_system],
         messages=[AssignmentClosedMessage]

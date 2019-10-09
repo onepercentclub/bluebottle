@@ -37,6 +37,26 @@ class FundingTestCase(BluebottleAdminTestCase):
         BudgetLineFactory.create_batch(4, activity=self.funding, amount=Money(125, 'EUR'))
         mail.outbox = []
 
+    def test_approve_deadline(self):
+        funding = FundingFactory.create(
+            owner=self.initiative.activity_manager,
+            initiative=self.initiative,
+            target=Money(500, 'EUR'),
+            duration=30,
+            deadline=None,
+            bank_account=BankAccountFactory.create()
+        )
+        funding.bank_account.reviewed = True
+
+        funding.review_transitions.submit()
+        funding.review_transitions.approve()
+
+        self.assertAlmostEqual(
+            funding.deadline,
+            now() + timedelta(days=30),
+            delta=timedelta(seconds=1)
+        )
+
     def test_no_donations(self):
         self.assertEqual(self.funding.initiative.status, 'approved')
         self.assertEqual(self.funding.status, 'open')

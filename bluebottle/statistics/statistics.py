@@ -135,7 +135,7 @@ class Statistics(object):
             self.date_filter('transition_date'),
             status='succeeded'
         )
-        totals = donations.values('amount_currency').annotate(total=Sum('amount'))
+        totals = donations.order_by('amount_currency').values('amount_currency').annotate(total=Sum('amount'))
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
         if totals:
             donated = sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])

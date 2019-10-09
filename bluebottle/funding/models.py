@@ -71,7 +71,6 @@ class PaymentProvider(PolymorphicModel):
                     currency = (cur.code, get_currency_name(cur.code))
                     if currency not in currencies:
                         currencies.append(currency)
-        print currencies
         return currencies
 
     @classmethod

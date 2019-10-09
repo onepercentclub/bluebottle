@@ -386,7 +386,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         with mock.patch('stripe.Account.create', return_value=self.connect_account):
             self.payout_account = StripePayoutAccountFactory.create(owner=self.user)
 
-        self.webhook = reverse('stripe-payment-webhook')
+        self.webhook = reverse('stripe-connect-webhook')
 
     def test_verified(self):
         with open('bluebottle/funding_stripe/tests/files/connect_webhook_verified.json') as hook_file:

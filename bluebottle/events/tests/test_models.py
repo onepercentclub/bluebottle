@@ -87,6 +87,8 @@ class EventTestCase(BluebottleTestCase):
         ParticipantFactory.create_batch(3, activity=event, status='new')
         ParticipantFactory.create(activity=event, status='withdrawn')
 
+        mail.outbox = []
+
         event.start_date = event.start_date + timedelta(days=1)
         event.save()
 
@@ -107,6 +109,8 @@ class EventTestCase(BluebottleTestCase):
         )
         ParticipantFactory.create_batch(3, activity=event, status='new')
         ParticipantFactory.create(activity=event, status='withdrawn')
+
+        mail.outbox = []
 
         event.title = 'New title'
         event.save()

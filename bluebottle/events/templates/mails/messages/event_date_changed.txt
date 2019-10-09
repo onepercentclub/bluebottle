@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=obj.owner.first_name event_title=obj.title event_date=obj.start|date event_time=obj.start|time  context 'email' %}
+{% blocktrans with recipient_name=to.first_name event_title=obj.title event_date=obj.start|date event_time=obj.start|time  context 'email' %}
 Hi {{ recipient_name }},
 The date and time for "{{ event_title }}" has been changed to {{ event_date }} {{ event_time }}
 

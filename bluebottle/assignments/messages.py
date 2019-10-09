@@ -43,3 +43,44 @@ class AssignmentApplicationMessage(TransitionMessage):
     context = {
         'assignment_title': 'activity.title'
     }
+
+
+class AssignmentDateChanged(TransitionMessage):
+    subject = _('The date and time for your assignment changed')
+    template = 'messages/assignment_date_changed'
+
+    def get_recipients(self):
+        return [
+            contribution.user for contribution
+            in self.obj.contributions.filter(status='new')
+        ]
+
+
+class AssignmentReminderOnDate(TransitionMessage):
+    subject = _('"{assigment_title}" will take place in 5 days!')
+    template = 'messages/assignment_reminder_on_date'
+
+    context = {
+        'assignment_title': 'title'
+    }
+
+    def get_recipients(self):
+        return [
+            contribution.user for contribution
+            in self.obj.contributions.filter(status='new')
+        ]
+
+
+class AssignmentReminderDeadline(TransitionMessage):
+    subject = _('The deadline for your task "{assignment_title}" is getting close')
+    template = 'messages/assignment_reminder_deadline'
+
+    context = {
+        'assignment_title': 'title'
+    }
+
+    def get_recipients(self):
+        return [
+            contribution.user for contribution
+            in self.obj.contributions.filter(status='new')
+        ]

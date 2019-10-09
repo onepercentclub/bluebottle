@@ -41,7 +41,7 @@ class TransitionMessage(object):
                 context[key] = attrgetter(item)(self.obj)
             return self.subject.format(**context)
 
-    def get_messages(self, once):
+    def get_messages(self, once=False):
         custom_message = self.options.get('custom_message', '')
 
         for recipient in self.get_recipients():

@@ -71,6 +71,7 @@ class PaymentProvider(PolymorphicModel):
                     currency = (cur.code, get_currency_name(cur.code))
                     if currency not in currencies:
                         currencies.append(currency)
+        print currencies
         return currencies
 
     @classmethod
@@ -185,12 +186,6 @@ class Funding(Activity):
             self.amount_matching or Money(0, self.target.currency),
             self.target.currency
         )
-
-    @property
-    def payment_methods(self):
-        if not self.bank_account or not self.bank_account.payment_methods:
-            return []
-        return self.bank_account.payment_methods
 
     def save(self, *args, **kwargs):
         for reward in self.rewards.all():

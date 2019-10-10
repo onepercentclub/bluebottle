@@ -21,3 +21,6 @@ class CanExportSupportersPermission(IsOwner):
     """ Allows access only to obj owner. """
     def has_object_action_permission(self, action, user, obj):
         return obj.owner == user or obj.initiative.activity_manager == user
+
+    def has_action_permission(self, action, user, model_cls):
+        return True

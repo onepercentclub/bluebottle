@@ -241,7 +241,7 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
     )
 
     supporters_export_url = PrivateFileSerializer(
-        'funding-supporters-export', url_args=('slug', ), permission=CanExportSupportersPermission,
+        'funding-supporters-export', url_args=('pk', ), permission=CanExportSupportersPermission,
         read_only=True
     )
 

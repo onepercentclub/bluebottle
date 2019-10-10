@@ -223,7 +223,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
 
-    def test_view_funding(self):
+    def test_view_funding_owner(self):
         DonationFactory.create_batch(5, amount=Money(200, 'EUR'), activity=self.funding, status='succeeded')
         DonationFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')
 
@@ -270,6 +270,11 @@ class FundingDetailTestCase(BluebottleTestCase):
         geolocation = get_included(response, 'geolocations')
         self.assertEqual(geolocation['attributes']['locality'], 'Barranquilla')
 
+        export_url = data['data']['attributes']['supporters-export-url']['url']
+
+        export_response = self.client.get(export_url)
+        self.assertTrue('Email,Name,Donation Date' in export_response.content)
+
     def test_get_bank_account(self):
         self.funding.bank_account = ExternalAccountFactory.create(
             account_id='some-external-account-id'
@@ -297,7 +302,10 @@ class FundingDetailTestCase(BluebottleTestCase):
             bank_account['id'], unicode(self.funding.bank_account.pk)
         )
 
-    def test_get_bank_account_other_user(self):
+    def test_other_user(self):
+        DonationFactory.create_batch(5, amount=Money(200, 'EUR'), activity=self.funding, status='succeeded')
+        DonationFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')
+
         self.funding.bank_account = ExternalAccountFactory.create(
             account_id='some-external-account-id'
         )
@@ -320,6 +328,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue('bank_account' not in response.json()['data']['relationships'])
+        self.assertIsNone(response.json()['data']['attributes']['supporters-export-url'])
 
     def test_update(self):
         new_title = 'New title'

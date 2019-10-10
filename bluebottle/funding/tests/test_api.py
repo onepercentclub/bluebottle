@@ -275,6 +275,11 @@ class FundingDetailTestCase(BluebottleTestCase):
         export_response = self.client.get(export_url)
         self.assertTrue('Email,Name,Donation Date' in export_response.content)
 
+        wrong_signature_response = self.client.get(export_url + '111')
+        self.assertEqual(
+            wrong_signature_response.status_code, 404
+        )
+
     def test_get_bank_account(self):
         self.funding.bank_account = ExternalAccountFactory.create(
             account_id='some-external-account-id'

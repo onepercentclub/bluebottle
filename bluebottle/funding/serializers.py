@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField
 )
-from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField
 from rest_framework_json_api.serializers import (
     ModelSerializer, ValidationError, IntegerField,
     PolymorphicModelSerializer
@@ -228,7 +228,9 @@ class BankAccountSerializer(PolymorphicModelSerializer):
 class FundingSerializer(NoCommitMixin, FundingListSerializer):
     rewards = RewardSerializer(many=True, required=False)
     budget_lines = BudgetLineSerializer(many=True, required=False)
-    payment_methods = PaymentMethodSerializer(many=True, read_only=True)
+    payment_methods = SerializerMethodResourceRelatedField(
+        read_only=True, many=True, source='get_payment_methods', model=PaymentMethod
+    )
     contributions = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
 
     bank_account = PolymorphicResourceRelatedField(
@@ -262,8 +264,8 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
 
     class JSONAPIMeta(FundingListSerializer.JSONAPIMeta):
         included_resources = FundingListSerializer.JSONAPIMeta.included_resources + [
-            'rewards',
             'payment_methods',
+            'rewards',
             'budget_lines',
             'contributions',
             'contributions.user',
@@ -275,11 +277,28 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
         **{
             'rewards': 'bluebottle.funding.serializers.BudgetLineSerializer',
             'budget_lines': 'bluebottle.funding.serializers.RewardSerializer',
-            'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
             'contributions': 'bluebottle.funding.serializers.DonationSerializer',
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
+            'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
         }
     )
+
+    def get_payment_methods(self, obj):
+        if not obj.bank_account or not obj.bank_account.payment_methods:
+            return []
+
+        methods = obj.bank_account.payment_methods
+
+        request = self.context['request']
+
+        if request.user.is_authenticated and request.user.can_pledge:
+            try:
+                from bluebottle.funding_pledge.models import PledgePaymentProvider
+                methods += PledgePaymentProvider.objects.get().payment_methods
+            except PledgePaymentProvider.DoesNotExist:
+                pass
+
+        return methods
 
 
 class FundingTransitionSerializer(TransitionSerializer):

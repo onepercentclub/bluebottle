@@ -16,7 +16,7 @@ class PaymentTestCase(BluebottleTestCase):
     def setUp(self):
         super(PaymentTestCase, self).setUp()
         self.client = JSONAPITestClient()
-        self.user = BlueBottleUserFactory()
+        self.user = BlueBottleUserFactory(can_pledge=True)
         self.initiative = InitiativeFactory.create()
 
         self.initiative.transitions.submit()

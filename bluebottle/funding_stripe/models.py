@@ -86,13 +86,23 @@ class StripeSourcePayment(Payment):
 
     transitions = TransitionManager(StripeSourcePaymentTransitions, 'status')
 
+    @property
     def charge(self):
+        if self.charge_token:
+            return stripe.Charge.retrieve(self.charge_token)
+
+    @property
+    def source(self):
+        if self.source_token:
+            return stripe.Source.retrieve(self.source_token)
+
+    def do_charge(self):
         account_id = self.donation.activity.bank_account.connect_account.account_id
         charge = stripe.Charge.create(
-            amount=self.donation.amount,
+            amount=int(self.donation.amount.amount * 100),
             currency=self.donation.amount.currency,
             source=self.source_token,
-            destination={
+            transfer_data={
                 'destination': account_id,
             },
             metadata=self.metadata
@@ -100,6 +110,31 @@ class StripeSourcePayment(Payment):
 
         self.charge_token = charge.id
         self.transitions.charge()
+        self.save()
+
+    def update(self):
+        if not self.charge_token and self.source.status == 'chargeable':
+            self.do_charge()
+
+        if (not self.status == 'failed') and self.source.status == 'failed':
+            self.transitions.fail()
+
+        if (not self.status == 'canceled') and self.source.status == 'canceled':
+            self.transitions.cancel()
+
+        if self.charge_token:
+            if (not self.status == 'failed') and self.charge.status == 'failed':
+                self.transitions.fail()
+
+            if (not self.status == 'succeeded') and self.charge.status == 'succeeded':
+                self.transitions.succeed()
+
+            if (not self.status == 'refunded') and self.charge.refunded:
+                self.transitions.refund()
+
+            if (not self.status == 'disputed') and self.charge.dispute:
+                self.transitions.dispute()
+
         self.save()
 
     @property

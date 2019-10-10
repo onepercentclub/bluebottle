@@ -212,7 +212,7 @@ class SourceWebHookView(View):
 
             if event.type == 'source.chargeable':
                 payment = self.get_payment_from_source(event.data.object.id)
-                payment.charge()
+                payment.do_charge()
                 payment.save()
 
                 return HttpResponse('Updated payment')

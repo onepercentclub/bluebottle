@@ -176,3 +176,6 @@ class Applicant(Contribution):
             follow(self.user, self.activity)
             self.transitions.initiate()
         self.activity.check_capacity()
+
+
+from bluebottle.assignments.signals import *  # noqa

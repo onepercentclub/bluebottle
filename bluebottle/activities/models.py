@@ -46,6 +46,7 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
     )
 
     followers = GenericRelation('follow.Follow', object_id_field='instance_id')
+    messages = GenericRelation('notifications.Message')
 
     review_transitions = TransitionManager(ActivityReviewTransitions, 'review_status')
 

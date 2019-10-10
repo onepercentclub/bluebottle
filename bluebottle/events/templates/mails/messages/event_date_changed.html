@@ -1,0 +1,18 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=to.first_name event_title=obj.title event_date=obj.start|date event_time=obj.start|time  context 'email' %}
+Hi {{ recipient_name }},
+<br><br>
+The date and time for "{{ event_title }}" has been changed to {{ event_date }} {{ event_time }}.
+<br><br>
+If this means you can’t make it anymore, please let your activity manager know so they can prepare accordingly.
+{% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ site }}{{ obj.get_absolute_url }}" class="action-email">
+       {% trans 'Goto event' context 'email' %}:
+    </a>
+{% endblock %}`

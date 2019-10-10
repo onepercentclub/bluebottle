@@ -13,6 +13,7 @@ from rest_framework_json_api.serializers import (
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer
 )
+from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.files.serializers import ImageField, PrivateDocumentSerializer
 from bluebottle.files.serializers import PrivateDocumentField
 from bluebottle.funding.filters import DonationListFilter
@@ -21,6 +22,7 @@ from bluebottle.funding.models import (
     BankAccount, PayoutAccount, PaymentProvider
 )
 from bluebottle.funding.models import PlainPayoutAccount
+from bluebottle.funding.permissions import CanExportSupportersPermission
 from bluebottle.funding_flutterwave.serializers import FlutterwaveBankAccountSerializer
 from bluebottle.funding_lipisha.serializers import LipishaBankAccountSerializer
 from bluebottle.funding_stripe.serializers import ExternalAccountSerializer, ConnectAccountSerializer
@@ -238,6 +240,11 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
         allow_null=True
     )
 
+    supporters_export_url = PrivateFileSerializer(
+        'funding-supporters-export', url_args=('slug', ), permission=CanExportSupportersPermission,
+        read_only=True
+    )
+
     def get_fields(self):
         fields = super(FundingSerializer, self).get_fields()
 
@@ -257,7 +264,8 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
             'fundraisers',
             'rewards',
             'contributions',
-            'bank_account'
+            'bank_account',
+            'supporters_export_url',
         )
 
     class JSONAPIMeta(FundingListSerializer.JSONAPIMeta):

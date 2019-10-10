@@ -15,3 +15,9 @@ class PaymentPermission(IsOwner):
             return obj.donation.client_secret == request.auth
 
         return super(PaymentPermission, self).has_object_permission(request, view, obj.donation)
+
+
+class CanExportSupportersPermission(IsOwner):
+    """ Allows access only to obj owner. """
+    def has_object_action_permission(self, action, user, obj):
+        return obj.owner == user or obj.initiative.activity_manager == user

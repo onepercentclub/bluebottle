@@ -131,7 +131,7 @@ def get_client_ip(request=None):
         except AttributeError:
             ipa = None
 
-    return ipa.strip()
+    return ipa.strip() if ipa else ipa
 
 
 def set_author_editor_ip(request, obj):

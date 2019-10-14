@@ -117,7 +117,7 @@ class RelatedInitiativeImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIV
 
 class RelatedInitiativeImageContent(ImageContentView):
     queryset = RelatedImage.objects
-    field = 'content_object'
+    field = 'image'
 
 
 class InitiativeReviewTransitionList(TransitionList):

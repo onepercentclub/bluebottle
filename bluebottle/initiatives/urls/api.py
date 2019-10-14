@@ -31,7 +31,7 @@ urlpatterns = [
     ),
 
     url(
-        r'^/related-image$',
+        r'^/related-images$',
         RelatedInitiativeImageList.as_view(),
         name='related-initiative-image-list'),
     url(

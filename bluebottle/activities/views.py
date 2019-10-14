@@ -79,10 +79,14 @@ class RelatedActivityImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIVie
 class RelatedActivityImageContent(ImageContentView):
     def get_queryset(self):
         return RelatedImage.objects.filter(
-            content_type=ContentType.objects.get_for_model(Activity)
+            content_type__in=[
+                ContentType.objects.get_by_natural_key('events', 'event'),
+                ContentType.objects.get_by_natural_key('funding', 'funding'),
+                ContentType.objects.get_by_natural_key('assignments', 'assignment'),
+            ]
         )
 
-    field = 'content_object'
+    field = 'image'
 
 
 class ActivityReviewTransitionList(TransitionList):

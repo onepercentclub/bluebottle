@@ -344,10 +344,14 @@ def migrate_projects(apps, schema_editor):
                 bank_account=account
             )
 
-            project.wallposts.update(content_type=content_type, object_id=funding.id)
+            old_ct = ContentType.objects.get_for_model(Project)
+            Wallpost.objects.filter(content_type=old_ct, object_id=project.id).\
+                update(content_type=content_type, object_id=funding.id)
         else:
             content_type = ContentType.objects.get_for_model(Initiative)
-            project.wallposts.update(content_type=content_type, object_id=initiative.id)
+            old_ct = ContentType.objects.get_for_model(Project)
+            Wallpost.objects.filter(content_type=old_ct, object_id=project.id).\
+                update(content_type=content_type, object_id=initiative.id)
 
             # TODO: Add budget lines
             # TODO: Add fundraisers

@@ -57,6 +57,7 @@ def migrate_tasks(apps, schema_editor):
 
     Initiative = apps.get_model('initiatives', 'Initiative')
     ContentType = apps.get_model('contenttypes', 'ContentType')
+    Wallpost = apps.get_model('wallposts', 'Wallpost')
 
     # Clean-up previous migrations of projects to initiatives
     Event.objects.all().delete()
@@ -69,6 +70,7 @@ def migrate_tasks(apps, schema_editor):
 
     for task in Task.objects.all():
         if task.type == 'event' and (not task.skill_id or not task.skill.expertise):
+            content_type = ContentType.objects.get_for_model(Event)
             initiative = Initiative.objects.get(slug=task.project.slug)
             # geolocation = Geolocation.objects.create()
             geolocation = None
@@ -76,6 +78,7 @@ def migrate_tasks(apps, schema_editor):
 
             event = Event.objects.create(
                 # activity fields
+                polymorphic_ctype=content_type,
                 initiative=initiative,
                 title=task.title,
                 slug=slugify(task.title),
@@ -112,7 +115,13 @@ def migrate_tasks(apps, schema_editor):
                 participant.updated = task.updated
                 participant.polymorphic_ctype = participant_ctype
                 participant.save()
+
+            old_ct = ContentType.objects.get_for_model(Task)
+            Wallpost.objects.filter(content_type=old_ct, object_id=task.id).\
+                update(content_type=content_type, object_id=event.id)
+
         else:
+            content_type = ContentType.objects.get_for_model(Event)
             initiative = Initiative.objects.get(slug=task.project.slug)
             # geolocation = Geolocation.objects.create()
             geolocation = None
@@ -123,6 +132,7 @@ def migrate_tasks(apps, schema_editor):
 
             assignment = Assignment.objects.create(
                 # activity fields
+                polymorphic_ctype=content_type,
                 initiative=initiative,
                 title=task.title,
                 slug=slugify(task.title),
@@ -161,6 +171,10 @@ def migrate_tasks(apps, schema_editor):
                 applicant.updated = task.updated
                 applicant.polymorphic_ctype = applicant_ctype
                 applicant.save()
+
+            old_ct = ContentType.objects.get_for_model(Task)
+            Wallpost.objects.filter(content_type=old_ct, object_id=task.id). \
+                update(content_type=content_type, object_id=assignment.id)
 
 
 class Migration(migrations.Migration):

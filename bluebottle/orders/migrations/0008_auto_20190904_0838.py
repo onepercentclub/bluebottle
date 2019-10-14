@@ -52,6 +52,7 @@ def migrate_orders(apps, schema_editor):
     Order = apps.get_model('orders', 'Order')
     Funding = apps.get_model('funding', 'Funding')
     Payment = apps.get_model('payments', 'Payment')
+    Donation = apps.get_model('donations', 'Donation')
     NewDonation = apps.get_model('funding', 'Donation')
     LegacyPayment = apps.get_model('funding', 'LegacyPayment')
     StripeSourcePayment = apps.get_model('funding_stripe', 'StripeSourcePayment')
@@ -59,6 +60,7 @@ def migrate_orders(apps, schema_editor):
     FlutterwavePayment = apps.get_model('funding_flutterwave', 'FlutterwavePayment')
     LipishaPayment = apps.get_model('funding_lipisha', 'LipishaPayment')
     VitepayPayment = apps.get_model('funding_vitepay', 'VitepayPayment')
+    Wallpost = apps.get_model('wallposts', 'Wallpost')
 
     # TelesomPayment = apps.get_model('funding_telesom', 'TelesomPayment')
     # BeyonicPayment = apps.get_model('funding_beyonic', 'BeyonicPayment')
@@ -88,6 +90,10 @@ def migrate_orders(apps, schema_editor):
             )
             new_donation.created = donation.created
             new_donation.save()
+
+            old_ct = ContentType.objects.get_for_model(Donation)
+            Wallpost.objects.filter(content_type=old_ct, object_id=donation.id).\
+                update(content_type=content_type, object_id=new_donation.id)
 
             payment= None
             if order_payment:

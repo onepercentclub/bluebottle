@@ -1,3 +1,5 @@
+import datetime
+
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -21,6 +23,15 @@ class FundingTransitions(ActivityTransitions):
     def deadline_in_future(self):
         if not self.instance.deadline or self.instance.deadline < timezone.now():
             return _("Please select a new deadline in the future before extending.")
+
+    @transition(
+        source=values.in_review,
+        target=values.open,
+        permissions=[ActivityTransitions.can_approve]
+    )
+    def reviewed(self):
+        if self.instance.duration and not self.instance.deadline:
+            self.instance.deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
 
     @transition(
         source=values.open,

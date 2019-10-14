@@ -133,55 +133,6 @@ class ExternalAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdate
         serializer.save()
 
 
-class WebHookView(View):
-    def post(self, request, **kwargs):
-        payload = request.body
-        signature_header = request.META['HTTP_STRIPE_SIGNATURE']
-
-        try:
-            event = stripe.Webhook.construct_event(
-                payload, signature_header, stripe.webhook_secret
-            )
-        except stripe.error.SignatureVerificationError:
-            # Invalid signature
-            return HttpResponse('Signature failed to verify', status=400)
-
-        try:
-            if event.type == 'payment_intent.succeeded':
-                payment = self.get_payment(event.data.object.id)
-                payment.transitions.succeed()
-                payment.save()
-
-                return HttpResponse('Updated payment')
-
-            elif event.type == 'payment_intent.payment_failed':
-                payment = self.get_payment(event.data.object.id)
-                payment.transitions.fail()
-                payment.save()
-
-                return HttpResponse('Updated payment')
-
-            elif event.type == 'charge.refunded':
-                payment = self.get_payment(event.data.object.payment_intent)
-                payment.transitions.refund()
-                payment.save()
-
-                return HttpResponse('Updated payment')
-            else:
-                return HttpResponse('Skipped event {}'.format(event.type))
-
-        except StripePayment.DoesNotExist:
-            return HttpResponse('Payment not found', status=400)
-
-    def get_payment(self, intent_id):
-        intent = PaymentIntent.objects.get(intent_id=intent_id)
-
-        try:
-            return intent.payment
-        except StripePayment.DoesNotExist:
-            return StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
-
-
 class IntentWebHookView(View):
     def post(self, request, **kwargs):
         payload = request.body
@@ -261,7 +212,7 @@ class SourceWebHookView(View):
 
             if event.type == 'source.chargeable':
                 payment = self.get_payment_from_source(event.data.object.id)
-                payment.charge()
+                payment.do_charge()
                 payment.save()
 
                 return HttpResponse('Updated payment')

@@ -1,3 +1,7 @@
+import csv
+
+from django.http.response import HttpResponse
+
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.status import HTTP_404_NOT_FOUND
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -18,6 +22,7 @@ from bluebottle.funding.serializers import (
 )
 
 from bluebottle.transitions.views import TransitionList
+from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
@@ -267,3 +272,33 @@ class PaymentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'donation': ['donation'],
         'user': ['user']
     }
+
+
+class SupportersExportView(PrivateFileView):
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Donation Date'),
+        ('amount_currency', 'Currency'),
+        ('amount', 'Amount'),
+        ('reward__title', 'Reward'),
+    )
+
+    model = Funding
+
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        response = HttpResponse()
+        response['Content-Disposition'] = 'attachment; filename="supporters.csv"'
+        response['Content-Type'] = 'text/csv'
+
+        writer = csv.writer(response)
+
+        writer.writerow([field[1] for field in self.fields])
+        for donation in instance.contributions.filter(status='succeeded'):
+            writer.writerow([
+                prep_field(request, donation, field[0]) for field in self.fields
+            ])
+
+        return response

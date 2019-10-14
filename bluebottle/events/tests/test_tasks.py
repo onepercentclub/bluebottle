@@ -4,8 +4,8 @@ from django.core import mail
 from django.utils.timezone import now
 
 from bluebottle.events.models import Event
-from bluebottle.events.tasks import check_event_end, check_event_start
-from bluebottle.events.tests.factories import EventFactory
+from bluebottle.events.tasks import check_event_end, check_event_start, check_event_reminder
+from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.events.transitions import EventTransitions
 from bluebottle.initiatives.tests.factories import (
     InitiativePlatformSettingsFactory, InitiativeFactory
@@ -64,3 +64,59 @@ class EventTasksTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, "The status of your event was changed to successful")
         self.assertTrue("Hi Nono,", mail.outbox[0].body)
+
+    def test_event_reminder_task(self):
+        user = BlueBottleUserFactory.create(first_name='Nono')
+        start = now() + timedelta(days=4)
+        event = EventFactory.create(
+            owner=user,
+            status='open',
+            initiative=self.initiative,
+            start_time=start.time(),
+            start_date=start.date(),
+            duration=1
+        )
+
+        ParticipantFactory.create_batch(3, activity=event, status='new')
+        ParticipantFactory.create(activity=event, status='withdrawn')
+
+        check_event_reminder()
+
+        recipients = [message.to[0] for message in mail.outbox]
+
+        for participant in event.contributions.all():
+            if participant.status == 'new':
+                self.assertTrue(participant.user.email in recipients)
+            else:
+                self.assertFalse(participant.user.email in recipients)
+
+        recipients = [message.to[0] for message in mail.outbox]
+
+        for participant in event.contributions.all():
+            if participant.status == 'new':
+                self.assertTrue(participant.user.email in recipients)
+            else:
+                self.assertFalse(participant.user.email in recipients)
+
+        mail.outbox = []
+
+    def test_event_reminder_task_twice(self):
+        user = BlueBottleUserFactory.create(first_name='Nono')
+        start = now() + timedelta(days=4)
+        event = EventFactory.create(
+            owner=user,
+            status='open',
+            initiative=self.initiative,
+            start_time=start.time(),
+            start_date=start.date(),
+            duration=1
+        )
+
+        ParticipantFactory.create_batch(3, activity=event, status='new')
+        ParticipantFactory.create(activity=event, status='withdrawn')
+
+        check_event_reminder()
+        mail.outbox = []
+        check_event_reminder()
+
+        self.assertEqual(len(mail.outbox), 0)

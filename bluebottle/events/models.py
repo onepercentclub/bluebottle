@@ -144,3 +144,5 @@ class Participant(Contribution):
             follow(self.user, self.activity)
 
         self.activity.check_capacity()
+
+from bluebottle.events.signals import *  # noqa

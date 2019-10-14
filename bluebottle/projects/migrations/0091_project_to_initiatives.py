@@ -172,6 +172,7 @@ def migrate_projects(apps, schema_editor):
     FlutterwaveBankAccount = apps.get_model('funding_flutterwave', 'FlutterwaveBankAccount')
     VitepayBankAccount = apps.get_model('funding_vitepay', 'VitepayBankAccount')
     LipishaBankAccount = apps.get_model('funding_lipisha', 'LipishaBankAccount')
+    Wallpost = apps.get_model('wallposts', 'Wallpost')
 
     ContentType = apps.get_model('contenttypes', 'ContentType')
 
@@ -342,6 +343,11 @@ def migrate_projects(apps, schema_editor):
                 country=project.country,
                 bank_account=account
             )
+
+            project.wallposts.update(content_type=content_type, object_id=funding.id)
+        else:
+            content_type = ContentType.objects.get_for_model(Initiative)
+            project.wallposts.update(content_type=content_type, object_id=initiative.id)
 
             # TODO: Add budget lines
             # TODO: Add fundraisers

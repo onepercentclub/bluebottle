@@ -1,9 +1,13 @@
 from rest_framework_json_api.relations import PolymorphicResourceRelatedField
-from rest_framework_json_api.serializers import PolymorphicModelSerializer
+from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
 from bluebottle.activities.models import Contribution, Activity
 from bluebottle.assignments.serializers import ApplicantSerializer, AssignmentListSerializer
 from bluebottle.events.serializers import ParticipantSerializer, EventListSerializer
+
+from bluebottle.files.models import RelatedImage
+from bluebottle.files.serializers import ImageSerializer, ImageField
+
 from bluebottle.funding.serializers import DonationSerializer, FundingListSerializer
 from bluebottle.transitions.serializers import TransitionSerializer
 
@@ -63,3 +67,36 @@ class ActivityReviewTransitionSerializer(TransitionSerializer):
     class JSONAPIMeta:
         included_resources = ['resource']
         resource_name = 'activities/review-transitions'
+
+
+class RelatedActivityImageSerializer(ModelSerializer):
+    image = ImageField(required=False, allow_null=True)
+    resource = PolymorphicResourceRelatedField(
+        ActivitySerializer,
+        queryset=Activity.objects.all(),
+        source='content_object'
+    )
+
+    included_serializers = {
+        'resource': 'bluebottle.activities.serializers.ActivitySerializer',
+        'image': 'bluebottle.activities.serializers.RelatedActivityImageContentSerializer',
+    }
+
+    class Meta:
+        model = RelatedImage
+        fields = ('image', 'resource', )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'resource', 'image',
+        ]
+
+        resource_name = 'related-activity-images'
+
+
+class RelatedActivityImageContentSerializer(ImageSerializer):
+    sizes = {
+        'large': '600',
+    }
+    content_view_name = 'related-activity-image-content'
+    relationship = 'relatedimage_set'

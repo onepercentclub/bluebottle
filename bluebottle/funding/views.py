@@ -14,8 +14,8 @@ from bluebottle.funding.serializers import (
     FundingSerializer, DonationSerializer, FundingTransitionSerializer,
     FundraiserSerializer, RewardSerializer, BudgetLineSerializer,
     DonationCreateSerializer, FundingListSerializer,
-    PayoutAccountSerializer, PlainPayoutAccountSerializer
-)
+    PayoutAccountSerializer, PlainPayoutAccountSerializer,
+    FundingPayoutsSerializer)
 
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import IsOwner
@@ -142,6 +142,17 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
         'budgetlines': ['budgetlines'],
         'payment_methods': ['payment_methods'],
         'fundraisers': ['fundraisers']
+    }
+
+
+class FundingPayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = Funding.objects.all()
+    serializer_class = FundingPayoutsSerializer
+
+    permission_classes = (ActivityPermission,)
+
+    prefetch_for_includes = {
+        'payouts': ['payouts'],
     }
 
 

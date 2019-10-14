@@ -18,8 +18,8 @@ from bluebottle.files.serializers import PrivateDocumentField
 from bluebottle.funding.filters import DonationListFilter
 from bluebottle.funding.models import (
     Funding, Donation, Fundraiser, Reward, BudgetLine, PaymentMethod,
-    BankAccount, PayoutAccount, PaymentProvider
-)
+    BankAccount, PayoutAccount, PaymentProvider,
+    Payout)
 from bluebottle.funding.models import PlainPayoutAccount
 from bluebottle.funding_flutterwave.serializers import FlutterwaveBankAccountSerializer
 from bluebottle.funding_lipisha.serializers import LipishaBankAccountSerializer
@@ -280,6 +280,52 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
         }
     )
+
+
+class PayoutSerializer(ModelSerializer):
+    donations = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
+
+    class Meta():
+        fields = (
+            'donations',
+        )
+        model = Payout
+
+    class JSONAPIMeta():
+        included_resources = [
+            'donations',
+        ]
+        resource_name = 'activities/funding-payouts'
+
+    included_serializers = {
+        'donations': 'bluebottle.funding.serializers.DonationSerializer',
+    }
+
+
+class FundingPayoutsSerializer(NoCommitMixin, FundingListSerializer):
+    bank_account = PolymorphicResourceRelatedField(
+        BankAccountSerializer,
+        queryset=BankAccount.objects.all(),
+        required=False,
+        allow_null=True
+    )
+
+    class Meta(FundingListSerializer.Meta):
+        fields = (
+            'payouts',
+            'bank_account',
+        )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'payouts',
+            'bank_account',
+        ]
+
+    included_serializers = {
+        'payouts': 'bluebottle.funding.serializers.PayoutSerializer',
+        'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
+    }
 
 
 class FundingTransitionSerializer(TransitionSerializer):

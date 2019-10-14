@@ -683,7 +683,13 @@ class GetClientIPTestCase(TestCase):
         self.assertEqual(ip, '127.0.0.1')
 
     def test_get_client_ip_no_spoofing(self):
-        request = RequestFactory().get('/', HTTP_REMOTE_ADDR='8.8.8.8,127.0.0.1')
+        request = RequestFactory().get('/', HTTP_X_FORWARDED_FOR='8.8.8.8,127.0.0.1')
+
+        ip = get_client_ip(request)
+        self.assertEqual(ip, '127.0.0.1')
+
+    def test_get_client_ip_extra_spaces(self):
+        request = RequestFactory().get('/', HTTP_X_FORWARDED_FOR='8.8.8.8, 127.0.0.1 ')
 
         ip = get_client_ip(request)
         self.assertEqual(ip, '127.0.0.1')

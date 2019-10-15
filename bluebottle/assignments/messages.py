@@ -44,6 +44,9 @@ class AssignmentApplicationMessage(TransitionMessage):
         'assignment_title': 'activity.title'
     }
 
+    def get_recipients(self):
+        return [self.obj.activity.owner]
+
 
 class AssignmentDateChanged(TransitionMessage):
     subject = _('The date and time for your assignment changed')

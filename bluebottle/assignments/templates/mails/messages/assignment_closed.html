@@ -5,7 +5,7 @@
     {% if custom_message %}
         {{ custom_message }}
     {% else %}
-        {% blocktrans with recipient_name=obj.user.first_name assignment_title=obj.activity.title context 'email' %}
+        {% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
             Hi {{ recipient_name }},<br>
             Your task {{ assignment_title }} has been closed by the platform admin. If anyone applied to the task, please send them an update to let them know.
         {% endblocktrans %}

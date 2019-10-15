@@ -251,6 +251,7 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
         fields = super(FundingSerializer, self).get_fields()
 
         if not self.context['request'].user in [
+            self.owner,
             self.instance.initiative.owner,
             self.instance.initiative.activity_manager
         ]:

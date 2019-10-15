@@ -264,3 +264,14 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'activity_types',
             'require_organization',
         )
+
+
+class InitiativeRedirectSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    route = serializers.CharField()
+    params = serializers.DictField()
+    target_route = serializers.CharField(read_only=True)
+    target_params = serializers.ListField(read_only=True)
+
+    class JSONAPIMeta:
+        resource_name = 'initiative-redirects'

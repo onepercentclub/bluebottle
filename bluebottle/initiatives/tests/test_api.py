@@ -12,8 +12,11 @@ from rest_framework import status
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.events.tests.factories import EventFactory
+from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.assignments.tests.factories import AssignmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
+from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import JSONAPITestClient
@@ -735,3 +738,138 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
         self.assertEqual(initiative.status, 'draft')
+
+
+class InitiativeRedirectTest(TestCase):
+    def setUp(self):
+        super(InitiativeRedirectTest, self).setUp()
+        self.client = JSONAPITestClient()
+
+        self.url = reverse('initiative-redirect-list')
+
+    def test_initiative(self):
+        initiative = InitiativeFactory.create()
+        data = {
+            'data': {
+                'type': 'initiative-redirects',
+                'attributes': {
+                    'route': 'project',
+                    'params': {'project_id': initiative.slug}
+                },
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(
+            response.json()['data']['attributes']['target-route'], 'initiatives.details'
+        )
+
+        self.assertEqual(
+            response.json()['data']['attributes']['target-params'], [initiative.pk, initiative.slug]
+        )
+
+    def test_initiative_with_funding(self):
+        initiative = InitiativeFactory.create()
+        funding = FundingFactory.create(initiative=initiative)
+
+        data = {
+            'data': {
+                'type': 'initiative-redirects',
+                'attributes': {
+                    'route': 'project',
+                    'params': {'project_id': initiative.slug}
+                },
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(
+            response.json()['data']['attributes']['target-route'], 'initiatives.activities.details.funding'
+        )
+
+        self.assertEqual(
+            response.json()['data']['attributes']['target-params'], [funding.pk, funding.slug]
+        )
+
+    def test_event(self):
+        event = EventFactory.create()
+        task = TaskFactory.create(type='event', activity_id=event.pk)
+
+        data = {
+            'data': {
+                'type': 'initiative-redirects',
+                'attributes': {
+                    'route': 'task',
+                    'params': {'task_id': task.pk}
+                },
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(
+            response.json()['data']['attributes']['target-route'], 'initiatives.activities.details.event'
+        )
+
+        self.assertEqual(
+            response.json()['data']['attributes']['target-params'], [event.pk, event.slug]
+        )
+
+    def test_assignment(self):
+        assignment = AssignmentFactory.create()
+        task = TaskFactory.create(activity_id=assignment.pk)
+
+        data = {
+            'data': {
+                'type': 'initiative-redirects',
+                'attributes': {
+                    'route': 'task',
+                    'params': {'task_id': task.pk}
+                },
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(
+            response.json()['data']['attributes']['target-route'], 'initiatives.activities.details.assignment'
+        )
+
+        self.assertEqual(
+            response.json()['data']['attributes']['target-params'], [assignment.pk, assignment.slug]
+        )
+
+    def test_does_not_exist(self):
+
+        data = {
+            'data': {
+                'type': 'initiative-redirects',
+                'attributes': {
+                    'route': 'tasks.detail',
+                    'params': {'id': '123'}
+                },
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data)
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

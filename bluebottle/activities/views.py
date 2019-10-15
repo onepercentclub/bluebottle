@@ -1,17 +1,23 @@
+from django.contrib.contenttypes.models import ContentType
+
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.models import Activity
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.serializers import (
     ActivitySerializer,
-    ActivityReviewTransitionSerializer
+    ActivityReviewTransitionSerializer,
+    RelatedActivityImageSerializer
 )
+from bluebottle.files.views import ImageContentView
+from bluebottle.files.models import RelatedImage
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
 from bluebottle.utils.views import (
-    ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView
+    ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
+    CreateAPIView
 )
 
 
@@ -51,6 +57,36 @@ class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyA
         'owner': ['owner'],
         'contributions': ['contributions']
     }
+
+
+class RelatedActivityImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+    def get_queryset(self):
+        return RelatedImage.objects.filter(
+            content_type=ContentType.objects.get_for_model(Activity)
+        )
+
+    serializer_class = RelatedActivityImageSerializer
+
+    related_permission_classes = {
+        'content_object': [
+            OneOf(ResourcePermission, ResourceOwnerPermission),
+        ]
+    }
+
+    permission_classes = []
+
+
+class RelatedActivityImageContent(ImageContentView):
+    def get_queryset(self):
+        return RelatedImage.objects.filter(
+            content_type__in=[
+                ContentType.objects.get_by_natural_key('events', 'event'),
+                ContentType.objects.get_by_natural_key('funding', 'funding'),
+                ContentType.objects.get_by_natural_key('assignments', 'assignment'),
+            ]
+        )
+
+    field = 'image'
 
 
 class ActivityReviewTransitionList(TransitionList):

@@ -170,7 +170,10 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
         self.donation.user = self.user
         self.donation.save()
 
-        response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
+        with mock.patch(
+            'stripe.Source.modify'
+        ):
+            response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
@@ -179,11 +182,14 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
         self.assertEqual(data['included'][0]['attributes']['status'], 'new')
 
     def test_create_payment_anonymous(self):
-        response = self.client.post(
-            self.payment_url,
-            data=json.dumps(self.data),
-            HTTP_AUTHORIZATION='Donation {}'.format(self.donation.client_secret)
-        )
+        with mock.patch(
+            'stripe.Source.modify'
+        ):
+            response = self.client.post(
+                self.payment_url,
+                data=json.dumps(self.data),
+                HTTP_AUTHORIZATION='Donation {}'.format(self.donation.client_secret)
+            )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)

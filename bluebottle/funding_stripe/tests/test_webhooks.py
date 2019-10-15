@@ -161,10 +161,13 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonationFactory.create(activity=self.funding)
 
-        self.payment = StripeSourcePaymentFactory.create(
-            source_token='some-source-id',
-            donation=self.donation
-        )
+        with mock.patch(
+            'stripe.Source.modify'
+        ):
+            self.payment = StripeSourcePaymentFactory.create(
+                source_token='some-source-id',
+                donation=self.donation
+            )
 
         self.webhook = reverse('stripe-source-webhook')
 

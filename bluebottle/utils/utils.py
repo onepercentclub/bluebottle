@@ -130,7 +130,8 @@ def get_client_ip(request=None):
             ipa = request.META.get('REMOTE_ADDR')
         except AttributeError:
             ipa = None
-    return ipa
+
+    return ipa.strip() if ipa else ipa
 
 
 def set_author_editor_ip(request, obj):

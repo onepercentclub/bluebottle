@@ -66,7 +66,7 @@ def migrate_orders(apps, schema_editor):
     # BeyonicPayment = apps.get_model('funding_beyonic', 'BeyonicPayment')
 
     # Migrate
-    for order in Order.objects.all():
+    for order in Order.objects.iterator():
         order_payment = get_latest_order_payment(order)
         for donation in order.donations.all():
             content_type = ContentType.objects.get_for_model(NewDonation)

@@ -68,7 +68,7 @@ def migrate_tasks(apps, schema_editor):
     assignment_ctype = ContentType.objects.get_for_model(Assignment)
     applicant_ctype= ContentType.objects.get_for_model(Applicant)
 
-    for task in Task.objects.all():
+    for task in Task.objects.iterator():
         if task.type == 'event' and (not task.skill_id or not task.skill.expertise):
             content_type = ContentType.objects.get_for_model(Event)
             initiative = Initiative.objects.get(slug=task.project.slug)

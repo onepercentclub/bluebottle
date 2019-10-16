@@ -182,7 +182,7 @@ def migrate_projects(apps, schema_editor):
     tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
     properties.set_tenant(tenant)
 
-    for project in Project.objects.all():
+    for project in Project.objects.iterator():
 
         if hasattr(project, 'projectlocation') and project.projectlocation.country:
             if project.projectlocation.latitude and project.projectlocation.longitude:

@@ -15,7 +15,6 @@ from bluebottle.test.utils import BluebottleTestCase
 
 
 class AssignmentTransitionMessagesTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(AssignmentTransitionMessagesTestCase, self).setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
@@ -59,7 +58,6 @@ class AssignmentTransitionMessagesTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, u'Someone applied to your task Nice things! 🙌')
         self.assertTrue('Henk applied to join your task' in mail.outbox[0].body)
-
 
 class AssignmentTransitionTestCase(BluebottleTestCase):
     def setUp(self):

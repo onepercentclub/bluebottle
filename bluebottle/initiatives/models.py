@@ -192,6 +192,10 @@ class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
             self.has_organization = True
             self.organization = self.owner.partner_organization
 
+        if not self.has_organization:
+            self.organization = None
+            self.organization_contact = None
+
         super(Initiative, self).save(**kwargs)
 
 

@@ -128,7 +128,7 @@ urlpatterns = [
     url(r'^api/surveys/',
         include('bluebottle.surveys.urls.api')),
 
-    url(r'^api/organizations/',
+    url(r'^api/organizations',
         include('bluebottle.organizations.urls.api')),
 
     url(r'^embed/', include('bluebottle.widget.urls.core')),

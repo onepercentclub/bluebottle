@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from datetime import timedelta
 
-from django.db import migrations, connection
+from django.db import migrations, connection, models
 from django.utils.text import slugify
 
 from bluebottle.clients import properties
@@ -93,6 +93,9 @@ def migrate_tasks(apps, schema_editor):
                 start_time=task.deadline.time(),
                 duration=task.time_needed
             )
+            task.activity_id = event.pk
+            task.save()
+
             event.created = task.created
             event.updated = task.updated
             event.polymorphic_ctype = event_ctype
@@ -141,6 +144,9 @@ def migrate_tasks(apps, schema_editor):
                 expertise=task.skill
             )
 
+            task.activity_id = assignment.pk
+            task.save()
+
             assignment.created = task.created
             assignment.updated = task.updated
             assignment.polymorphic_ctype = assignment_ctype
@@ -170,5 +176,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AddField(
+            model_name='task',
+            name='activity_id',
+            field=models.IntegerField(null=True),
+        ),
         migrations.RunPython(migrate_tasks, migrations.RunPython.noop)
     ]

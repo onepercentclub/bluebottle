@@ -321,6 +321,7 @@ class StripePayoutAccount(PayoutAccount):
                 type='custom',
                 settings=self.account_settings,
                 business_type='individual',
+                requested_capabilities=["card_payments", "transfers"],
                 metadata=self.metadata
             )
             self.account_id = self._account.id

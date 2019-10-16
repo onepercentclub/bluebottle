@@ -140,7 +140,7 @@ class IntentWebHookView(View):
 
         try:
             event = stripe.Webhook.construct_event(
-                payload, signature_header, stripe.webhook_secret
+                payload, signature_header, stripe.webhook_secret_intents
             )
         except stripe.error.SignatureVerificationError:
             # Invalid signature
@@ -189,7 +189,7 @@ class SourceWebHookView(View):
 
         try:
             event = stripe.Webhook.construct_event(
-                payload, signature_header, stripe.webhook_secret
+                payload, signature_header, stripe.webhook_secret_sources
             )
         except stripe.error.SignatureVerificationError:
             # Invalid signature

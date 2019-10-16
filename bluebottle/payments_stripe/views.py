@@ -18,7 +18,7 @@ class WebHookView(View):
 
         try:
             event = stripe.Webhook.construct_event(
-                payload, signature_header, stripe.webhook_secret
+                payload, signature_header, stripe.webhook_secret_sources
             )
 
             if event.type == 'source.chargeable':

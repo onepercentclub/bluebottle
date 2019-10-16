@@ -1,8 +1,12 @@
 import uuid
 
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+
+from bluebottle.files.fields import ImageField
 
 
 class File(models.Model):
@@ -34,3 +38,12 @@ class Image(File):
 class Document(File):
     class JSONAPIMeta:
         resource_name = 'documents'
+
+
+class RelatedImage(models.Model):
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    image = ImageField()

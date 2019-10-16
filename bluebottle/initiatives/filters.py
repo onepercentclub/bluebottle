@@ -22,7 +22,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
     search_fields = (
         'status', 'title', 'story', 'pitch',
         'place.locality', 'place.postal_code',
-        'theme.name', 'owner.name', 'promoter.name',
+        'theme.name', 'owner.full_name', 'promoter.full_name',
     )
 
     boost = {'title': 2}

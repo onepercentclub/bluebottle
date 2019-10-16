@@ -26,7 +26,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
     )
 
     search_fields = (
-        'status', 'title', 'description', 'owner.name',
+        'status', 'title', 'description', 'owner.full_name',
     )
 
     boost = {'title': 2}

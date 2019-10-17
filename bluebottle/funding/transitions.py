@@ -1,3 +1,5 @@
+import datetime
+
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -22,6 +24,15 @@ class FundingTransitions(ActivityTransitions):
     def deadline_in_future(self):
         if not self.instance.deadline or self.instance.deadline < timezone.now():
             return _("Please select a new deadline in the future before extending.")
+
+    @transition(
+        source=values.in_review,
+        target=values.open,
+        permissions=[ActivityTransitions.can_approve]
+    )
+    def reviewed(self):
+        if self.instance.duration and not self.instance.deadline:
+            self.instance.deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
 
     @transition(
         source=values.open,
@@ -159,7 +170,7 @@ class PayoutTransitions(ModelTransitions):
         failed = ChoiceItem('failed', _('failed'))
 
     @transition(
-        source=[values.new],
+        source=['*'],
         target=values.approved
     )
     def approve(self):
@@ -167,21 +178,28 @@ class PayoutTransitions(ModelTransitions):
         adapter.trigger_payout()
 
     @transition(
-        source=[values.approved],
+        source=['*'],
+        target=values.new
+    )
+    def draft(self):
+        pass
+
+    @transition(
+        source=['*'],
         target=values.started
     )
     def start(self):
         pass
 
     @transition(
-        source=[values.approved, values.started, values.failed],
+        source=['*'],
         target=values.succeeded
     )
     def succeed(self):
         pass
 
     @transition(
-        source=[values.approved, values.started, values.succeeded],
+        source=['*'],
         target=values.failed
     )
     def fail(self):

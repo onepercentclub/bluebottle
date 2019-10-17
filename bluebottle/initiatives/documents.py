@@ -55,7 +55,7 @@ class InitiativeDocument(DocType):
 
     place = fields.NestedField(properties={
         'country': fields.LongField(attr='country.pk'),
-        'province': fields.LongField(),
+        'province': fields.TextField(),
         'locality': fields.TextField(),
         'street': fields.TextField(),
         'postal_code': fields.TextField(),

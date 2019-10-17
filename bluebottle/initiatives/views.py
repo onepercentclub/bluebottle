@@ -1,3 +1,5 @@
+from django.contrib.contenttypes.models import ContentType
+
 from django.core.cache import cache
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
@@ -5,15 +7,19 @@ from rest_framework.response import Response
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.files.views import ImageContentView
+from bluebottle.files.models import RelatedImage
 from bluebottle.initiatives.filters import InitiativeSearchFilter
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.permissions import InitiativePermission
 from bluebottle.initiatives.serializers import (
     InitiativeSerializer, InitiativeReviewTransitionSerializer,
-    InitiativeMapSerializer)
+    InitiativeMapSerializer, RelatedInitiativeImageSerializer
+)
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.views import (
-    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin)
+    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
+    CreateAPIView,
+)
 
 
 class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -91,6 +97,26 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
 
 class InitiativeImage(ImageContentView):
     queryset = Initiative.objects
+    field = 'image'
+
+
+class RelatedInitiativeImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+    def get_queryset(self):
+        return RelatedImage.objects.filter(
+            content_type=ContentType.objects.get_for_model(Initiative)
+        )
+
+    serializer_class = RelatedInitiativeImageSerializer
+
+    related_permission_classes = {
+        'content_object': [InitiativePermission]
+    }
+
+    permission_classes = []
+
+
+class RelatedInitiativeImageContent(ImageContentView):
+    queryset = RelatedImage.objects
     field = 'image'
 
 

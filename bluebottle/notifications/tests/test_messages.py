@@ -49,7 +49,7 @@ class MessageTestCase(BluebottleTestCase):
     def test_translated_messages(self):
         dutch = BlueBottleUserFactory.create(primary_language='nl')
         message = TestMessage(InitiativeFactory(owner=dutch, title='Some title'))
-        messages = message.get_messages()
+        messages = list(message.get_messages())
         self.assertEqual(len(messages), 1)
         self.assertEqual(messages[0].subject, "Test bericht voor Some title")
 

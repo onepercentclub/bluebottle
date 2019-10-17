@@ -1,0 +1,15 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=to.first_name title=obj.title deadline=obj.end_date|date context 'email' %}
+Hi {{ recipient_name }},
+
+On {{ deadline}} your task "{{ title }}" will take place. That's in 5 days!
+
+If you still need to make some preparations, this is the moment.
+{% endblocktrans %}
+{% endblock %}
+{% block action %}
+{% trans 'Post update' context 'email' %}: {{ obj.get_absolute_url }}
+{% endblock %}`

@@ -1,3 +1,7 @@
+import csv
+
+from django.http.response import HttpResponse
+
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.status import HTTP_404_NOT_FOUND
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -16,8 +20,10 @@ from bluebottle.funding.serializers import (
     DonationCreateSerializer, FundingListSerializer,
     PayoutAccountSerializer, PlainPayoutAccountSerializer,
     FundingPayoutsSerializer)
+from bluebottle.payouts_dorado.permissions import IsFinancialMember
 
 from bluebottle.transitions.views import TransitionList
+from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
@@ -145,15 +151,30 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     }
 
 
-class FundingPayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+class FundingPayoutDetails(RetrieveUpdateAPIView):
+    # For Payout service
     queryset = Funding.objects.all()
     serializer_class = FundingPayoutsSerializer
 
-    permission_classes = (ActivityPermission,)
+    permission_classes = (IsFinancialMember,)
 
-    prefetch_for_includes = {
-        'payouts': ['payouts'],
-    }
+    def put(self, *args, **kwargs):
+        status = self.request.data['status']
+        # FIXME better trigger a request here where we check all payouts
+        # related to this Funding.
+        payout = self.get_object().payouts.first()
+        if status == 'started':
+            payout.transitions.start()
+        if status == 'scheduled':
+            payout.transitions.start()
+        if status == 'new':
+            payout.transitions.draft()
+        if status == 'success':
+            payout.transitions.succeed()
+        if status == 'confirm':
+            payout.transitions.succeed()
+        payout.save()
+        return HttpResponse(200)
 
 
 class FundingTransitionList(TransitionList):
@@ -278,3 +299,33 @@ class PaymentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'donation': ['donation'],
         'user': ['user']
     }
+
+
+class SupportersExportView(PrivateFileView):
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Donation Date'),
+        ('amount_currency', 'Currency'),
+        ('amount', 'Amount'),
+        ('reward__title', 'Reward'),
+    )
+
+    model = Funding
+
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        response = HttpResponse()
+        response['Content-Disposition'] = 'attachment; filename="supporters.csv"'
+        response['Content-Type'] = 'text/csv'
+
+        writer = csv.writer(response)
+
+        writer.writerow([field[1] for field in self.fields])
+        for donation in instance.contributions.filter(status='succeeded'):
+            writer.writerow([
+                prep_field(request, donation, field[0]) for field in self.fields
+            ])
+
+        return response

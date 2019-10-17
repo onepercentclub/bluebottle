@@ -15,6 +15,7 @@ from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.geo.serializers import TinyPointSerializer
+from bluebottle.files.models import RelatedImage
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -76,6 +77,14 @@ class InitiativeImageSerializer(ImageSerializer):
     }
     content_view_name = 'initiative-image'
     relationship = 'initiative_set'
+
+
+class RelatedInitiativeImageContentSerializer(ImageSerializer):
+    sizes = {
+        'large': '600',
+    }
+    content_view_name = 'related-initiative-image-content'
+    relationship = 'relatedimage_set'
 
 
 class InitiativeMapSerializer(serializers.ModelSerializer):
@@ -151,6 +160,30 @@ def _error_messages_for(label):
     return {
         'error_messages': {'required': "'{}' is required".format(label)}
     }
+
+
+class RelatedInitiativeImageSerializer(ModelSerializer):
+    image = ImageField(required=False, allow_null=True)
+    resource = ResourceRelatedField(
+        queryset=Initiative.objects.all(),
+        source='content_object'
+    )
+
+    included_serializers = {
+        'resource': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'image': 'bluebottle.initiatives.serializers.RelatedInitiativeImageContentSerializer',
+    }
+
+    class Meta:
+        model = RelatedImage
+        fields = ('image', 'resource', )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'resource', 'image',
+        ]
+
+        resource_name = 'related-initiative-images'
 
 
 class OrganizationSubmitSerializer(serializers.ModelSerializer):

@@ -735,3 +735,86 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
         self.assertEqual(initiative.status, 'draft')
+
+
+class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
+    def setUp(self):
+        super(InitiativeRelatedImageAPITestCase, self).setUp()
+        self.initiative = InitiativeFactory(
+            owner=self.owner,
+        )
+        self.url = reverse('initiative-detail', args=(self.initiative.pk,))
+        self.related_image_url = reverse('related-initiative-image-list')
+
+        file_path = './bluebottle/files/tests/files/test-image.png'
+
+        with open(file_path) as test_file:
+            response = self.client.post(
+                reverse('image-list'),
+                test_file.read(),
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.jpg"',
+                user=self.owner
+            )
+
+        self.file_data = json.loads(response.content)
+
+    def test_create(self):
+        data = {
+            'data': {
+                'type': 'related-initiative-images',
+                'relationships': {
+                    'image': {
+                        'data': {
+                            'type': 'images',
+                            'id': self.file_data['data']['id']
+                        }
+                    },
+                    'resource': {
+                        'data': {
+                            'type': 'initiatives',
+                            'id': self.initiative.pk,
+                        }
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            self.related_image_url,
+            data=json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(
+            response.json()['included'][0]['attributes']['links']['large'],
+            u'/api/initiatives/{}/related-image/600'.format(response.json()['data']['id'])
+        )
+
+    def test_create_non_owner(self):
+        data = {
+            'data': {
+                'type': 'related-initiative-images',
+                'relationships': {
+                    'image': {
+                        'data': {
+                            'type': 'images',
+                            'id': self.file_data['data']['id']
+                        }
+                    },
+                    'resource': {
+                        'data': {
+                            'type': 'initiatives',
+                            'id': self.initiative.pk,
+                        }
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            self.related_image_url,
+            data=json.dumps(data),
+            user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

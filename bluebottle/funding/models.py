@@ -223,12 +223,6 @@ class Funding(Activity):
             self.target.currency
         )
 
-    @property
-    def payment_methods(self):
-        if not self.bank_account or not self.bank_account.payment_methods:
-            return []
-        return self.bank_account.payment_methods
-
     def save(self, *args, **kwargs):
         for reward in self.rewards.all():
             if not reward.amount.currency == self.target.currency:
@@ -559,6 +553,10 @@ class BankAccount(PolymorphicModel):
         return self.connect_account.owner
 
     provider_class = None
+
+    @property
+    def type(self):
+        return self.provider_class().name
 
     @property
     def funding(self):

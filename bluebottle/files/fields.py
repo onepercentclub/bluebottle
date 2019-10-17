@@ -1,7 +1,6 @@
 from django.db.models.fields.related import ForeignKey
 from django.forms import ModelChoiceField
 
-from bluebottle.files.models import Image, Document
 from bluebottle.files.widgets import ImageWidget, DocumentWidget
 
 
@@ -11,6 +10,7 @@ class ImageField(ForeignKey):
                  limit_choices_to=None, parent_link=False, to_field=None,
                  db_constraint=True, **kwargs):
         if not to:
+            from bluebottle.files.models import Image
             to = Image
         super(ImageField, self).__init__(
             to, on_delete, related_name, related_query_name,
@@ -37,6 +37,7 @@ class DocumentField(ForeignKey):
                  limit_choices_to=None, parent_link=False, to_field=None,
                  db_constraint=True, **kwargs):
         if not to:
+            from bluebottle.files.models import Document
             to = Document
         super(DocumentField, self).__init__(
             to, on_delete, related_name, related_query_name,

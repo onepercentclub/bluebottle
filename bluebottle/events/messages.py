@@ -10,3 +10,25 @@ class EventSucceededOwnerMessage(TransitionMessage):
 class EventClosedOwnerMessage(TransitionMessage):
     subject = _('Your event has been closed')
     template = 'messages/event_closed_owner'
+
+
+class EventDateChanged(TransitionMessage):
+    subject = _('The date and time for your event changed')
+    template = 'messages/event_date_changed'
+
+    def get_recipients(self):
+        return [
+            contribution.user for contribution
+            in self.obj.contributions.filter(status='new')
+        ]
+
+
+class EventReminder(TransitionMessage):
+    subject = _('Your event will take place in 5 days!')
+    template = 'messages/event_reminder'
+
+    def get_recipients(self):
+        return [
+            contribution.user for contribution
+            in self.obj.contributions.filter(status='new')
+        ]

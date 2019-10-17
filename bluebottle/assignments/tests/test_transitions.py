@@ -59,6 +59,7 @@ class AssignmentTransitionMessagesTestCase(BluebottleTestCase):
         self.assertEqual(mail.outbox[0].subject, u'Someone applied to your task Nice things! 🙌')
         self.assertTrue('Henk applied to join your task' in mail.outbox[0].body)
 
+
 class AssignmentTransitionTestCase(BluebottleTestCase):
     def setUp(self):
         super(AssignmentTransitionTestCase, self).setUp()

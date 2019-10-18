@@ -125,6 +125,17 @@ class DonationTransitions(ContributionTransitions):
     )
     def succeed(self):
         self.update_funding()
+        parent = self.instance.fundraiser or self.instance.activity
+        from bluebottle.wallposts.models import SystemWallpost
+        SystemWallpost.objects.get_or_create(
+            author=self.instance.user,
+            donation=self.instance,
+            defaults={
+                'content_object': parent,
+                'related_object': self.instance
+            }
+
+        )
 
 
 class PaymentTransitions(ModelTransitions):

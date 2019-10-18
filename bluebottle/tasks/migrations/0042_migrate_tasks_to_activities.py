@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from datetime import timedelta
 
-from django.db import migrations, connection
+from django.db import migrations, connection, models
 from django.utils.text import slugify
 
 from bluebottle.clients import properties
@@ -57,6 +57,7 @@ def migrate_tasks(apps, schema_editor):
 
     Initiative = apps.get_model('initiatives', 'Initiative')
     ContentType = apps.get_model('contenttypes', 'ContentType')
+    Wallpost = apps.get_model('wallposts', 'Wallpost')
 
     # Clean-up previous migrations of projects to initiatives
     Event.objects.all().delete()
@@ -67,8 +68,9 @@ def migrate_tasks(apps, schema_editor):
     assignment_ctype = ContentType.objects.get_for_model(Assignment)
     applicant_ctype= ContentType.objects.get_for_model(Applicant)
 
-    for task in Task.objects.all():
+    for task in Task.objects.iterator():
         if task.type == 'event' and (not task.skill_id or not task.skill.expertise):
+            content_type = ContentType.objects.get_for_model(Event)
             initiative = Initiative.objects.get(slug=task.project.slug)
             # geolocation = Geolocation.objects.create()
             geolocation = None
@@ -76,6 +78,7 @@ def migrate_tasks(apps, schema_editor):
 
             event = Event.objects.create(
                 # activity fields
+                polymorphic_ctype=content_type,
                 initiative=initiative,
                 title=task.title,
                 slug=slugify(task.title),
@@ -93,6 +96,9 @@ def migrate_tasks(apps, schema_editor):
                 start_time=task.deadline.time(),
                 duration=task.time_needed
             )
+            task.activity_id = event.pk
+            task.save()
+
             event.created = task.created
             event.updated = task.updated
             event.polymorphic_ctype = event_ctype
@@ -112,7 +118,13 @@ def migrate_tasks(apps, schema_editor):
                 participant.updated = task.updated
                 participant.polymorphic_ctype = participant_ctype
                 participant.save()
+
+            old_ct = ContentType.objects.get_for_model(Task)
+            Wallpost.objects.filter(content_type=old_ct, object_id=task.id).\
+                update(content_type=content_type, object_id=event.id)
+
         else:
+            content_type = ContentType.objects.get_for_model(Event)
             initiative = Initiative.objects.get(slug=task.project.slug)
             # geolocation = Geolocation.objects.create()
             geolocation = None
@@ -123,6 +135,7 @@ def migrate_tasks(apps, schema_editor):
 
             assignment = Assignment.objects.create(
                 # activity fields
+                polymorphic_ctype=content_type,
                 initiative=initiative,
                 title=task.title,
                 slug=slugify(task.title),
@@ -140,6 +153,9 @@ def migrate_tasks(apps, schema_editor):
                 duration=task.time_needed,
                 expertise=task.skill
             )
+
+            task.activity_id = assignment.pk
+            task.save()
 
             assignment.created = task.created
             assignment.updated = task.updated
@@ -162,6 +178,10 @@ def migrate_tasks(apps, schema_editor):
                 applicant.polymorphic_ctype = applicant_ctype
                 applicant.save()
 
+            old_ct = ContentType.objects.get_for_model(Task)
+            Wallpost.objects.filter(content_type=old_ct, object_id=task.id). \
+                update(content_type=content_type, object_id=assignment.id)
+
 
 class Migration(migrations.Migration):
 
@@ -170,5 +190,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AddField(
+            model_name='task',
+            name='activity_id',
+            field=models.IntegerField(null=True),
+        ),
         migrations.RunPython(migrate_tasks, migrations.RunPython.noop)
     ]

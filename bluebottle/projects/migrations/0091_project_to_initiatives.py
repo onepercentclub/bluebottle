@@ -172,6 +172,7 @@ def migrate_projects(apps, schema_editor):
     FlutterwaveBankAccount = apps.get_model('funding_flutterwave', 'FlutterwaveBankAccount')
     VitepayBankAccount = apps.get_model('funding_vitepay', 'VitepayBankAccount')
     LipishaBankAccount = apps.get_model('funding_lipisha', 'LipishaBankAccount')
+    Wallpost = apps.get_model('wallposts', 'Wallpost')
 
     ContentType = apps.get_model('contenttypes', 'ContentType')
 
@@ -181,7 +182,7 @@ def migrate_projects(apps, schema_editor):
     tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
     properties.set_tenant(tenant)
 
-    for project in Project.objects.all():
+    for project in Project.objects.iterator():
 
         if hasattr(project, 'projectlocation') and project.projectlocation.country:
             if project.projectlocation.latitude and project.projectlocation.longitude:
@@ -342,6 +343,15 @@ def migrate_projects(apps, schema_editor):
                 country=project.country,
                 bank_account=account
             )
+
+            old_ct = ContentType.objects.get_for_model(Project)
+            Wallpost.objects.filter(content_type=old_ct, object_id=project.id).\
+                update(content_type=content_type, object_id=funding.id)
+        else:
+            content_type = ContentType.objects.get_for_model(Initiative)
+            old_ct = ContentType.objects.get_for_model(Project)
+            Wallpost.objects.filter(content_type=old_ct, object_id=project.id).\
+                update(content_type=content_type, object_id=initiative.id)
 
             # TODO: Add budget lines
             # TODO: Add fundraisers

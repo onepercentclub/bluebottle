@@ -137,6 +137,14 @@ class StripeSourcePayment(Payment):
 
         self.save()
 
+    def save(self, *args, **kwargs):
+        created = not self.pk
+
+        super(StripeSourcePayment, self).save()
+
+        if created:
+            stripe.Source.modify(self.source_token, metadata=self.metadata)
+
     @property
     def metadata(self):
         return {

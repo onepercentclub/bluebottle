@@ -59,7 +59,7 @@ class Wallpost(PolymorphicModel):
 
     donation = models.ForeignKey('donations.Donation',
                                  verbose_name=_("Donation"),
-                                 related_name='donation',
+                                 related_name='wallpost',
                                  null=True, blank=True)
 
     pinned = models.BooleanField(

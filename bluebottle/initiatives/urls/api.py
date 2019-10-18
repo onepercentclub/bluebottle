@@ -4,7 +4,8 @@ from bluebottle.initiatives.views import (
     InitiativeList, InitiativeDetail, InitiativeImage,
     RelatedInitiativeImageList, RelatedInitiativeImageContent,
     InitiativeReviewTransitionList,
-    InitiativeMapList)
+    InitiativeMapList, InitiativeRedirectList
+)
 
 
 urlpatterns = [
@@ -31,9 +32,16 @@ urlpatterns = [
     ),
 
     url(
+        r'^/redirects$',
+        InitiativeRedirectList.as_view(),
+        name='initiative-redirect-list'
+    ),
+
+    url(
         r'^/related-images$',
         RelatedInitiativeImageList.as_view(),
-        name='related-initiative-image-list'),
+        name='related-initiative-image-list'
+    ),
     url(
         r'^/(?P<pk>\d+)/related-image/(?P<size>\d+(x\d+)?)$',
         RelatedInitiativeImageContent.as_view(),
@@ -45,5 +53,4 @@ urlpatterns = [
         InitiativeMapList.as_view(),
         name='initiative-map-list'
     ),
-
 ]

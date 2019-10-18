@@ -8,7 +8,7 @@ from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.utils.admin import FSMAdmin, BasePlatformSettingsAdmin
+from bluebottle.utils.admin import FSMAdmin, BasePlatformSettingsAdmin, export_as_csv_action
 from bluebottle.utils.forms import FSMModelForm
 
 
@@ -31,11 +31,34 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
 
     raw_id_fields = ('owner', 'reviewer', 'promoter', 'activity_manager',
                      'place', 'organization', 'organization_contact')
+
     list_display = ['title', 'created', 'status']
+
     list_filter = ['status']
+
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
+
     readonly_fields = ['status', 'link', 'created', 'updated']
+
+    export_to_csv_fields = (
+        ('title', 'Title'),
+        ('status', 'Status'),
+        ('created', 'Created'),
+        ('pitch', 'Pitch'),
+        ('theme', 'Theme'),
+        ('image', 'Image'),
+        ('video_url', 'Video'),
+        ('place', 'Place'),
+        ('location', 'Location'),
+        ('organization', 'Organization'),
+        ('owner', 'Owner'),
+        ('activity_manager', 'Activity Manager'),
+        ('promoter', 'Promoter'),
+        ('reviewer', 'Reviewer'),
+    )
+
+    actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
     def get_fieldsets(self, request, obj=None):
         details = ['pitch', 'story', 'theme', 'categories']

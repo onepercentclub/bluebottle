@@ -28,7 +28,7 @@ from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayout
     StripeSourcePayment, ExternalAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList
+from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +84,25 @@ class FundingAdmin(ActivityChildAdmin):
         'transitions',
     )
 
+    export_to_csv_fields = (
+        ('title', 'Title'),
+        ('description', 'Description'),
+        ('status', 'Status'),
+        ('created', 'Created'),
+        ('initiative__title', 'Initiative'),
+        ('deadline', 'Deadline'),
+        ('duration', 'Duration'),
+        ('target', 'Target'),
+        ('country', 'Country'),
+        ('owner', 'Owner'),
+        ('amount_matching', 'Amount Matching'),
+        ('bank_account', 'Bank Account'),
+        ('amount_donated', 'Amount Donatated'),
+        ('amount_raised', 'Amount Raised'),
+    )
+
+    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+
     def donations_link(self, obj):
         url = reverse('admin:funding_donation_changelist')
         total = obj.contributions.filter(status=DonationTransitions.values.succeeded).count()
@@ -100,6 +119,21 @@ class DonationAdmin(FSMAdmin, PaymentLinkMixin):
     list_display = ['created', 'payment_link', 'funding_link', 'user_link', 'status', 'amount', 'payout_amount']
     list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
     date_hierarchy = 'created'
+
+    export_to_csv_fields = (
+        ('status', 'Status'),
+        ('created', 'Created'),
+        ('activity', 'Activity'),
+        ('owner', 'Owner'),
+        ('amount', 'Amount'),
+        ('payout_amount', 'Payout Amount'),
+        ('reward', 'Reward'),
+        ('fundraiser', 'Fundraiser'),
+        ('name', 'name'),
+        ('anonymous', 'Anonymous'),
+    )
+
+    actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
     def user_link(self, obj):
         # if obj.anonymous:

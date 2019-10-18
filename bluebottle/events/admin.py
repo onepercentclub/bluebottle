@@ -80,7 +80,21 @@ class EventAdmin(ActivityChildAdmin):
 
     export_to_csv_fields = (
         ('title', 'Title'),
+        ('description', 'Description'),
+        ('status', 'Status'),
+        ('created', 'Created'),
+        ('initiative__title', 'Initiative'),
         ('start_date', 'Start Date'),
+        ('start_time', 'Start Time'),
+        ('duration', 'Duration'),
+        ('end', 'End'),
+        ('registration_deadline', 'Registration Deadline'),
+        ('owner', 'Owner'),
+        ('capacity', 'Capacity'),
+        ('is_online', 'Will be hosted online?'),
+        ('location', 'Location'),
+        ('location_hint', 'Location Hint'),
+        ('automatically_accept', 'Auto Accept Members'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

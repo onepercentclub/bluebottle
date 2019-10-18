@@ -43,6 +43,19 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
 
     export_to_csv_fields = (
         ('title', 'Title'),
+        ('status', 'Status'),
+        ('created', 'Created'),
+        ('pitch', 'Pitch'),
+        ('theme', 'Theme'),
+        ('image', 'Image'),
+        ('video_url', 'Video'),
+        ('place', 'Place'),
+        ('location', 'Location'),
+        ('organization', 'Organization'),
+        ('owner', 'Owner'),
+        ('activity_manager', 'Activity Manager'),
+        ('promoter', 'Promoter'),
+        ('reviewer', 'Reviewer'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

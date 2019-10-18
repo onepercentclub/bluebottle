@@ -71,7 +71,19 @@ class AssignmentAdmin(ActivityChildAdmin):
 
     export_to_csv_fields = (
         ('title', 'Title'),
+        ('description', 'Description'),
+        ('status', 'Status'),
+        ('created', 'Created'),
+        ('initiative__title', 'Initiative'),
+        ('expertise', 'Expertise'),
+        ('end_date_type', 'End Time Type'),
+        ('end_date', 'End Date'),
         ('duration', 'Duration'),
+        ('registration_deadline', 'Registration Deadline'),
+        ('owner', 'Owner'),
+        ('capacity', 'Capacity'),
+        ('is_online', 'Will be hosted online?'),
+        ('location', 'Location'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

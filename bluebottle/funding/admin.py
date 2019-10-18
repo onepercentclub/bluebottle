@@ -86,7 +86,6 @@ class FundingAdmin(ActivityChildAdmin):
 
     export_to_csv_fields = (
         ('title', 'Title'),
-        ('bank_account', 'Bank Account'),
         ('deadline', 'Deadline'),
     )
 

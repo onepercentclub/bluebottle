@@ -193,8 +193,7 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
 class SystemWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = SystemWallpost
     readonly_fields = ('ip_address', 'created', 'content_type', 'related_type',
-                       'donation_link', 'project_link',
-                       'related_id', 'object_id')
+                       'donation_link', 'related_id', 'object_id')
     fields = readonly_fields + ('author', 'donation', 'text', 'pinned')
     list_display = ('created', 'author', 'content_type', 'related_type', 'text', 'deleted')
     raw_id_fields = ('author', 'editor', 'donation')
@@ -203,18 +202,9 @@ class SystemWallpostAdmin(PolymorphicChildModelAdmin):
 
     inlines = (ReactionInline, )
 
-    def project_link(self, obj):
-        if obj.donation:
-            link = reverse('admin:projects_project_change', args=(obj.donation.project.id,))
-            return format_html(
-                u"<a href='{}'>{}</a>",
-                link, obj.donation.project.title
-            )
-    project_link.short_description = _('Project link')
-
     def donation_link(self, obj):
         if obj.donation:
-            link = reverse('admin:donations_donation_change', args=(obj.donation.id,))
+            link = reverse('admin:funding_donation_change', args=(obj.donation.id,))
             return format_html(
                 u"<a href='{}'>{}</a>",
                 link, obj.donation

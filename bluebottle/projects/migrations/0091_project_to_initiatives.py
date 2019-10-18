@@ -357,7 +357,7 @@ def migrate_projects(apps, schema_editor):
                     description=budget_line.description
                 )
                 new_budget_line.created = budget_line.created
-                new_budget_line.update = budget_line.update
+                new_budget_line.updated = budget_line.updated
                 new_budget_line.save()
 
             fundraiser_ct = ContentType.objects.get_for_model(Initiative)
@@ -369,12 +369,11 @@ def migrate_projects(apps, schema_editor):
                     activity=funding,
                     title=fundraiser.title,
                     description=fundraiser.description,
-                    video_url=fundraiser.video_url,
-                    target=fundraiser.amount,
+                    amount=fundraiser.amount,
                     deadline=fundraiser.deadline,
                 )
                 new_fundraiser.created = fundraiser.created
-                new_fundraiser.update = fundraiser.update
+                new_fundraiser.updated = fundraiser.updated
                 new_fundraiser.deleted = fundraiser.deleted
                 new_fundraiser.save()
                 if fundraiser.image:
@@ -395,7 +394,7 @@ def migrate_projects(apps, schema_editor):
                     limit=reward.limit,
                 )
                 new_reward.created = reward.created
-                new_reward.update = reward.update
+                new_reward.updated = reward.updated
                 new_reward.save()
         else:
             content_type = ContentType.objects.get_for_model(Initiative)

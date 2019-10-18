@@ -55,16 +55,6 @@ class Migration(migrations.Migration):
             field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3),
         ),
         migrations.AlterField(
-            model_name='fundraiser',
-            name='amount',
-            field=bluebottle.utils.fields.MoneyField(currency_choices="[('EUR', u'Euro')]", decimal_places=2, default=Decimal('0.0'), max_digits=12, verbose_name='amount'),
-        ),
-        migrations.AlterField(
-            model_name='fundraiser',
-            name='amount_currency',
-            field=djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3),
-        ),
-        migrations.AlterField(
             model_name='reward',
             name='amount',
             field=bluebottle.utils.fields.MoneyField(currency_choices="[('EUR', u'Euro')]", decimal_places=2, default=Decimal('0.0'), max_digits=12, verbose_name='Amount'),

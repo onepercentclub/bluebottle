@@ -64,7 +64,7 @@ class FundraiserSerializer(ModelSerializer):
     image = ImageField(required=False, allow_null=True)
 
     amount_donated = MoneySerializer(read_only=True)
-    target = MoneySerializer()
+    amount = MoneySerializer()
 
     validators = [FundingCurrencyValidator()]
 
@@ -83,7 +83,8 @@ class FundraiserSerializer(ModelSerializer):
             'title',
             'description',
             'image',
-            'target',
+            'amount',
+            'amount_donated',
             'deadline'
         )
 

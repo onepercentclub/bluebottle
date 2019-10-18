@@ -363,9 +363,13 @@ class ESPaginator(Paginator):
             queryset, search = self.object_list
             page = self._get_page(search[bottom:top], number, self)
 
-            pks = [result._id for result in search[bottom:top]]
+            try:
+                pks = [result._id for result in search[bottom:top]]
+                queryset = queryset.filter(pk__in=pks)
+            except ValueError:
+                pks = search.to_queryset().values_list('id', flat=True)
+                queryset = search.to_queryset()
 
-            queryset = queryset.filter(pk__in=pks)
             preserved_order = Case(
                 *[When(pk=pk, then=pos) for pos, pk in enumerate(pks)],
                 output_field=IntegerField()

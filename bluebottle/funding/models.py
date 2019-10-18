@@ -22,8 +22,9 @@ from bluebottle.funding.transitions import (
     DonationTransitions,
     PaymentTransitions,
     PayoutAccountTransitions,
-    PlainPayoutAccountTransitions
-)
+    PlainPayoutAccountTransitions,
+    PayoutTransitions)
+from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import Validator, ValidatedModelMixin
@@ -111,7 +112,7 @@ class PaymentProvider(PolymorphicModel):
 
 class KYCPassedValidator(Validator):
     code = 'kyc'
-    message = _('Make sure your account is verified')
+    message = [_('Make sure your account is verified')]
     field = 'kyc'
 
     def is_valid(self):
@@ -166,6 +167,42 @@ class Funding(Activity):
         """
         totals = self.contributions.filter(
             status=FundingTransitions.values.succeeded
+        ).values(
+            'donation__amount_currency'
+        ).annotate(
+            total=Sum('donation__amount')
+        )
+        amounts = [Money(total['total'], total['donation__amount_currency']) for total in totals]
+        amounts = [convert(amount, self.target.currency) for amount in amounts]
+
+        return sum(amounts) or Money(0, self.target.currency)
+
+    @cached_property
+    def genuine_amount_donated(self):
+        """
+        The sum of all contributions (donations) without pledges converted to the targets currency
+        """
+        totals = self.contributions.filter(
+            status=FundingTransitions.values.succeeded,
+            donation__payment__pledgepayment__isnull=True
+        ).values(
+            'donation__amount_currency'
+        ).annotate(
+            total=Sum('donation__amount')
+        )
+        amounts = [Money(total['total'], total['donation__amount_currency']) for total in totals]
+        amounts = [convert(amount, self.target.currency) for amount in amounts]
+
+        return sum(amounts) or Money(0, self.target.currency)
+
+    @cached_property
+    def amount_pledged(self):
+        """
+        The sum of all contributions (donations) converted to the targets currency
+        """
+        totals = self.contributions.filter(
+            status=FundingTransitions.values.succeeded,
+            donation__payment__pledgepayment__isnull=False
         ).values(
             'donation__amount_currency'
         ).annotate(
@@ -310,6 +347,47 @@ class Fundraiser(models.Model):
         verbose_name_plural = _('fundraisers')
 
 
+class Payout(TransitionsMixin, models.Model):
+    activity = models.ForeignKey(
+        'funding.Funding',
+        verbose_name=_("activity"),
+        related_name="payouts"
+    )
+    status = FSMField(
+        default=PayoutTransitions.values.new,
+    )
+    transitions = TransitionManager(PayoutTransitions, 'status')
+
+    amount_donated = MoneyField(_("amount donated"))
+    amount_pledged = MoneyField(_("amount pledged"))
+    amount_matched = MoneyField(_("amount matched"))
+
+    date_approved = models.DateTimeField(_('approved'), null=True, blank=True)
+    date_started = models.DateTimeField(_('started'), null=True, blank=True)
+    date_completed = models.DateTimeField(_('completed'), null=True, blank=True)
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def generate(cls, activity):
+        payout = cls.objects.create(
+            activity=activity,
+            amount_donated=activity.genuine_amount_donated,
+            amount_matched=activity.amount_matching,
+            amount_pledged=activity.amount_pledged
+        )
+        for contribution in activity.contributions.\
+                filter(donation__payout__isnull=True).\
+                filter(status='succeeded').all():
+            contribution.payout = payout
+            contribution.save()
+
+    class Meta():
+        verbose_name = _('payout')
+        verbose_name_plural = _('payout')
+
+
 class Donation(Contribution):
     amount = MoneyField()
     payout_amount = MoneyField()
@@ -319,6 +397,7 @@ class Donation(Contribution):
     name = models.CharField(max_length=200, null=True, blank=True,
                             verbose_name=_('Override donor name / Name for guest donation'))
     anonymous = models.BooleanField(_('anonymous'), default=False)
+    payout = models.ForeignKey('funding.Payout', null=True, blank=True, on_delete=SET_NULL, related_name='donations')
 
     transitions = TransitionManager(DonationTransitions, 'status')
 
@@ -358,6 +437,10 @@ class Payment(TransitionsMixin, PolymorphicModel):
     updated = models.DateTimeField(auto_now=True)
 
     donation = models.OneToOneField(Donation, related_name='payment')
+
+    @property
+    def can_update(self):
+        return hasattr(self, 'update')
 
     def __unicode__(self):
         return "{} - {}".format(self.polymorphic_ctype, self.id)
@@ -420,6 +503,10 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
 
+    def send_payout(self):
+        adapter = DoradoPayoutAdapter(self.activity)
+        adapter.trigger_payout()
+
 
 class PlainPayoutAccount(PayoutAccount):
     document = DocumentField(blank=True, null=True)
@@ -466,6 +553,10 @@ class BankAccount(PolymorphicModel):
         return self.connect_account.owner
 
     provider_class = None
+
+    @property
+    def type(self):
+        return self.provider_class().name
 
     @property
     def funding(self):

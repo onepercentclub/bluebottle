@@ -11,6 +11,7 @@ from bluebottle.funding.messages import (
     DonationRefundedDonorMessage, FundingRealisedOwnerMessage,
     FundingClosedMessage, FundingPartiallyFundedMessage
 )
+from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 
 
 class FundingTransitions(ActivityTransitions):
@@ -42,12 +43,13 @@ class FundingTransitions(ActivityTransitions):
         pass
 
     @transition(
-        source=values.open,
+        source=[values.open, values.succeeded],
         target=values.succeeded,
         messages=[FundingRealisedOwnerMessage]
     )
     def succeed(self):
-        pass
+        from bluebottle.funding.models import Payout
+        Payout.generate(self.instance)
 
     @transition(
         source=values.partially_funded,
@@ -144,7 +146,7 @@ class PaymentTransitions(ModelTransitions):
 
     @transition(
         source=[values.new, values.succeeded],
-        target='failed'
+        target=values.failed
     )
     def fail(self):
         self.instance.donation.transitions.fail()
@@ -157,6 +159,51 @@ class PaymentTransitions(ModelTransitions):
     def refund(self):
         self.instance.donation.transitions.refund()
         self.instance.donation.save()
+
+
+class PayoutTransitions(ModelTransitions):
+    class values(DjangoChoices):
+        new = ChoiceItem('new', _('new'))
+        approved = ChoiceItem('approved', _('approved'))
+        started = ChoiceItem('started', _('started'))
+        succeeded = ChoiceItem('succeeded', _('succeeded'))
+        failed = ChoiceItem('failed', _('failed'))
+
+    @transition(
+        source=['*'],
+        target=values.approved
+    )
+    def approve(self):
+        adapter = DoradoPayoutAdapter(self.instance.activity)
+        adapter.trigger_payout()
+
+    @transition(
+        source=['*'],
+        target=values.new
+    )
+    def draft(self):
+        pass
+
+    @transition(
+        source=['*'],
+        target=values.started
+    )
+    def start(self):
+        pass
+
+    @transition(
+        source=['*'],
+        target=values.succeeded
+    )
+    def succeed(self):
+        pass
+
+    @transition(
+        source=['*'],
+        target=values.failed
+    )
+    def fail(self):
+        pass
 
 
 class PayoutAccountTransitions(ModelTransitions):

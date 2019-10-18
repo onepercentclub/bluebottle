@@ -10,6 +10,7 @@ from bluebottle.funding.views import (
     PlainPayoutAccountDetail, PlainPayoutAccountList,
     PlainPayoutAccountDocumentDetail,
     SupportersExportView,
+    FundingPayoutDetails
 )
 
 
@@ -32,13 +33,19 @@ urlpatterns = [
     url(r'^/transitions$', FundingTransitionList.as_view(), name='funding-transition-list'),
     url(r'^/export/(?P<pk>[\d]+)$', SupportersExportView.as_view(), name='funding-supporters-export'),
 
-    url(r'^/payout-accounts$', PayoutAccountList.as_view(), name='payout-account-list'),
-    url(r'^/payout-accounts/plain$', PlainPayoutAccountList.as_view(), name='plain-payout-account-list'),
-    url(
-        r'^/payout-accounts/plain/(?P<pk>[\d]+)$',
+    url(r'^/(?P<pk>[\d]+)/payout-details$',
+        FundingPayoutDetails.as_view(),
+        name='funding-payout-details'),
+
+    url(r'^/payout-accounts$',
+        PayoutAccountList.as_view(),
+        name='payout-account-list'),
+    url(r'^/payout-accounts/plain$',
+        PlainPayoutAccountList.as_view(),
+        name='plain-payout-account-list'),
+    url(r'^/payout-accounts/plain/(?P<pk>[\d]+)$',
         PlainPayoutAccountDetail.as_view(),
-        name='plain-payout-account-detail'
-    ),
+        name='plain-payout-account-detail'),
     url(r'^/payout-accounts/plain/(?P<pk>\d+)/document$',
         PlainPayoutAccountDocumentDetail.as_view(),
         name='kyc-document')

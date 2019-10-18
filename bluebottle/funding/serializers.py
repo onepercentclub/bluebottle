@@ -19,12 +19,13 @@ from bluebottle.files.serializers import PrivateDocumentField
 from bluebottle.funding.filters import DonationListFilter
 from bluebottle.funding.models import (
     Funding, Donation, Fundraiser, Reward, BudgetLine, PaymentMethod,
-    BankAccount, PayoutAccount, PaymentProvider
-)
+    BankAccount, PayoutAccount, PaymentProvider,
+    Payout)
 from bluebottle.funding.models import PlainPayoutAccount
 from bluebottle.funding.permissions import CanExportSupportersPermission
 from bluebottle.funding_flutterwave.serializers import FlutterwaveBankAccountSerializer
 from bluebottle.funding_lipisha.serializers import LipishaBankAccountSerializer
+from bluebottle.funding_stripe.models import ExternalAccount
 from bluebottle.funding_stripe.serializers import ExternalAccountSerializer, ConnectAccountSerializer
 from bluebottle.funding_vitepay.serializers import VitepayBankAccountSerializer
 from bluebottle.members.models import Member
@@ -501,3 +502,83 @@ class PayoutAccountSerializer(PolymorphicModelSerializer):
         'external_accounts': 'bluebottle.funding.serializers.BankAccountSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
+
+
+class PayoutStripeBankSerializer(serializers.ModelSerializer):
+
+    account_holder_name = serializers.CharField(source='account.account_holder_name')
+    currency = serializers.CharField(source='account.currency')
+    connect_account_id = serializers.CharField(source='connect_account.account_id')
+    external_account_id = serializers.CharField(source='account_id')
+    type = serializers.CharField(read_only=True)
+
+    class Meta:
+        fields = (
+            'id',
+            'type',
+            'external_account_id',
+            'connect_account_id',
+            'account_holder_name',
+            'currency'
+        )
+        model = ExternalAccount
+
+
+class PayoutBankAccountSerializer(serializers.ModelSerializer):
+    # For Payout service
+    class Meta:
+        fields = (
+            'id',
+            'verified'
+        )
+        model = BankAccount
+
+    def to_representation(self, obj):
+        """
+        BankAccount Polymorphic serialization
+        """
+        if isinstance(obj, ExternalAccount):
+            return PayoutStripeBankSerializer(obj, context=self.context).to_representation(obj)
+        return super(PayoutBankAccountSerializer, self).to_representation(obj)
+
+
+class PayoutDonationSerializer(serializers.ModelSerializer):
+    # For Payout service
+    amount = MoneySerializer()
+
+    class Meta:
+        fields = (
+            'id',
+            'amount',
+            'status'
+        )
+        model = Donation
+
+
+class PayoutSerializer(serializers.ModelSerializer):
+    # For Payout service
+    donations = PayoutDonationSerializer(many=True)
+
+    class Meta:
+        fields = (
+            'id',
+            'status',
+            'donations',
+        )
+        model = Payout
+
+
+class FundingPayoutsSerializer(serializers.ModelSerializer):
+    # For Payout service
+    payouts = PayoutSerializer(many=True)
+    bank_account = PayoutBankAccountSerializer()
+
+    class Meta:
+        fields = (
+            'id',
+            'title',
+            'status',
+            'payouts',
+            'bank_account'
+        )
+        model = Funding

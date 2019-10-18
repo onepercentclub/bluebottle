@@ -27,7 +27,7 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
-    transition_date = models.DateTimeField(null=True)
+    transition_date = models.DateTimeField(null=True, blank=True)
 
     status = FSMField(
         default=ActivityTransitions.default

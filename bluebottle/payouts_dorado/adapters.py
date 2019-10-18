@@ -27,7 +27,8 @@ class DoradoPayoutAdapter(object):
         # Send the signal to Dorado
         data = {
             'project_id': self.project.id,
-            'tenant': self.tenant.client_name
+            'tenant': self.tenant.client_name,
+            'type': 'funding'
         }
 
         try:

@@ -86,7 +86,19 @@ class FundingAdmin(ActivityChildAdmin):
 
     export_to_csv_fields = (
         ('title', 'Title'),
+        ('description', 'Description'),
+        ('status', 'Status'),
+        ('created', 'Created'),
+        ('initiative__title', 'Initiative'),
         ('deadline', 'Deadline'),
+        ('duration', 'Duration'),
+        ('target', 'Target'),
+        ('country', 'Country'),
+        ('owner', 'Owner'),
+        ('amount_matching', 'Amount Matching'),
+        ('bank_account', 'Bank Account'),
+        ('amount_donated', 'Amount Donatated'),
+        ('amount_raised', 'Amount Raised'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
@@ -110,6 +122,15 @@ class DonationAdmin(FSMAdmin, PaymentLinkMixin):
 
     export_to_csv_fields = (
         ('status', 'Status'),
+        ('created', 'Created'),
+        ('activity', 'Activity'),
+        ('owner', 'Owner'),
+        ('amount', 'Amount'),
+        ('payout_amount', 'Payout Amount'),
+        ('reward', 'Reward'),
+        ('fundraiser', 'Fundraiser'),
+        ('name', 'name'),
+        ('anonymous', 'Anonymous'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

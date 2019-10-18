@@ -42,6 +42,12 @@ class ApplicantAdmin(FSMAdmin):
 
     export_to_csv_fields = (
         ('status', 'Status'),
+        ('created', 'Created'),
+        ('activity', 'Activity'),
+        ('owner', 'Owner'),
+        ('motivation', 'Motivation'),
+        ('time_spent', 'Time Spent'),
+        ('document', 'Document'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

@@ -445,7 +445,7 @@ class FundraiserListTestCase(BluebottleTestCase):
                 'attributes': {
                     'title': 'Test title',
                     'description': 'Test description',
-                    'amount': {'amount': 100, 'currency': 'EUR'},
+                    'target': {'amount': 100, 'currency': 'EUR'},
                     'deadline': str(now() + timedelta(days=10))
                 },
                 'relationships': {
@@ -488,7 +488,7 @@ class FundraiserListTestCase(BluebottleTestCase):
         )
 
     def test_create_wrong_currency(self):
-        self.data['data']['attributes']['amount']['currency'] = 'USD'
+        self.data['data']['attributes']['target']['currency'] = 'USD'
         response = self.client.post(
             self.create_url,
             data=json.dumps(self.data),

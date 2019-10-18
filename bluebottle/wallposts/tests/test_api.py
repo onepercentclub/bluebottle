@@ -1,26 +1,22 @@
 import mock
-
-from django.utils.timezone import now
 from django.contrib.auth.models import Group, Permission
-from django.core.urlresolvers import reverse
 from django.core import mail
-
+from django.core.urlresolvers import reverse
+from django.utils.timezone import now
 from rest_framework import status
 
 from bluebottle.events.tests.factories import EventFactory
+from bluebottle.funding.tests.factories import DonationFactory, FundingFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.utils.tests.test_unit import UserTestsMixin
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.fundraisers import FundraiserFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.wallposts import (
     TextWallpostFactory, MediaWallpostFactory
 )
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.fundraisers import FundraiserFactory
-from bluebottle.test.factory_models.tasks import TaskFactory
-
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.tests.test_unit import UserTestsMixin
 from ..models import Reaction
 
 
@@ -843,21 +839,23 @@ class TestDonationWallpost(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
-        self.some_project = ProjectFactory.create()
+        self.funding = FundingFactory.create()
         self.wallpost_url = reverse('wallpost_list')
         self.text_wallpost_url = reverse('text_wallpost_list')
 
-        order = OrderFactory.create(user=self.user)
-        donation = DonationFactory.create(project=self.some_project, order=order, fundraiser=None)
-        order.locked()
-        order.success()
-        order.save()
+        donation = DonationFactory.create(
+            user=self.user,
+            activity=self.funding,
+            fundraiser=None
+        )
+        donation.transitions.succeed()
+        donation.save()
 
         self.data = {
             "title": "",
             "text": "What a nice project!",
-            "parent_id": self.some_project.slug,
-            "parent_type": "project",
+            "parent_id": self.funding.id,
+            "parent_type": "funding",
             "donation": donation.id,
             "email_followers": False
         }
@@ -865,9 +863,10 @@ class TestDonationWallpost(BluebottleTestCase):
     def test_donation_wallposts(self):
         # Create a donation and set it to settled to trigger wallpost
         # There should be one system wallpost now
-        response = self.client.get(self.wallpost_url,
-                                   {'parent_id': self.some_project.slug, 'parent_type': 'project'},
-                                   token=self.user_token)
+        response = self.client.get(
+            self.wallpost_url,
+            {'parent_id': self.funding.id, 'parent_type': 'funding'},
+            token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['type'], 'system')
@@ -877,10 +876,10 @@ class TestDonationWallpost(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # The project should still have one wallpost, only the message last added
-        response = self.client.get(self.wallpost_url,
-                                   {'parent_id': self.some_project.slug,
-                                    'parent_type': 'project'},
-                                   token=self.user_token)
+        response = self.client.get(
+            self.wallpost_url,
+            {'parent_id': self.funding.id, 'parent_type': 'funding'},
+            token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['type'], 'text')

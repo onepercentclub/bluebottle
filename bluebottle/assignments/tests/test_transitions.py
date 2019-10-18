@@ -15,7 +15,6 @@ from bluebottle.test.utils import BluebottleTestCase
 
 
 class AssignmentTransitionMessagesTestCase(BluebottleTestCase):
-
     def setUp(self):
         super(AssignmentTransitionMessagesTestCase, self).setUp()
         self.settings = InitiativePlatformSettingsFactory.create(

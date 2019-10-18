@@ -5,7 +5,7 @@
     {% if custom_message %}
         {{ custom_message }}
     {% else %}
-        {% blocktrans with recipient_name=obj.user.first_name assignment_title=obj.activity.title context 'email' %}
+        {% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
             Hi {{ recipient_name }},<br>
             Unfortunately, nobody applied to your task {{ assignment_title }} before the deadline. This means we'll have to close this task.
             But, don't give up yet! You can always create a new task and try again.

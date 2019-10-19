@@ -21,8 +21,16 @@ from bluebottle.utils.views import (
 )
 
 
-class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
-    queryset = Activity.objects.all()
+class ActivityList(JsonApiViewMixin, ListAPIView):
+    queryset = Activity.objects.select_related(
+        'owner', 'initiative',
+        'initiative__owner',
+        'initiative__location', 'initiative__theme',
+        'initiative__place', 'initiative__image',
+        'initiative__activity_manager',
+        'initiative__location__country',
+        'initiative__organization',
+    )
     serializer_class = ActivitySerializer
     model = Activity
 
@@ -37,6 +45,7 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     prefetch_for_includes = {
         'initiative': ['initiative'],
         'location': ['location'],
+        'country': ['country'],
         'owner': ['owner'],
     }
 

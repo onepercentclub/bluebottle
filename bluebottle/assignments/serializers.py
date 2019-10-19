@@ -4,7 +4,7 @@ from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer,
-)
+    BaseActivityListSerializer)
 from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.permissions import ApplicantDocumentPermission
@@ -18,7 +18,7 @@ class ApplicantDocumentSerializer(PrivateDocumentSerializer):
     relationship = 'applicant_set'
 
 
-class AssignmentListSerializer(BaseActivitySerializer):
+class AssignmentListSerializer(BaseActivityListSerializer):
     permissions = ResourcePermissionField('assignment-detail', view_args=('pk',))
 
     class Meta(BaseActivitySerializer.Meta):

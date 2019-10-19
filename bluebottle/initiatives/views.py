@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import connection
 from rest_framework import generics
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
@@ -72,8 +73,8 @@ class InitiativeMapList(generics.ListAPIView):
 
     owner_filter_field = 'owner'
 
-    def list(self, request):
-        data = cache.get('initiative_map_data')
+    def list(self, request, *args, **kwargs):
+        data = cache.get('{}.initiative_map_data'.format(connection.tenant.name))
         if not data:
             result = self.queryset.order_by('-created')
             serializer = self.get_serializer(result, many=True)

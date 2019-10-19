@@ -156,6 +156,46 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         resource_name = 'initiatives'
 
 
+class InitiativeListSerializer(ModelSerializer):
+    image = ImageField(required=False, allow_null=True)
+    owner = ResourceRelatedField(read_only=True)
+    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
+    activity_manager = ResourceRelatedField(read_only=True)
+    slug = serializers.CharField(read_only=True)
+    story = SafeField(required=False, allow_blank=True, allow_null=True)
+    title = serializers.CharField(allow_blank=True)
+
+    included_serializers = {
+        'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
+        'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'place': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'location': 'bluebottle.geo.serializers.LocationSerializer',
+        'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
+    }
+
+    class Meta:
+        model = Initiative
+        fsm_fields = ['status']
+        fields = (
+            'id', 'title', 'pitch', 'categories',
+            'owner', 'activity_manager',
+            'slug', 'has_organization', 'organization',
+            'story', 'image', 'theme', 'place', 'location'
+        )
+
+        meta_fields = ('permissions', 'status', 'created', )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'owner', 'activity_manager',
+            'categories', 'theme', 'place', 'location',
+            'image', 'organization',
+        ]
+        resource_name = 'initiatives'
+
+
 def _error_messages_for(label):
     return {
         'error_messages': {'required': "'{}' is required".format(label)}

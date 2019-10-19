@@ -3,6 +3,7 @@ import random
 import string
 
 from babel.numbers import get_currency_name
+from django.core.cache import cache
 from django.db import connection
 from django.db import models
 from django.db.models import SET_NULL
@@ -159,32 +160,42 @@ class Funding(Activity):
             ('api_delete_own_funding', 'Can delete own funding through the API'),
         )
 
-    @cached_property
+    def update_amounts(self):
+        cache_key = '{}.{}.amount_donated'.format(connection.tenant.name, self.id)
+        cache.delete(cache_key)
+        self.amount_donated
+
+    @property
     def amount_donated(self):
         """
         The sum of all contributions (donations) converted to the targets currency
         """
-        totals = self.contributions.filter(
-            status=FundingTransitions.values.succeeded
-        ).values(
-            'donation__amount_currency'
-        ).annotate(
-            total=Sum('donation__amount')
-        )
-        amounts = [Money(total['total'], total['donation__amount_currency']) for total in totals]
-        amounts = [convert(amount, self.target.currency) for amount in amounts]
-
-        return sum(amounts) or Money(0, self.target.currency)
+        cache_key = '{}.{}.amount_donated'.format(connection.tenant.name, self.id)
+        total = cache.get(cache_key)
+        if not total:
+            totals = self.contributions.filter(
+                status=FundingTransitions.values.succeeded
+            ).values(
+                'donation__amount_currency'
+            ).annotate(
+                total=Sum('donation__amount')
+            )
+            amounts = [Money(tot['total'], tot['donation__amount_currency']) for tot in totals]
+            amounts = [convert(amount, self.target.currency) for amount in amounts]
+            total = sum(amounts) or Money(0, self.target.currency)
+            cache.set(cache_key, total)
+        return total
 
     @property
     def amount_raised(self):
         """
         The sum of amount donated + amount matching
         """
-        return self.amount_donated + convert(
+        total = self.amount_donated + convert(
             self.amount_matching or Money(0, self.target.currency),
             self.target.currency
         )
+        return total
 
     def save(self, *args, **kwargs):
         for reward in self.rewards.all():

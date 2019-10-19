@@ -7,12 +7,13 @@ from bluebottle.assignments.models import Assignment
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ContentTextField, PhotoSerializer)
 from bluebottle.events.models import Event
-from bluebottle.funding.models import Funding
+from bluebottle.funding.models import Funding, Donation
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
+from bluebottle.utils.serializers import MoneySerializer
 
 from .models import Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, Reaction
 
@@ -75,6 +76,35 @@ class WallpostParentIdField(serializers.IntegerField):
         return value
 
 
+class WallpostDonationSerializer(serializers.ModelSerializer):
+    amount = MoneySerializer()
+    user = UserPreviewSerializer()
+    type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Donation
+        fields = (
+            'type',
+            'id',
+            'user',
+            'amount',
+            'fundraiser',
+            'reward',
+            'anonymous',)
+
+    def get_type(self, obj):
+        return 'contributions/donations'
+
+    def get_fields(self):
+        """
+        If the donation is anonymous, we do not return the user.
+        """
+        fields = super(WallpostDonationSerializer, self).get_fields()
+        if isinstance(self.instance, Donation) and self.instance.anonymous:
+            del fields['user']
+        return fields
+
+
 class WallpostSerializerBase(serializers.ModelSerializer):
     """
     Base class serializer for Wallposts. This is not used directly;
@@ -86,6 +116,8 @@ class WallpostSerializerBase(serializers.ModelSerializer):
                                            source='content_type')
     parent_id = WallpostParentIdField(source='object_id')
     reactions = ReactionSerializer(many=True, read_only=True, required=False)
+
+    donation = WallpostDonationSerializer()
 
     class Meta:
         fields = ('id', 'type', 'author', 'created', 'reactions',

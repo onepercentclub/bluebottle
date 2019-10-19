@@ -3,7 +3,7 @@ from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer,
-)
+    BaseActivityListSerializer)
 from bluebottle.events.filters import ParticipantListFilter
 from bluebottle.events.models import Event, Participant
 from bluebottle.transitions.serializers import TransitionSerializer
@@ -53,7 +53,7 @@ class ParticipantTransitionSerializer(TransitionSerializer):
         ]
 
 
-class EventListSerializer(BaseActivitySerializer):
+class EventListSerializer(BaseActivityListSerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
 
     class Meta(BaseActivitySerializer.Meta):

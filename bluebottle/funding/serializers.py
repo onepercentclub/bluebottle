@@ -11,8 +11,8 @@ from rest_framework_json_api.serializers import (
 )
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseContributionSerializer
-)
+    BaseContributionSerializer,
+    BaseActivityListSerializer)
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.files.serializers import ImageField, PrivateDocumentSerializer
 from bluebottle.files.serializers import PrivateDocumentField
@@ -171,16 +171,16 @@ class PaymentMethodSerializer(serializers.Serializer):
         return currencies
 
 
-class FundingListSerializer(BaseActivitySerializer):
+class FundingListSerializer(BaseActivityListSerializer):
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
     target = MoneySerializer(required=False, allow_null=True)
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
 
-    class Meta(BaseActivitySerializer.Meta):
+    class Meta(BaseActivityListSerializer.Meta):
         model = Funding
-        fields = BaseActivitySerializer.Meta.fields + (
+        fields = BaseActivityListSerializer.Meta.fields + (
             'country',
             'deadline',
             'duration',
@@ -191,7 +191,7 @@ class FundingListSerializer(BaseActivitySerializer):
             'permissions',
         )
 
-    class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
+    class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
         included_resources = [
             'owner',
             'initiative',
@@ -203,7 +203,7 @@ class FundingListSerializer(BaseActivitySerializer):
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
@@ -256,6 +256,8 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
             self.instance.initiative.activity_manager
         ]:
             del fields['bank_account']
+            del fields['required']
+            del fields['errors']
 
         return fields
 

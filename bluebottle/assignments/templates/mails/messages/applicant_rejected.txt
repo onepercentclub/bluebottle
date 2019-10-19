@@ -7,11 +7,11 @@
     {% else %}
         {% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
         Hi {{ recipient_name }},
-        Unfortunately, you have not been selected for the assignment "{{ assignment_title }}".
+        Unfortunately, you have not been selected for the task "{{ assignment_title }}".
         {% endblocktrans %}
     {% endif %}
 {% endblock %}
 
 {% block action %}
-   {% trans 'View assignment' context 'email' %}: {{ obj.activity.get_absolute_url }}
+   {% trans 'View task' context 'email' %}: {{ obj.activity.get_absolute_url }}
 {% endblock %}`

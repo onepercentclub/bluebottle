@@ -182,7 +182,10 @@ class Funding(Activity):
             )
             amounts = [Money(tot['total'], tot['donation__amount_currency']) for tot in totals]
             amounts = [convert(amount, self.target.currency) for amount in amounts]
-            total = sum(amounts) or Money(0, self.target.currency)
+            if self.target:
+                total = sum(amounts) or Money(0, self.target.currency)
+            else:
+                total = Money(0, 'EUR')
             cache.set(cache_key, total)
         return total
 
@@ -191,10 +194,16 @@ class Funding(Activity):
         """
         The sum of amount donated + amount matching
         """
-        total = self.amount_donated + convert(
-            self.amount_matching or Money(0, self.target.currency),
-            self.target.currency
-        )
+        if self.target:
+            currency = self.target.currency
+        else:
+            currency = 'EUR'
+        total = self.amount_donated
+        if self.amount_matching:
+            total += convert(
+                self.amount_matching,
+                currency
+            )
         return total
 
     def save(self, *args, **kwargs):

@@ -74,12 +74,13 @@ class InitiativeMapList(generics.ListAPIView):
     owner_filter_field = 'owner'
 
     def list(self, request, *args, **kwargs):
-        data = cache.get('{}.initiative_map_data'.format(connection.tenant.name))
+        cache_key = '{}.initiative_map_data'.format(connection.tenant.name)
+        data = cache.get(cache_key)
         if not data:
-            result = self.queryset.order_by('-created')
+            result = self.queryset.order_by('created')
             serializer = self.get_serializer(result, many=True)
             data = serializer.data
-            cache.set('initiative_map_data', data)
+            cache.set(cache_key, data)
         return Response(data)
 
 

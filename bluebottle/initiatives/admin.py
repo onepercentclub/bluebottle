@@ -34,7 +34,9 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
 
     list_display = ['title', 'created', 'status']
 
-    list_filter = ['status']
+    date_hierarchy = 'created'
+
+    list_filter = ['status', 'review_status']
 
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']

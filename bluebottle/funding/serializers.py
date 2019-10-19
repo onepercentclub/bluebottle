@@ -234,6 +234,10 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
         read_only=True, many=True, source='get_payment_methods', model=PaymentMethod
     )
     contributions = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
+    errors = ValidationErrorsField()
+    required = RequiredErrorsField()
+    status = FSMField(read_only=True)
+    review_status = FSMField(read_only=True)
 
     bank_account = PolymorphicResourceRelatedField(
         BankAccountSerializer,
@@ -258,6 +262,7 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
             del fields['bank_account']
             del fields['required']
             del fields['errors']
+            del fields['review_status']
 
         return fields
 
@@ -271,6 +276,10 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
             'contributions',
             'bank_account',
             'supporters_export_url',
+            'errors',
+            'required',
+            'status',
+            'review_status'
         )
 
     class JSONAPIMeta(FundingListSerializer.JSONAPIMeta):
@@ -281,6 +290,10 @@ class FundingSerializer(NoCommitMixin, FundingListSerializer):
             'contributions',
             'contributions.user',
             'bank_account',
+            'errors',
+            'required',
+            'status',
+            'review_status'
         ]
 
     included_serializers = dict(

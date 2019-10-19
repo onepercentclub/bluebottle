@@ -71,6 +71,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'assignments.applicant',
                 'permissions': ['assignments.assignment']
             },
+            {
+                'name': 'tasks.skill',
+                'permissions': ['tasks.change_skill']
+            },
         ]
     },
 

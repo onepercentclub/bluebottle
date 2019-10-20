@@ -30,6 +30,22 @@ class StripeSourcePaymentTransitions(PaymentTransitions):
             return _('Missing charge token')
 
     @transition(
+        source=[values.charged],
+        target=values.succeeded
+    )
+    def succeed(self):
+        self.instance.donation.transitions.succeed()
+        self.instance.donation.save()
+
+    @transition(
+        source=[values.new, values.charged, values.succeeded],
+        target='failed'
+    )
+    def fail(self):
+        self.instance.donation.transitions.fail()
+        self.instance.donation.save()
+
+    @transition(
         source=[values.succeeded],
         target=PaymentTransitions.values.refund_requested
     )

@@ -32,10 +32,8 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     raw_id_fields = ('owner', 'reviewer', 'promoter', 'activity_manager',
                      'place', 'organization', 'organization_contact')
 
-    list_display = ['title', 'created', 'status']
-
     date_hierarchy = 'created'
-
+    list_display = ['created', 'title', 'status']
     list_filter = ['status']
 
     search_fields = ['title', 'pitch', 'story',
@@ -71,12 +69,16 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
             details.append('place')
 
         return (
-            (_('Basic'), {'fields': ('title', 'link', 'slug', 'owner',
-                                     'image', 'video_url',
-                                     'created', 'updated')}),
+            (_('Basic'), {'fields': (
+                'title', 'link', 'slug', 'owner',
+                'image', 'video_url',
+                'created', 'updated')}),
             (_('Details'), {'fields': details}),
-            (_('Organization'), {'fields': ('organization', 'organization_contact')}),
-            (_('Review'), {'fields': ('reviewer', 'activity_manager', 'promoter', 'status', 'transitions')}),
+            (_('Organization'), {'fields': (
+                'has_organization', 'organization', 'organization_contact')}),
+            (_('Review'), {'fields': (
+                'reviewer', 'activity_manager',
+                'promoter', 'status', 'transitions')}),
         )
 
     inlines = [ActivityAdminInline, MessageAdminInline]

@@ -1,36 +1,32 @@
 # -*- coding: utf-8 -*-
+import StringIO
 import csv
 from datetime import timedelta
-import json
-import mock
-from moneyed import Money
-import StringIO
-import requests
 
-from django.db import connection
+import mock
+import requests
 from django.contrib.admin.sites import AdminSite
-from django.contrib import messages
-from django.forms.models import modelform_factory
+from django.db import connection
 from django.forms import ValidationError
+from django.forms.models import modelform_factory
 from django.test.client import RequestFactory
 from django.urls.base import reverse
 from django.utils.timezone import now
-
+from moneyed import Money
 
 from bluebottle.projects.admin import (
     LocationFilter, ProjectReviewerFilter, ProjectAdminForm,
     ReviewerWidget, ProjectAdmin)
 from bluebottle.projects.models import Project, ProjectPhase, CustomProjectFieldSettings, CustomProjectField
 from bluebottle.projects.tasks import refund_project
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.payouts import PlainPayoutAccountFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import LocationFactory
-from bluebottle.test.factory_models.payouts import PlainPayoutAccountFactory
 from bluebottle.test.utils import BluebottleTestCase, override_settings, BluebottleAdminTestCase
-
 
 factory = RequestFactory()
 
@@ -165,161 +161,6 @@ class TestProjectAdmin(BluebottleAdminTestCase):
 
         self.assertTrue(
             'payout_status' not in self.project_admin.get_list_display(request)
-        )
-
-    def test_mark_payout_as_approved(self):
-        request = self.request_factory.post('/', data={'confirm': True})
-        request.user = MockUser(['projects.approve_payout'])
-
-        project = self._generate_completed_project()
-        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
-        project.save()
-
-        with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
-            self.project_admin.approve_payout(request, project.id)
-
-        request_mock.assert_called_with(
-            PAYOUT_URL, {'project_id': project.id, 'tenant': 'test'}
-        )
-
-        project = Project.objects.get(pk=project.id)
-        self.assertEqual(project.payout_account.account_number, '1234567890')
-
-        # Check it shows up in object history
-        self.client.force_login(self.superuser)
-        url = reverse('admin:projects_project_history', args=(project.id, ))
-        response = self.client.get(url)
-        self.assertContains(response, 'Approved payout')
-
-    def test_mark_payout_as_approved_remote_validation_error(self):
-        request = self.request_factory.post('/', data={'confirm': True})
-        request.user = MockUser(['projects.approve_payout'])
-
-        project = self._generate_completed_project()
-        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
-        project.save()
-
-        self.mock_response.status_code = 400
-        self.mock_response._content = json.dumps({'errors': {'name': ['This field is required']}})
-        with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
-            with mock.patch.object(self.project_admin, 'message_user') as message_mock:
-                self.project_admin.approve_payout(request, project.id)
-        request_mock.assert_called_with(
-            PAYOUT_URL, {'project_id': project.id, 'tenant': 'test'}
-        )
-
-        message_mock.assert_called_with(
-            request, 'Account details: name, this field is required.', level=messages.ERROR
-        )
-
-    def test_mark_payout_as_approved_internal_server_error(self):
-        request = self.request_factory.post('/', data={'confirm': True})
-        request.user = MockUser(['projects.approve_payout'])
-
-        project = self._generate_completed_project()
-        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
-        project.save()
-
-        self.mock_response.status_code = 500
-        self.mock_response._content = 'Internal Server Error'
-
-        with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
-            with mock.patch.object(self.project_admin, 'message_user') as message_mock:
-                self.project_admin.approve_payout(request, project.id)
-
-        request_mock.assert_called_with(
-            PAYOUT_URL, {'project_id': project.id, 'tenant': 'test'}
-        )
-
-        message_mock.assert_called_with(
-            request, 'Failed to approve payout: Internal Server Error', level=messages.ERROR
-        )
-
-    def test_mark_payout_as_approved_connection_error(self):
-        request = self.request_factory.post('/', data={'confirm': True})
-        request.user = MockUser(['projects.approve_payout'])
-
-        project = self._generate_completed_project()
-        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
-        project.save()
-
-        exception = requests.ConnectionError('Host not found')
-
-        with mock.patch('requests.post', side_effect=exception) as request_mock:
-            with mock.patch.object(self.project_admin, 'message_user') as message_mock:
-                self.project_admin.approve_payout(request, project.id)
-
-        request_mock.assert_called_with(
-            PAYOUT_URL, {'project_id': project.id, 'tenant': 'test'}
-        )
-
-        message_mock.assert_called_with(
-            request, 'Failed to approve payout: Host not found', level=messages.ERROR
-        )
-
-    def test_mark_payout_as_approved_no_permissions(self):
-        request = self.request_factory.post('/', data={'confirm': True})
-        request.user = MockUser()
-
-        project = ProjectFactory.create(payout_status='needs_approval')
-        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
-        project.save()
-
-        with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
-            with mock.patch.object(self.project_admin, 'message_user') as message_mock:
-                response = self.project_admin.approve_payout(request, project.id)
-
-        self.assertEqual(response.status_code, 302)
-        request_mock.assert_not_called()
-        message_mock.assert_called_with(
-            request, 'Missing permission: projects.approve_payout', level='ERROR'
-        )
-
-    def test_mark_payout_as_approved_wrong_status(self):
-        request = self.request_factory.post('/', data={'confirm': True})
-        request.user = MockUser(['projects.approve_payout'])
-
-        project = self._generate_completed_project()
-        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
-        project.payout_status = 'done'
-        project.save()
-
-        with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
-            with mock.patch.object(self.project_admin, 'message_user') as message_mock:
-                self.project_admin.approve_payout(request, project.id)
-
-        self.assertEqual(
-            Project.objects.get(id=project.id).payout_status, 'done'
-        )
-        request_mock.assert_not_called()
-        message_mock.assert_called()
-
-    def test_read_only_status_after_payout_approved(self):
-        request = self.request_factory.post('/', data={'confirm': True})
-        request.user = MockUser(['projects.approve_payout'])
-
-        project = self._generate_completed_project()
-        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
-        project.save()
-
-        # Project status should be editable
-        self.assertFalse(
-            'status' in self.project_admin.get_readonly_fields(request, obj=project)
-        )
-
-        def side_effect(*args, **kwargs):
-            project.payout_status = 'approved'
-            project.save()
-            return self.mock_response
-
-        with mock.patch('requests.post', side_effect=side_effect):
-            self.project_admin.approve_payout(request, project.id)
-
-        project = Project.objects.get(id=project.id)
-
-        # Project status should be readonly after payout has been approved
-        self.assertTrue(
-            'status' in self.project_admin.get_readonly_fields(request, obj=project)
         )
 
     def test_export_rewards(self):

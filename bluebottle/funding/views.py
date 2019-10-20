@@ -18,8 +18,9 @@ from bluebottle.funding.serializers import (
     FundingSerializer, DonationSerializer, FundingTransitionSerializer,
     FundraiserSerializer, RewardSerializer, BudgetLineSerializer,
     DonationCreateSerializer, FundingListSerializer,
-    PayoutAccountSerializer, PlainPayoutAccountSerializer
-)
+    PayoutAccountSerializer, PlainPayoutAccountSerializer,
+    FundingPayoutsSerializer)
+from bluebottle.payouts_dorado.permissions import IsFinancialMember
 
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -148,6 +149,32 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
         'payment_methods': ['payment_methods'],
         'fundraisers': ['fundraisers']
     }
+
+
+class FundingPayoutDetails(RetrieveUpdateAPIView):
+    # For Payout service
+    queryset = Funding.objects.all()
+    serializer_class = FundingPayoutsSerializer
+
+    permission_classes = (IsFinancialMember,)
+
+    def put(self, *args, **kwargs):
+        status = self.request.data['status']
+        # FIXME better trigger a request here where we check all payouts
+        # related to this Funding.
+        payout = self.get_object().payouts.first()
+        if status == 'started':
+            payout.transitions.start()
+        if status == 'scheduled':
+            payout.transitions.start()
+        if status == 'new':
+            payout.transitions.draft()
+        if status == 'success':
+            payout.transitions.succeed()
+        if status == 'confirm':
+            payout.transitions.succeed()
+        payout.save()
+        return HttpResponse(200)
 
 
 class FundingTransitionList(TransitionList):

@@ -57,7 +57,7 @@ class Wallpost(PolymorphicModel):
     share_with_linkedin = models.BooleanField(default=False)
     email_followers = models.BooleanField(default=True)
 
-    donation = models.ForeignKey('donations.Donation',
+    donation = models.ForeignKey('funding.Donation',
                                  verbose_name=_("Donation"),
                                  related_name='wallpost',
                                  null=True, blank=True)

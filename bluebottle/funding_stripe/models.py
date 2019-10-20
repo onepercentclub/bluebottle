@@ -6,6 +6,7 @@ from django.db import ProgrammingError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 from memoize import memoize
+from stripe.error import AuthenticationError
 
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation
@@ -307,8 +308,10 @@ class StripePayoutAccount(PayoutAccount):
     @property
     def account(self):
         if not hasattr(self, '_account'):
-            self._account = stripe.Account.retrieve(self.account_id)
-
+            try:
+                self._account = stripe.Account.retrieve(self.account_id)
+            except AuthenticationError:
+                self._account = {}
         return self._account
 
     def save(self, *args, **kwargs):

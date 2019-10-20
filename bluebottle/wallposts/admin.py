@@ -19,6 +19,17 @@ from .models import (Wallpost, MediaWallpost, TextWallpost,
                      MediaWallpostPhoto, Reaction)
 
 
+class BaseWallpostAdmin(PolymorphicChildModelAdmin):
+    base_model = Wallpost
+
+    def view_online(self, obj):
+        return format_html('<a href="{}" target="_blank">{}</a>',
+                           obj.content_object.get_absolute_url(),
+                           obj.content_object)
+
+    view_online.short_description = _('View online')
+
+
 class ReactionInline(admin.TabularInline):
     model = Reaction
     readonly_fields = ('reaction_link', 'author', 'ip_address', 'text', 'created', 'deleted')
@@ -53,8 +64,7 @@ class MediaWallpostPhotoInline(admin.TabularInline):
     image_tag.short_description = 'Preview'
 
 
-class MediaWallpostAdmin(PolymorphicChildModelAdmin):
-    base_model = Wallpost
+class MediaWallpostAdmin(BaseWallpostAdmin):
     readonly_fields = ('ip_address', 'created', 'deleted', 'view_online', 'gallery', 'donation',
                        'share_with_facebook', 'share_with_twitter',
                        'share_with_linkedin', 'email_followers')
@@ -103,29 +113,6 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
 
         return mark_safe(render_to_string("admin/wallposts/preview_thumbnail.html", data))
 
-    def view_online(self, obj):
-        if obj.content_object is None:
-            return _(u'The project this post belongs to has been deleted')
-
-        if obj.content_type.name == 'project':
-            return format_html(
-                u'<a href="/projects/{}">{}</a>',
-                obj.content_object.slug, obj.content_object.title
-            )
-        if obj.content_type.name == 'task':
-            if obj.content_object:
-                return format_html(
-                    u'<a href="/tasks/{}">{}</a>',
-                    obj.content_object.id,
-                    obj.content_object.title
-                )
-        if obj.content_type.name == 'fundraiser':
-            return format_html(
-                u'<a href="/fundraisers/{}">{}</a>',
-                obj.content_object.id, obj.content_object.title
-            )
-        return '---'
-
     def gallery(self, obj):
         data = {}
         data['images'] = [dict(full=p.photo.url,
@@ -142,9 +129,8 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
         return self.model.objects_with_deleted.all()
 
 
-class TextWallpostAdmin(PolymorphicChildModelAdmin):
-    base_model = Wallpost
-    readonly_fields = ('ip_address', 'created', 'deleted', 'posted_on', 'donation_link')
+class TextWallpostAdmin(BaseWallpostAdmin):
+    readonly_fields = ('ip_address', 'created', 'deleted', 'view_online', 'donation_link')
     search_fields = ('text', 'author__first_name', 'author__last_name')
     list_display = ('created', 'author', 'content_type', 'text', 'deleted')
     raw_id_fields = ('author', 'editor', 'donation')
@@ -154,28 +140,6 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
     ordering = ('-created',)
 
     inlines = (ReactionInline, )
-
-    def posted_on(self, obj):
-        type = obj.content_type.name
-        type_name = unicode(obj.content_type).title()
-
-        if type == 'task':
-            url = reverse('admin:tasks_task_change',
-                          args=(obj.content_object.id,))
-        elif type == 'project':
-            url = reverse('admin:projects_project_change',
-                          args=(obj.content_object.id,))
-        elif type == 'fundraiser':
-            url = reverse('admin:fundraisers_fundraiser_change',
-                          args=(obj.content_object.id,))
-        else:
-            return ''
-
-        title = obj.content_object.title
-        return format_html(
-            u'{}: <a href="{}">{}</a>',
-            type_name, url, title
-        )
 
     def donation_link(self, obj):
         if obj.donation:
@@ -190,11 +154,10 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
         return self.model.objects_with_deleted.all()
 
 
-class SystemWallpostAdmin(PolymorphicChildModelAdmin):
+class SystemWallpostAdmin(BaseWallpostAdmin):
     base_model = SystemWallpost
-    readonly_fields = ('ip_address', 'created', 'content_type', 'related_type',
-                       'donation_link', 'project_link',
-                       'related_id', 'object_id')
+    readonly_fields = ('ip_address', 'created', 'view_online', 'content_type', 'related_type',
+                       'donation_link', 'related_id', 'object_id')
     fields = readonly_fields + ('author', 'donation', 'text', 'pinned')
     list_display = ('created', 'author', 'content_type', 'related_type', 'text', 'deleted')
     raw_id_fields = ('author', 'editor', 'donation')
@@ -203,18 +166,9 @@ class SystemWallpostAdmin(PolymorphicChildModelAdmin):
 
     inlines = (ReactionInline, )
 
-    def project_link(self, obj):
-        if obj.donation:
-            link = reverse('admin:projects_project_change', args=(obj.donation.project.id,))
-            return format_html(
-                u"<a href='{}'>{}</a>",
-                link, obj.donation.project.title
-            )
-    project_link.short_description = _('Project link')
-
     def donation_link(self, obj):
         if obj.donation:
-            link = reverse('admin:donations_donation_change', args=(obj.donation.id,))
+            link = reverse('admin:funding_donation_change', args=(obj.donation.id,))
             return format_html(
                 u"<a href='{}'>{}</a>",
                 link, obj.donation
@@ -277,7 +231,7 @@ admin.site.register(SystemWallpost, SystemWallpostAdmin)
 
 class ReactionAdmin(admin.ModelAdmin):
     # created and updated are auto-set fields. author, editor and ip_address are auto-set on save.
-    readonly_fields = ('project_url', 'created', 'updated', 'author',
+    readonly_fields = ('parent_url', 'created', 'updated', 'author',
                        'editor', 'ip_address')
     list_display = ('author_full_name', 'created', 'updated',
                     'deleted', 'ip_address')
@@ -287,7 +241,7 @@ class ReactionAdmin(admin.ModelAdmin):
     search_fields = ('text', 'author__username', 'author__email',
                      'author__first_name', 'author__last_name', 'ip_address')
 
-    fields = ('text', 'project_url', 'wallpost', 'deleted', 'created',
+    fields = ('text', 'parent_url', 'wallpost', 'deleted', 'created',
               'updated', 'author', 'editor', 'ip_address')
 
     def get_fieldsets(self, request, obj=None):
@@ -305,17 +259,10 @@ class ReactionAdmin(admin.ModelAdmin):
 
     author_full_name.short_description = _('Author')
 
-    def project_url(self, obj):
-        project = obj.wallpost.content_object
-        if project.__class__.__name__ == 'Project':
-            url = project.get_absolute_url()
-            return format_html(
-                u"<a href='{}'>{}</a>",
-                str(url), project.title
-            )
-        return ''
+    def parent_url(self, obj):
+        return obj.wallpost.content_object.get_absolute_url()
 
-    project_url.short_description = _('project link')
+    parent_url.short_description = _('View update wall')
 
     def save_model(self, request, obj, form, change):
         """ Set the author or editor (as required) and ip when saving the model. """

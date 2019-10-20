@@ -117,7 +117,14 @@ class WallpostSerializerBase(serializers.ModelSerializer):
     parent_id = WallpostParentIdField(source='object_id')
     reactions = ReactionSerializer(many=True, read_only=True, required=False)
 
-    donation = WallpostDonationSerializer()
+    donation = serializers.PrimaryKeyRelatedField(queryset=Donation.objects)
+
+    def to_representation(self, instance):
+        # We want to connect a donation by just sending the id,
+        # but reading we want an embedded object, so we do a little trick here.
+        response = super(WallpostSerializerBase, self).to_representation(instance)
+        response['donation'] = WallpostDonationSerializer(instance.donation, context=self.context).data
+        return response
 
     class Meta:
         fields = ('id', 'type', 'author', 'created', 'reactions',

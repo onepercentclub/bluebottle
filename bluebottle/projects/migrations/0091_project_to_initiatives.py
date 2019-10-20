@@ -168,6 +168,9 @@ def migrate_projects(apps, schema_editor):
     ExternalAccount = apps.get_model('funding_stripe', 'ExternalAccount')
     PlainPayoutAccount = apps.get_model('funding', 'PlainPayoutAccount')
     PayoutAccount = apps.get_model('funding', 'PayoutAccount')
+    BudgetLine = apps.get_model('funding', 'BudgetLine')
+    Reward = apps.get_model('funding', 'Reward')
+    Fundraiser = apps.get_model('funding', 'Fundraiser')
     OldPayoutAccount = apps.get_model('payouts', 'PayoutAccount')
     FlutterwaveBankAccount = apps.get_model('funding_flutterwave', 'FlutterwaveBankAccount')
     VitepayBankAccount = apps.get_model('funding_vitepay', 'VitepayBankAccount')
@@ -337,7 +340,6 @@ def migrate_projects(apps, schema_editor):
 
                 # Funding specific fields
                 deadline=project.deadline,
-                # ??? duration
                 target=project.amount_asked,
                 amount_matching=project.amount_extra,
                 country=project.country,
@@ -347,15 +349,59 @@ def migrate_projects(apps, schema_editor):
             old_ct = ContentType.objects.get_for_model(Project)
             Wallpost.objects.filter(content_type=old_ct, object_id=project.id).\
                 update(content_type=content_type, object_id=funding.id)
+
+            for budget_line in project.projectbudgetline_set.all():
+                new_budget_line = BudgetLine.objects.create(
+                    activity=funding,
+                    amount=budget_line.amount,
+                    description=budget_line.description
+                )
+                new_budget_line.created = budget_line.created
+                new_budget_line.updated = budget_line.updated
+                new_budget_line.save()
+
+            fundraiser_ct = ContentType.objects.get_for_model(Initiative)
+            old_fundraiser_ct = ContentType.objects.get_for_model(Project)
+
+            for fundraiser in project.fundraiser_set.all():
+                new_fundraiser = Fundraiser.objects.create(
+                    owner=fundraiser.owner,
+                    activity=funding,
+                    title=fundraiser.title,
+                    description=fundraiser.description,
+                    amount=fundraiser.amount,
+                    deadline=fundraiser.deadline,
+                )
+                new_fundraiser.created = fundraiser.created
+                new_fundraiser.updated = fundraiser.updated
+                new_fundraiser.deleted = fundraiser.deleted
+                new_fundraiser.save()
+                if fundraiser.image:
+                    try:
+                        image = Image.objects.create(owner=fundraiser.owner)
+                        image.file.save(fundraiser.image.name, fundraiser.image.file, save=True)
+                        initiative.image = image
+                    except IOError:
+                        pass
+                Wallpost.objects.filter(content_type=old_fundraiser_ct, object_id=fundraiser.id). \
+                    update(content_type=fundraiser_ct, object_id=new_fundraiser.id)
+
+            for reward in project.reward_set.all():
+                new_reward = Reward.objects.create(
+                    activity=funding,
+                    amount=reward.amount,
+                    description=reward.description,
+                    limit=reward.limit,
+                )
+                new_reward.created = reward.created
+                new_reward.updated = reward.updated
+                new_reward.save()
         else:
             content_type = ContentType.objects.get_for_model(Initiative)
             old_ct = ContentType.objects.get_for_model(Project)
             Wallpost.objects.filter(content_type=old_ct, object_id=project.id).\
                 update(content_type=content_type, object_id=initiative.id)
 
-            # TODO: Add budget lines
-            # TODO: Add fundraisers
-            # TODO: Add rewards
 
 
 def wipe_initiatives(apps, schema_editor):

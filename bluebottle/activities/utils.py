@@ -30,8 +30,9 @@ class BaseActivitySerializer(ModelSerializer):
     required = RequiredErrorsField()
 
     included_serializers = {
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
     }
 
     def get_is_follower(self, instance):
@@ -119,6 +120,9 @@ class BaseActivityListSerializer(ModelSerializer):
         included_resources = [
             'owner',
             'initiative',
+            'initiative.image',
+            'initiative.location',
+            'initiative.place',
         ]
         resource_name = 'activities'
 

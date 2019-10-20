@@ -21,6 +21,39 @@ class ApplicantDocumentSerializer(PrivateDocumentSerializer):
 class AssignmentListSerializer(BaseActivityListSerializer):
     permissions = ResourcePermissionField('assignment-detail', view_args=('pk',))
 
+    class Meta(BaseActivityListSerializer.Meta):
+        model = Assignment
+        fields = BaseActivityListSerializer.Meta.fields + (
+            'is_online',
+            'end_date',
+            'end_date_type',
+            'registration_deadline',
+            'capacity',
+            'expertise',
+            'duration',
+            'location',
+            'permissions',
+        )
+
+    class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
+        included_resources = [
+            'location',
+            'expertise',
+        ]
+        resource_name = 'activities/assignments'
+
+    included_serializers = dict(
+        BaseActivityListSerializer.included_serializers,
+        **{
+            'expertise': 'bluebottle.tasks.serializers.SkillSerializer',
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        }
+    )
+
+
+class AssignmentSerializer(BaseActivitySerializer):
+    contributions = FilteredRelatedField(many=True, filter_backend=ApplicantListFilter)
+
     class Meta(BaseActivitySerializer.Meta):
         model = Assignment
         fields = BaseActivitySerializer.Meta.fields + (
@@ -33,47 +66,22 @@ class AssignmentListSerializer(BaseActivityListSerializer):
             'duration',
             'location',
             'permissions',
-        )
-
-    class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
-        included_resources = [
-            'owner',
-            'location',
-            'expertise',
-            'initiative',
-            'initiative.image',
-            'initiative.location',
-            'initiative.place',
-        ]
-        resource_name = 'activities/assignments'
-
-    included_serializers = {
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'expertise': 'bluebottle.tasks.serializers.SkillSerializer',
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
-        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
-        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-    }
-
-
-class AssignmentSerializer(AssignmentListSerializer):
-    contributions = FilteredRelatedField(many=True, filter_backend=ApplicantListFilter)
-
-    class Meta(AssignmentListSerializer.Meta):
-        fields = AssignmentListSerializer.Meta.fields + (
             'contributions',
         )
 
-    class JSONAPIMeta(AssignmentListSerializer.JSONAPIMeta):
-        included_resources = AssignmentListSerializer.JSONAPIMeta.included_resources + [
+    class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
+        included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'contributions',
             'contributions.user',
             'contributions.document'
         ]
+        resource_name = 'activities/assignments'
 
     included_serializers = dict(
-        AssignmentListSerializer.included_serializers,
+        BaseActivitySerializer.included_serializers,
         **{
+            'expertise': 'bluebottle.tasks.serializers.SkillSerializer',
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'contributions': 'bluebottle.assignments.serializers.ApplicantSerializer',
         }
     )

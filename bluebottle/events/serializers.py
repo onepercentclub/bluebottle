@@ -56,9 +56,9 @@ class ParticipantTransitionSerializer(TransitionSerializer):
 class EventListSerializer(BaseActivityListSerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
 
-    class Meta(BaseActivitySerializer.Meta):
+    class Meta(BaseActivityListSerializer.Meta):
         model = Event
-        fields = BaseActivitySerializer.Meta.fields + (
+        fields = BaseActivityListSerializer.Meta.fields + (
             'capacity',
             'start_date',
             'start_time',
@@ -70,9 +70,7 @@ class EventListSerializer(BaseActivityListSerializer):
             'registration_deadline',
         )
 
-        meta_fields = ('permissions', 'transitions', 'review_transitions', 'created', 'updated', 'errors', 'required', )
-
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+    class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
         included_resources = [
             'owner',
             'initiative',
@@ -89,22 +87,33 @@ class EventListSerializer(BaseActivityListSerializer):
     }
 
 
-class EventSerializer(NoCommitMixin, EventListSerializer):
+class EventSerializer(NoCommitMixin, BaseActivitySerializer):
     contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
 
-    class Meta(EventListSerializer.Meta):
-        fields = EventListSerializer.Meta.fields + (
+    class Meta(BaseActivitySerializer.Meta):
+        model = Event
+        fields = BaseActivitySerializer.Meta.fields + (
+            'capacity',
+            'start_date',
+            'start_time',
+            'duration',
+            'is_online',
+            'location',
+            'location_hint',
+            'permissions',
+            'registration_deadline',
             'contributions',
         )
 
-    class JSONAPIMeta(EventListSerializer.JSONAPIMeta):
-        included_resources = EventListSerializer.JSONAPIMeta.included_resources + [
+    class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
+        included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'contributions',
             'contributions.user'
         ]
+        resource_name = 'activities/events'
 
     included_serializers = dict(
-        EventListSerializer.included_serializers,
+        BaseActivitySerializer.included_serializers,
         **{
             'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
         }

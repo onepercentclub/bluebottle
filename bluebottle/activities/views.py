@@ -7,8 +7,8 @@ from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.serializers import (
     ActivitySerializer,
     ActivityReviewTransitionSerializer,
-    RelatedActivityImageSerializer
-)
+    RelatedActivityImageSerializer,
+    ActivityListSerializer)
 from bluebottle.files.views import ImageContentView
 from bluebottle.files.models import RelatedImage
 from bluebottle.transitions.views import TransitionList
@@ -31,7 +31,7 @@ class ActivityList(JsonApiViewMixin, ListAPIView):
         'initiative__location__country',
         'initiative__organization',
     )
-    serializer_class = ActivitySerializer
+    serializer_class = ActivityListSerializer
     model = Activity
 
     filter_backends = (

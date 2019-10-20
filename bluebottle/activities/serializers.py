@@ -2,17 +2,17 @@ from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
 from bluebottle.activities.models import Contribution, Activity
-from bluebottle.assignments.serializers import ApplicantSerializer, AssignmentListSerializer
-from bluebottle.events.serializers import ParticipantSerializer, EventListSerializer
+from bluebottle.assignments.serializers import ApplicantSerializer, AssignmentListSerializer, AssignmentSerializer
+from bluebottle.events.serializers import ParticipantSerializer, EventListSerializer, EventSerializer
 
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 
-from bluebottle.funding.serializers import DonationSerializer, FundingListSerializer
+from bluebottle.funding.serializers import DonationSerializer, FundingListSerializer, FundingSerializer
 from bluebottle.transitions.serializers import TransitionSerializer
 
 
-class ActivitySerializer(PolymorphicModelSerializer):
+class ActivityListSerializer(PolymorphicModelSerializer):
 
     polymorphic_serializers = [
         EventListSerializer,
@@ -31,7 +31,49 @@ class ActivitySerializer(PolymorphicModelSerializer):
 
     class Meta:
         model = Activity
-        meta_fields = ('permissions', 'created', 'updated', )
+        meta_fields = (
+            'permissions',
+            'transitions', 'review_transitions',
+            'created', 'updated',
+            'errors', 'required',
+        )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'owner',
+            'initiative',
+            'location',
+            'initiative.image',
+            'initiative.place',
+            'initiative.location',
+        ]
+
+
+class ActivitySerializer(PolymorphicModelSerializer):
+
+    polymorphic_serializers = [
+        EventSerializer,
+        FundingSerializer,
+        AssignmentSerializer
+    ]
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
+        'initiative.place': 'bluebottle.geo.serializers.GeolocationSerializer',
+    }
+
+    class Meta:
+        model = Activity
+        meta_fields = (
+            'permissions',
+            'transitions', 'review_transitions',
+            'created', 'updated',
+            'errors', 'required',
+        )
 
     class JSONAPIMeta:
         included_resources = [

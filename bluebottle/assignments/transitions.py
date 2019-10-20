@@ -98,6 +98,14 @@ class AssignmentTransitions(ActivityTransitions):
     def extend(self, **kwargs):
         pass
 
+    @transition(
+        source=values.in_review,
+        target=values.open,
+        permissions=[ActivityTransitions.can_approve]
+    )
+    def reviewed(self):
+        pass
+
 
 class ApplicantTransitions(ContributionTransitions):
     class values(ContributionTransitions.values):

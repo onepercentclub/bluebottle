@@ -72,19 +72,16 @@ class EventListSerializer(BaseActivityListSerializer):
 
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
         included_resources = [
-            'owner',
-            'initiative',
-            'initiative.image',
             'location',
         ]
         resource_name = 'activities/events'
 
-    included_serializers = {
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
-        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
-        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-    }
+    included_serializers = dict(
+        BaseActivitySerializer.included_serializers,
+        **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        }
+    )
 
 
 class EventSerializer(NoCommitMixin, BaseActivitySerializer):
@@ -107,6 +104,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
+            'location',
             'contributions',
             'contributions.user'
         ]
@@ -115,6 +113,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
     included_serializers = dict(
         BaseActivitySerializer.included_serializers,
         **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
         }
     )

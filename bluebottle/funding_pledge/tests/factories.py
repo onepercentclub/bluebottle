@@ -15,4 +15,5 @@ class PledgePaymentFactory(factory.DjangoModelFactory):
     def _create(cls, model_class, *args, **kwargs):
         payment = super(PledgePaymentFactory, cls)._create(model_class, *args, **kwargs)
         payment.transitions.succeed()
+        payment.save()
         return payment

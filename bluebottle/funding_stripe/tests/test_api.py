@@ -316,6 +316,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                         business_type='individual',
                         country=self.data['data']['attributes']['country'],
                         metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.user.pk},
+                        requested_capabilities=['card_payments', 'transfers'],
                         settings={
                             'payments': {'statement_descriptor': u''},
                             'payouts': {'schedule': {'interval': 'manual'}}

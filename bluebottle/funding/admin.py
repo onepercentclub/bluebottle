@@ -13,7 +13,7 @@ from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-from bluebottle.activities.admin import ActivityChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
 from bluebottle.funding.models import (
@@ -127,11 +127,11 @@ class FundingAdmin(ActivityChildAdmin):
 
 
 @admin.register(Donation)
-class DonationAdmin(FSMAdmin, PaymentLinkMixin):
+class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'status', 'payment_link', 'funding_link']
+    readonly_fields = ['payment_link', 'status', 'payment_link']
     model = Donation
-    list_display = ['created', 'payment_link', 'funding_link', 'user_link', 'status', 'amount', 'payout_amount']
+    list_display = ['created', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', 'payout_amount']
     list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
     date_hierarchy = 'created'
 
@@ -159,12 +159,6 @@ class DonationAdmin(FSMAdmin, PaymentLinkMixin):
         return format_html('<i style="color: #999">guest</i>')
 
     user_link.short_description = _('User')
-
-    def funding_link(self, obj):
-        funding_url = reverse('admin:funding_funding_change', args=(obj.activity.id,))
-        return format_html(u'<a href="{}">{}</a>', funding_url, obj.activity.title)
-
-    funding_link.short_description = _('Funding activity')
 
     def get_changelist(self, request, **kwargs):
         self.total_column = 'amount'

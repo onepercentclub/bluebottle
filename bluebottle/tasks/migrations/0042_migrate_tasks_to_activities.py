@@ -38,6 +38,22 @@ def map_participant_status(member):
         'realized': 'succeeded',
         'absent': 'no_show'
     }
+    status = mapping[member.status]
+    return status
+
+
+def map_applicant_status(member):
+    mapping = {
+        'applied': 'new',
+        'accepted': 'accepted',
+        'rejected': 'rejected',
+        'stopped': 'closed',
+        'withdrew': 'withdrawn',
+        'realized': 'succeeded',
+        'absent': 'no_show'
+    }
+    status = mapping[member.status]
+    return status
 
 
 def migrate_tasks(apps, schema_editor):
@@ -105,7 +121,7 @@ def migrate_tasks(apps, schema_editor):
             event.save()
 
             for task_member in task.members.all():
-                status = task.status
+                status = map_participant_status(task_member.status)
 
                 participant = Participant.objects.create(
                     activity=event,
@@ -163,7 +179,7 @@ def migrate_tasks(apps, schema_editor):
             assignment.save()
 
             for task_member in task.members.all():
-                status = task.status
+                status = map_applicant_status(task_member.status)
 
                 applicant = Applicant.objects.create(
                     activity=assignment,

@@ -43,6 +43,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         'valid',
         'status',
         'transitions',
+        'transition_date'
     )
 
     detail_fields = (

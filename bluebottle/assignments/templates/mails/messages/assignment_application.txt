@@ -14,5 +14,5 @@
 {% endblock %}
 
 {% block action %}
-   {% trans 'Review application' context 'email' %}: {{ obj.get_absolute_url }}
+   {% trans 'Review application' context 'email' %}: {{ obj.activity.get_absolute_url }}
 {% endblock %}`

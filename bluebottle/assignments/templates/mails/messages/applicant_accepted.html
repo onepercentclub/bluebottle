@@ -7,12 +7,12 @@
     {% else %}
         {% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
             Hi {{ recipient_name }},<br>
-            Good news, you have been accepted for assignment "{{ assignment_title }}"!
+            Good news, you have been accepted for the task "{{ assignment_title }}"!
         {% endblocktrans %}
     {% endif %}
 {% endblock %}
 
 {% block action %}
     <a href="{{ obj.activity.get_absolute_url }}"
-       class="action-email">{% trans 'View assignment' context 'email' %}</a>
+       class="action-email">{% trans 'View task' context 'email' %}</a>
 {% endblock %}`

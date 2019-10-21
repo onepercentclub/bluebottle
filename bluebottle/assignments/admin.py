@@ -58,10 +58,14 @@ class AssignmentAdmin(ActivityChildAdmin):
     form = AssignmentAdminForm
     inlines = (ApplicantInline, )
 
+    date_hierarchy = 'end_date'
+
     base_model = Assignment
     raw_id_fields = ('owner', 'location')
 
-    list_display = ('created', 'title', 'status', 'highlight')
+    list_display = ('created', 'title', 'status', 'highlight', 'end_date', 'is_online', 'registration_deadline')
+    search_fields = ['title', 'description']
+    list_filter = ['status', 'expertise', 'is_online']
 
     detail_fields = (
         'description',

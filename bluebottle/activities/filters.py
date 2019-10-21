@@ -1,6 +1,12 @@
 import dateutil
+from django_filters.rest_framework import DjangoFilterBackend
 
 from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, Range
+from django.db.models import Q as DQ
+
+from bluebottle.activities.transitions import ActivityTransitions
+from bluebottle.events.transitions import EventTransitions
+from bluebottle.funding.transitions import FundingTransitions
 from bluebottle.utils.filters import ElasticSearchFilter
 from bluebottle.activities.documents import activity
 
@@ -145,3 +151,29 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
     def get_default_filters(self, request):
         return [Terms(review_status=['approved']), ~Term(status='closed')]
+
+
+class ActivityFilter(DjangoFilterBackend):
+    """
+    Filter that shows only successful contributions
+    """
+    public_statuses = [
+        ActivityTransitions.values.succeeded,
+        ActivityTransitions.values.open,
+        FundingTransitions.values.partially_funded,
+        EventTransitions.values.full,
+        EventTransitions.values.running
+    ]
+
+    def filter_queryset(self, request, queryset, view):
+        if request.user.id:
+            queryset = queryset.filter(
+                DQ(owner=request.user) |
+                DQ(initiative__activity_manager=request.user) |
+                DQ(initiative__owner=request.user) |
+                DQ(status__in=self.public_statuses)
+            )
+        else:
+            queryset = queryset.filter(status__in=self.public_statuses)
+
+        return super(ActivityFilter, self).filter_queryset(request, queryset, view)

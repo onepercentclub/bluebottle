@@ -1,10 +1,11 @@
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
-    ResourceRelatedField, PolymorphicResourceRelatedField
+    ResourceRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
+from bluebottle.activities.filters import ActivityFilter
 from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import (
@@ -12,10 +13,10 @@ from bluebottle.bluebottle_drf2.serializers import (
 )
 from bluebottle.categories.models import Category
 from bluebottle.files.models import Image
+from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.geo.serializers import TinyPointSerializer
-from bluebottle.files.models import RelatedImage
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -24,8 +25,8 @@ from bluebottle.transitions.serializers import (
 )
 from bluebottle.utils.fields import SafeField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import (
-    ResourcePermissionField, NoCommitMixin
-)
+    ResourcePermissionField, NoCommitMixin,
+    FilteredPolymorphicResourceRelatedField)
 
 
 class ThemeSerializer(ModelSerializer):
@@ -105,8 +106,10 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     reviewer = ResourceRelatedField(read_only=True)
     activity_manager = ResourceRelatedField(read_only=True)
-    activities = PolymorphicResourceRelatedField(
-        ActivitySerializer, many=True, read_only=True
+    activities = FilteredPolymorphicResourceRelatedField(
+        filter_backend=ActivityFilter,
+        polymorphic_serializer=ActivitySerializer,
+        many=True, read_only=True
     )
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)

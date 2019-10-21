@@ -20,20 +20,25 @@ class ActivityPermission(ResourcePermission):
         perm = super(ActivityPermission, self).has_permission(request, view)
         if not request.method == 'POST':
             return perm
-
         try:
             initiative_id = request.data['initiative']['id']
             initiative = Initiative.objects.get(id=initiative_id)
-            return perm and initiative.owner == request.user or initiative.activity_manager == request.user
+            return perm and request.user in (
+                initiative.activity_manager,
+                initiative.owner)
         except KeyError, Initiative.DoesNotExist:
             return False
 
     def has_object_action_permission(self, action, user, obj):
         perms = self.get_required_permissions(action, obj.__class__)
         if action in permissions.SAFE_METHODS:
-            return perms
+            return user.has_perms(perms)
         else:
-            return perms and user == obj.owner
+            return user.has_perms(perms) and user in [
+                obj.owner,
+                obj.initiative.owner,
+                obj.initiative.activity_manager
+            ]
 
 
 class ActivityTypePermission(ResourcePermission):

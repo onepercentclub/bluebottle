@@ -18,7 +18,7 @@ from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount)
+    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout)
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
@@ -59,7 +59,10 @@ class FundingAdmin(ActivityChildAdmin):
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
 
-    readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_donated', 'amount_raised', 'donations_link']
+    readonly_fields = ActivityChildAdmin.readonly_fields + [
+        'amount_donated', 'amount_raised',
+        'donations_link', 'payout_links'
+    ]
 
     list_display = ['title', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
 
@@ -72,7 +75,8 @@ class FundingAdmin(ActivityChildAdmin):
         'amount_donated',
         'amount_raised',
         'donations_link',
-        'bank_account'
+        'bank_account',
+        'payout_links'
     )
 
     status_fields = (
@@ -108,8 +112,18 @@ class FundingAdmin(ActivityChildAdmin):
         url = reverse('admin:funding_donation_changelist')
         total = obj.contributions.filter(status=DonationTransitions.values.succeeded).count()
         return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
-
     donations_link.short_description = _("Donations")
+
+    def payout_links(self, obj):
+        return format_html(", ".join([
+            format_html(
+                u"<a href='{}'>{}</a>",
+                reverse('admin:funding_payout_change', args=(p.id,)),
+                p.id
+            ) for p in obj.payouts.all()
+        ]))
+
+    payout_links.short_description = _('Payouts')
 
 
 @admin.register(Donation)
@@ -345,3 +359,29 @@ class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
     inlines = [BankAccountInline]
 
     fields = PayoutAccountChildAdmin.fields + ('document',)
+
+
+class DonationInline(admin.TabularInline):
+    model = Donation
+    readonly_fields = ('created', 'amount', 'status')
+    fields = readonly_fields
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(Payout)
+class PayoutAdmin(FSMAdmin):
+    model = Payout
+    inlines = [DonationInline]
+    raw_id_fields = ('activity', )
+    readonly_fields = ['activity_link', 'status',
+                       'amount_donated', 'amount_pledged', 'amount_matched',
+                       'date_approved', 'date_started', 'date_completed']
+    list_display = ['created', 'activity_link', 'status']
+
+    def activity_link(self, obj):
+        url = reverse('admin:funding_funding_change', args=(obj.activity.id,))
+        return format_html(u'<a href="{}">{}</a>', url, obj.activity)

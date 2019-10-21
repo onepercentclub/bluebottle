@@ -43,20 +43,6 @@ class FlutterwaveBankAccountAdmin(BankAccountChildAdmin):
         return custom_urls + urls
 
     def generate_account(self, request, account_id):
-        account = FlutterwaveBankAccount.objects.get(id=account_id)
-        details = {
-            "account_bank": account.bank_code,
-            "account_number": account.account_number,
-            "business_name": account.account_holder_name,
-            "business_email": account.connect_account.owner.email,
-            "country": account.bank_country_code,
-            "business_contact": account.connect_account.owner.full_name,
-            "business_contact_mobile": "",
-            "business_mobile": "",
-            "split_type": "flat",
-            "split_value": 0,
-            "meta": [{"metaname": "PayoutAccount", "metavalue": account_id}]
-        }
         provider = FlutterwavePaymentProvider.objects.get()
         rave = Rave(
             provider.public_settings['pub_key'],
@@ -64,10 +50,36 @@ class FlutterwaveBankAccountAdmin(BankAccountChildAdmin):
             usingEnv=False,
             production=settings.LIVE_PAYMENTS_ENABLED
         )
+        account = FlutterwaveBankAccount.objects.get(id=account_id)
+        details = {
+            "account_bank": account.bank_code,
+            "account_number": account.account_number,
+        }
+        response = rave.SubAccount.allSubaccounts(details)
+        if len(response['returnedData']['data']['subaccounts']):
+            account.account = response['returnedData']['data']['subaccounts'][0]['account_id']
+            account.reviewed = True
+            account.save()
+            payout_url = reverse('admin:funding_flutterwave_flutterwavebankaccount_change', args=(account_id,))
+            return HttpResponseRedirect(payout_url)
+
+        details = {
+            "account_bank": account.bank_code,
+            "account_number": account.account_number,
+            "business_name": account.account_holder_name,
+            "business_email": account.connect_account.owner.email,
+            "country": account.bank_country_code,
+            "business_contact": account.connect_account.owner.full_name,
+            "business_contact_mobile": "09087930450",
+            "business_mobile": "09087930450",
+            "split_type": "flat",
+            "split_value": "0",
+            "meta": [{"metaname": "PayoutAccount", "metavalue": account_id}]
+        }
         try:
             response = rave.SubAccount.createSubaccount(details)
             account.account = response['data']['subaccount_id']
-            account.transitions.verify()
+            account.verified = True
             account.save()
         except SubaccountCreationError as e:
             message = 'Error creating Flutterwave sub account: {}'.format(e.err["errMsg"])

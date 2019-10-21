@@ -16,8 +16,8 @@ class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
     review_status = FSMField(read_only=True)
-    permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
+    permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField()
     review_transitions = AvailableTransitionsField()
     is_follower = serializers.SerializerMethodField()
@@ -30,8 +30,9 @@ class BaseActivitySerializer(ModelSerializer):
     required = RequiredErrorsField()
 
     included_serializers = {
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
     }
 
     def get_is_follower(self, instance):
@@ -70,6 +71,60 @@ class BaseActivitySerializer(ModelSerializer):
         included_resources = [
             'owner',
             'initiative',
+            'initiative.place',
+            'initiative.image',
+        ]
+        resource_name = 'activities'
+
+
+class BaseActivityListSerializer(ModelSerializer):
+    title = serializers.CharField(allow_blank=True, required=False)
+    status = FSMField(read_only=True)
+    permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
+    owner = ResourceRelatedField(read_only=True)
+    is_follower = serializers.SerializerMethodField()
+    type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
+    stats = serializers.OrderedDict(read_only=True)
+
+    slug = serializers.CharField(read_only=True)
+
+    included_serializers = {
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+    def get_is_follower(self, instance):
+        user = self.context['request'].user
+        return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
+
+    class Meta:
+        model = Activity
+        fields = (
+            'type',  # Needed for old style API endpoints like pages / page blocks
+            'slug',
+            'id',
+            'initiative',
+            'owner',
+            'title',
+            'description',
+            'is_follower',
+            'status',
+            'stats',
+        )
+
+        meta_fields = (
+            'permissions',
+            'created',
+            'updated',
+        )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'owner',
+            'initiative',
+            'initiative.image',
+            'initiative.location',
+            'initiative.place',
         ]
         resource_name = 'activities'
 

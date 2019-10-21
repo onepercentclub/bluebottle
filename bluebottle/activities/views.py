@@ -4,11 +4,12 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.models import Activity
 from bluebottle.activities.filters import ActivitySearchFilter
+from bluebottle.activities.permissions import ActivityPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
     ActivityReviewTransitionSerializer,
-    RelatedActivityImageSerializer
-)
+    RelatedActivityImageSerializer,
+    ActivityListSerializer)
 from bluebottle.files.views import ImageContentView
 from bluebottle.files.models import RelatedImage
 from bluebottle.transitions.views import TransitionList
@@ -21,9 +22,17 @@ from bluebottle.utils.views import (
 )
 
 
-class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
-    queryset = Activity.objects.all()
-    serializer_class = ActivitySerializer
+class ActivityList(JsonApiViewMixin, ListAPIView):
+    queryset = Activity.objects.select_related(
+        'owner', 'initiative',
+        'initiative__owner',
+        'initiative__location', 'initiative__theme',
+        'initiative__place', 'initiative__image',
+        'initiative__activity_manager',
+        'initiative__location__country',
+        'initiative__organization',
+    )
+    serializer_class = ActivityListSerializer
     model = Activity
 
     filter_backends = (
@@ -37,6 +46,7 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     prefetch_for_includes = {
         'initiative': ['initiative'],
         'location': ['location'],
+        'country': ['country'],
         'owner': ['owner'],
     }
 
@@ -47,9 +57,7 @@ class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyA
     model = Activity
     lookup_field = 'pk'
 
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
+    permission_classes = (ActivityPermission,)
 
     prefetch_for_includes = {
         'initiative': ['initiative'],

@@ -95,7 +95,7 @@ install_requires = [
     'python-social-auth==0.3.6',
     'social-auth-app-django==2.1.0',
     'surlex==0.2.0',
-    'rave-python==1.0.1',
+    'rave-python==1.0.2',
     'raven==6.1.0',
     'regex==2017.05.26',
     'requests==2.20.1',

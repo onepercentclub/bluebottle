@@ -3,7 +3,7 @@ from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer,
-)
+    BaseActivityListSerializer)
 from bluebottle.events.filters import ParticipantListFilter
 from bluebottle.events.models import Event, Participant
 from bluebottle.transitions.serializers import TransitionSerializer
@@ -53,8 +53,40 @@ class ParticipantTransitionSerializer(TransitionSerializer):
         ]
 
 
-class EventListSerializer(BaseActivitySerializer):
+class EventListSerializer(BaseActivityListSerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
+
+    class Meta(BaseActivityListSerializer.Meta):
+        model = Event
+        fields = BaseActivityListSerializer.Meta.fields + (
+            'capacity',
+            'start_date',
+            'start_time',
+            'duration',
+            'is_online',
+            'location',
+            'location_hint',
+            'permissions',
+            'registration_deadline',
+        )
+
+    class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
+        included_resources = [
+            'location',
+        ]
+        resource_name = 'activities/events'
+
+    included_serializers = dict(
+        BaseActivitySerializer.included_serializers,
+        **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        }
+    )
+
+
+class EventSerializer(NoCommitMixin, BaseActivitySerializer):
+    permissions = ResourcePermissionField('event-detail', view_args=('pk',))
+    contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
 
     class Meta(BaseActivitySerializer.Meta):
         model = Event
@@ -68,44 +100,21 @@ class EventListSerializer(BaseActivitySerializer):
             'location_hint',
             'permissions',
             'registration_deadline',
-        )
-
-        meta_fields = ('permissions', 'transitions', 'review_transitions', 'created', 'updated', 'errors', 'required', )
-
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        included_resources = [
-            'owner',
-            'initiative',
-            'initiative.image',
-            'location',
-        ]
-        resource_name = 'activities/events'
-
-    included_serializers = {
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
-        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
-        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-    }
-
-
-class EventSerializer(NoCommitMixin, EventListSerializer):
-    contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
-
-    class Meta(EventListSerializer.Meta):
-        fields = EventListSerializer.Meta.fields + (
             'contributions',
         )
 
-    class JSONAPIMeta(EventListSerializer.JSONAPIMeta):
-        included_resources = EventListSerializer.JSONAPIMeta.included_resources + [
+    class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
+        included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
+            'location',
             'contributions',
             'contributions.user'
         ]
+        resource_name = 'activities/events'
 
     included_serializers = dict(
-        EventListSerializer.included_serializers,
+        BaseActivitySerializer.included_serializers,
         **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
         }
     )

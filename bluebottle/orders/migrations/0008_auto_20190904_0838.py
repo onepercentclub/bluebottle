@@ -90,10 +90,7 @@ def migrate_orders(apps, schema_editor):
             )
             new_donation.created = donation.created
             new_donation.save()
-
-            old_ct = ContentType.objects.get_for_model(Donation)
-            Wallpost.objects.filter(content_type=old_ct, object_id=donation.id).\
-                update(content_type=content_type, object_id=new_donation.id)
+            Wallpost.objects.filter(donation=donation).update(funding_donation=new_donation)
 
             payment= None
             if order_payment:
@@ -175,7 +172,8 @@ class Migration(migrations.Migration):
         ('orders', '0007_auto_20180509_1437'),
         ('projects', '0091_project_to_initiatives'),
         ('funding_flutterwave', '0003_flutterwavepayoutaccount'),
-        ('funding_stripe', '0001_initial')
+        ('funding_stripe', '0001_initial'),
+        ('wallposts', '0019_auto_20191017_2204')
     ]
 
     operations = [

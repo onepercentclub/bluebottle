@@ -131,6 +131,8 @@ class Assignment(Activity):
             else:
                 self.transitions.expire()
 
+            self.save()
+
     def check_capacity(self):
         if self.capacity \
                 and len(self.accepted_applicants) >= self.capacity \

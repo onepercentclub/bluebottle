@@ -149,7 +149,10 @@ class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
         ]
 
         if self.has_organization:
-            fields += ['organization', 'organization_contact']
+            fields.append('organization')
+
+            if not self.owner.partner_organization:
+                fields.append('organization_contact')
 
         if Location.objects.count():
             fields.append('location')
@@ -185,9 +188,16 @@ class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
         except InitiativePlatformSettings.DoesNotExist:
             pass
 
-        if self.has_organization:
-            if not self.organization and self.owner and self.owner.partner_organization:
-                self.organization = self.owner.partner_organization
+        if not self.organization \
+                and self.owner \
+                and self.owner.partner_organization \
+                and self.has_organization is not False:
+            self.has_organization = True
+            self.organization = self.owner.partner_organization
+
+        if not self.has_organization:
+            self.organization = None
+            self.organization_contact = None
 
         super(Initiative, self).save(**kwargs)
 

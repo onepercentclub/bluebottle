@@ -82,6 +82,7 @@ class FundingAdmin(ActivityChildAdmin):
         'review_transitions',
         'status',
         'transitions',
+        'transition_date'
     )
 
     export_to_csv_fields = (

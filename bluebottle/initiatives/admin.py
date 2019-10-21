@@ -75,7 +75,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
                                      'image', 'video_url',
                                      'created', 'updated')}),
             (_('Details'), {'fields': details}),
-            (_('Organization'), {'fields': ('organization', 'organization_contact')}),
+            (_('Organization'), {'fields': ('has_organization', 'organization', 'organization_contact')}),
             (_('Review'), {'fields': ('reviewer', 'activity_manager', 'promoter', 'status', 'transitions')}),
         )
 

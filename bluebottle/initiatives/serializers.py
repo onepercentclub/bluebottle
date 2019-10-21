@@ -6,7 +6,7 @@ from rest_framework_json_api.relations import (
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.filters import ActivityFilter
-from bluebottle.activities.serializers import ActivitySerializer
+from bluebottle.activities.serializers import ActivityListSerializer
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer as OldImageSerializer, SorlImageField
@@ -108,7 +108,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     activity_manager = ResourceRelatedField(read_only=True)
     activities = FilteredPolymorphicResourceRelatedField(
         filter_backend=ActivityFilter,
-        polymorphic_serializer=ActivitySerializer,
+        polymorphic_serializer=ActivityListSerializer,
         many=True, read_only=True
     )
     slug = serializers.CharField(read_only=True)
@@ -132,7 +132,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
-        'activities': 'bluebottle.activities.serializers.ActivitySerializer',
+        'activities': 'bluebottle.activities.serializers.ActivityListSerializer',
         'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
 

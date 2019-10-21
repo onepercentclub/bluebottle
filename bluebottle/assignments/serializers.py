@@ -52,6 +52,7 @@ class AssignmentListSerializer(BaseActivityListSerializer):
 
 
 class AssignmentSerializer(BaseActivitySerializer):
+    permissions = ResourcePermissionField('assignment-detail', view_args=('pk',))
     contributions = FilteredRelatedField(many=True, filter_backend=ApplicantListFilter)
 
     class Meta(BaseActivitySerializer.Meta):

@@ -85,6 +85,7 @@ class EventListSerializer(BaseActivityListSerializer):
 
 
 class EventSerializer(NoCommitMixin, BaseActivitySerializer):
+    permissions = ResourcePermissionField('event-detail', view_args=('pk',))
     contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
 
     class Meta(BaseActivitySerializer.Meta):

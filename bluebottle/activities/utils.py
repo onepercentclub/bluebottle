@@ -16,8 +16,8 @@ class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
     review_status = FSMField(read_only=True)
-    permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
+    permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField()
     review_transitions = AvailableTransitionsField()
     is_follower = serializers.SerializerMethodField()
@@ -71,6 +71,8 @@ class BaseActivitySerializer(ModelSerializer):
         included_resources = [
             'owner',
             'initiative',
+            'initiative.place',
+            'initiative.image',
         ]
         resource_name = 'activities'
 

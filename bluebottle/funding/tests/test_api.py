@@ -216,7 +216,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         self.funding = FundingFactory.create(
             initiative=self.initiative,
-            owner=self.initiative.owner,
+            owner=self.user,
             target=Money(5000, 'EUR'),
             deadline=now() + timedelta(days=15)
         )
@@ -555,7 +555,6 @@ class FundingTestCase(BluebottleTestCase):
     def test_create(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
         data = response.json()
         self.assertTrue(
             data['data']['meta']['permissions']['PATCH']

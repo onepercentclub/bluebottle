@@ -14,6 +14,6 @@ If you have any questions please contact {{ admin_email }}
 {% endblock %}
 
 {% block action %}
-{% trans 'view project' context 'email' %} {{ site }}{{ link }}
+{% trans 'view initiative' context 'email' %} {{ site }}{{ link }}
 {% endblock %}`
 

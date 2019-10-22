@@ -5,7 +5,7 @@
 {% block content %}
     {% blocktrans with donor_name=donation.user.full_name owner_name=donation.project.owner.full_name slug=donation.project.slug project_name=donation.project.title %}
 
-    A project just received an invoiced donation by {{ donor_name }}. The amount should be transfered directly to the bank account of {{ owner_name }} for the project {{ project_name }}.
+    A campaign just received an invoiced donation by {{ donor_name }}. The amount should be transfered directly to the bank account of {{ owner_name }} for the campaign {{ project_name }}.
     {% endblocktrans %}
 
     {% include 'donations/mails/donation.html' %}
@@ -15,4 +15,4 @@
         The amount of {{ amount|format_money }} needs to be transfered by {{ donor_name }} to "{{ project_title }}".
     {% endblocktrans %}
 
-{% endblock content %} 
+{% endblock content %}

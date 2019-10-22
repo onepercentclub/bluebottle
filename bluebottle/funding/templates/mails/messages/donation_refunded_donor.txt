@@ -6,7 +6,7 @@
     {% blocktrans with recipient_name=obj.user.first_name title=obj.activity.title context 'email' %}
         Hi {{ recipient_name }},
         Your donation to {{ title }} will be fully refunded within 10 days.
-        Either you requested this refund or the project didn’t reach its funding goal.
+        Either you requested this refund or the campaign didn’t reach its funding goal.
         If you have any questions about this refund, please contact {{ admin_email }}.
     {% endblocktrans %}
-{% endblock content %} 
+{% endblock content %}

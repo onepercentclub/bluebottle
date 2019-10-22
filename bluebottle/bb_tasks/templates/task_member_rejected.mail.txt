@@ -19,5 +19,5 @@ No worries, have a look at some similar tasks that need your skills.
 {% endblock %}
 
 {% block action %}
-{% trans 'Browse projects' context 'email' %}: {{ site }}{{ project_list }}
+{% trans 'Browse initiatives' context 'email' %}: {{ site }}{{ project_list }}
 {% endblock %}

@@ -3,10 +3,10 @@
 
 {% block content %}
     {% blocktrans with first_name=receiver.first_name slug=project.slug project_title=project.title %}
-    Hello {{ first_name }}, Your donation to {{ project_title }} will be fully refunded within 10 days. Either you requested this refund or the project didn’t reach its funding goal. If you have any questions about this refund, please contact {{ admin_email }}.
+    Hello {{ first_name }}, Your donation to {{ project_title }} will be fully refunded within 10 days. Either you requested this refund or the campaign didn’t reach its funding goal. If you have any questions about this refund, please contact {{ admin_email }}.
     {% endblocktrans %}
-{% endblock content %} 
+{% endblock content %}
 
 {% block action %}
-     Visit project: {{ site }}/projects/{{project.slug}}
+     Visit campaign: {{ site }}/projects/{{project.slug}}
 {% endblock %}

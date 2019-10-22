@@ -21,16 +21,17 @@ from django.utils.http import int_to_base36
 from django.utils.translation import ugettext_lazy as _
 from permissions_widget.forms import PermissionSelectMultipleField
 
+from bluebottle.assignments.models import Applicant
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.bb_follow.models import Follow
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
-from bluebottle.donations.models import Donation
+from bluebottle.events.models import Participant
+from bluebottle.funding.models import Donation
 from bluebottle.geo.admin import PlaceInline
 from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings
-from bluebottle.projects.models import Project
-from bluebottle.tasks.models import Task
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
@@ -228,7 +229,7 @@ class MemberAdmin(UserAdmin):
                     _('Engagement'),
                     {
                         'fields':
-                        ['projects_managed', 'tasks', 'donations', 'following']
+                        ['initiatives', 'events', 'assignments', 'funding']
                     }
                 ],
             ]
@@ -260,7 +261,7 @@ class MemberAdmin(UserAdmin):
             'date_joined', 'last_login',
             'updated', 'deleted', 'login_as_user',
             'reset_password', 'resend_welcome_link',
-            'projects_managed', 'tasks', 'donations', 'following'
+            'initiatives', 'events', 'assignments', 'funding'
         ]
 
         user_groups = request.user.groups.all()
@@ -311,77 +312,70 @@ class MemberAdmin(UserAdmin):
 
     inlines = (PlaceInline, )
 
-    def projects_managed(self, obj):
-        url = reverse('admin:projects_project_changelist')
-        completed = Project.objects.filter(owner=obj, status__slug__in=['done-complete', 'done-incomplete']).count()
-        campaign = Project.objects.filter(owner=obj, status__slug__in=['campaign', 'voting-running']).count()
-        submitted = Project.objects.filter(owner=obj, status__slug='plan-submitted').count()
-        plan = Project.objects.filter(owner=obj, status__slug__in=['plan-new', 'plan-needs-work']).count()
-        links = []
-        if completed:
-            links.append(
-                format_html(
-                    '<a href="{}?owner={}&status_filter=8%2C9">{} {}</a>',
-                    url, obj.id, completed, _('completed')
-                )
-            )
-        if campaign:
-            links.append(
-                format_html(
-                    '<a href="{}?owner={}&status_filter=11%2C5">{} {}</a>',
-                    url, obj.id, campaign, _('campaigning')
-                )
-            )
-        if plan:
-            links.append(
-                format_html(
-                    '<a href="{}?owner={}&status_filter=1%2C3">{} {}</a>',
-                    url, obj.id, plan, _('plan')
-                )
-            )
-        if submitted:
-            links.append(
-                format_html(
-                    '<a href="{}?owner={}&status_filter=2">{} {}</a>',
-                    url, obj.id, submitted, _('submitted')
-                )
-            )
-        return format_html(', '.join(links) or _('None'))
-
-    projects_managed.short_description = _('Projects Managed')
-
-    def tasks(self, obj):
-        url = reverse('admin:tasks_task_changelist')
-        owner = Task.objects.filter(author=obj, status__in=['open', 'full', 'running', 'realised']).count()
-        applied = Task.objects.filter(members__member=obj, members__status__in=['applied', 'accepted']).count()
-        realized = Task.objects.filter(members__member=obj, members__status__in=['realized']).count()
-        links = []
-        if owner:
-            links.append('<a href="{}?author={}">{} {}</a>'.format(
-                url, obj.id, owner, _('created')
+    def initiatives(self, obj):
+        initiatives = []
+        initiative_url = reverse('admin:initiatives_initiative_changelist')
+        for field in ['owner', 'reviewer', 'promoter', 'activity_manager']:
+            if Initiative.objects.filter(status__in=['draft', 'submitted', 'needs_work'], **{field: obj}).count():
+                link = initiative_url + '?{}_id={}'.format(field, obj.id)
+                initiatives.append(format_html(
+                    '<a href="{}">{}</a> draft {}',
+                    link,
+                    Initiative.objects.filter(status__in=['draft', 'submitted', 'needs_work'], **{field: obj}).count(),
+                    field,
+                ))
+        if Initiative.objects.filter(status='approved', **{field: obj}).count():
+            link = initiative_url + '?{}_id={}'.format(field, obj.id)
+            initiatives.append(format_html(
+                '<a href="{}">{}</a> open {}',
+                link,
+                Initiative.objects.filter(status='approved', **{field: obj}).count(),
+                field,
             ))
-        if applied:
-            links.append(
-                format_html(
-                    '<a href="{}?members__member_id={}">{} {}</a>',
-                    url, obj.id, applied, _('applied')
-                )
-            )
-        if realized:
-            links.append(
-                format_html(
-                    '<a href="{}?members__member_id={}">{} {}</a>',
-                    url, obj.id, realized, _('realised')
-                )
-            )
-        return format_html(', '.join(links) or _('None'))
-    tasks.short_description = _('Tasks')
+        return format_html('<br/>'.join(initiatives)) or _('None')
+    initiatives.short_description = _('Initiatives')
 
-    def donations(self, obj):
-        url = reverse('admin:donations_donation_changelist')
-        donations = Donation.objects.filter(order__status__in=['success', 'pending'], order__user=obj).count()
-        return format_html('<a href="{}?order__user_id={}">{} {}</a>', url, obj.id, donations, _('donations'))
-    donations.short_description = _('Donations')
+    def events(self, obj):
+        participants = []
+        participant_url = reverse('admin:events_participant_changelist')
+        for status in ['new', 'succeeded', 'failed', 'withdrawn', 'rejected', 'no_show']:
+            if Participant.objects.filter(status=status, user=obj).count():
+                link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
+                participants.append(format_html(
+                    '<a href="{}">{}</a> {}',
+                    link,
+                    Participant.objects.filter(status=status, user=obj).count(),
+                    status,
+                ))
+        return format_html('<br/>'.join(participants)) or _('None')
+    events.short_description = _('Event participation')
+
+    def assignments(self, obj):
+        applicants = []
+        applicant_url = reverse('admin:assignments_applicant_changelist')
+        for status in ['new', 'accepted', 'active', 'succeeded', 'failed', 'withdrawn', 'rejected', 'no_show']:
+            if Applicant.objects.filter(status=status, user=obj).count():
+                link = applicant_url + '?user_id={}&status={}'.format(obj.id, status)
+                applicants.append(format_html(
+                    '<a href="{}">{}</a> {}',
+                    link,
+                    Applicant.objects.filter(status=status, user=obj).count(),
+                    status,
+                ))
+        return format_html('<br/>'.join(applicants)) or _('None')
+
+    def funding(self, obj):
+        donations = []
+        donation_url = reverse('admin:funding_donation_changelist')
+        if Donation.objects.filter(status='succeeded', user=obj).count():
+            link = donation_url + '?user_id={}'.format(obj.id)
+            donations.append(format_html(
+                '<a href="{}">{}</a> donations',
+                link,
+                Donation.objects.filter(status='succeeded', user=obj).count(),
+            ))
+        return format_html('<br/>'.join(donations)) or _('None')
+    funding.short_description = _('Funding donations')
 
     def following(self, obj):
         url = reverse('admin:bb_follow_follow_changelist')

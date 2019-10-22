@@ -121,7 +121,7 @@ def migrate_tasks(apps, schema_editor):
             event.save()
 
             for task_member in task.members.all():
-                status = map_participant_status(task_member.status)
+                status = map_participant_status(task_member)
 
                 participant = Participant.objects.create(
                     activity=event,
@@ -179,7 +179,7 @@ def migrate_tasks(apps, schema_editor):
             assignment.save()
 
             for task_member in task.members.all():
-                status = map_applicant_status(task_member.status)
+                status = map_applicant_status(task_member)
 
                 applicant = Applicant.objects.create(
                     activity=assignment,

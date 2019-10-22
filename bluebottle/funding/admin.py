@@ -128,9 +128,9 @@ class FundingAdmin(ActivityChildAdmin):
 
 @admin.register(Donation)
 class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
+    model = Donation
     raw_id_fields = ['activity', 'user']
     readonly_fields = ['payment_link', 'status', 'payment_link']
-    model = Donation
     list_display = ['created', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', 'payout_amount']
     list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
     date_hierarchy = 'created'

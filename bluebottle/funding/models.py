@@ -438,8 +438,8 @@ class Donation(Contribution):
         return self.payment.type
 
     class Meta:
-        verbose_name = _('donation')
-        verbose_name_plural = _('donations')
+        verbose_name = _('Donation')
+        verbose_name_plural = _('Donations')
 
     def __unicode__(self):
         return u'{}'.format(self.amount)

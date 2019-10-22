@@ -162,7 +162,7 @@ class Funding(Activity):
         )
 
     def update_amounts(self):
-        cache_key = '{}.{}.amount_donated'.format(connection.tenant.name, self.id)
+        cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         cache.delete(cache_key)
         self.amount_donated
 
@@ -171,7 +171,7 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) converted to the targets currency
         """
-        cache_key = '{}.{}.amount_donated'.format(connection.tenant.name, self.id)
+        cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
             totals = self.contributions.filter(
@@ -190,7 +190,7 @@ class Funding(Activity):
             cache.set(cache_key, total)
         return total
 
-    @cached_property
+    @property
     def genuine_amount_donated(self):
         """
         The sum of all contributions (donations) without pledges converted to the targets currency

@@ -74,7 +74,7 @@ class InitiativeMapList(generics.ListAPIView):
     owner_filter_field = 'owner'
 
     def list(self, request, *args, **kwargs):
-        cache_key = '{}.initiative_map_data'.format(connection.tenant.name)
+        cache_key = '{}.initiative_map_data'.format(connection.tenant.schema_name)
         data = cache.get(cache_key)
         if not data:
             result = self.queryset.order_by('created')

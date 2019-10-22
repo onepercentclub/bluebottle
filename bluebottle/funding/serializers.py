@@ -25,6 +25,7 @@ from bluebottle.funding.models import PlainPayoutAccount
 from bluebottle.funding.permissions import CanExportSupportersPermission
 from bluebottle.funding_flutterwave.serializers import FlutterwaveBankAccountSerializer
 from bluebottle.funding_lipisha.serializers import LipishaBankAccountSerializer
+from bluebottle.funding_pledge.serializers import PledgeBankAccountSerializer
 from bluebottle.funding_stripe.models import ExternalAccount
 from bluebottle.funding_stripe.serializers import ExternalAccountSerializer, ConnectAccountSerializer
 from bluebottle.funding_vitepay.serializers import VitepayBankAccountSerializer
@@ -177,7 +178,8 @@ class BankAccountSerializer(PolymorphicModelSerializer):
         ExternalAccountSerializer,
         FlutterwaveBankAccountSerializer,
         LipishaBankAccountSerializer,
-        VitepayBankAccountSerializer
+        VitepayBankAccountSerializer,
+        PledgeBankAccountSerializer
     ]
 
     class Meta:

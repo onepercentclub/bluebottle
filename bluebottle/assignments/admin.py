@@ -2,9 +2,9 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 
-from bluebottle.activities.admin import ActivityChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.utils.admin import FSMAdmin, export_as_csv_action
+from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.forms import FSMModelForm
 
 
@@ -34,10 +34,10 @@ class ApplicantAdminForm(FSMModelForm):
 
 
 @admin.register(Applicant)
-class ApplicantAdmin(FSMAdmin):
+class ApplicantAdmin(ContributionChildAdmin):
     model = Applicant
     form = ApplicantAdminForm
-    list_display = ['user', 'status', 'time_spent']
+    list_display = ['user', 'status', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
     export_to_csv_fields = (

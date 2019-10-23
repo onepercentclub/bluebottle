@@ -1,9 +1,12 @@
 from django.contrib import admin
 from django.urls import reverse
+from django.utils import translation
 from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.tasks.models import Skill
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.forms import FSMModelForm
 
@@ -53,6 +56,20 @@ class ApplicantAdmin(ContributionChildAdmin):
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
 
+class ExpertiseFilter(admin.SimpleListFilter):
+    title = _('Expertise')
+    parameter_name = 'expertise'
+
+    def lookups(self, request, model_admin):
+        language = translation.get_language()
+        return [(skill.id, skill.name) for skill in Skill.objects.language(language).order_by('translations__name')]
+
+    def queryset(self, request, queryset):
+        if self.value() is not None:
+            queryset = queryset.filter(id=self.value())
+        return queryset
+
+
 @admin.register(Assignment)
 class AssignmentAdmin(ActivityChildAdmin):
     form = AssignmentAdminForm
@@ -65,7 +82,7 @@ class AssignmentAdmin(ActivityChildAdmin):
 
     list_display = ('__unicode__', 'created', 'status', 'highlight', 'end_date', 'is_online', 'registration_deadline')
     search_fields = ['title', 'description']
-    list_filter = ['status', 'expertise', 'is_online']
+    list_filter = ['status', ExpertiseFilter, 'is_online']
 
     detail_fields = (
         'description',

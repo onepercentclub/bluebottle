@@ -63,7 +63,7 @@ class AssignmentAdmin(ActivityChildAdmin):
     base_model = Assignment
     raw_id_fields = ('owner', 'location')
 
-    list_display = ('created', 'title', 'status', 'highlight', 'end_date', 'is_online', 'registration_deadline')
+    list_display = ('__unicode__', 'created', 'status', 'highlight', 'end_date', 'is_online', 'registration_deadline')
     search_fields = ['title', 'description']
     list_filter = ['status', 'expertise', 'is_online']
 

@@ -52,14 +52,25 @@ class BudgetLineInline(admin.TabularInline):
 
 class RewardInline(admin.TabularInline):
     model = Reward
-
+    readonly_fields = ('link', 'amount', 'description', 'limit')
     extra = 0
+
+    def link(self, obj):
+        url = reverse('admin:funding_reward_change', args=(obj.id,))
+        return format_html(u'<a href="{}">{}</a>', url, obj.title)
+
+
+@admin.register(Reward)
+class RewardAdmin(admin.ModelAdmin):
+    model = Reward
+    raw_id_fields = ['activity']
 
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
     inlines = (BudgetLineInline, RewardInline, MessageAdminInline)
     base_model = Funding
+    date_hierarchy = 'deadline'
     list_filter = ['status', 'review_status', 'target_currency']
 
     search_fields = ['title', 'slug', 'description']
@@ -70,7 +81,7 @@ class FundingAdmin(ActivityChildAdmin):
         'donations_link', 'payout_links'
     ]
 
-    list_display = ['title', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
+    list_display = ['__unicode__', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
 
     detail_fields = (
         'description',

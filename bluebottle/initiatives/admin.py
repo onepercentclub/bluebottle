@@ -33,7 +33,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
                      'place', 'organization', 'organization_contact')
 
     date_hierarchy = 'created'
-    list_display = ['created', 'title', 'owner', 'status']
+    list_display = ['__unicode__', 'created', 'owner', 'status']
     list_filter = ['status']
 
     search_fields = ['title', 'pitch', 'story',

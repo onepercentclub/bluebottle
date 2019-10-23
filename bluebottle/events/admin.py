@@ -62,7 +62,7 @@ class ParticipantAdmin(ContributionChildAdmin):
 class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
     inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
-    list_display = ['created', 'title', 'status', 'start_date', 'start_time', 'duration']
+    list_display = ['__unicode__', 'created', 'status', 'start_date', 'start_time', 'duration']
     search_fields = ['title', 'description']
 
     base_model = Event

@@ -18,7 +18,7 @@ from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout)
+    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward)
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
@@ -50,9 +50,15 @@ class BudgetLineInline(admin.TabularInline):
     extra = 0
 
 
+class RewardInline(admin.TabularInline):
+    model = Reward
+
+    extra = 0
+
+
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, MessageAdminInline)
+    inlines = (BudgetLineInline, RewardInline, MessageAdminInline)
     base_model = Funding
     list_filter = ['status', 'review_status', 'target_currency']
 

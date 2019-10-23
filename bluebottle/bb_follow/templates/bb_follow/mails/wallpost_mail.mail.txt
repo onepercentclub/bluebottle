@@ -18,7 +18,7 @@ Hello {{ first_name }},
 {% block unsubscribe %}
 {% blocktrans %}
 You received this email because you support {{ title }}.
-Don't want to receive project updates anymore?
+Don't want to receive initiative updates anymore?
 Unsubscribe via your account page:
 {{ site }}{{ unsubscribe_link }}
 {% endblocktrans %}

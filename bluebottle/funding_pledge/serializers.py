@@ -14,8 +14,8 @@ class PledgePaymentSerializer(PaymentSerializer):
 
 
 class PledgeBankAccountSerializer(BaseBankAccountSerializer):
-    account_holder_country = ResourceRelatedField(queryset=Country.objects)
-    account_bank_country = ResourceRelatedField(queryset=Country.objects)
+    account_holder_country = ResourceRelatedField(queryset=Country.objects, required=False)
+    account_bank_country = ResourceRelatedField(queryset=Country.objects, required=False)
 
     class Meta(BaseBankAccountSerializer.Meta):
         model = PledgeBankAccount

@@ -36,8 +36,8 @@ class Event(Activity):
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
-    start_date = models.DateField(_('start'), null=True, blank=True)
-    start_time = models.TimeField(_('start'), null=True, blank=True)
+    start_date = models.DateField(_('start date'), null=True, blank=True)
+    start_time = models.TimeField(_('start time'), null=True, blank=True)
     duration = models.FloatField(_('duration'), null=True, blank=True)
     end = models.DateTimeField(_('end'), null=True, blank=True)
     registration_deadline = models.DateField(_('registration deadline'), null=True, blank=True)

@@ -394,6 +394,7 @@ def migrate_projects(apps, schema_editor):
                     activity=funding,
                     amount=reward.amount,
                     description=reward.description,
+                    title=reward.title,
                     limit=reward.limit,
                 )
                 new_reward.created = reward.created

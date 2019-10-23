@@ -118,7 +118,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     list_filter = (PolymorphicChildModelFilter, 'status', 'review_status', 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['created', 'title', 'type', 'status', 'review_status',
+    list_display = ['__unicode__', 'created', 'type', 'status', 'review_status',
                     'link', 'highlight']
 
     list_search = ('title', 'description', 'owner__first_name', 'owner__last_name')

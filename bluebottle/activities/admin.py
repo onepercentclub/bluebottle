@@ -52,6 +52,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         'review_status',
         'valid',
         'complete',
+        'transition_date',
         'stats_data']
 
     basic_fields = (
@@ -63,6 +64,24 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         'updated',
         'stats_data'
     )
+
+    def get_status_fields(self, request, obj=None):
+        if obj and obj.status == 'in_review':
+            return [
+                'title',
+                'complete',
+                'valid',
+                'review_status',
+                'review_transitions',
+                'transition_date'
+            ]
+        return [
+            'complete',
+            'valid',
+            'status',
+            'transitions',
+            'transition_date'
+        ]
 
     status_fields = (
         'complete',
@@ -81,7 +100,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         return (
             (_('Basic'), {'fields': self.basic_fields}),
             (_('Details'), {'fields': self.detail_fields}),
-            (_('Status'), {'fields': self.status_fields}),
+            (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
 
     def stats_data(self, obj):

@@ -1,9 +1,10 @@
 import logging
 
+from babel.numbers import get_currency_symbol
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.admin import TabularInline
+from django.contrib.admin import TabularInline, SimpleListFilter
 from django.db import models
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -66,12 +67,29 @@ class RewardAdmin(admin.ModelAdmin):
     raw_id_fields = ['activity']
 
 
+class CurrencyFilter(SimpleListFilter):
+
+    title = _('Currency')
+    parameter_name = 'currency'
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(target_currency=self.value())
+        return queryset
+
+    def lookups(self, request, model_admin):
+        return [
+            (cur, get_currency_symbol(cur)) for cur in
+            Funding.objects.values_list('target_currency', flat=True).distinct()
+        ]
+
+
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
     inlines = (BudgetLineInline, RewardInline, MessageAdminInline)
     base_model = Funding
     date_hierarchy = 'deadline'
-    list_filter = ['status', 'review_status', 'target_currency']
+    list_filter = ['status', 'review_status', CurrencyFilter]
 
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
@@ -94,16 +112,6 @@ class FundingAdmin(ActivityChildAdmin):
         'donations_link',
         'bank_account',
         'payout_links'
-    )
-
-    status_fields = (
-        'complete',
-        'valid',
-        'review_status',
-        'review_transitions',
-        'status',
-        'transitions',
-        'transition_date'
     )
 
     export_to_csv_fields = (

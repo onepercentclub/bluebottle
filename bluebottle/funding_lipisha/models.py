@@ -12,7 +12,9 @@ class LipishaPaymentProvider(PaymentProvider):
     api_key = models.CharField(max_length=100)
     api_signature = models.CharField(max_length=500)
     prefix = models.CharField(max_length=100, default='goodup')
-    paybill = models.CharField(max_length=10)
+    paybill = models.CharField(
+        _('Business Number'), max_length=10,
+        help_text='Find this at https://app.lypa.io/payment under `Business Number`')
 
     @property
     def payment_methods(self):
@@ -65,6 +67,11 @@ class LipishaBankAccount(BankAccount):
     address = models.CharField(max_length=500, blank=True, null=True)
     swift = models.CharField('SWIFT/Routing Code', max_length=50, blank=True, null=True)
 
+    mpesa_code = models.CharField(
+        'MPESA code',
+        help_text='Create a channel here: https://app.lypa.io/account and copy the generated `Number`.',
+        unique=True, max_length=50, blank=True, null=True)
+
     def save(self, *args, **kwargs):
         super(LipishaBankAccount, self).save(*args, **kwargs)
 
@@ -74,3 +81,14 @@ class LipishaBankAccount(BankAccount):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/lipisha-external-accounts'
+
+    @property
+    def public_data(self):
+        if not self.mpesa_code:
+            return {}
+        provider = LipishaPaymentProvider.objects.first()
+
+        return {
+            'business': provider.paybill,
+            'account': self.mpesa_code
+        }

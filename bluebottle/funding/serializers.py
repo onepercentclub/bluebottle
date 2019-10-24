@@ -244,9 +244,12 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
     )
 
     supporters_export_url = PrivateFileSerializer(
-        'funding-supporters-export', url_args=('pk', ), permission=CanExportSupportersPermission,
+        'funding-supporters-export', url_args=('pk', ),
+        filename='supporters.csv',
+        permission=CanExportSupportersPermission,
         read_only=True
     )
+    account_info = serializers.DictField(source='bank_account.public_data', read_only=True)
 
     def get_fields(self):
         fields = super(FundingSerializer, self).get_fields()
@@ -260,7 +263,6 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             del fields['required']
             del fields['errors']
             del fields['review_status']
-
         return fields
 
     class Meta(BaseActivitySerializer.Meta):
@@ -273,6 +275,7 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             'amount_donated',
             'amount_matching',
             'amount_raised',
+            'account_info',
 
             'rewards',
             'payment_methods',

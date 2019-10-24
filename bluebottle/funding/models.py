@@ -164,7 +164,7 @@ class Funding(Activity):
     def update_amounts(self):
         cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         cache.delete(cache_key)
-        self.amount_donated
+        return self.amount_donated
 
     @property
     def amount_donated(self):
@@ -589,3 +589,5 @@ class BankAccount(PolymorphicModel):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/external-accounts'
+
+    public_data = {}

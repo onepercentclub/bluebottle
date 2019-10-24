@@ -238,8 +238,9 @@ class PlainPayoutAccountTransitions(PayoutAccountTransitions):
         target='verified'
     )
     def verify(self):
-        self.instance.document.delete()
-        self.instance.document = None
+        if self.instance.document:
+            self.instance.document.delete()
+            self.instance.document = None
         self.instance.save()
 
     @transition(
@@ -247,6 +248,7 @@ class PlainPayoutAccountTransitions(PayoutAccountTransitions):
         target=PayoutAccountTransitions.values.rejected
     )
     def reject(self):
-        self.instance.document.delete()
-        self.instance.document = None
+        if self.instance.document:
+            self.instance.document.delete()
+            self.instance.document = None
         self.instance.save()

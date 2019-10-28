@@ -23,6 +23,8 @@ class EventTransitions(ActivityTransitions):
             return _('The start date has not passed')
 
     def can_open(self):
+        if self.instance.review_transitions.is_complete():
+            return _('The event is not complete')
         if self.instance.review_status != ReviewTransitions.values.approved:
             return _('The event is not approved')
         if not self.instance.start:

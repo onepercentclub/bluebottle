@@ -35,7 +35,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         'owner',
         'created',
         'updated',
-        'stats_data'
+        'stats_data',
     )
 
     status_fields = (

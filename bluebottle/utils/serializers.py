@@ -5,13 +5,11 @@ from HTMLParser import HTMLParser
 from django.core.urlresolvers import resolve, reverse
 from django.core.validators import BaseValidator
 from django.utils.translation import ugettext_lazy as _
-
 from moneyed import Money
-
 from rest_framework import serializers
+from rest_framework.utils import model_meta
 from rest_framework_json_api.relations import SerializerMethodResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer as JSONAPIModelSerializer
-from rest_framework.utils import model_meta
 
 from bluebottle.utils.fields import FSMField
 from .models import Address, Language
@@ -298,6 +296,36 @@ class FilteredRelatedField(SerializerMethodResourceRelatedField):
 
     def get_attribute(self, instance):
         queryset = super(FilteredRelatedField, self).get_attribute(instance)
+        filter_backend = self.child_relation.filter_backend
+        queryset = filter_backend().filter_queryset(
+            request=self.context['request'],
+            queryset=queryset,
+            view=self.context['view']
+        )
+        return queryset
+
+
+class FilteredPolymorphicResourceRelatedField(SerializerMethodResourceRelatedField):
+    """
+    Filter a related queryset based on `filter_backend`.
+    Example:
+    `contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
+    Note: `many=True` is required
+    """
+
+    _skip_polymorphic_optimization = False
+
+    def use_pk_only_optimization(self):
+        return False
+
+    def __init__(self, **kwargs):
+        self.polymorphic_serializer = kwargs.pop('polymorphic_serializer', None)
+        self.filter_backend = kwargs.pop('filter_backend', None)
+        kwargs['read_only'] = True
+        super(FilteredPolymorphicResourceRelatedField, self).__init__(**kwargs)
+
+    def get_attribute(self, instance):
+        queryset = super(FilteredPolymorphicResourceRelatedField, self).get_attribute(instance)
         filter_backend = self.child_relation.filter_backend
         queryset = filter_backend().filter_queryset(
             request=self.context['request'],

@@ -16,11 +16,15 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--start', type=str, default=None, action='store')
         parser.add_argument('--end', type=str, default=None, action='store')
+        parser.add_argument('--tenant', type=str, default=None, action='store')
         parser.add_argument('--file', type=str, default=None, action='store')
 
     def handle(self, *args, **options):
         results = []
-        for client in Client.objects.all():
+        clients = Client.objects.all()
+        if options['tenant']:
+            clients = clients.filter(client_name=options['tenant'])
+        for client in clients:
             connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
                 ContentType.objects.clear_cache()

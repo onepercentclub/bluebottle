@@ -4,13 +4,19 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class ApplicantAcceptedMessage(TransitionMessage):
-    subject = _('You have been accepted for the assignment!')
+    subject = _('You have been accepted for the task {assignment_title}')
     template = 'messages/applicant_accepted'
+    context = {
+        'assignment_title': 'activity.title'
+    }
 
 
 class ApplicantRejectedMessage(TransitionMessage):
-    subject = _('You not been selected for the assignment')
+    subject = _('You not been selected for the task {assignment_title}')
     template = 'messages/applicant_rejected'
+    context = {
+        'assignment_title': 'activity.title'
+    }
 
 
 class AssignmentExpiredMessage(TransitionMessage):
@@ -44,9 +50,12 @@ class AssignmentApplicationMessage(TransitionMessage):
         'assignment_title': 'activity.title'
     }
 
+    def get_recipients(self):
+        return [self.obj.activity.owner]
+
 
 class AssignmentDateChanged(TransitionMessage):
-    subject = _('The date and time for your assignment changed')
+    subject = _('The date and time for your task changed')
     template = 'messages/assignment_date_changed'
 
     def get_recipients(self):

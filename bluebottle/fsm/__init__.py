@@ -175,6 +175,9 @@ class ModelTransitions():
                 transition=transition,
                 **kwargs
             )
+            if user:
+                from bluebottle.utils.admin import log_action
+                log_action(self.instance, user, 'Changed status to {} (API)'.format(transition.target))
         except Exception:
             # the transition failed. Revert the value
             setattr(self.instance, self.field, transition.target)

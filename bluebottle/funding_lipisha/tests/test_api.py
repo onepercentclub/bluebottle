@@ -4,13 +4,12 @@ from django.urls import reverse
 from mock import patch
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, PlainPayoutAccountFactory
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_lipisha.tests.factories import LipishaPaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
-
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
 
 initiate_response_fail = {
     "status": {
@@ -91,3 +90,54 @@ class LipishaPaymentTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.content, "Error creating payment: Invalid API Credentials")
+
+
+class LipishaPayoutAccountTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(LipishaPayoutAccountTestCase, self).setUp()
+
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create()
+        LipishaPaymentProviderFactory.create()
+
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.funding = FundingFactory.create(initiative=self.initiative)
+        self.payout_account = PlainPayoutAccountFactory.create(
+            status='verified',
+            owner=self.user
+        )
+
+        self.payout_account_url = reverse('payout-account-list')
+        self.bank_account_url = reverse('lipisha-external-account-list')
+
+        self.data = {
+            'data': {
+                'type': 'payout-accounts/lipisha-external-accounts',
+                'attributes': {
+                    'account-number': '123456789',
+                    'account-holder-name': 'Habari Gani'
+                },
+                'relationships': {
+                    'connect-account': {
+                        'data': {
+                            'id': self.payout_account.id,
+                            'type': 'payout-accounts/plains'
+                        }
+                    }
+                }
+            }
+        }
+
+    def test_create_bank_account(self):
+        response = self.client.post(self.bank_account_url, data=json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+        self.assertEqual(data['data']['attributes']['account-number'], '123456789')
+
+        response = self.client.get(self.payout_account_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        bank_details = get_included(response, 'payout-accounts/lipisha-external-accounts')
+        self.assertEqual(bank_details['attributes']['account-number'], '123456789')

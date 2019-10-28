@@ -22,6 +22,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['activities.activity']
             },
             {
+                'name': 'activities.contribution',
+                'permissions': ['activities.activity']
+            },
+            {
                 'name': 'categories.category',
                 'permissions': ['categories.change_category']
             },
@@ -71,6 +75,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'assignments.applicant',
                 'permissions': ['assignments.assignment']
             },
+            {
+                'name': 'tasks.skill',
+                'permissions': ['tasks.change_skill']
+            },
         ]
     },
 
@@ -98,6 +106,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             {
                 'name': 'funding.bankaccount',
                 'permissions': ['funding.payoutaccount']
+            },
+            {
+                'name': 'funding.payout',
+                'permissions': ['funding.payout']
             },
         ]
     },

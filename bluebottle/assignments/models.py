@@ -38,7 +38,7 @@ class Assignment(Activity):
     duration = models.FloatField(_('duration'), null=True, blank=True)
     end_date_type = models.CharField(
         _('end date'), max_length=50, null=True, default=None, blank=True,
-        help_text=_('Whether the end date is a deadline or a specific date the assignment takes place.'),
+        help_text=_('Whether the end date is a deadline or a specific date the task takes place.'),
         choices=EndDateTypes.choices)
 
     capacity = models.PositiveIntegerField(_('capacity'), null=True, blank=True)
@@ -47,7 +47,7 @@ class Assignment(Activity):
     is_online = models.NullBooleanField(null=True, default=None)
 
     location = models.ForeignKey(
-        Geolocation, verbose_name=_('assignment location'),
+        Geolocation, verbose_name=_('task location'),
         null=True, blank=True, on_delete=SET_NULL)
 
     transitions = TransitionManager(AssignmentTransitions, 'status')
@@ -130,6 +130,8 @@ class Assignment(Activity):
                 self.transitions.succeed()
             else:
                 self.transitions.expire()
+
+            self.save()
 
     def check_capacity(self):
         if self.capacity \

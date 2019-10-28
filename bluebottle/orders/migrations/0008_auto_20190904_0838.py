@@ -52,6 +52,7 @@ def migrate_orders(apps, schema_editor):
     Order = apps.get_model('orders', 'Order')
     Funding = apps.get_model('funding', 'Funding')
     Payment = apps.get_model('payments', 'Payment')
+    Donation = apps.get_model('donations', 'Donation')
     NewDonation = apps.get_model('funding', 'Donation')
     LegacyPayment = apps.get_model('funding', 'LegacyPayment')
     StripeSourcePayment = apps.get_model('funding_stripe', 'StripeSourcePayment')
@@ -59,12 +60,13 @@ def migrate_orders(apps, schema_editor):
     FlutterwavePayment = apps.get_model('funding_flutterwave', 'FlutterwavePayment')
     LipishaPayment = apps.get_model('funding_lipisha', 'LipishaPayment')
     VitepayPayment = apps.get_model('funding_vitepay', 'VitepayPayment')
+    Wallpost = apps.get_model('wallposts', 'Wallpost')
 
     # TelesomPayment = apps.get_model('funding_telesom', 'TelesomPayment')
     # BeyonicPayment = apps.get_model('funding_beyonic', 'BeyonicPayment')
 
     # Migrate
-    for order in Order.objects.all():
+    for order in Order.objects.iterator():
         order_payment = get_latest_order_payment(order)
         for donation in order.donations.all():
             content_type = ContentType.objects.get_for_model(NewDonation)
@@ -88,6 +90,7 @@ def migrate_orders(apps, schema_editor):
             )
             new_donation.created = donation.created
             new_donation.save()
+            Wallpost.objects.filter(donation=donation).update(funding_donation=new_donation)
 
             payment= None
             if order_payment:
@@ -169,7 +172,8 @@ class Migration(migrations.Migration):
         ('orders', '0007_auto_20180509_1437'),
         ('projects', '0091_project_to_initiatives'),
         ('funding_flutterwave', '0003_flutterwavepayoutaccount'),
-        ('funding_stripe', '0001_initial')
+        ('funding_stripe', '0001_initial'),
+        ('wallposts', '0019_auto_20191017_2204')
     ]
 
     operations = [

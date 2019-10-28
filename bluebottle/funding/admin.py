@@ -13,12 +13,12 @@ from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-from bluebottle.activities.admin import ActivityChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount)
+    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward)
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
@@ -28,7 +28,7 @@ from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayout
     StripeSourcePayment, ExternalAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList
+from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action
 
 logger = logging.getLogger(__name__)
 
@@ -50,18 +50,38 @@ class BudgetLineInline(admin.TabularInline):
     extra = 0
 
 
+class RewardInline(admin.TabularInline):
+    model = Reward
+    readonly_fields = ('link', 'amount', 'description', 'limit')
+    extra = 0
+
+    def link(self, obj):
+        url = reverse('admin:funding_reward_change', args=(obj.id,))
+        return format_html(u'<a href="{}">{}</a>', url, obj.title)
+
+
+@admin.register(Reward)
+class RewardAdmin(admin.ModelAdmin):
+    model = Reward
+    raw_id_fields = ['activity']
+
+
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, MessageAdminInline)
+    inlines = (BudgetLineInline, RewardInline, MessageAdminInline)
     base_model = Funding
+    date_hierarchy = 'deadline'
     list_filter = ['status', 'review_status', 'target_currency']
 
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
 
-    readonly_fields = ActivityChildAdmin.readonly_fields + ['amount_donated', 'amount_raised', 'donations_link']
+    readonly_fields = ActivityChildAdmin.readonly_fields + [
+        'amount_donated', 'amount_raised',
+        'donations_link', 'payout_links'
+    ]
 
-    list_display = ['title', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
+    list_display = ['__unicode__', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
 
     detail_fields = (
         'description',
@@ -72,7 +92,8 @@ class FundingAdmin(ActivityChildAdmin):
         'amount_donated',
         'amount_raised',
         'donations_link',
-        'bank_account'
+        'bank_account',
+        'payout_links'
     )
 
     status_fields = (
@@ -82,24 +103,69 @@ class FundingAdmin(ActivityChildAdmin):
         'review_transitions',
         'status',
         'transitions',
+        'transition_date'
     )
+
+    export_to_csv_fields = (
+        ('title', 'Title'),
+        ('description', 'Description'),
+        ('status', 'Status'),
+        ('created', 'Created'),
+        ('initiative__title', 'Initiative'),
+        ('deadline', 'Deadline'),
+        ('duration', 'Duration'),
+        ('target', 'Target'),
+        ('country', 'Country'),
+        ('owner', 'Owner'),
+        ('amount_matching', 'Amount Matching'),
+        ('bank_account', 'Bank Account'),
+        ('amount_donated', 'Amount Donatated'),
+        ('amount_raised', 'Amount Raised'),
+    )
+
+    actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
     def donations_link(self, obj):
         url = reverse('admin:funding_donation_changelist')
         total = obj.contributions.filter(status=DonationTransitions.values.succeeded).count()
         return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
-
     donations_link.short_description = _("Donations")
+
+    def payout_links(self, obj):
+        return format_html(", ".join([
+            format_html(
+                u"<a href='{}'>{}</a>",
+                reverse('admin:funding_payout_change', args=(p.id,)),
+                p.id
+            ) for p in obj.payouts.all()
+        ]))
+
+    payout_links.short_description = _('Payouts')
 
 
 @admin.register(Donation)
-class DonationAdmin(FSMAdmin, PaymentLinkMixin):
-    raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'status', 'payment_link', 'funding_link']
+class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     model = Donation
-    list_display = ['created', 'payment_link', 'funding_link', 'user_link', 'status', 'amount', 'payout_amount']
+    raw_id_fields = ['activity', 'user']
+    readonly_fields = ['payment_link', 'status', 'payment_link']
+    list_display = ['created', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', 'payout_amount']
     list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
     date_hierarchy = 'created'
+
+    export_to_csv_fields = (
+        ('status', 'Status'),
+        ('created', 'Created'),
+        ('activity', 'Activity'),
+        ('owner', 'Owner'),
+        ('amount', 'Amount'),
+        ('payout_amount', 'Payout Amount'),
+        ('reward', 'Reward'),
+        ('fundraiser', 'Fundraiser'),
+        ('name', 'name'),
+        ('anonymous', 'Anonymous'),
+    )
+
+    actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
     def user_link(self, obj):
         # if obj.anonymous:
@@ -110,12 +176,6 @@ class DonationAdmin(FSMAdmin, PaymentLinkMixin):
         return format_html('<i style="color: #999">guest</i>')
 
     user_link.short_description = _('User')
-
-    def funding_link(self, obj):
-        funding_url = reverse('admin:funding_funding_change', args=(obj.activity.id,))
-        return format_html(u'<a href="{}">{}</a>', funding_url, obj.activity.title)
-
-    funding_link.short_description = _('Funding activity')
 
     def get_changelist(self, request, **kwargs):
         self.total_column = 'amount'
@@ -310,3 +370,29 @@ class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
     inlines = [BankAccountInline]
 
     fields = PayoutAccountChildAdmin.fields + ('document',)
+
+
+class DonationInline(admin.TabularInline):
+    model = Donation
+    readonly_fields = ('created', 'amount', 'status')
+    fields = readonly_fields
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(Payout)
+class PayoutAdmin(FSMAdmin):
+    model = Payout
+    inlines = [DonationInline]
+    raw_id_fields = ('activity', )
+    readonly_fields = ['activity_link', 'status',
+                       'amount_donated', 'amount_pledged', 'amount_matched',
+                       'date_approved', 'date_started', 'date_completed']
+    list_display = ['created', 'activity_link', 'status']
+
+    def activity_link(self, obj):
+        url = reverse('admin:funding_funding_change', args=(obj.activity.id,))
+        return format_html(u'<a href="{}">{}</a>', url, obj.activity)

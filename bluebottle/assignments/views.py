@@ -2,8 +2,9 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.assignments.serializers import ApplicantSerializer, \
-    AssignmentTransitionSerializer, ApplicantTransitionSerializer, AssignmentListSerializer, AssignmentSerializer
+from bluebottle.assignments.serializers import (
+    ApplicantSerializer, AssignmentTransitionSerializer,
+    ApplicantTransitionSerializer, AssignmentSerializer)
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission)
@@ -13,9 +14,7 @@ from bluebottle.utils.views import (
 
 class AssignmentList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Assignment.objects.all()
-    serializer_class = AssignmentListSerializer
-    filter_fields = ('owner__id', )
-
+    serializer_class = AssignmentSerializer
     permission_classes = (ActivityTypePermission, ActivityPermission,)
 
     def perform_create(self, serializer):

@@ -4,12 +4,12 @@
 {% block content %}
 {% blocktrans %}
 
-Hello Project Team,
+Hello Campaign Team,
 
-A project has been funded!
+A campaign has been funded!
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-{% trans 'View project' context 'email' %}: {{ site }}{{ link }}
+{% trans 'View campaign' context 'email' %}: {{ site }}{{ link }}
 {% endblock %}

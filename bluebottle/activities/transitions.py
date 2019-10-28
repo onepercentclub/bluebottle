@@ -107,22 +107,6 @@ class ActivityTransitions(ModelTransitions):
         # Only system and admin users. Not api users.
         return not user
 
-    @transition(
-        source=values.in_review,
-        target=values.open,
-        permissions=[can_approve]
-    )
-    def reviewed(self):
-        pass
-
-    @transition(
-        source=values.closed,
-        target=values.in_review,
-        permissions=[can_approve]
-    )
-    def reopen(self, **kwargs):
-        pass
-
 
 class ContributionTransitions(ModelTransitions):
     class values(DjangoChoices):

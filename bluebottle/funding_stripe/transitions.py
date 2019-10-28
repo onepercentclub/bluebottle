@@ -71,6 +71,7 @@ class StripeSourcePaymentTransitions(PaymentTransitions):
     def cancel(self):
         self.instance.donation.transitions.fail()
         self.instance.donation.save()
+        self.instance.donation.activity.update_amounts()
 
     @transition(
         source=[values.succeeded],
@@ -79,6 +80,7 @@ class StripeSourcePaymentTransitions(PaymentTransitions):
     def dispute(self):
         self.instance.donation.transitions.refund()
         self.instance.donation.save()
+        self.instance.donation.activity.update_amounts()
 
 
 class StripePayoutAccountTransitions(PayoutAccountTransitions):

@@ -1,9 +1,7 @@
 import csv
 
 from django.http.response import HttpResponse
-
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from rest_framework.status import HTTP_404_NOT_FOUND
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
@@ -18,9 +16,9 @@ from bluebottle.funding.serializers import (
     FundingSerializer, DonationSerializer, FundingTransitionSerializer,
     FundraiserSerializer, RewardSerializer, BudgetLineSerializer,
     DonationCreateSerializer, FundingListSerializer,
-    PayoutAccountSerializer, PlainPayoutAccountSerializer
-)
-
+    PayoutAccountSerializer, PlainPayoutAccountSerializer,
+    FundingPayoutsSerializer)
+from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import IsOwner
@@ -150,6 +148,32 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     }
 
 
+class FundingPayoutDetails(RetrieveUpdateAPIView):
+    # For Payout service
+    queryset = Funding.objects.all()
+    serializer_class = FundingPayoutsSerializer
+
+    permission_classes = (IsFinancialMember,)
+
+    def put(self, *args, **kwargs):
+        status = self.request.data['status']
+        # FIXME better trigger a request here where we check all payouts
+        # related to this Funding.
+        payout = self.get_object().payouts.first()
+        if status == 'started':
+            payout.transitions.start()
+        if status == 'scheduled':
+            payout.transitions.start()
+        if status == 'new':
+            payout.transitions.draft()
+        if status == 'success':
+            payout.transitions.succeed()
+        if status == 'confirm':
+            payout.transitions.succeed()
+        payout.save()
+        return HttpResponse(200)
+
+
 class FundingTransitionList(TransitionList):
     serializer_class = FundingTransitionSerializer
     queryset = Funding.objects.all()
@@ -203,14 +227,6 @@ class PlainPayoutAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpda
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
-    def get_object(self):
-        # Make this smarter
-        obj = self.request.user.funding_payout_account.first()
-        if not obj:
-            raise HTTP_404_NOT_FOUND
-        self.check_object_permissions(self.request, obj)
-        return obj
-
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
         serializer.instance.transitions.submit()
@@ -220,7 +236,8 @@ class PlainPayoutAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpda
         return self.queryset.filter(owner=self.request.user)
 
     def perform_update(self, serializer):
-        serializer.instance.transitions.submit()
+        if serializer.instance.status != serializer.instance.transitions.values.pending:
+            serializer.instance.transitions.submit()
         serializer.instance.save()
 
 

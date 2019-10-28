@@ -1,21 +1,22 @@
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
-    ResourceRelatedField, PolymorphicResourceRelatedField
+    ResourceRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
-from bluebottle.activities.serializers import ActivitySerializer
+from bluebottle.activities.filters import ActivityFilter
+from bluebottle.activities.serializers import ActivityListSerializer
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer as OldImageSerializer, SorlImageField
 )
 from bluebottle.categories.models import Category
 from bluebottle.files.models import Image
+from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.geo.serializers import TinyPointSerializer
-from bluebottle.files.models import RelatedImage
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -24,8 +25,8 @@ from bluebottle.transitions.serializers import (
 )
 from bluebottle.utils.fields import SafeField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import (
-    ResourcePermissionField, NoCommitMixin
-)
+    ResourcePermissionField, NoCommitMixin,
+    FilteredPolymorphicResourceRelatedField)
 
 
 class ThemeSerializer(ModelSerializer):
@@ -105,8 +106,10 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     reviewer = ResourceRelatedField(read_only=True)
     activity_manager = ResourceRelatedField(read_only=True)
-    activities = PolymorphicResourceRelatedField(
-        ActivitySerializer, many=True, read_only=True
+    activities = FilteredPolymorphicResourceRelatedField(
+        filter_backend=ActivityFilter,
+        polymorphic_serializer=ActivityListSerializer,
+        many=True, read_only=True
     )
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
@@ -129,7 +132,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
-        'activities': 'bluebottle.activities.serializers.ActivitySerializer',
+        'activities': 'bluebottle.activities.serializers.ActivityListSerializer',
         'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',
     }
 
@@ -152,6 +155,46 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'owner', 'reviewer', 'promoter', 'activity_manager',
             'categories', 'theme', 'place', 'location',
             'image', 'organization', 'organization_contact', 'activities', 'activities.location',
+        ]
+        resource_name = 'initiatives'
+
+
+class InitiativeListSerializer(ModelSerializer):
+    image = ImageField(required=False, allow_null=True)
+    owner = ResourceRelatedField(read_only=True)
+    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
+    activity_manager = ResourceRelatedField(read_only=True)
+    slug = serializers.CharField(read_only=True)
+    story = SafeField(required=False, allow_blank=True, allow_null=True)
+    title = serializers.CharField(allow_blank=True)
+
+    included_serializers = {
+        'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
+        'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity_manager': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'place': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'location': 'bluebottle.geo.serializers.LocationSerializer',
+        'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
+    }
+
+    class Meta:
+        model = Initiative
+        fsm_fields = ['status']
+        fields = (
+            'id', 'title', 'pitch', 'categories',
+            'owner', 'activity_manager',
+            'slug', 'has_organization', 'organization',
+            'story', 'image', 'theme', 'place', 'location'
+        )
+
+        meta_fields = ('permissions', 'status', 'created', )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'owner', 'activity_manager',
+            'categories', 'theme', 'place', 'location',
+            'image', 'organization',
         ]
         resource_name = 'initiatives'
 

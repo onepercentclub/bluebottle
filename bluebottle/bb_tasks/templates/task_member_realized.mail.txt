@@ -6,9 +6,9 @@
 
 Hi {{ receiver_name }},
 
-The project owner {{ sender_name }} marked the task '{{ task_title }}' as realized.
+The task owner {{ sender_name }} marked the task '{{ task_title }}' as realized.
 
-You've spent {{ time_spent }} hours on this project.
+You've spent {{ time_spent }} hours on this task.
 {% endblocktrans %}
 
 {% if survey_link %}

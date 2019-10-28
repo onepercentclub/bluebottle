@@ -5,7 +5,7 @@
     {% if custom_message %}
         {{ custom_message }}
     {% else %}
-        {% blocktrans with recipient_name=obj.activity.user.first_name applicant_name=obj.user.first_name assignment_title=obj.activity.title context 'email' %}
+        {% blocktrans with recipient_name=to.first_name applicant_name=obj.user.first_name assignment_title=obj.activity.title context 'email' %}
             Hi {{ recipient_name }},<br>
             {{ applicant_name }} applied to join your task {{ assignment_title }}!<br>
             Review the application and decide if this person is the right fit.<br>
@@ -14,6 +14,6 @@
 {% endblock %}
 
 {% block action %}
-    <a href="{{ obj.get_absolute_url }}"
+    <a href="{{ obj.activity.get_absolute_url }}"
        class="action-email">{% trans 'Review application' context 'email' %}</a>
 {% endblock %}`

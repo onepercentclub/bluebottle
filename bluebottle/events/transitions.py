@@ -1,13 +1,13 @@
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
-
 from djchoices.choices import ChoiceItem
 
-from bluebottle.fsm import transition
-from bluebottle.follow.models import follow, unfollow
 from bluebottle.initiatives.transitions import ReviewTransitions
+
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
 from bluebottle.events.messages import EventSucceededOwnerMessage, EventClosedOwnerMessage
+from bluebottle.follow.models import follow, unfollow
+from bluebottle.fsm import transition
 
 
 class EventTransitions(ActivityTransitions):
@@ -47,7 +47,7 @@ class EventTransitions(ActivityTransitions):
         pass
 
     @transition(
-        source=values.full,
+        source=[values.full, values.closed],
         target=values.open,
         conditions=[can_open]
     )
@@ -89,6 +89,14 @@ class EventTransitions(ActivityTransitions):
         conditions=[can_open]
     )
     def extend(self):
+        pass
+
+    @transition(
+        source=values.in_review,
+        target=values.open,
+        permissions=[ActivityTransitions.can_approve]
+    )
+    def reviewed(self):
         pass
 
 

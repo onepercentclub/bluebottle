@@ -168,10 +168,14 @@ def migrate_projects(apps, schema_editor):
     ExternalAccount = apps.get_model('funding_stripe', 'ExternalAccount')
     PlainPayoutAccount = apps.get_model('funding', 'PlainPayoutAccount')
     PayoutAccount = apps.get_model('funding', 'PayoutAccount')
+    BudgetLine = apps.get_model('funding', 'BudgetLine')
+    Reward = apps.get_model('funding', 'Reward')
+    Fundraiser = apps.get_model('funding', 'Fundraiser')
     OldPayoutAccount = apps.get_model('payouts', 'PayoutAccount')
     FlutterwaveBankAccount = apps.get_model('funding_flutterwave', 'FlutterwaveBankAccount')
     VitepayBankAccount = apps.get_model('funding_vitepay', 'VitepayBankAccount')
     LipishaBankAccount = apps.get_model('funding_lipisha', 'LipishaBankAccount')
+    Wallpost = apps.get_model('wallposts', 'Wallpost')
 
     ContentType = apps.get_model('contenttypes', 'ContentType')
 
@@ -181,7 +185,17 @@ def migrate_projects(apps, schema_editor):
     tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
     properties.set_tenant(tenant)
 
-    for project in Project.objects.all():
+    stripe_bank_ct = ContentType.objects.get_for_model(ExternalAccount)
+    stripe_account_ct = ContentType.objects.get_for_model(StripePayoutAccount)
+    plain_account_ct = ContentType.objects.get_for_model(PlainPayoutAccount)
+    flutterwave_ct = ContentType.objects.get_for_model(FlutterwaveBankAccount)
+    lipisha_ct = ContentType.objects.get_for_model(LipishaBankAccount)
+    vitepay_ct = ContentType.objects.get_for_model(VitepayBankAccount)
+    funding_ct = ContentType.objects.get_for_model(Funding)
+    project_ct = ContentType.objects.get_for_model(Project)
+    initiative_ct = ContentType.objects.get_for_model(Initiative)
+
+    for project in Project.objects.iterator():
 
         if hasattr(project, 'projectlocation') and project.projectlocation.country:
             if project.projectlocation.latitude and project.projectlocation.longitude:
@@ -266,35 +280,32 @@ def migrate_projects(apps, schema_editor):
             if project.payout_account:
                 try:
                     stripe_account = project.payout_account.stripepayoutaccount
-                    content_type = ContentType.objects.get_for_model(StripePayoutAccount)
-                    payout_account = StripePayoutAccount.objects.create(
-                        polymorphic_ctype=content_type,
-                        account_id=stripe_account.account_id or 'unknown',
-                        owner=stripe_account.user,
-                        # country=stripe_account.country.alpha2_code
-                    )
-                    content_type = ContentType.objects.get_for_model(ExternalAccount)
-                    account = ExternalAccount.objects.create(
-                        polymorphic_ctype=content_type,
-                        connect_account=payout_account,
-                        # account_id=stripe_account.bank_details.account
-                    )
+                    if stripe_account.account_id:
+                        payout_account = StripePayoutAccount.objects.create(
+                            polymorphic_ctype=stripe_account_ct,
+                            account_id=stripe_account.account_id,
+                            owner=stripe_account.user,
+                            # country=stripe_account.country.alpha2_code
+                        )
+                        account = ExternalAccount.objects.create(
+                            polymorphic_ctype=stripe_bank_ct,
+                            connect_account=payout_account,
+                            # account_id=stripe_account.bank_details.account
+                        )
                 except OldPayoutAccount.DoesNotExist:
-                    content_type = ContentType.objects.get_for_model(PlainPayoutAccount)
                     plain_account = project.payout_account.plainpayoutaccount
                     payout_account = PlainPayoutAccount.objects.create(
-                        polymorphic_ctype=content_type,
+                        polymorphic_ctype=plain_account_ct,
                         owner=plain_account.user,
                         reviewed=plain_account.reviewed
                     )
 
                     if str(project.amount_asked.currency) == 'NGN':
-                        content_type = ContentType.objects.get_for_model(FlutterwaveBankAccount)
                         country = None
                         if plain_account.account_bank_country:
                             country = plain_account.account_bank_country.alpha2_code
                         account = FlutterwaveBankAccount.objects.create(
-                            polymorphic_ctype=content_type,
+                            polymorphic_ctype=flutterwave_ct,
                             connect_account=payout_account,
                             account_holder_name=plain_account.account_holder_name,
                             bank_country_code=country,
@@ -302,9 +313,8 @@ def migrate_projects(apps, schema_editor):
                         )
 
                     if str(project.amount_asked.currency) == 'KES':
-                        content_type = ContentType.objects.get_for_model(LipishaBankAccount)
                         account = LipishaBankAccount.objects.create(
-                            polymorphic_ctype=content_type,
+                            polymorphic_ctype=lipisha_ct,
                             connect_account=payout_account,
                             account_number=plain_account.account_number,
                             account_name=plain_account.account_holder_name,
@@ -312,17 +322,15 @@ def migrate_projects(apps, schema_editor):
                         )
 
                     if str(project.amount_asked.currency) == 'CFA':
-                        content_type = ContentType.objects.get_for_model(VitepayBankAccount)
                         account = VitepayBankAccount.objects.create(
-                            polymorphic_ctype=content_type,
+                            polymorphic_ctype=vitepay_ct,
                             connect_account=payout_account,
                             account_name=plain_account.account_holder_name,
                         )
 
-            content_type = ContentType.objects.get_for_model(Funding)
             funding = Funding.objects.create(
                 # Common activity fields
-                polymorphic_ctype=content_type,  # This does not get set automatically in migrations
+                polymorphic_ctype=funding_ct,  # This does not get set automatically in migrations
                 initiative=initiative,
                 owner=project.owner,
                 highlight=project.is_campaign,
@@ -336,16 +344,65 @@ def migrate_projects(apps, schema_editor):
 
                 # Funding specific fields
                 deadline=project.deadline,
-                # ??? duration
                 target=project.amount_asked,
                 amount_matching=project.amount_extra,
                 country=project.country,
                 bank_account=account
             )
 
-            # TODO: Add budget lines
-            # TODO: Add fundraisers
-            # TODO: Add rewards
+            Wallpost.objects.filter(content_type=project_ct, object_id=project.id).\
+                update(content_type=funding_ct, object_id=funding.id)
+
+            for budget_line in project.projectbudgetline_set.all():
+                new_budget_line = BudgetLine.objects.create(
+                    activity=funding,
+                    amount=budget_line.amount,
+                    description=budget_line.description
+                )
+                new_budget_line.created = budget_line.created
+                new_budget_line.updated = budget_line.updated
+                new_budget_line.save()
+
+            fundraiser_ct = ContentType.objects.get_for_model(Initiative)
+            old_fundraiser_ct = ContentType.objects.get_for_model(Project)
+
+            for fundraiser in project.fundraiser_set.all():
+                new_fundraiser = Fundraiser.objects.create(
+                    owner=fundraiser.owner,
+                    activity=funding,
+                    title=fundraiser.title,
+                    description=fundraiser.description,
+                    amount=fundraiser.amount,
+                    deadline=fundraiser.deadline,
+                )
+                new_fundraiser.created = fundraiser.created
+                new_fundraiser.updated = fundraiser.updated
+                new_fundraiser.deleted = fundraiser.deleted
+                new_fundraiser.save()
+                if fundraiser.image:
+                    try:
+                        image = Image.objects.create(owner=fundraiser.owner)
+                        image.file.save(fundraiser.image.name, fundraiser.image.file, save=True)
+                        initiative.image = image
+                    except IOError:
+                        pass
+                Wallpost.objects.filter(content_type=old_fundraiser_ct, object_id=fundraiser.id). \
+                    update(content_type=fundraiser_ct, object_id=new_fundraiser.id)
+
+            for reward in project.reward_set.all():
+                new_reward = Reward.objects.create(
+                    activity=funding,
+                    amount=reward.amount,
+                    description=reward.description,
+                    title=reward.title,
+                    limit=reward.limit,
+                )
+                new_reward.created = reward.created
+                new_reward.updated = reward.updated
+                new_reward.save()
+        else:
+            Wallpost.objects.filter(content_type=project_ct, object_id=project.id).\
+                update(content_type=initiative_ct, object_id=initiative.id)
 
 
 def wipe_initiatives(apps, schema_editor):

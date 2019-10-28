@@ -6,12 +6,38 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
     StackedPolymorphicInline)
 
-from bluebottle.activities.models import Activity
-from bluebottle.events.models import Event
+from bluebottle.activities.models import Activity, Contribution
+from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
-from bluebottle.funding.models import Funding
-from bluebottle.assignments.models import Assignment
+from bluebottle.funding.models import Funding, Donation
+from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.utils.admin import FSMAdmin
+
+
+class ContributionChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
+    base_model = Contribution
+    search_fields = ['user__first_name', 'user__last_name', 'activity__title']
+    list_filter = ['status', ]
+
+    def activity_link(self, obj):
+        url = reverse("admin:{}_{}_change".format(
+            obj.activity._meta.app_label,
+            obj.activity._meta.model_name),
+            args=(obj.activity.id,)
+        )
+        return format_html(u"<a href='{}'>{}</a>", url, obj.activity.title or '-empty-')
+    activity_link.short_description = _('Activity')
+
+
+@admin.register(Contribution)
+class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
+    base_model = Contribution
+    child_models = (Participant, Donation, Applicant)
+    list_display = ['created', 'owner', 'type', 'activity', 'status']
+    list_filter = (PolymorphicChildModelFilter, 'status')
+
+    def type(self, obj):
+        return obj.get_real_instance_class().__name__
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
@@ -43,6 +69,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         'valid',
         'status',
         'transitions',
+        'transition_date'
     )
 
     detail_fields = (
@@ -91,7 +118,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     list_filter = (PolymorphicChildModelFilter, 'status', 'review_status', 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['created', 'title', 'type', 'status', 'review_status',
+    list_display = ['__unicode__', 'created', 'type', 'status', 'review_status',
                     'link', 'highlight']
 
     list_search = ('title', 'description', 'owner__first_name', 'owner__last_name')

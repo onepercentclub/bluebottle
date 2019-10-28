@@ -26,6 +26,10 @@ class LipishaBankAccountSerializer(BaseBankAccountSerializer):
             'account_name',
             'account_number',
             'bank_name',
+            'bank_code',
+            'branch_name',
+            'branch_code',
+            'address',
             'swift',
         )
 

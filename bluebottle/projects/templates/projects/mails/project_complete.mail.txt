@@ -6,14 +6,14 @@
 
 Hi {{receiver_name}},
 
-Congratulations! Your project "{{title}}" has been realised! It's time to
+Congratulations! Your initiative "{{title}}" has been realised! It's time to
 celebrate!
 
 Why don't you share this success with your supporters.
 {% endblocktrans %}
 {% if survey_link %}
 {% blocktrans with link=survey_link %}
-To record the impact we have with our projects, your input is extremely important.
+To record the impact we have with our initiatives, your input is extremely important.
 Please help us by filling out our 1 minute survey:
 {{ link }}
 {% endblocktrans %}

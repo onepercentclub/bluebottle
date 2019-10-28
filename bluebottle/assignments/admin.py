@@ -77,7 +77,7 @@ class AssignmentAdmin(ActivityChildAdmin):
 
     date_hierarchy = 'end_date'
 
-    base_model = Assignment
+    model = Assignment
     raw_id_fields = ('owner', 'location')
 
     list_display = ('__unicode__', 'created', 'status', 'highlight', 'end_date', 'is_online', 'registration_deadline')

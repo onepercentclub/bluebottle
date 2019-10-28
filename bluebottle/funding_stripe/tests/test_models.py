@@ -60,7 +60,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 business_type='individual',
                 country=self.check.country,
                 metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},
-                requested_capabilities=['card_payments', 'transfers'],
+                requested_capabilities=['legacy_payments'],
                 settings={'payments': {'statement_descriptor': u''}, 'payouts': {'schedule': {'interval': 'manual'}}},
                 type='custom'
             )

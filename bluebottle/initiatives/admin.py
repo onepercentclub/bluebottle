@@ -22,6 +22,30 @@ class InitiativeAdminForm(FSMModelForm):
         }
 
 
+class InitiativeReviewerFilter(admin.SimpleListFilter):
+    title = _('Reviewer')
+    parameter_name = 'reviewer'
+
+    def lookups(self, request, model_admin):
+        reviewers = Initiative.objects.filter(reviewer__isnull=False). \
+            distinct('reviewer__id', 'reviewer__first_name', 'reviewer__last_name'). \
+            values_list('reviewer__id', 'reviewer__first_name', 'reviewer__last_name'). \
+            order_by('reviewer__first_name', 'reviewer__last_name', 'reviewer__id')
+        return [('me', _('My initiatives'))] + [(r[0], u"{} {}".format(r[1], r[2])) for r in reviewers]
+
+    def queryset(self, request, queryset):
+        if self.value() == 'me':
+            return queryset.filter(
+                reviewer=request.user
+            )
+        elif self.value():
+            return queryset.filter(
+                reviewer__id=self.value()
+            )
+        else:
+            return queryset
+
+
 @admin.register(Initiative)
 class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
 
@@ -34,7 +58,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
 
     date_hierarchy = 'created'
     list_display = ['__unicode__', 'created', 'owner', 'status']
-    list_filter = ['status']
 
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
@@ -59,6 +82,16 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
+
+    def get_list_filter(self, instance):
+        filters = [InitiativeReviewerFilter, 'categories', 'theme', 'status']
+
+        if Location.objects.count():
+            filters.append('location')
+        else:
+            filters.append('place')
+
+        return filters
 
     def get_fieldsets(self, request, obj=None):
         details = ['pitch', 'story', 'theme', 'categories']

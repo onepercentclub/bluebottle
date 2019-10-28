@@ -3,7 +3,7 @@ from bluebottle.utils.transitions import ReviewTransitions
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from bluebottle.fsm import ModelTransitions, transition
+from bluebottle.fsm import ModelTransitions, transition, TransitionNotPossible
 
 
 class ActivityReviewTransitions(ReviewTransitions):
@@ -51,7 +51,10 @@ class ActivityReviewTransitions(ReviewTransitions):
         permissions=[can_review]
     )
     def approve(self):
-        self.instance.transitions.reviewed()
+        try:
+            self.instance.transitions.reviewed()
+        except TransitionNotPossible:
+            pass
 
     @transition(
         source=[ReviewTransitions.values.submitted],

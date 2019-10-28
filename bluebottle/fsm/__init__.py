@@ -106,7 +106,10 @@ class partialmethod(partial):
 class ModelTransitionsMeta(type):
     def __new__(cls, name, bases, dct):
         if bases:
-            dct['transitions'] = [transition for transition in getattr(bases[0], 'transitions', [])]
+            dct['transitions'] = [
+                transition for transition in getattr(bases[0], 'transitions', [])
+                if transition.name not in dct
+            ]
         else:
             dct['transitions'] = []
 

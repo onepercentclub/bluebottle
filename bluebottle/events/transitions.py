@@ -2,6 +2,8 @@ from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
 
+from bluebottle.initiatives.transitions import ReviewTransitions
+
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
 from bluebottle.events.messages import EventSucceededOwnerMessage, EventClosedOwnerMessage
 from bluebottle.follow.models import follow, unfollow
@@ -21,6 +23,10 @@ class EventTransitions(ActivityTransitions):
             return _('The start date has not passed')
 
     def can_open(self):
+        if self.instance.review_transitions.is_complete():
+            return _('The event is not complete')
+        if self.instance.review_status != ReviewTransitions.values.approved:
+            return _('The event is not approved')
         if not self.instance.start:
             return _('Start date has not been set')
         if self.instance.start < now():

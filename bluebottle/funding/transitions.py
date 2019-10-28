@@ -9,7 +9,7 @@ from bluebottle.fsm import transition, ModelTransitions
 from bluebottle.funding.messages import (
     DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
     DonationRefundedDonorMessage, FundingRealisedOwnerMessage,
-    FundingClosedMessage
+    FundingClosedMessage, FundingPartiallyFundedMessage
 )
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 
@@ -33,6 +33,14 @@ class FundingTransitions(ActivityTransitions):
     def reviewed(self):
         if self.instance.duration and not self.instance.deadline:
             self.instance.deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
+
+    @transition(
+        source=values.open,
+        target=values.partially_funded,
+        messages=[FundingPartiallyFundedMessage]
+    )
+    def partial(self):
+        pass
 
     @transition(
         source=[values.open, values.succeeded],

@@ -41,6 +41,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
+    base_model = Activity
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline,)
     show_in_index = True

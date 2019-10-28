@@ -1,7 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.funding.tests.factories import FundingFactory, BankAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 
@@ -12,12 +12,15 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-
+        self.initiative.save()
+        bank_account = BankAccountFactory.create()
         self.funding = FundingFactory.create(
             owner=self.superuser,
             initiative=self.initiative,
+            bank_account=bank_account
         )
-
+        self.funding.review_transitions.submit()
+        self.funding.save()
         self.admin_url = reverse('admin:funding_funding_change', args=(self.funding.id, ))
 
     def test_funding_admin(self):
@@ -25,9 +28,9 @@ class FundingTestCase(BluebottleAdminTestCase):
         response = self.client.get(self.admin_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
-        self.assertContains(response, 'reviewed')
+        self.assertContains(response, 'approve')
         reviewed_url = reverse('admin:funding_funding_transition',
-                               args=(self.funding.id, 'transitions', 'reviewed'))
+                               args=(self.funding.id, 'review_transitions', 'approve'))
         self.assertContains(response, reviewed_url)
 
     def test_funding_admin_review(self):
@@ -35,9 +38,9 @@ class FundingTestCase(BluebottleAdminTestCase):
         response = self.client.get(self.admin_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
-        self.assertContains(response, 'reviewed')
+        self.assertContains(response, 'approve')
         reviewed_url = reverse('admin:funding_funding_transition',
-                               args=(self.funding.id, 'transitions', 'reviewed'))
+                               args=(self.funding.id, 'review_transitions', 'approve'))
 
         self.assertContains(response, reviewed_url)
         response = self.client.get(reviewed_url)

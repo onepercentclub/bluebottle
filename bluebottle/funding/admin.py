@@ -6,6 +6,7 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin import TabularInline, SimpleListFilter
 from django.db import models
+from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
@@ -15,12 +16,13 @@ from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
+from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
     BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward)
-from bluebottle.funding.transitions import DonationTransitions
+from bluebottle.funding.transitions import DonationTransitions, FundingTransitions
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount, LipishaPayment
@@ -84,12 +86,28 @@ class CurrencyFilter(SimpleListFilter):
         ]
 
 
+class FundingStatusFilter(SimpleListFilter):
+
+    title = _('Status')
+    parameter_name = 'status'
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(
+                Q(status=self.value()) |
+                Q(review_status=self.value()))
+        return queryset
+
+    def lookups(self, request, model_admin):
+        return ActivityReviewTransitions.values.choices + FundingTransitions.values.choices
+
+
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
     inlines = (BudgetLineInline, RewardInline, MessageAdminInline)
     base_model = Funding
     date_hierarchy = 'deadline'
-    list_filter = ['status', 'review_status', CurrencyFilter]
+    list_filter = [FundingStatusFilter, CurrencyFilter]
 
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
@@ -99,7 +117,7 @@ class FundingAdmin(ActivityChildAdmin):
         'donations_link', 'payout_links'
     ]
 
-    list_display = ['__unicode__', 'initiative', 'status', 'deadline', 'target', 'amount_raised']
+    list_display = ['__unicode__', 'initiative', 'combined_status', 'deadline', 'target', 'amount_raised']
 
     detail_fields = (
         'description',
@@ -149,6 +167,12 @@ class FundingAdmin(ActivityChildAdmin):
         ]))
 
     payout_links.short_description = _('Payouts')
+
+    def combined_status(self, obj):
+        if obj.status == 'in_review':
+            return obj.review_status
+        return obj.status
+    combined_status.short_description = _('status')
 
 
 @admin.register(Donation)

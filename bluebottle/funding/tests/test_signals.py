@@ -7,9 +7,10 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.wallposts.models import SystemWallpost
 
 
-class TestDonationSignals(BluebottleTestCase):
+class TestDonationSignalsTestCase(BluebottleTestCase):
+
     def setUp(self):
-        super(TestDonationSignals, self).setUp()
+        super(TestDonationSignalsTestCase, self).setUp()
         self.user = BlueBottleUserFactory.create()
         self.funding = FundingFactory.create(target=Money(5000, 'EUR'), status='open')
 

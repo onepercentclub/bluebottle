@@ -1032,6 +1032,24 @@ class InitiativeWallpostTest(BluebottleTestCase):
             wallpost.status_code, status.HTTP_201_CREATED,
             'Event owners can share a wallpost.')
 
+    def test_create_wallpost_empty_donation(self):
+        """
+        Tests that only the event creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': self.event.id,
+                         'parent_type': 'event',
+                         'text': 'I can share stuff!',
+                         'donation': None}
+
+        # The owner can post with empty donation
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.owner_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_201_CREATED,
+            'Event owners can post a wallpost with empty donation set.')
+
     def test_create_event_wallpost_other(self):
         """
         Tests that only the event creator can share a wallpost.

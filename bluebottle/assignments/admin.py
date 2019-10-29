@@ -57,7 +57,7 @@ class ApplicantAdmin(ContributionChildAdmin):
 
 
 class ExpertiseFilter(admin.SimpleListFilter):
-    title = _('Expertise')
+    title = _('Skill')
     parameter_name = 'expertise'
 
     def lookups(self, request, model_admin):

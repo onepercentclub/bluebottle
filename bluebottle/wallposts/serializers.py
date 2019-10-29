@@ -117,7 +117,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
     parent_id = WallpostParentIdField(source='object_id')
     reactions = ReactionSerializer(many=True, read_only=True, required=False)
 
-    donation = serializers.PrimaryKeyRelatedField(queryset=Donation.objects, required=False)
+    donation = serializers.PrimaryKeyRelatedField(queryset=Donation.objects, required=False, allow_null=True)
 
     def to_representation(self, instance):
         # We want to connect a donation by just sending the id,

@@ -122,16 +122,16 @@ class KYCPassedValidator(Validator):
 
 class Funding(Activity):
     deadline = models.DateTimeField(
-        _('deadline'), 
-        null=True, 
-        blank=True, 
+        _('deadline'),
+        null=True,
+        blank=True,
         help_text=_('If you enter a deadline, leave the duration field empty.')
     )
 
     duration = models.PositiveIntegerField(
-        _('duration'), 
-        null=True, 
-        blank=True, 
+        _('duration'),
+        null=True,
+        blank=True,
         help_text=_('If you enter a duration, leave the deadline field empty.')
     )
 

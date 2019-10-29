@@ -123,7 +123,8 @@ class WallpostSerializerBase(serializers.ModelSerializer):
         # We want to connect a donation by just sending the id,
         # but reading we want an embedded object, so we do a little trick here.
         response = super(WallpostSerializerBase, self).to_representation(instance)
-        response['donation'] = WallpostDonationSerializer(instance.donation, context=self.context).data
+        if instance.donation:
+            response['donation'] = WallpostDonationSerializer(instance.donation, context=self.context).data
         return response
 
     class Meta:

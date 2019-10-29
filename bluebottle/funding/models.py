@@ -121,8 +121,19 @@ class KYCPassedValidator(Validator):
 
 
 class Funding(Activity):
-    deadline = models.DateTimeField(_('deadline'), null=True, blank=True, help_text=_('If you enter a deadline, leave the duration field empty.'))
-    duration = models.PositiveIntegerField(_('duration'), null=True, blank=True, help_text=_('If you enter a duration, leave the deadline field empty.'))
+    deadline = models.DateTimeField(
+        _('deadline'), 
+        null=True, 
+        blank=True, 
+        help_text=_('If you enter a deadline, leave the duration field empty.')
+    )
+
+    duration = models.PositiveIntegerField(
+        _('duration'), 
+        null=True, 
+        blank=True, 
+        help_text=_('If you enter a duration, leave the deadline field empty.')
+    )
 
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     amount_matching = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
@@ -190,7 +201,6 @@ class Funding(Activity):
             cache.set(cache_key, total)
         return total
     amount_donated.short_description = _('amount donated')
-
 
     @property
     def genuine_amount_donated(self):

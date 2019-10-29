@@ -200,7 +200,7 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
     )
 
 
-class FSMAdmin(admin.ModelAdmin):
+class FSMAdminMixin(object):
     form = FSMModelForm
 
     readonly_fields = ['status']
@@ -288,7 +288,7 @@ class FSMAdmin(admin.ModelAdmin):
         )
 
     def get_urls(self):
-        urls = super(FSMAdmin, self).get_urls()
+        urls = super(FSMAdminMixin, self).get_urls()
         custom_urls = [
             url(
                 r'^(?P<pk>.+)/transition/(?P<field_name>.+)/(?P<transition_name>.+)$',
@@ -297,3 +297,7 @@ class FSMAdmin(admin.ModelAdmin):
             ),
         ]
         return custom_urls + urls
+
+
+class FSMAdmin(FSMAdminMixin, admin.ModelAdmin):
+    pass

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import random
 import string
+from itertools import groupby
 
 from babel.numbers import get_currency_name
 from django.core.cache import cache
@@ -373,14 +374,13 @@ class Payout(TransitionsMixin, models.Model):
         verbose_name=_("activity"),
         related_name="payouts"
     )
+    provider = models.CharField(max_length=100)
+    currency = models.CharField(max_length=5)
+
     status = FSMField(
         default=PayoutTransitions.values.new,
     )
     transitions = TransitionManager(PayoutTransitions, 'status')
-
-    amount_donated = MoneyField(_("amount donated"))
-    amount_pledged = MoneyField(_("amount pledged"))
-    amount_matched = MoneyField(_("amount matched"))
 
     date_approved = models.DateTimeField(_('approved'), null=True, blank=True)
     date_started = models.DateTimeField(_('started'), null=True, blank=True)
@@ -391,17 +391,23 @@ class Payout(TransitionsMixin, models.Model):
 
     @classmethod
     def generate(cls, activity):
-        payout = cls.objects.create(
-            activity=activity,
-            amount_donated=activity.genuine_amount_donated,
-            amount_matched=activity.amount_matching,
-            amount_pledged=activity.amount_pledged
-        )
-        for contribution in activity.contributions.\
-                filter(donation__payout__isnull=True).\
-                filter(status='succeeded').all():
-            contribution.payout = payout
-            contribution.save()
+        for (currency, provider), donations in groupby(
+            activity.contributions.filter(status='succeeded'),
+            lambda x: (x.amount_currency, x.payment.provider)
+        ):
+            payout = cls.objects.create(
+                activity=activity,
+                provider=provider,
+                currency=currency
+            )
+            for donation in donations:
+                donation.payout = payout
+                donation.save()
+
+    @property
+    def total_amount(self):
+        if self.currency:
+            return Money(self.donations.aggregate(total=Sum('amount'))['total'] or 0, self.currency)
 
     class Meta():
         verbose_name = _('payout')
@@ -410,7 +416,6 @@ class Payout(TransitionsMixin, models.Model):
 
 class Donation(Contribution):
     amount = MoneyField()
-    payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
     reward = models.ForeignKey(Reward, null=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
@@ -425,10 +430,6 @@ class Donation(Contribution):
         if not self.user and not self.client_secret:
             self.client_secret = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
 
-        if not self.payout_amount or (
-                self.payout_amount.currency == self.amount.currency and
-                self.payout_amount.amount != self.amount.amount):
-            self.payout_amount = self.amount
         super(Donation, self).save(*args, **kwargs)
 
     @property

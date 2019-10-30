@@ -43,6 +43,8 @@ class VitepayPayment(Payment):
     transitions = TransitionManager(PaymentTransitions, 'status')
     payment_url = models.CharField(max_length=200, blank=True, null=True)
 
+    provider = 'vitepay'
+
     def update(self):
         pass
 

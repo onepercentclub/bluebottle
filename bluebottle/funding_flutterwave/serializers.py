@@ -32,3 +32,16 @@ class FlutterwaveBankAccountSerializer(BaseBankAccountSerializer):
 
     class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
         resource_name = 'payout-accounts/flutterwave-external-accounts'
+
+
+class PayoutFlutterwaveBankAccountSerializer(serializers.ModelSerializer):
+
+    class Meta(BaseBankAccountSerializer.Meta):
+        model = FlutterwaveBankAccount
+
+        fields = (
+            'id',
+            'account_holder_name',
+            'bank_code',
+            'account_number',
+        )

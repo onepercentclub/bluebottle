@@ -1,3 +1,5 @@
+from rest_framework import serializers
+
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.funding.base_serializers import PaymentSerializer, BaseBankAccountSerializer
@@ -40,3 +42,24 @@ class PledgeBankAccountSerializer(BaseBankAccountSerializer):
 
     class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
         resource_name = 'payout-accounts/pledge-external-accounts'
+
+
+class PayoutPledgeBankAccountSerializer(serializers.ModelSerializer):
+    account_holder_country = serializers.CharField(read_only=True, source='account_holder_country.code')
+    account_bank_country = serializers.CharField(read_only=True, source='account_bank_country.code')
+
+    class Meta(BaseBankAccountSerializer.Meta):
+        model = PledgeBankAccount
+
+        fields = (
+            'id',
+            'account_holder_name',
+            'account_holder_address',
+            'account_holder_postal_code',
+            'account_holder_city',
+            'account_number',
+            'account_details',
+
+            'account_holder_country',
+            'account_bank_country'
+        )

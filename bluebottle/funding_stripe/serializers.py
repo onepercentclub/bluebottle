@@ -111,3 +111,23 @@ class ExternalAccountSerializer(BaseBankAccountSerializer):
     class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
         resource_name = 'payout-accounts/stripe-external-accounts'
         included_resources = ['connect-account']
+
+
+class PayoutStripeBankSerializer(serializers.ModelSerializer):
+    connect_account_id = serializers.CharField(source='connect_account.account_id')
+    external_account_id = serializers.CharField(source='account_id')
+    type = serializers.CharField(read_only=True)
+
+    account_holder_name = serializers.CharField(read_only=True, source='account.account_holder_name')
+    currency = serializers.CharField(read_only=True, source='account.currency')
+
+    class Meta:
+        fields = (
+            'id',
+            'type',
+            'external_account_id',
+            'connect_account_id',
+            'account_holder_name',
+            'currency'
+        )
+        model = ExternalAccount

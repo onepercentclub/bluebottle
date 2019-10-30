@@ -81,7 +81,6 @@ def migrate_orders(apps, schema_editor):
                 polymorphic_ctype=content_type,
                 activity=funding,
                 amount=donation.amount,
-                payout_amount=donation.payout_amount,
                 name=donation.name,
                 status=map_donation_status(order.status)
                 # reward=reward,

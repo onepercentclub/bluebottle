@@ -564,6 +564,8 @@ class PayoutSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'status',
+            'provider',
+            'currency',
             'donations',
             'total_amount',
         )

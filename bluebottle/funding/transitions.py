@@ -163,8 +163,9 @@ class PaymentTransitions(ModelTransitions):
         target=values.refunded
     )
     def refund(self):
-        self.instance.donation.transitions.refund()
-        self.instance.donation.save()
+        if self.instance.donation.status != 'refunded':
+            self.instance.donation.transitions.refund()
+            self.instance.donation.save()
         self.instance.donation.activity.update_amounts()
 
 

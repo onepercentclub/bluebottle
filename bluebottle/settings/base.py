@@ -1,15 +1,14 @@
-import os
 import datetime
+import os
 from collections import OrderedDict
+
 import rules
 from PIL import ImageFile
-
-from .payments import *  # noqa
-from .admin_dashboard import *  # noqa
 
 BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
 PROJECT_ROOT = BASE_DIR
+
 
 DEBUG = True
 COMPRESS_ENABLED = False

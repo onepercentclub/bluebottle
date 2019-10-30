@@ -2,6 +2,13 @@
 {% load i18n admin_static admin_list admin_urls %}
 
 {% block object-tools-items %}
+    {% if perms.funding.refund_payment and original.can_refund %}
+        <li>
+            <a href="{% url 'admin:funding_payment_refund' object_id %}" style="color: white; background-color: #E62828">
+                {% trans "Refund" %}
+            </a>
+        </li>
+    {% endif %}
     {% if original.can_update %}
         <li>
             <a href="{% url 'admin:funding_payment_check' object_id %}" style="color: white; background-color: #64A03C">

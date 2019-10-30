@@ -462,6 +462,10 @@ class Payment(TransitionsMixin, PolymorphicModel):
     def can_update(self):
         return hasattr(self, 'update')
 
+    @property
+    def can_refund(self):
+        return hasattr(self, 'refund')
+
     def __unicode__(self):
         return "{} - {}".format(self.polymorphic_ctype, self.id)
 

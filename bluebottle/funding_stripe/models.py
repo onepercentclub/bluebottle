@@ -1,12 +1,15 @@
 import json
 from operator import attrgetter
 
+from djmoney.money import Money
+
+from bluebottle.funding.exception import PaymentException
 from django.conf import settings
 from django.db import ProgrammingError
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 from memoize import memoize
-from stripe.error import AuthenticationError
+from stripe.error import AuthenticationError, StripeError
 
 from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation
@@ -64,6 +67,14 @@ class StripePayment(Payment):
     payment_intent = models.OneToOneField(PaymentIntent, related_name='payment')
     transitions = TransitionManager(StripePaymentTransitions, 'status')
 
+    def refund(self):
+        intent = self.payment_intent.intent
+        charge = intent.charges.data[0]
+        charge.refund(
+            reverse_transfer=True,
+        )
+        self.save()
+
     def update(self):
         intent = self.payment_intent.intent
         if len(intent.charges) == 0:
@@ -97,6 +108,12 @@ class StripeSourcePayment(Payment):
         if self.source_token:
             return stripe.Source.retrieve(self.source_token)
 
+    def refund(self):
+        charge = stripe.Charge.retrieve(self.charge_token)
+        charge.refund(
+            reverse_transfer=True,
+        )
+
     def do_charge(self):
         account_id = self.donation.activity.bank_account.connect_account.account_id
         charge = stripe.Charge.create(
@@ -114,29 +131,36 @@ class StripeSourcePayment(Payment):
         self.save()
 
     def update(self):
-        if not self.charge_token and self.source.status == 'chargeable':
-            self.do_charge()
-
-        if (not self.status == 'failed') and self.source.status == 'failed':
-            self.transitions.fail()
-
-        if (not self.status == 'canceled') and self.source.status == 'canceled':
-            self.transitions.cancel()
-
-        if self.charge_token:
-            if (not self.status == 'failed') and self.charge.status == 'failed':
+        try:
+            # Update donation amount if it differs
+            if self.source.amount / 100 != self.donation.amount.amount \
+                    or self.source.currency != self.donation.amount.currency:
+                self.donation.amount = Money(self.source.amount / 100, self.source.currency)
+                self.donation.save()
+            if not self.charge_token and self.source.status == 'chargeable':
+                self.do_charge()
+            if (not self.status == 'failed') and self.source.status == 'failed':
                 self.transitions.fail()
 
-            if (not self.status == 'succeeded') and self.charge.status == 'succeeded':
-                self.transitions.succeed()
+            if (not self.status == 'canceled') and self.source.status == 'canceled':
+                self.transitions.cancel()
 
-            if (not self.status == 'refunded') and self.charge.refunded:
-                self.transitions.refund()
+            if self.charge_token:
+                if (not self.status == 'failed') and self.charge.status == 'failed':
+                    self.transitions.fail()
 
-            if (not self.status == 'disputed') and self.charge.dispute:
-                self.transitions.dispute()
+                if (not self.status == 'succeeded') and self.charge.status == 'succeeded':
+                    self.transitions.succeed()
 
-        self.save()
+                if (not self.status == 'refunded') and self.charge.refunded:
+                    self.transitions.refund()
+
+                if (not self.status == 'disputed') and self.charge.dispute:
+                    self.transitions.dispute()
+
+            self.save()
+        except StripeError as error:
+            raise PaymentException(error.message)
 
     def save(self, *args, **kwargs):
         created = not self.pk

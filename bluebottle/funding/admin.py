@@ -17,8 +17,10 @@ from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.activities.transitions import ActivityReviewTransitions
+from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
+from bluebottle.funding.forms import RefundConfirmationForm
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
     BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward)
@@ -222,6 +224,13 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     raw_id_fields = ['donation']
     change_form_template = 'admin/funding/payment/change_form.html'
 
+    def get_fields(self, request, obj=None):
+        fields = super(PaymentChildAdmin, self).get_fields(request, obj)
+        # Don't show
+        if not request.user.is_superuser:
+            fields.remove('transitions')
+        return fields
+
     def get_urls(self):
         urls = super(PaymentChildAdmin, self).get_urls()
         process_urls = [
@@ -246,10 +255,18 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         response = HttpResponseRedirect(payment_url)
         return response
 
-    def refund(self, request, pk=None):
-        payment = Payment.objects.get(pk=pk)
+    @confirmation_form(
+        RefundConfirmationForm,
+        Payment,
+        'admin/payments/refund_confirmation.html'
+    )
+    def refund(self, request, val=None):
+        if isinstance(val, Payment):
+            payment = val
+        else:
+            payment = Payment.objects.get(pk=val)
         try:
-            payment.refund()
+            payment.transitions.request_refund()
         except PaymentException as e:
             self.message_user(
                 request,

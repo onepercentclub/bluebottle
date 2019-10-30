@@ -52,7 +52,10 @@ class FundingCurrencyValidator(object):
 
     def __call__(self, data):
         for field in self.fields:
-            if data[field].currency != data['activity'].target.currency:
+            if (
+                data['activity'].target and
+                data[field].currency != data['activity'].target.currency
+            ):
                 raise ValidationError(self.message)
 
 

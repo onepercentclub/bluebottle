@@ -1,0 +1,15 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=to.first_name applicant_name=obj.user.first_name title=obj.activity.title context 'email' %}
+Hi {{ recipient_name }},
+
+You’ve been added to "{{ title }}". 
+Check out the event page and leave a message to meet your fellow participants.
+{% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+   {% trans 'View event' context 'email' %}: {{ obj.activity.get_absolute_url }}
+{% endblock %}`

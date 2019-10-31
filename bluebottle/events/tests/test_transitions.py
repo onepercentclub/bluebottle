@@ -295,6 +295,11 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             len(self.event.participants), 1
         )
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'You were added to "{}"'.format(self.event.title)
+        )
 
     def test_withdraw(self):
         self.participant.transitions.withdraw(user=self.participant.user)
@@ -361,6 +366,11 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             len(self.event.participants), 0
+        )
+        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(
+            mail.outbox[2].subject,
+            'Your status for "{}" was changed to "not going"'.format(self.event.title)
         )
 
     def test_untreject(self):

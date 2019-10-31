@@ -32,3 +32,27 @@ class EventReminder(TransitionMessage):
             contribution.user for contribution
             in self.obj.contributions.filter(status='new')
         ]
+
+
+class ParticipantApplicationMessage(TransitionMessage):
+    subject = _('You were added to "{title}"')
+    template = 'messages/participant_application'
+
+    context = {
+        'title': 'activity.title'
+    }
+
+    def get_recipients(self):
+        return [self.obj.user]
+
+
+class ParticipantRejectedMessage(TransitionMessage):
+    subject = _('Your status for "{title}" was changed to "not going"')
+    template = 'messages/participant_rejected'
+
+    context = {
+        'title': 'activity.title'
+    }
+
+    def get_recipients(self):
+        return [self.obj.user]

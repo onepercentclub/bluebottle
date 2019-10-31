@@ -29,7 +29,11 @@ def check_event_start():
             ).all()
 
             for event in events:
-                event.transitions.start()
+                if len(event.participants):
+                    event.transitions.start()
+                else:
+                    event.transitions.close()
+
                 event.save()
 
 

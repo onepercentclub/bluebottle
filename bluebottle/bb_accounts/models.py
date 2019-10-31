@@ -188,8 +188,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         abstract = True
-        verbose_name = _('Member')
-        verbose_name_plural = _('Members')
+        verbose_name = _('member')
+        verbose_name_plural = _('members')
 
         permissions = (
             ('api_read_member', 'Can view members through the API'),

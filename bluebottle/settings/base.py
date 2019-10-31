@@ -2,6 +2,9 @@ import datetime
 import os
 from collections import OrderedDict
 
+from .payments import *  # noqa
+from .admin_dashboard import *  # noqa
+
 import rules
 from PIL import ImageFile
 

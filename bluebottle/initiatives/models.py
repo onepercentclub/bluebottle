@@ -208,9 +208,20 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('event', _('Events')),
         ('assignment', _('Assignment')),
     )
+    SEARCH_FILTERS = (
+        ('location', _('Location')),
+        ('date', _('Date')),
+        ('skill', _('Skill')),
+        ('type', _('Type')),
+        ('theme', _('Theme')),
+        ('category', _('Category')),
+        ('status', _('Status')),
+    )
 
     activity_types = MultiSelectField(max_length=100, choices=ACTIVITY_TYPES)
     require_organization = models.BooleanField(default=False)
+
+    search_filters = MultiSelectField(max_length=1000, choices=SEARCH_FILTERS)
 
     class Meta:
         verbose_name_plural = _('initiative platform settings')

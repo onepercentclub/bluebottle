@@ -250,7 +250,7 @@ class Funding(Activity):
                 reward.save()
 
         for line in self.budget_lines.all():
-            if not line.amount.currency == self.target.currency:
+            if self.target and not line.amount.currency == self.target.currency:
                 line.amount = Money(line.amount.amount, self.target.currency)
                 line.save()
 

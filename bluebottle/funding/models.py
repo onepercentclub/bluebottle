@@ -251,7 +251,7 @@ class Funding(Activity):
                 reward.save()
 
         for line in self.budget_lines.all():
-            if not line.amount.currency == self.target.currency:
+            if self.target and not line.amount.currency == self.target.currency:
                 line.amount = Money(line.amount.amount, self.target.currency)
                 line.save()
 
@@ -462,6 +462,10 @@ class Payment(TransitionsMixin, PolymorphicModel):
     @property
     def can_update(self):
         return hasattr(self, 'update')
+
+    @property
+    def can_refund(self):
+        return hasattr(self, 'refund')
 
     def __unicode__(self):
         return "{} - {}".format(self.polymorphic_ctype, self.id)

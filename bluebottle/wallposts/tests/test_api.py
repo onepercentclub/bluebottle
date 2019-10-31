@@ -3,6 +3,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core import mail
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now
+from djmoney.money import Money
 from rest_framework import status
 
 from bluebottle.events.tests.factories import EventFactory
@@ -1032,6 +1033,24 @@ class InitiativeWallpostTest(BluebottleTestCase):
             wallpost.status_code, status.HTTP_201_CREATED,
             'Event owners can share a wallpost.')
 
+    def test_create_wallpost_empty_donation(self):
+        """
+        Tests that only the event creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': self.event.id,
+                         'parent_type': 'event',
+                         'text': 'I can share stuff!',
+                         'donation': None}
+
+        # The owner can post with empty donation
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.owner_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_201_CREATED,
+            'Event owners can post a wallpost with empty donation set.')
+
     def test_create_event_wallpost_other(self):
         """
         Tests that only the event creator can share a wallpost.
@@ -1047,3 +1066,45 @@ class InitiativeWallpostTest(BluebottleTestCase):
                                     token=self.other_token)
 
         self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class FundingWallpostTest(BluebottleTestCase):
+    def setUp(self):
+        super(FundingWallpostTest, self).setUp()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.funding = FundingFactory.create(target=Money(5000, 'EUR'), status='open', initiative=self.initiative)
+        self.updates_url = "{}?parent_type=funding&parent_id={}".format(reverse('wallpost_list'), self.funding.id)
+
+    def test_wallposts_with_and_without_donation(self):
+        """
+        Test that a Wallpost doesn't serializes donation if there isn't one
+        """
+        TextWallpostFactory.create(content_object=self.funding)
+        self.donation = DonationFactory(
+            amount=Money(35, 'EUR'),
+            user=None,
+            activity=self.funding
+        )
+        self.donation.transitions.succeed()
+        self.donation.save()
+
+        response = self.client.get(self.updates_url, token=self.owner_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+        self.assertEqual(
+            response.data['results'][0]['donation'],
+            {
+                'fundraiser': None,
+                'amount': {'currency': 'EUR', 'amount': 35.00},
+                'user': None,
+                'anonymous': False,
+                'reward': None,
+                'type': 'contributions/donations',
+                'id': self.donation.id
+            }
+        )
+        self.assertEqual(response.data['results'][1]['donation'], None)

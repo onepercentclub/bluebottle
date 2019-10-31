@@ -112,7 +112,7 @@ install_requires = [
     'xlsxwriter==0.9.8',
 
     # Github requirements
-    'django-exportdb @ git+https://github.com/onepercentclub/django-exportdb.git@0.4.7#egg=django-exportdb-0.4.7-github',
+    'django-exportdb @ git+https://github.com/onepercentclub/django-exportdb.git@0.4.8#egg=django-exportdb-0.4.8-github',
     'django-tenant-extras @ git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.14#egg=django-tenant-extras-2.0.14',
     'django-fluent-contents @ git+https://github.com/onepercentclub/django-fluent-contents.git@741ffae615a4afed01388a202709ed9a5b60e80f#egg=django-fluent-contents-1.2.1-741ffae6',
     'django-bb-salesforce @ git+https://github.com/onepercentclub/django-bb-salesforce.git@1.2.2#egg=django-bb-salesforce-1.2.2',

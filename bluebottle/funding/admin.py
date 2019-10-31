@@ -119,6 +119,14 @@ class FundingAdmin(ActivityChildAdmin):
 
     list_display = ['__unicode__', 'initiative', 'combined_status', 'deadline', 'target', 'amount_raised']
 
+    def amount_raised(self, obj):
+        return obj.amount_raised
+    amount_raised.short_description = _('amount donated + matched')
+
+    def amount_donated(self, obj):
+        return obj.amount_raised
+    amount_donated.short_description = _('amount donated')
+
     detail_fields = (
         'description',
         'duration',

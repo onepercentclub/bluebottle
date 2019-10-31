@@ -200,7 +200,6 @@ class Funding(Activity):
                 total = Money(0, 'EUR')
             cache.set(cache_key, total)
         return total
-    amount_donated.short_description = _('amount donated')
 
     @property
     def genuine_amount_donated(self):
@@ -254,7 +253,6 @@ class Funding(Activity):
                 currency
             )
         return total
-    amount_raised.short_description = _('amount donated + matched')
 
     def save(self, *args, **kwargs):
         for reward in self.rewards.all():

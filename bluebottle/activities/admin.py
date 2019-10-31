@@ -18,7 +18,7 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     base_model = Contribution
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
     list_filter = ['status', ]
-    ordering = ('created', )
+    ordering = ('-created', )
 
     def activity_link(self, obj):
         url = reverse("admin:{}_{}_change".format(
@@ -37,7 +37,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     list_display = ['created', 'owner', 'type', 'activity', 'status']
     list_filter = (PolymorphicChildModelFilter, 'status')
 
-    ordering = ('created', )
+    ordering = ('-created', )
 
     def type(self, obj):
         return obj.get_real_instance_class().__name__
@@ -49,7 +49,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     inlines = (FollowAdminInline,)
     show_in_index = True
 
-    ordering = ('created', )
+    ordering = ('-created', )
 
     readonly_fields = [
         'created',
@@ -153,7 +153,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
 
     link.short_description = _("Show on site")
 
-    ordering = ('created', )
+    ordering = ('-created', )
 
     def type(self, obj):
         return obj.get_real_instance_class().__name__

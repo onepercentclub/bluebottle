@@ -64,7 +64,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
 
     readonly_fields = ['status', 'link', 'created', 'updated']
 
-    ordering = ('created', )
+    ordering = ('-created', )
 
     export_to_csv_fields = (
         ('title', 'Title'),

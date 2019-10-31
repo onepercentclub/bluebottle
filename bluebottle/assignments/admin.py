@@ -8,6 +8,7 @@ from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdm
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.tasks.models import Skill
 from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.forms import FSMModelForm
 
 
@@ -73,14 +74,17 @@ class ExpertiseFilter(admin.SimpleListFilter):
 @admin.register(Assignment)
 class AssignmentAdmin(ActivityChildAdmin):
     form = AssignmentAdminForm
-    inlines = (ApplicantInline, )
+    inlines = (ApplicantInline, MessageAdminInline)
 
     date_hierarchy = 'end_date'
 
     model = Assignment
     raw_id_fields = ('owner', 'location')
 
-    list_display = ('__unicode__', 'created', 'status', 'highlight', 'end_date', 'is_online', 'registration_deadline')
+    list_display = (
+        '__unicode__', 'initiative', 'created', 'status', 'highlight',
+        'end_date', 'is_online', 'registration_deadline'
+    )
     search_fields = ['title', 'description']
     list_filter = ['status', ExpertiseFilter, 'is_online']
 

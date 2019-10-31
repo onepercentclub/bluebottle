@@ -1,7 +1,9 @@
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
+from stripe.error import StripeError
 
 from bluebottle.fsm import transition
+from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.transitions import PaymentTransitions, PayoutAccountTransitions
 from bluebottle.funding_stripe.utils import stripe
 
@@ -50,11 +52,10 @@ class StripeSourcePaymentTransitions(PaymentTransitions):
         target=PaymentTransitions.values.refund_requested
     )
     def request_refund(self):
-        charge = stripe.Charge.retrieve(self.instance.charge_token)
-
-        charge.refund(
-            reverse_transfer=True,
-        )
+        try:
+            self.instance.refund()
+        except StripeError as error:
+            raise PaymentException(error.message)
 
     @transition(
         source=[values.new],
@@ -78,8 +79,9 @@ class StripeSourcePaymentTransitions(PaymentTransitions):
         target=values.disputed,
     )
     def dispute(self):
-        self.instance.donation.transitions.refund()
-        self.instance.donation.save()
+        if self.instance.donation.status != 'refunded':
+            self.instance.donation.transitions.refund()
+            self.instance.donation.save()
         self.instance.donation.activity.update_amounts()
 
 

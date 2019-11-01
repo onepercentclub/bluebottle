@@ -67,6 +67,8 @@ class StripePayment(Payment):
     payment_intent = models.OneToOneField(PaymentIntent, related_name='payment')
     transitions = TransitionManager(StripePaymentTransitions, 'status')
 
+    provider = 'stripe'
+
     def refund(self):
         intent = self.payment_intent.intent
         charge = intent.charges.data[0]
@@ -97,6 +99,8 @@ class StripeSourcePayment(Payment):
     charge_token = models.CharField(max_length=30, blank=True, null=True)
 
     transitions = TransitionManager(StripeSourcePaymentTransitions, 'status')
+
+    provider = 'stripe'
 
     @property
     def charge(self):

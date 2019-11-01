@@ -39,3 +39,20 @@ class LipishaBankAccountSerializer(BaseBankAccountSerializer):
 
     class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
         resource_name = 'payout-accounts/lipisha-external-accounts'
+
+
+class PayoutLipishaBankAccountSerializer(serializers.ModelSerializer):
+    class Meta(BaseBankAccountSerializer.Meta):
+        model = LipishaBankAccount
+
+        fields = (
+            'id',
+            'account_name',
+            'account_number',
+            'bank_name',
+            'bank_code',
+            'branch_name',
+            'branch_code',
+            'address',
+            'swift',
+        )

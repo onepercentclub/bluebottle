@@ -33,7 +33,7 @@ from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayout
     StripeSourcePayment, ExternalAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action
+from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action, FSMAdminMixin
 
 logger = logging.getLogger(__name__)
 
@@ -104,9 +104,30 @@ class FundingStatusFilter(SimpleListFilter):
         return ActivityReviewTransitions.values.choices + FundingTransitions.values.choices
 
 
+class PayoutInline(FSMAdminMixin, admin.StackedInline):
+
+    model = Payout
+    readonly_fields = [
+        'total_amount', 'date_approved', 'date_started', 'date_completed',
+        'status', 'approve'
+    ]
+
+    fields = readonly_fields
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request):
+        return False
+
+    def approve(self, obj):
+        if obj.status == 'new':
+            url = reverse('admin:funding_payout_transition', args=(obj.id, 'transitions', 'approve'))
+            return format_html('<a href="{}">{}</a>', url, _('Approve'))
+
+
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, RewardInline, MessageAdminInline)
+    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline)
     base_model = Funding
     date_hierarchy = 'deadline'
     list_filter = [FundingStatusFilter, CurrencyFilter]
@@ -182,7 +203,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     model = Donation
     raw_id_fields = ['activity', 'user']
     readonly_fields = ['payment_link', 'status', 'payment_link']
-    list_display = ['created', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', 'payout_amount']
+    list_display = ['created', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', ]
     list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
     date_hierarchy = 'created'
 
@@ -192,7 +213,6 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
         ('activity', 'Activity'),
         ('owner', 'Owner'),
         ('amount', 'Amount'),
-        ('payout_amount', 'Payout Amount'),
         ('reward', 'Reward'),
         ('fundraiser', 'Fundraiser'),
         ('name', 'name'),
@@ -437,8 +457,7 @@ class PayoutAdmin(FSMAdmin):
     model = Payout
     inlines = [DonationInline]
     raw_id_fields = ('activity', )
-    readonly_fields = ['activity_link', 'status',
-                       'amount_donated', 'amount_pledged', 'amount_matched',
+    readonly_fields = ['activity_link', 'status', 'total_amount',
                        'date_approved', 'date_started', 'date_completed']
     list_display = ['created', 'activity_link', 'status']
 

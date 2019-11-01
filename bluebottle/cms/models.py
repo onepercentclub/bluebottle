@@ -135,12 +135,19 @@ class Stat(SortableMixin, models.Model):
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
         ('participants', _('Participants')),
+
         ('activities_succeeded', _('Activities succeeded')),
         ('assignments_succeeded', _('Assignments succeeded')),
         ('events_succeeded', _('Events succeeded')),
         ('fundings_succeeded', _('Fundraisers succeeded')),
+
         ('assignment_members', _('Assignment members')),
         ('event_members', _('Event participants')),
+
+        ('assignments_online', _('Assignments online')),
+        ('events_online', _('Events online')),
+        ('fundings_online', _('Fundraisers online')),
+
         ('donations', _('Donations')),
         ('donated_total', _('Donated total')),
         ('pledged_total', _('Pledged total')),

@@ -47,7 +47,7 @@ class Statistics(object):
         contributor_ids = Contribution.objects.filter(
             self.date_filter('transition_date'),
             user_id__isnull=False,
-            status='succeeded'
+            status__in=('new', 'accepted', 'succeeded')
         ).order_by(
             'user__id'
         ).distinct('user').values_list('user_id', flat=True)
@@ -59,7 +59,14 @@ class Statistics(object):
             'owner__id'
         ).distinct('owner').values_list('owner_id', flat=True)
 
-        people_count = len(set(contributor_ids) | set(initiative_owner_ids))
+        activity_owner_ids = Activity.objects.filter(
+            self.date_filter('created'),
+            review_status='approved'
+        ).order_by(
+            'owner__id'
+        ).distinct('owner').values_list('owner_id', flat=True)
+
+        people_count = len(set(contributor_ids) | set(initiative_owner_ids) | set(activity_owner_ids))
 
         # Add anonymous donations
         people_count += len(Contribution.objects.filter(
@@ -107,6 +114,36 @@ class Statistics(object):
             status='succeeded'
         )
         return len(tasks)
+
+    @property
+    @memoize(timeout=timeout)
+    def assignments_online(self):
+        """ Total number of online tasks """
+        tasks = Assignment.objects.filter(
+            self.date_filter('transition_date'),
+            status__in=('open', 'full', 'running')
+        )
+        return len(tasks)
+
+    @property
+    @memoize(timeout=timeout)
+    def events_online(self):
+        """ Total number of succeeded tasks """
+        events = Event.objects.filter(
+            self.date_filter('transition_date'),
+            status__in=('open', 'full', 'running')
+        )
+        return len(events)
+
+    @property
+    @memoize(timeout=timeout)
+    def fundings_online(self):
+        """ Total number of succeeded tasks """
+        fundings = Funding.objects.filter(
+            self.date_filter('transition_date'),
+            status='open'
+        )
+        return len(fundings)
 
     @property
     @memoize(timeout=timeout)

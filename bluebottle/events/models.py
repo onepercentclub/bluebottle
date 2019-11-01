@@ -140,7 +140,8 @@ class Participant(Contribution):
 
         super(Participant, self).save(*args, **kwargs)
 
-        if created:
+        if created and self.status == 'new':
+            self.transitions.initiate()
             follow(self.user, self.activity)
 
         self.activity.check_capacity()

@@ -5,7 +5,14 @@ from djchoices.choices import ChoiceItem
 from bluebottle.initiatives.transitions import ReviewTransitions
 
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
-from bluebottle.events.messages import EventSucceededOwnerMessage, EventClosedOwnerMessage
+from bluebottle.events.messages import (
+    EventSucceededOwnerMessage,
+    EventClosedOwnerMessage,
+    ParticipantApplicationMessage,
+    ParticipantRejectedMessage,
+
+)
+
 from bluebottle.follow.models import follow, unfollow
 from bluebottle.fsm import transition
 
@@ -123,6 +130,14 @@ class ParticipantTransitions(ContributionTransitions):
         return self.instance.user == user
 
     @transition(
+        source=[ContributionTransitions.values.new],
+        target=ContributionTransitions.values.new,
+        messages=[ParticipantApplicationMessage]
+    )
+    def initiate(self):
+        pass
+
+    @transition(
         source=values.new,
         target=values.withdrawn,
         conditions=[event_is_open_or_full],
@@ -142,7 +157,8 @@ class ParticipantTransitions(ContributionTransitions):
     @transition(
         source=[values.new],
         target=values.rejected,
-        permissions=[ContributionTransitions.is_activity_manager]
+        permissions=[ContributionTransitions.is_activity_manager],
+        messages=[ParticipantRejectedMessage]
     )
     def reject(self):
         unfollow(self.instance.user, self.instance.activity)

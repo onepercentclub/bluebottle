@@ -73,12 +73,12 @@
             <tr class="donation-share-buttons">
                 <td>
                     {% if SHARE_OPTIONS.facebook %}
-                        <a class="action-facebook" href="https://www.facebook.com/sharer/sharer.php?u={{site}}{{link}}">
+                        <a class="action-facebook" href="https://www.facebook.com/sharer/sharer.php?u={{obj.activity.get_absolute_url}}">
                             {% trans 'Share on facebook' %}
                         </a>
                     {%  endif %}
                     {% if SHARE_OPTIONS.twitter %}
-                        <a class="action-twitter" href="https://twitter.com/intent/tweet?url={{site}}{{link}}">
+                        <a class="action-twitter" href="https://twitter.com/intent/tweet?url={{obj.activity.get_absolute_url}}">
                             {% trans 'Share on Twitter' %}
                         </a>
                     {% endif %}

@@ -595,7 +595,7 @@ class ParticipantTestCase(BluebottleTestCase):
                 transition['name'] for transition in data['data']['meta']['transitions']
                 if transition['available']
             ],
-            ['withdraw', 'close']
+            ['initiate', 'withdraw', 'close']
         )
 
     def test_possible_transitions_other_user(self):
@@ -614,7 +614,7 @@ class ParticipantTestCase(BluebottleTestCase):
             [
                 transition['name'] for transition in data['data']['meta']['transitions']
                 if transition['available']],
-            ['close']
+            ['initiate', 'close']
         )
 
 

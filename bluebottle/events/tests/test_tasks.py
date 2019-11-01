@@ -33,13 +33,35 @@ class EventTasksTestCase(BluebottleTestCase):
             start_date=start.date(),
             duration=3
         )
+
         event.review_transitions.submit()
         event.save()
+
+        ParticipantFactory.create(activity=event)
+
         self.assertEqual(event.status, 'open')
         check_event_start()
         check_event_end()
         event = Event.objects.get(pk=event.pk)
         self.assertEqual(event.status, 'running')
+
+    def test_event_start_task_no_participants(self):
+        start = now() - timedelta(hours=1)
+        event = EventFactory.create(
+            initiative=self.initiative,
+            start_time=start.time(),
+            start_date=start.date(),
+            duration=3
+        )
+
+        event.review_transitions.submit()
+        event.save()
+
+        self.assertEqual(event.status, 'open')
+        check_event_start()
+        check_event_end()
+        event = Event.objects.get(pk=event.pk)
+        self.assertEqual(event.status, 'closed')
 
     def test_event_end_task(self):
         user = BlueBottleUserFactory.create(first_name='Nono')

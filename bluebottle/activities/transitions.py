@@ -45,7 +45,11 @@ class ActivityReviewTransitions(ReviewTransitions):
             self.approve()
 
     @transition(
-        source=[ReviewTransitions.values.submitted, ReviewTransitions.values.draft],
+        source=[
+            ReviewTransitions.values.submitted,
+            ReviewTransitions.values.draft,
+            ReviewTransitions.values.needs_work
+        ],
         target=ReviewTransitions.values.approved,
         conditions=[is_complete, is_valid],
         permissions=[can_review]

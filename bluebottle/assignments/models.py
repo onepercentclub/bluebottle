@@ -31,18 +31,18 @@ class Assignment(Activity):
         deadline = ChoiceItem('deadline', label=_("Deadline"))
         on_date = ChoiceItem('on_date', label=_("On specific date"))
 
-    registration_deadline = models.DateField(_('registration deadline'), null=True, blank=True)
+    registration_deadline = models.DateField(_('deadline to apply'), null=True, blank=True)
     end_date = models.DateField(
         _('end date'), null=True, blank=True,
         help_text=_('Either the deadline or the date it will take place.'))
-    duration = models.FloatField(_('duration'), null=True, blank=True)
+    duration = models.FloatField(_('number of hours per person'), null=True, blank=True)
     end_date_type = models.CharField(
-        _('end date'), max_length=50, null=True, default=None, blank=True,
-        help_text=_('Whether the end date is a deadline or a specific date the task takes place.'),
+        _('date type'), max_length=50, null=True, default=None, blank=True,
+        help_text=_('Does the task have a deadline or does it take place on a specific date.'),
         choices=EndDateTypes.choices)
 
-    capacity = models.PositiveIntegerField(_('capacity'), null=True, blank=True)
-    expertise = models.ForeignKey('tasks.Skill', verbose_name=_('expertise'), blank=True, null=True)
+    capacity = models.PositiveIntegerField(_('number of people needed'), null=True, blank=True)
+    expertise = models.ForeignKey('tasks.Skill', verbose_name=_('skill'), blank=True, null=True)
 
     is_online = models.NullBooleanField(null=True, default=None)
 

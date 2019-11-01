@@ -28,10 +28,10 @@ class RegistrationDeadlineValidator(Validator):
 
 
 class Event(Activity):
-    capacity = models.PositiveIntegerField(null=True, blank=True)
+    capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
     automatically_accept = models.BooleanField(default=True)
 
-    is_online = models.NullBooleanField(null=True, default=None)
+    is_online = models.NullBooleanField(_('is online'), null=True, default=None)
     location = models.ForeignKey(Geolocation, verbose_name=_('location'),
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
@@ -40,7 +40,7 @@ class Event(Activity):
     start_time = models.TimeField(_('start time'), null=True, blank=True)
     duration = models.FloatField(_('duration'), null=True, blank=True)
     end = models.DateTimeField(_('end'), null=True, blank=True)
-    registration_deadline = models.DateField(_('registration deadline'), null=True, blank=True)
+    registration_deadline = models.DateField(_('deadline to apply'), null=True, blank=True)
 
     transitions = TransitionManager(EventTransitions, 'status')
 

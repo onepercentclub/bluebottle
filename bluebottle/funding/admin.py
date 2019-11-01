@@ -140,7 +140,10 @@ class FundingAdmin(ActivityChildAdmin):
         'donations_link', 'payout_links'
     ]
 
-    list_display = ['__unicode__', 'initiative', 'combined_status', 'deadline', 'target', 'amount_raised']
+    list_display = [
+        '__unicode__', 'initiative', 'created', 'combined_status',
+        'highlight', 'deadline', 'target', 'amount_raised'
+    ]
 
     def amount_raised(self, obj):
         return obj.amount_raised

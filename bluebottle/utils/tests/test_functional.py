@@ -5,7 +5,6 @@ from django.http.response import HttpResponseForbidden
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
 
 
 class AdminPermissionsTest(BluebottleTestCase):
@@ -34,18 +33,6 @@ class AdminPermissionsTest(BluebottleTestCase):
         response = self.client.get(reverse('admin:auth_group_changelist'))
 
         self.assertIsInstance(response, HttpResponseForbidden)
-
-    def test_staff_list_projects(self):
-        response = self.client.get(reverse('admin:projects_project_changelist'))
-
-        self.assertIsInstance(response, TemplateResponse)
-
-    def test_staff_edit_project(self):
-        project = ProjectFactory.create()
-
-        response = self.client.get(
-            reverse('admin:projects_project_change', args=(project.pk,)))
-        self.assertIsInstance(response, TemplateResponse)
 
     def test_staff_create_project(self):
         response = self.client.get(reverse('admin:projects_project_add'))

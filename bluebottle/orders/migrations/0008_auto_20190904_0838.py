@@ -66,10 +66,18 @@ def migrate_orders(apps, schema_editor):
     # BeyonicPayment = apps.get_model('funding_beyonic', 'BeyonicPayment')
 
     # Migrate
-    for order in Order.objects.iterator():
+
+    stripe_content_type = ContentType.objects.get_for_model(StripeSourcePayment)
+    pledge_content_type = ContentType.objects.get_for_model(PledgePayment)
+    flutterwave_content_type = ContentType.objects.get_for_model(FlutterwavePayment)
+    vitepay_content_type = ContentType.objects.get_for_model(VitepayPayment)
+    lipisha_content_type = ContentType.objects.get_for_model(LipishaPayment)
+    legacy_content_type = ContentType.objects.get_for_model(LegacyPayment)
+    donation_content_type = ContentType.objects.get_for_model(NewDonation)
+
+    for order in Order.objects.prefetch_related('order_payment', 'order_payment__payment').iterator():
         order_payment = get_latest_order_payment(order)
         for donation in order.donations.all():
-            content_type = ContentType.objects.get_for_model(NewDonation)
             try:
                 funding = Funding.objects.get(slug=donation.project.slug)
             except Funding.DoesNotExist:
@@ -78,8 +86,9 @@ def migrate_orders(apps, schema_editor):
                 continue
             new_donation = NewDonation.objects.create(
                 user=order.user,
-                polymorphic_ctype=content_type,
+                polymorphic_ctype=donation_content_type,
                 activity=funding,
+                created=donation.created,
                 amount=donation.amount,
                 name=donation.name,
                 status=map_donation_status(order.status)
@@ -87,8 +96,7 @@ def migrate_orders(apps, schema_editor):
                 # fundraiser=fundraiser,
                 # anonymous=donation.anonymous
             )
-            new_donation.created = donation.created
-            new_donation.save()
+
             Wallpost.objects.filter(donation=donation).update(funding_donation=new_donation)
 
             payment= None
@@ -101,42 +109,37 @@ def migrate_orders(apps, schema_editor):
             if order_payment and payment:
                 unique_id = "order-payment-".format(order_payment.id)
                 if 'stripe' in payment.polymorphic_ctype.model:
-                    content_type = ContentType.objects.get_for_model(StripeSourcePayment)
                     new_payment = StripeSourcePayment.objects.create(
-                        polymorphic_ctype=content_type,
+                        polymorphic_ctype=stripe_content_type,
                         donation=new_donation,
                         source_token=order_payment.payment.stripepayment.source_token,
                         charge_token=order_payment.payment.stripepayment.charge_token,
                         status=map_payment_status(order_payment.payment.status)
                     )
                 elif 'pledge' in payment.polymorphic_ctype.model:
-                    content_type = ContentType.objects.get_for_model(PledgePayment)
                     new_payment = PledgePayment.objects.create(
-                        polymorphic_ctype=content_type,
+                        polymorphic_ctype=pledge_content_type,
                         donation=new_donation,
                         status=map_payment_status(order_payment.payment.status)
                     )
                 elif 'flutterwave' in payment.polymorphic_ctype.model:
-                    content_type = ContentType.objects.get_for_model(FlutterwavePayment)
                     new_payment = FlutterwavePayment.objects.create(
-                        polymorphic_ctype=content_type,
+                        polymorphic_ctype=flutterwave_content_type,
                         donation=new_donation,
                         tx_ref=order_payment.payment.flutterwavepayment.transaction_reference or unique_id,
                         status=map_payment_status(order_payment.payment.status)
                     )
                 elif 'vitepay' in payment.polymorphic_ctype.model:
-                    content_type = ContentType.objects.get_for_model(VitepayPayment)
                     new_payment = VitepayPayment.objects.create(
-                        polymorphic_ctype=content_type,
+                        polymorphic_ctype=vitepay_content_type,
                         donation=new_donation,
                         status=map_payment_status(order_payment.payment.status),
                         unique_id=unique_id,
                         payment_url = order_payment.payment.vitepaypayment.payment_url
                     )
                 elif 'lipisha' in payment.polymorphic_ctype.model:
-                    content_type = ContentType.objects.get_for_model(LipishaPayment)
                     new_payment = LipishaPayment.objects.create(
-                        polymorphic_ctype=content_type,
+                        polymorphic_ctype=lipisha_content_type,
                         donation=new_donation,
                         mobile_number=order_payment.payment.lipishapayment.transaction_mobile_number,
                         transaction=order_payment.payment.lipishapayment.transaction_reference,
@@ -144,16 +147,14 @@ def migrate_orders(apps, schema_editor):
                         status=map_payment_status(order_payment.payment.status)
                     )
                 else:
-                    content_type = ContentType.objects.get_for_model(LegacyPayment)
                     new_payment = LegacyPayment.objects.create(
-                        polymorphic_ctype=content_type,
+                        polymorphic_ctype=legacy_content_type,
+                        created=payment.created,
                         donation=new_donation,
                         method=order_payment.payment_method,
                         status=map_payment_status(order_payment.payment.status),
                         data=order_payment.payment.__dict__
                     )
-                new_payment.created = payment.created
-                new_payment.save()
 
 
 def wipe_donations(apps, schema_editor):

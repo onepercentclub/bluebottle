@@ -12,6 +12,7 @@ from django.db.models.aggregates import Sum
 from django.utils.functional import cached_property
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 from moneyed import Money
 from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
@@ -465,8 +466,8 @@ class Payment(TransitionsMixin, PolymorphicModel):
         default=PaymentTransitions.values.new,
     )
 
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(default=timezone.now)
+    updated = models.DateTimeField()
 
     donation = models.OneToOneField(Donation, related_name='payment')
 
@@ -477,6 +478,11 @@ class Payment(TransitionsMixin, PolymorphicModel):
     @property
     def can_refund(self):
         return hasattr(self, 'refund')
+
+    def save(self, *args, **kwargs):
+        self.updated = timezone.now()
+
+        super(Payment, self).save(*args, **kwargs)
 
     def __unicode__(self):
         return "{} - {}".format(self.polymorphic_ctype, self.id)

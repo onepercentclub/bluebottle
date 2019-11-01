@@ -195,8 +195,7 @@ def migrate_projects(apps, schema_editor):
     project_ct = ContentType.objects.get_for_model(Project)
     initiative_ct = ContentType.objects.get_for_model(Initiative)
 
-    for project in Project.objects.iterator():
-
+    for project in Project.objects.select_related('payout_account', 'projectlocation').iterator():
         if hasattr(project, 'projectlocation') and project.projectlocation.country:
             if project.projectlocation.latitude and project.projectlocation.longitude:
                 point = Point(
@@ -242,14 +241,14 @@ def migrate_projects(apps, schema_editor):
             slug=project.slug,
             pitch=project.pitch or '',
             story=project.story or '',
-            theme=project.theme,
+            theme_id=project.theme_id,
             video_url=project.video_url,
             place=place,
-            location=project.location,
-            owner=project.owner,
-            reviewer=project.reviewer,
-            activity_manager=project.task_manager,
-            promoter=project.promoter,
+            location_id=project.location_id,
+            owner_id=project.owner_id,
+            reviewer_id=project.reviewer_id,
+            activity_manager_id=project.task_manager_id,
+            promoter_id=project.promoter_id,
             status=map_status(project.status)
 
         )
@@ -332,7 +331,7 @@ def migrate_projects(apps, schema_editor):
                 # Common activity fields
                 polymorphic_ctype=funding_ct,  # This does not get set automatically in migrations
                 initiative=initiative,
-                owner=project.owner,
+                owner_id=project.owner_id,
                 highlight=project.is_campaign,
                 created=project.created,
                 updated=project.updated,
@@ -368,7 +367,7 @@ def migrate_projects(apps, schema_editor):
 
             for fundraiser in project.fundraiser_set.all():
                 new_fundraiser = Fundraiser.objects.create(
-                    owner=fundraiser.owner,
+                    owner_id=fundraiser.owner_id,
                     activity=funding,
                     title=fundraiser.title,
                     description=fundraiser.description,

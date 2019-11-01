@@ -84,7 +84,7 @@ def migrate_tasks(apps, schema_editor):
     assignment_ctype = ContentType.objects.get_for_model(Assignment)
     applicant_ctype= ContentType.objects.get_for_model(Applicant)
 
-    for task in Task.objects.iterator():
+    for task in Task.objects.select_related('project').prefetch_related('members').iterator():
         if task.type == 'event' and (not task.skill_id or not task.skill.expertise):
             content_type = ContentType.objects.get_for_model(Event)
             initiative = Initiative.objects.get(slug=task.project.slug)
@@ -100,7 +100,7 @@ def migrate_tasks(apps, schema_editor):
                 slug=slugify(task.title),
                 description=task.description,
                 status=status,
-                owner=task.author,
+                owner_id=task.author_id,
 
                 # event fields
                 capacity=task.people_needed,

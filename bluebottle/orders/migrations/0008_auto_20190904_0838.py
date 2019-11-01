@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 
+
 def map_donation_status(status):
     mapping = {
         'failed': 'failed',
@@ -40,10 +41,8 @@ def map_payment_status(status):
 
 def get_latest_order_payment(order):
     if order.order_payments.filter(status__in=['settled', 'authorized']).count():
-        return order.order_payments.filter(status__in=['settled', 'authorized']).order_by('-created').all()[0]
-    if order.order_payments.count():
-        return order.order_payments.order_by('-created').all()[0]
-    return None
+        return order.order_payments.filter(status__in=['settled', 'authorized']).order_by('-created').first()
+    return order.order_payments.first()
 
 
 def migrate_orders(apps, schema_editor):
@@ -75,29 +74,34 @@ def migrate_orders(apps, schema_editor):
     legacy_content_type = ContentType.objects.get_for_model(LegacyPayment)
     donation_content_type = ContentType.objects.get_for_model(NewDonation)
 
-    for order in Order.objects.prefetch_related('order_payment', 'order_payment__payment').iterator():
+    for order in Order.objects.iterator():
         order_payment = get_latest_order_payment(order)
-        for donation in order.donations.all():
+        for donation in order.donations.prefetch_related('project').all():
             try:
-                funding = Funding.objects.get(slug=donation.project.slug)
+                funding = Funding.objects.prefetch_related('rewards').get(slug=donation.project.slug)
             except Funding.DoesNotExist:
                 print donation.project.title
                 print donation.id
                 continue
+            reward = None
+            if donation.reward:
+                reward = funding.rewards.filter(title=donation.reward.title, amount=donation.reward.amount).first()
             new_donation = NewDonation.objects.create(
-                user=order.user,
+                user_id=order.user_id,
                 polymorphic_ctype=donation_content_type,
                 activity=funding,
                 created=donation.created,
                 amount=donation.amount,
                 name=donation.name,
-                status=map_donation_status(order.status)
-                # reward=reward,
+                status=map_donation_status(order.status),
+                reward=reward,
                 # fundraiser=fundraiser,
-                # anonymous=donation.anonymous
+                anonymous=donation.anonymous
             )
 
-            Wallpost.objects.filter(donation=donation).update(funding_donation=new_donation)
+            # Store reference to new donation on old one
+            donation.new_donation_id = new_donation.id
+            donation.save()
 
             payment= None
             if order_payment:
@@ -110,21 +114,24 @@ def migrate_orders(apps, schema_editor):
                 unique_id = "order-payment-".format(order_payment.id)
                 if 'stripe' in payment.polymorphic_ctype.model:
                     new_payment = StripeSourcePayment.objects.create(
+                        created=payment.created,
                         polymorphic_ctype=stripe_content_type,
                         donation=new_donation,
                         source_token=order_payment.payment.stripepayment.source_token,
                         charge_token=order_payment.payment.stripepayment.charge_token,
                         status=map_payment_status(order_payment.payment.status)
                     )
-                elif 'pledge' in payment.polymorphic_ctype.model:
+                elif 'pledge' in order_payment.payment_method:
                     new_payment = PledgePayment.objects.create(
                         polymorphic_ctype=pledge_content_type,
+                        created=payment.created,
                         donation=new_donation,
                         status=map_payment_status(order_payment.payment.status)
                     )
                 elif 'flutterwave' in payment.polymorphic_ctype.model:
                     new_payment = FlutterwavePayment.objects.create(
                         polymorphic_ctype=flutterwave_content_type,
+                        created=payment.created,
                         donation=new_donation,
                         tx_ref=order_payment.payment.flutterwavepayment.transaction_reference or unique_id,
                         status=map_payment_status(order_payment.payment.status)
@@ -132,6 +139,7 @@ def migrate_orders(apps, schema_editor):
                 elif 'vitepay' in payment.polymorphic_ctype.model:
                     new_payment = VitepayPayment.objects.create(
                         polymorphic_ctype=vitepay_content_type,
+                        created=payment.created,
                         donation=new_donation,
                         status=map_payment_status(order_payment.payment.status),
                         unique_id=unique_id,
@@ -140,6 +148,7 @@ def migrate_orders(apps, schema_editor):
                 elif 'lipisha' in payment.polymorphic_ctype.model:
                     new_payment = LipishaPayment.objects.create(
                         polymorphic_ctype=lipisha_content_type,
+                        created=payment.created,
                         donation=new_donation,
                         mobile_number=order_payment.payment.lipishapayment.transaction_mobile_number,
                         transaction=order_payment.payment.lipishapayment.transaction_reference,
@@ -156,6 +165,10 @@ def migrate_orders(apps, schema_editor):
                         data=order_payment.payment.__dict__
                     )
 
+    for wp in Wallpost.objects.select_related('donation').filter(donation__isnull=False).all():
+        wp.funding_donation_id = wp.donation.new_donation_id
+        wp.save()
+
 
 def wipe_donations(apps, schema_editor):
 
@@ -170,6 +183,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('orders', '0007_auto_20180509_1437'),
+        ('donations', '0011_auto_20191101_1046'),
         ('projects', '0091_project_to_initiatives'),
         ('funding_flutterwave', '0003_flutterwavepayoutaccount'),
         ('funding_stripe', '0001_initial'),

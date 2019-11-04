@@ -99,6 +99,7 @@ def migrate_tasks(apps, schema_editor):
                 title=task.title,
                 slug=slugify(task.title),
                 description=task.description,
+                review_status='approved',
                 status=status,
                 owner_id=task.author_id,
 
@@ -157,6 +158,7 @@ def migrate_tasks(apps, schema_editor):
                 slug=slugify(task.title),
                 description=task.description,
                 status=status,
+                review_status='approved',
                 owner=task.author,
 
                 # assignment fields

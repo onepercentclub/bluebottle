@@ -107,12 +107,17 @@ class InitiativeReviewTransitions(ReviewTransitions):
     )
     def close(self):
         for activity in self.instance.activities.all():
-            activity.review_transitions.close(send_messages=False)
-            activity.save()
+            try:
+                activity.review_transitions.close(send_messages=False)
+                activity.save()
+            except TransitionNotPossible:
+                pass
 
     @transition(
         source=[ReviewTransitions.values.closed],
         target=ReviewTransitions.values.submitted,
     )
     def reopen(self):
-        pass
+        for activity in self.instance.activities.all():
+            activity.review_transitions.reopen(send_messages=False)
+            activity.save()

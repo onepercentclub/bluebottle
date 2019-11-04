@@ -94,7 +94,7 @@ class Task(models.Model, PreviousStatusMixin):
     wallposts = GenericRelation(Wallpost, related_query_name='task_wallposts')
     mail_logs = GenericRelation(MailLog)
 
-    activity_id = models.IntegerField(null=True)
+    activity_id = models.IntegerField(null=True, blank=True)
 
     def __unicode__(self):
         return self.title

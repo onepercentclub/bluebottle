@@ -51,7 +51,6 @@ def migrate_orders(apps, schema_editor):
     Order = apps.get_model('orders', 'Order')
     Funding = apps.get_model('funding', 'Funding')
     Payment = apps.get_model('payments', 'Payment')
-    Donation = apps.get_model('donations', 'Donation')
     NewDonation = apps.get_model('funding', 'Donation')
     LegacyPayment = apps.get_model('funding', 'LegacyPayment')
     StripeSourcePayment = apps.get_model('funding_stripe', 'StripeSourcePayment')
@@ -60,11 +59,6 @@ def migrate_orders(apps, schema_editor):
     LipishaPayment = apps.get_model('funding_lipisha', 'LipishaPayment')
     VitepayPayment = apps.get_model('funding_vitepay', 'VitepayPayment')
     Wallpost = apps.get_model('wallposts', 'Wallpost')
-
-    # TelesomPayment = apps.get_model('funding_telesom', 'TelesomPayment')
-    # BeyonicPayment = apps.get_model('funding_beyonic', 'BeyonicPayment')
-
-    # Migrate
 
     stripe_content_type = ContentType.objects.get_for_model(StripeSourcePayment)
     pledge_content_type = ContentType.objects.get_for_model(PledgePayment)
@@ -77,24 +71,18 @@ def migrate_orders(apps, schema_editor):
     for order in Order.objects.iterator():
         order_payment = get_latest_order_payment(order)
         for donation in order.donations.prefetch_related('project').all():
-            try:
-                funding = Funding.objects.prefetch_related('rewards').get(slug=donation.project.slug)
-            except Funding.DoesNotExist:
-                print donation.project.title
-                print donation.id
-                continue
-            reward = None
+            reward_id = None
             if donation.reward:
-                reward = funding.rewards.filter(title=donation.reward.title, amount=donation.reward.amount).first()
+                reward_id = donation.reward.new_reward_id
             new_donation = NewDonation.objects.create(
                 user_id=order.user_id,
                 polymorphic_ctype=donation_content_type,
-                activity=funding,
+                activity_id=donation.project.funding_id,
                 created=donation.created,
                 amount=donation.amount,
                 name=donation.name,
                 status=map_donation_status(order.status),
-                reward=reward,
+                reward_id=reward_id,
                 # fundraiser=fundraiser,
                 anonymous=donation.anonymous
             )
@@ -187,7 +175,8 @@ class Migration(migrations.Migration):
         ('projects', '0091_project_to_initiatives'),
         ('funding_flutterwave', '0003_flutterwavepayoutaccount'),
         ('funding_stripe', '0001_initial'),
-        ('wallposts', '0019_auto_20191017_2204')
+        ('wallposts', '0019_auto_20191017_2204'),
+        ('rewards', '0009_auto_20191104_1230')
     ]
 
     operations = [

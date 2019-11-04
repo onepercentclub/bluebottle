@@ -13,7 +13,8 @@ class Donation(models.Model):
     """
     Donation of an amount from a user to a project.
     """
-    new_donation_id = models.IntegerField(null=True)
+    new_donation_id = models.IntegerField(null=True, blank=True)
+
     amount = MoneyField(_("Amount"))
     payout_amount = MoneyField(_("Payout amount"))
 

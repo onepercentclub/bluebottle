@@ -71,19 +71,13 @@ def migrate_orders(apps, schema_editor):
     for order in Order.objects.iterator():
         order_payment = get_latest_order_payment(order)
         for donation in order.donations.prefetch_related('project').all():
-            try:
-                funding = Funding.objects.prefetch_related('rewards').get(slug=donation.project.slug)
-            except Funding.DoesNotExist:
-                print donation.project.title
-                print donation.id
-                continue
             reward_id = None
             if donation.reward:
                 reward_id = donation.reward.new_reward_id
             new_donation = NewDonation.objects.create(
                 user_id=order.user_id,
                 polymorphic_ctype=donation_content_type,
-                activity=funding,
+                activity_id=donation.project.funding_id,
                 created=donation.created,
                 amount=donation.amount,
                 name=donation.name,

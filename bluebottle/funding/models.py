@@ -288,7 +288,7 @@ class Reward(models.Model):
         help_text=_('How many of this rewards are available')
     )
 
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
     @property
@@ -324,7 +324,7 @@ class BudgetLine(models.Model):
 
     amount = MoneyField()
 
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
     class JSONAPIMeta:
@@ -354,7 +354,7 @@ class Fundraiser(models.Model):
     amount = MoneyField(_("amount"))
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
@@ -541,7 +541,7 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
         related_name='funding_payout_account'
     )
 
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
 

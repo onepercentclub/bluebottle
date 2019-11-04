@@ -320,7 +320,7 @@ def migrate_projects(apps, schema_editor):
                             address=plain_account.account_holder_address
                         )
 
-                    if str(project.amount_asked.currency) == 'CFA':
+                    if str(project.amount_asked.currency) == 'XOF':
                         account = VitepayBankAccount.objects.create(
                             polymorphic_ctype=vitepay_ct,
                             connect_account=payout_account,
@@ -356,11 +356,10 @@ def migrate_projects(apps, schema_editor):
                 new_budget_line = BudgetLine.objects.create(
                     activity=funding,
                     amount=budget_line.amount,
-                    description=budget_line.description
+                    description=budget_line.description,
+                    created=budget_line.created,
+                    updated=budget_line.updated
                 )
-                new_budget_line.created = budget_line.created
-                new_budget_line.updated = budget_line.updated
-                new_budget_line.save()
 
             fundraiser_ct = ContentType.objects.get_for_model(Initiative)
             old_fundraiser_ct = ContentType.objects.get_for_model(Project)
@@ -373,10 +372,9 @@ def migrate_projects(apps, schema_editor):
                     description=fundraiser.description,
                     amount=fundraiser.amount,
                     deadline=fundraiser.deadline,
+                    created=fundraiser.created,
+                    updated=fundraiser.updated
                 )
-                new_fundraiser.created = fundraiser.created
-                new_fundraiser.updated = fundraiser.updated
-                new_fundraiser.deleted = fundraiser.deleted
                 new_fundraiser.save()
                 if fundraiser.image:
                     try:
@@ -395,10 +393,10 @@ def migrate_projects(apps, schema_editor):
                     description=reward.description,
                     title=reward.title,
                     limit=reward.limit,
+                    created=reward.created,
+                    updated=reward.updated
                 )
-                new_reward.created = reward.created
-                new_reward.updated = reward.updated
-                new_reward.save()
+                reward.new_reward_id = new_reward.id
         else:
             Wallpost.objects.filter(content_type=project_ct, object_id=project.id).\
                 update(content_type=initiative_ct, object_id=initiative.id)
@@ -419,12 +417,13 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('projects', '0090_merge_20190222_1101'),
-        ('funding', '0035_auto_20191002_1415'),
+        ('funding', '0042_auto_20191104_1154'),
         ('funding_lipisha', '0006_auto_20191001_2251'),
         ('funding_vitepay', '0007_auto_20191002_0903'),
         ('funding_flutterwave', '0005_auto_20191002_0903'),
         ('funding_stripe', '0001_initial'),
         ('funding_pledge', '0002_pledgepaymentprovider'),
+        ('rewards', '0008_auto_20170914_2029')
     ]
 
     operations = [

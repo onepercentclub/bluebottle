@@ -182,7 +182,7 @@ class Migration(migrations.Migration):
         ('funding_flutterwave', '0003_flutterwavepayoutaccount'),
         ('funding_stripe', '0001_initial'),
         ('wallposts', '0019_auto_20191017_2204'),
-        ('rewards', '0008_auto_20170914_2029')
+        ('rewards', '0009_auto_20191104_1230')
     ]
 
     operations = [

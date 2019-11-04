@@ -397,6 +397,7 @@ def migrate_projects(apps, schema_editor):
                     updated=reward.updated
                 )
                 reward.new_reward_id = new_reward.id
+                reward.save()
         else:
             Wallpost.objects.filter(content_type=project_ct, object_id=project.id).\
                 update(content_type=initiative_ct, object_id=initiative.id)

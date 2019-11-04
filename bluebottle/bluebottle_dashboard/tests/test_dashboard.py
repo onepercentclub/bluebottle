@@ -35,7 +35,8 @@ class MainDashboardTest(BluebottleAdminTestCase):
         # Override settings to show export options
         response = self.client.get(self.admin_url)
         self.assertContains(response, 'Download report')
-        self.assertContains(response, 'Request complete participation metrics')
+        # Get rid of this
+        self.assertNotContains(response, 'Request complete participation metrics')
 
 
 class CustomAppDashboardTest(BluebottleAdminTestCase):

@@ -79,7 +79,7 @@ class ActivityReviewTransitions(ReviewTransitions):
         permissions=[can_review]
     )
     def close(self):
-        pass
+        self.instance.transitions.close()
 
     @transition(
         source=[ReviewTransitions.values.closed],

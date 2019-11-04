@@ -3,10 +3,13 @@ from django.contrib.contenttypes.models import ContentType
 
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.utils.html import format_html
+
 from geoposition.fields import GeopositionField
 from sorl.thumbnail import ImageField
 from parler.models import TranslatedFields
 
+from bluebottle.geo.fields import PointField
 from bluebottle.utils.models import SortableTranslatableModel
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
@@ -92,6 +95,10 @@ class Country(GeoBaseModel):
             "Whether a country is a recipient of Official Development"
             "Assistance from the OECD's Development Assistance Committee."))
 
+    @property
+    def code(self):
+        return self.alpha2_code
+
     class Meta(GeoBaseModel.Meta):
         ordering = ['translations__name']
         verbose_name = _("country")
@@ -124,8 +131,8 @@ class Location(models.Model):
 
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']
-        verbose_name = _('location')
-        verbose_name_plural = _('locations')
+        verbose_name = _('office location')
+        verbose_name_plural = _('office locations')
 
     def __unicode__(self):
         return self.name
@@ -146,3 +153,38 @@ class Place(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
+
+
+class InitiativePlace(models.Model):
+    street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
+    street = models.CharField(_('Street'), max_length=255, blank=True, null=True)
+    postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)
+    locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
+    province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
+    country = models.ForeignKey('geo.Country')
+
+    formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
+
+    position = GeopositionField()
+
+
+class Geolocation(models.Model):
+    street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
+    street = models.CharField(_('Street'), max_length=255, blank=True, null=True)
+    postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)
+    locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
+    province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
+    country = models.ForeignKey('geo.Country')
+
+    formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
+
+    position = PointField()
+
+    class JSONAPIMeta:
+        resource_name = 'locations'
+
+    def __unicode__(self):
+        if self.locality:
+            return format_html(u"{}, {}", self.locality, self.country.name)
+        else:
+            return self.country.name

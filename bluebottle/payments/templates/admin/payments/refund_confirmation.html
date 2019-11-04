@@ -1,0 +1,17 @@
+{% extends "admin/confirmation.html" %}
+{% load i18n l10n admin_urls %}
+
+{% block confirmation_message %}
+    <p>{% trans "Are you sure you want to REFUND this payment: " %}</p>
+{% endblock %} 
+
+{% block confirmation_content %}
+  <h2>{% trans "Refund payment" %}</h2>
+  <ul>
+    <li>{{ obj }}</li>
+  </ul>
+  <ul>
+      <li>{% trans "Total amount" %}: {{ obj.donation.amount }}</li>
+      <li>{% trans "Funding" %}: {{ obj.donation.activity.title }}</li>
+  </ul>
+{% endblock %}

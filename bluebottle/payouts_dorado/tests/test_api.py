@@ -2,6 +2,7 @@ from django.test import override_settings
 from mock import patch
 import os
 
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.projects.models import Project
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
@@ -125,7 +126,7 @@ MERCHANT_ACCOUNTS = [
     {
         'merchant': 'stripe',
         'currency': 'EUR',
-        'secret_key': 'sk_test_secret_key',
+        'api_key': 'sk_test_api_key',
         'webhook_secret': 'whsec_test_webhook_secret',
         'webhook_secret_connect': 'whsec_test_webhook_secret_connect',
     }
@@ -210,6 +211,7 @@ class TestPayoutProjectApi(BluebottleTestCase):
     def test_payouts_api_complete_project_details_stripe(self, stripe_retrieve):
         """
         """
+        StripePaymentProviderFactory.create()
         stripe_retrieve.return_value = json2obj(
             open(os.path.dirname(__file__) + '/data/stripe_account_verified.json').read()
         )

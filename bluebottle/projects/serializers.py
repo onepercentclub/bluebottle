@@ -13,7 +13,6 @@ from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer, PlaceSerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
-from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.payouts.serializers import PayoutAccountSerializer
 from bluebottle.projects.models import (
     ProjectBudgetLine, Project, ProjectImage,
@@ -136,7 +135,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     image = ImageSerializer(required=False)
     is_funding = serializers.ReadOnlyField()
     location = serializers.PrimaryKeyRelatedField(required=False, queryset=Location.objects)
-    organization = OrganizationPreviewSerializer(read_only=True)
     owner = UserProfileSerializer()
     people_needed = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
@@ -190,13 +188,11 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'longitude',
                   'project_location',
                   'open_task_count',
-                  'organization',
                   'owner',
                   'people_needed',
                   'people_registered',
                   'permissions',
                   'pitch',
-                  'place',
                   'project_type',
                   'promoter',
                   'realized_task_count',
@@ -255,7 +251,6 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'people_needed',
                   'people_registered',
                   'pitch',
-                  'place',
                   'project_type',
                   'realized_task_count',
                   'skills',
@@ -295,7 +290,6 @@ class ManageTaskSerializer(serializers.ModelSerializer):
                   'skill',
                   'time_needed',
                   'title',
-                  'place',
                   'type',)
 
 
@@ -464,12 +458,10 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'latitude',
                   'location',
                   'longitude',
-                  'organization',
                   'payout_account',
                   'people_needed',
                   'people_registered',
                   'pitch',
-                  'place',
                   'project_location',
                   'project_type',
                   'promoter',

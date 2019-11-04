@@ -1,15 +1,12 @@
 import logging
-import stripe
 
 from django.http import HttpResponse
 from django.views.generic import View
 
+from bluebottle.funding_stripe.utils import stripe
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.services import PaymentService
-from bluebottle.payments_stripe.utils import get_webhook_secret
-
 from .models import StripePayment
-
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +18,7 @@ class WebHookView(View):
 
         try:
             event = stripe.Webhook.construct_event(
-                payload, signature_header, get_webhook_secret()
+                payload, signature_header, stripe.webhook_secret_sources
             )
 
             if event.type == 'source.chargeable':

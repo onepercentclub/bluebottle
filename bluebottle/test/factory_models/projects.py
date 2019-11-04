@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+from djmoney.money import Money
+
 from bluebottle.test.factory_models.utils import LanguageFactory
 from django.utils import timezone
 
@@ -56,6 +58,6 @@ class ProjectFactory(factory.DjangoModelFactory):
     language = factory.SubFactory(LanguageFactory)
 
     deadline = timezone.now() + timedelta(days=100)
-    amount_needed = 100
-    amount_asked = 100
+    amount_needed = Money(100, 'EUR')
+    amount_asked = Money(100, 'EUR')
     allow_overfunding = True

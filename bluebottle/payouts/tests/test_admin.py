@@ -1,21 +1,20 @@
 import os
 
+from django.contrib.admin import AdminSite
+from django.contrib.auth.models import Permission, Group
+from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
 from django.test import override_settings
 from mock import patch
 
-from bluebottle.utils.utils import json2obj
-from django.contrib.admin import AdminSite
-
-from bluebottle.payouts.models import StripePayoutAccount
-from django.contrib.auth.models import Permission, Group
-from django.core.urlresolvers import reverse
-
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.payouts import PlainPayoutAccountFactory, StripePayoutAccountFactory
-from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.payouts.admin.stripe import StripePayoutAccountAdmin
-
+from bluebottle.payouts.models import StripePayoutAccount
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.payouts import PlainPayoutAccountFactory, StripePayoutAccountFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.utils.utils import json2obj
 
 MERCHANT_ACCOUNTS = [
     {
@@ -38,6 +37,7 @@ PROJECT_PAYOUT_FEES = {
 class StripePayoutTestAdmin(BluebottleAdminTestCase):
     def setUp(self):
         super(StripePayoutTestAdmin, self).setUp()
+        StripePaymentProviderFactory.create()
         self.payout = StripePayoutAccountFactory.create(
 
         )
@@ -131,8 +131,11 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
 
     def test_permissions_granted_user(self):
         # Check user has permission when added specific permission
+        ctype = ContentType.objects.get(app_label="payouts", model="plainpayoutaccount")
         self.user.user_permissions.add(
-            Permission.objects.get(codename='change_plainpayoutaccount')
+            Permission.objects.get(
+                codename='change_plainpayoutaccount',
+                content_type=ctype)
         )
         self.client.force_login(self.user)
         response = self.client.get(self.payout_url)

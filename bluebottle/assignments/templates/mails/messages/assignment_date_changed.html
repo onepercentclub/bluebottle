@@ -1,0 +1,18 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=to.first_name assignment_title=obj.title assignment_date=obj.start|date context 'email' %}
+Hi {{ recipient_name }},
+<br><br>
+Heads up: The date and time of your task "{{ assignment_title }}" has been changed. 
+<br><br>
+The new date is: {{ assignment_date }}.
+{% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ site }}{{ obj.get_absolute_url }}" class="action-email">
+       {% trans 'Goto task' context 'email' %}:
+    </a>
+{% endblock %}`

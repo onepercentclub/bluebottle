@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import (CreationDateTimeField,
                                          ModificationDateTimeField)
 
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import LegacyMoneyField as MoneyField
 from bluebottle.utils.utils import StatusDefinition
 
 
@@ -12,6 +12,7 @@ class Reward(models.Model):
     """
     Rewards for donations
     """
+    new_reward_id = models.IntegerField(null=True, blank=True)
     amount = MoneyField(_('Amount'))
     title = models.CharField(_('Title'), max_length=200)
     description = models.CharField(_('Description'), max_length=500)

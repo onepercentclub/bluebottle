@@ -1,0 +1,12 @@
+{% extends "base.mail.txt" %}
+{% load money %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with recipient_name=obj.user.first_name title=obj.activity.title context 'email' %}
+        Hi {{ recipient_name }},
+        Your donation to {{ title }} will be fully refunded within 10 days.
+        Either you requested this refund or the campaign didn’t reach its funding goal.
+        If you have any questions about this refund, please contact {{ admin_email }}.
+    {% endblocktrans %}
+{% endblock content %}

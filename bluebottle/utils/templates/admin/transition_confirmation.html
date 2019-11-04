@@ -1,0 +1,46 @@
+{% extends "admin/confirmation.html" %}
+
+{% load i18n l10n admin_urls %}
+
+{% block confirmation_content %}
+<h2>{{ obj.title }}</h2>
+{% endblock %}
+
+{% block content %}
+    {% block confirmation_message %}
+        <p>
+            {% blocktrans with target=target source=source %}
+                Are you sure you want to change status from <b>{{source}}</b> to <b>{{target}}</b>?<br/>
+            {% endblocktrans %}
+
+            {% if notifications %}
+                {% blocktrans with message_count=notifications|length %}
+                    This will send out {{message_count}} email(s).
+                {% endblocktrans %}
+                <ul>
+                    {% for message in notifications %}
+                        <li>
+                            <b>{{message.subject}}</b> - {{message.recipient.full_name}} - {{message.recipient.email}}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </p>
+    {% endblock %}
+
+    <form action="" method="post">{% csrf_token %}
+        {% if notifications %}
+            {% for field in form %}
+                {{ field }}{{ field.label_tag }}<br/>
+                <small>{{field.help_text}}</small>
+            {% endfor %}
+        {% endif %}
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}"/>
+        <div class="submit-row">
+            <input type="hidden" name="action" value="{{ action }}"/>
+            <input type="submit" class="button danger" name="confirm" value="{% trans " Yes, I am sure" %}"/>
+            <a href="#" onclick="window.history.back(); return false;"
+               class="button cancel-link">{% trans "No, take me back" %}</a>
+        </div>
+    </form>
+{% endblock %}

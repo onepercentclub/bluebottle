@@ -1,16 +1,19 @@
-from HTMLParser import HTMLParser
 import json
-from moneyed import Money
 import re
+from HTMLParser import HTMLParser
 
 from django.core.urlresolvers import resolve, reverse
 from django.core.validators import BaseValidator
 from django.utils.translation import ugettext_lazy as _
-
+from moneyed import Money
 from rest_framework import serializers
+from rest_framework.utils import model_meta
+from rest_framework_json_api.relations import SerializerMethodResourceRelatedField
+from rest_framework_json_api.serializers import ModelSerializer as JSONAPIModelSerializer
 
-from .validators import validate_postal_code
+from bluebottle.utils.fields import FSMField
 from .models import Address, Language
+from .validators import validate_postal_code
 
 
 class MaxAmountValidator(BaseValidator):
@@ -237,3 +240,141 @@ class RelatedResourcePermissionField(BasePermissionField):
             (perm.has_parent_permission(method, user, value, view.model) and
              perm.has_action_permission(method, user, view.model))
             for perm in view.get_permissions())
+
+
+class FSMModelSerializer(JSONAPIModelSerializer):
+    def update(self, instance, validated_data):
+        fsm_fields = dict(
+            (key, validated_data.pop(key)) for key, field in self.fields.items()
+            if isinstance(field, FSMField) and key in validated_data
+        )
+        for key, value in fsm_fields.items():
+            transitions = getattr(
+                instance,
+                'get_available_{}_transitions'.format(key)
+            )()
+            transition = [
+                transition for transition in transitions if
+                transition.target == value
+            ][0]
+            getattr(instance, transition.name)()
+
+        return super(FSMModelSerializer, self).update(instance, validated_data)
+
+
+class FSMSerializer(serializers.ModelSerializer):
+    def update(self, instance, validated_data):
+        fsm_fields = dict(
+            (key, validated_data.pop(key)) for key, field in self.fields.items()
+            if isinstance(field, FSMField)
+        )
+        for key, value in fsm_fields.items():
+            transitions = getattr(
+                instance,
+                'get_available_{}_transitions'.format(key)
+            )()
+            transition = [
+                transition for transition in transitions if
+                transition.target == value
+            ][0]
+            getattr(instance, transition.name)()
+
+        return super(FSMSerializer, self).update(instance, validated_data)
+
+
+class FilteredRelatedField(SerializerMethodResourceRelatedField):
+    """
+    Filter a related queryset based on `filter_backend`.
+    Example:
+    `contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
+    Note: `many=True` is required
+    """
+    def __init__(self, **kwargs):
+        self.filter_backend = kwargs.pop('filter_backend', None)
+        kwargs['read_only'] = True
+        super(FilteredRelatedField, self).__init__(**kwargs)
+
+    def get_attribute(self, instance):
+        queryset = super(FilteredRelatedField, self).get_attribute(instance)
+        filter_backend = self.child_relation.filter_backend
+        queryset = filter_backend().filter_queryset(
+            request=self.context['request'],
+            queryset=queryset,
+            view=self.context['view']
+        )
+        return queryset
+
+
+class FilteredPolymorphicResourceRelatedField(SerializerMethodResourceRelatedField):
+    """
+    Filter a related queryset based on `filter_backend`.
+    Example:
+    `contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
+    Note: `many=True` is required
+    """
+
+    _skip_polymorphic_optimization = False
+
+    def use_pk_only_optimization(self):
+        return False
+
+    def __init__(self, **kwargs):
+        self.polymorphic_serializer = kwargs.pop('polymorphic_serializer', None)
+        self.filter_backend = kwargs.pop('filter_backend', None)
+        kwargs['read_only'] = True
+        super(FilteredPolymorphicResourceRelatedField, self).__init__(**kwargs)
+
+    def get_attribute(self, instance):
+        queryset = super(FilteredPolymorphicResourceRelatedField, self).get_attribute(instance)
+        filter_backend = self.child_relation.filter_backend
+        queryset = filter_backend().filter_queryset(
+            request=self.context['request'],
+            queryset=queryset,
+            view=self.context['view']
+        )
+        return queryset
+
+
+class RelatedField(serializers.Field):
+    def __init__(self, queryset, *args, **kwargs):
+        self.queryset = queryset
+        super(RelatedField, self).__init__(*args, **kwargs)
+
+    def to_internal_value(self, data):
+        if not data:
+            return data
+
+        try:
+            data = data['id']
+        except TypeError:
+            pass
+
+        return self.queryset.get(pk=data)
+
+    def to_representation(self, value):
+        if hasattr(value, 'pk'):
+            value = value.pk
+
+        return value
+
+
+class NoCommitMixin():
+    def update(self, instance, validated_data):
+        serializers.raise_errors_on_nested_writes('update', self, validated_data)
+        info = model_meta.get_field_info(instance)
+
+        # Simply set each attribute on the instance, and then save it.
+        # Note that unlike `.create()` we don't need to treat many-to-many
+        # relationships as being a special case. During updates we already
+        # have an instance pk for the relationships to be associated with.
+        for attr, value in validated_data.items():
+            if attr in info.relations and info.relations[attr].to_many:
+                field = getattr(instance, attr)
+                field.set(value)
+            else:
+                setattr(instance, attr, value)
+
+        if not self.context['request'].META.get('HTTP_X_DO_NOT_COMMIT'):
+            instance.save()
+
+        return instance

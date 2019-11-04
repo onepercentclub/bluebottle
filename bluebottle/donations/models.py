@@ -1,11 +1,10 @@
-from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
-
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
+from bluebottle.utils.fields import LegacyMoneyField as MoneyField
 
-from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import MailLog
 from bluebottle.utils.utils import StatusDefinition
 
@@ -14,6 +13,8 @@ class Donation(models.Model):
     """
     Donation of an amount from a user to a project.
     """
+    new_donation_id = models.IntegerField(null=True, blank=True)
+
     amount = MoneyField(_("Amount"))
     payout_amount = MoneyField(_("Payout amount"))
 

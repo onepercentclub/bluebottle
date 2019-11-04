@@ -1,12 +1,9 @@
 import csv
-from moneyed import Money
-import urllib
 
 from adminfilters.multiselect import UnionFieldListFilter
-from django_singleton_admin.admin import SingletonAdmin
-
 from django.conf import settings
-from django.contrib import admin
+from django.conf.urls import url
+from django.contrib import admin, messages
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.contenttypes.models import ContentType
@@ -15,94 +12,21 @@ from django.db.models.aggregates import Sum
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
-from django.urls.exceptions import NoReverseMatch
-from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.http import HttpResponseRedirect
+from django.template import loader
+from django.template.response import TemplateResponse
+from django_singleton_admin.admin import SingletonAdmin
+from moneyed import Money
 
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.clients import properties
+from bluebottle.fsm import TransitionNotPossible
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
 from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.exchange_rates import convert
-
+from bluebottle.utils.forms import FSMModelForm
+from bluebottle.utils.forms import TransitionConfirmationForm
 from .models import Language
-
-
-def link_to(value, url_name, view_args=(), view_kwargs={}, query={},
-            short_description=None, truncate=None):
-    """
-    Return admin field with link to named view with view_args/view_kwargs
-    or view_[kw]args(obj) methods and HTTP GET parameters.
-
-    Parameters:
-
-      * value: function(object) or string for object proeprty name
-      * url_name: name used to reverse() view
-      * view_args: () or function(object) -> () returing view params
-      * view_kwargs: {} or function(object) -> {} returing view params
-      * query: {} or function(object) -> {} returning HTTP GET params
-      * short_description: string with description, defaults to
-        'value'/property name
-    """
-
-    def prop(self, obj):
-        # Replace view_args methods by result of function calls
-        if callable(view_args):
-            args = view_args(obj)
-        else:
-            args = view_args
-
-        if callable(view_kwargs):
-            kwargs = view_kwargs(obj)
-        else:
-            kwargs = view_kwargs
-
-        # Construct URL
-        try:
-            url = reverse(url_name, args=args, kwargs=kwargs)
-        except NoReverseMatch:
-            url = ''
-
-        if callable(query):
-            params = query(obj)
-        else:
-            params = query
-
-        # Append query parameters
-        if params:
-            url += '?' + urllib.urlencode(params)
-
-        # Get value
-        if callable(value):
-            # Call value getter
-            new_value = value(obj)
-        else:
-            # String, assume object property
-            assert isinstance(value, basestring)
-            new_value = getattr(obj, value)
-
-        if truncate:
-            new_value = unicode(new_value)
-            new_value = (new_value[:truncate] + '...') if len(
-                new_value) > truncate else new_value
-
-        if url and new_value:
-            return format_html(
-                u'<a href="{}">{}</a>',
-                url, new_value
-            )
-        if url:
-            return None
-        return new_value
-
-    if not short_description:
-        # No short_description set, use property name
-        assert isinstance(value, basestring)
-        short_description = value
-    prop.short_description = short_description
-
-    return prop
 
 
 class LanguageAdmin(admin.ModelAdmin):
@@ -137,17 +61,6 @@ def prep_field(request, obj, field, manyToManySep=';'):
     if isinstance(output, (list, tuple, QuerySet)):
         output = manyToManySep.join([str(item) for item in output])
     return unicode(output).encode('utf-8') if output else ""
-
-
-def mark_as_plan_new(modeladmin, request, queryset):
-    try:
-        status = ProjectPhase.objects.get(slug='plan-new')
-    except ProjectPhase.DoesNotExist:
-        return
-    queryset.update(status=status)
-
-
-mark_as_plan_new.short_description = _("Mark selected projects as status Plan New")
 
 
 def escape_csv_formulas(item):
@@ -266,9 +179,6 @@ class BasePlatformSettingsAdmin(SingletonAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    def has_add_permission(self, request, obj=None):
-        return False
-
 
 class TranslatedUnionFieldListFilter(UnionFieldListFilter):
 
@@ -288,3 +198,106 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
         action_flag=action_flag,
         change_message=change_message
     )
+
+
+class FSMAdminMixin(object):
+    form = FSMModelForm
+
+    readonly_fields = ['status']
+
+    def get_transition(self, instance, name, field_name):
+        transitions = getattr(instance, field_name).all_transitions
+        for transition in transitions:
+            if transition.name == name:
+                return transition
+
+    def transition(self, request, pk, field_name, transition_name, send_messages=True):
+        link = reverse(
+            'admin:{}_{}_change'.format(
+                self.model._meta.app_label, self.model._meta.model_name
+            ),
+            args=(pk, )
+        )
+
+        if not request.user.has_perm('initiative.change_initiative'):
+            messages.error(request, 'Missing permission: initiative.change_initiative')
+            return HttpResponseRedirect(link)
+
+        instance = self.model.objects.get(pk=pk)
+        form = TransitionConfirmationForm(request.POST)
+        transition = self.get_transition(instance, transition_name, field_name)
+
+        if not transition:
+            messages.error(
+                request,
+                'Transition not allowed: {}'.format(transition_name)
+            )
+            return HttpResponseRedirect(link)
+
+        if 'confirm' in request.POST and request.POST['confirm']:
+            if form.is_valid():
+                send_messages = form.cleaned_data['send_messages']
+
+                try:
+                    transitions = getattr(instance, field_name)
+                    getattr(transitions, transition.name)(
+                        send_messages=send_messages
+                    )
+
+                    instance.save()
+                    log_action(
+                        instance,
+                        request.user,
+                        'Changed status to {}'.format(transition.name)
+                    )
+
+                    return HttpResponseRedirect(link)
+                except TransitionNotPossible:
+                    errors = transition.errors(instance.transitions)
+                    if errors:
+                        template = loader.get_template(
+                            'admin/transition_errors.html'
+                        )
+                        error_message = template.render({'errors': errors})
+                    else:
+                        error_message = 'Transition not allowed: {}'.format(transition.name)
+
+                    messages.error(request, error_message)
+
+                    return HttpResponseRedirect(link)
+
+        transition_messages = []
+        for message_list in [message(instance).get_messages() for message in transition.options.get('messages', [])]:
+            transition_messages += message_list
+
+        context = dict(
+            self.admin_site.each_context(request),
+            title=TransitionConfirmationForm.title,
+            action=transition.name,
+            opts=self.model._meta,
+            obj=instance,
+            pk=instance.pk,
+            form=form,
+            source=instance.status,
+            notifications=transition_messages,
+            target=transition.name,
+        )
+
+        return TemplateResponse(
+            request, 'admin/transition_confirmation.html', context
+        )
+
+    def get_urls(self):
+        urls = super(FSMAdminMixin, self).get_urls()
+        custom_urls = [
+            url(
+                r'^(?P<pk>.+)/transition/(?P<field_name>.+)/(?P<transition_name>.+)$',
+                self.admin_site.admin_view(self.transition),
+                name='{}_{}_transition'.format(self.model._meta.app_label, self.model._meta.model_name),
+            ),
+        ]
+        return custom_urls + urls
+
+
+class FSMAdmin(FSMAdminMixin, admin.ModelAdmin):
+    pass

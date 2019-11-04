@@ -1,0 +1,15 @@
+{% extends "base.mail.txt" %}
+{% load money %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with recipient_name=obj.owner.first_name title=obj.title context 'email' %}
+        Hi {{ recipient_name }},
+        Congrats! Your funding deadline for "{{title}}" has passed and you’ve successfully reached your funding goal.
+        Head over to your campaign page and thank your awesome backers for their support.
+    {% endblocktrans %}
+{% endblock content %} 
+
+{% block action %}
+   {% trans 'Go to campaign' context 'email' %}: {{ obj.activity.get_absolute_url }}
+{% endblock %}`

@@ -4,32 +4,38 @@ from collections import namedtuple
 
 import magic
 
+from django.db.models import Case, When, IntegerField
 from django.conf import settings
+from django.core.paginator import Paginator
 from django.core.signing import TimestampSigner, BadSignature
-from django.http.response import HttpResponseNotFound
+from django.utils.functional import cached_property
 from django.http import Http404, HttpResponse
+from django.http.response import HttpResponseNotFound
 from django.template.loader import render_to_string
-from django.utils.translation import ugettext as _
 from django.utils import translation
+from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
 from parler.utils.i18n import get_language
-
 from rest_framework import generics
 from rest_framework import views, response
+from rest_framework_json_api.exceptions import exception_handler
+from rest_framework_json_api.pagination import JsonApiPageNumberPagination
+from rest_framework_json_api.parsers import JSONParser
+from rest_framework_json_api.views import AutoPrefetchMixin
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from sorl.thumbnail.shortcuts import get_thumbnail
 from taggit.models import Tag
 from tenant_extras.utils import TenantLanguage
 
+from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.clients import properties
 from bluebottle.projects.models import Project
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.permissions import ResourcePermission
-
 from .models import Language
 from .serializers import ShareSerializer, LanguageSerializer
-
 
 mime = magic.Magic(mime=True)
 
@@ -217,19 +223,39 @@ class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView):
             self.request,
             serializer.Meta.model(**serializer.validated_data)
         )
-
         serializer.save()
 
 
-class CreateAPIView(ViewPermissionsMixin, generics.CreateAPIView):
+class RelatedPermissionMixin(object):
+    related_permission_classes = {}
+
+    def check_related_object_permissions(self, request, obj):
+        """
+        Check if the request should be permitted for a given related object.
+        Raises an appropriate exception if the request is not permitted.
+        """
+        for related, permissions in self.related_permission_classes.items():
+            related_obj = getattr(obj, related)
+            for permission in permissions:
+                if not permission().has_object_permission(request, None, related_obj):
+                    self.permission_denied(
+                        request, message=getattr(permission, 'message', None)
+                    )
+
+
+class CreateAPIView(ViewPermissionsMixin, generics.CreateAPIView, RelatedPermissionMixin):
     permission_classes = (ResourcePermission,)
 
     def perform_create(self, serializer):
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
+        if hasattr(serializer.Meta, 'model'):
+            self.check_object_permissions(
+                self.request,
+                serializer.Meta.model(**serializer.validated_data)
+            )
+            self.check_related_object_permissions(
+                self.request,
+                serializer.Meta.model(**serializer.validated_data)
+            )
         serializer.save()
 
 
@@ -244,8 +270,9 @@ class RetrieveUpdateDestroyAPIView(ViewPermissionsMixin, generics.RetrieveUpdate
 class PrivateFileView(DetailView):
     """ Serve private files using X-sendfile header. """
     field = None  # Field on the model that is the actual file
+    relation = None  # If the file is in a related object (e.g. Document)
     signer = TimestampSigner()
-    max_age = 6 * 60 * 60
+    max_age = 6 * 60 * 60  # 6 hours
     query_pk_and_slug = True
 
     def get_object(self):
@@ -260,7 +287,10 @@ class PrivateFileView(DetailView):
         return super(PrivateFileView, self).get_object()
 
     def get(self, request, *args, **kwargs):
-        field = getattr(self.get_object(), self.field)
+        if self.relation:
+            field = getattr(getattr(self.get_object(), self.relation), self.field)
+        else:
+            field = getattr(self.get_object(), self.field)
         filename = os.path.basename(field.name)
         content_type = mimetypes.guess_type(filename)[0]
         response = HttpResponse()
@@ -300,3 +330,70 @@ class TranslatedApiViewMixin(object):
         )
         qs = qs.order_by(*qs.model._meta.ordering)
         return qs
+
+
+class ESPaginator(Paginator):
+    @cached_property
+    def count(self):
+        """
+        Returns the total number of objects, across all pages.
+        """
+        if isinstance(self.object_list, tuple):
+            _, object_list = self.object_list
+        else:
+            object_list = self.object_list
+
+        try:
+            return object_list.count()
+        except (AttributeError, TypeError):
+            # AttributeError if object_list has no count() method.
+            # TypeError if object_list.count() requires arguments
+            # (i.e. is of type list).
+            return len(object_list)
+
+    def page(self, number):
+        number = self.validate_number(number)
+        bottom = (number - 1) * self.per_page
+        top = bottom + self.per_page
+
+        if top + self.orphans >= self.count:
+            top = self.count
+
+        if isinstance(self.object_list, tuple):
+            queryset, search = self.object_list
+            page = self._get_page(search[bottom:top], number, self)
+
+            try:
+                pks = [result._id for result in search[bottom:top]]
+                queryset = queryset.filter(pk__in=pks)
+            except ValueError:
+                pks = search.to_queryset().values_list('id', flat=True)
+                queryset = search.to_queryset()
+
+            preserved_order = Case(
+                *[When(pk=pk, then=pos) for pos, pk in enumerate(pks)],
+                output_field=IntegerField()
+            )
+            page.object_list = queryset.annotate(search_order=preserved_order).order_by('search_order')
+        else:
+            page = self._get_page(self.object_list[bottom:top], number, self)
+
+        return page
+
+
+class JsonApiPagination(JsonApiPageNumberPagination):
+    page_size = 8
+    django_paginator_class = ESPaginator
+
+
+class JsonApiViewMixin(AutoPrefetchMixin):
+
+    pagination_class = JsonApiPagination
+
+    parser_classes = (JSONParser,)
+    renderer_classes = (BluebottleJSONAPIRenderer,)
+
+    authentication_classes = (JSONWebTokenAuthentication,)
+
+    def get_exception_handler(self):
+        return exception_handler

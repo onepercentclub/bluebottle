@@ -1,13 +1,12 @@
-from collections import namedtuple
-
-import bleach
-from importlib import import_module
 import json
 import logging
-import pygeoip
 import socket
 import urllib
+from collections import namedtuple
+from importlib import import_module
 
+import bleach
+import pygeoip
 from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Permission, Group
@@ -15,12 +14,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.signing import TimestampSigner
 from django.core.urlresolvers import reverse
 from django.db import connection
-
 from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients import properties
-
 
 TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'ul', 'li', 'ol', 'a',
         'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u']
@@ -189,15 +186,29 @@ def get_current_host(include_scheme=True):
     E.g. http://localhost:8000 or https://bluebottle.org
     """
     request = ThreadLocal.get_current_request()
-    host = request.get_host()
+    if request:
+        host = request.get_host()
+    else:
+        host = connection.tenant.domain_url
     if include_scheme:
-        if request.is_secure():
+        if request and request.is_secure():
             scheme = 'https'
         else:
             scheme = 'http'
-        return '{0}://{1}'.format(scheme, request.get_host())
+        return '{0}://{1}'.format(scheme, host)
     else:
         return host
+
+
+def get_current_language():
+    """
+    Get the current language from request
+    """
+    request = ThreadLocal.get_current_request()
+    if request:
+        return request.LANGUAGE_CODE
+    else:
+        return properties.LANGUAGE_CODE
 
 
 class InvalidIpError(Exception):

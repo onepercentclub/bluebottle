@@ -2,12 +2,12 @@ import os
 
 from django.conf import settings
 from django.core.exceptions import SuspiciousFileOperation
-from django.core.files.storage import FileSystemStorage
+from tenant_schemas.storage import TenantFileSystemStorage as BaseTenantFileSystemStorage
 
 __all__ = ('TenantFileSystemStorage',)
 
 
-class TenantFileSystemStorage(FileSystemStorage):
+class TenantFileSystemStorage(BaseTenantFileSystemStorage):
     """
     Lookup files first in $TENANT_BASE//media/ then in default location
     """

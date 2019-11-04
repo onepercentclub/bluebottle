@@ -14,7 +14,7 @@ class MediaMiddleware(object):
         ):
             return redirect(
                 request.path.replace(settings.MEDIA_URL,
-                                     urljoin(settings.MEDIA_URL, connection.tenant.client_name + '/'))
+                                     urljoin(settings.MEDIA_URL, connection.tenant.schema_name + '/'))
             )
 
         return response

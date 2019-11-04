@@ -1,6 +1,6 @@
 from django import forms
-from django.contrib.admin.filters import SimpleListFilter
 from django.contrib import admin
+from django.contrib.admin.filters import SimpleListFilter
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -9,7 +9,7 @@ from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.rewards.models import Reward
 from bluebottle.utils.admin import (
-    link_to, export_as_csv_action, TotalAmountAdminChangeList
+    export_as_csv_action, TotalAmountAdminChangeList
 )
 from bluebottle.utils.utils import StatusDefinition
 
@@ -22,7 +22,7 @@ class DonationStatusFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         choises = (('all', _('All')),
-                   ('pending_or_success', _('Pending/Success')))
+                   ('pending_or_success', _('Pending/Success/Pledged')))
         return choises + Order.STATUS_CHOICES
 
     def choices(self, cl):
@@ -39,7 +39,9 @@ class DonationStatusFilter(SimpleListFilter):
         if self.value() is None or self.value() == 'pending_or_success':
             return queryset.filter(
                 order__status__in=[StatusDefinition.PENDING,
-                                   StatusDefinition.SUCCESS])
+                                   StatusDefinition.SUCCESS,
+                                   StatusDefinition.PLEDGED,
+                                   ])
         elif self.value() != 'all':
             return queryset.filter(order__status=self.value())
         return queryset
@@ -102,8 +104,10 @@ class DonationAdmin(admin.ModelAdmin):
 
     form = DonationAdminForm
     date_hierarchy = 'created'
-    list_display = ('created', 'completed', 'order_payment_links', 'admin_project', 'fundraiser',
-                    'user_full_name', 'amount',
+    list_display = ('created', 'order_payment_links',
+                    'admin_project', 'fundraiser',
+                    'user_full_name',
+                    'amount', 'payout_amount',
                     'related_payment_method', 'status')
     list_filter = (DonationStatusFilter, DonationUserFilter, 'amount_currency')
     ordering = ('-created',)
@@ -228,21 +232,15 @@ class DonationAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    admin_project = link_to(
-        lambda obj: obj.project,
-        'admin:projects_project_change',
-        view_args=lambda obj: (obj.project.id,),
-        short_description='project',
-        truncate=50
-    )
+    def admin_project(self, obj):
+        url = reverse('admin:projects_project_change', args=(obj.project.id, ))
+        return format_html(u'<a href="{}">{}</a>', url, obj.project)
+    admin_project.short_description = _('Project')
 
-    admin_fundraiser = link_to(
-        lambda obj: obj.fundraiser,
-        'admin:fundraisers_fundraiser_change',
-        view_args=lambda obj: (obj.fundraiser_id,),
-        short_description='fundraiser',
-        truncate=50
-    )
+    def admin_fundraiser(self, obj):
+        url = reverse('admin:fundraisers_fundraiser_change', args=(obj.fundraiser.id, ))
+        return format_html(u'<a href="{}">{}</a>', url, obj.fundraiser)
+    admin_fundraiser.short_description = _('Fundraiser')
 
 
 admin.site.register(Donation, DonationAdmin)

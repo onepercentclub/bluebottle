@@ -14,13 +14,17 @@ from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 
+from rest_framework_json_api.views import AutoPrefetchMixin
+
 from bluebottle.bb_accounts.permissions import CurrentUserPermission
-from bluebottle.utils.views import RetrieveAPIView, UpdateAPIView
+from bluebottle.utils.views import RetrieveAPIView, UpdateAPIView, JsonApiViewMixin
+
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
+from bluebottle.initiatives.serializers import MemberSerializer
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
     PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
@@ -93,6 +97,21 @@ class ManageProfileDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_destroy(self, instance):
         instance.anonymize()
+
+
+class MemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
+    """
+    Retrieve details about the member
+    """
+    queryset = USER_MODEL.objects.all()
+    serializer_class = MemberSerializer
+
+    permission_classes = (CurrentUserPermission, )
+
+    def get_object(self):
+        if isinstance(self.request.user, AnonymousUser):
+            raise Http404()
+        return self.request.user
 
 
 class CurrentUser(RetrieveAPIView):
@@ -177,7 +196,7 @@ class PasswordReset(views.APIView):
         except USER_MODEL.DoesNotExist:
             pass
 
-        return response.Response(status=status.HTTP_200_OK)
+        return response.Response({}, status=status.HTTP_200_OK)
 
 
 class PasswordProtectedMemberUpdateApiView(UpdateAPIView):

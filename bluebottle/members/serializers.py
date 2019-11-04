@@ -11,11 +11,11 @@ from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import LocationSerializer, PlaceSerializer
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
 from bluebottle.tasks.models import Skill, Task, TaskMember
 from bluebottle.utils.serializers import PermissionField
-from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 
 BB_USER_MODEL = get_user_model()
 
@@ -91,7 +91,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     location = LocationSerializer()
     permissions = UserPermissionsSerializer(read_only=True)
-    partner_organization = OrganizationPreviewSerializer(allow_null=True, read_only=True, required=False)
+    organization = OrganizationSerializer(read_only=True, source='partner_organization')
 
     class Meta:
         model = BB_USER_MODEL
@@ -99,7 +99,8 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
-            'verified', 'permissions', 'partner_organization', 'matching_options_set',
+            'verified', 'permissions', 'matching_options_set',
+            'organization'
         )
 
 
@@ -135,7 +136,6 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     task_count = serializers.ReadOnlyField()
     time_spent = serializers.ReadOnlyField()
     tasks_performed = serializers.ReadOnlyField()
-    partner_organization = OrganizationPreviewSerializer(allow_null=True, read_only=True, required=False)
     is_active = serializers.BooleanField(read_only=True)
 
     class Meta:
@@ -146,7 +146,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'project_count', 'donation_count', 'date_joined',
             'fundraiser_count', 'task_count', 'time_spent', 'is_active',
             'tasks_performed', 'website', 'twitter', 'facebook',
-            'skypename', 'skill_ids', 'favourite_theme_ids', 'partner_organization',
+            'skypename', 'skill_ids', 'favourite_theme_ids',
             'subscribed',
         )
 

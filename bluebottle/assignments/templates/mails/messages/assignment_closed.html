@@ -1,0 +1,18 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% if custom_message %}
+        {{ custom_message }}
+    {% else %}
+        {% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
+            Hi {{ recipient_name }},<br>
+            Your task {{ assignment_title }} has been closed by the platform admin. If anyone applied to the task, please send them an update to let them know.
+        {% endblocktrans %}
+    {% endif %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ obj.get_absolute_url }}"
+       class="action-email">{% trans 'Post update' context 'email' %}</a>
+{% endblock %}`

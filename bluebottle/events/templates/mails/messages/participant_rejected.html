@@ -1,0 +1,15 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with recipient_name=to.first_name title=obj.activity.title context 'email' %}
+        Hi {{ recipient_name }},<br>
+        We wanted to let you know your status for "{{ title }}" was changed to 'not going'.
+        Do you want to help out, but are you looking for a better match? Check out the other activities to see if there’s an activity that fits your interests.
+    {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ site }}/initiatives/activities/list"
+       class="action-email">{% trans 'View other activities' context 'email' %}</a>
+{% endblock %}`

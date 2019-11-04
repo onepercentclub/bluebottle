@@ -18,7 +18,7 @@ def dummy(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('analytics', '0001_initial'),
+        ('analytics', '0001_initial')
     ]
 
     operations = [

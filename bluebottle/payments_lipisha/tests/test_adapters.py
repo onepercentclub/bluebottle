@@ -231,7 +231,7 @@ class LipishaPaymentInterfaceTestCase(BluebottleTestCase):
         self.assertEqual(donation.amount.amount, 1750.00)
         self.assertEqual(donation.name, 'Sam Gichuru')
 
-    def test_create_donation_from_lipisha_call_wrong_(self):
+    def test_create_donation_from_lipisha_call_wrong(self):
         LipishaProjectFactory.create(project=self.project, account_number='424242')
         data = {
             'transaction_account': '424242',

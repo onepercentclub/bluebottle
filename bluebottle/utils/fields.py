@@ -1,50 +1,72 @@
 import mimetypes
-from babel.numbers import get_currency_name
+import xml.etree.cElementTree as et
 
-from rest_framework import serializers
+import inflection
 
+import sorl.thumbnail
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
-from django.conf import settings
-from django.utils.functional import lazy
 from django.utils.translation import ugettext as _
-
-import sorl.thumbnail
+from djmoney.forms import MoneyField as MoneyFormField
 from djmoney.models.fields import MoneyField as DjangoMoneyField
-
-import xml.etree.cElementTree as et
-
-from bluebottle.clients import properties
+from rest_framework import serializers
 
 from .utils import clean_html
-
-
-def get_currency_choices():
-    currencies = []
-    for method in properties.PAYMENT_METHODS:
-        currencies += method['currencies'].keys()
-
-    return [(currency, get_currency_name(currency, locale='en')) for currency in set(currencies)]
-
-
-def get_default_currency():
-    return getattr(properties, 'DEFAULT_CURRENCY')
 
 
 class MoneyField(DjangoMoneyField):
     def __init__(self, verbose_name=None, name=None,
                  max_digits=12, decimal_places=2, default=None,
-                 default_currency=lazy(get_default_currency, str)(),
-                 currency_choices=lazy(get_currency_choices, tuple)(),
+                 default_currency=None,
+                 currency_choices=None,
                  **kwargs):
+        default_currency = 'EUR'
+        currency_choices = [('EUR', 'Euro')]
         super(MoneyField, self).__init__(
             verbose_name=verbose_name, name=name,
             max_digits=max_digits, decimal_places=decimal_places, default=default,
             default_currency=default_currency,
             currency_choices=currency_choices,
             **kwargs)
+
+    def get_default_currency(self):
+        from bluebottle.funding.models import PaymentProvider
+        return PaymentProvider.get_default_currency()
+
+    def get_currency_choices(self):
+        from bluebottle.funding.models import PaymentProvider
+        return PaymentProvider.get_currency_choices()
+
+    def deconstruct(self):
+        name, path, args, kwargs = super(MoneyField, self).deconstruct()
+
+        if self.default is not None:
+            kwargs['default'] = self.default.amount
+        if self.default_currency != self.get_default_currency():
+            kwargs['default_currency'] = str(self.default_currency)
+        if self.currency_choices != self.get_currency_choices():
+            kwargs['currency_choices'] = self.currency_choices
+        return name, path, args, kwargs
+
+    def formfield(self, **kwargs):
+        # For the form load the actual available currencies from PaymentProviders
+        defaults = {'form_class': MoneyFormField}
+        defaults.update(kwargs)
+        self.default_currency = self.get_default_currency()
+        self.currency_choices = self.get_currency_choices()
+        return super(MoneyField, self).formfield(**kwargs)
+
+
+class LegacyMoneyField(MoneyField):
+
+    def get_default_currency(self):
+        return 'EUR'
+
+    def get_currency_choices(self):
+        return [('EUR', 'Euro')]
 
 
 # Validation references:
@@ -163,3 +185,61 @@ class PrivateFileField(models.FileField):
         super(PrivateFileField, self).__init__(
             verbose_name=verbose_name, name=name, upload_to=upload_to, storage=storage, **kwargs
         )
+
+
+class FSMStatusValidator(object):
+    def set_context(self, serializers_field):
+        self.instance = serializers_field.parent.instance
+        self.source = serializers_field.source
+
+    def __call__(self, value):
+        available_transitions = getattr(
+            self.instance,
+            'get_available_{}_transitions'.format(self.source)
+        )()
+
+        transitions = [
+            transition for transition in available_transitions if
+            transition.target == value
+        ]
+
+        if len(transitions) != 1:
+            raise ValidationError(
+                'Cannot transition from {} to {}'.format(
+                    getattr(self.instance, self.source),
+                    value
+                )
+            )
+
+
+class FSMField(serializers.CharField):
+    def __init__(self, **kwargs):
+        super(FSMField, self).__init__(**kwargs)
+        validator = FSMStatusValidator()
+        self.validators.append(validator)
+
+
+class ValidationErrorsField(serializers.ReadOnlyField):
+    def to_representation(self, value):
+        return [
+            {
+                'title': error.message,
+                'code': error.code,
+                'source': {
+                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(error.field).replace('.', '/'))
+                }
+            } for error in value
+        ]
+
+
+class RequiredErrorsField(serializers.ReadOnlyField):
+    def to_representation(self, value):
+        return [
+            {
+                'title': _('This field is required'),
+                'code': 'required',
+                'source': {
+                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(field).replace('.', '/'))
+                }
+            } for field in value
+        ]

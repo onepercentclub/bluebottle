@@ -22,10 +22,9 @@ class MainDashboardTest(BluebottleAdminTestCase):
 
     def test_main_dashboard(self):
         response = self.client.get(self.admin_url)
-        self.assertContains(response, 'Recently submitted project')
-        self.assertContains(response, 'Projects nearing deadline')
+        self.assertContains(response, 'Recently submitted initiatives')
+        self.assertContains(response, 'Recently submitted events')
         self.assertContains(response, 'Recently joined users')
-        self.assertContains(response, 'Tasks nearing application deadline')
         self.assertContains(response, 'Export metrics')
         # Stand settings don't show export options
         self.assertNotContains(response, 'Download report')
@@ -36,7 +35,8 @@ class MainDashboardTest(BluebottleAdminTestCase):
         # Override settings to show export options
         response = self.client.get(self.admin_url)
         self.assertContains(response, 'Download report')
-        self.assertContains(response, 'Request complete participation metrics')
+        # Get rid of this
+        self.assertNotContains(response, 'Request complete participation metrics')
 
 
 class CustomAppDashboardTest(BluebottleAdminTestCase):

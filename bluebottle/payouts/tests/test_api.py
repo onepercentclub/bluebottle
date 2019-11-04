@@ -8,6 +8,7 @@ from django.test.utils import override_settings
 import stripe
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.payouts import PlainPayoutAccountFactory
@@ -36,6 +37,7 @@ PROJECT_PAYOUT_FEES = {
 @override_settings(MERCHANT_ACCOUNTS=MERCHANT_ACCOUNTS)
 class StripePayoutTestApi(BluebottleTestCase):
     def setUp(self):
+        StripePaymentProviderFactory.create()
         super(StripePayoutTestApi, self).setUp()
         self.country = CountryFactory.create()
         self.init_projects()

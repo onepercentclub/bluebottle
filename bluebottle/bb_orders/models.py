@@ -10,7 +10,7 @@ from django_fsm import FSMField, transition
 from moneyed.classes import Money
 
 from bluebottle.donations.models import Donation
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import LegacyMoneyField as MoneyField
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 

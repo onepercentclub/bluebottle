@@ -3,11 +3,17 @@ from django.core.exceptions import ValidationError
 
 from rest_framework import serializers
 
+from bluebottle.assignments.models import Assignment
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ContentTextField, PhotoSerializer)
+from bluebottle.events.models import Event
+from bluebottle.funding.models import Funding, Donation
 from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.projects.models import Project
+from bluebottle.tasks.models import Task
+from bluebottle.utils.serializers import MoneySerializer
 
 from .models import Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, Reaction
 
@@ -36,11 +42,21 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
         return ContentType.objects
 
     def to_internal_value(self, data):
+        if data == 'task':
+            data = ContentType.objects.get_for_model(Task)
         if data == 'project':
-            data = ContentType.objects.get_for_model(Project).model
+            data = ContentType.objects.get_for_model(Project)
         if data == 'fundraiser':
-            data = ContentType.objects.get_for_model(Fundraiser).model
-        return super(WallpostContentTypeField, self).to_internal_value(data)
+            data = ContentType.objects.get_for_model(Fundraiser)
+        if data == 'initiative':
+            data = ContentType.objects.get_for_model(Initiative)
+        if data == 'event':
+            data = ContentType.objects.get_for_model(Event)
+        if data == 'assignment':
+            data = ContentType.objects.get_for_model(Assignment)
+        if data == 'funding':
+            data = ContentType.objects.get_for_model(Funding)
+        return data
 
 
 class WallpostParentIdField(serializers.IntegerField):
@@ -50,14 +66,43 @@ class WallpostParentIdField(serializers.IntegerField):
 
     # Make an exception for project slugs.
     def to_internal_value(self, value):
-        if not value.isnumeric():
+        if not isinstance(value, int) and not value.isdigit():
             # Assume a project slug here
             try:
                 project = Project.objects.get(slug=value)
             except Project.DoesNotExist:
-                raise ValidationError("No project with that slug")
+                raise ValidationError("Project not found: {}".format(value))
             value = project.id
         return value
+
+
+class WallpostDonationSerializer(serializers.ModelSerializer):
+    amount = MoneySerializer()
+    user = UserPreviewSerializer()
+    type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Donation
+        fields = (
+            'type',
+            'id',
+            'user',
+            'amount',
+            'fundraiser',
+            'reward',
+            'anonymous',)
+
+    def get_type(self, obj):
+        return 'contributions/donations'
+
+    def get_fields(self):
+        """
+        If the donation is anonymous, we do not return the user.
+        """
+        fields = super(WallpostDonationSerializer, self).get_fields()
+        if isinstance(self.instance, Donation) and self.instance.anonymous:
+            del fields['user']
+        return fields
 
 
 class WallpostSerializerBase(serializers.ModelSerializer):
@@ -71,6 +116,16 @@ class WallpostSerializerBase(serializers.ModelSerializer):
                                            source='content_type')
     parent_id = WallpostParentIdField(source='object_id')
     reactions = ReactionSerializer(many=True, read_only=True, required=False)
+
+    donation = serializers.PrimaryKeyRelatedField(queryset=Donation.objects, required=False, allow_null=True)
+
+    def to_representation(self, instance):
+        # We want to connect a donation by just sending the id,
+        # but reading we want an embedded object, so we do a little trick here.
+        response = super(WallpostSerializerBase, self).to_representation(instance)
+        if instance.donation:
+            response['donation'] = WallpostDonationSerializer(instance.donation, context=self.context).data
+        return response
 
     class Meta:
         fields = ('id', 'type', 'author', 'created', 'reactions',
@@ -126,7 +181,7 @@ class TextWallpostSerializer(WallpostSerializerBase):
             'donation' in data and
             TextWallpost.objects.filter(donation=data['donation'])
         ):
-                raise ValidationError("Wallpost for donation already exists.")
+            raise ValidationError("Wallpost for donation already exists.")
 
         return super(WallpostSerializerBase, self).validate(data)
 

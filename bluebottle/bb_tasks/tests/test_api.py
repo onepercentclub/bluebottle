@@ -150,6 +150,23 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                          response.data)
         self.assertEquals(response.data['title'], some_task_data['title'])
 
+    def test_create_task_not_project_owner(self):
+        # Create task should fail if by some one else then project task manager
+        future_date = timezone.now() + timezone.timedelta(days=30)
+        some_task_data = {
+            'project': self.some_project.slug,
+            'title': 'A nice task!',
+            'description': 'Well, this is nice',
+            'time_needed': 5,
+            'skill': '{0}'.format(self.skill1.id),
+            'location': 'Overthere',
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timedelta(days=1))
+        }
+        response = self.client.post(self.task_url, some_task_data,
+                                    token=self.another_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_create_task_incorrect_deadline(self):
         # Create a task with an invalid deadline
         some_task_data = {

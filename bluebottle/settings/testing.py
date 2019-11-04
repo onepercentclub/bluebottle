@@ -140,3 +140,12 @@ except ImportError:
     pass
 
 ELASTICSEARCH_DSL_AUTOSYNC = False
+
+STRIPE = {
+    'secret_key': 'test-key',
+    'webhook_secret_sources': 'test-webhook-secret',
+    'webhook_secret_intents': 'test-webhook-secret',
+    'webhook_secret_connect': 'test-webhook-secret-connect',
+    'api_key': 'test-pub-key',
+    'publishable_key': 'test-pub-key'
+}

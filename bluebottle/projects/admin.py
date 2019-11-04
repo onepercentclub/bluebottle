@@ -328,7 +328,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     save_as = True
     search_fields = (
         'title', 'owner__first_name', 'owner__last_name', 'owner__email',
-        'organization__name', 'organization__contacts__email'
+        'organization__name'
     )
     raw_id_fields = ('owner', 'reviewer', 'task_manager', 'promoter', 'organization', 'payout_account')
     prepopulated_fields = {'slug': ('title',)}
@@ -388,7 +388,6 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ('location__group', 'region'),
         ('country', 'country'),
         ('location', 'location'),
-        ('place', 'place'),
         ('deadline', 'deadline'),
         ('date_submitted', 'date submitted'),
         ('campaign_started', 'campaign started'),
@@ -684,7 +683,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'pitch', 'story',
             'image', 'video_url',
             'theme', 'categories',
-            'country', 'place',
+            'country',
         ]})
 
         if Location.objects.count():

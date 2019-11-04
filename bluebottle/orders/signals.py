@@ -1,10 +1,9 @@
 from datetime import timedelta
-from django.db import connection
-from django.dispatch.dispatcher import receiver
-from django.db.models.signals import post_save
-from django.contrib.contenttypes.models import ContentType
-from django.utils import timezone
 
+from django.db import connection
+from django.db.models.signals import post_save
+from django.dispatch.dispatcher import receiver
+from django.utils import timezone
 from django_fsm.signals import post_transition
 
 from bluebottle.clients import properties
@@ -14,7 +13,6 @@ from bluebottle.orders.models import Order
 from bluebottle.orders.tasks import timeout_new_order, timeout_locked_order
 from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.wallposts.models import SystemWallpost, TextWallpost
 
 
 @receiver(post_save, sender=Order)
@@ -62,44 +60,8 @@ def _order_status_post_transition(sender, instance, **kwargs):
             # success/pending for the first time and only if it's a
             # one-off donation.
             if first_time_success and instance.order_type == "one-off":
-                if not donation.anonymous:
-                    author = donation.order.user
-                else:
-                    author = None
-
                 successful_donation_fundraiser_mail(donation)
                 new_oneoff_donation(donation)
-
-                if donation.fundraiser:
-                    # Create Wallpost on fundraiser wall (if FR present)
-                    SystemWallpost.objects.create(
-                        content_type=ContentType.objects.get_for_model(
-                            donation.fundraiser
-                        ),
-                        object_id=donation.fundraiser.pk,
-                        related_type=ContentType.objects.get_for_model(
-                            donation
-                        ),
-                        related_id=donation.pk,
-                        donation=donation,
-                        author=author,
-                        ip_address='127.0.0.1'
-                    )
-                elif TextWallpost.objects.filter(donation=donation).count() == 0:
-                    # Create Wallpost on project wall if there isn't a wallpost for this donation yet
-                    SystemWallpost.objects.get_or_create(
-                        content_type=ContentType.objects.get_for_model(
-                            donation.project
-                        ),
-                        object_id=donation.project.pk,
-                        related_type=ContentType.objects.get_for_model(
-                            donation
-                        ),
-                        related_id=donation.pk,
-                        donation=donation,
-                        author=author,
-                        ip_address='127.0.0.1'
-                    )
 
 
 @receiver(post_transition, sender=Order)

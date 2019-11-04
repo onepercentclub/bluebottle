@@ -10,11 +10,11 @@
     {% else %}
         {% blocktrans with first_name=donation.project.owner.first_name slug=donation.project.slug%}
 
-        Hello {{ first_name }}, you received a donation from {{ donor_name }}. Quickly thank your supporter by posting a personal message on your project page.
+        Hello {{ first_name }}, you received a donation from {{ donor_name }}. Quickly thank your supporter by posting a personal message on your campaign page.
         {% endblocktrans %}
     {% endif %}
-    
+
     {% include 'donations/mails/donation.html' %}
     {% include 'donations/mails/payment_details.html' %}
 
-{% endblock content %} 
+{% endblock content %}

@@ -6,12 +6,12 @@
 {% if pledged %}
 {% blocktrans with first_name=donation.user.first_name initiator_name=donation.project.owner.full_name slug=donation.project.slug%}
 
-Thanks {{first_name}}, for co-financing this project. The project initiator {{initiator_name}} has received an email with your pledge.
+Thanks {{first_name}}, for co-financing this campaign. The campaign initiator {{initiator_name}} has received an email with your pledge.
 {% endblocktrans %}
 {% else %}
 {% blocktrans with first_name=donation.user.first_name initiator=donation.project.owner.full_name %}
-Thanks {{ first_name }}, for your donation! Be sure to follow the project page for the latest updates on the project.
-Give some extra support and share this project with your network.
+Thanks {{ first_name }}, for your donation! Be sure to follow the campaign page for the latest updates on the campaign.
+Give some extra support and share this campaign with your network.
 {% endblocktrans %}
 {% endif %}
 {% include 'donations/mails/donation.txt' %}
@@ -22,6 +22,6 @@ Give some extra support and share this project with your network.
 {% endblocktrans %}
 {% endif %}
 {% blocktrans %}
-    Support even more by sharing the project with your network
+    Support even more by sharing the campaign with your network
 {% endblocktrans %}
-{% endblock content %} 
+{% endblock content %}

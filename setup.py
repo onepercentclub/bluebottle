@@ -16,14 +16,14 @@ changes = ''
 install_requires = [
     'Babel==2.4.0',
     'Django==1.11.15',
-    'Flutterwave==1.0.7',
     'Pillow==4.1.1',
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
     'bleach==2.1.4',
     'bunch==1.0.1',
-    'beyonic-python @ git+https://github.com/beyonic/beyonic-python.git@be8a0eebfaa53cf1b483b9bd1bf95e1a430032de#egg=beyonic-python-0.1.12',
+    'beyonic==0.1.14',
     'celery==3.1.24',
+    'dotted==0.1.8',
     'django-admin-sortable==2.1',
     'django-admin-tools==0.8.1',
     'django-adminfilters==0.3',
@@ -34,7 +34,6 @@ install_requires = [
     'django-dynamic-fixture==1.9.5',
     'django-elasticsearch-dsl==0.5.0',
     'django-extensions==1.7.9',
-    'django-exportdb==0.4.7',
     'django-filetransfers @ hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1',
     'django-filter==1.1.0',
     'django-geoposition==0.3.0',
@@ -46,9 +45,10 @@ install_requires = [
     'django-localflavor==1.5.2',
     'django-lockdown==1.4.2',
     'django-loginas==0.3.2',
+    'django-map-widgets==0.2.2',
     'django-memoize==2.1.0',
     'django-modeltranslation==0.12.1',
-    'django-money==0.11.4',
+    'django-money==0.14',
     'django-parler==1.9.2',
     'django-permissions-widget==1.5.1',
     'django_polymorphic==1.2',
@@ -63,6 +63,7 @@ install_requires = [
     'django-tools==0.32.13',
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.8.0',
+    'djangorestframework-jsonapi==2.8.0',
     'djangorestframework-jwt==1.11.0',
     'djangorestframework==3.8.2',
     'dkimpy==0.6.1',
@@ -93,6 +94,7 @@ install_requires = [
     'python-social-auth==0.3.6',
     'social-auth-app-django==2.1.0',
     'surlex==0.2.0',
+    'rave-python==1.0.2',
     'raven==6.1.0',
     'regex==2017.05.26',
     'requests==2.20.1',
@@ -101,7 +103,7 @@ install_requires = [
     'sorl-watermark==1.0.0',
     'South==1.0.2',
     'Sphinx==1.6.3',
-    'stripe==2.11.0',
+    'stripe==2.33.0',
     'suds-jurko==0.6',
     'SurveyGizmo==1.2.2',
     'transifex-client==0.12.4',
@@ -110,12 +112,12 @@ install_requires = [
     'xlsxwriter==0.9.8',
 
     # Github requirements
+    'django-exportdb @ git+https://github.com/onepercentclub/django-exportdb.git@0.4.8#egg=django-exportdb-0.4.8-github',
     'django-tenant-extras @ git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.14#egg=django-tenant-extras-2.0.14',
     'django-fluent-contents @ git+https://github.com/onepercentclub/django-fluent-contents.git@741ffae615a4afed01388a202709ed9a5b60e80f#egg=django-fluent-contents-1.2.1-741ffae6',
     'django-bb-salesforce @ git+https://github.com/onepercentclub/django-bb-salesforce.git@1.2.2#egg=django-bb-salesforce-1.2.2',
     'django-taggit-autocomplete-modified @ git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
     'django-money-rates @ git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github',
-    'Flutterwave @ git+https://github.com/onepercentclub/flutterwave-python.git@9b6adba8e7eff4204d36ea3a627ebccebe285cf4#egg=Flutterwave-1.1.0'
 ]
 
 tests_requires = [
@@ -135,7 +137,8 @@ tests_requires = [
     'pylint-django==0.7.2',
     'tblib==1.3.2',
     'tdaemon==0.1.1',
-    'WebTest==2.0.27'
+    'WebTest==2.0.27',
+    'sniffer==0.4.0'
 ]
 
 dev_requires = [

@@ -9,7 +9,112 @@ JET_DEFAULT_THEME = 'goodup'
 
 JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
     {
-        'label': _('Projects'),
+        'label': _('Initiatives'),
+        'app_label': 'initiatives',
+        'permissions': ['initiatives.change_initiative'],
+        'items': [
+            {
+                'name': 'initiatives.initiative',
+                'permissions': ['initiatives.change_initiative']
+            },
+            {
+                'name': 'activities.activity',
+                'permissions': ['activities.activity']
+            },
+            {
+                'name': 'activities.contribution',
+                'permissions': ['activities.activity']
+            },
+            {
+                'name': 'categories.category',
+                'permissions': ['categories.change_category']
+            },
+            {
+                'name': 'bb_projects.projecttheme',
+                'permissions': ['bb_projects.change_projecttheme']
+            },
+            {
+                'name': 'organizations.organization',
+                'permissions': ['organizations.organization']
+            },
+            {
+                'name': 'geo.location',
+                'permissions': ['geo.location']
+            },
+            {
+                'name': 'bb_projects.projecttheme',
+                'permissions': ['bb_projects.change_projecttheme']
+            },
+        ]
+    },
+    {
+        'label': _('Events'),
+        'app_label': 'events',
+        'permissions': ['activities.change_activity'],
+        'items': [
+            {
+                'name': 'events.event',
+                'permissions': ['events.event']
+            },
+            {
+                'name': 'events.participant',
+                'permissions': ['events.event']
+            },
+        ]
+    },
+    {
+        'label': _('Tasks'),
+        'app_label': 'assignments',
+        'permissions': ['activities.change_activity'],
+        'items': [
+            {
+                'name': 'assignments.assignment',
+                'permissions': ['assignments.assignment']
+            },
+            {
+                'name': 'assignments.applicant',
+                'permissions': ['assignments.assignment']
+            },
+            {
+                'name': 'tasks.skill',
+                'permissions': ['tasks.change_skill']
+            },
+        ]
+    },
+
+    {
+        'label': _('Funding'),
+        'app_label': 'funding',
+        'permissions': ['funding.change_activity'],
+        'items': [
+            {
+                'name': 'funding.funding',
+                'permissions': ['funding.funding']
+            },
+            {
+                'name': 'funding.donation',
+                'permissions': ['funding.donation']
+            },
+            {
+                'name': 'funding.payment',
+                'permissions': ['funding.payment']
+            },
+            {
+                'name': 'funding.payoutaccount',
+                'permissions': ['funding.payoutaccount']
+            },
+            {
+                'name': 'funding.bankaccount',
+                'permissions': ['funding.payoutaccount']
+            },
+            {
+                'name': 'funding.payout',
+                'permissions': ['funding.payout']
+            },
+        ]
+    },
+    {
+        'label': _('Legacy'),
         'app_label': 'projects',
         'permissions': ['projects.change_project'],
         'items': [
@@ -45,39 +150,18 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'votes.vote',
                 'permissions': ['votes.vote']
             },
-
-        ]
-    },
-    {
-        'label': _('Users'),
-        'app_label': 'members',
-        'permissions': ['members.change_member'],
-        'items': [
             {
-                'name': 'members.member',
-                'permissions': ['members.change_member']
+                'name': 'tasks.task',
+                'permissions': ['tasks.change_task']
             },
             {
-                'name': 'auth.group',
-                'permissions': ['auth.change_group']
+                'name': 'tasks.taskmember',
+                'permissions': ['tasks.change_task']
             },
-        ]
-    },
-    {
-        'label': _('Tasks'),
-        'app_label': 'tasks',
-        'permissions': ['tasks.change_task'],
-        'items': [
-            {'name': 'tasks.task', 'permissions': ['tasks.change_task']},
-            {'name': 'tasks.taskmember', 'permissions': ['tasks.change_task']},
-            {'name': 'tasks.skill', 'permissions': ['tasks.change_skill']},
-        ]
-    },
-    {
-        'label': _('Donations'),
-        'app_label': 'donations',
-        'permissions': ['donations.change_donation'],
-        'items': [
+            {
+                'name': 'tasks.skill',
+                'permissions': ['tasks.change_skill']
+            },
             {
                 'name': 'donations.donation',
                 'permissions': ['donations.change_donation']
@@ -97,6 +181,22 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             {
                 'name': 'payments.payment',
                 'permissions': ['payments.change_payment']
+            },
+
+        ]
+    },
+    {
+        'label': _('Users'),
+        'app_label': 'members',
+        'permissions': ['members.change_member'],
+        'items': [
+            {
+                'name': 'members.member',
+                'permissions': ['members.change_member']
+            },
+            {
+                'name': 'auth.group',
+                'permissions': ['auth.change_group']
             },
         ]
     },
@@ -141,7 +241,7 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['wallposts.change_wallpost']
             },
             {
-                'url': '/admin/wallposts/mediawallpost/',
+                'url': 'wallposts.mediawallpost',
                 'label': _('Media wall posts'),
                 'permissions': ['wallposts.change_wallpost']
             },
@@ -170,6 +270,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['projects.change_projectplatformsettings']
             },
             {
+                'name': 'initiatives.initiativeplatformsettings',
+                'permissions': ['initiatives.change_initiativeplatformsettings']
+            },
+            {
                 'name': 'members.memberplatformsettings',
                 'permissions': ['members.change_memberplatformsettings']
             },
@@ -189,6 +293,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             {
                 'name': 'mails.mailplatformsettings',
                 'permissions': ['mails.change_mailplatformsettings']
+            },
+            {
+                'name': 'funding.paymentprovider',
+                'permissions': ['funding.change_paymentprovider']
             },
             {
                 'name': 'djmoney_rates.ratesource',

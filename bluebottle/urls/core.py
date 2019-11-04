@@ -68,6 +68,35 @@ urlpatterns = [
         include('bluebottle.projects.urls.api')),
     url(r'^api/cms/',
         include('bluebottle.cms.urls.api')),
+    url(r'^api/initiatives',
+        include('bluebottle.initiatives.urls.api')),
+
+    url(r'^api/activities',
+        include('bluebottle.activities.urls.api')),
+
+    url(r'^api/events',
+        include('bluebottle.events.urls.api')),
+
+    url(r'^api/assignments',
+        include('bluebottle.assignments.urls.api')),
+
+    url(r'^api/funding',
+        include('bluebottle.funding.urls.api')),
+    url(r'^api/funding',
+        include('bluebottle.funding.urls.api')),
+    url(r'^api/funding/pledge',
+        include('bluebottle.funding_pledge.urls.api')),
+    url(r'^api/funding/stripe',
+        include('bluebottle.funding_stripe.urls.api')),
+    url(r'^api/funding/vitepay',
+        include('bluebottle.funding_vitepay.urls.api')),
+    url(r'^api/funding/flutterwave',
+        include('bluebottle.funding_flutterwave.urls.api')),
+    url(r'^api/funding/lipisha',
+        include('bluebottle.funding_lipisha.urls.api')),
+
+    url(r'^api/files/',
+        include('bluebottle.files.urls.api')),
 
     url(r'^payments_mock/',
         include('bluebottle.payments_mock.urls.core')),
@@ -99,11 +128,7 @@ urlpatterns = [
     url(r'^api/surveys/',
         include('bluebottle.surveys.urls.api')),
 
-    # Organization urls for private documents
-    url(r'^documents/',
-        include('bluebottle.organizations.urls.documents')),
-
-    url(r'^api/organizations/',
+    url(r'^api/organizations',
         include('bluebottle.organizations.urls.api')),
 
     url(r'^embed/', include('bluebottle.widget.urls.core')),

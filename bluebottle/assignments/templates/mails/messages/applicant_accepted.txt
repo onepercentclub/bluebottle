@@ -1,0 +1,17 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% if custom_message %}
+    {{ custom_message }}
+{% else %}
+    {% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
+    Hi {{ recipient_name }},
+    Good news, you have been accepted for the task "{{ assignment_title }}"!
+    {% endblocktrans %}
+{% endif %}
+{% endblock %}
+
+{% block action %}
+   {% trans 'View task' context 'email' %}: {{ obj.activity.get_absolute_url }}
+{% endblock %}`

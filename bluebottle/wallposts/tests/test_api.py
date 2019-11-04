@@ -1,24 +1,23 @@
 import mock
-
-from django.utils.timezone import now
 from django.contrib.auth.models import Group, Permission
-from django.core.urlresolvers import reverse
 from django.core import mail
-
+from django.core.urlresolvers import reverse
+from django.utils.timezone import now
+from djmoney.money import Money
 from rest_framework import status
 
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.utils.tests.test_unit import UserTestsMixin
+from bluebottle.events.tests.factories import EventFactory
+from bluebottle.funding.tests.factories import DonationFactory, FundingFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.fundraisers import FundraiserFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.wallposts import (
     TextWallpostFactory, MediaWallpostFactory
 )
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.fundraisers import FundraiserFactory
-from bluebottle.test.factory_models.tasks import TaskFactory
-
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.tests.test_unit import UserTestsMixin
 from ..models import Reaction
 
 
@@ -78,9 +77,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                                     wallpost_data,
                                     token=self.other_token)
 
-        self.assertEqual(wallpost.status_code,
-                         status.HTTP_403_FORBIDDEN,
-                         'Only the project owner can share a wallpost.')
+        self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_permissions_on_task_wallpost_sharing(self):
         """
@@ -96,9 +93,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                                     wallpost_data,
                                     token=self.other_token)
 
-        self.assertEqual(wallpost.status_code,
-                         status.HTTP_403_FORBIDDEN,
-                         'Only the task owner can share a wallpost.')
+        self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
         self.task.project.promoter = BlueBottleUserFactory.create()
         self.task.project.save()
@@ -110,27 +105,23 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                                     token=promoter_token)
 
         self.assertEqual(wallpost.status_code,
-                         status.HTTP_201_CREATED,
-                         'Only the task owner can share a wallpost.')
+                         status.HTTP_201_CREATED)
 
     def test_permissions_on_task_wallpost_non_sharing(self):
         """
-        Tests that only the task creator can share a wallpost.
+        Tests other can post, without sharing
         """
         wallpost_data = {'parent_id': str(self.task.id),
                          'parent_type': 'task',
                          'email_followers': False,
                          'text': 'I can share stuff!'}
 
-        # Non-owner users can't share a post
+        # Non-owner users can post, without email followers
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
                                     token=self.other_token)
 
-        self.assertEqual(
-            wallpost.status_code,
-            status.HTTP_201_CREATED
-        )
+        self.assertEqual(wallpost.status_code, status.HTTP_201_CREATED)
 
     def test_permissions_on_fundraiser_wallpost_sharing(self):
         """
@@ -146,9 +137,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                                     wallpost_data,
                                     token=self.other_token)
 
-        self.assertEqual(wallpost.status_code,
-                         status.HTTP_403_FORBIDDEN,
-                         'Only the fundraiser owner can share a wallpost.')
+        self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_filtering_on_wallpost_list(self):
         authenticated = Group.objects.get(name='Authenticated')
@@ -329,8 +318,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         self.client.logout()
         response = self.client.delete(
             reaction_detail_url, token=self.another_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         # Create a Reaction by another user
         another_reaction_text = "I'm not so sure..."
@@ -454,7 +442,6 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
             response.data)
 
 
-# ProjectWallpostTestsMixin,
 class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
     def setUp(self):
         from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
@@ -853,21 +840,23 @@ class TestDonationWallpost(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
-        self.some_project = ProjectFactory.create()
+        self.funding = FundingFactory.create(status='open')
         self.wallpost_url = reverse('wallpost_list')
         self.text_wallpost_url = reverse('text_wallpost_list')
 
-        order = OrderFactory.create(user=self.user)
-        donation = DonationFactory.create(project=self.some_project, order=order, fundraiser=None)
-        order.locked()
-        order.success()
-        order.save()
+        donation = DonationFactory.create(
+            user=self.user,
+            activity=self.funding,
+            fundraiser=None
+        )
+        donation.transitions.succeed()
+        donation.save()
 
         self.data = {
             "title": "",
             "text": "What a nice project!",
-            "parent_id": self.some_project.slug,
-            "parent_type": "project",
+            "parent_id": self.funding.id,
+            "parent_type": "funding",
             "donation": donation.id,
             "email_followers": False
         }
@@ -875,9 +864,13 @@ class TestDonationWallpost(BluebottleTestCase):
     def test_donation_wallposts(self):
         # Create a donation and set it to settled to trigger wallpost
         # There should be one system wallpost now
-        response = self.client.get(self.wallpost_url,
-                                   {'parent_id': self.some_project.slug, 'parent_type': 'project'},
-                                   token=self.user_token)
+        response = self.client.get(
+            self.wallpost_url,
+            {
+                'parent_id': self.funding.id,
+                'parent_type': 'funding'
+            },
+            token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['type'], 'system')
@@ -886,11 +879,11 @@ class TestDonationWallpost(BluebottleTestCase):
         response = self.client.post(self.text_wallpost_url, self.data, token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # The project should still have one wallpost, only the message last added
-        response = self.client.get(self.wallpost_url,
-                                   {'parent_id': self.some_project.slug,
-                                    'parent_type': 'project'},
-                                   token=self.user_token)
+        # The funding should still have one wallpost, only the message last added
+        response = self.client.get(
+            self.wallpost_url,
+            {'parent_id': self.funding.id, 'parent_type': 'funding'},
+            token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['type'], 'text')
@@ -961,3 +954,157 @@ class TestPinnedWallpost(BluebottleTestCase):
         # The sixth wallposts should be by initiator but unpinned
         self.assertEqual(response.data['results'][5]['author']['id'], self.initiator.id)
         self.assertEqual(response.data['results'][5]['pinned'], False)
+
+
+class InitiativeWallpostTest(BluebottleTestCase):
+    def setUp(self):
+        super(InitiativeWallpostTest, self).setUp()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.event = EventFactory.create(owner=self.owner)
+
+        self.other_user = BlueBottleUserFactory.create()
+        self.other_token = "JWT {0}".format(
+            self.other_user.get_jwt_token())
+
+        self.media_wallpost_url = reverse('media_wallpost_list')
+        self.text_wallpost_url = reverse('text_wallpost_list')
+        self.wallpost_url = reverse('wallpost_list')
+
+    def test_create_initiative_wallpost(self):
+        """
+        Tests that only the initiative creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': self.initiative.id,
+                         'parent_type': 'initiative',
+                         'text': 'I can share stuff!',
+                         'share_with_twitter': True}
+
+        # The owner can share a wallpost
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.owner_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_201_CREATED,
+            'Initiative owners can share a wallpost.')
+
+        self.initiative.promoter = BlueBottleUserFactory.create()
+        self.initiative.save()
+        promoter_token = "JWT {0}".format(self.initiative.promoter.get_jwt_token())
+
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=promoter_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_201_CREATED,
+            'Initiative promoters can share a wallpost.')
+
+        # Non-owner users can't share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.other_token)
+
+        self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
+
+        params = {'parent_id': self.initiative.id, 'parent_type': 'initiative'}
+        response = self.client.get(self.wallpost_url, params)
+        self.assertEqual(response.data['count'], 2)
+
+    def test_create_event_wallpost(self):
+        """
+        Tests that only the event creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': self.event.id,
+                         'parent_type': 'event',
+                         'text': 'I can share stuff!',
+                         'share_with_twitter': True}
+
+        # The owner can share a wallpost
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.owner_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_201_CREATED,
+            'Event owners can share a wallpost.')
+
+    def test_create_wallpost_empty_donation(self):
+        """
+        Tests that only the event creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': self.event.id,
+                         'parent_type': 'event',
+                         'text': 'I can share stuff!',
+                         'donation': None}
+
+        # The owner can post with empty donation
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.owner_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_201_CREATED,
+            'Event owners can post a wallpost with empty donation set.')
+
+    def test_create_event_wallpost_other(self):
+        """
+        Tests that only the event creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': self.event.id,
+                         'parent_type': 'event',
+                         'text': 'I want to share stuff!',
+                         'share_with_twitter': True}
+
+        # Non-owner users can't share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.other_token)
+
+        self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class FundingWallpostTest(BluebottleTestCase):
+    def setUp(self):
+        super(FundingWallpostTest, self).setUp()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.funding = FundingFactory.create(target=Money(5000, 'EUR'), status='open', initiative=self.initiative)
+        self.updates_url = "{}?parent_type=funding&parent_id={}".format(reverse('wallpost_list'), self.funding.id)
+
+    def test_wallposts_with_and_without_donation(self):
+        """
+        Test that a Wallpost doesn't serializes donation if there isn't one
+        """
+        TextWallpostFactory.create(content_object=self.funding)
+        self.donation = DonationFactory(
+            amount=Money(35, 'EUR'),
+            user=None,
+            activity=self.funding
+        )
+        self.donation.transitions.succeed()
+        self.donation.save()
+
+        response = self.client.get(self.updates_url, token=self.owner_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+        self.assertEqual(
+            response.data['results'][0]['donation'],
+            {
+                'fundraiser': None,
+                'amount': {'currency': 'EUR', 'amount': 35.00},
+                'user': None,
+                'anonymous': False,
+                'reward': None,
+                'type': 'contributions/donations',
+                'id': self.donation.id
+            }
+        )
+        self.assertEqual(response.data['results'][1]['donation'], None)

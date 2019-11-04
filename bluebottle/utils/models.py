@@ -1,3 +1,5 @@
+from operator import attrgetter
+
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -103,7 +105,7 @@ class PublishableModel(models.Model):
     publication_date = models.DateTimeField(
         _('publication date'),
         null=True, db_index=True,
-        default=now(),
+        default=now,
         help_text=_("To go live, status must be 'Published'."))
 
     publication_end_date = models.DateTimeField(_('publication end date'),
@@ -119,3 +121,41 @@ class PublishableModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class ValidatorError(Exception):
+    def __init__(self, field, code, message):
+        self.field = field
+        self.code = code
+        super(ValidatorError, self).__init__(message)
+
+
+class Validator(object):
+    def __init__(self, instance):
+        self.instance = instance
+
+    def __call__(self):
+        if not self.is_valid():
+            raise ValidatorError(
+                self.field, self.field, self.message
+            )
+
+
+class ValidatedModelMixin(object):
+    validators = []
+    required_fields = []
+
+    @property
+    def errors(self):
+        for validator in self.validators:
+            try:
+                validator(self)()
+            except ValidatorError, e:
+                yield e
+
+    @property
+    def required(self):
+        for field in self.required_fields:
+            value = attrgetter(field)(self)
+            if value in (None, ''):
+                yield field

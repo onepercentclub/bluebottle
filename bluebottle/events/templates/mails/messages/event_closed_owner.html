@@ -1,0 +1,19 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=obj.owner.first_name event_title=obj.title context 'email' %}
+Hi {{ recipient_name }},
+<br><br>
+We wanted to let you know that your event "{{ event_title }}" has been closed.
+<br><br>
+You can update your attendees by posting a message on your event page.
+Make sure the email notification is turned on, so all attendees will be notified of the update.
+{% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ site }}{{ obj.get_absolute_url }}" class="action-email">
+       {% trans 'Post update' context 'email' %}:
+    </a>
+{% endblock %}`

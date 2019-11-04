@@ -1,0 +1,16 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with recipient_name=obj.owner.first_name initiative_title=obj.title context 'email' %}
+        Hi {{ recipient_name }},<br>
+        Good news, your initiative <i>{{ initiative_title }}</i> has been approved!
+        People can now join your activities. No activities yet? This is the perfect
+        moment to create one (or two), so people can help you reach your initiative’s goal.
+    {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ obj.get_absolute_url }}"
+       class="action-email">{% trans 'View initiative' context 'email' %}</a>
+{% endblock %}`

@@ -6,6 +6,7 @@ from fluent_contents.models import PlaceholderField, ContentItem
 from adminsortable.fields import SortableForeignKey
 from parler.models import TranslatableModel, TranslatedFields
 
+from bluebottle.activities.models import Activity
 from bluebottle.geo.models import Location
 from bluebottle.projects.models import Project
 from bluebottle.surveys.models import Survey
@@ -103,6 +104,11 @@ class LinkGroup(SortableMixin):
 class Link(SortableMixin):
     COMPONENT_CHOICES = (
         ('page', _('Page')),
+        ('initiatives.list', _('Initiative Search')),
+        ('initiatives.start', _('Initiative Start')),
+        ('initiatives.create', _('Initiative Create')),
+        ('initiatives.detail', _('Initiative Detail')),
+        ('initiatives.activities.list', _('Activities Search')),
         ('project', _('Project')),
         ('task', _('Task')),
         ('fundraiser', _('Fundraiser')),
@@ -129,14 +135,24 @@ class Stat(SortableMixin, models.Model):
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
         ('participants', _('Participants')),
-        ('projects_realized', _('Projects realised')),
-        ('projects_complete', _('Projects complete')),
-        ('tasks_realized', _('Tasks realised')),
-        ('task_members', _('Taskmembers')),
+
+        ('activities_succeeded', _('Activities succeeded')),
+        ('assignments_succeeded', _('Assignments succeeded')),
+        ('events_succeeded', _('Events succeeded')),
+        ('fundings_succeeded', _('Fundraisers succeeded')),
+
+        ('assignment_members', _('Assignment members')),
+        ('event_members', _('Event participants')),
+
+        ('assignments_online', _('Assignments online')),
+        ('events_online', _('Events online')),
+        ('fundings_online', _('Fundraisers online')),
+
+        ('donations', _('Donations')),
         ('donated_total', _('Donated total')),
         ('pledged_total', _('Pledged total')),
         ('amount_matched', _('Amount matched')),
-        ('projects_online', _('Projects Online')),
+        ('activities_online', _('Activities Online')),
         ('votes_cast', _('Votes casts')),
         ('time_spent', _('Time spent')),
         ('members', _("Number of members"))
@@ -212,6 +228,28 @@ class SurveyContent(TitledContent):
 
     def __unicode__(self):
         return unicode(self.survey)
+
+
+class ActivitiesContent(TitledContent):
+    type = 'activities'
+    action_text = models.CharField(max_length=80,
+                                   default=_('Find more activities'),
+                                   blank=True, null=True)
+    action_link = models.CharField(max_length=100, default="/initiatives/activities/list",
+                                   blank=True, null=True)
+
+    activities = models.ManyToManyField(
+        Activity, blank=True, db_table='cms_activitycontent_activities'
+    )
+    highlighted = models.BooleanField(default=False)
+
+    preview_template = 'admin/cms/preview/activities.html'
+
+    class Meta:
+        verbose_name = _('Activities')
+
+    def __unicode__(self):
+        return unicode(self.title)
 
 
 class ProjectsContent(TitledContent):

@@ -11,6 +11,24 @@ class PermissionsException(Exception):
     pass
 
 
+class IsOwner(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return obj.owner == request.user
+
+
+class IsUser(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return obj.user == request.user
+
+
 class BasePermission(permissions.BasePermission):
     """ BasePermission extends the standard BasePermission from DRF to include
     the ability to get the permissions without the request.
@@ -51,12 +69,11 @@ class BasePermission(permissions.BasePermission):
     def has_permission(self, request, view):
         """ This action is called from the views which include this permission.
 
-        The call happens during view initalisation so it will be called with views returning
+        The call happens during view initialisation so it will be called with views returning
         a data set as well as a single object.
 
         Return `True` if permission is granted, `False` otherwise.
         """
-
         try:
             model_cls = self.get_view_model(view)
             return self.has_action_permission(
@@ -96,6 +113,40 @@ class BasePermission(permissions.BasePermission):
 
         message = 'has_action_permission() must be implemented on {}'.format(self)
         raise NotImplementedError(message)
+
+
+class IsOwnerOrReadOnly(BasePermission):
+    def has_action_permission(self, action, user, model_cls):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return (request.method in permissions.SAFE_METHODS) or obj.owner == request.user
+
+    def has_object_action_permission(self, action, user, obj):
+        return (action in permissions.SAFE_METHODS) or obj.owner == user
+
+
+class IsAuthenticated(BasePermission):
+    def has_action_permission(self, action, user, obj):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Return `True` if user is owner of the object granted, `False` otherwise.
+        """
+        return request.user.is_authenticated
+
+    def has_object_action_permission(self, action, user, obj):
+        return user.is_authenticated
 
 
 class ResourcePermission(BasePermission, permissions.DjangoModelPermissions):
@@ -163,16 +214,6 @@ class TenantConditionalOpenClose(BasePermission):
         except AttributeError:
             pass
         return True
-
-
-class IsAuthenticated(BasePermission):
-    """ Allow access if the user is authenticated. """
-
-    def has_object_action_permission(self, action, user):
-        return self.has_action_permission(action, user, None)
-
-    def has_action_permission(self, action, user, model_cls):
-        return user and user.is_authenticated
 
 
 class AuthenticatedOrReadOnlyPermission(IsAuthenticated):

@@ -1,17 +1,19 @@
 import importlib
 
-from bluebottle.members.dashboard import RecentMembersDashboard
-from bluebottle.projects.dashboard import RecentProjects, MyReviewingProjects, ClosingFundingProjects
-from bluebottle.payouts.dashboard import PayoutAccountsNeedingAction
 from django.urls.base import reverse, reverse_lazy
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
-
 from jet.dashboard import modules
 from jet.dashboard.dashboard import Dashboard, DefaultAppIndexDashboard
 from jet.dashboard.modules import DashboardModule, LinkList
 
+from bluebottle.activities.dashboard import RecentActivities
+from bluebottle.assignments.dashboard import RecentAssignments
 from bluebottle.clients import properties
+from bluebottle.events.dashboard import RecentEvents
+from bluebottle.funding.dashboard import RecentFunding
+from bluebottle.initiatives.dashboard import RecentInitiatives, MyReviewingInitiatives
+from bluebottle.members.dashboard import RecentMembersDashboard
 from bluebottle.tasks.models import Task
 
 
@@ -36,11 +38,18 @@ class CustomIndexDashboard(Dashboard):
 
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)
-        self.children.append(RecentProjects())
-        self.children.append(MyReviewingProjects())
-        self.children.append(ClosingFundingProjects())
-        self.children.append(ClosingTasks())
-        self.children.append(PayoutAccountsNeedingAction())
+
+        # Initiatives
+        self.children.append(RecentInitiatives())
+        self.children.append(MyReviewingInitiatives())
+
+        # Activities
+        self.children.append(RecentActivities())
+        self.children.append(RecentEvents())
+        self.children.append(RecentFunding())
+        self.children.append(RecentAssignments())
+
+        # Other
         self.children.append(modules.RecentActions(
             _('Recent Actions'),
             10,
@@ -59,12 +68,6 @@ class CustomIndexDashboard(Dashboard):
                 metrics_children.append({
                     'title': _('Download report'),
                     'url': reverse_lazy('report-export'),
-                })
-
-            if properties.PARTICIPATION_BACKOFFICE_ENABLED:
-                metrics_children.append({
-                    'title': _('Request complete participation metrics'),
-                    'url': reverse('participation-metrics')
                 })
 
             self.children.append(LinkList(

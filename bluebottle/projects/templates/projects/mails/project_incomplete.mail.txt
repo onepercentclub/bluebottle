@@ -6,7 +6,7 @@
 
 Hi {{receiver_name}},
 
-The deadline of your project "{{title}}" has expired!
+The deadline of your initiative "{{title}}" has expired!
 
 Don't wait any longer. Let your supporters know about your next steps.
 {% endblocktrans %}

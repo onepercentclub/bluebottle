@@ -1,11 +1,11 @@
-from rest_framework.generics import ListAPIView, RetrieveAPIView
-from bluebottle.geo.models import Location
-from bluebottle.geo.serializers import LocationSerializer
-from bluebottle.projects.models import Project
-from bluebottle.utils.views import TranslatedApiViewMixin
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
+from rest_framework_json_api.views import AutoPrefetchMixin
 
+from bluebottle.geo.models import Location, Country, Geolocation
+from bluebottle.geo.serializers import LocationSerializer, GeolocationSerializer
+from bluebottle.projects.models import Project
+from bluebottle.utils.views import TranslatedApiViewMixin, JsonApiViewMixin
 from .serializers import CountrySerializer
-from .models import Country
 
 
 class CountryList(TranslatedApiViewMixin, ListAPIView):
@@ -38,3 +38,12 @@ class UsedCountryList(CountryList):
 class LocationList(ListAPIView):
     serializer_class = LocationSerializer
     queryset = Location.objects.all()
+
+
+class GeolocationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+    queryset = Geolocation.objects.all()
+    serializer_class = GeolocationSerializer
+
+    prefetch_for_includes = {
+        'country': ['country'],
+    }

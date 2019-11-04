@@ -12,7 +12,7 @@ class Reward(models.Model):
     """
     Rewards for donations
     """
-    new_reward_id = models.IntegerField(null=True)
+    new_reward_id = models.IntegerField(null=True, blank=True)
     amount = MoneyField(_('Amount'))
     title = models.CharField(_('Title'), max_length=200)
     description = models.CharField(_('Description'), max_length=500)

@@ -109,7 +109,7 @@ class ProjectPhaseLog(models.Model):
 
 class Project(BaseProject, PreviousStatusMixin):
 
-    funding_id = models.IntegerField(null=True)
+    funding_id = models.IntegerField(null=True, blank=True)
 
     video_url = models.URLField(
         _('video'), max_length=100, blank=True, null=True, default='',

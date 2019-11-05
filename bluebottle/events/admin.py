@@ -67,6 +67,7 @@ class EventAdmin(ActivityChildAdmin):
         'highlight', 'start_date', 'start_time', 'duration'
     ]
     search_fields = ['title', 'description']
+    list_filter = ['status', 'is_online']
 
     base_model = Event
 

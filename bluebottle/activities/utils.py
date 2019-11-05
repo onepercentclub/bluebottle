@@ -80,6 +80,7 @@ class BaseActivitySerializer(ModelSerializer):
 class BaseActivityListSerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
+    review_status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
     is_follower = serializers.SerializerMethodField()
@@ -109,6 +110,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'description',
             'is_follower',
             'status',
+            'review_status',
             'stats',
         )
 

@@ -83,6 +83,7 @@ def migrate_orders(apps, schema_editor):
                 name=donation.name,
                 status=map_donation_status(order.status),
                 reward_id=reward_id,
+                transition_date=order.completed,
                 # fundraiser=fundraiser,
                 anonymous=donation.anonymous
             )
@@ -176,6 +177,7 @@ class Migration(migrations.Migration):
         ('funding_flutterwave', '0003_flutterwavepayoutaccount'),
         ('funding_stripe', '0001_initial'),
         ('wallposts', '0019_auto_20191017_2204'),
+        ('activities', '0009_auto_20191007_1506'),
         ('rewards', '0009_auto_20191104_1230')
     ]
 

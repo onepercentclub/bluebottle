@@ -340,6 +340,7 @@ def migrate_projects(apps, schema_editor):
                 title=project.title,
                 slug=project.slug,
                 description=project.pitch or '',
+                transition_date=project.campaign_ended,
 
                 # Funding specific fields
                 deadline=project.deadline,

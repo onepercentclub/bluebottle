@@ -19,6 +19,7 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
     list_filter = ['status', ]
     ordering = ('-created', )
+    show_in_index = True
 
     def activity_link(self, obj):
         url = reverse("admin:{}_{}_change".format(

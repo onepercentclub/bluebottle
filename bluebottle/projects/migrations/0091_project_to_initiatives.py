@@ -175,6 +175,8 @@ def migrate_projects(apps, schema_editor):
     FlutterwaveBankAccount = apps.get_model('funding_flutterwave', 'FlutterwaveBankAccount')
     VitepayBankAccount = apps.get_model('funding_vitepay', 'VitepayBankAccount')
     LipishaBankAccount = apps.get_model('funding_lipisha', 'LipishaBankAccount')
+    PledgeBankAccount = apps.get_model('funding_pledge', 'PledgeBankAccount')
+
     Wallpost = apps.get_model('wallposts', 'Wallpost')
 
     ContentType = apps.get_model('contenttypes', 'ContentType')
@@ -191,6 +193,7 @@ def migrate_projects(apps, schema_editor):
     flutterwave_ct = ContentType.objects.get_for_model(FlutterwaveBankAccount)
     lipisha_ct = ContentType.objects.get_for_model(LipishaBankAccount)
     vitepay_ct = ContentType.objects.get_for_model(VitepayBankAccount)
+    pledge_ct = ContentType.objects.get_for_model(PledgeBankAccount)
     funding_ct = ContentType.objects.get_for_model(Funding)
     project_ct = ContentType.objects.get_for_model(Project)
     initiative_ct = ContentType.objects.get_for_model(Initiative)
@@ -310,8 +313,7 @@ def migrate_projects(apps, schema_editor):
                             bank_country_code=country,
                             account_number=plain_account.account_number
                         )
-
-                    if str(project.amount_asked.currency) == 'KES':
+                    elif str(project.amount_asked.currency) == 'KES':
                         account = LipishaBankAccount.objects.create(
                             polymorphic_ctype=lipisha_ct,
                             connect_account=payout_account,
@@ -319,12 +321,24 @@ def migrate_projects(apps, schema_editor):
                             account_name=plain_account.account_holder_name,
                             address=plain_account.account_holder_address
                         )
-
-                    if str(project.amount_asked.currency) == 'XOF':
+                    elif str(project.amount_asked.currency) == 'XOF':
                         account = VitepayBankAccount.objects.create(
                             polymorphic_ctype=vitepay_ct,
                             connect_account=payout_account,
                             account_name=plain_account.account_holder_name,
+                        )
+                    else:
+                        account = PledgeBankAccount.objects.create(
+                            polymorphic_ctype=pledge_ct,
+                            connect_account=payout_account,
+                            account_holder_name=plain_account.account_holder_name,
+                            account_holder_address=plain_account.account_holder_address,
+                            account_holder_postal_code=plain_account.account_holder_postal_code,
+                            account_holder_city=plain_account.account_holder_city,
+                            account_holder_country_id=plain_account.account_holder_country_id,
+                            account_number=plain_account.account_number,
+                            account_details=plain_account.account_details,
+                            account_bank_country_id=plain_account.account_bank_country_id,
                         )
 
             funding = Funding.objects.create(

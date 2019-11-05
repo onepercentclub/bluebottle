@@ -11,6 +11,7 @@ from polymorphic.models import PolymorphicModel
 from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.follow.models import Follow
 from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
 
@@ -49,6 +50,7 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
     messages = GenericRelation('notifications.Message')
 
     review_transitions = TransitionManager(ActivityReviewTransitions, 'review_status')
+    follows = GenericRelation(Follow, object_id_field='instance_id')
 
     needs_review = False
 
@@ -109,3 +111,4 @@ class Contribution(TransitionsMixin, PolymorphicModel):
 
 
 from bluebottle.activities.signals import *  # noqa
+from bluebottle.activities.wallposts import *  # noqa

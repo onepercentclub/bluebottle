@@ -312,5 +312,4 @@ class Reaction(models.Model):
         return Truncator(s).words(10)
 
 
-import mails  # noqa
 import bluebottle.wallposts.signals  # noqa

@@ -1,0 +1,16 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with recipient_name=to.first_name title=obj.content_object.title author_name=obj.author.first_name context 'email' %}
+        Hi {{ recipient_name }},
+
+        {{ author_name }} just posted a comment on your '{{ title }}' wallpost.
+
+    {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ obj.get_absolute_url }}"
+       class="action-email">{% trans 'View comment' context 'email' %}</a>
+{% endblock %}`

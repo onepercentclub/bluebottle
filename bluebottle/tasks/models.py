@@ -495,5 +495,4 @@ class TaskMemberStatusLog(models.Model):
 
 
 from .taskmail import send_task_realized_mail, send_deadline_to_apply_passed_mail  # noqa
-from .taskwallmails import *  # noqa
 from .signals import *  # noqa

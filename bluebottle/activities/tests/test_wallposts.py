@@ -1,31 +1,31 @@
 from django.core import mail
 from django.test import TestCase
-from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.events.tests.factories import EventFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.wallposts import MediaWallpostFactory, ReactionFactory
-from bluebottle.follow.tests.factories import InitiativeFollowFactory
+from bluebottle.follow.tests.factories import EventFollowFactory
 
 
-class InitiativeWallpostTestCase(TestCase):
+class ActivityWallpostTestCase(TestCase):
 
     def setUp(self):
-        self.initiative = InitiativeFactory.create()
+        self.activity = EventFactory.create()
 
         self.follower = BlueBottleUserFactory.create()
-        InitiativeFollowFactory.create(
-            user=self.follower, instance=self.initiative
+        EventFollowFactory.create(
+            user=self.follower, instance=self.activity
         )
-        InitiativeFollowFactory.create(
+        EventFollowFactory.create(
             user=BlueBottleUserFactory(campaign_notifications=False),
-            instance=self.initiative
+            instance=self.activity
         )
 
-        InitiativeFollowFactory.create(user=self.initiative.owner, instance=self.initiative)
+        EventFollowFactory.create(user=self.activity.owner, instance=self.activity)
 
     def test_wallpost(self):
         wallpost_user = BlueBottleUserFactory.create()
         MediaWallpostFactory.create(
-            content_object=self.initiative, author=wallpost_user, email_followers=False
+            content_object=self.activity, author=wallpost_user, email_followers=False
         )
 
         self.assertEqual(len(mail.outbox), 1)
@@ -34,12 +34,12 @@ class InitiativeWallpostTestCase(TestCase):
 
         self.assertEqual(
             owner_mail.subject,
-            '{} commented on your initiative'.format(wallpost_user.first_name)
+            '{} commented on your activity'.format(wallpost_user.first_name)
         )
 
     def test_wallpost_owner(self):
         MediaWallpostFactory.create(
-            content_object=self.initiative, author=self.initiative.owner, email_followers=True
+            content_object=self.activity, author=self.activity.owner, email_followers=True
         )
         self.assertEqual(len(mail.outbox), 1)
 
@@ -47,14 +47,14 @@ class InitiativeWallpostTestCase(TestCase):
 
         self.assertEqual(
             follow_mail.subject,
-            "New post on '{}'".format(self.initiative.title)
+            "New post on '{}'".format(self.activity.title)
         )
 
     def test_reaction(self):
         reaction_user = BlueBottleUserFactory.create()
         wallpost_user = BlueBottleUserFactory.create()
         wallpost = MediaWallpostFactory.create(
-            content_object=self.initiative, author=wallpost_user, email_followers=True
+            content_object=self.activity, author=wallpost_user, email_followers=True
         )
 
         mail.outbox = []
@@ -75,5 +75,5 @@ class InitiativeWallpostTestCase(TestCase):
 
         self.assertEqual(
             owner_mail.subject,
-            "{} commented on your initiative".format(reaction_user.first_name)
+            "{} commented on your activity".format(reaction_user.first_name)
         )

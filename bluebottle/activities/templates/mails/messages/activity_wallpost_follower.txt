@@ -5,7 +5,7 @@
 {% blocktrans with recipient_name=to.first_name title=obj.content_object.title author_name=obj.author.first_name text=obj.text|truncatechars:250 context 'email' %}
 Hi {{ recipient_name }},
 
-{{ author_name }} added a new post on a initiative you follow:
+{{ author_name }} added a new post on an activity you follow:
 
 '{{ text }}'
 {% endblocktrans %}
@@ -17,7 +17,7 @@ Hi {{ recipient_name }},
 {% block unsubscribe %}
 {% blocktrans with title=obj.content_object.title context 'email'%}
 You received this email because you support {{ title }}.
-Don't want to receive initiative updates anymore?
+Don't want to receive activity updates anymore?
 Unsubscribe via your account page:
 {{ site }}/member/profile
 {% endblocktrans %}

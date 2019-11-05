@@ -6,8 +6,11 @@ from datetime import timedelta
 
 from django.db import migrations, connection, models
 from django.utils.text import slugify
+from django.contrib.gis.geos import Point
+
 
 from bluebottle.clients import properties
+
 
 
 def map_event_status(task):
@@ -75,6 +78,8 @@ def migrate_tasks(apps, schema_editor):
     ContentType = apps.get_model('contenttypes', 'ContentType')
     Wallpost = apps.get_model('wallposts', 'Wallpost')
 
+    Place = apps.get_model('geo', 'Place')
+    Geolocation = apps.get_model('geo', 'Geolocation')
     # Clean-up previous migrations of projects to initiatives
     Event.objects.all().delete()
     Assignment.objects.all().delete()
@@ -83,13 +88,32 @@ def migrate_tasks(apps, schema_editor):
     participant_ctype= ContentType.objects.get_for_model(Participant)
     assignment_ctype = ContentType.objects.get_for_model(Assignment)
     applicant_ctype= ContentType.objects.get_for_model(Applicant)
+    task_ctype= ContentType.objects.get_for_model(Task)
+
+    def get_location(task):
+        try:
+            place = Place.objects.get(
+                content_type=task_ctype,
+                object_id=task.pk
+            )
+            return Geolocation.objects.create(
+                street_number=place.street_number,
+                street=place.street,
+                postal_code=place.postal_code,
+                locality=place.locality,
+                province=place.province,
+                position=Point(float(place.position.longitude), float(place.position.latitude)),
+                country_id=place.country_id
+                )
+        except Place.DoesNotExist:
+            return None
 
     for task in Task.objects.select_related('project').prefetch_related('members').iterator():
         if task.type == 'event' and (not task.skill_id or not task.skill.expertise):
             content_type = ContentType.objects.get_for_model(Event)
             initiative = Initiative.objects.get(slug=task.project.slug)
-            # geolocation = Geolocation.objects.create()
-            geolocation = None
+
+            geolocation = get_location(task)
             status = map_event_status(task)
 
             event = Event.objects.create(
@@ -143,8 +167,8 @@ def migrate_tasks(apps, schema_editor):
         else:
             content_type = ContentType.objects.get_for_model(Event)
             initiative = Initiative.objects.get(slug=task.project.slug)
-            # geolocation = Geolocation.objects.create()
-            geolocation = None
+            geolocation = get_location(task)
+
             status = map_event_status(task)
             end_date_type = 'deadline'
             if task.type == 'event':

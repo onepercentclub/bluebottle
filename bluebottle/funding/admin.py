@@ -28,7 +28,7 @@ from bluebottle.funding.transitions import DonationTransitions, FundingTransitio
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount, LipishaPayment
-from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
+from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider, PledgeBankAccount
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
@@ -428,7 +428,8 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
         ExternalAccount,
         FlutterwaveBankAccount,
         LipishaBankAccount,
-        VitepayBankAccount
+        VitepayBankAccount,
+        PledgeBankAccount,
     ]
 
 

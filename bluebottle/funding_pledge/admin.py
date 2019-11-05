@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin
+from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, BankAccountChildAdmin
 from bluebottle.funding.models import PaymentProvider, Payment
-from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
+from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider, PledgeBankAccount
 
 
 @admin.register(PledgePayment)
@@ -20,3 +20,18 @@ class PledgePaymentProviderAdmin(PaymentProviderChildAdmin):
 
     def settings(self, obj):
         return _('No settings are required for this payment provider')
+
+
+@admin.register(PledgeBankAccount)
+class LipishaBankAccountAdmin(BankAccountChildAdmin):
+    model = PledgeBankAccount
+    fields = BankAccountChildAdmin.fields + (
+        'account_holder_name',
+        'account_holder_address',
+        'account_holder_postal_code',
+        'account_holder_city',
+        'account_holder_country',
+        'account_number',
+        'account_details',
+        'account_bank_country'
+    )

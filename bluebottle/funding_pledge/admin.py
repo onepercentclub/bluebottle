@@ -23,7 +23,7 @@ class PledgePaymentProviderAdmin(PaymentProviderChildAdmin):
 
 
 @admin.register(PledgeBankAccount)
-class LipishaBankAccountAdmin(BankAccountChildAdmin):
+class PledgeBankAccountAdmin(BankAccountChildAdmin):
     model = PledgeBankAccount
     fields = BankAccountChildAdmin.fields + (
         'account_holder_name',

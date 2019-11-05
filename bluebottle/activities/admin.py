@@ -146,7 +146,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     list_display = ['__unicode__', 'created', 'type', 'status', 'review_status',
                     'link', 'highlight']
 
-    list_search = ('title', 'description', 'owner__first_name', 'owner__last_name')
+    search_fields = ('title', 'description', 'owner__first_name', 'owner__last_name')
 
     def link(self, obj):
         return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title)

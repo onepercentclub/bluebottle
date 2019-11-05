@@ -310,3 +310,6 @@ class Reaction(models.Model):
     def __unicode__(self):
         s = self.text
         return Truncator(s).words(10)
+
+
+import bluebottle.wallposts.signals  # noqa

@@ -9,7 +9,8 @@ from bluebottle.activities.permissions import ActivityPermission, ActivityTypePe
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.models import (
     Funding, Donation, Reward, Fundraiser,
-    BudgetLine, PayoutAccount, PlainPayoutAccount
+    BudgetLine, PayoutAccount, PlainPayoutAccount,
+    Payout
 )
 from bluebottle.funding.permissions import DonationOwnerPermission, PaymentPermission
 from bluebottle.funding.serializers import (
@@ -17,14 +18,15 @@ from bluebottle.funding.serializers import (
     FundraiserSerializer, RewardSerializer, BudgetLineSerializer,
     DonationCreateSerializer, FundingListSerializer,
     PayoutAccountSerializer, PlainPayoutAccountSerializer,
-    FundingPayoutsSerializer)
+    FundingPayoutsSerializer, PayoutSerializer
+)
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView
+    CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView, RetrieveAPIView
 )
 
 
@@ -148,25 +150,32 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     }
 
 
-class FundingPayoutDetails(RetrieveUpdateAPIView):
+class FundingPayoutDetails(RetrieveAPIView):
     # For Payout service
     queryset = Funding.objects.all()
     serializer_class = FundingPayoutsSerializer
 
     permission_classes = (IsFinancialMember,)
 
-    def put(self, *args, **kwargs):
-        status = self.request.data['status']
-        # FIXME better trigger a request here where we check all payouts
+
+class PayoutDetails(RetrieveUpdateAPIView):
+    queryset = Payout.objects.all()
+    serializer_class = PayoutSerializer
+
+    permission_classes = (IsFinancialMember,)
+
+    def perform_update(self, serializer):
+
+        status = serializer.cleaned_data['status']
         # related to this Funding.
-        payout = self.get_object().payouts.first()
+        payout = serializer.instance
         if status == 'started':
             payout.transitions.start()
         if status == 'scheduled':
             payout.transitions.start()
         if status == 'new':
             payout.transitions.draft()
-        if status == 'success':
+        if status == 'succeeded':
             payout.transitions.succeed()
         if status == 'confirm':
             payout.transitions.succeed()

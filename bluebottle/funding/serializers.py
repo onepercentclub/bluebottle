@@ -580,6 +580,14 @@ class PayoutSerializer(serializers.ModelSerializer):
         model = Payout
 
 
+class PayoutStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = (
+            'status',
+        )
+        model = Payout
+
+
 class FundingPayoutsSerializer(serializers.ModelSerializer):
     # For Payout service
     payouts = PayoutSerializer(many=True)

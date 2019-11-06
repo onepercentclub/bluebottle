@@ -15,7 +15,7 @@ class RecentActivities(DashboardModule):
     column = 0
 
     def init_with_context(self, context):
-        activities = Activity.objects.filter(status__in=['draft', 'open']).order_by('-created')
+        activities = Activity.objects.filter(review_status__in=['submitted']).order_by('-created')
         self.children = activities[:self.limit]
 
 

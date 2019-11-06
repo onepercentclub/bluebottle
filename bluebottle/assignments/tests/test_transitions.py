@@ -105,12 +105,23 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 
     def test_close(self):
         self.assignment.review_transitions.approve()
+
+        applicant = ApplicantFactory.create(activity=self.assignment)
+        applicant.transitions.accept()
+        applicant.save()
+
         self.assignment.save()
         self.assignment.transitions.close()
         self.assignment.save()
-        assignment = Assignment.objects.get(pk=self.assignment.pk)
+
+        self.assignment.refresh_from_db()
+        applicant.refresh_from_db()
+
         self.assertEqual(
-            assignment.status, AssignmentTransitions.values.closed
+            self.assignment.status, AssignmentTransitions.values.closed
+        )
+        self.assertEqual(
+            applicant.status, ApplicantTransitions.values.closed
         )
 
     def test_start_no_applicants(self):

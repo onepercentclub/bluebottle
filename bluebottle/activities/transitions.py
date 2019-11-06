@@ -117,11 +117,24 @@ class ContributionTransitions(ModelTransitions):
         new = ChoiceItem('new', _('new'))
         succeeded = ChoiceItem('succeeded', _('succeeded'))
         failed = ChoiceItem('failed', _('failed'))
+        closed = ChoiceItem('closed', _('closed'))
 
     def is_user(self, user):
         return self.instance.user == user
+
+    def can_review(self, user):
+        # TODO: Make me smart. Do we want to do this with a auth permission?
+        return not user or user.is_staff
 
     def is_activity_manager(self, user):
         return user in [
             self.instance.activity.initiative.activity_manager,
             self.instance.activity.owner]
+
+    @transition(
+        source='*',
+        target=values.closed,
+        permissions=[can_review]
+    )
+    def close(self):
+        self.instance.transitions.close()

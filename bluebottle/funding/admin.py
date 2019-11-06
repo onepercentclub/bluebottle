@@ -23,7 +23,8 @@ from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminC
 from bluebottle.funding.forms import RefundConfirmationForm
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward)
+    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward,
+    FundingPlatformSettings)
 from bluebottle.funding.transitions import DonationTransitions, FundingTransitions
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
@@ -33,7 +34,8 @@ from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayout
     StripeSourcePayment, ExternalAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action, FSMAdminMixin
+from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action, FSMAdminMixin, \
+    BasePlatformSettingsAdmin
 
 logger = logging.getLogger(__name__)
 
@@ -476,3 +478,8 @@ class PayoutAdmin(FSMAdmin):
     def activity_link(self, obj):
         url = reverse('admin:funding_funding_change', args=(obj.activity.id,))
         return format_html(u'<a href="{}">{}</a>', url, obj.activity)
+
+
+@admin.register(FundingPlatformSettings)
+class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
+    pass

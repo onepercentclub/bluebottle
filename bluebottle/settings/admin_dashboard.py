@@ -182,7 +182,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'payments.payment',
                 'permissions': ['payments.change_payment']
             },
-
+            {
+                'name': 'projects.projectplatformsettings',
+                'permissions': ['projects.change_projectplatformsettings']
+            },
         ]
     },
     {
@@ -266,12 +269,12 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['terms.change_terms']
             },
             {
-                'name': 'projects.projectplatformsettings',
-                'permissions': ['projects.change_projectplatformsettings']
-            },
-            {
                 'name': 'initiatives.initiativeplatformsettings',
                 'permissions': ['initiatives.change_initiativeplatformsettings']
+            },
+            {
+                'name': 'notifications.notificationplatformsettings',
+                'permissions': ['notifications.notificationplatformsettings']
             },
             {
                 'name': 'members.memberplatformsettings',

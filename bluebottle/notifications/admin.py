@@ -1,6 +1,8 @@
+from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 
-from bluebottle.notifications.models import Message
+from bluebottle.notifications.models import Message, NotificationPlatformSettings
+from bluebottle.utils.admin import BasePlatformSettingsAdmin
 
 
 class MessageAdminInline(GenericTabularInline):
@@ -16,3 +18,8 @@ class MessageAdminInline(GenericTabularInline):
     extra = 0
 
     can_delete = False
+
+
+@admin.register(NotificationPlatformSettings)
+class NotificationPlatformSettingsAdmin(BasePlatformSettingsAdmin):
+    pass

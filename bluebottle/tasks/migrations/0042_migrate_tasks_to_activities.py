@@ -91,11 +91,11 @@ def migrate_tasks(apps, schema_editor):
     task_ctype= ContentType.objects.get_for_model(Task)
 
     def get_location(task):
-        try:
-            place = Place.objects.get(
-                content_type=task_ctype,
-                object_id=task.pk
-            )
+        place = Place.objects.filter(
+            content_type=task_ctype,
+            object_id=task.pk
+        ).first()
+        if place:
             return Geolocation.objects.create(
                 street_number=place.street_number,
                 street=place.street,
@@ -104,8 +104,8 @@ def migrate_tasks(apps, schema_editor):
                 province=place.province,
                 position=Point(float(place.position.longitude), float(place.position.latitude)),
                 country_id=place.country_id
-                )
-        except Place.DoesNotExist:
+            )
+        else:
             return None
 
     for task in Task.objects.select_related('project').prefetch_related('members').iterator():

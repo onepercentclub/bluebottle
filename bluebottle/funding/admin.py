@@ -472,6 +472,7 @@ class PayoutAdmin(FSMAdmin):
     readonly_fields = ['activity_link', 'status', 'total_amount',
                        'date_approved', 'date_started', 'date_completed']
     list_display = ['created', 'activity_link', 'status']
+    list_filter = ['status']
 
     def activity_link(self, obj):
         url = reverse('admin:funding_funding_change', args=(obj.activity.id,))

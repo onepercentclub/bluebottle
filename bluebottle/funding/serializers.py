@@ -329,11 +329,16 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
         request = self.context['request']
 
         if request.user.is_authenticated and request.user.can_pledge:
-            from bluebottle.funding_pledge.models import PledgePaymentProvider
-            try:
-                methods += PledgePaymentProvider.objects.get().payment_methods
-            except PledgePaymentProvider.DoesNotExist:
-                pass
+            methods.append(
+                PaymentMethod(
+                    provider='pledge',
+                    code='pledge',
+                    name=_('Pledge'),
+                    currencies=[
+                        'EUR', 'USD', 'NGN', 'UGX', 'KES', 'XOF', 'BGN'
+                    ]
+                )
+            )
 
         return methods
 

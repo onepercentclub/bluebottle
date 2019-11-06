@@ -62,7 +62,7 @@ class AssignmentTransitions(ActivityTransitions):
     )
     def close(self, **kwargs):
         for member in self.instance.accepted_applicants:
-            member.transitions.fail()
+            member.transitions.close()
             member.save()
 
     @transition(
@@ -192,7 +192,8 @@ class ApplicantTransitions(ContributionTransitions):
         permissions=[ContributionTransitions.is_activity_manager]
     )
     def succeed(self):
-        pass
+        follow(self.instance.user, self.instance.activity)
+        self.instance.time_spent = self.instance.activity.duration
 
     @transition(
         field='status',
@@ -202,4 +203,13 @@ class ApplicantTransitions(ContributionTransitions):
     )
     def fail(self):
         unfollow(self.instance.user, self.instance.activity)
+        self.instance.time_spent = None
+
+    @transition(
+        field='status',
+        source='*',
+        target=values.closed,
+        permissions=[ContributionTransitions.is_activity_manager]
+    )
+    def close(self):
         self.instance.time_spent = None

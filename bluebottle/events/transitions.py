@@ -88,7 +88,9 @@ class EventTransitions(ActivityTransitions):
         permissions=[ActivityTransitions.can_approve]
     )
     def close(self):
-        pass
+        for participant in self.instance.participants:
+            participant.transitions.close()
+            participant.save()
 
     @transition(
         source=values.closed,

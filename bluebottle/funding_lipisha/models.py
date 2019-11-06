@@ -16,8 +16,6 @@ class LipishaPaymentProvider(PaymentProvider):
         _('Business Number'), max_length=10,
         help_text='Find this at https://app.lypa.io/payment under `Business Number`')
 
-    provider = 'lipisha'
-
     @property
     def payment_methods(self):
         return [
@@ -46,6 +44,8 @@ class LipishaPayment(Payment):
     transaction = models.CharField(max_length=200, blank=True, null=True)
     unique_id = models.CharField(max_length=30)
     transitions = TransitionManager(PaymentTransitions, 'status')
+
+    provider = 'lipisha'
 
     def update(self):
         pass

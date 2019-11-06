@@ -21,9 +21,9 @@ class FundingTransitions(ActivityTransitions):
         partially_funded = ChoiceItem('partially_funded', _('partially funded'))
         refunded = ChoiceItem('refunded', _('refunded'))
 
-    def deadline_in_future(self):
-        if not self.instance.deadline or self.instance.deadline < timezone.now():
-            return _("Please select a new deadline in the future before extending.")
+    def target_reached(self):
+        if not self.instance.amount_raised >= self.instance.target:
+            return _("Amount raised should at least equal to target amount.")
 
     @transition(
         source=values.in_review,
@@ -37,23 +37,37 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=values.open,
         target=values.partially_funded,
-        messages=[FundingPartiallyFundedMessage]
+        messages=[FundingPartiallyFundedMessage],
+        permissions=[ActivityTransitions.is_system]
     )
     def partial(self):
-        pass
+        from bluebottle.funding.models import Payout
+        Payout.generate(self.instance)
 
     @transition(
-        source=[values.open, values.succeeded],
+        source=[values.open],
         target=values.succeeded,
-        messages=[FundingRealisedOwnerMessage]
+        messages=[FundingRealisedOwnerMessage],
+        permissions=[ActivityTransitions.is_system]
     )
     def succeed(self):
         from bluebottle.funding.models import Payout
         Payout.generate(self.instance)
 
     @transition(
+        source=[values.succeeded, values.partially_funded],
+        target=values.succeeded,
+        permissions=[ActivityTransitions.can_approve],
+        conditions=[target_reached]
+    )
+    def recalculate(self):
+        from bluebottle.funding.models import Payout
+        Payout.generate(self.instance)
+
+    @transition(
         source=values.partially_funded,
         target=values.succeeded,
+        permissions=[ActivityTransitions.can_approve],
     )
     def approve(self):
         pass
@@ -61,26 +75,23 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=values.partially_funded,
         target=values.refunded,
+        permissions=[ActivityTransitions.can_approve],
     )
     def refund(self):
-        pass
+        for donation in self.instance.contributions.filter(status__in=['succeeded']).all():
+            donation.payment.transitions.request_refund()
+            donation.payment.save()
+        for payout in self.instance.payouts.all():
+            payout.transitions.cancel()
+            payout.save()
 
     @transition(
         source='*',
         target=values.closed,
-        messages=[FundingClosedMessage]
+        messages=[FundingClosedMessage],
+        permissions=[ActivityTransitions.can_approve],
     )
     def close(self):
-        pass
-
-    @transition(
-        source=[
-            values.partially_funded, values.closed, values.succeeded
-        ],
-        target=values.open,
-        conditions=[deadline_in_future]
-    )
-    def extend(self):
         pass
 
 
@@ -127,7 +138,6 @@ class DonationTransitions(ContributionTransitions):
                 'content_object': parent,
                 'related_object': self.instance
             }
-
         )
 
 
@@ -159,7 +169,7 @@ class PaymentTransitions(ModelTransitions):
         self.instance.donation.activity.update_amounts()
 
     @transition(
-        source=[values.succeeded],
+        source=[values.succeeded, values.refund_requested],
         target=values.refunded
     )
     def refund(self):
@@ -176,6 +186,7 @@ class PayoutTransitions(ModelTransitions):
         started = ChoiceItem('started', _('started'))
         succeeded = ChoiceItem('succeeded', _('succeeded'))
         failed = ChoiceItem('failed', _('failed'))
+        cancelled = ChoiceItem('cancelled', _('cancelled'))
 
     @transition(
         source=['*'],
@@ -212,6 +223,13 @@ class PayoutTransitions(ModelTransitions):
         target=values.failed
     )
     def fail(self):
+        pass
+
+    @transition(
+        source=['*'],
+        target=values.cancelled
+    )
+    def cancel(self):
         pass
 
 

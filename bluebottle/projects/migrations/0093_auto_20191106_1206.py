@@ -4,18 +4,28 @@ from __future__ import unicode_literals
 from itertools import groupby
 
 from django.db import migrations
-from bluebottle.funding.models import Funding, Payout, Donation
 
 
 def create_payouts(apps, schema_editor):
     Project = apps.get_model('projects', 'Project')
+    Funding = apps.get_model('funding', 'Funding')
+    Payout = apps.get_model('funding', 'Payout')
+    Donation = apps.get_model('funding', 'Donation')
+    LegacyPayment = apps.get_model('funding', 'LegacyPayment')
+
+    def get_currency_and_provider(donation):
+        return (
+            donation.amount.currency,
+            donation.payment.polymorphic_ctype.model.replace('payment', '').replace('source' ,'')
+        )
+
 
     for project in Project.objects.exclude(payout_status__isnull=True):
         funding = Funding.objects.get(pk=project.funding_id)
 
         for (currency, provider), donations in groupby(
-            Donation.objects.filter(activity=funding, status='succeeded', payment__isnull=False),
-            lambda x: (x.amount_currency, x.payment.provider if x.payment else 'legacy')
+            Donation.objects.select_related('payment', 'payment__polymorphic_ctype').filter(activity=funding, status='succeeded', payment__isnull=False),
+            lambda x: get_currency_and_provider(x)
         ):
             payout = Payout.objects.create(
                 status=project.payout_status,

@@ -39,6 +39,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('cms', '0055_migrate_statistics'),
+        ('projects', '0091_project_to_initiatives'),
     ]
 
     operations = [

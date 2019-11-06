@@ -12,6 +12,8 @@ class FlutterwavePayment(Payment):
 
     transitions = TransitionManager(PaymentTransitions, 'status')
 
+    provider = 'flutterwave'
+
     def update(self):
         check_payment_status(self)
 

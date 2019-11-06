@@ -16,6 +16,8 @@ class LipishaPaymentProvider(PaymentProvider):
         _('Business Number'), max_length=10,
         help_text='Find this at https://app.lypa.io/payment under `Business Number`')
 
+    provider = 'lipisha'
+
     @property
     def payment_methods(self):
         return [

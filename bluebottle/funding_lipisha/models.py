@@ -44,6 +44,7 @@ class LipishaPayment(Payment):
     transaction = models.CharField(max_length=200, blank=True, null=True)
     unique_id = models.CharField(max_length=30)
     transitions = TransitionManager(PaymentTransitions, 'status')
+    provider = 'lipisha'
 
     def update(self):
         pass

@@ -40,14 +40,23 @@ class FundingTransitions(ActivityTransitions):
         messages=[FundingPartiallyFundedMessage]
     )
     def partial(self):
-        pass
+        from bluebottle.funding.models import Payout
+        Payout.generate(self.instance)
 
     @transition(
-        source=[values.open, values.succeeded],
+        source=[values.open],
         target=values.succeeded,
         messages=[FundingRealisedOwnerMessage]
     )
     def succeed(self):
+        from bluebottle.funding.models import Payout
+        Payout.generate(self.instance)
+
+    @transition(
+        source=[values.succeeded],
+        target=values.succeeded,
+    )
+    def recalculate(self):
         from bluebottle.funding.models import Payout
         Payout.generate(self.instance)
 
@@ -63,7 +72,12 @@ class FundingTransitions(ActivityTransitions):
         target=values.refunded,
     )
     def refund(self):
-        pass
+        for donation in self.instance.contributions.filter(status__in=['succeeded']).all():
+            donation.payment.transitions.request_refund()
+            donation.payment.save()
+        for payout in self.instance.payouts.all():
+            payout.transitions.cancel()
+            payout.save()
 
     @transition(
         source='*',
@@ -71,16 +85,6 @@ class FundingTransitions(ActivityTransitions):
         messages=[FundingClosedMessage]
     )
     def close(self):
-        pass
-
-    @transition(
-        source=[
-            values.partially_funded, values.closed, values.succeeded
-        ],
-        target=values.open,
-        conditions=[deadline_in_future]
-    )
-    def extend(self):
         pass
 
 
@@ -127,7 +131,6 @@ class DonationTransitions(ContributionTransitions):
                 'content_object': parent,
                 'related_object': self.instance
             }
-
         )
 
 
@@ -159,7 +162,7 @@ class PaymentTransitions(ModelTransitions):
         self.instance.donation.activity.update_amounts()
 
     @transition(
-        source=[values.succeeded],
+        source=[values.succeeded, values.refund_requested],
         target=values.refunded
     )
     def refund(self):
@@ -176,6 +179,7 @@ class PayoutTransitions(ModelTransitions):
         started = ChoiceItem('started', _('started'))
         succeeded = ChoiceItem('succeeded', _('succeeded'))
         failed = ChoiceItem('failed', _('failed'))
+        cancelled = ChoiceItem('cancelled', _('cancelled'))
 
     @transition(
         source=['*'],
@@ -211,6 +215,13 @@ class PayoutTransitions(ModelTransitions):
         target=values.failed
     )
     def fail(self):
+        pass
+
+    @transition(
+        source=['*'],
+        target=values.cancelled
+    )
+    def cancel(self):
         pass
 
 

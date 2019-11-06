@@ -182,6 +182,7 @@ class PayoutTransitions(ModelTransitions):
         target=values.approved
     )
     def approve(self):
+        self.instance.date_approved = timezone.now()
         adapter = DoradoPayoutAdapter(self.instance.activity)
         adapter.trigger_payout()
 
@@ -197,14 +198,14 @@ class PayoutTransitions(ModelTransitions):
         target=values.started
     )
     def start(self):
-        pass
+        self.instance.date_approved = timezone.now()
 
     @transition(
         source=['*'],
         target=values.succeeded
     )
     def succeed(self):
-        pass
+        self.instance.date_completed = timezone.now()
 
     @transition(
         source=['*'],

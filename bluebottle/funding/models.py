@@ -498,6 +498,7 @@ class LegacyPayment(Payment):
     data = models.TextField()
 
     transitions = TransitionManager(PaymentTransitions, 'status')
+    provider = 'legacy'
 
 
 class PaymentMethod(object):

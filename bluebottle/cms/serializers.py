@@ -1,5 +1,5 @@
 from bluebottle.activities.models import Activity
-from bluebottle.activities.serializers import ActivitySerializer
+from bluebottle.activities.serializers import ActivityListSerializer
 from bluebottle.tasks.serializers import TaskPreviewSerializer
 from django.db import connection
 from django.db.models import Sum
@@ -248,7 +248,7 @@ class ActivitiesContentSerializer(serializers.ModelSerializer):
         else:
             activities = obj.activities
 
-        return ActivitySerializer(
+        return ActivityListSerializer(
             activities, many=True, context=self.context
         ).to_representation(activities)
 

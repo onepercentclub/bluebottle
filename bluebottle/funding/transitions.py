@@ -21,9 +21,9 @@ class FundingTransitions(ActivityTransitions):
         partially_funded = ChoiceItem('partially_funded', _('partially funded'))
         refunded = ChoiceItem('refunded', _('refunded'))
 
-    def deadline_in_future(self):
-        if not self.instance.deadline or self.instance.deadline < timezone.now():
-            return _("Please select a new deadline in the future before extending.")
+    def target_reached(self):
+        if not self.instance.amount_raised >= self.instance.target:
+            return _("Amount raised should at least equal to target amount.")
 
     @transition(
         source=values.in_review,
@@ -37,7 +37,8 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=values.open,
         target=values.partially_funded,
-        messages=[FundingPartiallyFundedMessage]
+        messages=[FundingPartiallyFundedMessage],
+        permissions=[ActivityTransitions.is_system]
     )
     def partial(self):
         from bluebottle.funding.models import Payout
@@ -46,15 +47,18 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=[values.open],
         target=values.succeeded,
-        messages=[FundingRealisedOwnerMessage]
+        messages=[FundingRealisedOwnerMessage],
+        permissions=[ActivityTransitions.is_system]
     )
     def succeed(self):
         from bluebottle.funding.models import Payout
         Payout.generate(self.instance)
 
     @transition(
-        source=[values.succeeded],
+        source=[values.succeeded, values.partially_funded],
         target=values.succeeded,
+        permissions=[ActivityTransitions.can_approve],
+        conditions=[target_reached]
     )
     def recalculate(self):
         from bluebottle.funding.models import Payout
@@ -63,6 +67,7 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=values.partially_funded,
         target=values.succeeded,
+        permissions=[ActivityTransitions.can_approve],
     )
     def approve(self):
         pass
@@ -70,6 +75,7 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=values.partially_funded,
         target=values.refunded,
+        permissions=[ActivityTransitions.can_approve],
     )
     def refund(self):
         for donation in self.instance.contributions.filter(status__in=['succeeded']).all():
@@ -82,7 +88,8 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source='*',
         target=values.closed,
-        messages=[FundingClosedMessage]
+        messages=[FundingClosedMessage],
+        permissions=[ActivityTransitions.can_approve],
     )
     def close(self):
         pass

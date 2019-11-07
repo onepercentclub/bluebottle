@@ -439,9 +439,11 @@ class Migration(migrations.Migration):
         ('funding_lipisha', '0006_auto_20191001_2251'),
         ('funding_vitepay', '0007_auto_20191002_0903'),
         ('funding_flutterwave', '0005_auto_20191002_0903'),
+        ('funding_pledge', '0004_pledgebankaccount'),
+        ('initiatives', '0014_auto_20190628_1656'),
         ('funding_stripe', '0001_initial'),
         ('funding_pledge', '0002_pledgepaymentprovider'),
-        ('rewards', '0009_auto_20191104_1230')
+        ('rewards', '0009_auto_20191104_1230'),
     ]
 
     operations = [

@@ -38,6 +38,7 @@ def migrate_project_blocks(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('projects', '0091_project_to_initiatives'),
         ('cms', '0055_migrate_statistics'),
     ]
 

@@ -23,7 +23,7 @@ class FlutterwaveBankAccountSerializer(BaseBankAccountSerializer):
         fields = BaseBankAccountSerializer.Meta.fields + (
             'account_holder_name',
             'bank_code',
-            'account_number',
+            'account_number'
         )
 
     included_serializers = {
@@ -43,5 +43,7 @@ class PayoutFlutterwaveBankAccountSerializer(serializers.ModelSerializer):
             'id',
             'account_holder_name',
             'bank_code',
+            'bank_country_code',
             'account_number',
+            'account',
         )

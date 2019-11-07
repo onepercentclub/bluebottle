@@ -12,6 +12,13 @@ from bluebottle.funding.tests.factories import (
     FundingFactory, DonationFactory
 )
 from bluebottle.funding.models import Payout
+from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider
+from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentProviderFactory, \
+    FlutterwaveBankAccountFactory, FlutterwavePaymentFactory
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider
+from bluebottle.funding_lipisha.tests.factories import LipishaPaymentProviderFactory, LipishaBankAccountFactory, \
+    LipishaPaymentFactory
+from bluebottle.funding_pledge.models import PledgePaymentProvider
 from bluebottle.funding_stripe.models import (
     StripePayoutAccount, ExternalAccount
 )
@@ -20,6 +27,7 @@ from bluebottle.funding_stripe.tests.factories import (
     StripeSourcePaymentFactory
 )
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
+from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import (
     VitepayPaymentFactory, VitepayBankAccountFactory,
     VitepayPaymentProviderFactory
@@ -165,8 +173,8 @@ class StripePayoutTestCase(BasePayoutTestCase):
 class VitepayPayoutTestCase(BasePayoutTestCase):
     def setUp(self):
         super(VitepayPayoutTestCase, self).setUp()
-
-        VitepayPaymentProviderFactory.create()
+        if not VitepayPaymentProvider.objects.count():
+            VitepayPaymentProviderFactory.create()
 
         self.funding = FundingFactory.create(
             owner=self.user,
@@ -211,18 +219,143 @@ class VitepayPayoutTestCase(BasePayoutTestCase):
         )
 
         self.assertEqual(
-            data['bank_account']['account_name'], 'Jane Austen'
+            data['bank_account'], {
+                u'mobile_number': u'1234',
+                u'type': u'vitepay',
+                u'id': self.funding.bank_account.id,
+                u'account_name': u'Jane Austen'
+            }
         )
+
+
+class LipishaPayoutTestCase(BasePayoutTestCase):
+    def setUp(self):
+        super(LipishaPayoutTestCase, self).setUp()
+        if not LipishaPaymentProvider.objects.count():
+            LipishaPaymentProviderFactory.create()
+
+        self.funding = FundingFactory.create(
+            owner=self.user,
+            initiative=self.initiative,
+            bank_account=LipishaBankAccountFactory.create(
+                reviewed=True,
+                account_number='1234',
+                account_name='Jane Austen'
+            )
+        )
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+        self.funding.save()
+        donation = DonationFactory.create(
+            activity=self.funding,
+            amount=Money(10000, 'KES'),
+            status='succeeded',
+        )
+        LipishaPaymentFactory.create(donation=donation)
+
+        donation = DonationFactory.create(
+            activity=self.funding,
+            amount=Money(10000, 'KES'),
+            status='failed',
+        )
+        LipishaPaymentFactory.create(donation=donation)
+
+    def test_payout_endpoint(self):
+        self.funding.transitions.succeed()
+
+        url = reverse('funding-payout-details', args=(self.funding.pk, ))
+
+        response = self.client.get(
+            url,
+            user=self.finance_user
+        )
+
+        data = response.json()
+
         self.assertEqual(
-            data['bank_account']['mobile_number'], '1234'
+            len(data['payouts']), 1
+        )
+
+        self.assertEqual(
+            data['bank_account'], {
+                u'bank_name': u'Big Duck Bank',
+                u'bank_code': u'7337',
+                u'account_name': u'Jane Austen',
+                u'branch_name': u'Daffy',
+                u'account_number': u'1234',
+                u'address': u'Main street 1',
+                u'branch_code': u'12',
+                u'swift': u'12345',
+                u'id': self.funding.bank_account.id
+            }
+        )
+
+
+class FlutterwavePayoutTestCase(BasePayoutTestCase):
+    def setUp(self):
+        super(FlutterwavePayoutTestCase, self).setUp()
+        if not FlutterwavePaymentProvider.objects.count():
+            FlutterwavePaymentProviderFactory.create()
+
+        self.funding = FundingFactory.create(
+            owner=self.user,
+            initiative=self.initiative,
+            bank_account=FlutterwaveBankAccountFactory.create(
+                reviewed=True,
+                account_number='1234',
+                account='FW-0001'
+            )
+        )
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+        self.funding.save()
+        donation = DonationFactory.create(
+            activity=self.funding,
+            amount=Money(10000, 'NGN'),
+            status='succeeded',
+        )
+        FlutterwavePaymentFactory.create(donation=donation)
+
+        donation = DonationFactory.create(
+            activity=self.funding,
+            amount=Money(10000, 'NGN'),
+            status='failed',
+        )
+        FlutterwavePaymentFactory.create(donation=donation)
+
+    def test_payout_endpoint(self):
+        self.funding.transitions.succeed()
+
+        url = reverse('funding-payout-details', args=(self.funding.pk, ))
+
+        response = self.client.get(
+            url,
+            user=self.finance_user
+        )
+
+        data = response.json()
+
+        self.assertEqual(
+            len(data['payouts']), 1
+        )
+
+        self.assertEqual(
+            data['bank_account'], {
+                u'account_holder_name': u'Test Name',
+                u'account_number': u'1234',
+                u'bank_country_code': u'NG',
+                u'account': u'FW-0001',
+                u'bank_code': u'044',
+                u'id': self.funding.bank_account.id
+            }
         )
 
 
 class PledgePayoutTestCase(BasePayoutTestCase):
     def setUp(self):
         super(PledgePayoutTestCase, self).setUp()
-
-        PledgePaymentProviderFactory.create()
+        if not PledgePaymentProvider.objects.count():
+            PledgePaymentProviderFactory.create()
 
         self.funding = FundingFactory.create(
             owner=self.user,
@@ -267,7 +400,6 @@ class PledgePayoutTestCase(BasePayoutTestCase):
             data['bank_account']['account_holder_city'],
             self.funding.bank_account.account_holder_city
         )
-        print data['bank_account']['account_holder_country']
 
         self.assertEqual(
             data['bank_account']['account_holder_country'],

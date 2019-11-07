@@ -14,6 +14,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('bluebottle_dashboard', '0001_initial'),
+        ('dashboard', '0001_initial'),
     ]
 
     operations = [

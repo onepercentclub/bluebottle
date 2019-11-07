@@ -484,10 +484,27 @@ class PayoutAdmin(FSMAdmin):
     model = Payout
     inlines = [DonationInline]
     raw_id_fields = ('activity', )
-    readonly_fields = ['activity_link', 'status', 'total_amount',
+    readonly_fields = ['approve', 'status', 'total_amount', 'account_link',
                        'date_approved', 'date_started', 'date_completed']
     list_display = ['created', 'activity_link', 'status']
     list_filter = ['status']
+
+    def get_fields(self, request, obj=None):
+        fields = super(PayoutAdmin, self).get_fields(request, obj)
+        # Don't show
+        fields.remove('transitions')
+        return fields
+
+    def approve(self, obj):
+        if obj.status == 'new':
+            url = reverse('admin:funding_payout_transition', args=(obj.id, 'transitions', 'approve'))
+            return format_html('<a href="{}">{}</a>', url, _('Approve'))
+        else:
+            return obj.status
+
+    def account_link(self, obj):
+        url = reverse('admin:funding_bankaccount_change', args=(obj.activity.bank_account.id,))
+        return format_html(u'<a href="{}">{}</a>', url, obj.activity.bank_account)
 
     def activity_link(self, obj):
         url = reverse('admin:funding_funding_change', args=(obj.activity.id,))

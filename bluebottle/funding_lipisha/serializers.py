@@ -47,6 +47,7 @@ class PayoutLipishaBankAccountSerializer(serializers.ModelSerializer):
 
         fields = (
             'id',
+            'type',
             'account_name',
             'account_number',
             'bank_name',
@@ -55,4 +56,5 @@ class PayoutLipishaBankAccountSerializer(serializers.ModelSerializer):
             'branch_code',
             'address',
             'swift',
+            'mpesa_code'
         )

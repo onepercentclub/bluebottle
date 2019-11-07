@@ -30,6 +30,7 @@ class LipishaBankAccountFactory(factory.DjangoModelFactory):
     branch_code = '12'
     address = 'Main street 1'
     swift = '12345'
+    mpesa_code = '123'
 
     class Meta(object):
         model = LipishaBankAccount

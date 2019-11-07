@@ -240,7 +240,8 @@ class LipishaPayoutTestCase(BasePayoutTestCase):
             bank_account=LipishaBankAccountFactory.create(
                 reviewed=True,
                 account_number='1234',
-                account_name='Jane Austen'
+                account_name='Jane Austen',
+                mpesa_code='1212'
             )
         )
         self.funding.review_transitions.submit()
@@ -285,6 +286,7 @@ class LipishaPayoutTestCase(BasePayoutTestCase):
                 u'account_number': u'1234',
                 u'address': u'Main street 1',
                 u'branch_code': u'12',
+                u'mpesa_code': u'1212',
                 u'swift': u'12345',
                 u'id': self.funding.bank_account.id
             }

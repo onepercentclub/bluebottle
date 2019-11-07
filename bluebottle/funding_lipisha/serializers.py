@@ -55,4 +55,5 @@ class PayoutLipishaBankAccountSerializer(serializers.ModelSerializer):
             'branch_code',
             'address',
             'swift',
+            'mpesa_code'
         )

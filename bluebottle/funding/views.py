@@ -165,7 +165,6 @@ class PayoutDetails(RetrieveUpdateAPIView):
     permission_classes = (IsFinancialMember,)
 
     def perform_update(self, serializer):
-
         status = serializer.cleaned_data['status']
         # related to this Funding.
         payout = serializer.instance

@@ -104,8 +104,8 @@ class Event(Activity):
         if self.start and self.duration:
             self.end = self.start + datetime.timedelta(hours=self.duration)
 
-        self.check_capacity()
         return super(Event, self).save(*args, **kwargs)
+        self.check_capacity()
 
     @property
     def participants(self):

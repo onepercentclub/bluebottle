@@ -101,7 +101,8 @@ class FundingStatusFilter(SimpleListFilter):
         return queryset
 
     def lookups(self, request, model_admin):
-        return ActivityReviewTransitions.values.choices + FundingTransitions.values.choices
+        return [(k, v) for k, v in ActivityReviewTransitions.values.choices if k != 'closed'] + \
+               [(k, v) for k, v in FundingTransitions.values.choices if k != 'in_review']
 
 
 class PayoutInline(FSMAdminMixin, admin.StackedInline):

@@ -288,6 +288,7 @@ class LipishaPayoutTestCase(BasePayoutTestCase):
                 u'branch_code': u'12',
                 u'mpesa_code': u'1212',
                 u'swift': u'12345',
+                u'type': 'lipisha',
                 u'id': self.funding.bank_account.id
             }
         )

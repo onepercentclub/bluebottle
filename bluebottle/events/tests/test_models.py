@@ -44,6 +44,46 @@ class EventTestCase(BluebottleTestCase):
         ParticipantFactory.create_batch(10, activity=event, status='new')
         self.assertEqual(event.status, 'full')
 
+    def test_reopen_changed_capacity(self):
+        start = now() + timedelta(hours=1)
+        event = EventFactory.create(
+            title='The greatest event',
+            start_date=start.date(),
+            start_time=start.time(),
+            duration=1,
+            capacity=10,
+            initiative=InitiativeFactory.create(status='approved')
+        )
+        event.review_transitions.submit()
+
+        ParticipantFactory.create_batch(10, activity=event, status='new')
+        self.assertEqual(event.status, 'full')
+
+        event.capacity = 20
+        event.save()
+
+        self.assertEqual(event.status, 'open')
+
+    def test_reopen_delete_participant(self):
+        start = now() + timedelta(hours=1)
+        event = EventFactory.create(
+            title='The greatest event',
+            start_date=start.date(),
+            start_time=start.time(),
+            duration=1,
+            capacity=10,
+            initiative=InitiativeFactory.create(status='approved')
+        )
+        event.review_transitions.submit()
+
+        ParticipantFactory.create_batch(10, activity=event, status='new')
+        self.assertEqual(event.status, 'full')
+
+        event.participants[0].delete()
+
+        event.refresh_from_db()
+        self.assertEqual(event.status, 'open')
+
     def test_no_capacity(self):
         start = now() + timedelta(hours=1)
         event = EventFactory.create(

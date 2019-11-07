@@ -90,6 +90,7 @@ class Event(Activity):
             self.save()
         elif self.capacity and len(self.participants) < self.capacity and self.status == EventTransitions.values.full:
             self.transitions.reopen()
+            self.save()
 
     @property
     def start(self):
@@ -102,6 +103,8 @@ class Event(Activity):
     def save(self, *args, **kwargs):
         if self.start and self.duration:
             self.end = self.start + datetime.timedelta(hours=self.duration)
+
+        self.check_capacity()
         return super(Event, self).save(*args, **kwargs)
 
     @property
@@ -143,6 +146,11 @@ class Participant(Contribution):
         if created and self.status == 'new':
             self.transitions.initiate()
             follow(self.user, self.activity)
+
+        self.activity.check_capacity()
+
+    def delete(self, *args, **kwargs):
+        super(Participant, self).delete(*args, **kwargs)
 
         self.activity.check_capacity()
 

@@ -1,0 +1,19 @@
+{% load i18n %}
+{% block module_content %}
+<ul class="dashboard-item-list">
+    {% spaceless %}
+    {% for payout in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <span class="float-right" title="Date submitted">
+            {{ payout.activity.deadline|date }}<br>
+        </span>
+        <a href="{% url 'admin:funding_payout_change' payout.id %}" >{{ payout.activity }}</a>
+        <br>
+        <b>{{ payout.activity.owner.full_name }}</b>
+        <br>
+        {% trans "Amount" %}: {{ payout.total_amount }}
+    </li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

@@ -11,7 +11,7 @@ from bluebottle.activities.dashboard import RecentActivities
 from bluebottle.assignments.dashboard import RecentAssignments
 from bluebottle.clients import properties
 from bluebottle.events.dashboard import RecentEvents
-from bluebottle.funding.dashboard import RecentFunding
+from bluebottle.funding.dashboard import RecentFunding, PayoutsReadForApprovalDashboardModule
 from bluebottle.initiatives.dashboard import RecentInitiatives, MyReviewingInitiatives
 from bluebottle.members.dashboard import RecentMembersDashboard
 from bluebottle.tasks.models import Task
@@ -48,6 +48,9 @@ class CustomIndexDashboard(Dashboard):
         self.children.append(RecentEvents())
         self.children.append(RecentFunding())
         self.children.append(RecentAssignments())
+
+        # Payouts
+        self.children.append(PayoutsReadForApprovalDashboardModule())
 
         # Other
         self.children.append(modules.RecentActions(

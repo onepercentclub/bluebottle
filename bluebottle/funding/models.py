@@ -420,6 +420,7 @@ class Payout(TransitionsMixin, models.Model):
     def total_amount(self):
         if self.currency:
             return Money(self.donations.aggregate(total=Sum('amount'))['total'] or 0, self.currency)
+        return self.donations.aggregate(total=Sum('amount'))['total']
 
     class Meta():
         verbose_name = _('payout')

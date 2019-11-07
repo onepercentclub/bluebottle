@@ -423,7 +423,7 @@ class Payout(TransitionsMixin, models.Model):
 
     class Meta():
         verbose_name = _('payout')
-        verbose_name_plural = _('payout')
+        verbose_name_plural = _('payouts')
 
 
 class Donation(Contribution):
@@ -498,6 +498,7 @@ class LegacyPayment(Payment):
     data = models.TextField()
 
     transitions = TransitionManager(PaymentTransitions, 'status')
+    provider = 'legacy'
 
 
 class PaymentMethod(object):

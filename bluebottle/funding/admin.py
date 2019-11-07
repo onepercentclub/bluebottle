@@ -103,7 +103,8 @@ class FundingStatusFilter(SimpleListFilter):
         return queryset
 
     def lookups(self, request, model_admin):
-        return ActivityReviewTransitions.values.choices + FundingTransitions.values.choices
+        return [(k, v) for k, v in ActivityReviewTransitions.values.choices if k != 'closed'] + \
+               [(k, v) for k, v in FundingTransitions.values.choices if k != 'in_review']
 
 
 class PayoutInline(FSMAdminMixin, admin.StackedInline):
@@ -144,8 +145,22 @@ class FundingAdmin(ActivityChildAdmin):
 
     list_display = [
         '__unicode__', 'initiative', 'created', 'combined_status',
-        'highlight', 'deadline', 'target', 'amount_raised'
+        'highlight', 'deadline', 'percentage_donated', 'percentage_matching'
     ]
+
+    def percentage_donated(self, obj):
+        if obj.target.amount:
+            return '{:.2f}%'.format((obj.amount_raised.amount / obj.target.amount) * 100)
+        else:
+            return '0%'
+    percentage_donated.short_description = _('% donated')
+
+    def percentage_matching(self, obj):
+        if obj.amount_matching.amount:
+            return '{:.2f}%'.format((obj.amount_matching.amount / obj.target.amount) * 100)
+        else:
+            return '0%'
+    percentage_matching.short_description = _('% matching')
 
     def amount_raised(self, obj):
         return obj.amount_raised
@@ -474,6 +489,7 @@ class PayoutAdmin(FSMAdmin):
     readonly_fields = ['activity_link', 'status', 'total_amount',
                        'date_approved', 'date_started', 'date_completed']
     list_display = ['created', 'activity_link', 'status']
+    list_filter = ['status']
 
     def activity_link(self, obj):
         url = reverse('admin:funding_funding_change', args=(obj.activity.id,))

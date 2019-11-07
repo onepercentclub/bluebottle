@@ -109,30 +109,3 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 5)
         self.assertEqual(mail.outbox[4].subject, u'You successfully completed your crowdfunding campaign! 🎉')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[4].body)
-
-    def test_extending(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(100, 'EUR'))
-        PledgePaymentFactory.create(donation=donation)
-        self.assertEqual(donation.status, 'succeeded')
-        self.funding.deadline = now() - timedelta(days=1)
-        self.funding.save()
-
-        # Run scheduled task
-        check_funding_end()
-        self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, 'partially_funded')
-
-        # Extend the campaign
-        self.funding.deadline = now() + timedelta(weeks=2)
-        self.funding.transitions.close()
-        self.funding.transitions.extend()
-        self.funding.save()
-        donation = DonationFactory.create(activity=self.funding, amount=Money(700, 'EUR'))
-        PledgePaymentFactory.create(donation=donation)
-        self.funding.deadline = now() - timedelta(days=1)
-        self.funding.save()
-
-        # Run scheduled task
-        check_funding_end()
-        self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, 'succeeded')

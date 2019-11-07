@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.admin import SimpleListFilter
+from django.db.models import Q
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -7,10 +9,12 @@ from polymorphic.admin import (
     StackedPolymorphicInline)
 
 from bluebottle.activities.models import Activity, Contribution
+from bluebottle.activities.transitions import ActivityReviewTransitions
+from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.funding.models import Funding, Donation
-from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.funding.transitions import FundingTransitions
 from bluebottle.utils.admin import FSMAdmin
 
 
@@ -136,15 +140,32 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     complete.short_description = _('Missing data')
 
 
+class ActivityStatusFilter(SimpleListFilter):
+
+    title = _('Status')
+    parameter_name = 'status'
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(
+                Q(status=self.value()) |
+                Q(review_status=self.value()))
+        return queryset
+
+    def lookups(self, request, model_admin):
+        return [(k, v) for k, v in ActivityReviewTransitions.values.choices if k != 'closed'] + \
+               [(k, v) for k, v in FundingTransitions.values.choices if k != 'in_review']
+
+
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
     readonly_fields = ['link']
-    list_filter = (PolymorphicChildModelFilter, 'status', 'review_status', 'highlight')
+    list_filter = (PolymorphicChildModelFilter, ActivityStatusFilter, 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['__unicode__', 'created', 'type', 'status', 'review_status',
+    list_display = ['__unicode__', 'created', 'type', 'combined_status',
                     'link', 'highlight']
 
     search_fields = ('title', 'description', 'owner__first_name', 'owner__last_name')
@@ -158,6 +179,12 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
 
     def type(self, obj):
         return obj.get_real_instance_class().__name__
+
+    def combined_status(self, obj):
+        if obj.status == 'in_review':
+            return obj.review_status
+        return obj.status
+    combined_status.short_description = _('status')
 
 
 class ActivityAdminInline(StackedPolymorphicInline):

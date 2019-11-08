@@ -561,8 +561,8 @@ class PlainPayoutAccount(PayoutAccount):
     transitions = TransitionManager(PlainPayoutAccountTransitions, 'status')
 
     class Meta:
-        verbose_name = _('plain payout account')
-        verbose_name_plural = _('plain payout accounts')
+        verbose_name = _('Without payment account')
+        verbose_name_plural = _('Without payment accounts')
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/plains'

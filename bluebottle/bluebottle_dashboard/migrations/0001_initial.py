@@ -7,6 +7,10 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
+    run_before = [
+        ('dashboard', '0001_initial'),
+    ]
+
     operations = [
         migrations.RunSQL("DELETE FROM django_migrations WHERE app='dashboard'", ''),
         migrations.RunSQL("DROP TABLE IF EXISTS dashboard_userdashboardmodule", ''),

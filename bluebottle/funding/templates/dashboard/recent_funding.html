@@ -11,9 +11,9 @@
         <br>
         <b>{{ activity.owner.full_name }}</b>
         <br>
-        Target: {{ activity.target }}
+        {% trans "Target" %}: {{ activity.target }}
         <br>
-        Deadline: {{ activity.deadline|date }}
+        {% trans "Deadline" %}: {{ activity.deadline|date }}
     </li>
     {% endfor %}
     {% endspaceless %}

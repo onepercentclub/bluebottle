@@ -23,6 +23,14 @@ class LipishaPaymentProviderFactory(factory.DjangoModelFactory):
 class LipishaBankAccountFactory(factory.DjangoModelFactory):
 
     account_number = factory.fuzzy.FuzzyInteger(10000, 99999)
+    account_name = 'Test name'
+    bank_name = 'Big Duck Bank'
+    bank_code = '7337'
+    branch_name = 'Daffy'
+    branch_code = '12'
+    address = 'Main street 1'
+    swift = '12345'
+    mpesa_code = '123'
 
     class Meta(object):
         model = LipishaBankAccount

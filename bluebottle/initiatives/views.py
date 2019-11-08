@@ -1,5 +1,6 @@
 import uuid
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.gis.geos import Point
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -14,6 +15,7 @@ from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Funding
 from bluebottle.activities.models import Activity
 from bluebottle.files.models import RelatedImage
+from bluebottle.geo.models import Location
 from bluebottle.initiatives.filters import InitiativeSearchFilter
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.permissions import InitiativePermission
@@ -68,17 +70,25 @@ class TinyProjectPagination(PageNumberPagination):
 
 
 class InitiativeMapList(generics.ListAPIView):
-    queryset = Initiative.objects.filter(status='approved').all()
+    queryset = Initiative.objects
     serializer_class = InitiativeMapSerializer
 
     owner_filter_field = 'owner'
+
+    def get_queryset(self):
+        queryset = super(InitiativeMapList, self).get_queryset()
+        queryset = queryset.filter(status='approved').all()
+        if not Location.objects.count():
+            # Skip initiatives without proper location
+            queryset = queryset.exclude(place__position=Point(0, 0))
+        return queryset
 
     def list(self, request, *args, **kwargs):
         cache_key = '{}.initiative_map_data'.format(connection.tenant.schema_name)
         data = cache.get(cache_key)
         if not data:
-            result = self.queryset.order_by('created')
-            serializer = self.get_serializer(result, many=True)
+            queryset = self.get_queryset().order_by('created')
+            serializer = self.get_serializer(queryset, many=True)
             data = serializer.data
             cache.set(cache_key, data)
         return Response(data)

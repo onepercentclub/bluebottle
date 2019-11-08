@@ -149,14 +149,14 @@ class FundingAdmin(ActivityChildAdmin):
     ]
 
     def percentage_donated(self, obj):
-        if obj.target.amount:
+        if obj.target and obj.target.amount:
             return '{:.2f}%'.format((obj.amount_raised.amount / obj.target.amount) * 100)
         else:
             return '0%'
     percentage_donated.short_description = _('% donated')
 
     def percentage_matching(self, obj):
-        if obj.amount_matching.amount:
+        if obj.amount_matching and obj.amount_matching.amount:
             return '{:.2f}%'.format((obj.amount_matching.amount / obj.target.amount) * 100)
         else:
             return '0%'
@@ -235,6 +235,10 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
     date_hierarchy = 'created'
 
+    fields = ['created', 'activity', 'user', 'amount',
+              'anonymous', 'name',
+              'status', 'payment_link']
+
     export_to_csv_fields = (
         ('status', 'Status'),
         ('created', 'Created'),
@@ -262,8 +266,6 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     def get_changelist(self, request, **kwargs):
         self.total_column = 'amount'
         return TotalAmountAdminChangeList
-
-    fields = ['created', 'activity', 'user', 'amount', 'status', 'payment_link']
 
 
 class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
@@ -486,10 +488,27 @@ class PayoutAdmin(FSMAdmin):
     model = Payout
     inlines = [DonationInline]
     raw_id_fields = ('activity', )
-    readonly_fields = ['activity_link', 'status', 'total_amount',
+    readonly_fields = ['approve', 'status', 'total_amount', 'account_link',
                        'date_approved', 'date_started', 'date_completed']
     list_display = ['created', 'activity_link', 'status']
     list_filter = ['status']
+
+    def get_fields(self, request, obj=None):
+        fields = super(PayoutAdmin, self).get_fields(request, obj)
+        # Don't show
+        fields.remove('transitions')
+        return fields
+
+    def approve(self, obj):
+        if obj.status == 'new':
+            url = reverse('admin:funding_payout_transition', args=(obj.id, 'transitions', 'approve'))
+            return format_html('<a href="{}">{}</a>', url, _('Approve'))
+        else:
+            return obj.status
+
+    def account_link(self, obj):
+        url = reverse('admin:funding_bankaccount_change', args=(obj.activity.bank_account.id,))
+        return format_html(u'<a href="{}">{}</a>', url, obj.activity.bank_account)
 
     def activity_link(self, obj):
         url = reverse('admin:funding_funding_change', args=(obj.activity.id,))

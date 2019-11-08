@@ -247,9 +247,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_matching_status(self):
         EventFactory.create(review_status='approved', status='closed')
         second = EventFactory.create(review_status='approved', status='succeeded')
-        third = EventFactory.create(review_status='approved', status='full')
+        ParticipantFactory.create(activity=second)
+        third = EventFactory.create(
+            review_status='approved',
+            status='open',
+            capacity=1
+        )
+        ParticipantFactory.create(activity=third)
         fourth = EventFactory.create(review_status='approved', status='running')
+        ParticipantFactory.create(activity=fourth)
         fifth = EventFactory.create(review_status='approved', status='open')
+        ParticipantFactory.create(activity=fifth)
 
         response = self.client.get(
             self.url + '?sort=popularity',
@@ -296,10 +304,19 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         initiative = InitiativeFactory.create(theme=theme)
 
-        first = EventFactory.create(review_status='approved', status='full')
-        second = EventFactory.create(review_status='approved', status='full', initiative=initiative)
+        first = EventFactory.create(review_status='approved', status='open', capacity=1)
+        ParticipantFactory.create(activity=first)
+        second = EventFactory.create(
+            review_status='approved',
+            status='open',
+            initiative=initiative,
+            capacity=1
+        )
+        ParticipantFactory.create(activity=second)
         third = EventFactory.create(review_status='approved', status='open')
+        ParticipantFactory.create(activity=third)
         fourth = EventFactory.create(review_status='approved', status='open', initiative=initiative)
+        ParticipantFactory.create(activity=fourth)
 
         response = self.client.get(
             self.url + '?sort=popularity',
@@ -322,17 +339,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second = AssignmentFactory.create(
             review_status='approved',
             status='full',
-            location=GeolocationFactory.create(position=Point(10.0, 20.0))
+            location=GeolocationFactory.create(position=Point(20.0, 10))
         )
         third = AssignmentFactory.create(review_status='approved', status='open')
         fourth = AssignmentFactory.create(
             review_status='approved',
             status='open',
-            location=GeolocationFactory.create(position=Point(9.0, 21.0))
+            location=GeolocationFactory.create(position=Point(21.0, 9.0))
         )
         fifth = AssignmentFactory.create(
             review_status='approved',
-            status='open', location=GeolocationFactory.create(position=Point(10.0, 20.0))
+            status='open', location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
 
         response = self.client.get(
@@ -358,18 +375,18 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second = AssignmentFactory.create(
             review_status='approved',
             status='full',
-            location=GeolocationFactory.create(position=Point(10.0, 20.0))
+            location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
         third = AssignmentFactory.create(review_status='approved', status='open')
         fourth = AssignmentFactory.create(
             review_status='approved',
             status='open',
-            location=GeolocationFactory.create(position=Point(9.0, 21.0))
+            location=GeolocationFactory.create(position=Point(21.0, 9.0))
         )
         fifth = AssignmentFactory.create(
             review_status='approved',
             status='open',
-            location=GeolocationFactory.create(position=Point(10.0, 20.0))
+            location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
 
         response = self.client.get(
@@ -425,13 +442,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second = AssignmentFactory.create(
             review_status='approved',
             status='open',
-            location=GeolocationFactory.create(position=Point(9.0, 21.0)),
+            location=GeolocationFactory.create(position=Point(21.0, 9.0)),
             initiative=initiative,
         )
         third = AssignmentFactory.create(
             review_status='approved',
             status='open',
-            location=GeolocationFactory.create(position=Point(9.0, 21.0)),
+            location=GeolocationFactory.create(position=Point(21.0, 9.0)),
             initiative=initiative,
             expertise=skill
         )

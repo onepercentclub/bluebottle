@@ -64,7 +64,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
                 ),
                 SF(
                     'gauss',
-                    weight=0.1,
+                    weight=0.01,
                     multi_value_mode='avg',
                     contributions={
                         'scale': '5d'

@@ -66,7 +66,7 @@ class AssignmentDateChanged(TransitionMessage):
 
 
 class AssignmentReminderOnDate(TransitionMessage):
-    subject = _('"{assigment_title}" will take place in 5 days!')
+    subject = _('"{assignment_title}" will take place in 5 days!')
     template = 'messages/assignment_reminder_on_date'
 
     context = {

@@ -39,7 +39,6 @@ class StripeSourcePaymentTransitions(PaymentTransitions):
         try:
             self.instance.donation.transitions.succeed()
             self.instance.donation.save()
-            self.instance.donation.activity.update_amounts()
         except TransitionNotPossible:
             pass
 

@@ -134,7 +134,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         init_vector = message[:16]
         enc_message = message[16:-20]
 
-        aes = AES.new(self.settings['aes_key'], AES.MODE_CBC, init_vector)
+        aes = AES.new(str(self.settings['aes_key']), AES.MODE_CBC, init_vector)
         message = aes.decrypt(enc_message)
 
         # Get the login data in an easy-to-use tuple.

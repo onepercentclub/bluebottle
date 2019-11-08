@@ -8,7 +8,6 @@ from bluebottle.funding_pledge.transitions import PledgePaymentTransitions
 
 class PledgePayment(Payment):
     provider = 'pledge'
-
     transitions = TransitionManager(PledgePaymentTransitions, 'status')
 
 

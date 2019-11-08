@@ -321,7 +321,7 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
     )
 
     def get_payment_methods(self, obj):
-        if not obj.bank_account or not obj.bank_account.payment_methods:
+        if not obj.bank_account:
             return []
 
         methods = obj.bank_account.payment_methods

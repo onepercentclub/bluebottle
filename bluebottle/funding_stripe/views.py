@@ -231,6 +231,13 @@ class SourceWebHookView(View):
 
                 return HttpResponse('Updated payment')
 
+            if event.type == 'charge.pending':
+                payment = self.get_payment_from_charge(event.data.object.id)
+                payment.transitions.pending()
+                payment.save()
+
+                return HttpResponse('Updated payment')
+
             if event.type == 'charge.refunded':
                 payment = self.get_payment_from_charge(event.data.object.id)
                 payment.transitions.refund()

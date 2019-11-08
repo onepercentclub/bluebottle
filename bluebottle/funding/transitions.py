@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
-from bluebottle.fsm import transition, ModelTransitions
+from bluebottle.fsm import transition, ModelTransitions, TransitionNotPossible
 from bluebottle.funding.messages import (
     DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
     DonationRefundedDonorMessage, FundingRealisedOwnerMessage,
@@ -155,9 +155,12 @@ class PaymentTransitions(ModelTransitions):
         target=values.succeeded
     )
     def succeed(self):
-        self.instance.donation.transitions.succeed()
-        self.instance.donation.save()
-        self.instance.donation.activity.update_amounts()
+        try:
+            self.instance.donation.transitions.succeed()
+            self.instance.donation.save()
+            self.instance.donation.activity.update_amounts()
+        except TransitionNotPossible:
+            pass
 
     @transition(
         source=[values.new, values.succeeded],

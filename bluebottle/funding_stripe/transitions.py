@@ -2,7 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import ChoiceItem
 from stripe.error import StripeError
 
-from bluebottle.fsm import transition
+from bluebottle.fsm import transition, TransitionNotPossible
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.transitions import PaymentTransitions, PayoutAccountTransitions
 from bluebottle.funding_stripe.utils import stripe
@@ -33,11 +33,27 @@ class StripeSourcePaymentTransitions(PaymentTransitions):
 
     @transition(
         source=[values.charged],
+        target=values.pending
+    )
+    def pending(self):
+        try:
+            self.instance.donation.transitions.succeed()
+            self.instance.donation.save()
+            self.instance.donation.activity.update_amounts()
+        except TransitionNotPossible:
+            pass
+
+    @transition(
+        source=[values.charged, values.pending],
         target=values.succeeded
     )
     def succeed(self):
-        self.instance.donation.transitions.succeed()
-        self.instance.donation.save()
+        try:
+            self.instance.donation.transitions.succeed()
+            self.instance.donation.save()
+            self.instance.donation.activity.update_amounts()
+        except TransitionNotPossible:
+            pass
 
     @transition(
         source=[values.new, values.charged, values.succeeded],
@@ -46,6 +62,7 @@ class StripeSourcePaymentTransitions(PaymentTransitions):
     def fail(self):
         self.instance.donation.transitions.fail()
         self.instance.donation.save()
+        self.instance.donation.activity.update_amounts()
 
     @transition(
         source=[values.succeeded],

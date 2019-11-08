@@ -250,6 +250,49 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self.assertEqual(self.donation.status, DonationTransitions.values.new)
         self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.charged)
 
+    def test_charge_pending(self):
+        self.payment.charge_token = 'some-charge-token'
+        self.payment.transitions.charge()
+        self.payment.save()
+
+        data = {
+            'object': {
+                'id': self.payment.charge_token
+            }
+        }
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.pending', data
+            )
+        ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self._refresh()
+        self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.pending)
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.succeeded', data
+            )
+        ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self._refresh()
+        self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.succeeded)
+
     def test_charge_succeeded(self):
         self.payment.charge_token = 'some-charge-token'
         self.payment.transitions.charge()

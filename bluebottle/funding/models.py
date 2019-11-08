@@ -608,8 +608,11 @@ class BankAccount(PolymorphicModel):
 
     @property
     def payment_methods(self):
-        provider = self.provider_class.objects.get()
-        return provider.payment_methods
+        try:
+            provider = self.provider_class.objects.get()
+            return provider.payment_methods
+        except self.provider_class.DoesNotExist:
+            return []
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/external-accounts'

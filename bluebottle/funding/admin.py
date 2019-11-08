@@ -233,6 +233,10 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
     date_hierarchy = 'created'
 
+    fields = ['created', 'activity', 'user', 'amount',
+              'anonymous', 'name',
+              'status', 'payment_link']
+
     export_to_csv_fields = (
         ('status', 'Status'),
         ('created', 'Created'),
@@ -260,8 +264,6 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     def get_changelist(self, request, **kwargs):
         self.total_column = 'amount'
         return TotalAmountAdminChangeList
-
-    fields = ['created', 'activity', 'user', 'amount', 'status', 'payment_link']
 
 
 class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):

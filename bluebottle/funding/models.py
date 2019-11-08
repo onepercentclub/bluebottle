@@ -433,7 +433,8 @@ class Donation(Contribution):
     reward = models.ForeignKey(Reward, null=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
     name = models.CharField(max_length=200, null=True, blank=True,
-                            verbose_name=_('Override donor name / Name for guest donation'))
+                            verbose_name=_('Fake name'),
+                            help_text=_('Override donor name / Name for guest donation'))
     anonymous = models.BooleanField(_('anonymous'), default=False)
     payout = models.ForeignKey('funding.Payout', null=True, blank=True, on_delete=SET_NULL, related_name='donations')
 

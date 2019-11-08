@@ -147,14 +147,14 @@ class FundingAdmin(ActivityChildAdmin):
     ]
 
     def percentage_donated(self, obj):
-        if obj.target.amount:
+        if obj.target and obj.target.amount:
             return '{:.2f}%'.format((obj.amount_raised.amount / obj.target.amount) * 100)
         else:
             return '0%'
     percentage_donated.short_description = _('% donated')
 
     def percentage_matching(self, obj):
-        if obj.amount_matching.amount:
+        if obj.amount_matching and obj.amount_matching.amount:
             return '{:.2f}%'.format((obj.amount_matching.amount / obj.target.amount) * 100)
         else:
             return '0%'

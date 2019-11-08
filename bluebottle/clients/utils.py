@@ -236,6 +236,8 @@ def get_public_properties(request):
                 'content': get_platform_settings('cms.SitePlatformSettings'),
                 'projects': get_platform_settings('projects.ProjectPlatformSettings'),
                 'initiatives': get_platform_settings('initiatives.InitiativePlatformSettings'),
+                'funding': get_platform_settings('funding.FundingPlatformSettings'),
+                'notifications': get_platform_settings('notifications.NotificationPlatformSettings'),
                 'currencies': get_currency_settings(),
                 'analytics': get_platform_settings('analytics.AnalyticsPlatformSettings'),
                 'members': get_platform_settings('members.MemberPlatformSettings'),

@@ -20,7 +20,7 @@ from bluebottle.funding.filters import DonationListFilter
 from bluebottle.funding.models import (
     Funding, Donation, Fundraiser, Reward, BudgetLine, PaymentMethod,
     BankAccount, PayoutAccount, PaymentProvider,
-    Payout)
+    Payout, FundingPlatformSettings)
 from bluebottle.funding.models import PlainPayoutAccount
 from bluebottle.funding.permissions import CanExportSupportersPermission
 from bluebottle.funding_flutterwave.serializers import (
@@ -602,3 +602,12 @@ class FundingPayoutsSerializer(serializers.ModelSerializer):
             'bank_account'
         )
         model = Funding
+
+
+class FundingPlatformSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FundingPlatformSettings
+
+        fields = (
+            'allow_anonymous_rewards',
+        )

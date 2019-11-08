@@ -1,11 +1,12 @@
 from django.contrib import admin
+from django.utils import translation
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityAdminInline
-from bluebottle.geo.models import Location
+from bluebottle.geo.models import Location, Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, BasePlatformSettingsAdmin, export_as_csv_action
@@ -44,6 +45,25 @@ class InitiativeReviewerFilter(admin.SimpleListFilter):
             )
         else:
             return queryset
+
+
+class InitiativeCountryFilter(admin.SimpleListFilter):
+    title = _("Country")
+    parameter_name = 'country'
+
+    def lookups(self, request, model_admin):
+        language = translation.get_language()
+        country_ids = Initiative.objects.\
+            filter(place__isnull=False).distinct('place__country').\
+            values_list('place__country__id', flat=True)
+        countries = Country.objects.filter(id__in=country_ids).language(language).\
+            order_by('translations__name')
+        return [(c.id, c.name) for c in countries]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(place__country_id=self.value())
+        return queryset
 
 
 @admin.register(Initiative)
@@ -91,7 +111,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
         if Location.objects.count():
             filters.append('location')
         else:
-            filters.append('place')
+            filters.append(InitiativeCountryFilter)
 
         return filters
 

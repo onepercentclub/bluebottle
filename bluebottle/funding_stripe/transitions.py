@@ -55,13 +55,12 @@ class StripeSourcePaymentTransitions(PaymentTransitions):
             pass
 
     @transition(
-        source=[values.new, values.charged, values.succeeded],
+        source=[values.new, values.charged, values.pending, values.succeeded],
         target='failed'
     )
     def fail(self):
         self.instance.donation.transitions.fail()
         self.instance.donation.save()
-        self.instance.donation.activity.update_amounts()
 
     @transition(
         source=[values.succeeded],

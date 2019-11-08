@@ -339,17 +339,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second = AssignmentFactory.create(
             review_status='approved',
             status='full',
-            location=GeolocationFactory.create(position=Point(10.0, 20.0))
+            location=GeolocationFactory.create(position=Point(20.0, 10))
         )
         third = AssignmentFactory.create(review_status='approved', status='open')
         fourth = AssignmentFactory.create(
             review_status='approved',
             status='open',
-            location=GeolocationFactory.create(position=Point(9.0, 21.0))
+            location=GeolocationFactory.create(position=Point(21.0, 9.0))
         )
         fifth = AssignmentFactory.create(
             review_status='approved',
-            status='open', location=GeolocationFactory.create(position=Point(10.0, 20.0))
+            status='open', location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
 
         response = self.client.get(
@@ -375,18 +375,18 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second = AssignmentFactory.create(
             review_status='approved',
             status='full',
-            location=GeolocationFactory.create(position=Point(10.0, 20.0))
+            location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
         third = AssignmentFactory.create(review_status='approved', status='open')
         fourth = AssignmentFactory.create(
             review_status='approved',
             status='open',
-            location=GeolocationFactory.create(position=Point(9.0, 21.0))
+            location=GeolocationFactory.create(position=Point(21.0, 9.0))
         )
         fifth = AssignmentFactory.create(
             review_status='approved',
             status='open',
-            location=GeolocationFactory.create(position=Point(10.0, 20.0))
+            location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
 
         response = self.client.get(
@@ -442,13 +442,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second = AssignmentFactory.create(
             review_status='approved',
             status='open',
-            location=GeolocationFactory.create(position=Point(9.0, 21.0)),
+            location=GeolocationFactory.create(position=Point(21.0, 9.0)),
             initiative=initiative,
         )
         third = AssignmentFactory.create(
             review_status='approved',
             status='open',
-            location=GeolocationFactory.create(position=Point(9.0, 21.0)),
+            location=GeolocationFactory.create(position=Point(21.0, 9.0)),
             initiative=initiative,
             expertise=skill
         )

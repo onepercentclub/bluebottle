@@ -107,7 +107,7 @@ class ActivityDocument(DocType):
     def prepare_position(self, instance):
         if hasattr(instance, 'location') and instance.location:
             position = instance.location.position
-            return {'lat': position.get_x(), 'lon': position.get_y()}
+            return {'lat': position.get_y(), 'lon': position.get_x()}
 
     def prepare_deadline(self, instance):
         return None

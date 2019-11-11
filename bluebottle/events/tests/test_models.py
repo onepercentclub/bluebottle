@@ -30,7 +30,7 @@ class EventTestCase(BluebottleTestCase):
         self.assertEqual(activity.get_absolute_url(), expected)
 
     def test_full(self):
-        start = now() + timedelta(hours=1)
+        start = now() + timedelta(hours=2)
         event = EventFactory.create(
             title='The greatest event',
             start_date=start.date(),
@@ -45,7 +45,7 @@ class EventTestCase(BluebottleTestCase):
         self.assertEqual(event.status, 'full')
 
     def test_reopen_changed_capacity(self):
-        start = now() + timedelta(hours=1)
+        start = now() + timedelta(hours=2)
         event = EventFactory.create(
             title='The greatest event',
             start_date=start.date(),
@@ -65,7 +65,7 @@ class EventTestCase(BluebottleTestCase):
         self.assertEqual(event.status, 'open')
 
     def test_reopen_delete_participant(self):
-        start = now() + timedelta(hours=1)
+        start = now() + timedelta(hours=2)
         event = EventFactory.create(
             title='The greatest event',
             start_date=start.date(),

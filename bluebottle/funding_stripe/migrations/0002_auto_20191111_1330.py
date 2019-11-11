@@ -10,13 +10,14 @@ def add_group_permissions(apps, schema_editor):
     group_perms = {
         'Staff': {
             'perms': (
-                'add_stripebankaccount',
-                'change_stripebankaccount',
+                'add_externalaccount',
+                'change_externalaccount',
+                'change_stripepayoutaccount',
             )
         },
     }
 
-    update_group_permissions('funding', group_perms, apps)
+    update_group_permissions('funding_stripe', group_perms, apps)
 
 
 

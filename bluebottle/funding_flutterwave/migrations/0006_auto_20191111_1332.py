@@ -16,7 +16,7 @@ def add_group_permissions(apps, schema_editor):
         },
     }
 
-    update_group_permissions('funding', group_perms, apps)
+    update_group_permissions('funding_flutterwave', group_perms, apps)
 
 
 class Migration(migrations.Migration):

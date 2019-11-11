@@ -219,8 +219,12 @@ class FSMAdminMixin(object):
             args=(pk, )
         )
 
-        if not request.user.has_perm('initiative.change_initiative'):
-            messages.error(request, 'Missing permission: initiative.change_initiative')
+        # perform actual check for change permission. using self.model
+        permission = '{}.{}'.format(
+            self.model._meta.app_label, self.model._meta.model_name
+        )
+        if not request.user.has_perm(permission):
+            messages.error(request, 'Missing permission: {}'.format(permission))
             return HttpResponseRedirect(link)
 
         instance = self.model.objects.get(pk=pk)

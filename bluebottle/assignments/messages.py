@@ -12,7 +12,7 @@ class ApplicantAcceptedMessage(TransitionMessage):
 
 
 class ApplicantRejectedMessage(TransitionMessage):
-    subject = _('You not been selected for the task {assignment_title}')
+    subject = _('You have not been selected for the task {assignment_title}')
     template = 'messages/applicant_rejected'
     context = {
         'assignment_title': 'activity.title'

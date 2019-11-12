@@ -220,7 +220,7 @@ class FSMAdminMixin(object):
         )
 
         # perform actual check for change permission. using self.model
-        permission = '{}.{}'.format(
+        permission = '{}.change_{}'.format(
             self.model._meta.app_label, self.model._meta.model_name
         )
         if not request.user.has_perm(permission):

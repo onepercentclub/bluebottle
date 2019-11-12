@@ -17,7 +17,7 @@ from rest_framework import status
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory
+from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -518,37 +518,6 @@ class TaskApiTestcase(ESTestCase, BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.some_token)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    def test_update_task_remove_place(self):
-        task = TaskFactory.create(
-            author=self.some_user,
-            project=self.some_project
-        )
-        PlaceFactory.create(content_object=task)
-
-        task_detail_url = reverse('task_detail', kwargs={'pk': task.pk})
-        response = self.client.put(
-            task_detail_url,
-            {
-                'id': task.pk,
-                'people_needed': task.people_needed,
-                'deadline': task.deadline,
-                'deadline_to_apply': task.deadline_to_apply,
-                'title': task.title,
-                'description': task.description,
-                'project': self.some_project.slug,
-                'location': task.location,
-                'skill': task.skill.pk,
-                'time_needed': task.time_needed,
-                'type': task.type,
-            },
-            token=self.some_token
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        task.refresh_from_db()
-        self.assertIsNone(
-            task.place
-        )
 
     def test_deadline_dates(self):
         """

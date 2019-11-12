@@ -60,7 +60,7 @@ class ResultPageTestCase(BluebottleTestCase):
             response = self.client.get(self.url)
             self.assertEquals(response.status_code, status.HTTP_200_OK)
             # Image should come in 4 sizes
-            self.assertEqual(len(response.data['image']), 4)
+            self.assertEqual(len(response.data['image']), 5)
             self.assertEqual(response.data['title'], self.page.title)
             self.assertEqual(response.data['description'], self.page.description)
             self.assertEqual(watermark_mock.call_args[0][1]['watermark'], 'test/logo-overlay.png')

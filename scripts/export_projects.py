@@ -10,8 +10,11 @@ def run(*args):
     projects = []
     for client in Client.objects.all():
         with LocalTenant(client):
-            projects += Project.objects.filter(
-                payout_status__isnull=False
-            ).values('pk', 'funding_id')
+            client_name = client.client_name
 
-    print json.dumps(dict((item['pk'], item['funding_id']) for item in projects))
+            for pk, funding_id in Project.objects.filter(
+                payout_status__isnull=False
+            ).values_list('pk', 'funding_id'):
+                projects.append((client_name, pk, funding_id))
+
+    print json.dumps(projects)

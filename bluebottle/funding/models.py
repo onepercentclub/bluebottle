@@ -129,7 +129,7 @@ class DeadlineValidator(Validator):
     field = 'deadline'
 
     def is_valid(self):
-        return self.instance.deadline > now()
+        return self.instance.duration or (self.instance.deadline and self.instance.deadline > now())
 
 
 class Funding(Activity):

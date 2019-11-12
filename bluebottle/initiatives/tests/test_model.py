@@ -27,7 +27,7 @@ class InitiativeTestCase(TestCase):
         self.assertEqual(initiative.status, 'closed')
 
         initiative.transitions.reopen()
-        self.assertEqual(initiative.status, 'submitted')
+        self.assertEqual(initiative.status, 'draft')
 
     def test_activity_manager(self):
         initiative = InitiativeFactory(activity_manager=None)

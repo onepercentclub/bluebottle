@@ -1,6 +1,9 @@
 from django.core import mail
 
 from bluebottle.fsm import TransitionNotPossible
+from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.funding.transitions import FundingTransitions
+from bluebottle.funding_pledge.tests.factories import PledgeBankAccountFactory
 from bluebottle.utils.transitions import ReviewTransitions
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
@@ -156,5 +159,30 @@ class InitiativeReviewTransitions(BluebottleTestCase):
         self.initiative.transitions.close()
         self.initiative.transitions.reopen()
         self.assertEqual(
-            self.initiative.status, ReviewTransitions.values.submitted
+            self.initiative.status, ReviewTransitions.values.draft
+        )
+
+    def test_reopen_with_funding(self):
+        account = PledgeBankAccountFactory.create(reviewed=True)
+        funding = FundingFactory.create(initiative=self.initiative, bank_account=account)
+        funding.review_transitions.submit()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.close()
+        funding.refresh_from_db()
+        self.assertEqual(
+            funding.review_status, ReviewTransitions.values.closed
+        )
+        self.assertEqual(
+            funding.status, FundingTransitions.values.closed
+        )
+        self.initiative.transitions.reopen()
+        funding.refresh_from_db()
+        self.assertEqual(
+            self.initiative.status, ReviewTransitions.values.draft
+        )
+        self.assertEqual(
+            funding.review_status, ReviewTransitions.values.draft
+        )
+        self.assertEqual(
+            funding.status, FundingTransitions.values.in_review
         )

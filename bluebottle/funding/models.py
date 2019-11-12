@@ -11,6 +11,7 @@ from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
 from django.utils.functional import cached_property
 from django.utils.html import format_html
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from moneyed import Money
@@ -122,6 +123,15 @@ class KYCPassedValidator(Validator):
         return self.instance.bank_account and self.instance.bank_account.verified
 
 
+class DeadlineValidator(Validator):
+    code = 'deadline'
+    message = [_('Make sure deadline is in the future')]
+    field = 'deadline'
+
+    def is_valid(self):
+        return self.instance.deadline > now()
+
+
 class Funding(Activity):
     deadline = models.DateTimeField(
         _('deadline'),
@@ -145,7 +155,7 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [KYCPassedValidator]
+    validators = [KYCPassedValidator, DeadlineValidator]
 
     @property
     def required_fields(self):

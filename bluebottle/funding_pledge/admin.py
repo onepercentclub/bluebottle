@@ -35,3 +35,6 @@ class PledgeBankAccountAdmin(BankAccountChildAdmin):
         'account_details',
         'account_bank_country'
     )
+    list_filter = ['reviewed']
+    search_fields = ['account_holder_name', 'account_number']
+    list_display = ['created', 'account_holder_name', 'account_number', 'reviewed']

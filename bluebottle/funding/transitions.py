@@ -28,7 +28,7 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=values.in_review,
         target=values.open,
-        permissions=[ActivityTransitions.can_approve]
+        permissions=[ActivityTransitions.can_approve],
     )
     def reviewed(self):
         if self.instance.duration and not self.instance.deadline:

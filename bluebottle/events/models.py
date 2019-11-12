@@ -97,9 +97,11 @@ class Event(Activity):
     @property
     def start(self):
         if self.start_time and self.start_date:
-            return datetime.datetime.combine(
-                self.start_date,
-                self.start_time.replace(tzinfo=get_current_timezone())
+            return get_current_timezone().localize(
+                datetime.datetime.combine(
+                    self.start_date,
+                    self.start_time
+                )
             )
 
     def save(self, *args, **kwargs):

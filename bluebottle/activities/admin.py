@@ -45,7 +45,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     ordering = ('-created', )
 
     def type(self, obj):
-        return obj.get_real_instance_class().__name__
+        return obj.get_real_instance_class()._meta.verbose_name
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
@@ -179,7 +179,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     ordering = ('-created', )
 
     def type(self, obj):
-        return obj.get_real_instance_class().__name__
+        return obj.get_real_instance_class()._meta.verbose_name
 
     def combined_status(self, obj):
         if obj.status == 'in_review':

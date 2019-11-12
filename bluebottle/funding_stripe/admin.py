@@ -35,7 +35,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     model = StripePayoutAccount
     inlines = [StripeBankAccountInline]
 
-    fields = PayoutAccountChildAdmin.fields + ('account_id', 'country')
+    fields = ('owner', 'status', 'account_id', 'country')
 
 
 @admin.register(ExternalAccount)

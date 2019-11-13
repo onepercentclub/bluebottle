@@ -60,10 +60,16 @@ def check_payment_status(payment):
     client = init_client()
 
     # If we have a transaction reference, then use that
-    response = client.get_transactions(
-        transaction_type='Payment',
-        transaction=payment.transaction
-    )
+    if payment.transition:
+        response = client.get_transactions(
+            transaction_type='Payment',
+            transaction=payment.transaction
+        )
+    else:
+        response = client.get_transactions(
+            transaction_type='Payment',
+            transaction_merchant_reference=payment.unique_id
+        )
 
     payment.update_response = json.dumps(response)
     data = response['content']

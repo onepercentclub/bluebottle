@@ -49,7 +49,8 @@ class LipishaPayment(Payment):
     provider = 'lipisha'
 
     def update(self):
-        pass
+        from bluebottle.funding_lipisha.utils import check_payment_status
+        check_payment_status(self)
 
     def save(self, *args, **kwargs):
         if not self.unique_id:

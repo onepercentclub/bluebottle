@@ -89,17 +89,19 @@ def check_payment_status(payment):
         payment.donation.name = data['transaction_account_name']
         payment.donation.save()
 
+    payment.mobile_number = data['transaction_mobile_number']
+
     if data['transaction_status'] in ['Completed', 'Settled', 'Acknowledged', 'Authorized']:
         try:
             payment.transitions.succeed()
         except TransitionNotPossible:
             pass
-    if data['transaction_status'] in ['Cancelled', 'Voided', 'Rejected']:
+    if data['transaction_status'] in ['Cancelled', 'Voided']:
         try:
             payment.transitions.fail()
         except TransitionNotPossible:
             pass
-    if data['transaction_status'] in ['Reversed']:
+    if data['transaction_reversal_status'] == 'Reverse' or data['transaction_status'] in ['Reversed']:
         try:
             payment.transitions.refund()
         except TransitionNotPossible:

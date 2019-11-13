@@ -151,7 +151,7 @@ class PaymentTransitions(ModelTransitions):
         failed = ChoiceItem('failed', _('failed'))
 
     @transition(
-        source=[values.new, values.failed],
+        source=[values.new, values.failed, values.refunded],
         target=values.succeeded
     )
     def succeed(self):
@@ -163,7 +163,7 @@ class PaymentTransitions(ModelTransitions):
             pass
 
     @transition(
-        source=[values.new, values.succeeded],
+        source=[values.new, values.succeeded, values.refunded],
         target=values.failed
     )
     def fail(self):
@@ -172,13 +172,15 @@ class PaymentTransitions(ModelTransitions):
         self.instance.donation.activity.update_amounts()
 
     @transition(
-        source=[values.succeeded, values.refund_requested],
+        source=[values.succeeded, values.refund_requested, values.failed],
         target=values.refunded
     )
     def refund(self):
-        if self.instance.donation.status != 'refunded':
+        try:
             self.instance.donation.transitions.refund()
             self.instance.donation.save()
+        except TransitionNotPossible:
+            pass
         self.instance.donation.activity.update_amounts()
 
 

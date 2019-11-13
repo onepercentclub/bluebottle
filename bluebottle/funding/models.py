@@ -177,7 +177,8 @@ class Funding(Activity):
     def update_amounts(self):
         cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         cache.delete(cache_key)
-        return self.amount_donated
+        cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
+        cache.delete(cache_key)
 
     @property
     def amount_donated(self):
@@ -208,18 +209,23 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) without pledges converted to the targets currency
         """
-        totals = self.contributions.filter(
-            status=FundingTransitions.values.succeeded,
-            donation__payment__pledgepayment__isnull=True
-        ).values(
-            'donation__amount_currency'
-        ).annotate(
-            total=Sum('donation__amount')
-        )
-        amounts = [Money(total['total'], total['donation__amount_currency']) for total in totals]
-        amounts = [convert(amount, self.target.currency) for amount in amounts]
+        cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
+        total = cache.get(cache_key)
+        if not total:
+            totals = self.contributions.filter(
+                status=FundingTransitions.values.succeeded,
+                donation__payment__pledgepayment__isnull=True
+            ).values(
+                'donation__amount_currency'
+            ).annotate(
+                total=Sum('donation__amount')
+            )
+            amounts = [Money(tot['total'], tot['donation__amount_currency']) for tot in totals]
+            amounts = [convert(amount, self.target.currency) for amount in amounts]
 
-        return sum(amounts) or Money(0, self.target.currency)
+            total = sum(amounts) or Money(0, self.target.currency)
+            cache.set(cache_key, total)
+        return total
 
     @cached_property
     def amount_pledged(self):

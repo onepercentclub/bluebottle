@@ -110,14 +110,14 @@ class DonationTransitions(ContributionTransitions):
         ]
     )
     def refund(self):
-        self.instance.activity.update_amounts()
+        pass
 
     @transition(
         source=[values.new, values.succeeded],
         target=values.failed,
     )
     def fail(self):
-        self.instance.activity.update_amounts()
+        pass
 
     @transition(
         source=[values.new, values.failed],
@@ -130,7 +130,7 @@ class DonationTransitions(ContributionTransitions):
     def succeed(self):
         parent = self.instance.fundraiser or self.instance.activity
         from bluebottle.wallposts.models import SystemWallpost
-        self.instance.activity.update_amounts()
+        pass
         SystemWallpost.objects.get_or_create(
             author=self.instance.user,
             donation=self.instance,
@@ -158,17 +158,20 @@ class PaymentTransitions(ModelTransitions):
         try:
             self.instance.donation.transitions.succeed()
             self.instance.donation.save()
-            self.instance.donation.activity.update_amounts()
         except TransitionNotPossible:
             pass
+        self.instance.donation.activity.update_amounts()
 
     @transition(
         source=[values.new, values.succeeded, values.refunded],
         target=values.failed
     )
     def fail(self):
-        self.instance.donation.transitions.fail()
-        self.instance.donation.save()
+        try:
+            self.instance.donation.transitions.fail()
+            self.instance.donation.save()
+        except TransitionNotPossible:
+            pass
         self.instance.donation.activity.update_amounts()
 
     @transition(

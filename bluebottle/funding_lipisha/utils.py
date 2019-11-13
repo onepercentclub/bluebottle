@@ -60,7 +60,7 @@ def check_payment_status(payment):
     client = init_client()
 
     # If we have a transaction reference, then use that
-    if payment.transition:
+    if payment.transaction:
         response = client.get_transactions(
             transaction_type='Payment',
             transaction=payment.transaction
@@ -74,7 +74,10 @@ def check_payment_status(payment):
     payment.update_response = json.dumps(response)
     data = response['content']
     if len(data) == 0:
-        payment.transitions.fail()
+        try:
+            payment.transitions.fail()
+        except TransitionNotPossible:
+            pass
         payment.save()
         raise PaymentException('Payment could not be verified yet. Payment not found.')
     else:
@@ -91,14 +94,14 @@ def check_payment_status(payment):
             payment.transitions.succeed()
         except TransitionNotPossible:
             pass
-    if data['transaction_status'] in ['Cancelled', 'Voided']:
+    if data['transaction_status'] in ['Cancelled', 'Voided', 'Rejected']:
         try:
-            payment.transactions.fail()
+            payment.transitions.fail()
         except TransitionNotPossible:
             pass
     if data['transaction_status'] in ['Reversed']:
         try:
-            payment.transactions.refund()
+            payment.transitions.refund()
         except TransitionNotPossible:
             pass
     payment.save()
@@ -188,10 +191,10 @@ def update_webhook_payment(data):
     payment.mobile_number = data['transaction_mobile']
     payment.reference = data['transaction_mobile']
 
-    if data['transaction_status'] == 'Completed':
-        payment.transactions.succeed()
-    else:
-        payment.transactions.fail()
+    try:
+        check_payment_status(payment)
+    except PaymentException:
+        pass
     payment.save()
     return payment
 
@@ -246,7 +249,10 @@ def initiate_payment(data):
             donation=donation,
             transaction=transaction_reference,
         )
-    check_payment_status(payment)
+    try:
+        check_payment_status(payment)
+    except PaymentException:
+        pass
     payment.save()
     return generate_success_response(payment)
 
@@ -273,6 +279,9 @@ def acknowledge_payment(data):
 
     payment.mobile_number = data['transaction_mobile']
 
-    check_payment_status(payment)
+    try:
+        check_payment_status(payment)
+    except PaymentException:
+        pass
     payment.save()
     return generate_success_response(payment)

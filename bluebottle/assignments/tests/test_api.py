@@ -417,7 +417,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['data']['relationships']['document']['data']['id'], document_id)
         document = get_included(response, 'documents')
-        self.assertEqual(document['meta']['size'], 39109)
+        self.assertTrue('.rtf' in document['meta']['filename'])
 
 
 class ApplicantTransitionAPITestCase(BluebottleTestCase):

@@ -6,10 +6,10 @@ from bluebottle.funding_vitepay.views import (
     VitepayBankAccountAccountDetail)
 
 urlpatterns = [
-    url(r'^payments/$',
+    url(r'^/payments/$',
         VitepayPaymentList.as_view(),
         name='vitepay-payment-list'),
-    url(r'^webhook$',
+    url(r'^/webhook/$',
         VitepayWebhookView.as_view(),
         name='vitepay-payment-webhook'),
     url(r'^/bank-accounts/$',

@@ -88,3 +88,6 @@ class FlutterwaveBankAccountAdmin(BankAccountChildAdmin):
         return HttpResponseRedirect(payout_url)
 
     generate_account.short_description = _('Generate account at Flutterwave')
+    list_filter = ['bank_code', 'reviewed']
+    search_fields = ['account_holder_name', 'account_number']
+    list_display = ['created', 'account_holder_name', 'account_number', 'bank_code', 'reviewed']

@@ -29,3 +29,6 @@ class LipishaBankAccountAdmin(BankAccountChildAdmin):
         'address',
         'swift'
     )
+    list_filter = ['reviewed']
+    search_fields = ['mpesa_code', 'account_number', 'account_name']
+    list_display = ['created', 'account_name', 'account_number', 'mpesa_code', 'reviewed']

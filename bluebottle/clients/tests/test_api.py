@@ -10,6 +10,8 @@ from rest_framework import status
 from bluebottle.analytics.models import AnalyticsPlatformSettings, AnalyticsAdapter
 from bluebottle.clients import properties
 from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.funding.models import FundingPlatformSettings
+from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
@@ -231,13 +233,38 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         # Create initiative platform settings and confirm they end up correctly in settings api
         InitiativePlatformSettings.objects.create(
             activity_types=['event', 'job'],
+            search_filters=['type', 'skill', 'status'],
+            contact_method='phone',
             require_organization=True
         )
 
         response = self.client.get(self.settings_url)
-
         self.assertEqual(response.data['platform']['initiatives']['activity_types'], ['event', 'job'])
+        self.assertEqual(response.data['platform']['initiatives']['search_filters'], ['type', 'skill', 'status'])
         self.assertEqual(response.data['platform']['initiatives']['require_organization'], True)
+        self.assertEqual(response.data['platform']['initiatives']['contact_method'], 'phone')
+
+    def test_notification_platform_settings(self):
+        # Create notification platform settings and confirm they end up correctly in settings api
+        NotificationPlatformSettings.objects.create(
+            match_options=['theme', 'skill', 'location'],
+            share_options=['twitter', 'facebook_at_work'],
+            facebook_at_work_url='https://my.facebook.com'
+        )
+
+        response = self.client.get(self.settings_url)
+        self.assertEqual(response.data['platform']['notifications']['match_options'], ['theme', 'skill', 'location'])
+        self.assertEqual(response.data['platform']['notifications']['share_options'], ['twitter', 'facebook_at_work'])
+        self.assertEqual(response.data['platform']['notifications']['facebook_at_work_url'], 'https://my.facebook.com')
+
+    def test_funding_platform_settings(self):
+        # Create funding platform settings and confirm they end up correctly in settings api
+        FundingPlatformSettings.objects.create(
+            allow_anonymous_rewards=True
+        )
+
+        response = self.client.get(self.settings_url)
+        self.assertEqual(response.data['platform']['funding']['allow_anonymous_rewards'], True)
 
     def test_analytics_platform_settings(self):
         # Create analytics platform settings and confirm they end up correctly in settings api

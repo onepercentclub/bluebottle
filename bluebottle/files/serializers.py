@@ -121,13 +121,17 @@ class ImageSerializer(DocumentSerializer):
 
     def get_links(self, obj):
         if hasattr(self, 'sizes'):
-            parent_id = getattr(obj, self.relationship).get().pk
-            return dict(
-                (
-                    key,
-                    reverse(self.content_view_name, args=(parent_id, size))
-                ) for key, size in self.sizes.items()
-            )
+            try:
+                relationship = getattr(obj, self.relationship)
+                parent_id = getattr(obj, self.relationship).get().pk
+                return dict(
+                    (
+                        key,
+                        reverse(self.content_view_name, args=(parent_id, size))
+                    ) for key, size in self.sizes.items()
+                )
+            except relationship.model.DoesNotExist:
+                return {}
 
     class Meta:
         model = Image

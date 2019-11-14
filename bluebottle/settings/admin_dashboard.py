@@ -35,7 +35,7 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             },
             {
                 'name': 'organizations.organization',
-                'permissions': ['organizations.organization']
+                'permissions': ['organizations.change_organization']
             },
             {
                 'name': 'geo.location',

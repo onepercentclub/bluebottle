@@ -222,14 +222,19 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('status', _('Status')),
     )
 
+    CONTACT_OPTIONS = (
+        ('mail', _('E-mail')),
+        ('phone', _('Phone')),
+    )
+
     activity_types = MultiSelectField(max_length=100, choices=ACTIVITY_TYPES)
     require_organization = models.BooleanField(default=False)
-
     search_filters = MultiSelectField(max_length=1000, choices=SEARCH_FILTERS)
+    contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
 
     class Meta:
-        verbose_name_plural = _('initiative platform settings')
-        verbose_name = _('initiative platform settings')
+        verbose_name_plural = _('initiative settings')
+        verbose_name = _('initiative settings')
 
 
 from bluebottle.initiatives.wallposts import *  # noqa

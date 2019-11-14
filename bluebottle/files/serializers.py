@@ -56,7 +56,6 @@ class FileSerializer(ModelSerializer):
     file = serializers.FileField(write_only=True)
     filename = serializers.SerializerMethodField()
     owner = ResourceRelatedField(read_only=True)
-    size = serializers.IntegerField(read_only=True, source='file.size')
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
@@ -64,8 +63,8 @@ class FileSerializer(ModelSerializer):
 
     class Meta:
         model = Document
-        fields = ('id', 'file', 'filename', 'size', 'owner', )
-        meta_fields = ['size', 'filename']
+        fields = ('id', 'file', 'filename', 'owner', )
+        meta_fields = ['filename']
 
     class JSONAPIMeta:
         included_resources = ['owner', ]
@@ -79,7 +78,6 @@ class DocumentSerializer(ModelSerializer):
     filename = serializers.SerializerMethodField()
     link = serializers.SerializerMethodField()
     owner = ResourceRelatedField(read_only=True)
-    size = serializers.IntegerField(read_only=True, source='file.size')
 
     relationship = None
     content_view_name = None
@@ -98,8 +96,8 @@ class DocumentSerializer(ModelSerializer):
 
     class Meta:
         model = Document
-        fields = ('id', 'file', 'filename', 'size', 'owner', 'link',)
-        meta_fields = ['size', 'filename']
+        fields = ('id', 'file', 'filename', 'owner', 'link',)
+        meta_fields = ['filename']
 
     class JSONAPIMeta:
         included_resources = ['owner', ]
@@ -131,5 +129,5 @@ class ImageSerializer(DocumentSerializer):
 
     class Meta:
         model = Image
-        fields = ('id', 'file', 'filename', 'size', 'owner', 'links',)
-        meta_fields = ['size', 'filename']
+        fields = ('id', 'file', 'filename', 'owner', 'links',)
+        meta_fields = ['filename']

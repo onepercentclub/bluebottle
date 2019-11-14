@@ -285,6 +285,9 @@ class ImageSerializer(RestrictedImageField):
                 get_thumbnail(value, '400x300', crop=self.crop))
             square = settings.MEDIA_URL + unicode(
                 get_thumbnail(value, '600x600', crop=self.crop))
+            wide = settings.MEDIA_URL + unicode(
+                get_thumbnail(value, '1024x256', crop=self.crop))
+
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
                 raise
@@ -297,6 +300,7 @@ class ImageSerializer(RestrictedImageField):
                 'large': request.build_absolute_uri(large),
                 'small': request.build_absolute_uri(small),
                 'square': request.build_absolute_uri(square),
+                'wide': request.build_absolute_uri(wide),
             }
         return {'full': full, 'large': large, 'small': small, 'square': square}
 

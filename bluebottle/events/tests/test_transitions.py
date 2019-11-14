@@ -31,6 +31,7 @@ class EventTransitionOpenTestCase(BluebottleTestCase):
 
     def test_open(self):
         self.initiative.transitions.approve()
+        self.initiative.save()
 
         self.event.title = 'Some title'
         self.event.review_transitions.submit()
@@ -135,13 +136,15 @@ class EventTransitionTestCase(BluebottleTestCase):
 
         self.initiative = InitiativeFactory.create()
         self.event = EventFactory.create(
-            initiative=self.initiative, capacity=1
+            initiative=self.initiative,
+            capacity=1
         )
+        self.event.review_transitions.submit()
+        self.event.save()
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
         self.initiative.save()
-
-        self.event = Event.objects.get(pk=self.event.pk)
+        self.event.refresh_from_db()
 
     def test_default_status(self):
         self.assertEqual(

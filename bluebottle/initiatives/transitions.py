@@ -90,6 +90,8 @@ class InitiativeReviewTransitions(ReviewTransitions):
     )
     def approve(self):
         for activity in self.instance.activities.all():
+            # Make sure that activity has the updated initiative status
+            activity.initiative.status = self.instance.status
             try:
                 activity.review_transitions.approve(send_messages=False)
                 activity.save()
@@ -108,6 +110,8 @@ class InitiativeReviewTransitions(ReviewTransitions):
     def close(self):
         for activity in self.instance.activities.all():
             try:
+                # Make sure that activity has the updated initiative status
+                activity.initiative.status = self.instance.status
                 activity.review_transitions.close(send_messages=False)
                 activity.save()
             except TransitionNotPossible:
@@ -115,9 +119,12 @@ class InitiativeReviewTransitions(ReviewTransitions):
 
     @transition(
         source=[ReviewTransitions.values.closed],
-        target=ReviewTransitions.values.submitted,
+        target=ReviewTransitions.values.draft,
     )
     def reopen(self):
         for activity in self.instance.activities.all():
-            activity.review_transitions.reopen(send_messages=False)
-            activity.save()
+            try:
+                activity.review_transitions.reopen(send_messages=False)
+                activity.save()
+            except TransitionNotPossible:
+                pass

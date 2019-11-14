@@ -340,6 +340,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'activity_types',
             'search_filters',
             'require_organization',
+            'contact_method'
         )
 
 

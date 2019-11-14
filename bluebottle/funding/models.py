@@ -11,6 +11,7 @@ from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
 from django.utils.functional import cached_property
 from django.utils.html import format_html
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from moneyed import Money
@@ -30,7 +31,7 @@ from bluebottle.funding.transitions import (
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
-from bluebottle.utils.models import Validator, ValidatedModelMixin
+from bluebottle.utils.models import Validator, ValidatedModelMixin, BasePlatformSettings
 
 
 class PaymentCurrency(models.Model):
@@ -122,6 +123,15 @@ class KYCPassedValidator(Validator):
         return self.instance.bank_account and self.instance.bank_account.verified
 
 
+class DeadlineValidator(Validator):
+    code = 'deadline'
+    message = [_('Make sure deadline is in the future')]
+    field = 'deadline'
+
+    def is_valid(self):
+        return self.instance.duration or (self.instance.deadline and self.instance.deadline > now())
+
+
 class Funding(Activity):
     deadline = models.DateTimeField(
         _('deadline'),
@@ -145,7 +155,7 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [KYCPassedValidator]
+    validators = [KYCPassedValidator, DeadlineValidator]
 
     @property
     def required_fields(self):
@@ -625,3 +635,14 @@ class BankAccount(PolymorphicModel):
         resource_name = 'payout-accounts/external-accounts'
 
     public_data = {}
+
+
+class FundingPlatformSettings(BasePlatformSettings):
+
+    allow_anonymous_rewards = models.BooleanField(
+        _('Allow guests to donate rewards'), default=True
+    )
+
+    class Meta:
+        verbose_name_plural = _('funding settings')
+        verbose_name = _('funding settings')

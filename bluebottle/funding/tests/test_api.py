@@ -1451,3 +1451,44 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
 
         self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)
+
+    def test_put(self):
+        PledgePaymentProviderFactory.create()
+        self.funding.bank_account = PledgeBankAccountFactory.create(
+            reviewed=True
+        )
+        self.funding.save()
+
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+
+        for i in range(5):
+            donation = DonationFactory.create(
+                amount=Money(200, 'EUR'),
+                activity=self.funding, status='succeeded',
+            )
+            PledgePaymentFactory.create(donation=donation)
+
+        self.funding.transitions.succeed()
+        self.funding.save()
+
+        payout = self.funding.payouts.first()
+
+        response = self.client.put(
+            self.get_payout_url(payout),
+            data=json.dumps({
+                'data': {
+                    'id': payout.pk,
+                    'type': 'funding/payouts',
+                    'attributes': {
+                        'status': 'scheduled'
+                    }
+                }
+            }),
+            user=self.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        payout.refresh_from_db()
+        self.assertEqual(payout.status, 'started')

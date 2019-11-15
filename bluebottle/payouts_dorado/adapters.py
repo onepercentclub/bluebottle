@@ -26,7 +26,7 @@ class DoradoPayoutAdapter(object):
     def trigger_payout(self):
         # Send the signal to Dorado
         data = {
-            'payout': self.payout.pk,
+            'payout_id': self.payout.pk,
             'tenant': self.tenant.client_name,
         }
 

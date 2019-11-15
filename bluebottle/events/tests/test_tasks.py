@@ -69,7 +69,7 @@ class EventTasksTestCase(BluebottleTestCase):
         event = EventFactory.create(
             owner=user,
             initiative=self.initiative,
-            titel='leuk hoor'
+            title='Finish them translations, Rolfertjan!',
             start_time=start.time(),
             start_date=start.date(),
             duration=1
@@ -85,7 +85,7 @@ class EventTasksTestCase(BluebottleTestCase):
         self.assertEqual(event.status, EventTransitions.values.succeeded)
 
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'You completed your event "{}"!'.format(self.event.title))
+        self.assertEqual(mail.outbox[0].subject, 'You completed your event "{}"!'.format(event.title))
         self.assertTrue("Hi Nono,", mail.outbox[0].body)
 
     def test_event_reminder_task(self):

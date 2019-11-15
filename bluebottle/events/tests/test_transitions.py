@@ -306,7 +306,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
             mail.outbox[1].subject,
-            'You were added to "{}"'.format(self.event.title)
+            'You were added to the event "{}"'.format(self.event.title)
         )
 
     def test_withdraw(self):

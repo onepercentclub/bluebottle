@@ -390,7 +390,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.data['status'], 'new')
         self.assertEqual(response.data['motivation'], 'Pick me! Pick me!')
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, u'Someone applied to your task Make coffee! 🙌')
+        self.assertEqual(mail.outbox[0].subject, u'Someone applied to your task "Make coffee"! 🙌')
         self.assertTrue("Review the application and decide", mail.outbox[0].body)
 
     def test_apply_with_document(self):

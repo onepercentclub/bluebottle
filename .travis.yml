@@ -28,8 +28,8 @@ before_install:
   - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.0.deb && sudo dpkg -i --force-confnew elasticsearch-6.6.0.deb && sudo service elasticsearch restart
   - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql
-  - sudo -u postgres psql -c "CREATE USER testuser WITH PASSWORD 'password'"
-  - sudo -u postgres psql -c "ALTER ROLE testuser SUPERUSER"
+  - psql -c "CREATE USER testuser WITH PASSWORD 'password'"
+  - psql -c "ALTER ROLE testuser SUPERUSER"
 install:
   - pip install --upgrade pip
   - pip install --upgrade wheel setuptools mercurial

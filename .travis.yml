@@ -11,10 +11,14 @@ addons:
       - swig
       - openjdk-8-jdk-headless
       - postgresql-client-10
-cache: pip
-  - "$HOME/.cache/pip/"
-  - "$HOME/virtualenv/python2.7.15/lib/python2.7/site-packages"
-python: 2.7
+cache:
+  apt: true
+  pip: true
+  directories:
+    - "$HOME/.cache/pip/"
+    - "$HOME/virtualenv/python2.7.15/lib/python2.7/site-packages"
+python:
+  - 2.7
 services:
   - elasticsearch
   - postgresql

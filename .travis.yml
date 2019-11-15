@@ -32,8 +32,6 @@ install:
   - pip install -e .[test] --trusted-host github.com
 before_script:
   - flake8
-  - createdb test_bluebottle_test
-  - psql test_bluebottle_test < testdata.sql
 script:
   - python -m coverage run --parallel-mode --source=bluebottle manage.py test --keepdb
 notifications:

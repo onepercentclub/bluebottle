@@ -79,8 +79,11 @@ class InitiativeReviewTransitions(ReviewTransitions):
     )
     def needs_work(self):
         for activity in self.instance.activities.all():
-            activity.review_transitions.needs_work(send_messages=False)
-            activity.save()
+            try:
+                activity.review_transitions.needs_work(send_messages=False)
+                activity.save()
+            except TransitionNotPossible:
+                pass
 
     @transition(
         source=ReviewTransitions.values.submitted,

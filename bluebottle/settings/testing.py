@@ -50,11 +50,11 @@ DEFAULT_DB_ALIAS = 'default'
 DATABASES = {
     'default': {
         "ENGINE": "bluebottle.clients.postgresql_backend",
-        'HOST': '',
-        'PORT': '',
+        'HOST': 'localhost',
+        'PORT': '5432',
         'NAME': 'bluebottle_test',
-        'USER': '',
-        'PASSWORD': ''
+        'USER': 'testuser',
+        'PASSWORD': 'password'
     }
 }
 

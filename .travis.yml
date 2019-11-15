@@ -2,7 +2,7 @@ dist: xenial
 sudo: false
 language: python
 addons:
-  postgresql: "9.4"
+  postgresql: "10"
   apt:
     packages:
       - libxmlsec1
@@ -10,6 +10,7 @@ addons:
       - libgdal-dev
       - swig
       - openjdk-8-jdk-headless
+      - postgresql-client-10
 cache:
   apt: true
   pip: true
@@ -25,6 +26,9 @@ env:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
   - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.0.deb && sudo dpkg -i --force-confnew elasticsearch-6.6.0.deb && sudo service elasticsearch restart
+  - psql test_bluebottle_test < testdata.sql
+  - sudo -u postgres psql -c "CREATE USER testuser WITH PASSWORD 'password'"
+  - sudo -u postgres psql -c "ALTER ROLE testuser SUPERUSER"
 install:
   - pip install --upgrade pip
   - pip install --upgrade wheel setuptools mercurial
@@ -33,7 +37,6 @@ install:
 before_script:
   - flake8
   - createdb test_bluebottle_test
-  - psql test_bluebottle_test < testdata.sql
 script:
   - python -m coverage run --parallel-mode --source=bluebottle manage.py test --keepdb
 notifications:

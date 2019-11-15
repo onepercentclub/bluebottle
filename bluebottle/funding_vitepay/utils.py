@@ -18,12 +18,12 @@ def get_payment_url(payment):
     domain = connection.tenant.domain_url
     if 'localhost' in domain:
         # Use a mocked url that will always return the expected result
-        domain = 'https://{}.t.goodup.com'.format(connection.tenant.client_name)
+        domain = '{}.t.goodup.com'.format(connection.tenant.client_name)
 
     provider = VitepayPaymentProvider.objects.get()
     credentials = provider.private_settings
 
-    return_url = "{}/initiatives/activities/details/funding/{}/{}?donation_id={}".format(
+    return_url = "https://{}/initiatives/activities/details/funding/{}/{}?donation_id={}".format(
         domain,
         payment.donation.activity.id,
         payment.donation.activity.slug,
@@ -36,7 +36,7 @@ def get_payment_url(payment):
 
     api_secret = credentials['api_secret']
     amount_100 = int(payment.donation.amount.amount * 100)
-    callback_url = "{}{}".format(domain, reverse('vitepay-payment-webhook'))
+    callback_url = "https://{}{}".format(domain, reverse('vitepay-payment-webhook'))
 
     message = "{order_id};{amount_100};{currency};" \
               "{callback_url};{api_secret}".format(order_id=payment.unique_id,

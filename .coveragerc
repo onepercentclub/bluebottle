@@ -1,4 +1,4 @@
 [run]
 concurrency=multiprocessing
 source=bluebottle
-omit=**/migrations/**, **/site-packages/**, scripts/**, */*fundraisers/**, */*orders/**, */*projects/**, */*tasks/**, */payments*/**
+omit=**/migrations/**, **/site-packages/**, scripts/**, */bb_payouts/**, */*fundraisers/**, */*orders/**, */*projects/**, */*tasks/**, */payments*/**, */surveys/**, */votes/**, */suggestions/**, */rewards/**, */donations/**

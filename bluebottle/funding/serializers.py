@@ -586,7 +586,8 @@ class PayoutSerializer(serializers.ModelSerializer):
     # For Payout service
     donations = ResourceRelatedField(read_only=True, many=True)
     activity = ResourceRelatedField(read_only=True)
-    method = serializers.CharField(source='provider')
+    currency = serializers.CharField(read_only=True)
+    method = serializers.CharField(source='provider', read_only=True)
 
     class Meta:
         fields = (

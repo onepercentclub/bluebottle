@@ -26,6 +26,7 @@ env:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
   - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.0.deb && sudo dpkg -i --force-confnew elasticsearch-6.6.0.deb && sudo service elasticsearch restart
+  - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql
   - sudo -u postgres psql -c "CREATE USER testuser WITH PASSWORD 'password'"
   - sudo -u postgres psql -c "ALTER ROLE testuser SUPERUSER"
@@ -36,7 +37,6 @@ install:
   - pip install -e .[test] --trusted-host github.com
 before_script:
   - flake8
-  - createdb test_bluebottle_test
 script:
   - python -m coverage run --parallel-mode --source=bluebottle manage.py test --keepdb
 notifications:

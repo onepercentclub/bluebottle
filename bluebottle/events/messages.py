@@ -9,12 +9,14 @@ class EventSucceededOwnerMessage(TransitionMessage):
         'title': 'activity.title'
     }
 
+
 class EventClosedOwnerMessage(TransitionMessage):
     subject = _('Your event "{title}" has been closed')
     template = 'messages/event_closed_owner'
     context = {
         'title': 'activity.title'
     }
+
 
 class EventDateChanged(TransitionMessage):
     subject = _('The date and time for your event "{title}" changed')

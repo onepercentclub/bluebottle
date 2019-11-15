@@ -6,7 +6,7 @@ class EventSucceededOwnerMessage(TransitionMessage):
     subject = _('You completed your event "{title}"!')
     template = 'messages/event_succeeded_owner'
     context = {
-        'title': 'activity.title'
+        'title': 'title'
     }
 
 
@@ -14,7 +14,7 @@ class EventClosedOwnerMessage(TransitionMessage):
     subject = _('Your event "{title}" has been closed')
     template = 'messages/event_closed_owner'
     context = {
-        'title': 'activity.title'
+        'title': 'title'
     }
 
 
@@ -22,7 +22,7 @@ class EventDateChanged(TransitionMessage):
     subject = _('The date and time for your event "{title}" changed')
     template = 'messages/event_date_changed'
     context = {
-        'title': 'activity.title'
+        'title': 'title'
     }
 
     def get_recipients(self):
@@ -36,7 +36,7 @@ class EventReminder(TransitionMessage):
     subject = _('Your event "{title}" will take place in 5 days!')
     template = 'messages/event_reminder'
     context = {
-        'title': 'activity.title'
+        'title': 'title'
     }
 
     def get_recipients(self):

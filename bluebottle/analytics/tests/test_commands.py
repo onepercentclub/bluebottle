@@ -1,6 +1,8 @@
 import os
 from argparse import ArgumentTypeError
 from datetime import datetime
+from unittest import skip
+
 from mock import patch
 from openpyxl import load_workbook
 import pytz
@@ -78,6 +80,7 @@ class SetupDataMixin(object):
         self.xls_file_path = os.path.join(settings.PROJECT_ROOT, self.xls_file_name)
 
 
+@skip("This is slow and obsolete")
 class TestEngagementMetricsUnit(SimpleTestCase):
 
     def test_validate_date(self):
@@ -114,6 +117,7 @@ class TestEngagementMetricsUnit(SimpleTestCase):
                           'engagement_report_20160101_20161231_generated_20170101-000000.xlsx')
 
 
+@skip("This is slow and obsolete")
 class TestEngagementMetricsXls(BluebottleTestCase):
 
     def setUp(self):
@@ -233,6 +237,7 @@ class TestEngagementMetricsXls(BluebottleTestCase):
         os.remove(self.xls_file_path)
 
 
+@skip("This is slow and obsolete")
 class TestParticipationXls(SetupDataMixin, BluebottleTestCase):
 
     def setUp(self):
@@ -259,6 +264,7 @@ class TestParticipationXls(SetupDataMixin, BluebottleTestCase):
             self.assertEqual(workbook.worksheets[7].title, 'Theme Segmentation - {}'.format(self.year))
 
 
+@skip("This is slow and obsolete")
 class TestExportAnalytics(SetupDataMixin, BluebottleTestCase):
 
     def setUp(self):

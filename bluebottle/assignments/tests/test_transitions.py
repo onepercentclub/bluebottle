@@ -39,28 +39,28 @@ class AssignmentTransitionMessagesTestCase(BluebottleTestCase):
         self.assignment.transitions.expire()
         self.assignment.save()
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your task Nice things has been closed')
+        self.assertEqual(mail.outbox[0].subject, 'Your task "Nice things" has been closed')
         self.assertTrue('nobody applied to your task' in mail.outbox[0].body)
 
     def test_closed(self):
         self.assignment.transitions.close()
         self.assignment.save()
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your task Nice things has been closed')
+        self.assertEqual(mail.outbox[0].subject, 'Your task "Nice things" has been closed')
         self.assertTrue('has been closed by the platform admin' in mail.outbox[0].body)
 
     def test_succeed(self):
         self.assignment.transitions.succeed()
         self.assignment.save()
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, u'Your task Nice things has been completed! 🎉')
+        self.assertEqual(mail.outbox[0].subject, u'Your task "Nice things" has been completed! 🎉')
         self.assertTrue('Great news!' in mail.outbox[0].body)
 
     def test_applied(self):
         someone = BlueBottleUserFactory.create(first_name='Henk')
         ApplicantFactory.create(activity=self.assignment, user=someone)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, u'Someone applied to your task Nice things! 🙌')
+        self.assertEqual(mail.outbox[0].subject, u'Someone applied to your task "Nice things"! 🙌')
         self.assertTrue('Henk applied to join your task' in mail.outbox[0].body)
 
 

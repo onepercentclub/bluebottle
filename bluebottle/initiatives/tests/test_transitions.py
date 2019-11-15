@@ -139,7 +139,7 @@ class InitiativeReviewTransitions(BluebottleTestCase):
             self.initiative.status, ReviewTransitions.values.approved
         )
         self.assertEqual(len(mail.outbox), 1)
-        subject = 'Your initiative {} has been approved!'.format(self.initiative.title)
+        subject = 'Your initiative "{}" has been approved!'.format(self.initiative.title)
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
 
@@ -150,7 +150,7 @@ class InitiativeReviewTransitions(BluebottleTestCase):
             self.initiative.status, ReviewTransitions.values.closed
         )
         self.assertEqual(len(mail.outbox), 1)
-        subject = 'Your initiative {} has been closed'.format(self.initiative.title)
+        subject = 'Your initiative "{}" has been closed'.format(self.initiative.title)
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
 

@@ -69,6 +69,7 @@ class EventTasksTestCase(BluebottleTestCase):
         event = EventFactory.create(
             owner=user,
             initiative=self.initiative,
+            titel='leuk hoor'
             start_time=start.time(),
             start_date=start.date(),
             duration=1

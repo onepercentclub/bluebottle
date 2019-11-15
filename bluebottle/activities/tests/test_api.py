@@ -17,7 +17,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory
 
-from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory
+from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.tasks import SkillFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
@@ -366,6 +366,32 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][2]['id'], unicode(third.pk))
         self.assertEqual(data['data'][3]['id'], unicode(second.pk))
         self.assertEqual(data['data'][4]['id'], unicode(first.pk))
+
+    def test_filter_country(self):
+        country1 = CountryFactory.create()
+        country2 = CountryFactory.create()
+
+        initiative1 = InitiativeFactory.create(place=GeolocationFactory.create(country=country1))
+        initiative2 = InitiativeFactory.create(place=GeolocationFactory.create(country=country2))
+        initiative3 = InitiativeFactory.create(place=GeolocationFactory.create(country=country1))
+        initiative4 = InitiativeFactory.create(place=GeolocationFactory.create(country=country2))
+
+        first = AssignmentFactory.create(review_status='approved', status='full', initiative=initiative1)
+        second = AssignmentFactory.create(review_status='approved', status='open', initiative=initiative3)
+        AssignmentFactory.create(review_status='approved', status='full', initiative=initiative2)
+        AssignmentFactory.create(review_status='approved', status='open', initiative=initiative4)
+
+        response = self.client.get(
+            self.url + '?sort=popularity&filter[country]={}'.format(country1.id),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+        self.assertEqual(data['data'][0]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
 
     def test_sort_matching_office_location(self):
         self.owner.location = LocationFactory.create(position='10.0, 20.0')

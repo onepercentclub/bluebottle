@@ -99,6 +99,10 @@ class ActivityDocument(DocType):
     def prepare_country(self, instance):
         if hasattr(instance, 'location') and instance.location:
             return instance.location.country_id
+        if hasattr(instance.initiative, 'location') and instance.initiative.location:
+            return instance.initiative.location.country_id
+        if hasattr(instance.initiative, 'place') and instance.initiative.place:
+            return instance.initiative.place.country_id
 
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:

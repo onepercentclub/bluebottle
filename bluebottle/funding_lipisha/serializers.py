@@ -47,7 +47,6 @@ class PayoutLipishaBankAccountSerializer(serializers.ModelSerializer):
 
         fields = (
             'id',
-            'type',
             'account_name',
             'account_number',
             'bank_name',

@@ -18,17 +18,16 @@ class PayoutCreationError(Exception):
 
 class DoradoPayoutAdapter(object):
 
-    def __init__(self, project):
+    def __init__(self, payout):
         self.settings = getattr(properties, 'PAYOUT_SERVICE', None)
-        self.project = project
+        self.payout = payout
         self.tenant = connection.tenant
 
     def trigger_payout(self):
         # Send the signal to Dorado
         data = {
-            'project_id': self.project.id,
+            'payout': self.payout.pk,
             'tenant': self.tenant.client_name,
-            'type': 'funding'
         }
 
         try:

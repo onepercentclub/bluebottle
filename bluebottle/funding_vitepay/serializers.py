@@ -38,12 +38,9 @@ class VitepayBankAccountSerializer(BaseBankAccountSerializer):
 
 
 class PayoutVitepayBankAccountSerializer(serializers.ModelSerializer):
-    type = serializers.CharField(read_only=True)
-
     class Meta:
         fields = (
             'id',
-            'type',
             'account_name',
             'mobile_number',
         )

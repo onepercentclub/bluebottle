@@ -1,21 +1,37 @@
 import json
 from datetime import timedelta
 import mock
+import bunch
 
 import stripe
 
+from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils.timezone import now
 from moneyed import Money
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory, FundraiserFactory, RewardFactory, DonationFactory
+from bluebottle.funding.tests.factories import (
+    FundingFactory, FundraiserFactory, RewardFactory, DonationFactory
+)
 from bluebottle.funding.models import Donation
 from bluebottle.funding.transitions import DonationTransitions
-from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentProviderFactory
+from bluebottle.funding_pledge.tests.factories import (
+    PledgeBankAccountFactory, PledgePaymentProviderFactory
+)
+from bluebottle.funding_lipisha.tests.factories import (
+    LipishaBankAccountFactory, LipishaPaymentFactory, LipishaPaymentProviderFactory
+)
+from bluebottle.funding_flutterwave.tests.factories import (
+    FlutterwaveBankAccountFactory, FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
+)
+from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePaymentProviderFactory, \
-    StripePayoutAccountFactory
+    StripePayoutAccountFactory, StripeSourcePaymentFactory
+from bluebottle.funding_vitepay.tests.factories import (
+    VitepayBankAccountFactory, VitepayPaymentFactory, VitepayPaymentProviderFactory
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
@@ -1170,3 +1186,272 @@ class PayoutAccountTestCase(BluebottleTestCase):
                 }
             ]
         )
+
+
+class PayoutDetailTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(PayoutDetailTestCase, self).setUp()
+        StripePaymentProvider.objects.all().delete()
+        StripePaymentProviderFactory.create()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.user.groups.add(Group.objects.get(name='Financial'))
+        self.geolocation = GeolocationFactory.create(locality='Barranquilla')
+        self.initiative = InitiativeFactory.create(
+            place=self.geolocation
+        )
+
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.initiative.save()
+
+        self.funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=Money(1000, 'EUR'),
+            deadline=now() + timedelta(days=15)
+        )
+
+    def get_payout_url(self, payout):
+        return reverse('payout-details', args=(payout.pk, ))
+
+    def test_get_stripe_payout(self):
+        self.funding.bank_account = ExternalAccountFactory.create(
+            account_id='some-external-account-id'
+        )
+        self.funding.save()
+
+        with mock.patch(
+            'bluebottle.funding_stripe.models.ExternalAccount.verified', new_callable=mock.PropertyMock
+        ) as verified:
+            verified.return_value = True
+
+            self.funding.review_transitions.submit()
+            self.funding.review_transitions.approve()
+
+        for i in range(5):
+            donation = DonationFactory.create(
+                amount=Money(200, 'EUR'),
+                activity=self.funding, status='succeeded',
+                payment=PledgePaymentFactory.create()
+            )
+            PledgePaymentFactory.create(donation=donation)
+
+        for i in range(5):
+            donation = DonationFactory.create(
+                amount=Money(200, 'EUR'),
+                activity=self.funding, status='succeeded',
+            )
+            with mock.patch('stripe.Source.modify'):
+                StripeSourcePaymentFactory.create(donation=donation)
+
+        for i in range(2):
+            donation = DonationFactory.create(
+                amount=Money(200, 'EUR'),
+                activity=self.funding,
+                status='new',
+            )
+            with mock.patch('stripe.Source.modify'):
+                StripeSourcePaymentFactory.create(donation=donation)
+            donation.transitions.fail()
+            donation.save()
+
+        self.funding.transitions.succeed()
+        self.funding.save()
+
+        with mock.patch(
+            'bluebottle.funding_stripe.models.ExternalAccount.account', new_callable=mock.PropertyMock
+        ) as account:
+            external_account = stripe.BankAccount('some-bank-token')
+            external_account.update(bunch.bunchify({
+                'object': 'bank_account',
+                'account_holder_name': 'Jane Austen',
+                'account_holder_type': 'individual',
+                'bank_name': 'STRIPE TEST BANK',
+                'country': 'US',
+                'currency': 'usd',
+                'fingerprint': '1JWtPxqbdX5Gamtc',
+                'last4': '6789',
+                'metadata': {
+                    'order_id': '6735'
+                },
+                'routing_number': '110000000',
+                'status': 'new',
+                'account': 'acct_1032D82eZvKYlo2C'
+            }))
+            account.return_value = external_account
+
+            response = self.client.get(self.get_payout_url(self.funding.payouts.first()), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
+
+        self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)
+
+    def test_get_vitepay_payout(self):
+        VitepayPaymentProviderFactory.create()
+        self.funding.bank_account = VitepayBankAccountFactory.create(
+            account_name='Test Tester',
+            mobile_number='12345',
+            reviewed=True
+        )
+        self.funding.save()
+
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+
+        for i in range(5):
+            donation = DonationFactory.create(
+                amount=Money(200, 'EUR'),
+                activity=self.funding, status='succeeded',
+            )
+            VitepayPaymentFactory.create(donation=donation)
+
+        for i in range(2):
+            donation = DonationFactory.create(
+                amount=Money(200, 'EUR'),
+                activity=self.funding,
+                status='new',
+            )
+            VitepayPaymentFactory.create(donation=donation)
+            donation.transitions.fail()
+            donation.save()
+
+        self.funding.transitions.succeed()
+        self.funding.save()
+
+        response = self.client.get(self.get_payout_url(self.funding.payouts.first()), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        print response.content
+
+        self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
+
+        self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)
+
+    def test_get_lipisha_payout(self):
+        LipishaPaymentProviderFactory.create()
+        self.funding.bank_account = LipishaBankAccountFactory.create(
+            reviewed=True
+        )
+        self.funding.save()
+
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+
+        for i in range(5):
+            donation = DonationFactory.create(
+                amount=Money(200, 'EUR'),
+                activity=self.funding, status='succeeded',
+            )
+            LipishaPaymentFactory.create(donation=donation)
+
+        for i in range(2):
+            donation = DonationFactory.create(
+                amount=Money(200, 'EUR'),
+                activity=self.funding,
+                status='new',
+            )
+            LipishaPaymentFactory.create(donation=donation)
+            donation.transitions.fail()
+            donation.save()
+
+        self.funding.transitions.succeed()
+        self.funding.save()
+
+        response = self.client.get(self.get_payout_url(self.funding.payouts.first()), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        print response.content
+
+        self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
+
+        self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)
+
+    def test_get_flutterwave_payout(self):
+        FlutterwavePaymentProviderFactory.create()
+        self.funding.bank_account = FlutterwaveBankAccountFactory.create(
+            reviewed=True
+        )
+        self.funding.save()
+
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+
+        for i in range(5):
+            donation = DonationFactory.create(
+                amount=Money(200, 'EUR'),
+                activity=self.funding, status='succeeded',
+            )
+            FlutterwavePaymentFactory.create(donation=donation)
+
+        for i in range(2):
+            donation = DonationFactory.create(
+                amount=Money(200, 'EUR'),
+                activity=self.funding,
+                status='new',
+            )
+            FlutterwavePaymentFactory.create(donation=donation)
+            donation.transitions.fail()
+            donation.save()
+
+        self.funding.transitions.succeed()
+        self.funding.save()
+
+        response = self.client.get(self.get_payout_url(self.funding.payouts.first()), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        print response.content
+
+        self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
+
+        self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)
+
+    def test_get_pledge_payout(self):
+        PledgePaymentProviderFactory.create()
+        self.funding.bank_account = PledgeBankAccountFactory.create(
+            reviewed=True
+        )
+        self.funding.save()
+
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
+
+        for i in range(5):
+            donation = DonationFactory.create(
+                amount=Money(200, 'EUR'),
+                activity=self.funding, status='succeeded',
+            )
+            PledgePaymentFactory.create(donation=donation)
+
+        for i in range(2):
+            donation = DonationFactory.create(
+                amount=Money(200, 'EUR'),
+                activity=self.funding,
+                status='new',
+            )
+            PledgePaymentFactory.create(donation=donation)
+            donation.transitions.fail()
+            donation.save()
+
+        self.funding.transitions.succeed()
+        self.funding.save()
+
+        response = self.client.get(self.get_payout_url(self.funding.payouts.first()), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        print response.content
+
+        self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
+
+        self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)

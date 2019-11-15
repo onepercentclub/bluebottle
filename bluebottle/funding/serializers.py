@@ -563,45 +563,55 @@ class PayoutDonationSerializer(serializers.ModelSerializer):
         model = Donation
 
 
+class PayoutFundingSerializer(BaseActivityListSerializer):
+
+    class Meta(BaseActivityListSerializer.Meta):
+        model = Funding
+        fields = (
+            'title', 'bank_account',
+        )
+
+    class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
+        resource_name = 'activities/fundings'
+        included_resources = [
+            'bank_account'
+        ]
+
+    included_serializers = {
+        'bank_account': 'bluebottle.funding.serializers.PayoutBankAccountSerializer'
+    }
+
+
 class PayoutSerializer(serializers.ModelSerializer):
     # For Payout service
-    donations = PayoutDonationSerializer(many=True)
-    total_amount = MoneySerializer()
+    donations = ResourceRelatedField(read_only=True, many=True)
+    activity = ResourceRelatedField(read_only=True)
+    method = serializers.CharField(source='provider')
 
     class Meta:
         fields = (
             'id',
             'status',
-            'provider',
+            'activity',
+            'method',
             'currency',
             'donations',
-            'total_amount',
         )
         model = Payout
 
+    class JSONAPIMeta():
+        resource_name = 'funding/payouts'
+        included_resources = [
+            'activity',
+            'donations',
+            'activity.bank_account'
+        ]
 
-class PayoutStatusSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = (
-            'status',
-        )
-        model = Payout
-
-
-class FundingPayoutsSerializer(serializers.ModelSerializer):
-    # For Payout service
-    payouts = PayoutSerializer(many=True)
-    bank_account = PayoutBankAccountSerializer()
-
-    class Meta:
-        fields = (
-            'id',
-            'title',
-            'status',
-            'payouts',
-            'bank_account'
-        )
-        model = Funding
+    included_serializers = {
+        'activity': 'bluebottle.funding.serializers.PayoutFundingSerializer',
+        'activity.bank_account': 'bluebottle.funding.serializers.PayoutBankAccountSerializer',
+        'donations': 'bluebottle.funding.serializers.PayoutDonationSerializer'
+    }
 
 
 class FundingPlatformSettingsSerializer(serializers.ModelSerializer):

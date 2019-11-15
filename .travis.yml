@@ -2,7 +2,7 @@ dist: xenial
 sudo: false
 language: python
 addons:
-  postgresql: "10.4"
+  postgresql: "9.4"
   apt:
     packages:
       - libxmlsec1

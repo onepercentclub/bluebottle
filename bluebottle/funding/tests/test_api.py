@@ -1327,7 +1327,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
-        print response.content
 
         self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
 
@@ -1368,7 +1367,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
-        print response.content
 
         self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
 
@@ -1409,7 +1407,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
-        print response.content
 
         self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
 
@@ -1450,7 +1447,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
-        print response.content
 
         self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
 

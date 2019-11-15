@@ -2,6 +2,7 @@ import csv
 
 from django.http.response import HttpResponse
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
@@ -153,6 +154,8 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
 class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Payout.objects.all()
     serializer_class = PayoutSerializer
+
+    authentication_classes = (TokenAuthentication, )
 
     permission_classes = (IsFinancialMember,)
 

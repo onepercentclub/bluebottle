@@ -34,7 +34,7 @@ class DonationRefundedDonorMessage(TransitionMessage):
 
 
 class FundingPartiallyFundedMessage(TransitionMessage):
-    subject = _(u"Your funding deadline passed")
+    subject = _(u"Your crowdfunding campaign deadline passed")
     template = 'messages/funding_partially_funded'
 
     def get_recipients(self):

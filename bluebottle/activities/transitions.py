@@ -31,6 +31,10 @@ class ActivityReviewTransitions(ReviewTransitions):
         # TODO: Make me smart. Do we want to do this with a auth permission?
         return not user or user.is_staff
 
+    def initiative_is_approved(self):
+        if not self.instance.initiative.status == ReviewTransitions.values.approved:
+            return _('Please make sure the initiative is approved')
+
     @transition(
         source=ReviewTransitions.values.draft,
         target=ReviewTransitions.values.submitted,
@@ -51,7 +55,7 @@ class ActivityReviewTransitions(ReviewTransitions):
             ReviewTransitions.values.needs_work
         ],
         target=ReviewTransitions.values.approved,
-        conditions=[is_complete, is_valid],
+        conditions=[is_complete, is_valid, initiative_is_approved],
         permissions=[can_review]
     )
     def approve(self):
@@ -83,11 +87,11 @@ class ActivityReviewTransitions(ReviewTransitions):
 
     @transition(
         source=[ReviewTransitions.values.closed],
-        target=ReviewTransitions.values.submitted,
+        target=ReviewTransitions.values.draft,
         permissions=[can_review]
     )
     def reopen(self):
-        pass
+        self.instance.transitions.reopen()
 
 
 class ActivityTransitions(ModelTransitions):
@@ -110,6 +114,14 @@ class ActivityTransitions(ModelTransitions):
     def is_system(self, user):
         # Only system and admin users. Not api users.
         return not user
+
+    @transition(
+        source=values.closed,
+        target=values.in_review,
+        permissions=[can_approve],
+    )
+    def reopen(self):
+        pass
 
 
 class ContributionTransitions(ModelTransitions):

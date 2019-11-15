@@ -4,9 +4,9 @@ from lipisha import Lipisha, lipisha
 from moneyed import Money
 
 from bluebottle.clients import properties
+from bluebottle.fsm import TransitionNotPossible
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donation, Funding
-from bluebottle.funding.transitions import PaymentTransitions
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayment, LipishaBankAccount
 
 
@@ -60,32 +60,52 @@ def check_payment_status(payment):
     client = init_client()
 
     # If we have a transaction reference, then use that
-    response = client.get_transactions(
-        transaction_type='Payment',
-        transaction_reference=payment.unique_id
-    )
+    if payment.transaction:
+        response = client.get_transactions(
+            transaction_type='Payment',
+            transaction=payment.transaction
+        )
+    else:
+        response = client.get_transactions(
+            transaction_type='Payment',
+            transaction_merchant_reference=payment.unique_id
+        )
 
     payment.update_response = json.dumps(response)
     data = response['content']
-
     if len(data) == 0:
-        payment.transitions.fail()
+        try:
+            payment.transitions.fail()
+        except TransitionNotPossible:
+            pass
         payment.save()
         raise PaymentException('Payment could not be verified yet. Payment not found.')
     else:
         data = data[0]
-        if data.transaction_amount != payment.donation.amount.amount:
+        if data['transaction_amount'] != payment.donation.amount.amount:
             # Update donation amount based on the amount registered at Lipisha
-            amount = Money(data.transaction_amount, 'KES')
+            amount = Money(data['transaction_amount'], 'KES')
             payment.donation.amount = amount
-            payment.donation.save()
+        payment.donation.name = data['transaction_account_name']
+        payment.donation.save()
 
-    if data.transaction_status in ['Completed', 'Settled', 'Acknowledged', 'Authorized']:
-        payment.transitions.succeed()
-    if data.transaction_status in ['Cancelled', 'Voided']:
-        payment.transactions.fail()
-    if data.transaction_status in ['Reversed']:
-        payment.transactions.refund()
+    payment.mobile_number = data['transaction_mobile_number']
+
+    if data['transaction_status'] in ['Completed', 'Settled', 'Acknowledged', 'Authorized']:
+        try:
+            payment.transitions.succeed()
+        except TransitionNotPossible:
+            pass
+    if data['transaction_status'] in ['Cancelled', 'Voided']:
+        try:
+            payment.transitions.fail()
+        except TransitionNotPossible:
+            pass
+    if data['transaction_reversal_status'] == 'Reverse' or data['transaction_status'] in ['Reversed']:
+        try:
+            payment.transitions.refund()
+        except TransitionNotPossible:
+            pass
     payment.save()
 
 
@@ -173,10 +193,10 @@ def update_webhook_payment(data):
     payment.mobile_number = data['transaction_mobile']
     payment.reference = data['transaction_mobile']
 
-    if data['transaction_status'] == 'Completed':
-        payment.transactions.succeed()
-    else:
-        payment.transactions.fail()
+    try:
+        check_payment_status(payment)
+    except PaymentException:
+        pass
     payment.save()
     return payment
 
@@ -215,7 +235,7 @@ def initiate_payment(data):
     if not payment:
         # If we haven't found a payment by now we should create a new donation
         try:
-            account = LipishaBankAccount.objects.get(account_number=account_number)
+            account = LipishaBankAccount.objects.get(mpesa_code=account_number)
             funding = account.funding
         except LipishaBankAccount.DoesNotExist:
             return generate_error_response(transaction_reference)
@@ -231,12 +251,10 @@ def initiate_payment(data):
             donation=donation,
             transaction=transaction_reference,
         )
-
-    if data['transaction_status'] in ['Success', 'Completed']:
-        if payment.status != PaymentTransitions.values.succeeded:
-            payment.transitions.succeed()
-    else:
-        payment.transitions.fail()
+    try:
+        check_payment_status(payment)
+    except PaymentException:
+        pass
     payment.save()
     return generate_success_response(payment)
 
@@ -263,10 +281,9 @@ def acknowledge_payment(data):
 
     payment.mobile_number = data['transaction_mobile']
 
-    if data['transaction_status'] in ['Success', 'Completed']:
-        if payment.status != PaymentTransitions.values.succeeded:
-            payment.transitions.succeed()
-    else:
-        payment.transitions.fail()
+    try:
+        check_payment_status(payment)
+    except PaymentException:
+        pass
     payment.save()
     return generate_success_response(payment)

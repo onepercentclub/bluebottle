@@ -33,7 +33,6 @@ class FileListAPITestCase(TestCase):
         data = json.loads(response.content)
         self.assertEqual(data['data']['type'], 'documents')
         self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.owner.pk))
-        self.assertEqual(data['data']['meta']['size'], 39109)
 
         file_field = Document.objects.get(pk=data['data']['id'])
         self.assertTrue(file_field.file.name.endswith(data['data']['meta']['filename']))
@@ -56,7 +55,6 @@ class FileListAPITestCase(TestCase):
         self.assertEqual(data['data']['type'], 'images')
         self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.owner.pk))
         self.assertTrue(file_field.file.name.endswith(data['data']['meta']['filename']))
-        self.assertEqual(data['data']['meta']['size'], 1145)
 
     def test_create_image_anonymous(self):
         with open(self.image_path) as test_file:

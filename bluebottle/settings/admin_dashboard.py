@@ -54,11 +54,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         'items': [
             {
                 'name': 'events.event',
-                'permissions': ['events.event']
+                'permissions': ['events.change_event']
             },
             {
                 'name': 'events.participant',
-                'permissions': ['events.event']
+                'permissions': ['events.change_participant']
             },
         ]
     },
@@ -69,11 +69,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         'items': [
             {
                 'name': 'assignments.assignment',
-                'permissions': ['assignments.assignment']
+                'permissions': ['assignments.change_assignment']
             },
             {
                 'name': 'assignments.applicant',
-                'permissions': ['assignments.assignment']
+                'permissions': ['assignments.change_assignment']
             },
             {
                 'name': 'tasks.skill',
@@ -85,31 +85,31 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
     {
         'label': _('Funding'),
         'app_label': 'funding',
-        'permissions': ['funding.change_activity'],
+        'permissions': ['activities.change_activity'],
         'items': [
             {
                 'name': 'funding.funding',
-                'permissions': ['funding.funding']
+                'permissions': ['funding.change_funding']
             },
             {
                 'name': 'funding.donation',
-                'permissions': ['funding.donation']
+                'permissions': ['funding.change_donation']
             },
             {
                 'name': 'funding.payment',
-                'permissions': ['funding.payment']
+                'permissions': ['funding.change_payment']
             },
             {
                 'name': 'funding.payoutaccount',
-                'permissions': ['funding.payoutaccount']
+                'permissions': ['funding.change_payoutaccount']
             },
             {
                 'name': 'funding.bankaccount',
-                'permissions': ['funding.payoutaccount']
+                'permissions': ['funding.change_bankaccount']
             },
             {
                 'name': 'funding.payout',
-                'permissions': ['funding.payout']
+                'permissions': ['funding.change_payout']
             },
         ]
     },

@@ -230,12 +230,12 @@ class FundingAdmin(ActivityChildAdmin):
 class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     model = Donation
     raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'status', 'payment_link']
+    readonly_fields = ['payment_link', 'status', 'payment_link', 'reward']
     list_display = ['created', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', ]
     list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
     date_hierarchy = 'created'
 
-    fields = ['created', 'activity', 'user', 'amount',
+    fields = ['created', 'activity', 'user', 'amount', 'reward',
               'anonymous', 'name',
               'status', 'payment_link']
 

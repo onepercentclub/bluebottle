@@ -28,7 +28,7 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=values.in_review,
         target=values.open,
-        permissions=[ActivityTransitions.can_approve]
+        permissions=[ActivityTransitions.can_approve],
     )
     def reviewed(self):
         if self.instance.duration and not self.instance.deadline:
@@ -110,14 +110,14 @@ class DonationTransitions(ContributionTransitions):
         ]
     )
     def refund(self):
-        self.instance.activity.update_amounts()
+        pass
 
     @transition(
         source=[values.new, values.succeeded],
         target=values.failed,
     )
     def fail(self):
-        self.instance.activity.update_amounts()
+        pass
 
     @transition(
         source=[values.new, values.failed],
@@ -130,7 +130,7 @@ class DonationTransitions(ContributionTransitions):
     def succeed(self):
         parent = self.instance.fundraiser or self.instance.activity
         from bluebottle.wallposts.models import SystemWallpost
-        self.instance.activity.update_amounts()
+        pass
         SystemWallpost.objects.get_or_create(
             author=self.instance.user,
             donation=self.instance,
@@ -151,34 +151,39 @@ class PaymentTransitions(ModelTransitions):
         failed = ChoiceItem('failed', _('failed'))
 
     @transition(
-        source=[values.new, values.failed],
+        source=[values.new, values.failed, values.refunded],
         target=values.succeeded
     )
     def succeed(self):
         try:
             self.instance.donation.transitions.succeed()
             self.instance.donation.save()
-            self.instance.donation.activity.update_amounts()
         except TransitionNotPossible:
             pass
-
-    @transition(
-        source=[values.new, values.succeeded],
-        target=values.failed
-    )
-    def fail(self):
-        self.instance.donation.transitions.fail()
-        self.instance.donation.save()
         self.instance.donation.activity.update_amounts()
 
     @transition(
-        source=[values.succeeded, values.refund_requested],
+        source=[values.new, values.succeeded, values.refunded],
+        target=values.failed
+    )
+    def fail(self):
+        try:
+            self.instance.donation.transitions.fail()
+            self.instance.donation.save()
+        except TransitionNotPossible:
+            pass
+        self.instance.donation.activity.update_amounts()
+
+    @transition(
+        source=[values.succeeded, values.refund_requested, values.failed],
         target=values.refunded
     )
     def refund(self):
-        if self.instance.donation.status != 'refunded':
+        try:
             self.instance.donation.transitions.refund()
             self.instance.donation.save()
+        except TransitionNotPossible:
+            pass
         self.instance.donation.activity.update_amounts()
 
 

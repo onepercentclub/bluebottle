@@ -11,6 +11,7 @@ from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
 from django.utils.functional import cached_property
 from django.utils.html import format_html
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from moneyed import Money
@@ -122,6 +123,15 @@ class KYCPassedValidator(Validator):
         return self.instance.bank_account and self.instance.bank_account.verified
 
 
+class DeadlineValidator(Validator):
+    code = 'deadline'
+    message = [_('Make sure deadline is in the future')]
+    field = 'deadline'
+
+    def is_valid(self):
+        return self.instance.duration or (self.instance.deadline and self.instance.deadline > now())
+
+
 class Funding(Activity):
     deadline = models.DateTimeField(
         _('deadline'),
@@ -145,7 +155,7 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [KYCPassedValidator]
+    validators = [KYCPassedValidator, DeadlineValidator]
 
     @property
     def required_fields(self):
@@ -177,7 +187,8 @@ class Funding(Activity):
     def update_amounts(self):
         cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         cache.delete(cache_key)
-        return self.amount_donated
+        cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
+        cache.delete(cache_key)
 
     @property
     def amount_donated(self):
@@ -208,18 +219,23 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) without pledges converted to the targets currency
         """
-        totals = self.contributions.filter(
-            status=FundingTransitions.values.succeeded,
-            donation__payment__pledgepayment__isnull=True
-        ).values(
-            'donation__amount_currency'
-        ).annotate(
-            total=Sum('donation__amount')
-        )
-        amounts = [Money(total['total'], total['donation__amount_currency']) for total in totals]
-        amounts = [convert(amount, self.target.currency) for amount in amounts]
+        cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
+        total = cache.get(cache_key)
+        if not total:
+            totals = self.contributions.filter(
+                status=FundingTransitions.values.succeeded,
+                donation__payment__pledgepayment__isnull=True
+            ).values(
+                'donation__amount_currency'
+            ).annotate(
+                total=Sum('donation__amount')
+            )
+            amounts = [Money(tot['total'], tot['donation__amount_currency']) for tot in totals]
+            amounts = [convert(amount, self.target.currency) for amount in amounts]
 
-        return sum(amounts) or Money(0, self.target.currency)
+            total = sum(amounts) or Money(0, self.target.currency)
+            cache.set(cache_key, total)
+        return total
 
     @cached_property
     def amount_pledged(self):
@@ -430,8 +446,8 @@ class Payout(TransitionsMixin, models.Model):
 class Donation(Contribution):
     amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
-    reward = models.ForeignKey(Reward, null=True, related_name="donations")
-    fundraiser = models.ForeignKey(Fundraiser, null=True, related_name="donations")
+    reward = models.ForeignKey(Reward, null=True, blank=True, related_name="donations")
+    fundraiser = models.ForeignKey(Fundraiser, null=True, blank=True, related_name="donations")
     name = models.CharField(max_length=200, null=True, blank=True,
                             verbose_name=_('Fake name'),
                             help_text=_('Override donor name / Name for guest donation'))

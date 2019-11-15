@@ -26,6 +26,9 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
         self.url = reverse('assignment-list')
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory(owner=self.user)
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.initiative.save()
 
     def test_create_assignment(self):
         data = {
@@ -156,6 +159,9 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.other_user = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create(activity_manager=self.manager)
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.initiative.save()
         self.assignment_incomplete = AssignmentFactory.create(
             owner=self.owner,
             initiative=self.initiative,
@@ -285,7 +291,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
         self.assertEqual(data['included'][0]['type'], 'activities/assignments')
-        self.assertEqual(data['included'][0]['attributes']['review-status'], 'submitted')
+        self.assertEqual(data['included'][0]['attributes']['review-status'], 'approved')
 
     def test_submit_other_user(self):
         # Other user can't submit the assignment
@@ -311,7 +317,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['included'][0]['type'], 'activities/assignments')
-        self.assertEqual(data['included'][0]['attributes']['review-status'], 'submitted')
+        self.assertEqual(data['included'][0]['attributes']['review-status'], 'approved')
 
     def test_approve_owner(self):
         # Owner should not be allowed to approve own assignment
@@ -352,9 +358,12 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.url = reverse('applicant-list')
         self.owner = BlueBottleUserFactory()
         self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.initiative.save()
         self.assignment = AssignmentFactory.create(owner=self.owner, title="Make coffee")
         self.assignment.review_transitions.submit()
-        self.assignment.review_transitions.approve()
         self.apply_data = {
             'data': {
                 'type': 'contributions/applicants',
@@ -373,6 +382,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         }
         self.document_url = reverse('document-list')
         self.document_path = './bluebottle/files/tests/files/test.rtf'
+        mail.outbox = []
 
     def test_apply(self):
         response = self.client.post(self.url, json.dumps(self.apply_data), user=self.user)
@@ -407,7 +417,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['data']['relationships']['document']['data']['id'], document_id)
         document = get_included(response, 'documents')
-        self.assertEqual(document['meta']['size'], 39109)
+        self.assertTrue('.rtf' in document['meta']['filename'])
 
 
 class ApplicantTransitionAPITestCase(BluebottleTestCase):
@@ -425,9 +435,11 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.manager = BlueBottleUserFactory(first_name="Boss")
         self.owner = BlueBottleUserFactory(first_name="Owner")
         self.initiative = InitiativeFactory.create(activity_manager=self.manager)
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.initiative.save()
         self.assignment = AssignmentFactory.create(owner=self.owner, initiative=self.initiative)
         self.assignment.review_transitions.submit()
-        self.assignment.review_transitions.approve()
         self.assignment.save()
         document = DocumentFactory.create()
         self.applicant = ApplicantFactory.create(activity=self.assignment, document=document, user=self.user)
@@ -448,6 +460,7 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
                 }
             }
         }
+        mail.outbox = []
 
     def test_applicant_document_by_user(self):
         response = self.client.get(self.participant_url, user=self.user)
@@ -486,8 +499,8 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'rejected')
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertTrue("Go away!", mail.outbox[1].body)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertTrue("Go away!", mail.outbox[0].body)
 
     def test_accept_by_owner_assignment(self):
         # Accept by assignment owner
@@ -495,8 +508,8 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'accepted')
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertTrue("you have been accepted" in mail.outbox[1].body)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertTrue("you have been accepted" in mail.outbox[0].body)
 
     def test_accept_by_owner_assignment_custom_message(self):
         # Accept by assignment owner
@@ -505,8 +518,8 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()
         self.assertEqual(self.applicant.status, 'accepted')
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertTrue("See you there!" in mail.outbox[1].body)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertTrue("See you there!" in mail.outbox[0].body)
 
     def test_accept_by_self_assignment(self):
         # Applicant should not be able to accept self

@@ -45,7 +45,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     ordering = ('-created', )
 
     def type(self, obj):
-        return obj.get_real_instance_class().__name__
+        return obj.get_real_instance_class()._meta.verbose_name
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
@@ -77,11 +77,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     )
 
     def get_status_fields(self, request, obj=None):
-        if obj and obj.status == 'in_review':
+        if obj and obj.status in ['in_review', 'closed']:
             return [
                 'title',
                 'complete',
                 'valid',
+                'status',
                 'review_status',
                 'review_transitions',
                 'transition_date'
@@ -122,10 +123,13 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     stats_data.short_description = _('Statistics')
 
     def valid(self, obj):
-        if not obj.review_transitions.is_valid():
+        if not obj.review_transitions.is_valid() and not obj.review_transitions.initiative_is_approved():
             return '-'
+        errors = obj.review_transitions.is_valid() or []
+        if obj.review_transitions.initiative_is_approved():
+            errors += [obj.review_transitions.initiative_is_approved()]
         return format_html("<ul>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in obj.review_transitions.is_valid()
+            format_html(u"<li>{}</li>", value) for value in errors
         ])))
 
     valid.short_description = _('Validation errors')
@@ -178,7 +182,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     ordering = ('-created', )
 
     def type(self, obj):
-        return obj.get_real_instance_class().__name__
+        return obj.get_real_instance_class()._meta.verbose_name
 
     def combined_status(self, obj):
         if obj.status == 'in_review':

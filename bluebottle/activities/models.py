@@ -100,7 +100,7 @@ class Contribution(TransitionsMixin, PolymorphicModel):
     transition_date = models.DateTimeField(null=True, blank=True)
 
     activity = models.ForeignKey(Activity, related_name='contributions')
-    user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True)
+    user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True, blank=True)
 
     @property
     def owner(self):

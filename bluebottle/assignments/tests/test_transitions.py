@@ -27,9 +27,13 @@ class AssignmentTransitionMessagesTestCase(BluebottleTestCase):
             title='Nice things',
             initiative=self.initiative
         )
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.initiative.save()
         self.assignment.review_transitions.approve()
         self.assignment.transitions.start()
         self.assignment.save()
+        mail.outbox = []
 
     def test_deadline_passed(self):
         self.assignment.transitions.expire()

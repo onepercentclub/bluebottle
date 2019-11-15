@@ -35,7 +35,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     model = StripePayoutAccount
     inlines = [StripeBankAccountInline]
 
-    fields = PayoutAccountChildAdmin.fields + ('account_id', 'country')
+    fields = ('owner', 'status', 'account_id', 'country')
 
 
 @admin.register(ExternalAccount)
@@ -43,3 +43,7 @@ class StripeBankAccountAdmin(BankAccountChildAdmin):
     base_model = BankAccount
     model = ExternalAccount
     fields = ('connect_account', 'account_id') + BankAccountChildAdmin.readonly_fields
+
+    list_filter = ['reviewed']
+    search_fields = ['account_id']
+    list_display = ['created', 'account_id', 'reviewed']

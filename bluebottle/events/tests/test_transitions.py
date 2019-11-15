@@ -242,7 +242,7 @@ class EventTransitionTestCase(BluebottleTestCase):
             EventTransitions.values.closed
         )
         self.assertEqual(len(mail.outbox), 3)
-        self.assertEqual(mail.outbox[2].subject, "Your event has been closed")
+        self.assertEqual(mail.outbox[2].subject, 'Your event "{}" has been closed'.format(self.event.title))
         self.assertTrue("Hi Nono,", mail.outbox[2].body)
 
         participant.refresh_from_db()

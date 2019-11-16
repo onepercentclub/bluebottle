@@ -326,9 +326,6 @@ TENANT_APPS = (
 
     'bb_salesforce',
 
-    # Widget
-    'bluebottle.widget',
-
     'rest_framework.authtoken',
     'django_elasticsearch_dsl',
 

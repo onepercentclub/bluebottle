@@ -82,6 +82,40 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.donation.refresh_from_db()
         self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
 
+    def test_double_success(self):
+        """
+        Often Stripe will send the charge.succeeded call multiple times
+        """
+        with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
+            data = json.load(hook_file)
+            data['object']['id'] = self.payment_intent.id
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'payment_intent.succeeded', data
+            )
+        ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.intent.refresh_from_db()
+        payment = self.intent.payment
+        donation = Donation.objects.get(pk=self.donation.pk)
+
+        self.assertEqual(donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(payment.status, StripePaymentTransitions.values.succeeded)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
+
     def test_failed(self):
         with mock.patch(
             'stripe.Webhook.construct_event',
@@ -89,6 +123,34 @@ class IntentWebhookTestCase(BluebottleTestCase):
                 'payment_intent.payment_failed', {'object': {'id': self.payment_intent.id}}
             )
         ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.intent.refresh_from_db()
+        payment = self.intent.payment
+
+        donation = Donation.objects.get(pk=self.donation.pk)
+
+        self.assertEqual(donation.status, DonationTransitions.values.failed)
+        self.assertEqual(payment.status, StripePaymentTransitions.values.failed)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.status, DonationTransitions.values.failed)
+
+    def test_double_failed(self):
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'payment_intent.payment_failed', {'object': {'id': self.payment_intent.id}}
+            )
+        ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
             response = self.client.post(
                 self.webhook,
                 HTTP_STRIPE_SIGNATURE='some signature'

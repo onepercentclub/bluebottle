@@ -8,7 +8,7 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
-from bluebottle.funding.transitions import PayoutAccountTransitions
+from bluebottle.funding.transitions import PayoutAccountTransitions, PaymentTransitions
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount, ExternalAccount
@@ -149,15 +149,17 @@ class IntentWebHookView(View):
         try:
             if event.type == 'payment_intent.succeeded':
                 payment = self.get_payment(event.data.object.id)
-                payment.transitions.succeed()
-                payment.save()
+                if payment.status != PaymentTransitions.values.succeeded:
+                    payment.transitions.succeed()
+                    payment.save()
 
                 return HttpResponse('Updated payment')
 
             elif event.type == 'payment_intent.payment_failed':
                 payment = self.get_payment(event.data.object.id)
-                payment.transitions.fail()
-                payment.save()
+                if payment.status != PaymentTransitions.values.failed:
+                    payment.transitions.fail()
+                    payment.save()
 
                 return HttpResponse('Updated payment')
 

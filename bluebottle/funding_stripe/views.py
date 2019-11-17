@@ -207,8 +207,9 @@ class SourceWebHookView(View):
 
             if event.type == 'source.failed':
                 payment = self.get_payment_from_source(event.data.object.id)
-                payment.transitions.fail()
-                payment.save()
+                if payment.status != PaymentTransitions.values.failed:
+                    payment.transitions.fail()
+                    payment.save()
 
                 return HttpResponse('Updated payment')
 
@@ -221,15 +222,17 @@ class SourceWebHookView(View):
 
             if event.type == 'charge.failed':
                 payment = self.get_payment_from_charge(event.data.object.id)
-                payment.transitions.fail()
-                payment.save()
+                if payment.status != PaymentTransitions.values.failed:
+                    payment.transitions.fail()
+                    payment.save()
 
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.succeeded':
                 payment = self.get_payment_from_charge(event.data.object.id)
-                payment.transitions.succeed()
-                payment.save()
+                if payment.status != PaymentTransitions.values.succeeded:
+                    payment.transitions.succeed()
+                    payment.save()
 
                 return HttpResponse('Updated payment')
 

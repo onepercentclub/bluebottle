@@ -131,8 +131,6 @@ urlpatterns = [
     url(r'^api/organizations',
         include('bluebottle.organizations.urls.api')),
 
-    url(r'^embed/', include('bluebottle.widget.urls.core')),
-
     # JSON Web Token based authentication for Django REST framework
     url(r'^api/token-auth/', obtain_jwt_token, name='token-auth'),
 

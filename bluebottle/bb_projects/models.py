@@ -297,6 +297,3 @@ class BaseProject(models.Model):
     @property
     def supporters(self):
         return self.funding + self.sourcing
-
-
-from projectwallmails import *  # noqa

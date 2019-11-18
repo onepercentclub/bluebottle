@@ -337,6 +337,3 @@ class Transaction(PolymorphicModel):
 
     class Meta:
         ordering = ('-created', '-updated')
-
-
-import signals  # noqa

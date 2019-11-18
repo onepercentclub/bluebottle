@@ -12,6 +12,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
         'date': ('-created', ),
         'alphabetical': ('title_keyword', ),
     }
+    default_sort_field = 'date'
 
     filters = (
         'owner.id', 'activity_manager.id',

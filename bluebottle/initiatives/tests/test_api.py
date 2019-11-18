@@ -606,8 +606,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][0]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
 
     def test_search_boost(self):
         first = InitiativeFactory.create(title='Something else', pitch='Lorem ipsum dolor sit amet', status='approved')

@@ -19,6 +19,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'alphabetical': ('title_keyword', ),
         'popularity': 'popularity',
     }
+    default_sort_field = 'popularity'
 
     filters = (
         'owner.id',

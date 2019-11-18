@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 from moneyed import Money
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 
 from bluebottle.funding.tests.factories import (
     FundingFactory, FundraiserFactory, RewardFactory, DonationFactory
@@ -1195,6 +1196,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
         StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
+        self.token = Token.objects.create(user=self.user)
+
         self.user.groups.add(Group.objects.get(name='Financial'))
         self.geolocation = GeolocationFactory.create(locality='Barranquilla')
         self.initiative = InitiativeFactory.create(
@@ -1280,7 +1283,10 @@ class PayoutDetailTestCase(BluebottleTestCase):
             }))
             account.return_value = external_account
 
-            response = self.client.get(self.get_payout_url(self.funding.payouts.first()), user=self.user)
+            response = self.client.get(
+                self.get_payout_url(self.funding.payouts.first()),
+                HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+            )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -1322,7 +1328,10 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.transitions.succeed()
         self.funding.save()
 
-        response = self.client.get(self.get_payout_url(self.funding.payouts.first()), user=self.user)
+        response = self.client.get(
+            self.get_payout_url(self.funding.payouts.first()),
+            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -1362,7 +1371,10 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.transitions.succeed()
         self.funding.save()
 
-        response = self.client.get(self.get_payout_url(self.funding.payouts.first()), user=self.user)
+        response = self.client.get(
+            self.get_payout_url(self.funding.payouts.first()),
+            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -1402,7 +1414,10 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.transitions.succeed()
         self.funding.save()
 
-        response = self.client.get(self.get_payout_url(self.funding.payouts.first()), user=self.user)
+        response = self.client.get(
+            self.get_payout_url(self.funding.payouts.first()),
+            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -1442,7 +1457,10 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.transitions.succeed()
         self.funding.save()
 
-        response = self.client.get(self.get_payout_url(self.funding.payouts.first()), user=self.user)
+        response = self.client.get(
+            self.get_payout_url(self.funding.payouts.first()),
+            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -1485,7 +1503,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
                     }
                 }
             }),
-            user=self.user
+            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

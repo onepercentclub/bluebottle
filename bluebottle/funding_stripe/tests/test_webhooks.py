@@ -72,6 +72,12 @@ class IntentWebhookTestCase(BluebottleTestCase):
                 HTTP_STRIPE_SIGNATURE='some signature'
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
+            # Stripe might send double success webhooks
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.intent.refresh_from_db()
         payment = self.intent.payment
@@ -89,6 +95,12 @@ class IntentWebhookTestCase(BluebottleTestCase):
                 'payment_intent.payment_failed', {'object': {'id': self.payment_intent.id}}
             )
         ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            # Stripe might send double failed webhooks
             response = self.client.post(
                 self.webhook,
                 HTTP_STRIPE_SIGNATURE='some signature'
@@ -188,6 +200,12 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                 'source.failed', data
             )
         ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            # Stripe might send double failed webhooks
             response = self.client.post(
                 self.webhook,
                 HTTP_STRIPE_SIGNATURE='some signature'
@@ -310,6 +328,12 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                 'charge.succeeded', data
             )
         ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            # Stripe might send double success webhooks
             response = self.client.post(
                 self.webhook,
                 HTTP_STRIPE_SIGNATURE='some signature'

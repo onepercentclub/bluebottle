@@ -41,8 +41,6 @@ from bluebottle.wallposts.models import (
 )
 from .mails import mail_project_complete, mail_project_incomplete
 
-from .signals import project_funded  # NOQA
-
 logger = logging.getLogger(__name__)
 
 

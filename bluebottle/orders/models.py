@@ -44,6 +44,3 @@ class Order(BaseOrder, PreviousStatusMixin):
                 return obj.created
             else:
                 return obj.updated
-
-
-import signals  # noqa

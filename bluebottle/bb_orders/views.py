@@ -1,7 +1,6 @@
 import logging
 from django.http import Http404
 from bluebottle.bb_orders.permissions import IsOrderCreator, OrderIsNew
-from bluebottle.bb_orders.signals import order_requested
 from bluebottle.utils import views
 
 
@@ -72,5 +71,4 @@ class ManageOrderDetail(views.RetrieveUpdateAPIView):
 
     def get_object(self, queryset=None):
         object = super(ManageOrderDetail, self).get_object()
-        order_requested.send(sender=Order, order=object)
         return object

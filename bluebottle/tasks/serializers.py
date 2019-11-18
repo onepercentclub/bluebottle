@@ -12,7 +12,6 @@ from bluebottle.geo.models import Place
 from bluebottle.members.serializers import UserPreviewSerializer, UserProfileSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.tasks.permissions import TaskMemberPermission, TaskManagerPermission
-from bluebottle.tasks.taskmail import TaskMemberMailAdapter
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.utils.permissions import OneOf
 from bluebottle.utils.serializers import PermissionField, ResourcePermissionField
@@ -94,14 +93,8 @@ class TaskMemberStatusSerializer(serializers.ModelSerializer):
         fields = ('id', 'member', 'status', 'permissions', 'message')
 
     def update(self, instance, validated_data):
-        message = validated_data.pop('message')
         instance.skip_mail = True
-
         result = super(TaskMemberStatusSerializer, self).update(instance, validated_data)
-
-        if instance._original_status != instance.status:
-            TaskMemberMailAdapter(self.instance, message=message).send_mail()
-
         return result
 
 

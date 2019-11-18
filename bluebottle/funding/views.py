@@ -2,6 +2,7 @@ import csv
 
 from django.http.response import HttpResponse
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
@@ -18,7 +19,7 @@ from bluebottle.funding.serializers import (
     FundraiserSerializer, RewardSerializer, BudgetLineSerializer,
     DonationCreateSerializer, FundingListSerializer,
     PayoutAccountSerializer, PlainPayoutAccountSerializer,
-    FundingPayoutsSerializer, PayoutSerializer
+    PayoutSerializer
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.transitions.views import TransitionList
@@ -26,7 +27,7 @@ from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView, RetrieveAPIView
+    CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView
 )
 
 
@@ -150,22 +151,16 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     }
 
 
-class FundingPayoutDetails(RetrieveAPIView):
-    # For Payout service
-    queryset = Funding.objects.all()
-    serializer_class = FundingPayoutsSerializer
-
-    permission_classes = (IsFinancialMember,)
-
-
-class PayoutDetails(RetrieveUpdateAPIView):
+class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Payout.objects.all()
     serializer_class = PayoutSerializer
+
+    authentication_classes = (TokenAuthentication, )
 
     permission_classes = (IsFinancialMember,)
 
     def perform_update(self, serializer):
-        status = serializer.cleaned_data['status']
+        status = serializer.validated_data['status']
         # related to this Funding.
         payout = serializer.instance
         if status == 'started':

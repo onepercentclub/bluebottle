@@ -91,6 +91,7 @@ class ExternalAccountSerializer(BaseBankAccountSerializer):
     last4 = serializers.CharField(read_only=True, source='account.last4')
     currency = serializers.CharField(read_only=True, source='account.currency')
     routing_number = serializers.CharField(read_only=True, source='account.routing_number')
+    account_id = serializers.CharField(read_only=True)
 
     included_serializers = {
         'connect_account': 'bluebottle.funding_stripe.serializers.ConnectAccountSerializer',
@@ -101,6 +102,7 @@ class ExternalAccountSerializer(BaseBankAccountSerializer):
 
         fields = BaseBankAccountSerializer.Meta.fields + (
             'token',
+            'account_id',
             'account_holder_name',
             'country',
             'last4',
@@ -114,20 +116,15 @@ class ExternalAccountSerializer(BaseBankAccountSerializer):
 
 
 class PayoutStripeBankSerializer(serializers.ModelSerializer):
-    connect_account_id = serializers.CharField(source='connect_account.account_id')
+    account_id = serializers.CharField(source='connect_account.account_id')
     external_account_id = serializers.CharField(source='account_id')
-    type = serializers.CharField(read_only=True)
-
-    account_holder_name = serializers.CharField(read_only=True, source='account.account_holder_name')
     currency = serializers.CharField(read_only=True, source='account.currency')
 
     class Meta:
         fields = (
             'id',
-            'type',
+            'account_id',
             'external_account_id',
-            'connect_account_id',
-            'account_holder_name',
             'currency'
         )
         model = ExternalAccount

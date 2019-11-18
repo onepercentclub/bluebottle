@@ -414,9 +414,10 @@ class ExternalAccount(BankAccount):
     @property
     def account(self):
         if self.account_id:
-            for account in self.connect_account.account.external_accounts:
-                if account.id == self.account_id:
-                    self._account = account
+            if not hasattr(self, '_account'):
+                for account in self.connect_account.account.external_accounts:
+                    if account.id == self.account_id:
+                        self._account = account
 
             if not hasattr(self, '_account'):
                 self._account = self.connect_account.account.external_accounts.retrieve(self.account_id)

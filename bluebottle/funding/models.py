@@ -28,7 +28,6 @@ from bluebottle.funding.transitions import (
     PayoutAccountTransitions,
     PlainPayoutAccountTransitions,
     PayoutTransitions)
-from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import Validator, ValidatedModelMixin, BasePlatformSettings
@@ -563,10 +562,6 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
-
-    def send_payout(self):
-        adapter = DoradoPayoutAdapter(self.activity)
-        adapter.trigger_payout()
 
 
 class PlainPayoutAccount(PayoutAccount):

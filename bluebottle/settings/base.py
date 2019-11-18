@@ -898,7 +898,7 @@ DJANGO_MONEY_RATES = {
 }
 AUTO_CONVERT_MONEY = False
 
-LOCKDOWN_URL_EXCEPTIONS = [r'^/payments_vitepay/status_update/']
+LOCKDOWN_URL_EXCEPTIONS = [r'^/api/funding/vitepay/webhook/']
 THUMBNAIL_ENGINE = 'sorl_watermarker.engines.pil_engine.Engine'
 THUMBNAIL_WATERMARK_ALWAYS = False
 

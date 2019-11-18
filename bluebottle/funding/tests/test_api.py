@@ -17,6 +17,7 @@ from bluebottle.funding.tests.factories import (
 )
 from bluebottle.funding.models import Donation
 from bluebottle.funding.transitions import DonationTransitions
+from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_pledge.tests.factories import (
     PledgeBankAccountFactory, PledgePaymentProviderFactory
 )
@@ -30,6 +31,7 @@ from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePaymentProviderFactory, \
     StripePayoutAccountFactory, StripeSourcePaymentFactory
+from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import (
     VitepayBankAccountFactory, VitepayPaymentFactory, VitepayPaymentProviderFactory
 )
@@ -1297,6 +1299,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)
 
     def test_get_vitepay_payout(self):
+        VitepayPaymentProvider.objects.all().delete()
         VitepayPaymentProviderFactory.create()
         self.funding.bank_account = VitepayBankAccountFactory.create(
             account_name='Test Tester',
@@ -1342,6 +1345,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)
 
     def test_get_lipisha_payout(self):
+        LipishaPaymentProvider.objects.all().delete()
         LipishaPaymentProviderFactory.create()
         self.funding.bank_account = LipishaBankAccountFactory.create(
             reviewed=True

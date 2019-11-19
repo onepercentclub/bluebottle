@@ -115,7 +115,7 @@ class PaymentProvider(PolymorphicModel):
 
 class KYCPassedValidator(Validator):
     code = 'kyc'
-    message = [_('Make sure your account is verified')]
+    message = _('Make sure your account is verified')
     field = 'kyc'
 
     def is_valid(self):
@@ -124,11 +124,20 @@ class KYCPassedValidator(Validator):
 
 class DeadlineValidator(Validator):
     code = 'deadline'
-    message = [_('Make sure deadline is in the future')]
+    message = _('Make sure deadline is in the future')
     field = 'deadline'
 
     def is_valid(self):
         return self.instance.duration or (self.instance.deadline and self.instance.deadline > now())
+
+
+class BudgetLineValidator(Validator):
+    code = 'budgetlines'
+    message = _('Please specify a budget')
+    field = 'budgetlines'
+
+    def is_valid(self):
+        return len(self.instance.budget_lines.all()) > 0
 
 
 class Funding(Activity):
@@ -154,11 +163,11 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [KYCPassedValidator, DeadlineValidator]
+    validators = [KYCPassedValidator, DeadlineValidator, BudgetLineValidator]
 
     @property
     def required_fields(self):
-        fields = ['title', 'description', 'target', 'bank_account', 'budget_lines']
+        fields = ['title', 'description', 'target', 'bank_account']
 
         if not self.duration:
             fields.append('deadline')

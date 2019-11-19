@@ -5,7 +5,10 @@ from django.utils.timezone import now
 from djmoney.money import Money
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory, BankAccountFactory, DonationFactory
+from bluebottle.funding.tests.factories import (
+    FundingFactory, BankAccountFactory, DonationFactory,
+    BudgetLineFactory
+)
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -24,6 +27,7 @@ class FundingTestCase(BluebottleAdminTestCase):
             initiative=self.initiative,
             bank_account=bank_account
         )
+        BudgetLineFactory.create(activity=self.funding)
         self.funding.review_transitions.submit()
         self.funding.save()
         self.admin_url = reverse('admin:funding_funding_change', args=(self.funding.id, ))

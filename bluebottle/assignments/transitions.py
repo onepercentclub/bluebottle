@@ -150,7 +150,6 @@ class ApplicantTransitions(ContributionTransitions):
         field='status',
         source=[values.new, values.accepted],
         target=values.rejected,
-        conditions=[assignment_is_open],
         permissions=[ContributionTransitions.is_activity_manager],
         messages=[ApplicantRejectedMessage]
     )
@@ -168,7 +167,7 @@ class ApplicantTransitions(ContributionTransitions):
         unfollow(self.instance.user, self.instance.activity)
 
     @transition(
-        source=values.withdrawn,
+        source=[values.withdrawn, values.closed],
         target=values.new,
         conditions=[assignment_is_open],
         permissions=[ContributionTransitions.is_user]

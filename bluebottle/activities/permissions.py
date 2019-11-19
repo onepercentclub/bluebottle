@@ -18,8 +18,10 @@ class ActivityPermission(ResourcePermission):
 
     def has_permission(self, request, view):
         perm = super(ActivityPermission, self).has_permission(request, view)
-        if request.method not in ['POST']:
+        if request.method != 'POST':
             return perm
+        # If it is a POST/create request we should check Initiative related permissions
+        # For PATCH/PUT this will be handled by has_object_action_permission
         try:
             initiative_id = request.data['initiative']['id']
             initiative = Initiative.objects.get(id=initiative_id)

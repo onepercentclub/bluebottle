@@ -1,7 +1,7 @@
 from django.core import mail
 
 from bluebottle.fsm import TransitionNotPossible
-from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
 from bluebottle.funding.transitions import FundingTransitions
 from bluebottle.funding_pledge.tests.factories import PledgeBankAccountFactory
 from bluebottle.utils.transitions import ReviewTransitions
@@ -165,6 +165,8 @@ class InitiativeReviewTransitions(BluebottleTestCase):
     def test_reopen_with_funding(self):
         account = PledgeBankAccountFactory.create(reviewed=True)
         funding = FundingFactory.create(initiative=self.initiative, bank_account=account)
+        BudgetLineFactory.create(activity=funding)
+
         funding.review_transitions.submit()
         self.initiative.transitions.submit()
         self.initiative.transitions.close()

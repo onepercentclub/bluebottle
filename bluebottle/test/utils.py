@@ -270,7 +270,6 @@ class JSONAPITestClient(Client):
                 secure=False, user=None, **extra):
         if user:
             extra['HTTP_AUTHORIZATION'] = "JWT {0}".format(user.get_jwt_token())
-
         return super(JSONAPITestClient, self).generic(method, path, data, content_type, secure, **extra)
 
 

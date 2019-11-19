@@ -193,7 +193,8 @@ class ApplicantTransitions(ContributionTransitions):
     )
     def succeed(self):
         follow(self.instance.user, self.instance.activity)
-        self.instance.time_spent = self.instance.activity.duration
+        if not self.instance.time_spent:
+            self.instance.time_spent = self.instance.activity.duration
 
     @transition(
         field='status',
@@ -212,4 +213,5 @@ class ApplicantTransitions(ContributionTransitions):
         permissions=[ContributionTransitions.is_activity_manager]
     )
     def close(self):
+        unfollow(self.instance.user, self.instance.activity)
         self.instance.time_spent = None

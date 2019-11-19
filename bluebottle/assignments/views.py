@@ -1,10 +1,11 @@
 from rest_framework_json_api.views import AutoPrefetchMixin
 
-from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
+from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission, ApplicantPermission
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.serializers import (
     ApplicantSerializer, AssignmentTransitionSerializer,
     ApplicantTransitionSerializer, AssignmentSerializer)
+from bluebottle.assignments.transitions import ApplicantTransitions
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission)
@@ -73,7 +74,7 @@ class ApplicantDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView
     serializer_class = ApplicantSerializer
 
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
+        OneOf(ResourcePermission, ResourceOwnerPermission, ApplicantPermission),
     )
 
     prefetch_for_includes = {
@@ -81,6 +82,17 @@ class ApplicantDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView
         'user': ['user'],
         'document': ['document'],
     }
+
+    def perform_update(self, serializer):
+        applicant = serializer.save()
+        # Fail the applicant if hours are set to 0
+        if applicant.status == ApplicantTransitions.values.succeeded and applicant.time_spent in [None, '0']:
+            applicant.transitions.fail()
+            applicant.save()
+        # Unfail an applicant if the hours are set to an amount
+        elif applicant.status == ApplicantTransitions.values.failed and applicant.time_spent not in [None, '0']:
+            applicant.transitions.succeed()
+            applicant.save()
 
 
 class ApplicantTransitionList(TransitionList):

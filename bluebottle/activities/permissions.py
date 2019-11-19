@@ -18,7 +18,7 @@ class ActivityPermission(ResourcePermission):
 
     def has_permission(self, request, view):
         perm = super(ActivityPermission, self).has_permission(request, view)
-        if request.method in permissions.SAFE_METHODS:
+        if request.method not in ['POST']:
             return perm
         try:
             initiative_id = request.data['initiative']['id']

@@ -22,9 +22,11 @@ class ApplicantInline(admin.TabularInline):
     model = Applicant
 
     raw_id_fields = ('user', )
-    readonly_fields = ('applicant', 'time_spent', 'status', 'created', 'motivation')
-    fields = ('applicant', 'user', 'time_spent', 'status', 'created', 'motivation')
+    readonly_fields = ('applicant', 'status', 'created', 'motivation')
+    fields = ('applicant', 'time_spent', 'status', 'created', 'motivation')
     extra = 0
+
+    can_delete = False
 
     def applicant(self, obj):
         url = reverse('admin:assignments_applicant_change', args=(obj.id,))

@@ -358,11 +358,18 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.url = reverse('applicant-list')
         self.owner = BlueBottleUserFactory()
         self.user = BlueBottleUserFactory()
-        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.initiative = InitiativeFactory.create(
+            owner=self.owner,
+            activity_manager=self.owner
+        )
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
         self.initiative.save()
-        self.assignment = AssignmentFactory.create(owner=self.owner, title="Make coffee")
+        self.assignment = AssignmentFactory.create(
+            initiative=self.initiative,
+            duration=4,
+            owner=self.owner,
+            title="Make coffee")
         self.assignment.review_transitions.submit()
         self.apply_data = {
             'data': {
@@ -418,6 +425,58 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(data['data']['relationships']['document']['data']['id'], document_id)
         document = get_included(response, 'documents')
         self.assertTrue('.rtf' in document['meta']['filename'])
+
+    def test_confirm_hours(self):
+        self.assertEqual(self.assignment.status, 'open')
+        applicant = ApplicantFactory.create(user=self.user, activity=self.assignment)
+        applicant.transitions.accept()
+        applicant.save()
+        no_show = ApplicantFactory.create(activity=self.assignment)
+        no_show.transitions.accept()
+        no_show.save()
+
+        self.assignment.end_date = now()
+        self.assignment.transitions.succeed()
+        self.assignment.save()
+
+        applicant.refresh_from_db()
+        self.assertEqual(applicant.status, 'succeeded')
+
+        url = reverse('applicant-detail', args=(applicant.id,))
+        self.apply_data['data']['id'] = applicant.id
+        self.apply_data['data']['attributes']['time-spent'] = 8
+
+        # User should not be able to set hours
+        response = self.client.patch(url, json.dumps(self.apply_data), user=self.user)
+        self.assertEqual(response.status_code, 200)
+        applicant.refresh_from_db()
+        self.assertEqual(applicant.time_spent, 8)
+
+        # Owner should be able to set hours
+        response = self.client.patch(url, json.dumps(self.apply_data), user=self.owner)
+        self.assertEqual(response.status_code, 200)
+        applicant.refresh_from_db()
+        self.assertEqual(applicant.time_spent, 8)
+
+        # Setting zero hours should fail the applicant
+        url = reverse('applicant-detail', args=(no_show.id,))
+        self.apply_data['data']['id'] = no_show.id
+        self.apply_data['data']['attributes']['time-spent'] = 0
+        response = self.client.patch(url, json.dumps(self.apply_data), user=self.owner)
+        self.assertEqual(response.status_code, 200)
+        no_show.refresh_from_db()
+        self.assertEqual(no_show.time_spent, None)
+        self.assertEqual(no_show.status, 'failed')
+
+        # And put the no show back to success
+        url = reverse('applicant-detail', args=(no_show.id,))
+        self.apply_data['data']['id'] = no_show.id
+        self.apply_data['data']['attributes']['time-spent'] = 2
+        response = self.client.patch(url, json.dumps(self.apply_data), user=self.owner)
+        self.assertEqual(response.status_code, 200)
+        no_show.refresh_from_db()
+        self.assertEqual(no_show.time_spent, 2)
+        self.assertEqual(no_show.status, 'succeeded')
 
 
 class ApplicantTransitionAPITestCase(BluebottleTestCase):

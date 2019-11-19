@@ -150,7 +150,6 @@ class ApplicantTransitions(ContributionTransitions):
         field='status',
         source=[values.new, values.accepted],
         target=values.rejected,
-        conditions=[assignment_is_open],
         permissions=[ContributionTransitions.is_activity_manager],
         messages=[ApplicantRejectedMessage]
     )
@@ -168,7 +167,7 @@ class ApplicantTransitions(ContributionTransitions):
         unfollow(self.instance.user, self.instance.activity)
 
     @transition(
-        source=values.withdrawn,
+        source=[values.withdrawn, values.closed],
         target=values.new,
         conditions=[assignment_is_open],
         permissions=[ContributionTransitions.is_user]
@@ -193,7 +192,8 @@ class ApplicantTransitions(ContributionTransitions):
     )
     def succeed(self):
         follow(self.instance.user, self.instance.activity)
-        self.instance.time_spent = self.instance.activity.duration
+        if not self.instance.time_spent:
+            self.instance.time_spent = self.instance.activity.duration
 
     @transition(
         field='status',
@@ -212,4 +212,5 @@ class ApplicantTransitions(ContributionTransitions):
         permissions=[ContributionTransitions.is_activity_manager]
     )
     def close(self):
+        unfollow(self.instance.user, self.instance.activity)
         self.instance.time_spent = None

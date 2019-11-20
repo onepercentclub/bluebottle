@@ -155,7 +155,8 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
 
     if not kwargs.get('site'):
         kwargs.update({
-            'site': tenant_url()
+            'site': tenant_url(),
+            'tenant': connection.tenant.client_name
         })
     kwargs.update({
         'settings': MailPlatformSettings.load()

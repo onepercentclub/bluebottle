@@ -1,0 +1,23 @@
+{% extends "base.mail.html" %}
+{% load money %}
+{% load i18n %}
+
+{% block content %}
+    <p class="donation-intro">
+        {% blocktrans with recipient_name=to.first_name %}
+            Hi {{ recipient_name }},<br/>
+           
+
+            We have received some feedback on your identity verification. 
+            Please check out the comments and make the appropriate changes. 
+
+            When you’re ready, you can submit your identity verification again and we’ll make sure it’s reviewed.
+        {% endblocktrans %}
+    </p>
+{% endblock content %} 
+
+{% block action %}
+    <a href="{{ site }}{{ obj.funding.get_absolute_url }}" class="action-email">
+       {% trans 'Go to your activity' context 'email' %}:
+    </a>
+{% endblock %}`

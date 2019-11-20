@@ -10,13 +10,20 @@ from django.db.models import F, OuterRef, Subquery
 def correct_activity_transition_date(apps, schema_editor):
     Contribution = apps.get_model('activities', 'Contribution')
     Activity = apps.get_model('activities', 'Activity')
+    Donation = apps.get_model('funding', 'Donation')
+    ContentType = apps.get_model('contenttypes', 'ContentType')
+
+    donation_ctype = ContentType.objects.get_for_model(Donation)
 
     transition_date = Activity.objects.filter(
         id=OuterRef('activity_id')
     ).values_list(
         'transition_date'
     )[:1]
-    Contribution.objects.update(transition_date=Subquery(transition_date))
+    # Donations should use date created
+    Contribution.objects.filter(polymorphic_ctype=donation_ctype).update(transition_date=F('created'))
+    # For tasks & events rely on activity transition_date
+    Contribution.objects.exclude(polymorphic_ctype=donation_ctype).update(transition_date=Subquery(transition_date))
 
 
 class Migration(migrations.Migration):

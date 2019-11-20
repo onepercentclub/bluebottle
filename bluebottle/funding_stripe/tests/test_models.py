@@ -106,12 +106,12 @@ class ConnectAccountTestCase(BluebottleTestCase):
 
             retrieve.assert_called_once_with(self.check.account_id)
 
-    def test_verified(self):
+    def test_complete(self):
         self.connect_account.individual.requirements.eventually_due = []
         with mock.patch(
             'stripe.Account.retrieve', return_value=self.connect_account
         ):
-            self.assertTrue(self.check.verified)
+            self.assertTrue(self.check.complete)
 
     def test_not_verified(self):
         with mock.patch(

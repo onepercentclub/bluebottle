@@ -22,6 +22,18 @@ class FundingTestCase(BluebottleTestCase):
         for line in funding.budget_lines.all():
             self.assertEqual(str(line.amount.currency), 'USD')
 
+    def test_budget_line_required(self):
+        funding = FundingFactory.create(target=Money(100, 'EUR'))
+        errors = list(funding.errors)
+
+        self.assertEqual(len(errors), 2)
+        self.assertEqual(errors[1].message, ['Please specify a budget'])
+
+        BudgetLineFactory.create_batch(5, activity=funding, amount=Money(20, 'EUR'))
+
+        errors = list(funding.errors)
+        self.assertEqual(len(errors), 1)
+
     def test_reward_currency_change(self):
         funding = FundingFactory.create(target=Money(100, 'EUR'))
 

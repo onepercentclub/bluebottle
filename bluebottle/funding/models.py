@@ -131,6 +131,15 @@ class DeadlineValidator(Validator):
         return self.instance.duration or (self.instance.deadline and self.instance.deadline > now())
 
 
+class BudgetLineValidator(Validator):
+    code = 'budgetlines'
+    message = [_('Please specify a budget')]
+    field = 'budgetlines'
+
+    def is_valid(self):
+        return len(self.instance.budget_lines.all()) > 0
+
+
 class Funding(Activity):
     deadline = models.DateTimeField(
         _('deadline'),
@@ -154,11 +163,11 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [KYCPassedValidator, DeadlineValidator]
+    validators = [KYCPassedValidator, DeadlineValidator, BudgetLineValidator]
 
     @property
     def required_fields(self):
-        fields = ['title', 'description', 'target', 'bank_account', 'budget_lines']
+        fields = ['title', 'description', 'target', 'bank_account']
 
         if not self.duration:
             fields.append('deadline')

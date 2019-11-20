@@ -13,7 +13,8 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 
 from bluebottle.funding.tests.factories import (
-    FundingFactory, FundraiserFactory, RewardFactory, DonationFactory
+    FundingFactory, FundraiserFactory, RewardFactory, DonationFactory,
+    BudgetLineFactory
 )
 from bluebottle.funding.models import Donation
 from bluebottle.funding.transitions import DonationTransitions
@@ -1215,6 +1216,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             target=Money(1000, 'EUR'),
             deadline=now() + timedelta(days=15)
         )
+        BudgetLineFactory.create(activity=self.funding)
 
     def get_payout_url(self, payout):
         return reverse('payout-details', args=(payout.pk, ))
@@ -1479,6 +1481,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.bank_account = PledgeBankAccountFactory.create(
             reviewed=True
         )
+        BudgetLineFactory.create(activity=self.funding)
         self.funding.save()
 
         self.funding.review_transitions.submit()

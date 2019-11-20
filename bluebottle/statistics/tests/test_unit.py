@@ -8,7 +8,9 @@ from moneyed.classes import Money
 from bluebottle.members.models import Member
 from bluebottle.statistics.views import Statistics
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, BankAccountFactory
+from bluebottle.funding.tests.factories import (
+    FundingFactory, DonationFactory, BankAccountFactory, BudgetLineFactory
+)
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
@@ -421,6 +423,7 @@ class FundingStatisticsTest(StatisticsTest):
             initiative=self.initiative,
             target=Money(100, 'EUR')
         )
+        BudgetLineFactory.create(activity=self.funding)
 
     def test_open(self):
         self.initiative.transitions.submit()

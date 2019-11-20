@@ -367,11 +367,19 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def verified(self):
+        return self.status == 'verified'
+
+    @property
+    def complete(self):
         return (
             'individual' in self.account and
             self.account.individual.verification.status == 'verified' and
             not self.account.individual.requirements.eventually_due
         )
+
+    @property
+    def rejected(self):
+        return self.account.individual.verification.status == 'unverified'
 
     @property
     def disabled(self):

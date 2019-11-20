@@ -572,6 +572,12 @@ class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
 
+    @property
+    def funding(self):
+        for account in self.external_accounts.all():
+            for funding in account.funding_set.all():
+                return funding
+
 
 class PlainPayoutAccount(PayoutAccount):
     document = DocumentField(blank=True, null=True)

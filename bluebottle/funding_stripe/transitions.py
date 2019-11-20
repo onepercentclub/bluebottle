@@ -4,6 +4,7 @@ from stripe.error import StripeError
 
 from bluebottle.fsm import transition, TransitionNotPossible
 from bluebottle.funding.exception import PaymentException
+from bluebottle.funding.messages import PayoutAccountRejected, PayoutAccountVerified
 from bluebottle.funding.transitions import PaymentTransitions, PayoutAccountTransitions
 from bluebottle.funding_stripe.utils import stripe
 
@@ -114,13 +115,28 @@ class StripePayoutAccountTransitions(PayoutAccountTransitions):
             PayoutAccountTransitions.values.rejected,
             PayoutAccountTransitions.values.new
         ],
-        target='verified'
+        messages=[PayoutAccountVerified],
+        target='verified',
     )
     def verify(self):
-        pass
+        self.instance.save()
+        for external_account in self.instance.external_accounts.all():
+            for funding in external_account.funding_set.filter(
+                review_status__in=('draft', 'needs_work')
+            ):
+                try:
+                    funding.review_transitions.submit()
+                    funding.save()
+                except TransitionNotPossible:
+                    pass
 
     @transition(
-        source=[PayoutAccountTransitions.values.pending, PayoutAccountTransitions.values.verified],
+        source=[
+            PayoutAccountTransitions.values.pending,
+            PayoutAccountTransitions.values.verified,
+            PayoutAccountTransitions.values.new,
+        ],
+        messages=[PayoutAccountRejected],
         target=PayoutAccountTransitions.values.rejected
     )
     def reject(self):

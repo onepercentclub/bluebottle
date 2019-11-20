@@ -55,3 +55,19 @@ class FundingClosedMessage(TransitionMessage):
 
     def get_recipients(self):
         return [self.obj.owner]
+
+
+class PayoutAccountRejected(TransitionMessage):
+    subject = _(u'Your identity verification needs some work')
+    template = 'messages/payout_account_rejected'
+
+    def get_recipients(self):
+        return [self.obj.owner]
+
+
+class PayoutAccountVerified(TransitionMessage):
+    subject = _(u'Your identity is verified')
+    template = 'messages/payout_account_verified'
+
+    def get_recipients(self):
+        return [self.obj.owner]

@@ -72,6 +72,8 @@ class AssignmentSerializer(BaseActivitySerializer):
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
+            'location',
+            'expertise',
             'contributions',
             'contributions.user',
             'contributions.document'

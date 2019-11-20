@@ -115,7 +115,7 @@ class PaymentProvider(PolymorphicModel):
 
 class KYCPassedValidator(Validator):
     code = 'kyc'
-    message = _('Make sure your account is verified')
+    message = [_('Make sure your account is verified')]
     field = 'kyc'
 
     def is_valid(self):
@@ -124,7 +124,7 @@ class KYCPassedValidator(Validator):
 
 class DeadlineValidator(Validator):
     code = 'deadline'
-    message = _('Make sure deadline is in the future')
+    message = [_('Make sure deadline is in the future')]
     field = 'deadline'
 
     def is_valid(self):
@@ -133,7 +133,7 @@ class DeadlineValidator(Validator):
 
 class BudgetLineValidator(Validator):
     code = 'budgetlines'
-    message = _('Please specify a budget')
+    message = [_('Please specify a budget')]
     field = 'budgetlines'
 
     def is_valid(self):

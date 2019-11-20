@@ -77,7 +77,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     )
 
     def get_status_fields(self, request, obj=None):
-        if obj and obj.status != 'approved':
+        if obj and obj.status in ['in_review', 'closed']:
             return [
                 'title',
                 'complete',

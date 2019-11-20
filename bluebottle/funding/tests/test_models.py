@@ -27,7 +27,7 @@ class FundingTestCase(BluebottleTestCase):
         errors = list(funding.errors)
 
         self.assertEqual(len(errors), 2)
-        self.assertEqual(errors[1].message, 'Please specify a budget')
+        self.assertEqual(errors[1].message, ['Please specify a budget'])
 
         BudgetLineFactory.create_batch(5, activity=funding, amount=Money(20, 'EUR'))
 

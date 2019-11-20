@@ -75,7 +75,6 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=values.partially_funded,
         target=values.refunded,
-        permissions=[ActivityTransitions.can_approve],
     )
     def refund(self):
         for donation in self.instance.contributions.filter(status__in=['succeeded']).all():

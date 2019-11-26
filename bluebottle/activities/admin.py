@@ -41,6 +41,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     child_models = (Participant, Donation, Applicant)
     list_display = ['created', 'owner', 'type', 'activity', 'status']
     list_filter = (PolymorphicChildModelFilter, 'status')
+    date_hierarchy = 'transition_date'
 
     ordering = ('-created', )
 
@@ -165,6 +166,7 @@ class ActivityStatusFilter(SimpleListFilter):
 class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
+    date_hierarchy = 'transition_date'
     readonly_fields = ['link']
     list_filter = (PolymorphicChildModelFilter, ActivityStatusFilter, 'highlight')
     list_editable = ('highlight',)

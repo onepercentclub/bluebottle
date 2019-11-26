@@ -63,11 +63,12 @@ class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
     inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
     list_display = [
-        '__unicode__', 'initiative', 'created', 'status',
-        'highlight', 'start_date', 'start_time', 'duration'
+        '__unicode__', 'initiative', 'status',
+        'highlight', 'start_date', 'start_time', 'duration', 'created'
     ]
     search_fields = ['title', 'description']
     list_filter = ['status', 'is_online']
+    date_hierarchy = 'start_date'
 
     base_model = Event
 

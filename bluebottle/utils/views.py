@@ -215,17 +215,6 @@ class RetrieveAPIView(ViewPermissionsMixin, generics.RetrieveAPIView):
     permission_classes = (ResourcePermission,)
 
 
-class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView):
-    permission_classes = (ResourcePermission,)
-
-    def perform_create(self, serializer):
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-        serializer.save()
-
-
 class RelatedPermissionMixin(object):
     related_permission_classes = {}
 
@@ -241,6 +230,22 @@ class RelatedPermissionMixin(object):
                     self.permission_denied(
                         request, message=getattr(permission, 'message', None)
                     )
+
+
+class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView, RelatedPermissionMixin):
+    permission_classes = (ResourcePermission,)
+
+    def perform_create(self, serializer):
+        self.check_related_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+        serializer.save()
 
 
 class CreateAPIView(ViewPermissionsMixin, generics.CreateAPIView, RelatedPermissionMixin):

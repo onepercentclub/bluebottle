@@ -4,7 +4,7 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.models import Activity
 from bluebottle.activities.filters import ActivitySearchFilter
-from bluebottle.activities.permissions import ActivityPermission
+from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
     ActivityReviewTransitionSerializer,
@@ -14,7 +14,7 @@ from bluebottle.files.views import ImageContentView
 from bluebottle.files.models import RelatedImage
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission
+    OneOf, ResourcePermission
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
@@ -40,7 +40,7 @@ class ActivityList(JsonApiViewMixin, ListAPIView):
     )
 
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
+        OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 
     prefetch_for_includes = {
@@ -57,7 +57,9 @@ class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyA
     model = Activity
     lookup_field = 'pk'
 
-    permission_classes = (ActivityPermission,)
+    permission_classes = (
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
 
     prefetch_for_includes = {
         'initiative': ['initiative'],
@@ -77,7 +79,7 @@ class RelatedActivityImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIVie
 
     related_permission_classes = {
         'content_object': [
-            OneOf(ResourcePermission, ResourceOwnerPermission),
+            OneOf(ResourcePermission, ActivityOwnerPermission),
         ]
     }
 

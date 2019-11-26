@@ -30,7 +30,11 @@ class InitiativeSearchFilter(ElasticSearchFilter):
 
     def get_default_filters(self, request):
         fields = super(InitiativeSearchFilter, self).get_filter_fields(request)
-        if 'owner.id' in fields:
+
+        permission = 'initiatives.api_read_initiative'
+        if not request.user.has_perm(permission):
+            return [Term(owner_id=request.user.id), Term(status='approved')]
+        elif 'owner.id' in fields:
             return [
                 Term(owner_id=request.user.id) |
                 Term(activity_manager_id=request.user.id) |

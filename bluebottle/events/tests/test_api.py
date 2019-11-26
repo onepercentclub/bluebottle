@@ -258,9 +258,9 @@ class EventAPITestCase(BluebottleTestCase):
                 'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start_time': str(now() + timedelta(days=21)),
-                    'end_time': str(now() + timedelta(days=21, hours=4)),
-                    'registration_deadline': str(now() + timedelta(days=14)),
+                    'start_time': str((now() + timedelta(days=21)).time()),
+                    'end_time': str((now() + timedelta(days=21, hours=4)).time()),
+                    'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
                     'address': 'Zuid-Boulevard Katwijk aan Zee',
                     'description': 'We will clean up the beach south of Katwijk'

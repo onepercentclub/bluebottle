@@ -18,7 +18,6 @@ from bluebottle.files.models import RelatedImage
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.filters import InitiativeSearchFilter
 from bluebottle.initiatives.models import Initiative
-from bluebottle.initiatives.permissions import InitiativePermission
 from bluebottle.initiatives.serializers import (
     InitiativeSerializer, InitiativeReviewTransitionSerializer,
     InitiativeMapSerializer, InitiativeRedirectSerializer,
@@ -26,6 +25,9 @@ from bluebottle.initiatives.serializers import (
 )
 from bluebottle.tasks.models import Task
 from bluebottle.transitions.views import TransitionList
+from bluebottle.utils.permissions import (
+    OneOf, ResourcePermission, ResourceOwnerPermission
+)
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
     CreateAPIView,
@@ -36,7 +38,9 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Initiative.objects.all()
     serializer_class = InitiativeSerializer
 
-    permission_classes = (InitiativePermission,)
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
 
     filter_backends = (
         InitiativeSearchFilter,
@@ -62,6 +66,11 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     }
 
     def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
         serializer.save(owner=self.request.user)
 
 
@@ -97,7 +106,10 @@ class InitiativeMapList(generics.ListAPIView):
 class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Initiative.objects.all()
     serializer_class = InitiativeSerializer
-    permission_classes = (InitiativePermission,)
+
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
 
     prefetch_for_includes = {
         'owner': ['owner'],
@@ -128,7 +140,7 @@ class RelatedInitiativeImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIV
     serializer_class = RelatedInitiativeImageSerializer
 
     related_permission_classes = {
-        'content_object': [InitiativePermission]
+        'content_object': [ResourceOwnerPermission]
     }
 
     permission_classes = []

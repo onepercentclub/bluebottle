@@ -1,6 +1,6 @@
 from rest_framework_json_api.views import AutoPrefetchMixin
 
-from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission, ApplicantPermission
+from bluebottle.activities.permissions import ActivityOwnerPermission, ActivityTypePermission, ApplicantPermission
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.serializers import (
     ApplicantSerializer, AssignmentTransitionSerializer,
@@ -15,7 +15,11 @@ from bluebottle.utils.views import (
 class AssignmentList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
-    permission_classes = (ActivityTypePermission, ActivityPermission,)
+
+    permission_classes = (
+        ActivityTypePermission,
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -31,7 +35,9 @@ class AssignmentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
 
-    permission_classes = (ActivityPermission,)
+    permission_classes = (
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
 
     prefetch_for_includes = {
         'initiative': ['initiative'],
@@ -65,6 +71,16 @@ class ApplicantList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     }
 
     def perform_create(self, serializer):
+        self.check_related_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
         serializer.save(user=self.request.user)
 
 

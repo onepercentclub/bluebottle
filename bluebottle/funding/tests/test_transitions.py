@@ -93,7 +93,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, 'partially_funded')
         self.assertEqual(len(mail.outbox), 3)
-        self.assertEqual(mail.outbox[2].subject, 'Your funding deadline passed')
+        self.assertEqual(mail.outbox[2].subject, 'Your crowdfunding campaign deadline passed')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
 
     def test_enough_donations(self):

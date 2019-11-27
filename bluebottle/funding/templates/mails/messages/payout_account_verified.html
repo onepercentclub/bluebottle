@@ -1,0 +1,22 @@
+{% extends "base.mail.html" %}
+{% load money %}
+{% load i18n %}
+
+{% block content %}
+    <p class="donation-intro">
+        {% blocktrans with recipient_name=to.first_name platform_name=tenant context 'email' %}
+            Hi {{ recipient_name }},<br/>
+           
+            Good news! Your identity is verified and you’re all good to go. 
+
+            If you filled out the entire creation flow, your crowdfunding campaign will be submitted for review. 
+            Didn’t complete your campaign yet? Go to {{ platform_name }} and enter the last details.
+        {% endblocktrans %}
+    </p>
+{% endblock content %} 
+
+{% block action %}
+    <a href="{{ site }}{{ obj.funding.get_absolute_url }}" class="action-email">
+       {% trans 'Go to your activity' context 'email' %}:
+    </a>
+{% endblock %}`

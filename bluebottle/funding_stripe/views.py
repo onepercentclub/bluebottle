@@ -288,13 +288,13 @@ class ConnectWebHookView(View):
                 account = self.get_account(event.data.object.id)
                 if (
                     account.status != PayoutAccountTransitions.values.verified and
-                    account.verified
+                    account.complete
                 ):
                     account.transitions.verify()
 
                 if (
                     account.status != PayoutAccountTransitions.values.rejected and
-                    account.disabled
+                    account.rejected
                 ):
                     account.transitions.reject()
 

@@ -4,10 +4,13 @@ import bunch
 import mock
 import stripe
 from django.urls import reverse
+from django.core import mail
 from rest_framework import status
 
 from bluebottle.funding.models import Donation
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import (
+    FundingFactory, DonationFactory, BudgetLineFactory
+)
 from bluebottle.funding.transitions import DonationTransitions, PayoutAccountTransitions
 from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
 from bluebottle.funding_stripe.models import StripeSourcePayment
@@ -456,12 +459,19 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         with mock.patch('stripe.Account.create', return_value=self.connect_account):
             self.payout_account = StripePayoutAccountFactory.create(owner=self.user)
 
+        external_account = ExternalAccountFactory.create(connect_account=self.payout_account)
+
+        self.funding = FundingFactory.create(bank_account=external_account)
+        BudgetLineFactory.create(activity=self.funding)
+
         self.webhook = reverse('stripe-connect-webhook')
 
     def test_verified(self):
         with open('bluebottle/funding_stripe/tests/files/connect_webhook_verified.json') as hook_file:
             data = json.load(hook_file)
             data['object']['id'] = self.payout_account.account_id
+
+        mail.outbox = []
 
         with mock.patch(
             'stripe.Webhook.construct_event',
@@ -478,14 +488,26 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
-        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.verified)
+        message = mail.outbox[0]
 
-    def test_disabled(self):
+        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.verified)
+        self.assertEqual(
+            message.subject, u'Your identity is verified'
+        )
+        self.assertTrue(
+            self.funding.get_absolute_url() in message.body
+        )
+
+        self.funding.refresh_from_db()
+
+        self.assertEqual(self.funding.review_status, 'submitted')
+
+    def test_rejected(self):
         with open('bluebottle/funding_stripe/tests/files/connect_webhook_verified.json') as hook_file:
             data = json.load(hook_file)
             data['object']['id'] = self.payout_account.account_id
 
-        self.connect_account.requirements.disabled = True
+        self.connect_account.individual.verification.status = 'unverified'
         with mock.patch(
             'stripe.Webhook.construct_event',
             return_value=MockEvent(
@@ -502,3 +524,11 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
         self.assertEqual(payout_account.status, PayoutAccountTransitions.values.rejected)
+
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject, u'Your identity verification needs some work'
+        )
+        self.assertTrue(
+            self.funding.get_absolute_url() in message.body
+        )

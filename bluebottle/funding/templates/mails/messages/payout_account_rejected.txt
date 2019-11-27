@@ -1,0 +1,17 @@
+{% extends "base.mail.txt" %}
+{% load money %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=to.first_name platform_name=tenant context 'email' %}
+Hi {{ recipient_name }},
+
+We have received some feedback on your identity verification. 
+Please check out the comments and make the appropriate changes. 
+When you’re ready, you can submit your identity verification again and we’ll make sure it’s reviewed.
+
+{% endblocktrans %}
+{% endblock content %} 
+{% block action %}
+   {% trans 'Go to your activity' context 'email' %}: {{ obj.funding.get_absolute_url }}
+{% endblock %}`

@@ -268,6 +268,16 @@ class PlainPayoutAccountTransitions(PayoutAccountTransitions):
         if self.instance.document:
             self.instance.document.delete()
             self.instance.document = None
+
+        for external_account in self.instance.external_accounts.all():
+            for funding in external_account.funding_set.filter(
+                review_status__in=('draft', 'needs_work')
+            ):
+                try:
+                    funding.review_transitions.submit()
+                except TransitionNotPossible:
+                    pass
+
         self.instance.save()
 
     @transition(

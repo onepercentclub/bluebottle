@@ -181,7 +181,7 @@ class Applicant(Contribution):
         elif self.status == ApplicantTransitions.values.failed and self.time_spent not in [None, '0', 0.0]:
             self.transitions.succeed()
         super(Applicant, self).save(*args, **kwargs)
-        if created:
+        if created and self.status == 'new':
             follow(self.user, self.activity)
             self.transitions.initiate()
         self.activity.check_capacity()

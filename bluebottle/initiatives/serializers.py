@@ -4,6 +4,7 @@ from rest_framework_json_api.relations import (
     ResourceRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
+from moneyed import Money
 
 from bluebottle.activities.filters import ActivityFilter
 from bluebottle.activities.serializers import ActivityListSerializer
@@ -12,6 +13,7 @@ from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer as OldImageSerializer, SorlImageField
 )
 from bluebottle.categories.models import Category
+from bluebottle.clients import properties
 from bluebottle.files.models import Image
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
@@ -23,6 +25,7 @@ from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.transitions.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
+from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import SafeField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import (
     ResourcePermissionField, NoCommitMixin,
@@ -118,6 +121,8 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
 
+    stats = serializers.SerializerMethodField()
+
     transitions = AvailableTransitionsField()
 
     included_serializers = {
@@ -145,10 +150,13 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'location', 'activities',
-            'errors', 'required',
+            'errors', 'required', 'stats',
         )
 
-        meta_fields = ('permissions', 'transitions', 'status', 'created', 'required', 'errors', )
+        meta_fields = (
+            'permissions', 'transitions', 'status', 'created', 'required',
+            'errors', 'stats',
+        )
 
     class JSONAPIMeta:
         included_resources = [
@@ -157,6 +165,21 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'image', 'organization', 'organization_contact', 'activities', 'activities.location',
         ]
         resource_name = 'initiatives'
+
+    def get_stats(self, obj):
+        activities = obj.activities.filter(status='succeeded')
+        stats = [activity.stats for activity in activities]
+        currency = properties.DEFAULT_CURRENCY
+
+        return {
+            'activities': len(activities),
+            'contributions': sum(stat['count'] for stat in stats),
+            'hours': sum(stat['hours'] for stat in stats if 'hours' in stat),
+            'amount': sum(
+                convert(Money(stat['amount']['amount'], stat['amount']['currency']), currency).amount
+                for stat in stats if 'amount' in stat
+            ),
+        }
 
 
 class InitiativeListSerializer(ModelSerializer):

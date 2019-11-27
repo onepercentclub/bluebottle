@@ -4,6 +4,8 @@ import string
 from itertools import groupby
 
 from babel.numbers import get_currency_name
+
+from django.db.models import Count
 from django.core.cache import cache
 from django.db import connection
 from django.db import models
@@ -279,6 +281,16 @@ class Funding(Activity):
                 currency
             )
         return total
+
+    @property
+    def stats(self):
+        stats = self.contributions.filter(
+            status=FundingTransitions.values.succeeded
+        ).aggregate(
+            count=Count('user__id')
+        )
+        stats['amount'] = {'amount': self.amount_raised.amount, 'currency': str(self.amount_raised.currency)}
+        return stats
 
     def save(self, *args, **kwargs):
         for reward in self.rewards.all():

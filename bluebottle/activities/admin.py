@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.db.models import Q
+from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -117,10 +118,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         )
 
     def stats_data(self, obj):
-        return format_html("<table>{}</table>", format_html("".join([
-            format_html(u"<tr><th>{}</th><td>{}</td></tr>", key, value) for key, value in obj.stats.items()
-        ])))
+        template = loader.get_template(
+            'admin/activity-stats.html'
+        )
 
+        return template.render({'stats': obj.stats})
     stats_data.short_description = _('Statistics')
 
     def valid(self, obj):

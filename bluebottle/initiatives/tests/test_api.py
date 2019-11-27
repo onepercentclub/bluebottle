@@ -6,14 +6,16 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase, tag
 from django.test.utils import override_settings
 from django.utils.timezone import get_current_timezone
+
+from moneyed import Money
 from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
 
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.events.tests.factories import EventFactory
-from bluebottle.funding.tests.factories import FundingFactory
-from bluebottle.assignments.tests.factories import AssignmentFactory
+from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
 from bluebottle.test.factory_models.tasks import TaskFactory
@@ -444,6 +446,29 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 {'type': included['type'], 'id': included['id']} for included in response.json()['included']
             )
         )
+
+    def test_get_stats(self):
+        event = EventFactory.create(initiative=self.initiative, status='succeeded')
+        ParticipantFactory.create_batch(3, activity=event, status='succeeded', time_spent=3)
+
+        assignment = AssignmentFactory.create(initiative=self.initiative, status='succeeded', duration=3)
+        ApplicantFactory.create_batch(3, activity=assignment, status='succeeded', time_spent=3)
+
+        funding = FundingFactory.create(initiative=self.initiative, status='succeeded')
+        DonationFactory.create_batch(3, activity=funding, status='succeeded', amount=Money(10, 'EUR'))
+        DonationFactory.create_batch(3, activity=funding, status='succeeded', amount=Money(10, 'USD'))
+
+        response = self.client.get(
+            self.url,
+            user=self.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        stats = response.json()['data']['meta']['stats']
+        self.assertEqual(stats['hours'], 18)
+        self.assertEqual(stats['activities'], 3)
+        self.assertEqual(stats['contributions'], 12)
+        self.assertEqual(stats['amount'], 75.0)
 
     def test_get_other(self):
         response = self.client.get(

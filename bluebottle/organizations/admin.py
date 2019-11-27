@@ -4,19 +4,19 @@ from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 
 from bluebottle.organizations.models import Organization, OrganizationContact
-from bluebottle.projects.models import Project
+from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 
-class OrganizationProjectInline(admin.TabularInline):
-    model = Project
-    readonly_fields = ('project_url', 'owner', 'status')
-    fields = ('project_url', 'owner', 'status')
+class OrganizationInitiativeInline(admin.TabularInline):
+    model = Initiative
+    readonly_fields = ('initiative_url', 'owner', 'status')
+    fields = ('initiative_url', 'owner', 'status')
     extra = 0
 
-    def project_url(self, obj):
+    def initiative_url(self, obj):
         url = reverse('admin:{0}_{1}_change'.format(obj._meta.app_label,
                                                     obj._meta.model_name),
                       args=[obj.id])
@@ -44,12 +44,12 @@ class OrganizationContactAdmin(admin.ModelAdmin):
 
 
 class OrganizationAdmin(admin.ModelAdmin):
-    inlines = (OrganizationProjectInline, )
+    inlines = (OrganizationInitiativeInline, )
 
     list_display = ('name', 'website', 'created')
     list_filter = (
-        ('projects__theme', admin.RelatedOnlyFieldListFilter),
-        ('projects__location', admin.RelatedOnlyFieldListFilter),
+        ('initiatives__theme', admin.RelatedOnlyFieldListFilter),
+        ('initiatives__location', admin.RelatedOnlyFieldListFilter),
     )
     fields = ('name', 'website', 'description', 'logo')
     search_fields = ('name',)

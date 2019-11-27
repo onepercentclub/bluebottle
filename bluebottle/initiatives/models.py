@@ -108,7 +108,13 @@ class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
         null=True, blank=True, on_delete=models.SET_NULL)
 
     has_organization = models.NullBooleanField(null=True, default=None)
-    organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
+    organization = models.ForeignKey(
+        Organization,
+        null=True,
+        blank=True,
+        on_delete=SET_NULL,
+        related_name='initiatives'
+    )
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
     follows = GenericRelation(Follow, object_id_field='instance_id')

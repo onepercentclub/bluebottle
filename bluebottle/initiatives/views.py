@@ -68,7 +68,7 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     def perform_create(self, serializer):
         self.check_object_permissions(
             self.request,
-            serializer.Meta.model(**serializer.validated_data)
+            serializer.Meta.model(owner=self.owner, **serializer.validated_data)
         )
 
         serializer.save(owner=self.request.user)

@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from django.contrib.auth.models import Group, Permission
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -53,12 +54,49 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertTrue('meta' in data['data'][0])
 
+    def test_anonymous(self):
+        succeeded = EventFactory.create(
+            owner=self.owner, review_status='approved', status='succeeded'
+        )
+        open = EventFactory.create(review_status='approved', status='open')
+        EventFactory.create(status='in_review')
+        EventFactory.create(review_status='approved', status='closed')
+
+        response = self.client.get(self.url)
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['data'][1]['id'], unicode(succeeded.pk))
+        self.assertEqual(data['data'][0]['id'], unicode(open.pk))
+
+        self.assertTrue('meta' in data['data'][0])
+
     def test_filter_owner(self):
         EventFactory.create(owner=self.owner, review_status='approved')
         EventFactory.create(review_status='approved')
 
         response = self.client.get(
             self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+
+    def test_only_owner_permission(self):
+        EventFactory.create(owner=self.owner, review_status='approved')
+        EventFactory.create(review_status='approved')
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_read_activity')
+        )
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_read_own_activity')
+        )
+
+        response = self.client.get(
+            self.url,
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 

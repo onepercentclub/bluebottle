@@ -6,7 +6,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from bluebottle.activities.permissions import ActivityPermission, ActivityTypePermission
+from bluebottle.activities.permissions import ActivityOwnerPermission, ActivityTypePermission
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.models import (
     Funding, Donation, Reward, Fundraiser,
@@ -24,7 +24,7 @@ from bluebottle.funding.serializers import (
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
-from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.permissions import IsOwner, OneOf, ResourcePermission
 from bluebottle.utils.views import (
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
     CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView
@@ -124,7 +124,10 @@ class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Funding.objects.all()
     serializer_class = FundingListSerializer
 
-    permission_classes = (ActivityTypePermission, ActivityPermission,)
+    permission_classes = (
+        ActivityTypePermission,
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
 
     prefetch_for_includes = {
         'initiative': ['initiative'],
@@ -132,6 +135,16 @@ class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     }
 
     def perform_create(self, serializer):
+        self.check_related_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
         serializer.save(owner=self.request.user)
 
 
@@ -139,7 +152,9 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Funding.objects.all()
     serializer_class = FundingSerializer
 
-    permission_classes = (ActivityPermission,)
+    permission_classes = (
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
 
     prefetch_for_includes = {
         'initiative': ['initiative'],

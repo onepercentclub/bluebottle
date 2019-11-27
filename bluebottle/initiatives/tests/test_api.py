@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
 from django.core.urlresolvers import reverse
 from django.test import TestCase, tag
@@ -495,6 +496,29 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 40)
         self.assertEqual(len(data['data']), 8)
+
+    def test_only_owner_permission(self):
+        owned = InitiativeFactory.create(owner=self.owner, status='approved')
+        InitiativeFactory.create(status="approved")
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_read_initiative')
+        )
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_read_own_initiative')
+        )
+
+        response = self.client.get(
+            self.url,
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(len(data['data']), 1)
+
+        self.assertEqual(data['data'][0]['id'], unicode(owned.pk))
 
     def test_not_approved(self):
         approved = InitiativeFactory.create(owner=self.owner, status='approved')

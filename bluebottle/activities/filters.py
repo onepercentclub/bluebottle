@@ -151,7 +151,18 @@ class ActivitySearchFilter(ElasticSearchFilter):
         return Range(date={'gt': start, 'lt': end}) | Range(deadline={'gt': start})
 
     def get_default_filters(self, request):
-        return [Terms(review_status=['approved']), ~Term(status='closed')]
+        permission = 'activities.api_read_activity'
+        if not request.user.has_perm(permission):
+            return [
+                Nested(
+                    path='owner',
+                    query=Term(owner__id=request.user.pk)
+                ),
+                Terms(review_status=['approved']),
+                ~Term(status='closed')
+            ]
+        else:
+            return [Terms(review_status=['approved']), ~Term(status='closed')]
 
 
 class ActivityFilter(DjangoFilterBackend):

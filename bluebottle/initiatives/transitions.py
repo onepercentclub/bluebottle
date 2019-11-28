@@ -127,7 +127,7 @@ class InitiativeReviewTransitions(ReviewTransitions):
     def reopen(self):
         for activity in self.instance.activities.all():
             try:
-                activity.review_transitions.reopen(send_messages=False)
+                activity.review_transitions.resubmit(send_messages=False)
                 activity.save()
             except TransitionNotPossible:
                 pass

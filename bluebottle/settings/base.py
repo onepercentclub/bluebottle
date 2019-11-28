@@ -330,6 +330,7 @@ TENANT_APPS = (
     'django_elasticsearch_dsl',
 
     'bluebottle.looker',
+    'bluebottle.exports',
 
     'bluebottle.members',
     'bluebottle.projects',
@@ -413,7 +414,6 @@ TENANT_APPS = (
     'fluent_contents.plugins.rawhtml',
     'django_wysiwyg',
     'tinymce',
-    'exportdb',
     'django.contrib.humanize',
     'django_tools',
     'taggit',

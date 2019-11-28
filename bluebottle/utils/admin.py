@@ -18,6 +18,7 @@ from django.template.response import TemplateResponse
 from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 
+from bluebottle.activities.models import Contribution
 from bluebottle.clients import properties
 from bluebottle.fsm import TransitionNotPossible
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
@@ -128,7 +129,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                     except CustomMemberField.DoesNotExist:
                         value = ''
                     row.append(value.encode('utf-8'))
-            if queryset.model is TaskMember:
+            if queryset.model is Contribution:
                 for field in CustomMemberFieldSettings.objects.all():
                     try:
                         value = obj.member.extra.get(field=field).value

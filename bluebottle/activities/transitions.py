@@ -87,11 +87,11 @@ class ActivityReviewTransitions(ReviewTransitions):
 
     @transition(
         source=[ReviewTransitions.values.closed],
-        target=ReviewTransitions.values.approved,
+        target=ReviewTransitions.values.draft,
         permissions=[can_review]
     )
-    def reopen(self):
-        self.instance.transitions.reopen()
+    def resubmit(self):
+        self.instance.transitions.resubmit()
 
 
 class ActivityTransitions(ModelTransitions):
@@ -121,6 +121,14 @@ class ActivityTransitions(ModelTransitions):
         permissions=[can_approve],
     )
     def reopen(self):
+        pass
+
+    @transition(
+        source=[values.closed],
+        target=values.in_review,
+        permissions=[can_approve],
+    )
+    def resubmit(self):
         pass
 
 

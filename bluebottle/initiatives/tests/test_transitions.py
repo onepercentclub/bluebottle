@@ -183,7 +183,7 @@ class InitiativeReviewTransitions(BluebottleTestCase):
             self.initiative.status, ReviewTransitions.values.draft
         )
         self.assertEqual(
-            funding.review_status, ReviewTransitions.values.approved
+            funding.review_status, ReviewTransitions.values.draft
         )
         self.assertEqual(
             funding.status, FundingTransitions.values.in_review

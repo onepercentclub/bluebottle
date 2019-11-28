@@ -56,7 +56,7 @@ class EventTransitions(ActivityTransitions):
     @transition(
         source=[values.full, values.closed],
         target=values.open,
-        conditions=[can_open]
+        permissions=[ActivityTransitions.can_approve]
     )
     def reopen(self):
         pass

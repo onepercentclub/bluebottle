@@ -87,7 +87,7 @@ class ActivityReviewTransitions(ReviewTransitions):
 
     @transition(
         source=[ReviewTransitions.values.closed],
-        target=ReviewTransitions.values.draft,
+        target=ReviewTransitions.values.approved,
         permissions=[can_review]
     )
     def reopen(self):

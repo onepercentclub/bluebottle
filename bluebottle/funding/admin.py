@@ -235,7 +235,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
     date_hierarchy = 'transition_date'
 
-    fields = ['created', 'activity', 'user', 'amount', 'reward',
+    fields = ['transition_date', 'created', 'activity', 'user', 'amount', 'reward',
               'anonymous', 'name',
               'status', 'payment_link']
 
@@ -254,8 +254,8 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
     def user_link(self, obj):
-        # if obj.anonymous:
-        #     format_html('<i style="color: #999">anonymous</i>')
+        if obj.anonymous:
+            return format_html('<i style="color: #999">anonymous</i>')
         if obj.user:
             user_url = reverse('admin:funding_funding_change', args=(obj.user.id,))
             return format_html(u'<a href="{}">{}</a>', user_url, obj.user.full_name)

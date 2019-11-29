@@ -30,13 +30,23 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'type',
         'status',
         'date',
+        'initiative_location.id',
     )
 
     search_fields = (
         'status', 'title', 'description', 'owner.full_name',
+        'initiative.title', 'initiative.pitch', 'initiative.pitch',
+        'initiative_location.name', 'initiative_location.city',
+        'location.formatted_address',
     )
 
-    boost = {'title': 2}
+    boost = {
+        'title': 2,
+        'initiative.pitch': 0.5,
+        'initiative.story': 0.5,
+        'initiative_location.name': 0.5,
+        'initiative_location.city': 0.5,
+    }
 
     def get_sort_popularity(self, request):
         score = FunctionScore(

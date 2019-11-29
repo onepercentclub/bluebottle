@@ -218,8 +218,9 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('event', _('Events')),
         ('assignment', _('Assignment')),
     )
-    SEARCH_FILTERS = (
+    ACTIVITY_SEARCH_FILTERS = (
         ('location', _('Location')),
+        ('country', _('Country')),
         ('date', _('Date')),
         ('skill', _('Skill')),
         ('type', _('Type')),
@@ -227,7 +228,12 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('category', _('Category')),
         ('status', _('Status')),
     )
-
+    INITIATIVE_SEARCH_FILTERS = (
+        ('location', _('Location')),
+        ('country', _('Country')),
+        ('theme', _('Theme')),
+        ('category', _('Category')),
+    )
     CONTACT_OPTIONS = (
         ('mail', _('E-mail')),
         ('phone', _('Phone')),
@@ -235,7 +241,8 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
     activity_types = MultiSelectField(max_length=100, choices=ACTIVITY_TYPES)
     require_organization = models.BooleanField(default=False)
-    search_filters = MultiSelectField(max_length=1000, choices=SEARCH_FILTERS)
+    initiative_search_filters = MultiSelectField(max_length=1000, choices=INITIATIVE_SEARCH_FILTERS)
+    activity_search_filters = MultiSelectField(max_length=1000, choices=ACTIVITY_SEARCH_FILTERS)
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
 
     class Meta:

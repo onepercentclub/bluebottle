@@ -61,6 +61,15 @@ class InitiativeDocument(DocType):
         'postal_code': fields.TextField(),
     })
 
+    location = fields.NestedField(
+        attr='location',
+        properties={
+            'id': fields.LongField(),
+            'name': fields.TextField(),
+            'city': fields.TextField(),
+        }
+    )
+
     class Meta:
         model = Initiative
         related_models = (

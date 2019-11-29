@@ -111,7 +111,8 @@ class PayoutInline(FSMAdminMixin, admin.StackedInline):
 
     model = Payout
     readonly_fields = [
-        'total_amount', 'date_approved', 'date_started', 'date_completed',
+        'payout_link', 'total_amount',
+        'date_approved', 'date_started', 'date_completed',
         'status', 'approve'
     ]
 
@@ -126,6 +127,10 @@ class PayoutInline(FSMAdminMixin, admin.StackedInline):
         if obj.status == 'new':
             url = reverse('admin:funding_payout_transition', args=(obj.id, 'transitions', 'approve'))
             return format_html('<a href="{}">{}</a>', url, _('Approve'))
+
+    def payout_link(self, obj):
+        url = reverse('admin:funding_payout_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
 
 
 @admin.register(Funding)

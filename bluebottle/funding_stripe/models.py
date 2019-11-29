@@ -460,3 +460,6 @@ class ExternalAccount(BankAccount):
     class Meta:
         verbose_name = _('Stripe external account')
         verbose_name_plural = _('Stripe exterrnal account')
+
+    def __unicode__(self):
+        return "Stripe external account {}".format(self.account_id)

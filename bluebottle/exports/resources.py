@@ -1,5 +1,7 @@
 from datetime import timedelta
-from exportdb.exporter import ExportModelResource
+
+from bluebottle.members.models import CustomMemberFieldSettings
+from .exporter import ExportModelResource
 
 
 class DateRangeResource(ExportModelResource):
@@ -12,13 +14,17 @@ class DateRangeResource(ExportModelResource):
             qs = qs.select_related(*self.select_related)
         frm, to = self.kwargs.get('from_date'), self.kwargs.get('to_date')
         to = to + timedelta(days=1)
-
         return qs.filter(**{'%s__range' % self.range_field: (frm, to)})
 
 
 class UserResource(DateRangeResource):
     range_field = 'date_joined'
     select_related = ('location', 'location__group')
+
+    def get_extra_fields(self):
+        return tuple([
+            ("extra_{}".format(extra.name), extra.description) for extra in CustomMemberFieldSettings.objects.all()
+        ])
 
 
 class InitiativeResource(DateRangeResource):

@@ -357,6 +357,13 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         super(BlueBottleBaseUser, self).save(force_insert, force_update, using,
                                              update_fields)
 
+    def __getattr__(self, name):
+        # Magically get extra fields
+        if name.startswith('extra_'):
+            name = name.replace('extra_', '')
+            return self.extra.get(field__name=name).value
+        return super(BlueBottleBaseUser, self).__getattr__(name)
+
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver

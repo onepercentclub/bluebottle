@@ -1,0 +1,77 @@
+{% extends "exportdb/base.html" %}{% load i18n admin_static %}
+
+{% block extrahead %}{{ block.super }}
+<style type="text/css">
+#progress {
+    color: white;
+    background: #EEE;
+    padding: 3px;
+    text-align: center;
+}
+#progress-bar {
+    background: #7CA0C7 url({% static "admin/img/default-bg.gif" %}) top left repeat-x;
+    width: 0;
+    min-width: 3%;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module aligned">
+        <h2>{% trans "Export in progress" %}</h2>
+
+        <div class="form-row">
+            {% trans "The following object types are being exported" %}
+            <ul>
+                {% for model in models %}
+                    <li>{{ model }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div id="progress">
+        <div id="progress-bar"><span id="progress-value">0</span>%</div>
+    </div>
+
+
+    <div class="submit-row" style="display: none;">
+        <a href="#" id="download-link" class="button default">{% trans "Download export file" %}</a>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+(function($, undefined) {
+    'use strict';
+
+    var url = '{% url 'exportdb_progress' %}';
+
+    var updateProgress = function() {
+        $.ajax({
+            cache: false,
+            url: url,
+            dataType: "json",        
+            success: function(json) {
+                if (json.status == 'PROGRESS') {
+                    var pg = parseInt(json.progress * 100, 10);
+                    $('#progress-value').text(pg);
+                    $('#progress-bar').width('' + pg + '%');
+                    setTimeout(updateProgress, 1000);
+                } else if (json.status == 'SUCCESS') {
+                    $('#progress-bar').width('100%');
+                    $('#progress-value').text('100');
+                    $('#download-link').attr('href', json.file);
+                    $('.submit-row').show();
+                }
+            }
+        });
+    };
+
+    updateProgress();
+
+})(window.jQuery || django.jQuery);
+</script>
+
+{% endblock content %}

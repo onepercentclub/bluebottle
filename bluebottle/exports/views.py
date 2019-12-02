@@ -13,6 +13,7 @@ from django.views.generic import FormView, View
 import rules
 from celery.result import AsyncResult
 
+from bluebottle.exports.tasks import plain_export
 from .compat import import_string, jquery_in_vendor
 from .exporter import get_export_models, Exporter
 from .tasks import export
@@ -77,11 +78,22 @@ class ExportView(ExportPermissionMixin, FormView):
         # multi-tenant support
         tenant = getattr(connection, 'tenant', None)
         # start actual export and render the template
-        async_result = export.delay(self.get_exporter_class(), tenant=tenant, **form.cleaned_data)
-        self.request.session[EXPORTDB_EXPORT_KEY] = async_result.id
-        context = self.get_context_data(export_running=True)
-        self.template_name = 'exportdb/in_progress.html'
-        return self.render_to_response(context)
+        if settings.EXPORTDB_USE_CELERY:
+            async_result = export.delay(self.get_exporter_class(), tenant=tenant, **form.cleaned_data)
+            self.request.session[EXPORTDB_EXPORT_KEY] = async_result.id
+            context = self.get_context_data(export_running=True)
+            self.template_name = 'exportdb/in_progress.html'
+            return self.render_to_response(context)
+        else:
+            result = plain_export(self.get_exporter_class(), tenant=tenant, **form.cleaned_data)
+            filename = result.split('/')[-1]
+            output = open(result, 'r')
+            response = HttpResponse(
+                output.read(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            return response
 
 
 class ExportPendingView(ExportPermissionMixin, View):

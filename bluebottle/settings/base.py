@@ -840,6 +840,8 @@ EXPORTDB_EXPORT_CONF = {
 EXPORTDB_CONFIRM_FORM = 'bluebottle.exports.forms.ExportDBForm'
 EXPORTDB_EXPORT_ROOT = os.path.join(MEDIA_ROOT, '%s', 'exports')
 EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser
+EXPORTDB_USE_CELERY = True
+EXPORTDB_EXPORT_MEDIA_URL = os.path.join(MEDIA_URL, 'exports')
 
 # maximum delta between from/to date for exports
 EXPORT_MAX_DAYS = 366

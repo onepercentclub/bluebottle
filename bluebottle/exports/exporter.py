@@ -46,7 +46,7 @@ class ExportModelResource(resources.ModelResource):
         else:
             iterable = queryset
 
-        if task_meta is not None:  # initialize the total amount accross multiple resources
+        if task_meta is not None:  # initialize the total amount across multiple resources
             self.num_done = task_meta['done']
 
         for obj in iterable:
@@ -98,7 +98,6 @@ def modelresource_factory(model, resource_class=ExportModelResource, **meta_kwar
 
     all_fields = [f.name for f in model._meta.get_fields()]
     all_fields += [f for f, _title in resource_class().get_extra_fields()]
-    print all_fields
     for field in field_names:
         # it's a real field, the meta class deals with this
         if field in all_fields and field not in field_labels:

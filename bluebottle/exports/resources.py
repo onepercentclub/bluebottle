@@ -14,18 +14,7 @@ class DateRangeResource(ExportModelResource):
             qs = qs.select_related(*self.select_related)
         frm, to = self.kwargs.get('from_date'), self.kwargs.get('to_date')
         to = to + timedelta(days=1)
-
         return qs.filter(**{'%s__range' % self.range_field: (frm, to)})
-
-    def get_fields(self, **kwargs):
-        """
-        Returns fields sorted according to
-        :attr:`~import_export.resources.ResourceOptions.export_order`.
-        """
-        data = [self.fields[f] for f in self.get_export_order()]
-        item = self.get_queryset()[0]
-        print item.extra__title
-        return data
 
 
 class UserResource(DateRangeResource):
@@ -34,7 +23,7 @@ class UserResource(DateRangeResource):
 
     def get_extra_fields(self):
         return tuple([
-            ("extra__{}".format(extra.name), extra.description) for extra in CustomMemberFieldSettings.objects.all()
+            ("extra_{}".format(extra.name), extra.description) for extra in CustomMemberFieldSettings.objects.all()
         ])
 
 

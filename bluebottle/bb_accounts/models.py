@@ -359,8 +359,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     def __getattr__(self, name):
         # Magically get extra fields
-        if name.startswith('extra__'):
-            name = name.replace('extra__', '')
+        if name.startswith('extra_'):
+            name = name.replace('extra_', '')
             return self.extra.get(field__name=name).value
         return super(BlueBottleBaseUser, self).__getattr__(name)
 

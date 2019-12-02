@@ -442,16 +442,23 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second = AssignmentFactory.create(
             review_status='approved',
             status='full',
+            is_online=False,
             location=GeolocationFactory.create(position=Point(20.0, 10))
         )
-        third = AssignmentFactory.create(review_status='approved', status='open')
+        third = AssignmentFactory.create(
+            review_status='approved',
+            status='open',
+            is_online=False,
+        )
         fourth = AssignmentFactory.create(
             review_status='approved',
             status='open',
+            is_online=False,
             location=GeolocationFactory.create(position=Point(21.0, 9.0))
         )
         fifth = AssignmentFactory.create(
             review_status='approved',
+            is_online=False,
             status='open', location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
 
@@ -504,17 +511,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second = AssignmentFactory.create(
             review_status='approved',
             status='full',
+            is_online=False,
             location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
         third = AssignmentFactory.create(review_status='approved', status='open')
         fourth = AssignmentFactory.create(
             review_status='approved',
             status='open',
+            is_online=False,
             location=GeolocationFactory.create(position=Point(21.0, 9.0))
         )
         fifth = AssignmentFactory.create(
             review_status='approved',
             status='open',
+            is_online=False,
             location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
 
@@ -567,19 +577,26 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         initiative = InitiativeFactory.create(theme=theme)
 
-        first = EventFactory.create(review_status='approved', status='open', initiative=initiative)
+        first = EventFactory.create(
+            review_status='approved',
+            status='open',
+            initiative=initiative,
+            is_online=False
+        )
         second = AssignmentFactory.create(
             review_status='approved',
             status='open',
             location=GeolocationFactory.create(position=Point(21.0, 9.0)),
             initiative=initiative,
+            is_online=False
         )
         third = AssignmentFactory.create(
             review_status='approved',
             status='open',
             location=GeolocationFactory.create(position=Point(21.0, 9.0)),
             initiative=initiative,
-            expertise=skill
+            expertise=skill,
+            is_online=False
         )
 
         response = self.client.get(

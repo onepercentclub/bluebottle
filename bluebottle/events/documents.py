@@ -30,3 +30,14 @@ class EventDocument(ActivityDocument):
 
     def prepare_date(self, instance):
         return instance.start_date
+
+    def prepare_country(self, instance):
+        if not instance.is_online and instance.location:
+            return instance.location.country_id
+        else:
+            return super(EventDocument, self).prepare_country(instance)
+
+    def prepare_position(self, instance):
+        if not instance.is_online and instance.location:
+            position = instance.location.position
+            return {'lat': position.get_y(), 'lon': position.get_x()}

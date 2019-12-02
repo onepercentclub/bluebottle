@@ -114,11 +114,9 @@ class ActivityDocument(DocType):
         return len(instance.contributions.filter(status__in=('new', 'success')))
 
     def prepare_country(self, instance):
-        if hasattr(instance, 'location') and instance.location:
-            return instance.location.country_id
-        if hasattr(instance.initiative, 'location') and instance.initiative.location:
+        if instance.initiative.location:
             return instance.initiative.location.country_id
-        if hasattr(instance.initiative, 'place') and instance.initiative.place:
+        if instance.initiative.place:
             return instance.initiative.place.country_id
 
     def prepare_location(self, instance):
@@ -133,9 +131,7 @@ class ActivityDocument(DocType):
             return {'id': instance.expertise_id}
 
     def prepare_position(self, instance):
-        if hasattr(instance, 'location') and instance.location:
-            position = instance.location.position
-            return {'lat': position.get_y(), 'lon': position.get_x()}
+        return None
 
     def prepare_deadline(self, instance):
         return None

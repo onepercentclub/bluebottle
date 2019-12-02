@@ -219,7 +219,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('assignment', _('Assignment')),
     )
     ACTIVITY_SEARCH_FILTERS = (
-        ('location', _('Location')),
+        ('location', _('Office location')),
         ('country', _('Country')),
         ('date', _('Date')),
         ('skill', _('Skill')),
@@ -229,7 +229,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('status', _('Status')),
     )
     INITIATIVE_SEARCH_FILTERS = (
-        ('location', _('Location')),
+        ('location', _('Office location')),
         ('country', _('Country')),
         ('theme', _('Theme')),
         ('category', _('Category')),

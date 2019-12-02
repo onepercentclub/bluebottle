@@ -19,7 +19,7 @@ from bluebottle.geo.models import Location
 from bluebottle.initiatives.filters import InitiativeSearchFilter
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.serializers import (
-    InitiativeSerializer, InitiativeReviewTransitionSerializer,
+    InitiativeSerializer, InitiativeListSerializer, InitiativeReviewTransitionSerializer,
     InitiativeMapSerializer, InitiativeRedirectSerializer,
     RelatedInitiativeImageSerializer
 )
@@ -35,8 +35,15 @@ from bluebottle.utils.views import (
 
 
 class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
-    queryset = Initiative.objects.all()
-    serializer_class = InitiativeSerializer
+    queryset = Initiative.objects.prefetch_related(
+        'place', 'location', 'owner', 'activity_manager', 'image', 'categories', 'theme',
+    )
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return InitiativeSerializer
+        else:
+            return InitiativeListSerializer
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),

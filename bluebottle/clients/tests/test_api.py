@@ -233,14 +233,22 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         # Create initiative platform settings and confirm they end up correctly in settings api
         InitiativePlatformSettings.objects.create(
             activity_types=['event', 'job'],
-            search_filters=['type', 'skill', 'status'],
+            initiative_search_filters=['category', 'location'],
+            activity_search_filters=['type', 'skill', 'status'],
             contact_method='phone',
             require_organization=True
         )
 
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['platform']['initiatives']['activity_types'], ['event', 'job'])
-        self.assertEqual(response.data['platform']['initiatives']['search_filters'], ['type', 'skill', 'status'])
+        self.assertEqual(
+            response.data['platform']['initiatives']['activity_search_filters'],
+            ['type', 'skill', 'status']
+        )
+        self.assertEqual(
+            response.data['platform']['initiatives']['initiative_search_filters'],
+            ['category', 'location']
+        )
         self.assertEqual(response.data['platform']['initiatives']['require_organization'], True)
         self.assertEqual(response.data['platform']['initiatives']['contact_method'], 'phone')
 

@@ -18,12 +18,14 @@ class InitiativeSearchFilter(ElasticSearchFilter):
         'owner.id', 'activity_manager.id',
         'theme.id', 'place.country',
         'categories.id', 'categories.slug',
+        'location.id',
     )
 
     search_fields = (
         'status', 'title', 'story', 'pitch',
-        'place.locality', 'place.postal_code',
-        'theme.name', 'owner.full_name', 'promoter.full_name',
+        'place.locality', 'place.postal_code', 'place.formatted_address',
+        'location.name', 'location.city', 'theme.name',
+        'owner.full_name', 'promoter.full_name',
     )
 
     boost = {'title': 2}

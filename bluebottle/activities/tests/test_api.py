@@ -102,7 +102,23 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
+
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+
+    def test_initiative_location(self):
+        location = LocationFactory.create()
+        initiative = InitiativeFactory.create(status='approved', location=location)
+        activity = EventFactory.create(review_status='approved', initiative=initiative)
+        EventFactory.create(review_status='approved')
+
+        response = self.client.get(
+            self.url + '?filter[initiative_location.id]={}'.format(location.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], unicode(activity.pk))
 
     def test_deadline(self):
         event = EventFactory.create(
@@ -198,6 +214,55 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['data'][0]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+
+    def test_search_formatted_address(self):
+        location = GeolocationFactory.create(formatted_address='Roggeveenstraat')
+        first = EventFactory.create(
+            location=location,
+            review_status='approved'
+        )
+        second = EventFactory.create(
+            title='Roggeveenstraat',
+            review_status='approved'
+        )
+        EventFactory.create(
+            review_status='approved'
+        )
+
+        response = self.client.get(
+            self.url + '?filter[search]=Roggeveenstraat',
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['data'][0]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+
+    def test_search_initiative_title(self):
+        first = EventFactory.create(
+            initiative=InitiativeFactory.create(title='Test title'),
+            review_status='approved'
+        )
+        second = EventFactory.create(
+            title='Test title',
+            review_status='approved'
+        )
+        EventFactory.create(
+            review_status='approved'
+        )
+
+        response = self.client.get(
+            self.url + '?filter[search]=test title',
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 

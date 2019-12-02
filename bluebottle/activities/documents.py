@@ -63,6 +63,23 @@ class ActivityDocument(DocType):
         }
     )
 
+    location = fields.NestedField(
+        attr='location',
+        properties={
+            'id': fields.LongField(),
+            'formatted_address': fields.TextField(),
+        }
+    )
+
+    initiative_location = fields.NestedField(
+        attr='initiative.location',
+        properties={
+            'id': fields.LongField(),
+            'name': fields.TextField(),
+            'city': fields.TextField(),
+        }
+    )
+
     contributions = fields.DateField()
     contribution_count = fields.IntegerField()
 
@@ -103,6 +120,13 @@ class ActivityDocument(DocType):
             return instance.initiative.location.country_id
         if hasattr(instance.initiative, 'place') and instance.initiative.place:
             return instance.initiative.place.country_id
+
+    def prepare_location(self, instance):
+        if hasattr(instance, 'location') and instance.location:
+            return {
+                'id': instance.location.pk,
+                'formatted_address': instance.location.formatted_address
+            }
 
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:

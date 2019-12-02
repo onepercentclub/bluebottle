@@ -635,7 +635,6 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['relationships']['promoter']['data']['id'], unicode(self.owner.pk))
 
     def test_filter_owner_and_activity_manager(self):
         """

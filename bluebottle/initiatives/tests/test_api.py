@@ -1006,7 +1006,7 @@ class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.assertEqual(
-            response.json()['included'][0]['attributes']['links']['large'],
+            response.json()['included'][0]['attributes']['links']['large'].split('?')[0],
             u'/api/initiatives/{}/related-image/600'.format(response.json()['data']['id'])
         )
 

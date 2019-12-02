@@ -1,3 +1,4 @@
+import md5
 import os
 
 from django.core.urlresolvers import reverse
@@ -122,10 +123,11 @@ class ImageSerializer(DocumentSerializer):
             try:
                 relationship = getattr(obj, self.relationship)
                 parent_id = getattr(obj, self.relationship).get().pk
+                hash = md5.new(obj.file.name).hexdigest()
                 return dict(
                     (
                         key,
-                        reverse(self.content_view_name, args=(parent_id, size))
+                        reverse(self.content_view_name, args=(parent_id, size, )) + '?_={}'.format(hash)
                     ) for key, size in self.sizes.items()
                 )
             except relationship.model.DoesNotExist:

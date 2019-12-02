@@ -118,6 +118,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
 
+    stats = serializers.ReadOnlyField()
     transitions = AvailableTransitionsField()
 
     included_serializers = {
@@ -145,10 +146,13 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'location', 'activities',
-            'errors', 'required',
+            'errors', 'required', 'stats',
         )
 
-        meta_fields = ('permissions', 'transitions', 'status', 'created', 'required', 'errors', )
+        meta_fields = (
+            'permissions', 'transitions', 'status', 'created', 'required',
+            'errors', 'stats',
+        )
 
     class JSONAPIMeta:
         included_resources = [

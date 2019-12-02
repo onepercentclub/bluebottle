@@ -1,0 +1,32 @@
+{% load i18n %}
+<table>
+    {% if stats.count %}
+        <tr>
+            <th>{% trans 'count' %}</th><td>{{stats.count}}</td>
+        </tr>
+    {% endif %}
+
+    {% if stats.commited_count %}
+        <tr>
+            <th>{% trans 'committed' %}</th><td>{{stats.count}}</td>
+        </tr>
+    {% endif %}
+
+
+    {% if stats.hours %}
+        <tr>
+            <th>{% trans 'hours' %}</th><td>{{stats.hours}}</td>
+        </tr>
+    {% endif %}
+    {% if stats.committed_hours %}
+        <tr>
+            <th>{% trans 'committed hours' %}</th><td>{{stats.commited_hours}}</td>
+        </tr>
+    {% endif %}
+
+    {% if stats.amount %}
+        <tr>
+            <th>{% trans 'amount' %}</th><td>{{stats.amount.amount}} {{stats.amount.currency}}</td>
+        </tr>
+    {% endif %}
+</table>

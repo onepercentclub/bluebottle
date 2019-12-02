@@ -6,14 +6,18 @@ from django.template.defaultfilters import slugify
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
+from moneyed import Money
+
 from multiselectfield import MultiSelectField
 
+from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField
 from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from bluebottle.follow.models import Follow
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.transitions import InitiativeReviewTransitions
 from bluebottle.organizations.models import Organization, OrganizationContact
+from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.models import BasePlatformSettings, Validator, ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
 
@@ -143,6 +147,22 @@ class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
             return self.place.position
         if self.location and self.location.position:
             return self.location.position
+
+    @property
+    def stats(self):
+        activities = self.activities.filter(status='succeeded')
+        stats = [activity.stats for activity in activities]
+        currency = properties.DEFAULT_CURRENCY
+
+        return {
+            'activities': len(activities),
+            'contributions': sum(stat['count'] for stat in stats),
+            'hours': sum(stat['hours'] or 0 for stat in stats if 'hours' in stat),
+            'amount': sum(
+                convert(Money(stat['amount']['amount'], stat['amount']['currency']), currency).amount
+                for stat in stats if 'amount' in stat
+            ),
+        }
 
     @property
     def required_fields(self):

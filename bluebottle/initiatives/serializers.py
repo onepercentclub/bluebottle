@@ -184,7 +184,7 @@ class InitiativeListSerializer(ModelSerializer):
         fields = (
             'id', 'title', 'pitch', 'categories',
             'owner', 'activity_manager',
-            'slug', 'has_organization', 'organization',
+            'slug', 'has_organization',
             'story', 'image', 'theme', 'place', 'location'
         )
 

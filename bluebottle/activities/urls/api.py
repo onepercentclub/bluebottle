@@ -14,12 +14,13 @@ urlpatterns = [
     url(r'^$',
         ActivityList.as_view(),
         name='activity-list'),
-    url(r'^/(?P<pk>\d+)$',
-        ActivityDetail.as_view(),
-        name='activity-detail'),
     url(r'^/contributions$',
         ContributionList.as_view(),
         name='contribution-list'),
+
+    url(r'^/(?P<pk>\d+)$',
+        ActivityDetail.as_view(),
+        name='activity-detail'),
 
     url(r'^/related-images$',
         RelatedActivityImageList.as_view(),

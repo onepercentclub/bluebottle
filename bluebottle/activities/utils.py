@@ -158,7 +158,7 @@ class BaseContributionSerializer(ModelSerializer):
     transitions = AvailableTransitionsField()
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 

@@ -78,7 +78,7 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
 
     def get_queryset(self):
         return Contribution.objects.select_related(
-            'activity', 'user',
+            'user',
         ).filter(user=self.request.user)
 
     serializer_class = ContributionSerializer

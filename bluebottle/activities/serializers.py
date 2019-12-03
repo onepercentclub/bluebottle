@@ -35,7 +35,6 @@ class ActivityListSerializer(PolymorphicModelSerializer):
             'permissions',
             'transitions', 'review_transitions',
             'created', 'updated',
-            'errors', 'required',
         )
 
     class JSONAPIMeta:

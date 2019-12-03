@@ -15,7 +15,9 @@ from bluebottle.files.fields import ImageField
 from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from bluebottle.follow.models import Follow
 from bluebottle.geo.models import Geolocation, Location
+from bluebottle.initiatives.messages import AssignedReviewerMessage
 from bluebottle.initiatives.transitions import InitiativeReviewTransitions
+from bluebottle.notifications.models import NotificationModelMixin
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.models import BasePlatformSettings, Validator, ValidatedModelMixin
@@ -35,7 +37,7 @@ class UniqueTitleValidator(Validator):
         )
 
 
-class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
+class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, models.Model):
     status = FSMField(
         default=InitiativeReviewTransitions.values.draft,
         choices=InitiativeReviewTransitions.values.choices,
@@ -43,6 +45,13 @@ class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
     )
 
     title = models.CharField(_('title'), max_length=255)
+
+    @classmethod
+    def get_messages(cls, old, new):
+        messages = []
+        if old.reviewer != new.reviewer:
+            messages.append(AssignedReviewerMessage)
+        return messages
 
     owner = models.ForeignKey(
         'members.Member',

@@ -8,7 +8,7 @@ from polymorphic.admin import PolymorphicInlineSupportMixin
 from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.geo.models import Location, Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
-from bluebottle.notifications.admin import MessageAdminInline
+from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.utils.admin import FSMAdmin, BasePlatformSettingsAdmin, export_as_csv_action
 from bluebottle.utils.forms import FSMModelForm
 
@@ -67,7 +67,7 @@ class InitiativeCountryFilter(admin.SimpleListFilter):
 
 
 @admin.register(Initiative)
-class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
+class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, FSMAdmin):
 
     form = InitiativeAdminForm
 

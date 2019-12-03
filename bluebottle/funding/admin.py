@@ -146,6 +146,7 @@ class FundingAdmin(ActivityChildAdmin):
     list_display = [
         '__unicode__', 'initiative', 'created', 'combined_status',
         'highlight', 'deadline', 'percentage_donated', 'percentage_matching'
+
     ]
 
     def percentage_donated(self, obj):

@@ -55,11 +55,12 @@ class ActivitySearchFilter(ElasticSearchFilter):
                 SF(
                     'field_value_factor',
                     field='status_score',
-                    factor=1
+                    weight=10,
+                    factor=10
                 ),
                 SF(
                     'gauss',
-                    weight=0.001,
+                    weight=0.1,
                     created={
                         'scale': "365d"
                     },
@@ -75,7 +76,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
                 ),
                 SF(
                     'gauss',
-                    weight=0.01,
+                    weight=0.1,
                     multi_value_mode='avg',
                     contributions={
                         'scale': '5d'
@@ -97,7 +98,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
                                     expertise__id=[skill.pk for skill in request.user.skills.all()]
                                 )
                             ),
-                            'weight': 0.1,
+                            'weight': 1,
                         }),
                         SF({'weight': 0}),
                     ]
@@ -115,7 +116,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
                                     theme__id=[theme.pk for theme in request.user.favourite_themes.all()]
                                 )
                             ),
-                            'weight': 0.1,
+                            'weight': 1,
                         }),
                         SF({'weight': 0}),
                     ]
@@ -139,7 +140,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
                     functions=[
                         SF({
                             'filter': {'exists': {'field': 'position'}},
-                            'weight': 0.1,
+                            'weight': 1,
                             'gauss': {
                                 'position': {
                                     'origin': position,

@@ -240,4 +240,8 @@ class Applicant(Contribution):
         super(Applicant, self).delete(*args, **kwargs)
         self.activity.check_capacity()
 
+    def __unicode__(self):
+        return unicode(self.user)
+
+
 from bluebottle.assignments.signals import *  # noqa

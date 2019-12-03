@@ -7,7 +7,7 @@ from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdm
 from bluebottle.events.models import Event, Participant
 from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.admin import export_as_csv_action, FSMAdmin
 from bluebottle.utils.forms import FSMModelForm
 
 
@@ -60,7 +60,10 @@ class ParticipantAdmin(ContributionChildAdmin):
         ('contribution_date', 'Contribution Date'),
     )
 
-    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+    actions = [
+        FSMAdmin.bulk_transition,
+        export_as_csv_action(fields=export_to_csv_fields)
+    ]
 
 
 @admin.register(Event)
@@ -111,7 +114,10 @@ class EventAdmin(ActivityChildAdmin):
         ('automatically_accept', 'Auto Accept Members'),
     )
 
-    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+    actions = [
+        FSMAdmin.bulk_transition,
+        export_as_csv_action(fields=export_to_csv_fields)
+    ]
 
     def save_formset(self, request, form, formset, change):
         instances = formset.save(commit=False)

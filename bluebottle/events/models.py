@@ -249,5 +249,8 @@ class Participant(Contribution):
 
         self.activity.check_capacity()
 
+    def __unicode__(self):
+        return unicode(self.user)
+
 
 from bluebottle.events.signals import *  # noqa

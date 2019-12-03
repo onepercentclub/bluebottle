@@ -161,7 +161,8 @@ class FundingAdmin(ActivityChildAdmin):
 
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         'amount_donated', 'amount_raised',
-        'donations_link', 'payout_links'
+        'donations_link', 'payout_links',
+        'combined_status'
     ]
 
     list_display = [
@@ -205,6 +206,14 @@ class FundingAdmin(ActivityChildAdmin):
         'payout_links'
     )
 
+    status_fields = (
+        'complete',
+        'valid',
+        'combined_status',
+        'transitions',
+        'transition_date'
+    )
+
     export_to_csv_fields = (
         ('title', 'Title'),
         ('description', 'Description'),
@@ -223,7 +232,10 @@ class FundingAdmin(ActivityChildAdmin):
         ('amount_raised', 'Amount Raised'),
     )
 
-    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+    actions = [
+        FSMAdmin.bulk_transition,
+        export_as_csv_action(fields=export_to_csv_fields)
+    ]
 
     def donations_link(self, obj):
         url = reverse('admin:funding_donation_changelist')
@@ -245,7 +257,7 @@ class FundingAdmin(ActivityChildAdmin):
     def combined_status(self, obj):
         if obj.review_status != ActivityReviewTransitions.values.approved:
             return obj.review_status
-        return obj.status
+        return format_html('<span title="review_status: {}">{}</span>', obj.review_status, obj.status)
     combined_status.short_description = _('status')
 
 

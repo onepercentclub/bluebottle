@@ -3,12 +3,16 @@ import logging
 from babel.numbers import get_currency_symbol
 from django import forms
 from django.conf.urls import url
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin import TabularInline, SimpleListFilter
+from django.contrib.admin.utils import model_ngettext
+from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.db.models import Q
 from django.http import HttpResponseRedirect
+from django.template.response import TemplateResponse
 from django.urls import reverse
+from django.utils.encoding import force_text
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
@@ -154,6 +158,7 @@ class FundingAdmin(ActivityChildAdmin):
     form = FundingAdminForm
     date_hierarchy = 'transition_date'
     list_filter = [FundingStatusFilter, CurrencyFilter]
+    transition_selected_confirmation_template = None
 
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
@@ -167,6 +172,59 @@ class FundingAdmin(ActivityChildAdmin):
         '__unicode__', 'initiative', 'created', 'combined_status',
         'highlight', 'deadline', 'percentage_donated', 'percentage_matching'
     ]
+
+    def bulk_transition(modeladmin, request, queryset):
+
+        opts = modeladmin.model._meta
+        app_label = opts.app_label
+        confirm = request.POST.get('confirm', False)
+
+        if len(queryset) == 1:
+            objects_name = force_text(opts.verbose_name)
+        else:
+            objects_name = force_text(opts.verbose_name_plural)
+
+        # Check that the user has change permission for the actual model
+        if not modeladmin.has_change_permission(request):
+            raise PermissionDenied
+
+        # The user has already confirmed the deletion.
+        # Do the deletion and return a None to display the change list view again.
+        if request.POST.get('post') and confirm:
+            n = queryset.count()
+            if n:
+                for obj in queryset:
+                    obj_display = force_text(obj)
+                    modeladmin.log_deletion(request, obj, obj_display)
+                queryset.delete()
+                modeladmin.message_user(request, _("Successfully transitioned %(count)d %(items)s.") % {
+                    "count": n, "items": model_ngettext(modeladmin.opts, n)
+                }, messages.SUCCESS)
+            # Return None to display the change list page again.
+            return None
+
+        transitions = queryset[0].transitions.values
+
+        title = _("Are you sure?")
+
+        context = dict(
+            modeladmin.admin_site.each_context(request),
+            title=title,
+            objects_name=objects_name,
+            queryset=queryset,
+            transitions=transitions,
+            opts=opts,
+            media=modeladmin.media,
+        )
+
+        request.current_app = modeladmin.admin_site.name
+
+        return TemplateResponse(request, modeladmin.transition_selected_confirmation_template or [
+            "admin/%s/%s/transition_confirmation.html" % (app_label, opts.model_name),
+            "admin/%s/transition_selected_confirmation.html" % app_label,
+            "admin/transition_selected_confirmation.html",
+            "admin/transition_selected_confirmation.html"
+        ], context)
 
     def percentage_donated(self, obj):
         if obj.target and obj.target.amount:
@@ -220,7 +278,10 @@ class FundingAdmin(ActivityChildAdmin):
         ('amount_raised', 'Amount Raised'),
     )
 
-    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+    actions = [
+        bulk_transition,
+        export_as_csv_action(fields=export_to_csv_fields)
+    ]
 
     def donations_link(self, obj):
         url = reverse('admin:funding_donation_changelist')

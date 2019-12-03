@@ -13,10 +13,10 @@ from django_elasticsearch_dsl.test import ESTestCase
 
 from rest_framework import status
 
-from bluebottle.assignments.tests.factories import AssignmentFactory
+from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
-from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.tasks import SkillFactory
@@ -697,3 +697,49 @@ class ActivityRelatedImageAPITestCase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class ContributionListAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        super(ContributionListAPITestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory.create()
+
+        ParticipantFactory.create_batch(10, user=self.user)
+        ApplicantFactory.create_batch(10, user=self.user)
+        DonationFactory.create_batch(10, user=self.user)
+
+        ParticipantFactory.create()
+        ApplicantFactory.create()
+        DonationFactory.create()
+
+        self.url = reverse('contribution-list')
+
+    def test_get(self):
+        response = self.client.get(
+            self.url,
+            user=self.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+
+        self.assertEqual(len(data['data']), 30)
+
+    def test_get_anonymous(self):
+        response = self.client.get(
+            self.url
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_other_user(self):
+        response = self.client.get(
+            self.url,
+            user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+
+        self.assertEqual(len(data['data']), 0)

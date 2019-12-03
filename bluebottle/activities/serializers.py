@@ -90,7 +90,6 @@ class ActivitySerializer(PolymorphicModelSerializer):
 
 
 class ContributionSerializer(PolymorphicModelSerializer):
-
     polymorphic_serializers = [
         ParticipantSerializer,
         ApplicantSerializer,

@@ -1,15 +1,19 @@
 from django.contrib.contenttypes.models import ContentType
 
 from rest_framework_json_api.views import AutoPrefetchMixin
+from rest_framework.permissions import IsAuthenticated
 
-from bluebottle.activities.models import Activity
+
+from bluebottle.activities.models import Activity, Contribution
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
     ActivityReviewTransitionSerializer,
     RelatedActivityImageSerializer,
-    ActivityListSerializer)
+    ActivityListSerializer,
+    ContributionSerializer
+)
 from bluebottle.files.views import ImageContentView
 from bluebottle.files.models import RelatedImage
 from bluebottle.transitions.views import TransitionList
@@ -67,6 +71,21 @@ class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyA
         'owner': ['owner'],
         'contributions': ['contributions']
     }
+
+
+class ContributionList(JsonApiViewMixin, ListAPIView):
+    model = Contribution
+
+    def get_queryset(self):
+        return Contribution.objects.select_related(
+            'activity', 'user',
+        ).filter(user=self.request.user)
+
+    serializer_class = ContributionSerializer
+
+    pagination_class = None
+
+    permission_classes = (IsAuthenticated, )
 
 
 class RelatedActivityImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):

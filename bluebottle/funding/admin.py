@@ -111,7 +111,8 @@ class PayoutInline(FSMAdminMixin, admin.StackedInline):
 
     model = Payout
     readonly_fields = [
-        'total_amount', 'date_approved', 'date_started', 'date_completed',
+        'payout_link', 'total_amount',
+        'date_approved', 'date_started', 'date_completed',
         'status', 'approve'
     ]
 
@@ -126,6 +127,10 @@ class PayoutInline(FSMAdminMixin, admin.StackedInline):
         if obj.status == 'new':
             url = reverse('admin:funding_payout_transition', args=(obj.id, 'transitions', 'approve'))
             return format_html('<a href="{}">{}</a>', url, _('Approve'))
+
+    def payout_link(self, obj):
+        url = reverse('admin:funding_payout_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
 
 
 @admin.register(Funding)
@@ -406,8 +411,8 @@ class PayoutAccountFundingLinkMixin(object):
 class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner',)
-    readonly_fields = ('status',)
-    fields = ('owner', 'status', 'transitions')
+    readonly_fields = ('status', 'created')
+    fields = ('owner', 'status', 'created', 'transitions')
     show_in_index = True
 
 
@@ -468,7 +473,6 @@ class BankAccountInline(TabularInline):
 class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
     model = PlainPayoutAccount
     inlines = [BankAccountInline]
-
     fields = PayoutAccountChildAdmin.fields + ('document',)
 
 

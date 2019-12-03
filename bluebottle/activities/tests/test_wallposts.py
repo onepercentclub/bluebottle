@@ -34,7 +34,11 @@ class ActivityWallpostTestCase(TestCase):
 
         self.assertEqual(
             owner_mail.subject,
-            '{} commented on your activity'.format(wallpost_user.first_name)
+            "You have a new post on '{}'".format(self.activity.title)
+        )
+        self.assertTrue(
+            "{} posted a comment to '{}'.".format(wallpost_user.first_name, self.activity.title)
+            in owner_mail.body
         )
 
     def test_wallpost_owner(self):
@@ -47,7 +51,7 @@ class ActivityWallpostTestCase(TestCase):
 
         self.assertEqual(
             follow_mail.subject,
-            "New post on '{}'".format(self.activity.title)
+            "Update from '{}'".format(self.activity.title)
         )
 
     def test_reaction(self):
@@ -69,11 +73,11 @@ class ActivityWallpostTestCase(TestCase):
 
         self.assertEqual(
             wallpost_owner_mail.subject,
-            "{} replied on your comment".format(reaction_user.first_name)
+            "You have a new post on '{}'".format(self.activity.title)
         )
         owner_mail = mail.outbox[1]
 
         self.assertEqual(
             owner_mail.subject,
-            "{} commented on your activity".format(reaction_user.first_name)
+            "You have a new post on '{}'".format(self.activity.title)
         )

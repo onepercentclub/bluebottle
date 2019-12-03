@@ -15,6 +15,7 @@ from bluebottle.funding.messages import (
 from bluebottle.follow.models import follow, unfollow
 
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
+from bluebottle.utils.transitions import ReviewTransitions
 from bluebottle.wallposts.models import Wallpost, SystemWallpost
 from django.utils.timezone import get_current_timezone
 
@@ -30,6 +31,27 @@ class FundingTransitions(ActivityTransitions):
         if not self.instance.amount_raised >= self.instance.target:
             return _("Amount raised should at least equal to target amount.")
 
+    def is_complete(self):
+        errors = [
+            _('{} is required').format(self.instance._meta.get_field(field).verbose_name)
+            for field in self.instance.required
+        ]
+
+        if errors:
+            return errors
+
+    def is_valid(self):
+        errors = [
+            error.message[0] for error in self.instance.errors
+        ]
+
+        if errors:
+            return errors
+
+    def initiative_is_approved(self):
+        if not self.instance.initiative.status == ReviewTransitions.values.approved:
+            return _('Please make sure the initiative is approved')
+
     def deadline_in_future(self):
         if not self.instance.deadline >= timezone.now():
             return _("The deadline of the activity should be in the future.")
@@ -37,9 +59,12 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=values.in_review,
         target=values.open,
+        conditions=[is_complete, is_valid, initiative_is_approved],
         permissions=[ActivityTransitions.can_approve],
     )
     def reviewed(self):
+        if self.instance.review_status != ReviewTransitions.values.approved:
+            self.instance.review_transitions.approve()
         if self.instance.duration and not self.instance.deadline:
             deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
             self.instance.deadline = get_current_timezone().localize(

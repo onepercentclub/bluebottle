@@ -9,7 +9,7 @@ from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdm
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
 from bluebottle.tasks.models import Skill
-from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.admin import export_as_csv_action, FSMAdmin
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.forms import FSMModelForm
 from bluebottle.wallposts.admin import WallpostInline
@@ -51,6 +51,7 @@ class ApplicantAdmin(ContributionChildAdmin):
     form = ApplicantAdminForm
     list_display = ['user', 'status', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
+    list_editable = ['time_spent']
 
     date_hierarchy = 'transition_date'
 
@@ -66,7 +67,10 @@ class ApplicantAdmin(ContributionChildAdmin):
         ('contribution_date', 'Contribution Date'),
     )
 
-    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+    actions = [
+        FSMAdmin.bulk_transition,
+        export_as_csv_action(fields=export_to_csv_fields)
+    ]
 
 
 class ExpertiseFilter(admin.SimpleListFilter):
@@ -91,7 +95,7 @@ class AssignmentAdmin(ActivityChildAdmin):
     date_hierarchy = 'date'
 
     model = Assignment
-    raw_id_fields = ('owner', 'location')
+    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
 
     list_display = (
         '__unicode__', 'initiative', 'created', 'status', 'highlight',
@@ -134,7 +138,10 @@ class AssignmentAdmin(ActivityChildAdmin):
         ('location', 'Location'),
     )
 
-    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+    actions = [
+        FSMAdmin.bulk_transition,
+        export_as_csv_action(fields=export_to_csv_fields)
+    ]
 
     def save_formset(self, request, form, formset, change):
         instances = formset.save(commit=False)

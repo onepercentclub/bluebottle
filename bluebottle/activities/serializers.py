@@ -90,12 +90,22 @@ class ActivitySerializer(PolymorphicModelSerializer):
 
 
 class ContributionSerializer(PolymorphicModelSerializer):
-
     polymorphic_serializers = [
         ParticipantSerializer,
         ApplicantSerializer,
         DonationSerializer
     ]
+
+    included_serializers = {
+        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+    class JSONAPIMeta:
+        included_resources = [
+            'user',
+            'activity',
+        ]
 
     class Meta:
         model = Contribution

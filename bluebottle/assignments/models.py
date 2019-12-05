@@ -185,7 +185,7 @@ class Applicant(Contribution):
         if created and self.status == ApplicantTransitions.values.new:
             follow(self.user, self.activity)
             self.transitions.initiate()
-        self.activity.check_capacity()
+        self.activity.assignment.check_capacity()
 
 
 from bluebottle.assignments.signals import *  # noqa

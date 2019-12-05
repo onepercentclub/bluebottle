@@ -5,8 +5,10 @@ from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.admin.models import CHANGE, LogEntry
+from django.contrib.admin.utils import model_ngettext
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db.models.aggregates import Sum
 from django.db.models.fields.files import FieldFile
@@ -15,6 +17,9 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
+from django.utils.encoding import force_text
+from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 
@@ -205,6 +210,84 @@ class FSMAdminMixin(object):
     form = FSMModelForm
 
     readonly_fields = ['status']
+    transition_selected_confirmation_template = None
+
+    def bulk_transition(self, request, queryset):
+        opts = self.model._meta
+        app_label = opts.app_label
+
+        if len(set(queryset.values_list('status', flat=True))) > 1:
+            self.message_user(
+                request,
+                'Can only bulk transition {} with the same status.'.format(opts.verbose_name_plural),
+                messages.ERROR)
+            return None
+
+        if len(queryset) == 1:
+            objects_name = force_text(opts.verbose_name)
+        else:
+            objects_name = force_text(opts.verbose_name_plural)
+
+        # Check that the user has change permission for the actual model
+        if not self.has_change_permission(request):
+            raise PermissionDenied
+
+        # The user has already confirmed the deletion.
+        # Do the deletion and return a None to display the change list view again.
+        if request.POST.get('confirm') and request.POST.get('transition'):
+            success = 0
+            error = 0
+            if queryset.count():
+                transition_name = request.POST.get('transition')
+                error_list = []
+                for obj in queryset.all():
+                    transition = self.get_transition(obj, transition_name, 'transitions')
+                    try:
+                        getattr(obj.transitions, transition_name)()
+                        obj.save()
+                        success += 1
+                        log_action(
+                            obj,
+                            request.user,
+                            'Changed status to {} (Admin bulk)'.format(transition.target)
+                        )
+                    except TransitionNotPossible:
+                        errors = transition.errors(obj.transitions)
+                        error_list.append(
+                            'Could not transition <i>{}</i> because: <b>{}</b>'.format(obj, ", ".join(errors))
+                        )
+                        error += 1
+                if success:
+                    self.message_user(request, _("Successfully transitioned %(count)d %(items)s.") % {
+                        "count": success, "items": model_ngettext(opts, success)
+                    }, messages.SUCCESS)
+                if error:
+                    message = format_html("<br>".join(error_list))
+                    self.message_user(request, message, messages.ERROR)
+
+            return None
+
+        transitions = queryset[0].transitions.all_transitions
+        title = _("Are you sure?")
+
+        context = dict(
+            self.admin_site.each_context(request),
+            title=title,
+            objects_name=objects_name,
+            queryset=queryset,
+            transitions=transitions,
+            opts=opts,
+            media=self.media,
+        )
+
+        request.current_app = self.admin_site.name
+
+        return TemplateResponse(request, self.transition_selected_confirmation_template or [
+            "admin/%s/%s/transition_confirmation.html" % (app_label, opts.model_name),
+            "admin/%s/transition_selected_confirmation.html" % app_label,
+            "admin/transition_selected_confirmation.html",
+            "admin/transition_selected_confirmation.html"
+        ], context)
 
     def get_transition(self, instance, name, field_name):
         transitions = getattr(instance, field_name).all_transitions
@@ -305,4 +388,7 @@ class FSMAdminMixin(object):
 
 
 class FSMAdmin(FSMAdminMixin, admin.ModelAdmin):
-    pass
+
+    actions = admin.ModelAdmin.actions + [
+        FSMAdminMixin.bulk_transition
+    ]

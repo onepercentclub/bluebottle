@@ -49,20 +49,13 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonationFactory.create(activity=self.funding)
 
-        self.payment_intent = stripe.PaymentIntent('some intent id')
-        self.payment_intent.update({
-            'client_secret': 'some client secret',
-        })
-
-        with mock.patch('stripe.PaymentIntent.create', return_value=self.payment_intent):
-            self.intent = StripePaymentIntentFactory.create(donation=self.donation)
-
+        self.intent = StripePaymentIntentFactory.create(donation=self.donation)
         self.webhook = reverse('stripe-intent-webhook')
 
     def test_success(self):
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
             data = json.load(hook_file)
-            data['object']['id'] = self.payment_intent.id
+            data['object']['id'] = self.intent.intent_id
 
         with mock.patch(
             'stripe.Webhook.construct_event',
@@ -95,7 +88,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         with mock.patch(
             'stripe.Webhook.construct_event',
             return_value=MockEvent(
-                'payment_intent.payment_failed', {'object': {'id': self.payment_intent.id}}
+                'payment_intent.payment_failed', {'object': {'id': self.intent.intent_id}}
             )
         ):
             response = self.client.post(
@@ -123,7 +116,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
     def test_refund(self):
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
             data = json.load(hook_file)
-            data['object']['id'] = self.payment_intent.id
+            data['object']['id'] = self.intent.intent_id
 
         with mock.patch(
             'stripe.Webhook.construct_event',
@@ -139,7 +132,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_refund.json') as hook_file:
             data = json.load(hook_file)
-            data['object']['payment_intent'] = self.payment_intent.id
+            data['object']['payment_intent'] = self.intent.intent_id
 
         with mock.patch(
             'stripe.Webhook.construct_event',

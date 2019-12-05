@@ -107,12 +107,12 @@ class FundingStatusFilter(SimpleListFilter):
                [(k, v) for k, v in FundingTransitions.values.choices if k != 'in_review']
 
 
-class PayoutInline(FSMAdminMixin, admin.StackedInline):
+class PayoutInline(FSMAdminMixin, admin.TabularInline):
 
     model = Payout
     readonly_fields = [
-        'total_amount', 'date_approved', 'date_started', 'date_completed',
-        'status', 'approve'
+        'payout_link', 'total_amount', 'provider', 'currency',
+        'date_approved', 'date_started', 'date_completed', 'approve'
     ]
 
     fields = readonly_fields
@@ -122,10 +122,16 @@ class PayoutInline(FSMAdminMixin, admin.StackedInline):
     def has_add_permission(self, request):
         return False
 
+    def payout_link(self, obj):
+        url = reverse('admin:funding_payout_change', args=(obj.id, ))
+        return format_html('<a href="{}">{}</a>', url, obj)
+
     def approve(self, obj):
         if obj.status == 'new':
             url = reverse('admin:funding_payout_transition', args=(obj.id, 'transitions', 'approve'))
-            return format_html('<a href="{}">{}</a>', url, _('Approve'))
+            return format_html('<a href="{}" class="button_select_option button">{}</a>', url, _('Approve'))
+        return obj.status
+    approve.short_description = _('Status')
 
 
 @admin.register(Funding)
@@ -473,9 +479,9 @@ class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
     fields = PayoutAccountChildAdmin.fields + ('document',)
 
 
-class DonationInline(admin.TabularInline):
+class DonationInline(PaymentLinkMixin, admin.TabularInline):
     model = Donation
-    readonly_fields = ('created', 'amount', 'status')
+    readonly_fields = ('created', 'amount', 'status', 'payment_link')
     fields = readonly_fields
     extra = 0
     can_delete = False

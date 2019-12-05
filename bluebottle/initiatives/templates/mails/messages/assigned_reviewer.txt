@@ -4,11 +4,13 @@
 {% block content %}
 {% blocktrans with recipient_name=to.first_name initiative_title=obj.title context 'email' %}
 Hi {{ recipient_name }},
-You have been assigend to review initiative "{{ initiative_title }}".
+You are assigned as reviewer for "{{ initiative_title }}".
+If you have any questions please contact {{ admin_email }}
+
 {% endblocktrans %}
 
 {% endblock %}
 
 {% block action %}
-   {% trans 'View initiative' context 'email' %}: {{ obj.get_absolute_url }}
+   {% trans 'View initiative' context 'email' %}: {{ obj.get_admin_url }}
 {% endblock %}`

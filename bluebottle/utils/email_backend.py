@@ -158,8 +158,10 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
             'site': tenant_url(),
             'tenant': connection.tenant.client_name
         })
+    mail_settings = MailPlatformSettings.load().__dict__
+    mail_settings['admin_email'] = properties.CONTACT_EMAIL
     kwargs.update({
-        'settings': MailPlatformSettings.load()
+        'settings': mail_settings
     })
     try:
         msg = create_message(template_name=template_name,

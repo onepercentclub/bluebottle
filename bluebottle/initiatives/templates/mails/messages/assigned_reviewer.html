@@ -4,7 +4,8 @@
 {% block content %}
     {% blocktrans with recipient_name=to.first_name initiative_title=obj.title context 'email' %}
         Hi {{ recipient_name }},<br>
-        You have been assigned to review initiative <i>{{ initiative_title }}</i>.
+        You are assigned as reviewer for <i>{{ initiative_title }}</i>.
+        If you have any questions please contact {{ admin_email }}
     {% endblocktrans %}
 {% endblock %}
 

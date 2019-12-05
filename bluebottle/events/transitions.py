@@ -180,7 +180,7 @@ class ParticipantTransitions(ContributionTransitions):
     )
     def succeed(self):
         follow(self.instance.user, self.instance.activity)
-        self.instance.time_spent = self.instance.activity.duration
+        self.instance.time_spent = self.instance.activity.event.duration
 
     @transition(
         source=values.succeeded,

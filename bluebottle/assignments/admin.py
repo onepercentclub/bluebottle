@@ -45,6 +45,7 @@ class ApplicantAdmin(ContributionChildAdmin):
     form = ApplicantAdminForm
     list_display = ['user', 'status', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
+    list_editable = ['time_spent']
 
     export_to_csv_fields = (
         ('status', 'Status'),
@@ -81,7 +82,7 @@ class AssignmentAdmin(ActivityChildAdmin):
     date_hierarchy = 'end_date'
 
     model = Assignment
-    raw_id_fields = ('owner', 'location')
+    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
 
     list_display = (
         '__unicode__', 'initiative', 'created', 'status', 'highlight',

@@ -35,18 +35,28 @@
 
     <form method="post">{% csrf_token %}
     <div>
-        {% for transition in transitions %}
-            <label for="{{transition}}">
-                <input type="radio" value="{{transition}}" id="{{transition}}" name="transition">
-                {{transition}}
-            </label>
-        {% endfor %}
-        {% for obj in queryset.items %}
-            <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}" />
-        {% endfor %}
-        <input type="hidden" name="action" value="transition_selected" />
+        <ul>
+            {% for obj in queryset.all %}
+                <li>
+                    {{obj}}
+                    <input type="hidden" name="_selected_action" value="{{ obj.pk|unlocalize }}" />
+                </li>
+            {% endfor %}
+        </ul>
+        {% trans "Transition" %}
+        <ul>
+            {% for transition in transitions %}
+                <li>
+                    <label for="{{transition.name}}">
+                        <input type="radio" value="{{transition.name}}" id="{{transition.name}}" name="transition">
+                        {{transition.name}}
+                    </label>
+                </li>
+            {% endfor %}
+        </ul>
+        <input type="hidden" name="action" value="bulk_transition" />
         <input type="hidden" name="post" value="yes" />
-        <input type="submit" value="{% trans "Yes, I'm sure" %}" />
+        <input type="submit" name="confirm" value="{% trans "Yes, I'm sure" %}" />
         <a href="#" class="button cancel-link">{% trans "No, take me back" %}</a>
     </div>
     </form>

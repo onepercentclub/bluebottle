@@ -193,7 +193,7 @@ class Applicant(Contribution):
         if created and self.status == ApplicantTransitions.values.new:
             follow(self.user, self.activity)
             self.transitions.initiate()
-        self.activity.check_capacity()
+        self.activity.assignment.check_capacity()
 
     def delete(self, *args, **kwargs):
         super(Applicant, self).delete(*args, **kwargs)

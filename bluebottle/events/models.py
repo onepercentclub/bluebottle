@@ -161,11 +161,11 @@ class Participant(Contribution):
             self.transitions.initiate()
             follow(self.user, self.activity)
 
-        self.activity.check_capacity()
+        self.activity.event.check_capacity()
 
     def delete(self, *args, **kwargs):
         super(Participant, self).delete(*args, **kwargs)
 
-        self.activity.check_capacity()
+        self.activity.event.check_capacity()
 
 from bluebottle.events.signals import *  # noqa

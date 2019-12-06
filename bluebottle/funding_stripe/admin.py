@@ -49,7 +49,15 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
             obj.account_id = ''
             self.message_user(
                 request,
-                'This Account id should start with acct_ The ba_ number is for the StripeBankAccountAdmin',
+                'This Account id should start with acct_ The ba_ number is for the StripeBankAccount',
+                messages.ERROR
+            )
+        if obj.account_id \
+                and StripePayoutAccount.objects.exclude(id=obj.id).filter(account_id=obj.account_id).count():
+            obj.account_id = ''
+            self.message_user(
+                request,
+                'There is already a StripePayoutAccount with this account_id.',
                 messages.ERROR
             )
         return super(StripePayoutAccountAdmin, self).save_model(request, obj, form, change)
@@ -71,6 +79,14 @@ class StripeBankAccountAdmin(BankAccountChildAdmin):
             self.message_user(
                 request,
                 'This Account id should start with ba_ The acct_. number is for the StripePayoutAccount',
+                messages.ERROR
+            )
+        if obj.account_id \
+                and ExternalAccount.objects.exclude(id=obj.id).filter(account_id=obj.account_id).count():
+            obj.account_id = ''
+            self.message_user(
+                request,
+                'There is already a StripeBankAccount with this account_id.',
                 messages.ERROR
             )
         return super(StripeBankAccountAdmin, self).save_model(request, obj, form, change)

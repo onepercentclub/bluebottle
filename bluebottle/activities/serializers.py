@@ -108,6 +108,7 @@ class ContributionSerializer(PolymorphicModelSerializer):
         ]
 
     class Meta:
+        meta_fields = ('permissions', 'transitions', 'created', 'updated', )
         model = Contribution
 
 

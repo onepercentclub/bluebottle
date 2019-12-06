@@ -216,7 +216,7 @@ class PayoutTransitions(ModelTransitions):
         target=values.started
     )
     def start(self):
-        self.instance.date_approved = timezone.now()
+        self.instance.date_started = timezone.now()
 
     @transition(
         source=['*'],

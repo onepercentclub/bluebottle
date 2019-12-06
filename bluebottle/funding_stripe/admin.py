@@ -40,7 +40,9 @@ class StripeBankAccountInline(admin.TabularInline):
 class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     model = StripePayoutAccount
     inlines = [StripeBankAccountInline]
-    fields = PayoutAccountChildAdmin.fields + ('account_id', 'country')
+    readonly_fields = PayoutAccountChildAdmin.readonly_fields + ['reviewed']
+    search_fields = ['account_id']
+    fields = ('created', 'owner', 'status', 'account_id', 'country', 'reviewed')
 
 
 @admin.register(ExternalAccount)

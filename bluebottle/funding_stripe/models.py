@@ -263,7 +263,7 @@ def get_specs(country):
 
 
 class StripePayoutAccount(PayoutAccount):
-    account_id = models.CharField(max_length=40)
+    account_id = models.CharField(max_length=40, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2)
     document_type = models.CharField(max_length=20, blank=True)
 
@@ -416,7 +416,7 @@ class StripePayoutAccount(PayoutAccount):
 
 
 class ExternalAccount(BankAccount):
-    account_id = models.CharField(max_length=40)
+    account_id = models.CharField(max_length=40, help_text=_("Starts with 'ba_...'"))
     provider_class = StripePaymentProvider
 
     @property

@@ -411,8 +411,8 @@ class PayoutAccountFundingLinkMixin(object):
 class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner',)
-    readonly_fields = ('status', 'created')
-    fields = ('owner', 'status', 'created', 'transitions')
+    readonly_fields = ['status', 'created']
+    fields = ['owner', 'status', 'created', 'transitions', 'reviewed']
     show_in_index = True
 
 
@@ -423,7 +423,7 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     list_filter = ('reviewed', PolymorphicChildModelFilter)
     raw_id_fields = ('owner',)
     show_in_index = True
-
+    search_fields = ['stripepayoutaccount__account_id']
     ordering = ('-created',)
     child_models = [
         StripePayoutAccount,
@@ -473,7 +473,7 @@ class BankAccountInline(TabularInline):
 class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
     model = PlainPayoutAccount
     inlines = [BankAccountInline]
-    fields = PayoutAccountChildAdmin.fields + ('document',)
+    fields = PayoutAccountChildAdmin.fields + ['document']
 
 
 class DonationInline(admin.TabularInline):

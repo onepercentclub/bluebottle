@@ -10,8 +10,8 @@ from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.admin import InitiativeAdmin
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleAdminTestCase
 
 
 class TestInitiativeAdmin(BluebottleAdminTestCase):
@@ -189,5 +189,8 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative.refresh_from_db()
         self.assertEqual(self.initiative.reviewer, user)
 
-        # Should send out one mail
+        # Should send out one mail that contains admin url and contact email
         self.assertEqual(len(mail.outbox), 1)
+        admin_url = '/admin/initiatives/initiative/{}/change'.format(self.initiative.id)
+        self.assertTrue(admin_url in mail.outbox[0].body)
+        self.assertTrue('contact@my-bluebottle-project.com' in mail.outbox[0].body)

@@ -3,6 +3,7 @@ from django.db.models import Max
 from django.db.models.deletion import SET_NULL
 from django.contrib.contenttypes.fields import GenericRelation
 from django.template.defaultfilters import slugify
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
@@ -206,6 +207,12 @@ class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, 
         domain = get_current_host()
         language = get_current_language()
         link = format_html('{}/{}/initiatives/details/{}/{}', domain, language, self.id, self.slug)
+        return link
+
+    def get_admin_url(self):
+        domain = get_current_host()
+        url = reverse('admin:initiatives_initiative_change', args=(self.id,))
+        link = format_html('{}/{}', domain, url)
         return link
 
     def save(self, **kwargs):

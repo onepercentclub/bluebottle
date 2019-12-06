@@ -159,7 +159,7 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
             'tenant': connection.tenant.client_name
         })
     mail_settings = MailPlatformSettings.load().__dict__
-    mail_settings['admin_email'] = properties.CONTACT_EMAIL
+    mail_settings['contact_email'] = properties.CONTACT_EMAIL
     kwargs.update({
         'settings': mail_settings
     })

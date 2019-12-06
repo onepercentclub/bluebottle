@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans with recipient_name=to.first_name initiative_title=obj.title context 'email' %}
+    {% blocktrans with recipient_name=to.first_name initiative_title=obj.title admin_email=settings.contact_email context 'email' %}
         Hi {{ recipient_name }},<br>
         You are assigned as reviewer for <i>{{ initiative_title }}</i>.
         If you have any questions please contact {{ admin_email }}
@@ -10,6 +10,6 @@
 {% endblock %}
 
 {% block action %}
-    <a href="{{ obj.get_absolute_url }}"
+    <a href="{{ obj.get_admin_url }}"
        class="action-email">{% trans 'View initiative' context 'email' %}</a>
 {% endblock %}`

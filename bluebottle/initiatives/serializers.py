@@ -171,6 +171,7 @@ class InitiativeListSerializer(ModelSerializer):
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
+    transitions = AvailableTransitionsField()
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -188,11 +189,11 @@ class InitiativeListSerializer(ModelSerializer):
         fields = (
             'id', 'title', 'pitch', 'categories',
             'owner', 'activity_manager',
-            'slug', 'has_organization',
+            'slug', 'has_organization', 'transitions',
             'story', 'image', 'theme', 'place', 'location'
         )
 
-        meta_fields = ('permissions', 'status', 'created', )
+        meta_fields = ('permissions', 'status', 'created', 'transitions',)
 
     class JSONAPIMeta:
         included_resources = [

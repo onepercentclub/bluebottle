@@ -192,5 +192,8 @@ class Applicant(Contribution):
             self.transitions.initiate()
         self.activity.check_capacity()
 
+    def delete(self, *args, **kwargs):
+        super(Applicant, self).delete(*args, **kwargs)
+        self.activity.check_capacity()
 
 from bluebottle.assignments.signals import *  # noqa

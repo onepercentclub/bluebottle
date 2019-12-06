@@ -88,10 +88,14 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
             try:
                 serializer.instance.update(token)
             except stripe.error.InvalidRequestError, e:
-                field = e.param.replace('[', '/').replace(']', '')
-                raise serializers.ValidationError(
-                    {field: [e.message]}
-                )
+                try:
+                    field = e.param.replace('[', '/').replace(']', '')
+                    raise serializers.ValidationError(
+                        {field: [e.message]}
+                    )
+                except AttributeError:
+                    raise serializers.ValidationError(unicode(e))
+
         serializer.save()
 
 

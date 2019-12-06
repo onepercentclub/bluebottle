@@ -112,7 +112,8 @@ class PayoutInline(FSMAdminMixin, admin.TabularInline):
     model = Payout
     readonly_fields = [
         'payout_link', 'total_amount', 'provider', 'currency',
-        'date_approved', 'date_started', 'date_completed', 'approve'
+        'date_approved', 'date_started', 'date_completed',
+        'approve'
     ]
 
     fields = readonly_fields
@@ -412,8 +413,8 @@ class PayoutAccountFundingLinkMixin(object):
 class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner',)
-    readonly_fields = ('status',)
-    fields = ('owner', 'status', 'transitions')
+    readonly_fields = ('status', 'created')
+    fields = ('owner', 'status', 'created', 'transitions')
     show_in_index = True
 
 
@@ -474,7 +475,6 @@ class BankAccountInline(TabularInline):
 class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
     model = PlainPayoutAccount
     inlines = [BankAccountInline]
-
     fields = PayoutAccountChildAdmin.fields + ('document',)
 
 

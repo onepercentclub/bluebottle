@@ -85,7 +85,6 @@ class BaseActivityListSerializer(ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
-    stats = serializers.OrderedDict(read_only=True)
 
     slug = serializers.CharField(read_only=True)
 
@@ -111,7 +110,6 @@ class BaseActivityListSerializer(ModelSerializer):
             'is_follower',
             'status',
             'review_status',
-            'stats',
         )
 
         meta_fields = (
@@ -160,7 +158,7 @@ class BaseContributionSerializer(ModelSerializer):
     transitions = AvailableTransitionsField()
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 

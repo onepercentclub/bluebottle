@@ -7,6 +7,8 @@ from jet.dashboard import modules
 from jet.dashboard.dashboard import Dashboard, DefaultAppIndexDashboard
 from jet.dashboard.modules import DashboardModule, LinkList
 
+import rules
+
 from bluebottle.activities.dashboard import RecentActivities
 from bluebottle.assignments.dashboard import RecentAssignments
 from bluebottle.clients import properties
@@ -60,7 +62,7 @@ class CustomIndexDashboard(Dashboard):
             order=0
         ))
         self.children.append(RecentMembersDashboard())
-        if context['request'].user.has_perm('sites.export'):
+        if rules.test_rule('exportdb.can_export', context['request'].user):
             metrics_children = [
                 {
                     'title': _('Export metrics'),

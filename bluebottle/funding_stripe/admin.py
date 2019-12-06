@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 
 from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin, \
     BankAccountChildAdmin
@@ -24,18 +26,21 @@ class PledgePaymentProviderAdmin(PaymentProviderChildAdmin):
 
 class StripeBankAccountInline(admin.TabularInline):
     model = ExternalAccount
-    readonly_fields = ['created', 'verified', 'account_id', ]
+    readonly_fields = ['bank_account_link', 'verified', 'account_id', ]
     fields = readonly_fields
     extra = 0
     can_delete = False
+
+    def bank_account_link(self, obj):
+        url = reverse('admin:funding_stripe_externalaccount_change', args=(obj.id, ))
+        return format_html('<a href="{}">{}</a>', url, obj)
 
 
 @admin.register(StripePayoutAccount)
 class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     model = StripePayoutAccount
     inlines = [StripeBankAccountInline]
-
-    fields = ('owner', 'status', 'account_id', 'country')
+    fields = PayoutAccountChildAdmin.fields + ('account_id', 'country')
 
 
 @admin.register(ExternalAccount)

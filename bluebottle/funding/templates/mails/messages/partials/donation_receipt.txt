@@ -1,0 +1,17 @@
+{% load i18n %}
+{% load money %}
+{% trans "Donation" %} {% if obj.reward %} - {{ obj.reward.title }} {% endif %}
+{{ obj.amount|format_money }}
+{{ obj.activity.title }}
+{{ obj.activity.get_absolute_url }}
+
+{% if not obj.anonymous %}
+{% trans 'Anonymous' %}
+{% else %}
+{{obj.user.full_name}}
+{% endif %}
+
+{% trans "Date" %}: {{obj.created}}
+{% trans "Order" %}: {{obj.id}}
+{% trans "Initiator" %}: {{obj.activity.owner.full_name}}
+{% if obj.activity.initiative.organization %}{% trans "Organization" %}: {{obj.activity.initiative.organization.name}}{% endif %}

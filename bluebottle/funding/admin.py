@@ -19,7 +19,7 @@ from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdm
 from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
+from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter, DonationAdminPledgeFilter
 from bluebottle.funding.forms import RefundConfirmationForm
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
@@ -239,7 +239,11 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     raw_id_fields = ['activity', 'user']
     readonly_fields = ['payment_link', 'status', 'payment_link', 'reward']
     list_display = ['transition_date', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', ]
-    list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
+    list_filter = [
+        DonationAdminStatusFilter,
+        DonationAdminCurrencyFilter,
+        DonationAdminPledgeFilter,
+    ]
     date_hierarchy = 'transition_date'
 
     fields = ['transition_date', 'created', 'activity', 'user', 'amount', 'reward',
@@ -448,6 +452,10 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
     list_filter = ('reviewed', PolymorphicChildModelFilter)
     raw_id_fields = ('connect_account',)
     show_in_index = True
+    search_fields = ['externalaccount__account_id',
+                     'flutterwavebankaccount__account_holder_name',
+                     'pledgebankaccount__account_holder_name',
+                     ]
 
     ordering = ('-created',)
     child_models = [

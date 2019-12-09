@@ -85,6 +85,7 @@ class BaseActivityListSerializer(ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
+    stats = serializers.OrderedDict(read_only=True)
 
     slug = serializers.CharField(read_only=True)
 
@@ -109,6 +110,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'description',
             'is_follower',
             'status',
+            'stats',
             'review_status',
         )
 

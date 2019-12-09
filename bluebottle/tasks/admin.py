@@ -384,6 +384,12 @@ class SkillAdmin(TranslatableAdmin):
     readonly_fields = ('task_link', 'member_link')
     fields = readonly_fields + ('name', 'disabled', 'description', 'expertise')
 
+    def get_actions(self, request):
+        actions = super(SkillAdmin, self).get_actions(request)
+        if 'delete_selected' in actions:
+            del actions['delete_selected']
+        return actions
+
     def has_delete_permission(self, request, obj=None):
         if obj and obj.task_set.count() == 0:
             return True

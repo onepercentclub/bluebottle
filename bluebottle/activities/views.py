@@ -83,8 +83,6 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
 
     serializer_class = ContributionSerializer
 
-    pagination_class = None
-
     permission_classes = (IsAuthenticated, )
 
 

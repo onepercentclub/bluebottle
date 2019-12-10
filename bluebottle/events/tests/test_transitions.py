@@ -153,21 +153,20 @@ class EventTransitionTestCase(BluebottleTestCase):
 
     def test_full(self):
         ParticipantFactory.create(activity=self.event)
-
+        self.event.refresh_from_db()
         self.assertEqual(
             self.event.status, EventTransitions.values.full
         )
 
     def test_reopen(self):
         participant = ParticipantFactory.create(activity=self.event)
-
+        self.event.refresh_from_db()
         self.assertEqual(
             self.event.status, EventTransitions.values.full
         )
-
         participant.transitions.withdraw(user=participant.user)
         participant.save()
-
+        self.event.refresh_from_db()
         self.assertEqual(
             self.event.status, EventTransitions.values.open
         )
@@ -203,9 +202,9 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.event.start_time = start.time()
         self.event.start_date = start.date()
         self.event.duration = 12
+        self.event.transitions.start()
         self.event.save()
 
-        self.event.transitions.start()
         self.event.transitions.succeed()
 
         self.assertEqual(
@@ -410,9 +409,9 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.event.start_time = start.time()
         self.event.start_date = start.date()
         self.event.duration = 24
+        self.event.transitions.start()
         self.event.save()
 
-        self.event.transitions.start()
         self.event.transitions.succeed()
         self.event.save()
 
@@ -437,9 +436,9 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.event.start_time = start.time()
         self.event.start_date = start.date()
         self.event.duration = 12
+        self.event.transitions.start()
         self.event.save()
 
-        self.event.transitions.start()
         self.event.transitions.succeed()
         self.event.save()
 
@@ -467,9 +466,9 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.event.start_time = start.time()
         self.event.start_date = start.date()
         self.event.duration = 12
+        self.event.transitions.start()
         self.event.save()
 
-        self.event.transitions.start()
         self.event.transitions.succeed()
         self.event.save()
 

@@ -40,8 +40,10 @@ class EventTestCase(BluebottleTestCase):
             initiative=InitiativeFactory.create(status='approved')
         )
         event.review_transitions.submit()
+        event.save()
 
         ParticipantFactory.create_batch(10, activity=event, status='new')
+        event.refresh_from_db()
         self.assertEqual(event.status, 'full')
 
     def test_reopen_changed_capacity(self):
@@ -55,13 +57,16 @@ class EventTestCase(BluebottleTestCase):
             initiative=InitiativeFactory.create(status='approved')
         )
         event.review_transitions.submit()
+        event.save()
 
         ParticipantFactory.create_batch(10, activity=event, status='new')
+        event.refresh_from_db()
         self.assertEqual(event.status, 'full')
 
         event.capacity = 20
         event.save()
 
+        event.refresh_from_db()
         self.assertEqual(event.status, 'open')
 
     def test_reopen_delete_participant(self):
@@ -75,8 +80,10 @@ class EventTestCase(BluebottleTestCase):
             initiative=InitiativeFactory.create(status='approved')
         )
         event.review_transitions.submit()
+        event.save()
 
         ParticipantFactory.create_batch(10, activity=event, status='new')
+        event.refresh_from_db()
         self.assertEqual(event.status, 'full')
 
         event.participants[0].delete()

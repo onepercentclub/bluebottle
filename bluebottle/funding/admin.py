@@ -11,6 +11,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from django_summernote.widgets import SummernoteWidget
 from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
@@ -36,6 +37,7 @@ from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBan
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action, FSMAdminMixin, \
     BasePlatformSettingsAdmin
+from bluebottle.utils.forms import FSMModelForm
 
 logger = logging.getLogger(__name__)
 
@@ -135,10 +137,21 @@ class PayoutInline(FSMAdminMixin, admin.TabularInline):
     approve.short_description = _('Status')
 
 
+class FundingAdminForm(FSMModelForm):
+
+    class Meta:
+        model = Funding
+        fields = '__all__'
+        widgets = {
+            'description': SummernoteWidget(attrs={'height': 400})
+        }
+
+
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
     inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline)
     base_model = Funding
+    form = FundingAdminForm
     date_hierarchy = 'transition_date'
     list_filter = [FundingStatusFilter, CurrencyFilter]
 

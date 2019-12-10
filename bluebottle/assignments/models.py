@@ -182,8 +182,11 @@ class Applicant(Contribution):
         # Fail the self if hours are set to 0
         if self.status == ApplicantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:
             self.transitions.fail()
-        # Unfail an self if the hours are set to an amount
-        elif self.status == ApplicantTransitions.values.failed and self.time_spent not in [None, '0', 0.0]:
+        # Succeed self if the hours are set to an amount
+        elif self.status in [
+            ApplicantTransitions.values.failed,
+            ApplicantTransitions.values.closed
+        ] and self.time_spent not in [None, '0', 0.0]:
             self.transitions.succeed()
         super(Applicant, self).save(*args, **kwargs)
 

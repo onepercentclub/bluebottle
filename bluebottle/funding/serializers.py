@@ -444,6 +444,15 @@ class DonationSerializer(BaseContributionSerializer):
         return fields
 
 
+class TinyDonationSerializer(DonationSerializer):
+    included_serializers = {
+        'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'reward': 'bluebottle.funding.serializers.RewardSerializer',
+        'fundraiser': 'bluebottle.funding.serializers.FundraiserSerializer',
+    }
+
+
 class DonationCreateSerializer(DonationSerializer):
     amount = MoneySerializer()
 

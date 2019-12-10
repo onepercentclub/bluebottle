@@ -137,6 +137,15 @@ class ApplicantSerializer(BaseContributionSerializer):
     }
 
 
+class TinyApplicantSerializer(ApplicantSerializer):
+
+    included_serializers = {
+        'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'document': 'bluebottle.assignments.serializers.ApplicantDocumentSerializer',
+    }
+
+
 class ApplicantTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Applicant.objects.all())
     field = 'transitions'

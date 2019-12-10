@@ -77,11 +77,13 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
     model = Contribution
 
     def get_queryset(self):
-        return Contribution.objects.select_related(
-            'user',
-        ).filter(user=self.request.user)
+        return Contribution.objects.prefetch_related('user', 'activity')\
+            .filter(user=self.request.user)\
+            .exclude(donation__status__in=['failed', 'new'])
 
     serializer_class = ContributionSerializer
+
+    pagination_class = None
 
     permission_classes = (IsAuthenticated, )
 

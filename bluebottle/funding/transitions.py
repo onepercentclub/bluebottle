@@ -32,7 +32,8 @@ class FundingTransitions(ActivityTransitions):
     )
     def reviewed(self):
         if self.instance.duration and not self.instance.deadline:
-            self.instance.deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
+            deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
+            self.instance.deadline = deadline.replace(hour=23, minute=59, second=59)
 
     @transition(
         source=values.open,
@@ -216,7 +217,7 @@ class PayoutTransitions(ModelTransitions):
         target=values.started
     )
     def start(self):
-        self.instance.date_approved = timezone.now()
+        self.instance.date_started = timezone.now()
 
     @transition(
         source=['*'],

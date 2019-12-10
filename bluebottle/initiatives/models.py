@@ -121,6 +121,7 @@ class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, 
         null=True, blank=True, on_delete=models.SET_NULL)
 
     has_organization = models.NullBooleanField(null=True, default=None)
+
     organization = models.ForeignKey(
         Organization,
         null=True,
@@ -234,7 +235,10 @@ class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, 
             self.has_organization = True
             self.organization = self.owner.partner_organization
 
-        if not self.has_organization:
+        if self.has_organization is None and (self.organization or self.organization_contact):
+            self.has_organization = True
+
+        if self.has_organization is False:
             self.organization = None
             self.organization_contact = None
 

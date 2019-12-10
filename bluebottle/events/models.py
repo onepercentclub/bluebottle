@@ -145,6 +145,16 @@ class Participant(Contribution):
     def save(self, *args, **kwargs):
         created = self.pk is None
 
+        # Fail the self if hours are set to 0
+        if self.status == ParticipantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:
+            self.transitions.close()
+        # Succeed self if the hours are set to an amount
+        elif self.status in [
+            ParticipantTransitions.values.failed,
+            ParticipantTransitions.values.closed
+        ] and self.time_spent not in [None, '0', 0.0]:
+            self.transitions.succeed()
+
         super(Participant, self).save(*args, **kwargs)
 
         if created and self.status == 'new':

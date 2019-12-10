@@ -169,6 +169,8 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
                              **kwargs)
     except Exception as e:
         msg = None
+        print '#####################'
+        print "Exception while rendering email template: {0}".format(e)
         logger.error("Exception while rendering email template: {0}".format(e))
         return
 

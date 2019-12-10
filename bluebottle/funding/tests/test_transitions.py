@@ -55,7 +55,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.assertAlmostEqual(
             funding.deadline,
-            now() + timedelta(days=30),
+            (now() + timedelta(days=30)).replace(hour=23, minute=59, second=59),
             delta=timedelta(seconds=1)
         )
 
@@ -84,6 +84,10 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(mail.outbox[1].subject, 'Thanks for your donation!')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
         self.assertTrue('Hi Bill,' in mail.outbox[1].body)
+
+        # Donation amount should appear in both emails
+        self.assertTrue(u'€ 50' in mail.outbox[0].body)
+        self.assertTrue(u'€ 50' in mail.outbox[1].body)
 
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()

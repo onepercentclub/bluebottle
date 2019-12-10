@@ -7,9 +7,11 @@ from rest_framework import status
 
 from bluebottle.funding.tests.factories import (
     FundingFactory, BankAccountFactory, DonationFactory,
-    BudgetLineFactory
+    BudgetLineFactory, RewardFactory
 )
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
+from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
+    ExternalAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 
@@ -115,3 +117,55 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(self.funding.status, 'succeeded')
         self.funding.save()
         self.assertEqual(self.funding.amount_raised, Money(100, 'EUR'))
+
+
+class DonationAdminTestCase(BluebottleAdminTestCase):
+
+    def setUp(self):
+        super(DonationAdminTestCase, self).setUp()
+        self.initiative = InitiativeFactory.create()
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.initiative.save()
+        account = StripePayoutAccountFactory.create()
+        bank_account = ExternalAccountFactory.create(connect_account=account)
+
+        self.funding = FundingFactory.create(
+            owner=self.superuser,
+            initiative=self.initiative,
+            bank_account=bank_account
+        )
+        self.admin_url = reverse('admin:funding_donation_changelist')
+
+    def test_donation_admin_pledge_filter(self):
+        for donation in DonationFactory.create_batch(2, activity=self.funding):
+            PledgePaymentFactory.create(donation=donation)
+
+        for donation in DonationFactory.create_batch(7, activity=self.funding):
+            StripePaymentFactory.create(donation=donation)
+
+        self.client.force_login(self.superuser)
+
+        response = self.client.get(self.admin_url, {'status__exact': 'all'})
+        self.assertContains(response, '9 Donations')
+
+        response = self.client.get(self.admin_url, {'status__exact': 'all', 'pledge': 'paid'})
+        self.assertContains(response, '7 Donations')
+
+        response = self.client.get(self.admin_url, {'status__exact': 'all', 'pledge': 'pledged'})
+        self.assertContains(response, '2 Donations')
+
+    def test_donation_reward(self):
+        donation = DonationFactory.create(activity=self.funding)
+
+        url = reverse('admin:funding_donation_change', args=(donation.pk, ))
+        first = RewardFactory.create(title='First', activity=self.funding)
+        second = RewardFactory.create(title='Second', activity=self.funding)
+        third = RewardFactory.create(title='Third')
+
+        self.client.force_login(self.superuser)
+
+        response = self.client.get(url)
+        self.assertTrue(first.title in response.content)
+        self.assertTrue(second.title in response.content)
+        self.assertFalse(third.title in response.content)

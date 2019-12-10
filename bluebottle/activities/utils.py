@@ -110,8 +110,8 @@ class BaseActivityListSerializer(ModelSerializer):
             'description',
             'is_follower',
             'status',
-            'review_status',
             'stats',
+            'review_status',
         )
 
         meta_fields = (
@@ -160,7 +160,7 @@ class BaseContributionSerializer(ModelSerializer):
     transitions = AvailableTransitionsField()
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 

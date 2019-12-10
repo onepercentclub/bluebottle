@@ -163,3 +163,28 @@ class EventTestCase(BluebottleTestCase):
         event.save()
 
         self.assertEqual(len(mail.outbox), 0)
+
+
+class ParticipantTestCase(BluebottleTestCase):
+
+    def test_applicant_status_change_on_time_spent(self):
+        event = EventFactory(
+            title='Test Title',
+            status='open',
+            start_date=now().date()
+        )
+
+        participant = ParticipantFactory.create(activity=event)
+        event.transitions.start()
+        event.end = now()
+        event.transitions.succeed()
+        event.save()
+        participant.refresh_from_db()
+
+        self.assertEqual(participant.status, 'succeeded')
+        participant.time_spent = 0
+        participant.save()
+        self.assertEqual(participant.status, 'closed')
+        participant.time_spent = 10
+        participant.save()
+        self.assertEqual(participant.status, 'succeeded')

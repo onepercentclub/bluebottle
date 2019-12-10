@@ -13,10 +13,10 @@ from django_elasticsearch_dsl.test import ESTestCase
 
 from rest_framework import status
 
-from bluebottle.assignments.tests.factories import AssignmentFactory
+from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
-from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.tasks import SkillFactory
@@ -382,7 +382,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.owner.save()
 
         first = AssignmentFactory.create(review_status='approved', status='full')
+        ApplicantFactory.create_batch(3, activity=first, status='accepted')
+
         second = AssignmentFactory.create(review_status='approved', status='full', expertise=skill)
+        ApplicantFactory.create_batch(3, activity=second, status='accepted')
+
         third = AssignmentFactory.create(review_status='approved', status='open')
         fourth = AssignmentFactory.create(review_status='approved', status='open', expertise=skill)
 
@@ -439,12 +443,16 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         PlaceFactory.create(content_object=self.owner, position='10.0, 20.0')
 
         first = AssignmentFactory.create(review_status='approved', status='full')
+        ApplicantFactory.create_batch(3, activity=first, status='accepted')
+
         second = AssignmentFactory.create(
             review_status='approved',
             status='full',
             is_online=False,
             location=GeolocationFactory.create(position=Point(20.0, 10))
         )
+        ApplicantFactory.create_batch(3, activity=second, status='accepted')
+
         third = AssignmentFactory.create(
             review_status='approved',
             status='open',
@@ -487,8 +495,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         initiative4 = InitiativeFactory.create(place=GeolocationFactory.create(country=country2))
 
         first = AssignmentFactory.create(review_status='approved', status='full', initiative=initiative1)
+        ApplicantFactory.create_batch(3, activity=first, status='accepted')
+
         second = AssignmentFactory.create(review_status='approved', status='open', initiative=initiative3)
-        AssignmentFactory.create(review_status='approved', status='full', initiative=initiative2)
+
+        third = AssignmentFactory.create(review_status='approved', status='full', initiative=initiative2)
+        ApplicantFactory.create_batch(3, activity=third, status='accepted')
+
         AssignmentFactory.create(review_status='approved', status='open', initiative=initiative4)
 
         response = self.client.get(
@@ -508,12 +521,16 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.owner.save()
 
         first = AssignmentFactory.create(review_status='approved', status='full')
+        ApplicantFactory.create_batch(3, activity=first, status='accepted')
+
         second = AssignmentFactory.create(
             review_status='approved',
             status='full',
             is_online=False,
             location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
+        ApplicantFactory.create_batch(3, activity=second, status='accepted')
+
         third = AssignmentFactory.create(review_status='approved', status='open')
         fourth = AssignmentFactory.create(
             review_status='approved',
@@ -697,3 +714,49 @@ class ActivityRelatedImageAPITestCase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class ContributionListAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        super(ContributionListAPITestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory.create()
+
+        ParticipantFactory.create_batch(10, user=self.user)
+        ApplicantFactory.create_batch(10, user=self.user)
+        DonationFactory.create_batch(10, user=self.user)
+
+        ParticipantFactory.create()
+        ApplicantFactory.create()
+        DonationFactory.create()
+
+        self.url = reverse('contribution-list')
+
+    def test_get(self):
+        response = self.client.get(
+            self.url,
+            user=self.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+
+        self.assertEqual(len(data['data']), 30)
+
+    def test_get_anonymous(self):
+        response = self.client.get(
+            self.url
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_other_user(self):
+        response = self.client.get(
+            self.url,
+            user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+
+        self.assertEqual(len(data['data']), 0)

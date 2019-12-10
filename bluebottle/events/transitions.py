@@ -174,7 +174,7 @@ class ParticipantTransitions(ContributionTransitions):
         follow(self.instance.user, self.instance.activity)
 
     @transition(
-        source=[values.new, values.no_show, values.rejected, values.withdrawn],
+        source=[values.new, values.no_show, values.rejected, values.withdrawn, values.closed],
         target=values.succeeded,
         conditions=[event_is_successful]
     )

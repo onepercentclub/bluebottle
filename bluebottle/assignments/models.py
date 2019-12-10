@@ -133,7 +133,7 @@ class Assignment(Activity):
 
             self.save()
 
-    def check_capacity(self):
+    def check_capacity(self, save=True):
         if self.capacity \
                 and len(self.accepted_applicants) >= self.capacity \
                 and self.status == AssignmentTransitions.values.open:
@@ -143,7 +143,12 @@ class Assignment(Activity):
                 and len(self.accepted_applicants) < self.capacity \
                 and self.status == AssignmentTransitions.values.full:
             self.transitions.reopen()
-            self.save()
+            if save:
+                self.save()
+
+    def save(self, *args, **kwargs):
+        self.check_capacity(save=False)
+        return super(Assignment, self).save(*args, **kwargs)
 
 
 class Applicant(Contribution):
@@ -177,8 +182,11 @@ class Applicant(Contribution):
         # Fail the self if hours are set to 0
         if self.status == ApplicantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:
             self.transitions.fail()
-        # Unfail an self if the hours are set to an amount
-        elif self.status == ApplicantTransitions.values.failed and self.time_spent not in [None, '0', 0.0]:
+        # Succeed self if the hours are set to an amount
+        elif self.status in [
+            ApplicantTransitions.values.failed,
+            ApplicantTransitions.values.closed
+        ] and self.time_spent not in [None, '0', 0.0]:
             self.transitions.succeed()
         super(Applicant, self).save(*args, **kwargs)
 
@@ -187,5 +195,8 @@ class Applicant(Contribution):
             self.transitions.initiate()
         self.activity.assignment.check_capacity()
 
+    def delete(self, *args, **kwargs):
+        super(Applicant, self).delete(*args, **kwargs)
+        self.activity.check_capacity()
 
 from bluebottle.assignments.signals import *  # noqa

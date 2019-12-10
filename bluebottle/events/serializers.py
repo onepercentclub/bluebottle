@@ -32,7 +32,7 @@ class ParticipantSerializer(BaseContributionSerializer):
         ]
 
     included_serializers = {
-        'activity': 'bluebottle.events.serializers.EventSerializer',
+        'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 

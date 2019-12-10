@@ -131,7 +131,7 @@ class ApplicantSerializer(BaseContributionSerializer):
         ]
 
     included_serializers = {
-        'activity': 'bluebottle.assignments.serializers.AssignmentSerializer',
+        'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'document': 'bluebottle.assignments.serializers.ApplicantDocumentSerializer',
     }

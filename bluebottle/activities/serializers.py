@@ -89,6 +89,15 @@ class ActivitySerializer(PolymorphicModelSerializer):
         ]
 
 
+class TinyActivityListSerializer(ModelSerializer):
+    class Meta:
+        model = Activity
+        fields = ('id', 'slug', 'title', )
+        meta_fields = (
+            'created', 'updated',
+        )
+
+
 class ContributionSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         ParticipantSerializer,
@@ -97,7 +106,7 @@ class ContributionSerializer(PolymorphicModelSerializer):
     ]
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
+        'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 

@@ -79,12 +79,11 @@ class AssignmentTestCase(BluebottleTestCase):
             capacity=3,
         )
         ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
-
+        assignment.refresh_from_db()
         self.assertEqual(assignment.status, 'full')
-
         assignment.capacity = 10
         assignment.save()
-
+        assignment.refresh_from_db()
         self.assertEqual(assignment.status, 'open')
 
     def test_check_status_applicant_removed(self):
@@ -95,11 +94,10 @@ class AssignmentTestCase(BluebottleTestCase):
             capacity=3,
         )
         applicants = ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
-
+        assignment.refresh_from_db()
         self.assertEqual(assignment.status, 'full')
-
         applicants[0].delete()
-
+        assignment.refresh_from_db()
         self.assertEqual(assignment.status, 'open')
 
 

@@ -628,10 +628,22 @@ class ParticipantListFilterCase(BluebottleTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)
-        ParticipantFactory.create_batch(3, activity=self.event, status='succeeded')
+        self.event = EventFactory(
+            title='Test Title',
+            status='open',
+            start_date=(now() - timedelta(hours=5)).date(),
+            start_time=(now() - timedelta(hours=5)).time(),
+            owner=self.initiative.owner,
+            initiative=self.initiative,
+            duration=4
+        )
+
+        ParticipantFactory.create_batch(3, activity=self.event, status='new')
         ParticipantFactory.create_batch(2, activity=self.event, status='closed')
-        ParticipantFactory.create_batch(3, status='succeeded')
+        ParticipantFactory.create_batch(3, status='new')
+        self.event.transitions.start()
+        self.event.transitions.succeed()
+        self.event.save()
 
         self.participant_url = reverse('participant-list')
         self.event_url = reverse('event-detail', args=(self.event.pk,))

@@ -135,7 +135,7 @@ class InitiativePlaceAdmin(admin.ModelAdmin):
 @admin.register(Geolocation)
 class GeolocationAdmin(admin.ModelAdmin):
 
-    list_display = ('street', 'locality', 'country')
+    list_display = ('__unicode__', 'street', 'locality', 'country')
 
     list_filter = ('country', )
     search_fields = ('locality', 'street', 'formatted_address')

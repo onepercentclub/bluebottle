@@ -133,7 +133,7 @@ class Assignment(Activity):
 
             self.save()
 
-    def check_capacity(self):
+    def check_capacity(self, save=True):
         if self.capacity \
                 and len(self.accepted_applicants) >= self.capacity \
                 and self.status == AssignmentTransitions.values.open:
@@ -143,7 +143,12 @@ class Assignment(Activity):
                 and len(self.accepted_applicants) < self.capacity \
                 and self.status == AssignmentTransitions.values.full:
             self.transitions.reopen()
-            self.save()
+            if save:
+                self.save()
+
+    def save(self, *args, **kwargs):
+        self.check_capacity(save=False)
+        return super(Assignment, self).save(*args, **kwargs)
 
 
 class Applicant(Contribution):
@@ -187,5 +192,8 @@ class Applicant(Contribution):
             self.transitions.initiate()
         self.activity.check_capacity()
 
+    def delete(self, *args, **kwargs):
+        super(Applicant, self).delete(*args, **kwargs)
+        self.activity.check_capacity()
 
 from bluebottle.assignments.signals import *  # noqa

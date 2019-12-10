@@ -70,3 +70,34 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment.save()
 
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_check_status_capacity_changed(self):
+        assignment = AssignmentFactory(
+            title='Test Title',
+            status='open',
+            end_date=date.today() + timedelta(days=4),
+            capacity=3,
+        )
+        ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
+
+        self.assertEqual(assignment.status, 'full')
+
+        assignment.capacity = 10
+        assignment.save()
+
+        self.assertEqual(assignment.status, 'open')
+
+    def test_check_status_applicant_removed(self):
+        assignment = AssignmentFactory(
+            title='Test Title',
+            status='open',
+            end_date=date.today() + timedelta(days=4),
+            capacity=3,
+        )
+        applicants = ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
+
+        self.assertEqual(assignment.status, 'full')
+
+        applicants[0].delete()
+
+        self.assertEqual(assignment.status, 'open')

@@ -55,7 +55,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.assertAlmostEqual(
             funding.deadline,
-            now() + timedelta(days=30),
+            (now() + timedelta(days=30)).replace(hour=23, minute=59, second=59),
             delta=timedelta(seconds=1)
         )
 

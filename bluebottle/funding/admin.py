@@ -246,11 +246,28 @@ class FundingAdmin(ActivityChildAdmin):
     combined_status.short_description = _('status')
 
 
+class DonationAdminForm(forms.ModelForm):
+    class Meta:
+        model = Donation
+        exclude = ()
+
+    def __init__(self, *args, **kwargs):
+        super(DonationAdminForm, self).__init__(*args, **kwargs)
+        if self.instance:
+            if self.instance.id:
+                # You can only select a reward if the project is set on the donation
+                self.fields['reward'].queryset = Reward.objects.filter(activity=self.instance.activity)
+            else:
+                self.fields['reward'].queryset = Reward.objects.none()
+
+
 @admin.register(Donation)
 class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     model = Donation
+    form = DonationAdminForm
+
     raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'status', 'payment_link', 'reward']
+    readonly_fields = ['payment_link', 'status', 'payment_link', ]
     list_display = ['transition_date', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', ]
     list_filter = [
         DonationAdminStatusFilter,

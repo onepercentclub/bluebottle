@@ -14,21 +14,21 @@ class AssignmentTestCase(BluebottleTestCase):
         self.assertEqual(activity.get_absolute_url(), expected)
 
     def test_slug(self):
-        initiative = AssignmentFactory(title='Test Title')
+        assignment = AssignmentFactory(title='Test Title')
         self.assertEqual(
-            initiative.slug, 'test-title'
+            assignment.slug, 'test-title'
         )
 
     def test_slug_empty(self):
-        initiative = AssignmentFactory(title='')
+        assignment = AssignmentFactory(title='')
         self.assertEqual(
-            initiative.slug, 'new'
+            assignment.slug, 'new'
         )
 
     def test_slug_special_characters(self):
-        initiative = AssignmentFactory(title='!!! $$$$')
+        assignment = AssignmentFactory(title='!!! $$$$')
         self.assertEqual(
-            initiative.slug, 'new'
+            assignment.slug, 'new'
         )
 
     def test_date_changed(self):
@@ -101,3 +101,28 @@ class AssignmentTestCase(BluebottleTestCase):
         applicants[0].delete()
 
         self.assertEqual(assignment.status, 'open')
+
+
+class ApplicantTestCase(BluebottleTestCase):
+
+    def test_applicant_status_change_on_time_spent(self):
+        assignment = AssignmentFactory(
+            title='Test Title',
+            status='open',
+            end_date=date.today() + timedelta(days=4),
+        )
+
+        applicant = ApplicantFactory.create(activity=assignment)
+        applicant.transitions.accept()
+        applicant.save()
+        assignment.transitions.succeed()
+        assignment.save()
+        applicant.refresh_from_db()
+
+        self.assertEqual(applicant.status, 'succeeded')
+        applicant.time_spent = 0
+        applicant.save()
+        self.assertEqual(applicant.status, 'failed')
+        applicant.time_spent = 10
+        applicant.save()
+        self.assertEqual(applicant.status, 'succeeded')

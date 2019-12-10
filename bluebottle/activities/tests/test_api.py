@@ -742,6 +742,21 @@ class ContributionListAPITestCase(BluebottleTestCase):
         data = response.json()
 
         self.assertEqual(len(data['data']), 30)
+        for contribution in data['data']:
+            self.assertTrue(
+                contribution['type'] in (
+                    'contributions/applicants',
+                    'contributions/participants',
+                    'contributions/donations'
+                )
+            )
+            self.assertTrue(
+                contribution['relationships']['activity']['data']['type'] in (
+                    'activities/fundings',
+                    'activities/events',
+                    'activities/assignments'
+                )
+            )
 
     def test_get_anonymous(self):
         response = self.client.get(

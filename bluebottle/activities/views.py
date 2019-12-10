@@ -12,7 +12,7 @@ from bluebottle.activities.serializers import (
     ActivityReviewTransitionSerializer,
     RelatedActivityImageSerializer,
     ActivityListSerializer,
-    ContributionSerializer
+    ContributionListSerializer
 )
 from bluebottle.files.views import ImageContentView
 from bluebottle.files.models import RelatedImage
@@ -79,9 +79,11 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
     def get_queryset(self):
         return Contribution.objects.prefetch_related(
             'user', 'activity'
-        ).filter(user=self.request.user)
+        ).filter(
+            user=self.request.user
+        ).order_by('-created')
 
-    serializer_class = ContributionSerializer
+    serializer_class = ContributionListSerializer
 
     pagination_class = None
 

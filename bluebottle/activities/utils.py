@@ -131,6 +131,27 @@ class BaseActivityListSerializer(ModelSerializer):
         resource_name = 'activities'
 
 
+class BaseTinyActivitySerializer(ModelSerializer):
+    title = serializers.CharField(allow_blank=True, required=False)
+    slug = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Activity
+        fields = (
+            'slug',
+            'id',
+            'title',
+        )
+
+        meta_fields = (
+            'created',
+            'updated',
+        )
+
+    class JSONAPIMeta:
+        pass
+
+
 class ActivitySubmitSerializer(ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(required=True, queryset=Member.objects.all())
     title = serializers.CharField(required=True)
@@ -149,6 +170,29 @@ class ActivitySubmitSerializer(ModelSerializer):
             'title',
             'description',
         )
+
+
+# This can't be in serializers because of circular imports
+class BaseContributionListSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
+    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+
+    included_serializers = {
+        'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+    class Meta:
+        model = Contribution
+        fields = ('user', 'activity', 'status', 'created', 'updated', )
+        meta_fields = ('created', 'updated', )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'user',
+            'activity',
+        ]
+        resource_name = 'contributions'
 
 
 # This can't be in serializers because of circular imports

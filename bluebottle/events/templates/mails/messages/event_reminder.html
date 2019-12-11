@@ -12,7 +12,7 @@ Want to know about the latest updates? Check out the <a href="{{url}}">event</a>
 {% endblock %}
 
 {% block action %}
-    <a href="{{ site }}{{ obj.get_absolute_url }}" class="action-email">
+    <a href="{{ obj.get_absolute_url }}" class="action-email">
        {% trans 'Goto event' context 'email' %}:
     </a>
 {% endblock %}`

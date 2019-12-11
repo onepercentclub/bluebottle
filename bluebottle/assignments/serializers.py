@@ -4,7 +4,8 @@ from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer,
-    BaseActivityListSerializer)
+    BaseActivityListSerializer, BaseTinyActivitySerializer
+)
 from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.permissions import ApplicantDocumentPermission
@@ -36,6 +37,7 @@ class AssignmentListSerializer(BaseActivityListSerializer):
         )
 
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
+        resource_name = 'activities/assignments'
         included_resources = [
             'location',
             'expertise',
@@ -49,6 +51,16 @@ class AssignmentListSerializer(BaseActivityListSerializer):
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )
+
+
+class TinyAssignmentSerializer(BaseTinyActivitySerializer):
+
+    class Meta(BaseTinyActivitySerializer.Meta):
+        model = Assignment
+        fields = BaseTinyActivitySerializer.Meta.fields
+
+    class JSONAPIMeta(BaseTinyActivitySerializer.JSONAPIMeta):
+        resource_name = 'activities/assignments'
 
 
 class AssignmentSerializer(BaseActivitySerializer):
@@ -71,6 +83,7 @@ class AssignmentSerializer(BaseActivitySerializer):
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
+        resource_name = 'activities/assignments'
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'location',
             'expertise',
@@ -102,6 +115,28 @@ class AssignmentTransitionSerializer(TransitionSerializer):
         resource_name = 'assignment-transitions'
 
 
+class ApplicantListSerializer(BaseContributionSerializer):
+    time_spent = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
+    class Meta(BaseContributionSerializer.Meta):
+        model = Applicant
+        fields = BaseContributionSerializer.Meta.fields + (
+            'time_spent',
+        )
+
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        resource_name = 'contributions/applicants'
+        included_resources = [
+            'user',
+            'activity',
+        ]
+
+    included_serializers = {
+        'activity': 'bluebottle.assignments.serializers.TinyAssignmentSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+
 class ApplicantSerializer(BaseContributionSerializer):
     time_spent = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
@@ -131,7 +166,7 @@ class ApplicantSerializer(BaseContributionSerializer):
         ]
 
     included_serializers = {
-        'activity': 'bluebottle.assignments.serializers.AssignmentSerializer',
+        'activity': 'bluebottle.assignments.serializers.AssignmentListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'document': 'bluebottle.assignments.serializers.ApplicantDocumentSerializer',
     }

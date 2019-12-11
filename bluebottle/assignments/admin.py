@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.tasks.models import Skill
-from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.admin import export_as_csv_action, FSMAdmin
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.forms import FSMModelForm
 
@@ -57,7 +57,10 @@ class ApplicantAdmin(ContributionChildAdmin):
         ('document', 'Document'),
     )
 
-    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+    actions = [
+        FSMAdmin.bulk_transition,
+        export_as_csv_action(fields=export_to_csv_fields)
+    ]
 
 
 class ExpertiseFilter(admin.SimpleListFilter):
@@ -120,4 +123,7 @@ class AssignmentAdmin(ActivityChildAdmin):
         ('location', 'Location'),
     )
 
-    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+    actions = [
+        FSMAdmin.bulk_transition,
+        export_as_csv_action(fields=export_to_csv_fields)
+    ]

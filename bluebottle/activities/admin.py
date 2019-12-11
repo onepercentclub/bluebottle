@@ -92,7 +92,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         return [
             'complete',
             'valid',
-            'status',
+            'combined_status',
             'transitions',
             'transition_date'
         ]

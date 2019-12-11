@@ -213,6 +213,9 @@ class FSMAdminMixin(object):
     transition_selected_confirmation_template = None
 
     def bulk_transition(self, request, queryset):
+        # Reload queryset to make sure it is really polymorphic
+        queryset = queryset.model.objects.filter(id__in=queryset.values_list('id', flat=True))
+
         opts = self.model._meta
         app_label = opts.app_label
 
@@ -252,7 +255,7 @@ class FSMAdminMixin(object):
                             'Changed status to {} (Admin bulk)'.format(transition.target)
                         )
                     except TransitionNotPossible:
-                        errors = transition.errors(obj.transitions)
+                        errors = [str(e) for e in transition.errors(obj.transitions)]
                         error_list.append(
                             'Could not transition <i>{}</i> because: <b>{}</b>'.format(obj, ", ".join(errors))
                         )
@@ -389,6 +392,4 @@ class FSMAdminMixin(object):
 
 class FSMAdmin(FSMAdminMixin, admin.ModelAdmin):
 
-    actions = admin.ModelAdmin.actions + [
-        FSMAdminMixin.bulk_transition
-    ]
+    pass

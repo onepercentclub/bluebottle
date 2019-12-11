@@ -12,6 +12,7 @@ from bluebottle.funding.messages import (
     FundingClosedMessage, FundingPartiallyFundedMessage
 )
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
+from bluebottle.utils.transitions import ReviewTransitions
 
 
 class FundingTransitions(ActivityTransitions):
@@ -25,12 +26,32 @@ class FundingTransitions(ActivityTransitions):
         if not self.instance.amount_raised >= self.instance.target:
             return _("Amount raised should at least equal to target amount.")
 
+    def is_complete(self):
+        errors = [
+            _('{} is required').format(self.instance._meta.get_field(field).verbose_name)
+            for field in self.instance.required
+        ]
+
+        if errors:
+            return errors
+
+    def is_valid(self):
+        errors = [
+            error.message[0] for error in self.instance.errors
+        ]
+
+        if errors:
+            return errors
+
     @transition(
         source=values.in_review,
         target=values.open,
+        conditions=[is_complete, is_valid],
         permissions=[ActivityTransitions.can_approve],
     )
     def reviewed(self):
+        if self.instance.review_status != ReviewTransitions.values.approved:
+            self.instance.review_transitions.approve()
         if self.instance.duration and not self.instance.deadline:
             deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
             self.instance.deadline = deadline.replace(hour=23, minute=59, second=59)

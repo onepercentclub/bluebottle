@@ -16,7 +16,7 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
     slug = serializers.SlugField(allow_null=True, required=False)
     name = serializers.CharField(required=True)
     website = serializers.CharField(allow_blank=True, required=False)
-    logo = ImageSerializer(required=False, allow_blank=True, allow_null=True)
+    logo = ImageSerializer(required=False, allow_null=True)
 
     permissions = ResourcePermissionField('organization_detail', view_args=('pk',))
 

@@ -186,7 +186,7 @@ class ApplicantTransitions(ContributionTransitions):
 
     @transition(
         field='status',
-        source=[values.active, values.failed, values.accepted],
+        source='*',
         target=values.succeeded,
         permissions=[ContributionTransitions.is_activity_manager]
     )

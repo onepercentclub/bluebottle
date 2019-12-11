@@ -722,9 +722,10 @@ class ContributionListAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 
-        ParticipantFactory.create_batch(10, user=self.user)
-        ApplicantFactory.create_batch(10, user=self.user)
-        DonationFactory.create_batch(10, user=self.user)
+        ParticipantFactory.create_batch(2, user=self.user)
+        ApplicantFactory.create_batch(2, user=self.user)
+        DonationFactory.create_batch(2, user=self.user, status='succeeded')
+        DonationFactory.create_batch(2, user=self.user, status='new')
 
         ParticipantFactory.create()
         ApplicantFactory.create()
@@ -741,7 +742,7 @@ class ContributionListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
 
-        self.assertEqual(len(data['data']), 30)
+        self.assertEqual(len(data['data']), 6)
         for contribution in data['data']:
             self.assertTrue(
                 contribution['type'] in (

@@ -81,6 +81,10 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
             'user', 'activity'
         ).filter(
             user=self.request.user
+        ).exclude(
+            status__in=['closed', 'failed']
+        ).exclude(
+            donation__status__in=['new']
         ).order_by('-created')
 
     serializer_class = ContributionListSerializer

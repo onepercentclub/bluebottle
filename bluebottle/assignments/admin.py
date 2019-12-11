@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.assignments.models import Assignment, Applicant
@@ -16,6 +17,9 @@ class AssignmentAdminForm(FSMModelForm):
     class Meta:
         model = Assignment
         fields = '__all__'
+        widgets = {
+            'description': SummernoteWidget(attrs={'height': 400})
+        }
 
 
 class ApplicantInline(admin.TabularInline):

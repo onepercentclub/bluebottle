@@ -54,6 +54,13 @@
                 </li>
             {% endfor %}
         </ul>
+        <div>
+            <input type="checkbox" checked id="send_messages" name="send_messages">
+            <label for="send_messages">
+                {% trans "Send messages triggered by this transition" %}
+            </label>
+        </div>
+        <br>
         <input type="hidden" name="action" value="bulk_transition" />
         <input type="hidden" name="post" value="yes" />
         <input type="submit" name="confirm" value="{% trans "Yes, I'm sure" %}" />

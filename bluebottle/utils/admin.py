@@ -240,13 +240,16 @@ class FSMAdminMixin(object):
         if request.POST.get('confirm') and request.POST.get('transition'):
             success = 0
             error = 0
+            send_messages = request.POST.get('send_messages')
             if queryset.count():
                 transition_name = request.POST.get('transition')
                 error_list = []
                 for obj in queryset.all():
                     transition = self.get_transition(obj, transition_name, 'transitions')
                     try:
-                        getattr(obj.transitions, transition_name)()
+                        getattr(obj.transitions, transition_name)(
+                            send_messages=send_messages
+                        )
                         obj.save()
                         success += 1
                         log_action(

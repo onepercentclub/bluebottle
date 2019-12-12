@@ -6,6 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
 from bluebottle.tasks.models import Skill
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.notifications.admin import MessageAdminInline
@@ -120,3 +121,16 @@ class AssignmentAdmin(ActivityChildAdmin):
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            # If we created a new applicant through admin then
+            # set it to succeeded when assignment is succeeded
+            if (instance.__class__ == Applicant and
+                    not instance.pk and
+                    form.instance.status == AssignmentTransitions.values.succeeded):
+                instance.time_spent = form.instance.duration
+                instance.status = ApplicantTransitions.values.succeeded
+            instance.save()
+        formset.save_m2m()

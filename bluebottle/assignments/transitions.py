@@ -50,6 +50,7 @@ class AssignmentTransitions(ActivityTransitions):
     )
     def succeed(self, **kwargs):
         for member in self.instance.accepted_applicants:
+            member.activity = self.instance
             member.transitions.succeed()
             member.save()
 
@@ -69,6 +70,7 @@ class AssignmentTransitions(ActivityTransitions):
             ApplicantTransitions.values.succeeded
         ]
         for member in self.instance.contributions.filter(status__in=states):
+            member.activity = self.instance
             member.transitions.succeed()
             member.save()
 

@@ -82,6 +82,23 @@ class EventTransitions(ActivityTransitions):
             member.save()
 
     @transition(
+        field='status',
+        source=[values.closed],
+        target=values.succeeded,
+        permissions=[ActivityTransitions.is_system],
+        messages=[EventSucceededOwnerMessage]
+    )
+    def reopen_and_succeed(self, **kwargs):
+        states = [
+            ParticipantTransitions.values.new,
+            ParticipantTransitions.values.closed,
+            ParticipantTransitions.values.succeeded
+        ]
+        for member in self.instance.contributions.filter(status__in=states):
+            member.transitions.succeed()
+            member.save()
+
+    @transition(
         source='*',
         target=values.closed,
         messages=[EventClosedOwnerMessage],

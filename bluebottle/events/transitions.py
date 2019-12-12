@@ -95,6 +95,7 @@ class EventTransitions(ActivityTransitions):
             ParticipantTransitions.values.succeeded
         ]
         for member in self.instance.contributions.filter(status__in=states):
+            member.activity = self.instance
             member.transitions.succeed()
             member.save()
 

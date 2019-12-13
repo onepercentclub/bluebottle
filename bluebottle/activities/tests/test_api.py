@@ -759,6 +759,24 @@ class ContributionListAPITestCase(BluebottleTestCase):
                 )
             )
 
+        for i in data['included']:
+            if i['type'] == 'activities/events':
+                self.assertTrue('start-time' in i['attributes'])
+                self.assertTrue('start-date' in i['attributes'])
+                self.assertTrue('duration' in i['attributes'])
+                self.assertTrue('slug' in i['attributes'])
+                self.assertTrue('title' in i['attributes'])
+
+            if i['type'] == 'activities/assignments':
+                self.assertTrue('end-date' in i['attributes'])
+                self.assertTrue('end-date-type' in i['attributes'])
+                self.assertTrue('slug' in i['attributes'])
+                self.assertTrue('title' in i['attributes'])
+
+            if i['type'] == 'activities/funding':
+                self.assertTrue('slug' in i['attributes'])
+                self.assertTrue('title' in i['attributes'])
+
     def test_get_anonymous(self):
         response = self.client.get(
             self.url

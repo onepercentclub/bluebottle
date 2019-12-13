@@ -348,6 +348,12 @@ class FundingDetailTestCase(BluebottleTestCase):
             bank_account['id'], unicode(self.funding.bank_account.pk)
         )
 
+        # Check that both bank and connect account are included
+        external = get_included(response, 'payout-accounts/stripe-external-accounts')
+        self.assertEqual(external['account_id'], 'some-external-account-id')
+        connect = get_included(response, 'payout-accounts/stripes')
+        self.assertEqual(connect['account_id'], 'some-connect-id')
+
     def test_other_user(self):
         DonationFactory.create_batch(5, amount=Money(200, 'EUR'), activity=self.funding, status='succeeded')
         DonationFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')

@@ -290,6 +290,9 @@ class ConnectWebHookView(View):
         try:
             if event.type == 'account.updated':
                 account = self.get_account(event.data.object.id)
+                # Bust cached account
+                if account.account:
+                    del account.account
                 if (
                     account.status != PayoutAccountTransitions.values.verified and
                     account.complete

@@ -1,6 +1,7 @@
 import json
 from operator import attrgetter
 
+from django.utils.functional import cached_property
 from djmoney.money import Money
 
 from bluebottle.funding.exception import PaymentException
@@ -16,6 +17,7 @@ from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount, BankAccount)
+from bluebottle.funding.transitions import PayoutAccountTransitions
 from bluebottle.funding_stripe.transitions import (
     StripePaymentTransitions,
     StripeSourcePaymentTransitions,
@@ -334,17 +336,36 @@ class StripePayoutAccount(PayoutAccount):
             yield 'external_account'
 
     def check_status(self):
-        account_details = getattr(self.account, 'legal_entity', None)
-        if (
-            account_details and
-            account_details.verification.status == 'verified'
-        ):
-            self.transitions.verify()
+        if self.account:
+            del self.account
+        account_details = getattr(self.account, 'individual', None)
+
+        if account_details:
+            if account_details.verification.status == 'verified':
+                if self.status != PayoutAccountTransitions.values.verified:
+                    self.transitions.verify()
+            elif account_details.verification.status == 'pending':
+                if self.status != PayoutAccountTransitions.values.pending:
+                    self.transitions.pending()
+            else:
+                if self.status != PayoutAccountTransitions.values.rejected:
+                    self.transitions.reject()
         else:
-            self.transitions.reject()
+            if self.status != PayoutAccountTransitions.values.rejected:
+                self.transitions.reject()
+
+        externals = self.account['external_accounts']['data']
+        for external in externals:
+            print external
+            external_account, _created = ExternalAccount.objects.get_or_create(
+                account_id=external['id']
+            )
+            external_account.account = external
+            external_account.connect_account = self
+            external_account.save()
         self.save()
 
-    @property
+    @cached_property
     def account(self):
         if not hasattr(self, '_account'):
             try:
@@ -430,7 +451,7 @@ class ExternalAccount(BankAccount):
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'ba_...'"))
     provider_class = StripePaymentProvider
 
-    @property
+    @cached_property
     def account(self):
         if self.account_id:
             if not hasattr(self, '_account'):

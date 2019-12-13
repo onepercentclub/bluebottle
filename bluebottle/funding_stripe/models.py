@@ -330,7 +330,7 @@ class StripePayoutAccount(PayoutAccount):
                 if value in (None, ''):
                     yield field
 
-        if not self.account.external_accounts.total_count > 0:
+        if not len(self.account.external_accounts):
             yield 'external_account'
 
     @property

@@ -298,7 +298,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
         if obj.anonymous:
             return format_html('<i style="color: #999">anonymous</i>')
         if obj.user:
-            user_url = reverse('admin:funding_funding_change', args=(obj.user.id,))
+            user_url = reverse('admin:members_member_change', args=(obj.user.id,))
             return format_html(u'<a href="{}">{}</a>', user_url, obj.user.full_name)
         return format_html('<i style="color: #999">guest</i>')
 

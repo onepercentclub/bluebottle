@@ -327,12 +327,34 @@ class FundingDetailTestCase(BluebottleTestCase):
         )
         self.funding.save()
 
+        connect_external_account = stripe.BankAccount('some-external-account-id')
+        connect_external_account.update(bunch.bunchify({
+            'object': 'bank_account',
+            'account_holder_name': 'Jane Austen',
+            'account_holder_type': 'individual',
+            'bank_name': 'STRIPE TEST BANK',
+            'country': 'US',
+            'currency': 'usd',
+            'fingerprint': '1JWtPxqbdX5Gamtc',
+            'last4': '6789',
+            'metadata': {
+                'order_id': '6735'
+            },
+            'routing_number': '110000000',
+            'status': 'new',
+            'account': 'acct_1032D82eZvKYlo2C'
+        }))
+
+        external_accounts = stripe.ListObject()
+        external_accounts.data = [connect_external_account]
+        external_accounts.update({
+            'total_count': 1,
+        })
+
         connect_account = stripe.Account('some-connect-id')
         connect_account.update({
             'country': 'NL',
-            'external_accounts': stripe.ListObject({
-                'data': [connect_account]
-            })
+            'external_accounts': external_accounts
         })
 
         with mock.patch(

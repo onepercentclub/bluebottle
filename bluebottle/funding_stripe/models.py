@@ -333,6 +333,17 @@ class StripePayoutAccount(PayoutAccount):
         if not self.account.external_accounts.total_count > 0:
             yield 'external_account'
 
+    def check_status(self):
+        account_details = getattr(self.account, 'legal_entity', None)
+        if (
+            account_details and
+            account_details.verification.status == 'verified'
+        ):
+            self.transitions.verify()
+        else:
+            self.transitions.reject()
+        self.save()
+
     @property
     def account(self):
         if not hasattr(self, '_account'):

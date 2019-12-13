@@ -1,6 +1,9 @@
+from django.conf.urls import url
 from django.contrib import admin, messages
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin, \
     BankAccountChildAdmin
@@ -61,6 +64,25 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
                 messages.ERROR
             )
         return super(StripePayoutAccountAdmin, self).save_model(request, obj, form, change)
+
+    def get_urls(self):
+        urls = super(StripePayoutAccountAdmin, self).get_urls()
+        custom_urls = [
+            url(
+                r'^(?P<account_id>.+)/check_status/$',
+                self.admin_site.admin_view(self.check_status),
+                name='funding-stripe-account-check',
+            ),
+        ]
+        return custom_urls + urls
+
+    def check_status(self, request, account_id):
+        account = StripePayoutAccount.objects.get(id=account_id)
+        account.check_status()
+        payout_url = reverse('admin:funding_payoutaccount_change', args=(account_id,))
+        return HttpResponseRedirect(payout_url)
+
+    check_status.short_description = _('Check status at Stripe')
 
 
 @admin.register(ExternalAccount)

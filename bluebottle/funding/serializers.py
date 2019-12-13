@@ -205,6 +205,10 @@ class BankAccountSerializer(PolymorphicModelSerializer):
         ]
         resource_name = 'payout-accounts/external-accounts'
 
+    included_serializers = {
+        'connect_account': 'bluebottle.funding.serializers.PayoutAccountSerializer',
+    }
+
 
 class FundingListSerializer(BaseActivityListSerializer):
     target = MoneySerializer(required=False, allow_null=True)
@@ -318,6 +322,7 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             'contributions',
             'contributions.user',
             'bank_account',
+            'bank_account.connect_account',
         ]
         resource_name = 'activities/fundings'
 

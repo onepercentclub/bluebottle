@@ -144,7 +144,7 @@ class TinyEventSerializer(BaseTinyActivitySerializer):
 
     class Meta(BaseTinyActivitySerializer.Meta):
         model = Event
-        fields = BaseTinyActivitySerializer.Meta.fields + ('start', 'end')
+        fields = BaseTinyActivitySerializer.Meta.fields + ('start_time', 'start_date', 'duration')
 
     class JSONAPIMeta(BaseTinyActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/events'

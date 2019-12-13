@@ -120,9 +120,7 @@ class StripePayoutAccountTransitions(PayoutAccountTransitions):
             PayoutAccountTransitions.values.new
         ],
         messages=[PayoutAccountVerified],
-        target=[
-            PayoutAccountTransitions.values.verified
-        ],
+        target=PayoutAccountTransitions.values.verified
     )
     def verify(self):
         self.instance.save()

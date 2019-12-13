@@ -53,7 +53,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     def get_fields(self, request, obj=None):
         fields = super(StripePayoutAccountAdmin, self).get_fields(request, obj)
         if request.user.is_superuser:
-            fields += ('stripe_link',)
+            fields = fields + ['stripe_link']
         return fields
 
     def save_model(self, request, obj, form, change):
@@ -119,7 +119,13 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
             url = 'https://dashboard.stripe.com/test/connect/accounts/{}'.format(obj.account_id)
         else:
             url = 'https://dashboard.stripe.com/test/connect/accounts/{}'.format(obj.account_id)
-        return format_html('<a href="{}" target="_blank">{}</a>', url, obj.account_id)
+        return format_html(
+            '<a href="{}" target="_blank">{}</a><br/>'
+            '<small>{}</small>',
+            url, obj.account_id,
+            _('This is only visible for superadmin accounts.')
+        )
+    stripe_link.short_description = _('Stripe link')
 
 
 @admin.register(ExternalAccount)

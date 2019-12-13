@@ -1,8 +1,12 @@
 import json
 from datetime import timedelta
+import urlparse
 
 from django.urls import reverse
-from django.utils.timezone import now
+from django.utils.timezone import now, utc
+
+import icalendar
+
 from rest_framework import status
 
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
@@ -308,6 +312,81 @@ class EventAPITestCase(BluebottleTestCase):
         }
         response = self.client.put(event_url, json.dumps(data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_event_calendar_links(self):
+        event = EventFactory.create(title='Pollute Katwijk Beach')
+        event_url = reverse('event-detail', args=(event.pk,))
+        response = self.client.get(event_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        links = response.json()['data']['attributes']['links']
+        google_link = urlparse.urlparse(links['google-calendar'])
+        google_query = urlparse.parse_qs(google_link.query)
+
+        self.assertEqual(google_link.netloc, 'calendar.google.com')
+        self.assertEqual(google_link.path, '/calendar/render')
+
+        self.assertEqual(google_query['action'][0], 'TEMPLATE')
+        self.assertEqual(google_query['location'][0], event.location.formatted_address)
+        self.assertEqual(google_query['text'][0], event.title)
+        self.assertEqual(google_query['uid'][0], 'test-event-{}'.format(event.pk))
+        self.assertEqual(google_query['details'][0], '{}\n{}'.format(event.description, event.get_absolute_url()))
+        self.assertEqual(
+            google_query['dates'][0],
+            u'{}/{}'.format(
+                event.start.astimezone(utc).strftime('%Y%m%dT%H%M%SZ'),
+                event.end.astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
+            )
+        )
+
+        outlook_link = urlparse.urlparse(links['outlook'])
+        outlook_query = urlparse.parse_qs(outlook_link.query)
+
+        self.assertEqual(outlook_link.netloc, 'outlook.live.com')
+        self.assertEqual(outlook_link.path, '/owa/')
+
+        self.assertEqual(outlook_query['rru'][0], 'addevent')
+        self.assertEqual(outlook_query['path'][0], u'/calendar/action/compose&rru=addevent')
+        self.assertEqual(outlook_query['location'][0], event.location.formatted_address)
+        self.assertEqual(outlook_query['subject'][0], event.title)
+        self.assertEqual(outlook_query['body'][0], '{}\n{}'.format(event.description, event.get_absolute_url()))
+        self.assertEqual(
+            outlook_query['startdt'][0], unicode(event.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
+        )
+        self.assertEqual(
+            outlook_query['enddt'][0], unicode(event.end.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
+        )
+
+        self.assertEqual(
+            links['ical'], reverse('event-ical', args=(event.pk, ))
+        )
+
+
+class EventIcalTestCase(BluebottleTestCase):
+    def test_get(self):
+        event = EventFactory.create(title='Pollute Katwijk Beach')
+        event_url = reverse('event-ical', args=(event.pk,))
+
+        response = self.client.get(event_url)
+
+        self.assertEqual(response.get('content-type'), 'text/calendar')
+        self.assertEqual(
+            response.get('content-disposition'),
+            'attachment; filename="{}.ical"'.format(event.slug)
+        )
+
+        calendar = icalendar.Calendar.from_ical(response.content)
+
+        for ical_event in calendar.walk('vevent'):
+            self.assertAlmostEqual(ical_event['dtstart'].dt, event.start, delta=timedelta(seconds=10))
+            self.assertAlmostEqual(ical_event['dtend'].dt, event.end, delta=timedelta(seconds=10))
+            self.assertEqual(str(ical_event['summary']), event.title)
+            self.assertEqual(
+                str(ical_event['description']),
+                '{}\n{}'.format(event.description, event.get_absolute_url())
+            )
+            self.assertEqual(str(ical_event['url']), event.get_absolute_url())
+            self.assertEqual(str(ical_event['organizer']), 'MAILTO:{}'.format(event.owner.email))
 
 
 class EventValidationTestCase(BluebottleTestCase):

@@ -1,4 +1,8 @@
+from django.urls import reverse
+
 from rest_framework.validators import UniqueTogetherValidator
+from rest_framework import serializers
+
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
@@ -107,6 +111,14 @@ class EventListSerializer(BaseActivityListSerializer):
 class EventSerializer(NoCommitMixin, BaseActivitySerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
     contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
+    links = serializers.SerializerMethodField()
+
+    def get_links(self, instance):
+        return {
+            'ical': reverse('event-ical', args=(instance.pk, )),
+            'google-calendar': instance.google_calendar_link,
+            'outlook': instance.outlook_link,
+        }
 
     class Meta(BaseActivitySerializer.Meta):
         model = Event
@@ -121,6 +133,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
             'permissions',
             'registration_deadline',
             'contributions',
+            'links'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

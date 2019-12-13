@@ -1,4 +1,7 @@
+from django.http import HttpResponse
 from rest_framework_json_api.views import AutoPrefetchMixin
+
+import icalendar
 
 from bluebottle.activities.permissions import ActivityOwnerPermission, ActivityTypePermission
 from bluebottle.events.filters import ParticipantListFilter
@@ -14,7 +17,10 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.transitions.views import TransitionList
 
-from bluebottle.utils.views import RetrieveUpdateAPIView, ListCreateAPIView, JsonApiViewMixin
+from bluebottle.utils.views import (
+    RetrieveUpdateAPIView, ListCreateAPIView, JsonApiViewMixin,
+    RetrieveAPIView
+)
 
 
 class EventList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -108,3 +114,41 @@ class ParticipantTransitionList(TransitionList):
     prefetch_for_includes = {
         'resource': ['participant', 'participant__activity'],
     }
+
+
+class EventIcalView(RetrieveAPIView):
+    permission_classes = (
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
+    queryset = Event.objects.exclude(status='closed')
+
+    def retrieve(self, *args, **kwargs):
+        instance = self.get_object()
+        calendar = icalendar.Calendar()
+
+        event = icalendar.Event()
+        event.add('summary', instance.title)
+        event.add(
+            'description',
+            '{}\n{}'.format(instance.description, instance.get_absolute_url())
+        )
+        event.add('url', instance.get_absolute_url())
+        event.add('dtstart', instance.start)
+        event.add('dtend', instance.end)
+        event['uid'] = instance.uid
+
+        organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))
+        organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
+
+        event['organizer'] = organizer
+        if instance.location:
+            event['location'] = icalendar.vText(instance.location.formatted_address)
+
+        calendar.add_component(event)
+
+        response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
+        response['Content-Disposition'] = 'attachment; filename="%s.ical"' % (
+            instance.slug
+        )
+
+        return response

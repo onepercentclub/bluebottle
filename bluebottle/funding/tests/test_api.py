@@ -58,7 +58,7 @@ class BudgetLineListTestCase(BluebottleTestCase):
         )
 
         self.create_url = reverse('funding-budget-line-list')
-        self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
+        self.funding_url = reverse('funding-detail', args=(self.funding.pk,))
 
         self.data = {
             'data': {
@@ -143,7 +143,7 @@ class RewardListTestCase(BluebottleTestCase):
         )
 
         self.create_url = reverse('funding-reward-list')
-        self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
+        self.funding_url = reverse('funding-detail', args=(self.funding.pk,))
 
         self.data = {
             'data': {
@@ -241,7 +241,16 @@ class FundingDetailTestCase(BluebottleTestCase):
             deadline=now() + timedelta(days=15)
         )
 
-        self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
+        self.funding_url = reverse('funding-detail', args=(self.funding.pk,))
+        self.stripe_country_spec = stripe.CountrySpec()
+        self.stripe_country_spec.update({
+            'verification_fields': bunch.bunchify({
+                'individual': bunch.bunchify({
+                    'additional': ['external_accounts'],
+                    'minimum': ['individual.first_name'],
+                })
+            })
+        })
 
     def test_view_funding_owner(self):
         co_financer = BlueBottleUserFactory.create(is_co_financer=True)
@@ -358,12 +367,15 @@ class FundingDetailTestCase(BluebottleTestCase):
         })
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=connect_account
+                'stripe.Account.retrieve', return_value=connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=connect_account
+                    'stripe.ListObject.retrieve', return_value=connect_account
             ):
-                response = self.client.get(self.funding_url, user=self.user)
+                with mock.patch(
+                        'stripe.CountrySpec.retrieve', return_value=self.stripe_country_spec
+                ):
+                    response = self.client.get(self.funding_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         bank_account = response.json()['data']['relationships']['bank-account']['data']
         self.assertEqual(
@@ -393,10 +405,10 @@ class FundingDetailTestCase(BluebottleTestCase):
         })
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=connect_account
+                'stripe.Account.retrieve', return_value=connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=connect_account
+                    'stripe.ListObject.retrieve', return_value=connect_account
             ):
                 response = self.client.get(self.funding_url, user=BlueBottleUserFactory.create())
 
@@ -429,38 +441,64 @@ class FundingDetailTestCase(BluebottleTestCase):
         external_account = ExternalAccountFactory.create(
             account_id='some-external-account-id'
         )
+
+        connect_external_account = stripe.BankAccount('some-external-account-id')
+        connect_external_account.update(bunch.bunchify({
+            'object': 'bank_account',
+            'account_holder_name': 'Jane Austen',
+            'account_holder_type': 'individual',
+            'bank_name': 'STRIPE TEST BANK',
+            'country': 'US',
+            'currency': 'usd',
+            'fingerprint': '1JWtPxqbdX5Gamtc',
+            'last4': '6789',
+            'metadata': {
+                'order_id': '6735'
+            },
+            'routing_number': '110000000',
+            'status': 'new',
+            'account': 'acct_1032D82eZvKYlo2C'
+        }))
+
+        external_accounts = stripe.ListObject()
+        external_accounts.data = [connect_external_account]
+        external_accounts.update({
+            'total_count': 1,
+        })
+
         connect_account = stripe.Account('some-connect-id')
         connect_account.update({
             'country': 'NL',
-            'external_accounts': stripe.ListObject({
-                'data': [connect_account]
-            })
+            'external_accounts': external_accounts
         })
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=connect_account
+                'stripe.Account.retrieve', return_value=connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=connect_account
+                    'stripe.ListObject.retrieve', return_value=connect_external_account
             ):
-                response = self.client.patch(
-                    self.funding_url,
-                    data=json.dumps({
-                        'data': {
-                            'id': self.funding.pk,
-                            'type': 'activities/fundings',
-                            'relationships': {
-                                'bank_account': {
-                                    'data': {
-                                        'id': external_account.pk,
-                                        'type': 'payout-accounts/stripe-external-accounts'
+                with mock.patch(
+                        'stripe.CountrySpec.retrieve', return_value=self.stripe_country_spec
+                ):
+                    response = self.client.patch(
+                        self.funding_url,
+                        data=json.dumps({
+                            'data': {
+                                'id': self.funding.pk,
+                                'type': 'activities/fundings',
+                                'relationships': {
+                                    'bank_account': {
+                                        'data': {
+                                            'id': external_account.pk,
+                                            'type': 'payout-accounts/stripe-external-accounts'
+                                        }
                                     }
                                 }
                             }
-                        }
-                    }),
-                    user=self.user
-                )
+                        }),
+                        user=self.user
+                    )
         self.assertEqual(response.status_code, 200)
 
         bank_account = response.json()['data']['relationships']['bank-account']['data']
@@ -506,7 +544,7 @@ class FundraiserListTestCase(BluebottleTestCase):
         )
 
         self.create_url = reverse('funding-fundraiser-list')
-        self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
+        self.funding_url = reverse('funding-detail', args=(self.funding.pk,))
 
         self.data = {
             'data': {
@@ -650,7 +688,7 @@ class DonationTestCase(BluebottleTestCase):
         self.funding = FundingFactory.create(initiative=self.initiative)
 
         self.create_url = reverse('funding-donation-list')
-        self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
+        self.funding_url = reverse('funding-detail', args=(self.funding.pk,))
 
         self.data = {
             'data': {
@@ -724,7 +762,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -750,7 +788,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -784,7 +822,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -807,7 +845,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -842,7 +880,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
         patch_data = {
             'data': {
                 'type': 'contributions/donations',
@@ -895,7 +933,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
         patch_data = {
             'data': {
                 'type': 'contributions/donations',
@@ -926,7 +964,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -954,7 +992,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -991,7 +1029,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
-        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'],))
 
         patch_data = {
             'data': {
@@ -1169,10 +1207,10 @@ class PayoutAccountTestCase(BluebottleTestCase):
     def test_stripe_methods(self):
         self.stripe.paymentcurrency_set.filter(code__in=['AUD', 'GBP']).all().delete()
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=self.connect_account
+                    'stripe.ListObject.retrieve', return_value=self.connect_account
             ):
                 response = self.client.get(self.funding_url)
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1217,10 +1255,10 @@ class PayoutAccountTestCase(BluebottleTestCase):
         self.stripe.save()
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=self.connect_account
+                    'stripe.ListObject.retrieve', return_value=self.connect_account
             ):
                 response = self.client.get(self.funding_url)
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1268,7 +1306,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         BudgetLineFactory.create(activity=self.funding)
 
     def get_payout_url(self, payout):
-        return reverse('payout-details', args=(payout.pk, ))
+        return reverse('payout-details', args=(payout.pk,))
 
     def test_get_stripe_payout(self):
         self.funding.bank_account = ExternalAccountFactory.create(
@@ -1277,7 +1315,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.save()
 
         with mock.patch(
-            'bluebottle.funding_stripe.models.ExternalAccount.verified', new_callable=mock.PropertyMock
+                'bluebottle.funding_stripe.models.ExternalAccount.verified', new_callable=mock.PropertyMock
         ) as verified:
             verified.return_value = True
 
@@ -1315,7 +1353,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.save()
 
         with mock.patch(
-            'bluebottle.funding_stripe.models.ExternalAccount.account', new_callable=mock.PropertyMock
+                'bluebottle.funding_stripe.models.ExternalAccount.account', new_callable=mock.PropertyMock
         ) as account:
             external_account = stripe.BankAccount('some-bank-token')
             external_account.update(bunch.bunchify({

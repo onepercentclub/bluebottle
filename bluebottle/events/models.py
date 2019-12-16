@@ -127,7 +127,8 @@ class Event(Activity):
     @property
     def google_calendar_link(self):
         def format_date(date):
-            return date.astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
+            if date:
+                return date.astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
 
         prepared_request = PreparedRequest()
 
@@ -151,7 +152,8 @@ class Event(Activity):
     @property
     def outlook_link(self):
         def format_date(date):
-            return date.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
+            if date:
+                return date.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
 
         prepared_request = PreparedRequest()
         url = 'https://outlook.live.com/owa/'

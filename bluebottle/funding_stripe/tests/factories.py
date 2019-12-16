@@ -52,8 +52,11 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
-        account_id = 'acct_1234567890'
-        with mock.patch('stripe.Account.create', return_value=stripe.Account(id=account_id)):
+        stripe_account = stripe.Account('acct_1234567890')
+        stripe_account.update({
+            'country': 'NL',
+        })
+        with mock.patch('stripe.Account.create', return_value=stripe_account):
             return super(StripePayoutAccountFactory, cls)._create(model_class, *args, **kwargs)
 
 

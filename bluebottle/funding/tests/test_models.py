@@ -9,6 +9,7 @@ from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
     ExternalAccountFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -58,14 +59,19 @@ class FundingTestCase(BluebottleTestCase):
 class PayoutTestCase(BluebottleTestCase):
 
     def setUp(self):
+        initiative = InitiativeFactory.create(status='approved')
         account = StripePayoutAccountFactory.create()
+        account.transitions.verify()
         bank_account = ExternalAccountFactory.create(connect_account=account)
         self.funding = FundingFactory(
+            initiative=initiative,
             deadline=now() + timedelta(days=10),
             target=Money(4000, 'EUR'),
             bank_account=bank_account
         )
-        self.funding.transitions.reviewed()
+        BudgetLineFactory.create(activity=self.funding)
+        self.funding.review_transitions.submit()
+        self.funding.review_transitions.approve()
         self.funding.save()
 
         for donation in DonationFactory.create_batch(

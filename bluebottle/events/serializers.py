@@ -116,7 +116,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
     def get_links(self, instance):
         return {
             'ical': reverse('event-ical', args=(instance.pk, )),
-            'google-calendar': instance.google_calendar_link,
+            'google': instance.google_calendar_link,
             'outlook': instance.outlook_link,
         }
 

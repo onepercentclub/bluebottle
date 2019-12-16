@@ -320,7 +320,7 @@ class EventAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         links = response.json()['data']['attributes']['links']
-        google_link = urlparse.urlparse(links['google-calendar'])
+        google_link = urlparse.urlparse(links['google'])
         google_query = urlparse.parse_qs(google_link.query)
 
         self.assertEqual(google_link.netloc, 'calendar.google.com')

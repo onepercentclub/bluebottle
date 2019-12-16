@@ -139,9 +139,11 @@ class Event(Activity):
                 format_date(self.start), format_date(self.end)
             ),
             'details': '{}\n{}'.format(self.description, self.get_absolute_url()),
-            'location': self.location.formatted_address,
             'uid': self.uid,
         }
+
+        if self.location:
+            params['location'] = self.location.formatted_address
 
         prepared_request.prepare_url(url, params)
         return prepared_request.url
@@ -162,8 +164,10 @@ class Event(Activity):
             'startdt': format_date(self.start),
             'enddt': format_date(self.end),
             'body': '{}\n{}'.format(self.description, self.get_absolute_url()),
-            'location': self.location.formatted_address,
         }
+
+        if self.location:
+            params['location'] = self.location.formatted_address
 
         prepared_request.prepare_url(url, params)
         return prepared_request.url

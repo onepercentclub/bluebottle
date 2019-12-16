@@ -11,8 +11,10 @@ from rest_framework_json_api.serializers import (
 )
 
 from bluebottle.activities.utils import (
-    BaseContributionSerializer,
-    BaseActivityListSerializer, BaseActivitySerializer)
+    BaseContributionSerializer, BaseContributionListSerializer,
+    BaseActivityListSerializer, BaseActivitySerializer,
+    BaseTinyActivitySerializer
+)
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.files.serializers import ImageField, PrivateDocumentSerializer
 from bluebottle.files.serializers import PrivateDocumentField
@@ -234,6 +236,16 @@ class FundingListSerializer(BaseActivityListSerializer):
     }
 
 
+class TinyFundingSerializer(BaseTinyActivitySerializer):
+
+    class Meta(BaseTinyActivitySerializer.Meta):
+        model = Funding
+        fields = BaseTinyActivitySerializer.Meta.fields + ('target', )
+
+    class JSONAPIMeta(BaseTinyActivitySerializer.JSONAPIMeta):
+        resource_name = 'activities/fundings'
+
+
 class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
     amount_raised = MoneySerializer(read_only=True)
@@ -396,6 +408,34 @@ class DonationMemberValidator(object):
             raise ValidationError(self.message)
 
 
+class DonationListSerializer(BaseContributionListSerializer):
+    amount = MoneySerializer()
+
+    user = ResourceRelatedField(
+        queryset=Member.objects.all(),
+        default=serializers.CurrentUserDefault(),
+        allow_null=True,
+        required=False
+    )
+
+    included_serializers = {
+        'activity': 'bluebottle.funding.serializers.TinyFundingSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+    class Meta(BaseContributionListSerializer.Meta):
+        model = Donation
+        fields = BaseContributionListSerializer.Meta.fields + ('amount', 'fundraiser', 'reward', 'anonymous',)
+        meta_fields = ('created', 'updated', )
+
+    class JSONAPIMeta(BaseContributionListSerializer.JSONAPIMeta):
+        resource_name = 'contributions/donations'
+        included_resources = [
+            'user',
+            'activity',
+        ]
+
+
 class DonationSerializer(BaseContributionSerializer):
     amount = MoneySerializer()
 
@@ -407,7 +447,7 @@ class DonationSerializer(BaseContributionSerializer):
     )
 
     included_serializers = {
-        'activity': 'bluebottle.funding.serializers.FundingSerializer',
+        'activity': 'bluebottle.funding.serializers.FundingListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reward': 'bluebottle.funding.serializers.RewardSerializer',
         'fundraiser': 'bluebottle.funding.serializers.FundraiserSerializer',

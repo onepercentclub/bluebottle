@@ -722,9 +722,10 @@ class ContributionListAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 
-        ParticipantFactory.create_batch(10, user=self.user)
-        ApplicantFactory.create_batch(10, user=self.user)
-        DonationFactory.create_batch(10, user=self.user)
+        ParticipantFactory.create_batch(2, user=self.user)
+        ApplicantFactory.create_batch(2, user=self.user)
+        DonationFactory.create_batch(2, user=self.user, status='succeeded')
+        DonationFactory.create_batch(2, user=self.user, status='new')
 
         ParticipantFactory.create()
         ApplicantFactory.create()
@@ -741,7 +742,40 @@ class ContributionListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
 
-        self.assertEqual(len(data['data']), 30)
+        self.assertEqual(len(data['data']), 6)
+        for contribution in data['data']:
+            self.assertTrue(
+                contribution['type'] in (
+                    'contributions/applicants',
+                    'contributions/participants',
+                    'contributions/donations'
+                )
+            )
+            self.assertTrue(
+                contribution['relationships']['activity']['data']['type'] in (
+                    'activities/fundings',
+                    'activities/events',
+                    'activities/assignments'
+                )
+            )
+
+        for i in data['included']:
+            if i['type'] == 'activities/events':
+                self.assertTrue('start-time' in i['attributes'])
+                self.assertTrue('start-date' in i['attributes'])
+                self.assertTrue('duration' in i['attributes'])
+                self.assertTrue('slug' in i['attributes'])
+                self.assertTrue('title' in i['attributes'])
+
+            if i['type'] == 'activities/assignments':
+                self.assertTrue('end-date' in i['attributes'])
+                self.assertTrue('end-date-type' in i['attributes'])
+                self.assertTrue('slug' in i['attributes'])
+                self.assertTrue('title' in i['attributes'])
+
+            if i['type'] == 'activities/funding':
+                self.assertTrue('slug' in i['attributes'])
+                self.assertTrue('title' in i['attributes'])
 
     def test_get_anonymous(self):
         response = self.client.get(

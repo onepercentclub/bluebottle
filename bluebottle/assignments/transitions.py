@@ -50,6 +50,27 @@ class AssignmentTransitions(ActivityTransitions):
     )
     def succeed(self, **kwargs):
         for member in self.instance.accepted_applicants:
+            member.activity = self.instance
+            member.transitions.succeed()
+            member.save()
+
+    @transition(
+        field='status',
+        source=[values.closed],
+        target=values.succeeded,
+        permissions=[ActivityTransitions.is_system],
+        messages=[AssignmentCompletedMessage]
+    )
+    def reopen_and_succeed(self, **kwargs):
+        states = [
+            ApplicantTransitions.values.new,
+            ApplicantTransitions.values.closed,
+            ApplicantTransitions.values.accepted,
+            ApplicantTransitions.values.active,
+            ApplicantTransitions.values.succeeded
+        ]
+        for member in self.instance.contributions.filter(status__in=states):
+            member.activity = self.instance
             member.transitions.succeed()
             member.save()
 
@@ -186,7 +207,7 @@ class ApplicantTransitions(ContributionTransitions):
 
     @transition(
         field='status',
-        source=[values.active, values.failed, values.accepted],
+        source='*',
         target=values.succeeded,
         permissions=[ContributionTransitions.is_activity_manager]
     )

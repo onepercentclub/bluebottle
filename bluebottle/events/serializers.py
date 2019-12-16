@@ -3,12 +3,32 @@ from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer,
-    BaseActivityListSerializer)
+    BaseActivityListSerializer, BaseTinyActivitySerializer
+)
 from bluebottle.events.filters import ParticipantListFilter
 from bluebottle.events.models import Event, Participant
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 from bluebottle.utils.serializers import NoCommitMixin
+
+
+class ParticipantListSerializer(BaseContributionSerializer):
+
+    class Meta(BaseContributionSerializer.Meta):
+        model = Participant
+        fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
+
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        resource_name = 'contributions/participants'
+        included_resources = [
+            'user',
+            'activity'
+        ]
+
+    included_serializers = {
+        'activity': 'bluebottle.events.serializers.TinyEventSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
 
 
 class ParticipantSerializer(BaseContributionSerializer):
@@ -32,7 +52,7 @@ class ParticipantSerializer(BaseContributionSerializer):
         ]
 
     included_serializers = {
-        'activity': 'bluebottle.events.serializers.EventSerializer',
+        'activity': 'bluebottle.events.serializers.EventListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
@@ -118,6 +138,16 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
             'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
         }
     )
+
+
+class TinyEventSerializer(BaseTinyActivitySerializer):
+
+    class Meta(BaseTinyActivitySerializer.Meta):
+        model = Event
+        fields = BaseTinyActivitySerializer.Meta.fields + ('start_time', 'start_date', 'duration')
+
+    class JSONAPIMeta(BaseTinyActivitySerializer.JSONAPIMeta):
+        resource_name = 'activities/events'
 
 
 class EventTransitionSerializer(TransitionSerializer):

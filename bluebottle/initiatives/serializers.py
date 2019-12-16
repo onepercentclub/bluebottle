@@ -62,7 +62,8 @@ class MemberSerializer(ModelSerializer):
         model = Member
         fields = (
             'id', 'first_name', 'last_name', 'initials', 'avatar',
-            'full_name', 'short_name', 'is_active', 'date_joined', 'about_me'
+            'full_name', 'short_name', 'is_active', 'date_joined',
+            'about_me', 'is_co_financer'
         )
 
     class JSONAPIMeta:

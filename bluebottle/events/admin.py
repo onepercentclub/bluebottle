@@ -5,6 +5,7 @@ from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.events.models import Event, Participant
+from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import export_as_csv_action, FSMAdmin
 from bluebottle.utils.forms import FSMModelForm
@@ -113,3 +114,16 @@ class EventAdmin(ActivityChildAdmin):
         FSMAdmin.bulk_transition,
         export_as_csv_action(fields=export_to_csv_fields)
     ]
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            # If we created a new participant through admin then
+            # set it to succeeded when event is succeeded
+            if (instance.__class__ == Participant and
+                    not instance.pk and
+                    form.instance.status == EventTransitions.values.succeeded):
+                instance.time_spent = form.instance.duration
+                instance.status = ParticipantTransitions.values.succeeded
+            instance.save()
+        formset.save_m2m()

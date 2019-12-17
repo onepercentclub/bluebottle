@@ -240,7 +240,7 @@ class FundingAdmin(ActivityChildAdmin):
     payout_links.short_description = _('Payouts')
 
     def combined_status(self, obj):
-        if obj.review_status != 'approved':
+        if obj.review_status != ActivityReviewTransitions.values.approved:
             return obj.review_status
         return obj.status
     combined_status.short_description = _('status')

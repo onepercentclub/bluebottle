@@ -25,6 +25,10 @@ class FundingTransitions(ActivityTransitions):
         if not self.instance.amount_raised >= self.instance.target:
             return _("Amount raised should at least equal to target amount.")
 
+    def deadline_in_future(self):
+        if not self.instance.deadline >= timezone.now():
+            return _("The deadline of the activity should be in the future.")
+
     @transition(
         source=values.in_review,
         target=values.open,
@@ -54,6 +58,15 @@ class FundingTransitions(ActivityTransitions):
     def succeed(self):
         from bluebottle.funding.models import Payout
         Payout.generate(self.instance)
+
+    @transition(
+        source=[values.succeeded, values.partially_funded],
+        target=values.open,
+        conditions=[deadline_in_future],
+        permissions=[ActivityTransitions.can_approve]
+    )
+    def extend(self):
+        pass
 
     @transition(
         source=[values.succeeded, values.partially_funded],

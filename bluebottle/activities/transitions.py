@@ -91,7 +91,8 @@ class ActivityReviewTransitions(ReviewTransitions):
         permissions=[can_review]
     )
     def resubmit(self):
-        self.instance.transitions.resubmit()
+        if self.instance.status != ActivityTransitions.values.in_review:
+            self.instance.transitions.resubmit()
 
 
 class ActivityTransitions(ModelTransitions):

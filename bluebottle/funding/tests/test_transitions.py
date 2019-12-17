@@ -117,7 +117,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(mail.outbox[4].subject, u'You successfully completed your crowdfunding campaign! 🎉')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[4].body)
 
-    def test_reopen(self):
+    def test_extend(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
 
@@ -131,10 +131,10 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.deadline = now() + timedelta(days=1)
         self.funding.save()
 
-        self.funding.transitions.reopen()
+        self.funding.transitions.extend()
         self.assertEqual(self.funding.status, 'open')
 
-    def test_reopen_past_deadline(self):
+    def test_extend_past_deadline(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
 
@@ -147,5 +147,5 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.assertRaises(
             TransitionNotPossible,
-            self.funding.transitions.reopen
+            self.funding.transitions.extend
         )

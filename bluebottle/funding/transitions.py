@@ -65,7 +65,7 @@ class FundingTransitions(ActivityTransitions):
         conditions=[deadline_in_future],
         permissions=[ActivityTransitions.can_approve]
     )
-    def reopen(self):
+    def extend(self):
         pass
 
     @transition(

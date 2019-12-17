@@ -372,7 +372,7 @@ class EventIcalTestCase(BluebottleTestCase):
         self.assertEqual(response.get('content-type'), 'text/calendar')
         self.assertEqual(
             response.get('content-disposition'),
-            'attachment; filename="{}.ical"'.format(event.slug)
+            'attachment; filename="{}.ics"'.format(event.slug)
         )
 
         calendar = icalendar.Calendar.from_ical(response.content)

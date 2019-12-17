@@ -147,7 +147,7 @@ class EventIcalView(RetrieveAPIView):
         calendar.add_component(event)
 
         response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
-        response['Content-Disposition'] = 'attachment; filename="%s.ical"' % (
+        response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
             instance.slug
         )
 

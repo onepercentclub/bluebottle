@@ -209,12 +209,12 @@ class ActivityAdminInline(StackedPolymorphicInline):
                 obj._meta.model_name),
                 args=(obj.id,)
             )
-            return format_html("<a href='{}'>{}</a>", url, obj.title or '-empty-')
+            return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
 
         activity_link.short_description = _('Edit activity')
 
         def link(self, obj):
-            return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
+            return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
 
         link.short_description = _('View on site')
 

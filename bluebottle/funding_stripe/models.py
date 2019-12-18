@@ -420,6 +420,8 @@ class StripePayoutAccount(PayoutAccount):
     @property
     def account_settings(self):
         statement_descriptor = connection.tenant.name[:21]
+        while len(statement_descriptor) < 5:
+            statement_descriptor += '-'
         return {
             'payouts': {
                 'schedule': {

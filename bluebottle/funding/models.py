@@ -523,6 +523,8 @@ class Payment(TransitionsMixin, PolymorphicModel):
 
     donation = models.OneToOneField(Donation, related_name='payment')
 
+    payment_method = models.CharField(max_length=30, default='', blank=True, null=True)
+
     @property
     def can_update(self):
         return hasattr(self, 'update')

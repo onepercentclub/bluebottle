@@ -1,0 +1,18 @@
+{% load i18n %}
+<table>
+    <tr>
+        <th>{% trans 'Account holder name' %}</th><td>{{info.account_holder_name}}</td>
+    </tr>
+    <tr>
+        <th>{% trans 'Bank name' %}</th><td>{{info.bank_name}}</td>
+    </tr>
+    <tr>
+        <th>{% trans 'Account number' %}</th><td>*********{{info.last4}}</td>
+    </tr>
+    <tr>
+        <th>{% trans 'Currency' %}</th><td>{{info.currency}}</td>
+    </tr>
+    <tr>
+        <th>{% trans 'Country' %}</th><td>{{info.country}}</td>
+    </tr>
+</table>

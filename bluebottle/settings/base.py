@@ -98,6 +98,8 @@ MULTI_TENANT_DIR = os.path.join(PROJECT_ROOT, 'tenants')
 
 COMPRESS_OUTPUT_DIR = 'compressed'
 
+FILE_UPLOAD_PERMISSIONS = 0o644
+
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (

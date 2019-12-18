@@ -1,3 +1,5 @@
+import os
+
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.functional import lazy
@@ -34,6 +36,10 @@ class DocumentItem(ContentItem):
     class Meta:
         verbose_name = _('Document')
         verbose_name_plural = _('Document')
+
+    def save(self, *args, **kwargs):
+        super(DocumentItem, self).save(*args, **kwargs)
+        os.chmod(self.document.path, 644)
 
 
 class ImageTextItem(ContentItem):

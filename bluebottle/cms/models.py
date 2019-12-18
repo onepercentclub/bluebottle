@@ -300,7 +300,7 @@ class ShareResultsContent(TitledContent):
     share_text = models.CharField(
         max_length=100,
         default='',
-        help_text="{amount}, {projects}, {tasks}, {hours}, {votes}, {people} will be replaced by live statistics"
+        help_text="{amount}, {fundraisers}, {events}, {tasks}, {hours}, {people} will be replaced by live statistics"
     )
 
     class Meta:

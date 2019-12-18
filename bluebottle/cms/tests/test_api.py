@@ -190,7 +190,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(len(images['images']), 2)
 
     def test_results_share_results(self):
-        share_text = '{people} donated {donated} to {projects} projects'
+        share_text = '{people} donated {donated} and did {tasks} tasks and joined {events} events.'
         ShareResultsContent.objects.create_for_placeholder(
             self.placeholder, title='Share', share_text=share_text
         )
@@ -206,7 +206,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(share['title'], 'Share')
         self.assertEqual(share['share_text'], share_text)
 
-        for key in ['people', 'amount', 'hours', 'events', 'assignments', 'fundings', 'votes']:
+        for key in ['people', 'amount', 'hours', 'events', 'tasks', 'fundraisers']:
             self.assertTrue(key in share['statistics'])
 
     def test_results_survey(self):

@@ -397,8 +397,7 @@ class ShareResultsContentSerializer(serializers.ModelSerializer):
             'hours': stats.time_spent,
             'fundraisers': stats.fundings_succeeded,
             'tasks': stats.assignments_succeeded,
-            'events': stats.events_succeeded,
-            'votes': stats.votes_cast,
+            'events': stats.events_succeeded
         }
 
     class Meta:

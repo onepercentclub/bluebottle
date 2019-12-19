@@ -51,6 +51,8 @@ class ApplicantAdmin(ContributionChildAdmin):
     list_display = ['user', 'status', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
+    date_hierarchy = 'transition_date'
+
     export_to_csv_fields = (
         ('status', 'Status'),
         ('created', 'Created'),

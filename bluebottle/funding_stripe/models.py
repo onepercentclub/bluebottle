@@ -26,6 +26,50 @@ from bluebottle.funding_stripe.transitions import (
 from bluebottle.funding_stripe.utils import stripe
 
 
+class StripePayment(Payment):
+    payment_intent = models.OneToOneField('funding_stripe.PaymentIntent', related_name='payment')
+    transitions = TransitionManager(StripePaymentTransitions, 'status')
+
+    provider = 'stripe'
+
+    def refund(self):
+        intent = self.payment_intent.intent
+        charge = intent.charges.data[0]
+        charge.refund(
+            reverse_transfer=True,
+        )
+        self.save()
+
+    def set_payment_method(self, method=None):
+        if self.payment_intent and self.payment_intent.intent:
+            pm_details = self.payment_intent.intent.charges.data[0].payment_method_details
+            payment_method = pm_details.type
+            if payment_method == 'card':
+                payment_method = pm_details.card.network
+            self.payment_method = "stripe-{}".format(payment_method)
+            self.save()
+
+    def update(self):
+        intent = self.payment_intent.intent
+
+        if self.payment_method in ['', None, 'stripe']:
+            self.set_payment_method()
+
+        if len(intent.charges) == 0:
+            # No charge. Do we still need to charge?
+            self.transitions.fail()
+            self.save()
+        elif intent.charges.data[0].refunded and self.status != StripePaymentTransitions.values.refunded:
+            self.transitions.refund()
+            self.save()
+        elif intent.status == 'failed' and self.status != StripePaymentTransitions.values.failed:
+            self.transitions.fail()
+            self.save()
+        elif intent.status == 'succeeded' and self.status != StripePaymentTransitions.values.succeeded:
+            self.transitions.succeed()
+            self.save()
+
+
 class PaymentIntent(models.Model):
     intent_id = models.CharField(max_length=30)
     client_secret = models.CharField(max_length=100)
@@ -48,9 +92,23 @@ class PaymentIntent(models.Model):
 
         super(PaymentIntent, self).save(*args, **kwargs)
 
+    def update(self):
+        if self.intent.status in ['succeeded', 'failed', 'refunded']:
+            try:
+                self.payment.update()
+            except StripePayment.DoesNotExist:
+                payment = StripePayment.objects.create(
+                    payment_intent_id=self.id,
+                    donation=self.donation
+                )
+                payment.update()
+
     @property
     def intent(self):
-        return stripe.PaymentIntent.retrieve(self.intent_id)
+        try:
+            return stripe.PaymentIntent.retrieve(self.intent_id)
+        except StripeError as error:
+            raise PaymentException(error.message)
 
     @property
     def metadata(self):
@@ -63,37 +121,6 @@ class PaymentIntent(models.Model):
 
     class JSONAPIMeta:
         resource_name = 'payments/stripe-payment-intents'
-
-
-class StripePayment(Payment):
-    payment_intent = models.OneToOneField(PaymentIntent, related_name='payment')
-    transitions = TransitionManager(StripePaymentTransitions, 'status')
-
-    provider = 'stripe'
-
-    def refund(self):
-        intent = self.payment_intent.intent
-        charge = intent.charges.data[0]
-        charge.refund(
-            reverse_transfer=True,
-        )
-        self.save()
-
-    def update(self):
-        intent = self.payment_intent.intent
-        if len(intent.charges) == 0:
-            # No charge. Do we still need to charge?
-            self.transitions.fail()
-            self.save()
-        elif intent.charges.data[0].refunded and self.status != StripePaymentTransitions.values.refunded:
-            self.transitions.refund()
-            self.save()
-        elif intent.status == 'failed' and self.status != StripePaymentTransitions.values.failed:
-            self.transitions.fail()
-            self.save()
-        elif intent.status == 'succeeded' and self.status != StripePaymentTransitions.values.succeeded:
-            self.transitions.succeed()
-            self.save()
 
 
 class StripeSourcePayment(Payment):
@@ -135,6 +162,10 @@ class StripeSourcePayment(Payment):
         self.charge_token = charge.id
         self.transitions.charge()
         self.save()
+
+    def set_payment_method(self, method=None):
+        if self.payment_method in ['', None, 'stripe']:
+            self.payment_method = "stripe-{}".format(self.source.type)
 
     def update(self):
         try:

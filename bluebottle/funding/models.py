@@ -525,6 +525,13 @@ class Payment(TransitionsMixin, PolymorphicModel):
 
     payment_method = models.CharField(max_length=30, default='', blank=True, null=True)
 
+    provider = 'unknown'
+
+    def set_payment_method(self, method=None):
+        if not method:
+            method = self.provider
+        self.payment_method = method
+
     @property
     def can_update(self):
         return hasattr(self, 'update')
@@ -535,7 +542,8 @@ class Payment(TransitionsMixin, PolymorphicModel):
 
     def save(self, *args, **kwargs):
         self.updated = timezone.now()
-
+        if not self.payment_method:
+            self.set_payment_method()
         super(Payment, self).save(*args, **kwargs)
 
     def __unicode__(self):

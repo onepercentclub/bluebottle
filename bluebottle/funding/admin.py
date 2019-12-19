@@ -32,7 +32,7 @@ from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, Fl
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount, LipishaPayment
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider, PledgeBankAccount
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
-    StripeSourcePayment, ExternalAccount
+    StripeSourcePayment, ExternalAccount, StripePayment
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action, FSMAdminMixin, \
@@ -314,6 +314,7 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 
     raw_id_fields = ['donation']
     change_form_template = 'admin/funding/payment/change_form.html'
+    readonly_fields = ('created', 'updated', 'payment_method', 'status')
 
     def get_fields(self, request, obj=None):
         fields = super(PaymentChildAdmin, self).get_fields(request, obj)
@@ -378,15 +379,16 @@ class LegacyPaymentPaymentAdmin(PaymentChildAdmin):
 @admin.register(Payment)
 class PaymentAdmin(PolymorphicParentModelAdmin):
     base_model = Payment
-    list_filter = (PolymorphicChildModelFilter, 'status')
+    list_filter = (PolymorphicChildModelFilter, 'status', 'payment_method')
 
-    list_display = ('created', 'type', 'status')
+    list_display = ('created', 'type', 'payment_method', 'status')
 
     def type(self, obj):
         return obj.get_real_instance_class().__name__
 
     child_models = (
         StripeSourcePayment,
+        StripePayment,
         FlutterwavePayment,
         LipishaPayment,
         VitepayPayment,

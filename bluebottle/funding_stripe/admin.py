@@ -11,12 +11,58 @@ from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmi
     BankAccountChildAdmin
 from bluebottle.funding.models import BankAccount, Payment, PaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount, \
-    StripeSourcePayment, ExternalAccount
+    StripeSourcePayment, ExternalAccount, PaymentIntent
+from bluebottle.payments.exception import PaymentException
 
 
 @admin.register(StripePayment)
 class StripePaymentAdmin(PaymentChildAdmin):
     base_model = StripePayment
+    raw_id_fields = ['payment_intent', 'donation']
+
+    readonly_fields = PaymentChildAdmin.readonly_fields + ('status',)
+
+
+@admin.register(PaymentIntent)
+class StripePaymentIntentAdmin(admin.ModelAdmin):
+    base_model = PaymentIntent
+    raw_id_fields = ['donation']
+    readonly_fields = ('payment_link',)
+
+    list_filter = ('payment__status', )
+
+    list_display = ('intent_id', 'status')
+
+    def payment_link(self, obj):
+        url = reverse('admin:funding_payment_change', args=(obj.payment.id,))
+        return format_html('<a href="{}">{}</a>', url, obj.payment)
+
+    def get_urls(self):
+        urls = super(StripePaymentIntentAdmin, self).get_urls()
+        process_urls = [
+            url(r'^(?P<pk>\d+)/check/$', self.check_status, name="funding_stripe_paymentintent_check"),
+        ]
+        return process_urls + urls
+
+    def check_status(self, request, pk=None):
+        intent = PaymentIntent.objects.get(pk=pk)
+        try:
+            intent.update()
+        except PaymentException as e:
+            self.message_user(
+                request,
+                'Error checking status {}'.format(e),
+                level='WARNING'
+            )
+        intent_url = reverse('admin:funding_stripe_paymentintent_change', args=(intent.id,))
+        response = HttpResponseRedirect(intent_url)
+        return response
+
+    def status(self, obj):
+        try:
+            return obj.payment.status
+        except StripePayment.DoesNotExist:
+            return '-'
 
 
 @admin.register(StripeSourcePayment)

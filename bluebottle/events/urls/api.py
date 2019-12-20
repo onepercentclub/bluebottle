@@ -4,7 +4,8 @@ from bluebottle.events.views import (
     EventList, EventDetail,
     EventTransitionList,
     ParticipantList, ParticipantDetail,
-    ParticipantTransitionList
+    ParticipantTransitionList,
+    EventIcalView
 )
 
 urlpatterns = [
@@ -18,6 +19,9 @@ urlpatterns = [
     url(r'^/transitions$',
         EventTransitionList.as_view(),
         name='event-transition-list'),
+    url(r'^/ical/(?P<pk>\d+)$',
+        EventIcalView.as_view(),
+        name='event-ical'),
 
     # Participants
     url(r'/participants$',

@@ -1,9 +1,11 @@
 import datetime
 
-from django.db import models
+from django.db import models, connection
 from django.db.models import Count, Sum
 from django.utils.translation import ugettext_lazy as _
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, utc
+
+from requests.models import PreparedRequest
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
@@ -117,6 +119,60 @@ class Event(Activity):
             status__in=[ParticipantTransitions.values.new,
                         ParticipantTransitions.values.succeeded]
         )
+
+    @property
+    def uid(self):
+        return '{}-{}-{}'.format(connection.tenant.client_name, 'event', self.pk)
+
+    @property
+    def google_calendar_link(self):
+        def format_date(date):
+            if date:
+                return date.astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
+
+        prepared_request = PreparedRequest()
+
+        url = 'https://calendar.google.com/calendar/render'
+        params = {
+            'action': 'TEMPLATE',
+            'text': self.title,
+            'dates': '{}/{}'.format(
+                format_date(self.start), format_date(self.end)
+            ),
+            'details': '{}\n{}'.format(self.description, self.get_absolute_url()),
+            'uid': self.uid,
+        }
+
+        if self.location:
+            params['location'] = self.location.formatted_address
+
+        prepared_request.prepare_url(url, params)
+        return prepared_request.url
+
+    @property
+    def outlook_link(self):
+        def format_date(date):
+            if date:
+                return date.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
+
+        prepared_request = PreparedRequest()
+        url = 'https://outlook.live.com/owa/'
+
+        params = {
+            'rru': 'addevent',
+            'path': '/calendar/action/compose&rru=addevent',
+            'allday': False,
+            'subject': self.title,
+            'startdt': format_date(self.start),
+            'enddt': format_date(self.end),
+            'body': '{}\n{}'.format(self.description, self.get_absolute_url()),
+        }
+
+        if self.location:
+            params['location'] = self.location.formatted_address
+
+        prepared_request.prepare_url(url, params)
+        return prepared_request.url
 
 
 class Participant(Contribution):

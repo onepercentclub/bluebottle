@@ -96,7 +96,7 @@ class PaymentIntent(models.Model):
             try:
                 self.payment
             except StripePayment.DoesNotExist:
-                self.payment, _created = StripePayment.objects.get_or_create(
+                self.payment = StripePayment.objects.get_or_create(
                     payment_intent_id=self.id,
                     donation=self.donation
                 )

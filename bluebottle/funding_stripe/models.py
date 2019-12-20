@@ -47,7 +47,6 @@ class StripePayment(Payment):
             if payment_method == 'card':
                 payment_method = pm_details.card.network
             self.payment_method = "stripe-{}".format(payment_method)
-            self.save()
 
     def update(self):
         intent = self.payment_intent.intent
@@ -95,13 +94,13 @@ class PaymentIntent(models.Model):
     def update(self):
         if self.intent.status in ['succeeded', 'failed', 'refunded']:
             try:
-                self.payment.update()
+                self.payment
             except StripePayment.DoesNotExist:
-                payment = StripePayment.objects.create(
+                self.payment, _created = StripePayment.objects.get_or_create(
                     payment_intent_id=self.id,
                     donation=self.donation
                 )
-                payment.update()
+            self.payment.update()
 
     @property
     def intent(self):

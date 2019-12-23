@@ -8,7 +8,7 @@ from bluebottle.funding_flutterwave.utils import check_payment_status
 
 
 class FlutterwavePayment(Payment):
-    tx_ref = models.CharField(max_length=30)
+    tx_ref = models.CharField(max_length=30, unique=True)
     provider = 'flutterwave'
     transitions = TransitionManager(PaymentTransitions, 'status')
 

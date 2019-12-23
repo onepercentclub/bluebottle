@@ -17,6 +17,9 @@ from bluebottle.funding_flutterwave.models import FlutterwavePayment, Flutterwav
 class FlutterwavePaymentAdmin(PaymentChildAdmin):
     base_model = Payment
 
+    search_fields = ['tx_ref', ]
+    list_display = ['__unicode__', 'created', 'status', 'tx_ref']
+
 
 @admin.register(FlutterwavePaymentProvider)
 class FlutterwavePaymentProviderAdmin(PaymentProviderChildAdmin):

@@ -1,6 +1,7 @@
 import urlparse
 
 from django.contrib import admin
+from django.contrib.contenttypes.admin import GenericTabularInline
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -275,3 +276,37 @@ class ReactionAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Reaction, ReactionAdmin)
+
+
+class DonationWallpostInline(admin.TabularInline):
+
+    model = Wallpost
+    readonly_fields = ('wallpost', 'donation', 'author', 'content_type', 'text')
+    fields = readonly_fields
+    extra = 0
+
+    def text(self, obj):
+        return obj.systemwallpost.text
+
+    def wallpost(self, obj):
+        url = reverse('admin:wallposts_wallpost_change', args=(obj.id,))
+        return format_html(u'<a href="{}">{}</a>', url, obj)
+
+
+class WallpostInline(GenericTabularInline):
+
+    model = Wallpost
+
+    readonly_fields = ('wallpost', 'author', 'content_type', 'text')
+    fields = readonly_fields
+    extra = 0
+
+    def text(self, obj):
+        return obj.systemwallpost.text
+
+    def wallpost(self, obj):
+        url = reverse('admin:wallposts_wallpost_change', args=(obj.id,))
+        return format_html(u'<a href="{}">{}</a>', url, obj)
+
+    def has_add_permission(self, request):
+        return False

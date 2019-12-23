@@ -17,6 +17,7 @@ from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.funding.models import Funding, Donation
 from bluebottle.funding.transitions import FundingTransitions
 from bluebottle.utils.admin import FSMAdmin
+from bluebottle.wallposts.admin import WallpostInline
 
 
 class ContributionChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
@@ -53,7 +54,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
 class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative']
-    inlines = (FollowAdminInline,)
+    inlines = (FollowAdminInline, WallpostInline)
     show_in_index = True
 
     ordering = ('-created', )

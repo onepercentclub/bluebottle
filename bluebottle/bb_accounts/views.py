@@ -52,6 +52,7 @@ class UserActivityDetail(CreateAPIView):
     """
     queryset = UserActivity.objects.all()
     serializer_class = UserActivitySerializer
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated():

@@ -99,7 +99,10 @@ class FundingTransitions(ActivityTransitions):
             payout.save()
 
     @transition(
-        source='*',
+        source=[
+            values.in_review,
+            values.refunded
+        ],
         target=values.closed,
         messages=[FundingClosedMessage],
         permissions=[ActivityTransitions.can_approve],

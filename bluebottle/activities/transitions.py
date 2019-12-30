@@ -86,7 +86,7 @@ class ActivityReviewTransitions(ReviewTransitions):
         self.instance.transitions.close()
 
     @transition(
-        source=[ReviewTransitions.values.closed],
+        source=ReviewTransitions.values.closed,
         target=ReviewTransitions.values.draft,
         permissions=[can_review]
     )
@@ -138,12 +138,16 @@ class ActivityTransitions(ModelTransitions):
         pass
 
     @transition(
-        source=[values.closed],
+        source=[
+            values.closed,
+            values.deleted
+        ],
         target=values.in_review,
         permissions=[can_approve],
     )
     def resubmit(self):
-        pass
+        if self.instance.review_status == ActivityReviewTransitions.values.closed:
+            self.instance.review_transitions.resubmit()
 
     @transition(
         source=[values.in_review],

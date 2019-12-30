@@ -40,11 +40,11 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     base_model = Contribution
     child_models = (Participant, Donation, Applicant)
-    list_display = ['created', 'owner', 'type', 'activity', 'status']
+    list_display = ['transition_date', 'created', 'owner', 'type', 'activity', 'status']
     list_filter = (PolymorphicChildModelFilter, 'status')
     date_hierarchy = 'transition_date'
 
-    ordering = ('-created', )
+    ordering = ('-transition_date', )
 
     def type(self, obj):
         return obj.get_real_instance_class()._meta.verbose_name
@@ -79,7 +79,10 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     )
 
     def get_status_fields(self, request, obj=None):
-        if obj and obj.review_status != ActivityReviewTransitions.values.approved:
+        if obj and obj.review_status not in [
+            ActivityReviewTransitions.values.approved,
+            ActivityReviewTransitions.values.closed
+        ]:
             return [
                 'title',
                 'complete',

@@ -166,6 +166,21 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             applicant.status, ApplicantTransitions.values.succeeded
         )
 
+    def test_applied_should_succeed(self):
+        self.assignment.review_transitions.approve()
+        self.assignment.save()
+        applicant = ApplicantFactory.create(activity=self.assignment)
+        self.assertEqual(
+            applicant.status, ApplicantTransitions.values.new
+        )
+        self.assignment.transitions.start()
+        self.assignment.transitions.succeed()
+        self.assignment.save()
+        applicant.refresh_from_db()
+        self.assertEqual(
+            applicant.status, ApplicantTransitions.values.succeeded
+        )
+
     def test_full(self):
         self.assignment.review_transitions.approve()
         self.assignment.save()

@@ -101,7 +101,10 @@ class FundingTransitions(ActivityTransitions):
     @transition(
         source=[
             values.in_review,
-            values.refunded
+            values.refunded,
+            values.open,
+            values.succeeded,
+            values.partially_funded
         ],
         target=values.closed,
         messages=[FundingClosedMessage],

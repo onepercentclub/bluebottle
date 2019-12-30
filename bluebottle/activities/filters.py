@@ -195,7 +195,7 @@ class ActivityFilter(DjangoFilterBackend):
                 DQ(initiative__activity_manager=request.user) |
                 DQ(initiative__owner=request.user) |
                 DQ(status__in=self.public_statuses)
-            )
+            ).exclude(status=ActivityTransitions.values.deleted)
         else:
             queryset = queryset.filter(status__in=self.public_statuses)
 

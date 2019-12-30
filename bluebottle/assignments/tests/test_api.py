@@ -293,6 +293,23 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(data['included'][0]['type'], 'activities/assignments')
         self.assertEqual(data['included'][0]['attributes']['review-status'], 'approved')
 
+    def test_delete_by_owner(self):
+        # Owner can delete the event
+
+        self.review_data['data']['attributes']['transition'] = 'delete'
+
+        response = self.client.post(
+            self.review_transition_url,
+            json.dumps(self.review_data),
+            user=self.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['type'], 'activities/events')
+        self.assertEqual(data['included'][0]['attributes']['review-status'], 'closed')
+        self.assertEqual(data['included'][0]['attributes']['status'], 'deleted')
+
     def test_submit_other_user(self):
         # Other user can't submit the assignment
         response = self.client.post(

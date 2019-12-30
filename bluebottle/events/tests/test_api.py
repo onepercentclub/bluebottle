@@ -478,6 +478,7 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         review_transitions = [
+            {u'available': True, u'name': u'delete', u'target': u'closed'},
             {u'available': True, u'name': u'submit', u'target': u'submitted'},
             {u'available': False, u'name': u'close', u'target': u'closed'},
             {u'available': False, u'name': u'approve', u'target': u'approved'}
@@ -503,7 +504,6 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.assertEqual(data['errors'][0], "Transition is not available")
 
     def test_submit_owner(self):
-
         # Owner can submit the event
         response = self.client.post(
             self.review_transition_url,
@@ -515,6 +515,23 @@ class EventTransitionTestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['included'][0]['type'], 'activities/events')
         self.assertEqual(data['included'][0]['attributes']['review-status'], 'submitted')
+
+    def test_delete_by_owner(self):
+        # Owner can delete the event
+
+        self.review_data['data']['attributes']['transition'] = 'delete'
+
+        response = self.client.post(
+            self.review_transition_url,
+            json.dumps(self.review_data),
+            user=self.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['type'], 'activities/events')
+        self.assertEqual(data['included'][0]['attributes']['review-status'], 'closed')
+        self.assertEqual(data['included'][0]['attributes']['status'], 'deleted')
 
     def test_submit_manager(self):
 

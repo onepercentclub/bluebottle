@@ -523,7 +523,7 @@ class Payment(TransitionsMixin, PolymorphicModel):
 
     donation = models.OneToOneField(Donation, related_name='payment')
 
-    payment_method = models.CharField(max_length=30, default='', blank=True, null=True)
+    payment_method = models.CharField(max_length=100, default='', blank=True, null=True)
 
     provider = 'unknown'
 

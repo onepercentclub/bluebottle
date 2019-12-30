@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='payment',
             name='payment_method',
-            field=models.CharField(blank=True, default=b'', max_length=30, null=True),
+            field=models.CharField(blank=True, default=b'', max_length=100, null=True),
         ),
     ]

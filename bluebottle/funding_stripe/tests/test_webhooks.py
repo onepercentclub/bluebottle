@@ -49,8 +49,21 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonationFactory.create(activity=self.funding)
 
+        # Construct dummy payment intent
         self.intent = StripePaymentIntentFactory.create(donation=self.donation)
         self.webhook = reverse('stripe-intent-webhook')
+        self.stripe_payment_intent = stripe.PaymentIntent()
+        stripe_charge = stripe.Charge()
+        stripe_payment_method = stripe.PaymentMethod()
+        stripe_payment_method.update({'type': 'visa'})
+        stripe_charge.update({
+            'payment_method_details': stripe_payment_method
+        })
+        list_object = stripe.ListObject()
+        list_object['data'] = [stripe_charge]
+        self.stripe_payment_intent.update({
+            'charges': list_object
+        })
 
     def test_success(self):
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
@@ -61,7 +74,9 @@ class IntentWebhookTestCase(BluebottleTestCase):
             'stripe.Webhook.construct_event',
             return_value=MockEvent(
                 'payment_intent.succeeded', data
-            )
+            )), mock.patch(
+            'stripe.PaymentIntent.retrieve',
+            return_value=self.stripe_payment_intent
         ):
             response = self.client.post(
                 self.webhook,
@@ -81,6 +96,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
         self.assertEqual(donation.status, DonationTransitions.values.succeeded)
         self.assertEqual(payment.status, StripePaymentTransitions.values.succeeded)
+        self.assertEqual(payment.payment_method, 'stripe-visa')
         self.donation.refresh_from_db()
         self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
 
@@ -90,6 +106,9 @@ class IntentWebhookTestCase(BluebottleTestCase):
             return_value=MockEvent(
                 'payment_intent.payment_failed', {'object': {'id': self.intent.intent_id}}
             )
+        ), mock.patch(
+            'stripe.PaymentIntent.retrieve',
+            return_value=self.stripe_payment_intent
         ):
             response = self.client.post(
                 self.webhook,
@@ -123,6 +142,9 @@ class IntentWebhookTestCase(BluebottleTestCase):
             return_value=MockEvent(
                 'payment_intent.succeeded', data
             )
+        ), mock.patch(
+            'stripe.PaymentIntent.retrieve',
+            return_value=self.stripe_payment_intent
         ):
             response = self.client.post(
                 self.webhook,
@@ -139,6 +161,9 @@ class IntentWebhookTestCase(BluebottleTestCase):
             return_value=MockEvent(
                 'charge.refunded', data
             )
+        ), mock.patch(
+            'stripe.PaymentIntent.retrieve',
+            return_value=stripe.PaymentIntent()
         ):
             response = self.client.post(
                 self.webhook,
@@ -169,8 +194,14 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonationFactory.create(activity=self.funding)
 
+        stripe_source = stripe.Source()
+        stripe_source.update({'type': 'ideal'})
+
         with mock.patch(
-            'stripe.Source.modify'
+                'stripe.Source.modify'
+        ), mock.patch(
+            'stripe.Source.retrieve',
+            return_value=stripe_source
         ):
             self.payment = StripeSourcePaymentFactory.create(
                 source_token='some-source-id',
@@ -339,6 +370,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self._refresh()
         self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
         self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.succeeded)
+        self.assertEqual(self.payment.payment_method, 'stripe-ideal')
 
     def test_charge_failed(self):
         self.payment.charge_token = 'some-charge-token'

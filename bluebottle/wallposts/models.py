@@ -118,7 +118,7 @@ class Wallpost(PolymorphicModel):
         )
 
     def __unicode__(self):
-        return str(self.id)
+        return "{} #{}".format(self.polymorphic_ctype, self.id)
 
 
 class MediaWallpost(Wallpost):
@@ -231,7 +231,7 @@ class SystemWallpost(Wallpost):
     related_object = fields.GenericForeignKey('related_type', 'related_id')
 
     def __unicode__(self):
-        return Truncator(self.text).words(10)
+        return Truncator(self.text).words(10) or super(SystemWallpost, self).__unicode__()
 
 
 class Reaction(models.Model):

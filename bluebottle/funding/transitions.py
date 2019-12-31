@@ -12,6 +12,7 @@ from bluebottle.funding.messages import (
     FundingClosedMessage, FundingPartiallyFundedMessage
 )
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
+from bluebottle.wallposts.models import Wallpost, SystemWallpost
 
 
 class FundingTransitions(ActivityTransitions):
@@ -130,7 +131,8 @@ class DonationTransitions(ContributionTransitions):
         target=values.failed,
     )
     def fail(self):
-        pass
+        # Remove walposts related to this donation
+        Wallpost.objects.filter(donation=self.instance).all().delete()
 
     @transition(
         source=[values.new, values.failed],
@@ -142,8 +144,6 @@ class DonationTransitions(ContributionTransitions):
     )
     def succeed(self):
         parent = self.instance.fundraiser or self.instance.activity
-        from bluebottle.wallposts.models import SystemWallpost
-        pass
         SystemWallpost.objects.get_or_create(
             author=self.instance.user,
             donation=self.instance,

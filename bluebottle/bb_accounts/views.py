@@ -17,7 +17,8 @@ from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.bb_accounts.permissions import CurrentUserPermission
-from bluebottle.utils.views import RetrieveAPIView, UpdateAPIView, JsonApiViewMixin
+from bluebottle.members.models import UserActivity
+from bluebottle.utils.views import RetrieveAPIView, UpdateAPIView, JsonApiViewMixin, CreateAPIView
 
 from tenant_extras.utils import TenantLanguage
 
@@ -30,7 +31,7 @@ from bluebottle.members.serializers import (
     PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
     UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
     EmailSetSerializer, PasswordUpdateSerializer,
-)
+    UserActivitySerializer)
 from bluebottle.members.tokens import login_token_generator
 
 USER_MODEL = get_user_model()
@@ -43,6 +44,19 @@ class UserProfileDetail(RetrieveAPIView):
     """
     queryset = USER_MODEL.objects.all()
     serializer_class = UserProfileSerializer
+
+
+class UserActivityDetail(CreateAPIView):
+    """
+
+    """
+    queryset = UserActivity.objects.all()
+    serializer_class = UserActivitySerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        if self.request.user.is_authenticated():
+            serializer.save(user=self.request.user)
 
 
 class ManageProfileDetail(generics.RetrieveUpdateDestroyAPIView):

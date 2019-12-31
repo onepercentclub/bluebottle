@@ -2,7 +2,7 @@ from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
@@ -294,4 +294,30 @@ class UserLogoutTest(BluebottleTestCase):
 
     def test_logout_wrong_token(self):
         response = self.client.post(self.logout_url, token=self.user_token + '1234')
+        self.assertEqual(response.status_code, 401)
+
+
+class UserActivityTest(BluebottleTestCase):
+    def setUp(self):
+        super(UserActivityTest, self).setUp()
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_activity_url = reverse('user-activity')
+
+    def test_log_activity(self):
+        data = {'path': '/'}
+        response = self.client.post(self.user_activity_url, data, token=self.user_token)
+        self.assertEqual(response.status_code, 201)
+        data = {'path': '/pages/about'}
+        response = self.client.post(self.user_activity_url, data, token=self.user_token)
+        self.assertEqual(response.status_code, 201)
+        data = {'path': '/initiatives/activities/list'}
+        response = self.client.post(self.user_activity_url, data, token=self.user_token)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(UserActivity.objects.count(), 3)
+
+    def test_log_activity_anonymous(self):
+        data = {'path': '/'}
+        response = self.client.post(self.user_activity_url, data)
         self.assertEqual(response.status_code, 401)

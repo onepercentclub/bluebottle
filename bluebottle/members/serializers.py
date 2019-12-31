@@ -10,7 +10,7 @@ from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializ
 from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import LocationSerializer, PlaceSerializer
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
@@ -148,6 +148,20 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'tasks_performed', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
             'subscribed',
+        )
+
+
+class UserActivitySerializer(serializers.ModelSerializer):
+    """
+    Serializer for user activity (log paths)
+    """
+    path = serializers.CharField(required=False)
+
+    class Meta:
+        model = UserActivity
+        fields = (
+            'id',
+            'path',
         )
 
 

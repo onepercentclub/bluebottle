@@ -7,6 +7,7 @@ from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount,
     ExternalAccount, StripePaymentProvider
 )
+from bluebottle.funding_stripe.tests.utils import create_mock_intent
 from bluebottle.funding_stripe.utils import stripe
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -16,6 +17,17 @@ class StripeSourcePaymentFactory(factory.DjangoModelFactory):
         model = StripeSourcePayment
 
     donation = factory.SubFactory(DonationFactory)
+    source_token = factory.Sequence(lambda n: 'src_{0}'.format(n))
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        stripe_source = stripe.Source('some intent id')
+        stripe_source.update({
+            'type': 'ideal',
+        })
+        with mock.patch('stripe.Source.create', return_value=stripe_source), \
+                mock.patch('stripe.Source.retrieve', return_value=stripe_source):
+            return super(StripeSourcePaymentFactory, cls)._create(model_class, *args, **kwargs)
 
 
 class StripePaymentIntentFactory(factory.DjangoModelFactory):
@@ -26,11 +38,9 @@ class StripePaymentIntentFactory(factory.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
-        payment_intent = stripe.PaymentIntent('some intent id')
-        payment_intent.update({
-            'client_secret': 'some client secret',
-        })
-        with mock.patch('stripe.PaymentIntent.create', return_value=payment_intent):
+        payment_intent = create_mock_intent()
+        with mock.patch('stripe.PaymentIntent.create', return_value=payment_intent),\
+                mock.patch('stripe.PaymentIntent.retrieve', return_value=payment_intent):
             return super(StripePaymentIntentFactory, cls)._create(model_class, *args, **kwargs)
 
 

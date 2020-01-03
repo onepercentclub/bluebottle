@@ -9,7 +9,11 @@ from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
     ExternalAccountFactory
+from bluebottle.funding_stripe.tests.utils import create_mock_intent
 from bluebottle.test.utils import BluebottleTestCase
+
+
+STRIPE_INTENT = create_mock_intent()
 
 
 class FundingTestCase(BluebottleTestCase):
@@ -57,7 +61,8 @@ class FundingTestCase(BluebottleTestCase):
 
 class PayoutTestCase(BluebottleTestCase):
 
-    def setUp(self):
+    @mock.patch('stripe.PaymentIntent.retrieve', return_value=STRIPE_INTENT)
+    def setUp(self, mock_intent):
         account = StripePayoutAccountFactory.create()
         bank_account = ExternalAccountFactory.create(connect_account=account)
         self.funding = FundingFactory(
@@ -107,7 +112,8 @@ class PayoutTestCase(BluebottleTestCase):
         self.funding.save()
         self.assertEqual(self.funding.payouts.count(), 3)
 
-    def test_generate_payouts(self):
+    @mock.patch('stripe.PaymentIntent.retrieve', return_value=STRIPE_INTENT)
+    def test_generate_payouts(self, mock_intent):
         Payout.generate(self.funding)
         self.assertEqual(self.funding.payouts.count(), 3)
 

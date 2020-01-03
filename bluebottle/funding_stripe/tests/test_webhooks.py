@@ -22,6 +22,7 @@ from bluebottle.funding_stripe.tests.factories import (
     StripePaymentProviderFactory,
     StripePayoutAccountFactory
 )
+from bluebottle.funding_stripe.tests.utils import create_mock_intent
 from bluebottle.funding_stripe.transitions import StripePaymentTransitions
 from bluebottle.funding_stripe.transitions import StripeSourcePaymentTransitions
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -49,21 +50,9 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonationFactory.create(activity=self.funding)
 
-        # Construct dummy payment intent
-        self.intent = StripePaymentIntentFactory.create(donation=self.donation)
         self.webhook = reverse('stripe-intent-webhook')
-        self.stripe_payment_intent = stripe.PaymentIntent()
-        stripe_charge = stripe.Charge()
-        stripe_payment_method = stripe.PaymentMethod()
-        stripe_payment_method.update({'type': 'visa'})
-        stripe_charge.update({
-            'payment_method_details': stripe_payment_method
-        })
-        list_object = stripe.ListObject()
-        list_object['data'] = [stripe_charge]
-        self.stripe_payment_intent.update({
-            'charges': list_object
-        })
+        self.intent = StripePaymentIntentFactory.create(donation=self.donation)
+        self.stripe_payment_intent = create_mock_intent()
 
     def test_success(self):
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:

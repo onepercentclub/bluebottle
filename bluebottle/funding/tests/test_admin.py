@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import mock
 from django.urls import reverse
 from django.utils.timezone import now
 from djmoney.money import Money
@@ -12,6 +13,7 @@ from bluebottle.funding.tests.factories import (
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
     ExternalAccountFactory
+from bluebottle.funding_stripe.tests.utils import create_mock_intent
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 
@@ -141,8 +143,9 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         for donation in DonationFactory.create_batch(2, activity=self.funding):
             PledgePaymentFactory.create(donation=donation)
 
-        for donation in DonationFactory.create_batch(7, activity=self.funding):
-            StripePaymentFactory.create(donation=donation)
+        with mock.patch('stripe.PaymentIntent.retrieve', return_value=create_mock_intent()):
+            for donation in DonationFactory.create_batch(7, activity=self.funding):
+                StripePaymentFactory.create(donation=donation)
 
         self.client.force_login(self.superuser)
 

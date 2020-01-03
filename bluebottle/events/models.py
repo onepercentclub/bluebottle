@@ -139,7 +139,7 @@ class Event(Activity):
             'dates': '{}/{}'.format(
                 format_date(self.start), format_date(self.end)
             ),
-            'details': '{}\n{}'.format(self.description, self.get_absolute_url()),
+            'details': u'{}\n{}'.format(self.description, self.get_absolute_url()),
             'uid': self.uid,
         }
 
@@ -165,7 +165,7 @@ class Event(Activity):
             'subject': self.title,
             'startdt': format_date(self.start),
             'enddt': format_date(self.end),
-            'body': '{}\n{}'.format(self.description, self.get_absolute_url()),
+            'body': u'{}\n{}'.format(self.description, self.get_absolute_url()),
         }
 
         if self.location:

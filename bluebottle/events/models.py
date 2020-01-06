@@ -2,6 +2,7 @@ import datetime
 
 from django.db import models, connection
 from django.db.models import Count, Sum
+from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import get_current_timezone, utc
 
@@ -139,7 +140,7 @@ class Event(Activity):
             'dates': '{}/{}'.format(
                 format_date(self.start), format_date(self.end)
             ),
-            'details': u'{}\n{}'.format(self.description, self.get_absolute_url()),
+            'details': u'{}\n{}'.format(strip_tags(self.description), self.get_absolute_url()),
             'uid': self.uid,
         }
 
@@ -165,7 +166,7 @@ class Event(Activity):
             'subject': self.title,
             'startdt': format_date(self.start),
             'enddt': format_date(self.end),
-            'body': u'{}\n{}'.format(self.description, self.get_absolute_url()),
+            'body': u'{}\n{}'.format(strip_tags(self.description), self.get_absolute_url()),
         }
 
         if self.location:

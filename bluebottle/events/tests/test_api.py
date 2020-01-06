@@ -1,3 +1,4 @@
+# coding=utf-8
 import json
 from datetime import timedelta
 import urlparse
@@ -315,11 +316,12 @@ class EventAPITestCase(BluebottleTestCase):
 
     def test_get_event_calendar_links(self):
         event = EventFactory.create(title='Pollute Katwijk Beach')
+        event.description = u"Just kidding, we're going to clean it up of course 😉"
+        event.save()
         event_url = reverse('event-detail', args=(event.pk,))
         response = self.client.get(event_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        links = response.json()['data']['attributes']['links']
+        links = response.data['links']
         google_link = urlparse.urlparse(links['google'])
         google_query = urlparse.parse_qs(google_link.query)
 
@@ -330,7 +332,10 @@ class EventAPITestCase(BluebottleTestCase):
         self.assertEqual(google_query['location'][0], event.location.formatted_address)
         self.assertEqual(google_query['text'][0], event.title)
         self.assertEqual(google_query['uid'][0], 'test-event-{}'.format(event.pk))
-        self.assertEqual(google_query['details'][0], '{}\n{}'.format(event.description, event.get_absolute_url()))
+        details = "Just kidding, we're going to clean it up of course \xf0\x9f\x98\x89\n" \
+                  "http://testserver/en/initiatives/activities/details/" \
+                  "event/{}/pollute-katwijk-beach".format(event.id)
+        self.assertEqual(google_query['details'][0], details)
         self.assertEqual(
             google_query['dates'][0],
             u'{}/{}'.format(
@@ -349,7 +354,7 @@ class EventAPITestCase(BluebottleTestCase):
         self.assertEqual(outlook_query['path'][0], u'/calendar/action/compose&rru=addevent')
         self.assertEqual(outlook_query['location'][0], event.location.formatted_address)
         self.assertEqual(outlook_query['subject'][0], event.title)
-        self.assertEqual(outlook_query['body'][0], '{}\n{}'.format(event.description, event.get_absolute_url()))
+        self.assertEqual(outlook_query['body'][0], details)
         self.assertEqual(
             outlook_query['startdt'][0], unicode(event.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
         )

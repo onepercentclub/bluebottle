@@ -101,7 +101,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         self.data['data']['relationships']['donation']['data']['id'] = new_donation.id
 
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class FlutterwavePayoutAccountTestCase(BluebottleTestCase):

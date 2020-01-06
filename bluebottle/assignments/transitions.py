@@ -93,7 +93,7 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=[values.open, values.running],
+        source=[values.open, values.running, values.full],
         target=values.closed,
         permissions=[ActivityTransitions.is_system],
         messages=[AssignmentExpiredMessage]

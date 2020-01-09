@@ -110,7 +110,8 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     activities = FilteredPolymorphicResourceRelatedField(
         filter_backend=ActivityFilter,
         polymorphic_serializer=ActivityListSerializer,
-        many=True, read_only=True
+        many=True,
+        read_only=True
     )
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)

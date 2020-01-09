@@ -316,7 +316,7 @@ class EventAPITestCase(BluebottleTestCase):
 
     def test_get_event_calendar_links(self):
         event = EventFactory.create(title='Pollute Katwijk Beach')
-        event.description = u"Just kidding, we're going to clean it up of course 😉"
+        event.description = u"Just kidding, <br/>we're going to clean it up of course 😉"
         event.save()
         event_url = reverse('event-detail', args=(event.pk,))
         response = self.client.get(event_url, user=self.user)

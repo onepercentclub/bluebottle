@@ -13,5 +13,5 @@ The new date is: {{ assignment_date }}.
 {% endblock %}
 
 {% block action %}
-   {% trans 'Goto task' context 'email' %}: {{ obj.get_absolute_url }}
+   {% trans 'Go to task' context 'email' %} {{ obj.get_absolute_url }}
 {% endblock %}`

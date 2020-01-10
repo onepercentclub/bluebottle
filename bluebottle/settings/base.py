@@ -698,6 +698,9 @@ EXPORTDB_EXPORT_CONF = {
                 ('place__locality', 'Location'),
                 ('place__country__name', 'Country'),
                 ('place__country__alpha2_code', 'Country Code'),
+                ('pitch', 'Pitch'),
+                ('story', 'Story'),
+                ('image__file', 'Image'),
 
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
@@ -714,10 +717,13 @@ EXPORTDB_EXPORT_CONF = {
                 ('owner__remote_id', 'Remote ID'),
                 ('owner__email', 'Email'),
                 ('title', 'Title'),
+                ('description', 'Description'),
                 ('status', 'Status'),
+                ('location__locality', 'Location'),
+                ('location__country__name', 'Country'),
+                ('location__country__alpha2_code', 'Country Code'),
 
                 ('location', 'Task location'),
-                ('location__group', 'Task Region'),
                 ('skill', 'Expertise'),
                 ('capacity', 'People needed'),
                 ('duration', 'Time needed'),
@@ -759,10 +765,13 @@ EXPORTDB_EXPORT_CONF = {
                 ('owner__remote_id', 'Remote ID'),
                 ('owner__email', 'Email'),
                 ('title', 'Title'),
+                ('description', 'Description'),
                 ('status', 'Status'),
 
-                ('location', _('Office location')),
-                ('location__group', 'Task Region'),
+                ('location__locality', 'Location'),
+                ('location__country__name', 'Country'),
+                ('location__country__alpha2_code', 'Country Code'),
+
                 ('capacity', 'People needed'),
                 ('duration', 'Time needed'),
                 ('end_date', 'End date'),
@@ -800,10 +809,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('owner__remote_id', 'Remote ID'),
                 ('owner__email', 'Email'),
                 ('title', 'Title'),
+                ('description', 'Description'),
                 ('status', 'Status'),
-
-                ('location', _('Office location')),
-                ('location__group', 'Task Region'),
 
                 ('target', 'Target'),
                 ('amount_matching', 'Amount matching'),
@@ -846,7 +853,7 @@ EXPORTDB_USE_CELERY = True
 EXPORTDB_EXPORT_MEDIA_URL = os.path.join(MEDIA_URL, 'exports')
 
 # maximum delta between from/to date for exports
-EXPORT_MAX_DAYS = 366
+EXPORT_MAX_DAYS = 366 * 3
 
 TOKEN_AUTH_SETTINGS = 'bluebottle.clients.properties'
 

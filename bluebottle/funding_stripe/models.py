@@ -357,7 +357,7 @@ class StripePayoutAccount(PayoutAccount):
         account_details = getattr(self.account, 'individual', None)
 
         if account_details:
-            if account_details.verification.status == 'verified':
+            if len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
                 if self.status != PayoutAccountTransitions.values.verified:
                     self.transitions.verify()
             elif len(self.missing_fields):

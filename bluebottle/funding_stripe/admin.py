@@ -104,12 +104,10 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
             elif obj.status == 'pending':
                 return _('Pending verification')
             else:
-                req = individual['requirements']
-                fields = req['currently_due'] + req['eventually_due'] + req['past_due']
                 template = loader.get_template(
                     'admin/funding_stripe/stripepayoutaccount/missing_fields.html'
                 )
-                return template.render({'fields': fields})
+                return template.render({'fields': obj.missing_fields})
 
         return _('All info missing')
     account_details.short_description = _('Details')

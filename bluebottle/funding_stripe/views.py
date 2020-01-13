@@ -8,7 +8,7 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
-from bluebottle.funding.transitions import PayoutAccountTransitions, PaymentTransitions
+from bluebottle.funding.transitions import PaymentTransitions
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount, ExternalAccount
@@ -293,18 +293,7 @@ class ConnectWebHookView(View):
                 # Bust cached account
                 if account.account:
                     del account.account
-                if (
-                    account.status != PayoutAccountTransitions.values.verified and
-                    account.complete
-                ):
-                    account.transitions.verify()
-
-                if (
-                    account.status != PayoutAccountTransitions.values.rejected and
-                    account.rejected
-                ):
-                    account.transitions.reject()
-
+                account.check_status()
                 account.save()
 
                 return HttpResponse('Updated payment')

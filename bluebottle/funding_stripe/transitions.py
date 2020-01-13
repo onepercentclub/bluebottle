@@ -106,6 +106,7 @@ class StripePayoutAccountTransitions(PayoutAccountTransitions):
         source=[
             PayoutAccountTransitions.values.new,
             PayoutAccountTransitions.values.verified,
+            PayoutAccountTransitions.values.incomplete,
             PayoutAccountTransitions.values.rejected
         ],
         target=PayoutAccountTransitions.values.pending
@@ -127,6 +128,7 @@ class StripePayoutAccountTransitions(PayoutAccountTransitions):
     @transition(
         source=[
             PayoutAccountTransitions.values.pending,
+            PayoutAccountTransitions.values.incomplete,
             PayoutAccountTransitions.values.rejected,
             PayoutAccountTransitions.values.new
         ],
@@ -148,6 +150,7 @@ class StripePayoutAccountTransitions(PayoutAccountTransitions):
     @transition(
         source=[
             PayoutAccountTransitions.values.pending,
+            PayoutAccountTransitions.values.incomplete,
             PayoutAccountTransitions.values.verified,
             PayoutAccountTransitions.values.new,
         ],

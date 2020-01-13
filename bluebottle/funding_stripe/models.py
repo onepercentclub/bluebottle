@@ -357,7 +357,10 @@ class StripePayoutAccount(PayoutAccount):
         account_details = getattr(self.account, 'individual', None)
 
         if account_details:
-            if len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
+            if account_details.verification.status == 'unverified':
+                if self.status != PayoutAccountTransitions.values.rejected:
+                    self.transitions.reject()
+            elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
                 if self.status != PayoutAccountTransitions.values.verified:
                     self.transitions.verify()
             elif len(self.missing_fields):
@@ -365,7 +368,8 @@ class StripePayoutAccount(PayoutAccount):
                     self.transitions.set_incomplete()
             elif account_details.verification.status == 'pending' or len(self.pending_fields):
                 if self.status != PayoutAccountTransitions.values.pending:
-                    self.transitions.pending()
+                    # Submit to transition to pending again
+                    self.transitions.submit()
             else:
                 if self.status != PayoutAccountTransitions.values.rejected:
                     self.transitions.reject()

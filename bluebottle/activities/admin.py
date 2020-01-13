@@ -176,7 +176,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     list_filter = (PolymorphicChildModelFilter, ActivityStatusFilter, 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['__unicode__', 'created', 'type', 'status',
+    list_display = ['__unicode__', 'created', 'type', 'combined_status',
                     'link', 'highlight']
 
     search_fields = ('title', 'description', 'owner__first_name', 'owner__last_name')
@@ -190,6 +190,12 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
 
     def type(self, obj):
         return obj.get_real_instance_class()._meta.verbose_name
+
+    def combined_status(self, obj):
+        if obj.status == 'in_review':
+            return obj.review_status
+        return obj.status
+    combined_status.short_description = _('status')
 
 
 class ActivityAdminInline(StackedPolymorphicInline):

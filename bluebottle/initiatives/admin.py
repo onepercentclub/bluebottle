@@ -11,6 +11,7 @@ from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, BasePlatformSettingsAdmin, export_as_csv_action
 from bluebottle.utils.forms import FSMModelForm
+from bluebottle.wallposts.admin import WallpostInline
 
 
 class InitiativeAdminForm(FSMModelForm):
@@ -136,7 +137,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
                 'promoter', 'status', 'transitions')}),
         )
 
-    inlines = [ActivityAdminInline, MessageAdminInline]
+    inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]
 
     def link(self, obj):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title)

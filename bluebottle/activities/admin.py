@@ -17,6 +17,7 @@ from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.funding.models import Funding, Donation
 from bluebottle.funding.transitions import FundingTransitions
 from bluebottle.utils.admin import FSMAdmin
+from bluebottle.wallposts.admin import WallpostInline
 
 
 class ContributionChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
@@ -40,7 +41,7 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     base_model = Contribution
     child_models = (Participant, Donation, Applicant)
-    list_display = ['created', 'owner', 'type', 'activity', 'status']
+    list_display = ['created', 'transition_date', 'owner', 'type', 'activity', 'status']
     list_filter = (PolymorphicChildModelFilter, 'status')
     date_hierarchy = 'transition_date'
 
@@ -53,7 +54,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
 class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative']
-    inlines = (FollowAdminInline,)
+    inlines = (FollowAdminInline, WallpostInline)
     show_in_index = True
 
     ordering = ('-created', )
@@ -79,12 +80,14 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     )
 
     def get_status_fields(self, request, obj=None):
-        if obj and obj.status == 'in_review':
+        if obj and obj.review_status not in [
+            ActivityReviewTransitions.values.approved,
+            ActivityReviewTransitions.values.closed
+        ]:
             return [
                 'title',
                 'complete',
                 'valid',
-                'status',
                 'review_status',
                 'review_transitions',
                 'transition_date'
@@ -203,12 +206,12 @@ class ActivityAdminInline(StackedPolymorphicInline):
                 obj._meta.model_name),
                 args=(obj.id,)
             )
-            return format_html("<a href='{}'>{}</a>", url, obj.title or '-empty-')
+            return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
 
         activity_link.short_description = _('Edit activity')
 
         def link(self, obj):
-            return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
+            return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
 
         link.short_description = _('View on site')
 

@@ -49,7 +49,12 @@ class AssignmentTransitions(ActivityTransitions):
         messages=[AssignmentCompletedMessage]
     )
     def succeed(self, **kwargs):
-        for member in self.instance.accepted_applicants:
+        source_states = [
+            ApplicantTransitions.values.new,
+            ApplicantTransitions.values.accepted,
+            ApplicantTransitions.values.active,
+        ]
+        for member in self.instance.contributions.filter(status__in=source_states):
             member.activity = self.instance
             member.transitions.succeed()
             member.save()
@@ -88,7 +93,7 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=[values.open, values.running],
+        source=[values.open, values.running, values.full],
         target=values.closed,
         permissions=[ActivityTransitions.is_system],
         messages=[AssignmentExpiredMessage]

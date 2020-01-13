@@ -12,6 +12,7 @@ from bluebottle.tasks.models import Skill
 from bluebottle.utils.admin import export_as_csv_action, FSMAdmin
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.forms import FSMModelForm
+from bluebottle.wallposts.admin import WallpostInline
 
 
 class AssignmentAdminForm(FSMModelForm):
@@ -52,6 +53,8 @@ class ApplicantAdmin(ContributionChildAdmin):
     raw_id_fields = ('user', 'activity')
     list_editable = ['time_spent']
 
+    date_hierarchy = 'transition_date'
+
     export_to_csv_fields = (
         ('status', 'Status'),
         ('created', 'Created'),
@@ -85,7 +88,7 @@ class ExpertiseFilter(admin.SimpleListFilter):
 @admin.register(Assignment)
 class AssignmentAdmin(ActivityChildAdmin):
     form = AssignmentAdminForm
-    inlines = (ApplicantInline, MessageAdminInline)
+    inlines = (ApplicantInline, MessageAdminInline, WallpostInline)
 
     date_hierarchy = 'end_date'
 

@@ -2,6 +2,7 @@ import json
 import mock
 
 import bunch
+from django.db import connection
 
 from django.urls import reverse
 
@@ -280,6 +281,9 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
 
     def test_create(self):
         self.check.delete()
+        tenant = connection.tenant
+        tenant.name = 'tst'
+        tenant.save()
 
         connect_account = stripe.Account('some-connect-id')
         connect_account.update({
@@ -315,10 +319,10 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                     create_account.assert_called_with(
                         business_type='individual',
                         country=self.data['data']['attributes']['country'],
-                        metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.user.pk},
+                        metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.user.pk},
                         requested_capabilities=['legacy_payments'],
                         settings={
-                            'payments': {'statement_descriptor': u''},
+                            'payments': {'statement_descriptor': 'tst--'},
                             'payouts': {'schedule': {'interval': 'manual'}}
                         },
                         # business_type='individual',

@@ -1,0 +1,9 @@
+{% load i18n %}
+<h3>{% trans 'Missing fields' %}</h3>
+<ul>
+    {% for field in fields %}
+        <li>
+            {% trans field %}
+        </li>
+    {% endfor %}
+</ul>

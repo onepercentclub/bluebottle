@@ -395,10 +395,9 @@ class ShareResultsContentSerializer(serializers.ModelSerializer):
                 'currency': str(stats.donated_total.currency)
             },
             'hours': stats.time_spent,
-            'fundings': stats.fundings_succeeded,
-            'assignments': stats.assignments_succeeded,
-            'events': stats.events_succeeded,
-            'votes': stats.votes_cast,
+            'fundraisers': stats.fundings_succeeded,
+            'tasks': stats.assignments_succeeded,
+            'events': stats.events_succeeded
         }
 
     class Meta:

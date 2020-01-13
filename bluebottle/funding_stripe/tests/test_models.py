@@ -1,7 +1,7 @@
 import bunch
 import mock
 import stripe
-from django.db import ProgrammingError
+from django.db import ProgrammingError, connection
 
 from bluebottle.funding_stripe.models import (
     StripePayoutAccount, ExternalAccount
@@ -52,6 +52,10 @@ class ConnectAccountTestCase(BluebottleTestCase):
 
     def test_save(self):
         self.check.account_id = None
+        tenant = connection.tenant
+        tenant.name = 'GoDoGood'
+        tenant.save()
+
         with mock.patch(
             'stripe.Account.create', return_value=self.connect_account
         ) as create:
@@ -61,7 +65,10 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 country=self.check.country,
                 metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},
                 requested_capabilities=['legacy_payments'],
-                settings={'payments': {'statement_descriptor': u''}, 'payouts': {'schedule': {'interval': 'manual'}}},
+                settings={
+                    'payments': {'statement_descriptor': u'GoDoGood'},
+                    'payouts': {'schedule': {'interval': 'manual'}}
+                },
                 type='custom'
             )
 

@@ -48,7 +48,6 @@ class EventTransitions(ActivityTransitions):
     @transition(
         source=values.open,
         target=values.full,
-        conditions=[can_open]
     )
     def full(self):
         pass

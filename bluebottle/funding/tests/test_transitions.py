@@ -5,6 +5,7 @@ from django.core import mail
 from django.utils.timezone import now
 from moneyed import Money
 
+from bluebottle.fsm import TransitionNotPossible
 from bluebottle.funding.tasks import check_funding_end
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, \
     BudgetLineFactory, BankAccountFactory
@@ -115,3 +116,36 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 5)
         self.assertEqual(mail.outbox[4].subject, u'You successfully completed your crowdfunding campaign! 🎉')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[4].body)
+
+    def test_extend(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+
+        self.funding.deadline = now() - timedelta(days=1)
+        self.funding.save()
+        check_funding_end()
+
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, 'succeeded')
+
+        self.funding.deadline = now() + timedelta(days=1)
+        self.funding.save()
+
+        self.funding.transitions.extend()
+        self.assertEqual(self.funding.status, 'open')
+
+    def test_extend_past_deadline(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+
+        self.funding.deadline = now() - timedelta(days=1)
+        self.funding.save()
+        check_funding_end()
+
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, 'succeeded')
+
+        self.assertRaises(
+            TransitionNotPossible,
+            self.funding.transitions.extend
+        )

@@ -7,6 +7,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import cached_property
 from django.core.exceptions import ObjectDoesNotExist
 
+from multiselectfield import MultiSelectField
+
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.geo.models import Place
 from bluebottle.projects.models import Project
@@ -41,6 +43,24 @@ class CustomMemberField(models.Model):
 
 
 class MemberPlatformSettings(BasePlatformSettings):
+    LOGIN_METHODS = (
+        ('password', _('Email/password combination')),
+        ('SSO', _('Company SSO')),
+    )
+
+    closed = models.BooleanField(
+        default=False, help_text=_('Require login before accessing the platform')
+    )
+    login_methods = MultiSelectField(max_length=100, choices=LOGIN_METHODS, default=['password'])
+    confirm_signup = models.BooleanField(
+        default=False, help_text=_('Require verifying the user\'s email before signup')
+    )
+    email_domain = models.CharField(
+        blank=True, null=True,
+        help_text=_('Domain that all email should belong to'),
+        max_length=256
+    )
+
     require_consent = models.BooleanField(
         default=False, help_text=_('Require users to consent to cookies')
     )

@@ -415,6 +415,10 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
         fields = (
             'require_consent',
             'consent_link',
+            'closed',
+            'email_domain',
+            'confirm_signup',
+            'login_methods',
         )
 
 

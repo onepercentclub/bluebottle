@@ -1,8 +1,15 @@
+import mock
+import time
+
+from django.db import connection
+from django.core import mail
 from django.core.urlresolvers import reverse
+from django.core.signing import TimestampSigner
+from django.test.utils import override_settings
 
 from rest_framework import status
 
-from bluebottle.members.models import MemberPlatformSettings, UserActivity
+from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
@@ -57,6 +64,201 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
             response.data['platform']['members']['consent_link'],
             '/pages/terms-and-conditions'
         )
+
+
+@override_settings(SEND_WELCOME_MAIL=True)
+class SignUpTokenTestCase(BluebottleTestCase):
+    """
+    Integration tests for the SignUp token api endpoint.
+    """
+    def setUp(self):
+        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
+
+        super(SignUpTokenTestCase, self).setUp()
+
+    def test_create(self):
+        email = 'test@example.com'
+        connection.tenant.name = 'Test'
+        connection.tenant.save()
+
+        response = self.client.post(reverse('user-signup-token'), {'email': email})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 1)
+
+        member = Member.objects.get(email=email)
+        self.assertTrue('{}:'.format(member.pk) in mail.outbox[0].body)
+        self.assertEqual('Your activation link for Test', mail.outbox[0].subject)
+        self.assertFalse(member.is_active)
+
+    def test_create_twice(self):
+        email = 'test@example.com'
+
+        response = self.client.post(reverse('user-signup-token'), {'email': email})
+        response = self.client.post(reverse('user-signup-token'), {'email': email})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 2)
+
+        member = Member.objects.get(email=email)
+        self.assertFalse(member.is_active)
+
+    def test_create_already_active(self):
+        email = 'test@example.com'
+
+        member = Member.objects.create(email=email, is_active=True)
+
+        response = self.client.post(reverse('user-signup-token'), {'email': email})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 2)
+
+        self.assertTrue(member.is_active)
+
+    def test_create_correct_domain(self):
+        email = 'test@example.com'
+        self.settings.email_domain = 'example.com'
+        self.settings.save()
+
+        response = self.client.post(reverse('user-signup-token'), {'email': email})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 1)
+
+        member = Member.objects.get(email=email)
+        self.assertFalse(member.is_active)
+
+    def test_create_incorrect_domain(self):
+        email = 'test@secondexample.com'
+        self.settings.email_domain = 'example.com'
+        self.settings.save()
+
+        response = self.client.post(reverse('user-signup-token'), {'email': email})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertTrue(
+            'Only emails' in response.json()['email'][0]
+        )
+
+
+@override_settings(SEND_WELCOME_MAIL=True)
+class CreateUserTestCase(BluebottleTestCase):
+    def setUp(self):
+        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
+
+        super(CreateUserTestCase, self).setUp()
+
+    def test_create(self):
+        email = 'test@example.com'
+        password = 'test@example.com'
+
+        response = self.client.post(
+            reverse('user-user-create'),
+            {'email': email, 'password': password, 'password_confirmation': password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        member = Member.objects.get(email=email)
+
+        self.assertEqual(member.is_active, True)
+        self.assertTrue(member.check_password(password))
+
+    def test_create_twice(self):
+        email = 'test@example.com'
+        password = 'test@example.com'
+
+        response = self.client.post(
+            reverse('user-user-create'),
+            {'email': email, 'password': password, 'password_confirmation': password}
+        )
+        response = self.client.post(
+            reverse('user-user-create'),
+            {'email': email, 'password': password, 'password_confirmation': password}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()['email'][0], 'member with this email address already exists.')
+
+    def test_require_confirmation(self):
+        self.settings.confirm_signup = True
+        self.settings.save()
+
+        email = 'test@example.com'
+        password = 'test@example.com'
+
+        response = self.client.post(
+            reverse('user-user-create'),
+            {'email': email, 'password': password, 'password_confirmation': password}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()['token'][0], 'Signup requires a confirmation token')
+
+
+@override_settings(SEND_WELCOME_MAIL=True)
+class ConfirmSignUpTestCase(BluebottleTestCase):
+    def setUp(self):
+        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
+
+        super(ConfirmSignUpTestCase, self).setUp()
+
+    def test_confirm(self):
+        email = 'test@example.com'
+        password = 'test@example.com'
+
+        member = Member.objects.create(email=email, is_active=False)
+
+        response = self.client.put(
+            reverse('user-signup-token-confirm', args=(TimestampSigner().sign(member.pk), )),
+            {'password': password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        member.refresh_from_db()
+
+        self.assertEqual(member.is_active, True)
+        self.assertTrue(member.check_password(password))
+
+    def test_confirm_expired_token(self):
+        email = 'test@example.com'
+        password = 'test@example.com'
+
+        member = Member.objects.create(email=email, is_active=False)
+
+        current_time = time.time()
+
+        with mock.patch('time.time', return_value=current_time - (3 * 60 * 60)):
+            token = TimestampSigner().sign(member.pk)
+
+        response = self.client.put(
+            reverse('user-signup-token-confirm', args=(token, )),
+            {'password': password}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()['id'], 'Confirmation token is expired')
+
+        member.refresh_from_db()
+
+        self.assertEqual(member.is_active, False)
+        self.assertFalse(member.check_password(password))
+
+    def test_confirm_wrong_token(self):
+        email = 'test@example.com'
+        password = 'test@example.com'
+
+        member = Member.objects.create(email=email, is_active=False)
+
+        response = self.client.put(
+            reverse(
+                'user-signup-token-confirm',
+                args=('{}:wrong-signature'.format(member.pk), )
+            ),
+            {'password': password}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()['id'], 'Confirmation token is not signed correctly')
+
+        member.refresh_from_db()
+
+        self.assertEqual(member.is_active, False)
+        self.assertFalse(member.check_password(password))
 
 
 class UserDataExportTest(BluebottleTestCase):

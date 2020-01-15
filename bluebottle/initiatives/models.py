@@ -50,7 +50,7 @@ class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, 
     @classmethod
     def get_messages(cls, old, new):
         messages = []
-        if old.reviewer != new.reviewer:
+        if old.reviewer != new.reviewer and new.reviewer is not None:
             messages.append(AssignedReviewerMessage)
         return messages
 

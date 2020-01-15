@@ -168,6 +168,10 @@ class Page(PublishableModel):
     # See https://github.com/edoburu/django-fluent-contents/issues/19
     contentitem_set = ContentItemRelation()
 
+    @property
+    def content(self):
+        return self.body
+
     class Meta:
         ordering = ('language', 'slug')
         unique_together = ('language', 'slug')

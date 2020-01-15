@@ -70,6 +70,8 @@ class MemberPlatformSettings(BasePlatformSettings):
         max_length=255
     )
 
+    background = models.ImageField(null=True, blank=True, upload_to='site_content/')
+
     class Meta:
         verbose_name_plural = _('member platform settings')
         verbose_name = _('member platform settings')

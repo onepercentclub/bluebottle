@@ -419,6 +419,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'email_domain',
             'confirm_signup',
             'login_methods',
+            'background',
         )
 
 

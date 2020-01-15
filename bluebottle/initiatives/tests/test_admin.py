@@ -168,7 +168,9 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
             'activities-TOTAL_FORMS': '0',
             'activities-INITIAL_FORMS': '0',
             'notifications-message-content_type-object_id-TOTAL_FORMS': '0',
-            'notifications-message-content_type-object_id-INITIAL_FORMS': '0'
+            'notifications-message-content_type-object_id-INITIAL_FORMS': '0',
+            'wallposts-wallpost-content_type-object_id-TOTAL_FORMS': '0',
+            'wallposts-wallpost-content_type-object_id-INITIAL_FORMS': '0'
         }
         response = self.client.post(admin_url, data)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)

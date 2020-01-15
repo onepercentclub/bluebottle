@@ -103,7 +103,7 @@ class CustomMemberFieldSettingsInline(SortableTabularInline):
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
     fields = (
         'closed', 'confirm_signup', 'login_methods',
-        'email_domain', 'require_consent', 'consent_link',
+        'email_domain', 'background', 'require_consent', 'consent_link',
     )
 
     inlines = [

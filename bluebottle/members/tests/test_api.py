@@ -47,7 +47,7 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
             response.data['platform']['members']['email_domain'], 'example.com'
         )
         self.assertEqual(
-            response.data['platform']['members']['login_methods'], ['password']
+            response.data['platform']['members']['login_methods'], ['sso']
         )
 
     def test_member_platform_settings_default(self):

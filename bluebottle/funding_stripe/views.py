@@ -88,10 +88,14 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
             try:
                 serializer.instance.update(token)
             except stripe.error.InvalidRequestError, e:
-                field = e.param.replace('[', '/').replace(']', '')
-                raise serializers.ValidationError(
-                    {field: [e.message]}
-                )
+                try:
+                    field = e.param.replace('[', '/').replace(']', '')
+                    raise serializers.ValidationError(
+                        {field: [e.message]}
+                    )
+                except AttributeError:
+                    raise serializers.ValidationError(unicode(e))
+
         serializer.save()
 
 
@@ -286,6 +290,9 @@ class ConnectWebHookView(View):
         try:
             if event.type == 'account.updated':
                 account = self.get_account(event.data.object.id)
+                # Bust cached account
+                if account.account:
+                    del account.account
                 if (
                     account.status != PayoutAccountTransitions.values.verified and
                     account.complete

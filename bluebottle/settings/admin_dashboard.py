@@ -19,11 +19,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             },
             {
                 'name': 'activities.activity',
-                'permissions': ['activities.activity']
+                'permissions': ['activities.change_activity']
             },
             {
                 'name': 'activities.contribution',
-                'permissions': ['activities.activity']
+                'permissions': ['activities.change_contribution']
             },
             {
                 'name': 'categories.category',

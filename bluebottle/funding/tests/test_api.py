@@ -244,8 +244,22 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
 
     def test_view_funding_owner(self):
-        DonationFactory.create_batch(5, amount=Money(200, 'EUR'), activity=self.funding, status='succeeded')
-        DonationFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')
+        co_financer = BlueBottleUserFactory.create(is_co_financer=True)
+        DonationFactory.create(
+            user=co_financer,
+            amount=Money(200, 'EUR'),
+            activity=self.funding,
+            status='succeeded')
+        DonationFactory.create_batch(
+            4,
+            amount=Money(200, 'EUR'),
+            activity=self.funding,
+            status='succeeded')
+        DonationFactory.create_batch(
+            2,
+            amount=Money(100, 'EUR'),
+            activity=self.funding,
+            status='new')
 
         self.funding.amount_matching = Money(500, 'EUR')
         self.funding.save()
@@ -285,6 +299,13 @@ class FundingDetailTestCase(BluebottleTestCase):
             len(data['data']['relationships']['contributions']['data']),
             5
         )
+
+        # There should be a co-financer in the includes
+        included = response.json()['included']
+        co_financers = [
+            inc for inc in included if inc['type'] == 'members' and inc['attributes']['is-co-financer']
+        ]
+        self.assertEqual(len(co_financers), 1)
 
         # Test that geolocation is included too
         geolocation = get_included(response, 'geolocations')

@@ -103,7 +103,11 @@ class StripeSourcePaymentTransitions(PaymentTransitions):
 
 class StripePayoutAccountTransitions(PayoutAccountTransitions):
     @transition(
-        source=[PayoutAccountTransitions.values.new, PayoutAccountTransitions.values.rejected],
+        source=[
+            PayoutAccountTransitions.values.new,
+            PayoutAccountTransitions.values.verified,
+            PayoutAccountTransitions.values.rejected
+        ],
         target=PayoutAccountTransitions.values.pending
     )
     def submit(self):
@@ -116,7 +120,7 @@ class StripePayoutAccountTransitions(PayoutAccountTransitions):
             PayoutAccountTransitions.values.new
         ],
         messages=[PayoutAccountVerified],
-        target='verified',
+        target=PayoutAccountTransitions.values.verified
     )
     def verify(self):
         self.instance.save()

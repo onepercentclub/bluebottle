@@ -110,8 +110,8 @@ class BaseActivityListSerializer(ModelSerializer):
             'description',
             'is_follower',
             'status',
-            'review_status',
             'stats',
+            'review_status',
         )
 
         meta_fields = (
@@ -129,6 +129,27 @@ class BaseActivityListSerializer(ModelSerializer):
             'initiative.place',
         ]
         resource_name = 'activities'
+
+
+class BaseTinyActivitySerializer(ModelSerializer):
+    title = serializers.CharField(allow_blank=True, required=False)
+    slug = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Activity
+        fields = (
+            'slug',
+            'id',
+            'title',
+        )
+
+        meta_fields = (
+            'created',
+            'updated',
+        )
+
+    class JSONAPIMeta:
+        pass
 
 
 class ActivitySubmitSerializer(ModelSerializer):
@@ -152,6 +173,29 @@ class ActivitySubmitSerializer(ModelSerializer):
 
 
 # This can't be in serializers because of circular imports
+class BaseContributionListSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
+    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+
+    included_serializers = {
+        'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+    class Meta:
+        model = Contribution
+        fields = ('user', 'activity', 'status', 'created', 'updated', )
+        meta_fields = ('created', 'updated', )
+
+    class JSONAPIMeta:
+        included_resources = [
+            'user',
+            'activity',
+        ]
+        resource_name = 'contributions'
+
+
+# This can't be in serializers because of circular imports
 class BaseContributionSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
@@ -160,7 +204,7 @@ class BaseContributionSerializer(ModelSerializer):
     transitions = AvailableTransitionsField()
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 

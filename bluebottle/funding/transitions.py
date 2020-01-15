@@ -12,6 +12,7 @@ from bluebottle.funding.messages import (
     FundingClosedMessage, FundingPartiallyFundedMessage
 )
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
+from bluebottle.wallposts.models import Wallpost, SystemWallpost
 
 
 class FundingTransitions(ActivityTransitions):
@@ -25,6 +26,10 @@ class FundingTransitions(ActivityTransitions):
         if not self.instance.amount_raised >= self.instance.target:
             return _("Amount raised should at least equal to target amount.")
 
+    def deadline_in_future(self):
+        if not self.instance.deadline >= timezone.now():
+            return _("The deadline of the activity should be in the future.")
+
     @transition(
         source=values.in_review,
         target=values.open,
@@ -32,7 +37,8 @@ class FundingTransitions(ActivityTransitions):
     )
     def reviewed(self):
         if self.instance.duration and not self.instance.deadline:
-            self.instance.deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
+            deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
+            self.instance.deadline = deadline.replace(hour=23, minute=59, second=59)
 
     @transition(
         source=values.open,
@@ -53,6 +59,15 @@ class FundingTransitions(ActivityTransitions):
     def succeed(self):
         from bluebottle.funding.models import Payout
         Payout.generate(self.instance)
+
+    @transition(
+        source=[values.succeeded, values.partially_funded],
+        target=values.open,
+        conditions=[deadline_in_future],
+        permissions=[ActivityTransitions.can_approve]
+    )
+    def extend(self):
+        pass
 
     @transition(
         source=[values.succeeded, values.partially_funded],
@@ -85,7 +100,13 @@ class FundingTransitions(ActivityTransitions):
             payout.save()
 
     @transition(
-        source='*',
+        source=[
+            values.in_review,
+            values.refunded,
+            values.open,
+            values.succeeded,
+            values.partially_funded
+        ],
         target=values.closed,
         messages=[FundingClosedMessage],
         permissions=[ActivityTransitions.can_approve],
@@ -116,7 +137,8 @@ class DonationTransitions(ContributionTransitions):
         target=values.failed,
     )
     def fail(self):
-        pass
+        # Remove walposts related to this donation
+        Wallpost.objects.filter(donation=self.instance).all().delete()
 
     @transition(
         source=[values.new, values.failed],
@@ -128,8 +150,6 @@ class DonationTransitions(ContributionTransitions):
     )
     def succeed(self):
         parent = self.instance.fundraiser or self.instance.activity
-        from bluebottle.wallposts.models import SystemWallpost
-        pass
         SystemWallpost.objects.get_or_create(
             author=self.instance.user,
             donation=self.instance,
@@ -216,7 +236,7 @@ class PayoutTransitions(ModelTransitions):
         target=values.started
     )
     def start(self):
-        self.instance.date_approved = timezone.now()
+        self.instance.date_started = timezone.now()
 
     @transition(
         source=['*'],

@@ -191,4 +191,16 @@ class Member(BlueBottleBaseUser):
         return u"{} | {}".format(self.full_name, self.email)
 
 
+class UserActivity(models.Model):
+
+    user = models.ForeignKey(Member, null=True)
+    created = models.DateTimeField(auto_now_add=True)
+    path = models.CharField(max_length=200, null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('User activity')
+        verbose_name_plural = _('User activities')
+        ordering = ['-created']
+
+
 import signals  # noqa

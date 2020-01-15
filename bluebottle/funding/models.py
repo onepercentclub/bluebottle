@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import random
 import string
-from itertools import groupby
 
 from babel.numbers import get_currency_name
 
@@ -439,10 +438,22 @@ class Payout(TransitionsMixin, models.Model):
 
     @classmethod
     def generate(cls, activity):
-        for (currency, provider), donations in groupby(
-            activity.contributions.filter(status='succeeded'),
-            lambda x: (x.amount_currency, x.payment.provider)
-        ):
+        for payout in cls.objects.filter(activity=activity):
+            if payout.status == PayoutTransitions.values.new:
+                payout.delete()
+            elif payout.donations.count() == 0:
+                raise AssertionError('Payout without donations already started!')
+        ready_donations = activity.contributions.filter(status='succeeded', donation__payout__isnull=True)
+        groups = set([
+            (don.amount_currency, don.payment.provider) for don in
+            ready_donations
+        ])
+        for currency, provider in groups:
+            donations = [
+                don for don in
+                ready_donations.filter(donation__amount_currency=currency)
+                if don.payment.provider == provider
+            ]
             payout = cls.objects.create(
                 activity=activity,
                 provider=provider,
@@ -461,6 +472,9 @@ class Payout(TransitionsMixin, models.Model):
     class Meta():
         verbose_name = _('payout')
         verbose_name_plural = _('payouts')
+
+    def __unicode__(self):
+        return '{} #{}'.format(_('Payout'), self.id)
 
 
 class Donation(Contribution):

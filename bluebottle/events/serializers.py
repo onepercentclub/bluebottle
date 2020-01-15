@@ -1,14 +1,38 @@
+from django.urls import reverse
+
 from rest_framework.validators import UniqueTogetherValidator
+from rest_framework import serializers
+
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer,
-    BaseActivityListSerializer)
+    BaseActivityListSerializer, BaseTinyActivitySerializer
+)
 from bluebottle.events.filters import ParticipantListFilter
 from bluebottle.events.models import Event, Participant
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 from bluebottle.utils.serializers import NoCommitMixin
+
+
+class ParticipantListSerializer(BaseContributionSerializer):
+
+    class Meta(BaseContributionSerializer.Meta):
+        model = Participant
+        fields = BaseContributionSerializer.Meta.fields + ('time_spent', )
+
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        resource_name = 'contributions/participants'
+        included_resources = [
+            'user',
+            'activity'
+        ]
+
+    included_serializers = {
+        'activity': 'bluebottle.events.serializers.TinyEventSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
 
 
 class ParticipantSerializer(BaseContributionSerializer):
@@ -32,7 +56,7 @@ class ParticipantSerializer(BaseContributionSerializer):
         ]
 
     included_serializers = {
-        'activity': 'bluebottle.events.serializers.EventSerializer',
+        'activity': 'bluebottle.events.serializers.EventListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
@@ -87,6 +111,14 @@ class EventListSerializer(BaseActivityListSerializer):
 class EventSerializer(NoCommitMixin, BaseActivitySerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
     contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
+    links = serializers.SerializerMethodField()
+
+    def get_links(self, instance):
+        return {
+            'ical': reverse('event-ical', args=(instance.pk, )),
+            'google': instance.google_calendar_link,
+            'outlook': instance.outlook_link,
+        }
 
     class Meta(BaseActivitySerializer.Meta):
         model = Event
@@ -101,6 +133,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
             'permissions',
             'registration_deadline',
             'contributions',
+            'links'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -118,6 +151,16 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
             'contributions': 'bluebottle.events.serializers.ParticipantSerializer',
         }
     )
+
+
+class TinyEventSerializer(BaseTinyActivitySerializer):
+
+    class Meta(BaseTinyActivitySerializer.Meta):
+        model = Event
+        fields = BaseTinyActivitySerializer.Meta.fields + ('start_time', 'start_date', 'duration')
+
+    class JSONAPIMeta(BaseTinyActivitySerializer.JSONAPIMeta):
+        resource_name = 'activities/events'
 
 
 class EventTransitionSerializer(TransitionSerializer):

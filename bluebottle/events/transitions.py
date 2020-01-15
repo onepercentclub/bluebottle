@@ -48,7 +48,6 @@ class EventTransitions(ActivityTransitions):
     @transition(
         source=values.open,
         target=values.full,
-        conditions=[can_open]
     )
     def full(self):
         pass
@@ -77,6 +76,24 @@ class EventTransitions(ActivityTransitions):
     )
     def succeed(self):
         for member in self.instance.participants:
+            member.activity = self.instance
+            member.transitions.succeed()
+            member.save()
+
+    @transition(
+        field='status',
+        source=[values.closed],
+        target=values.succeeded,
+        permissions=[ActivityTransitions.is_system],
+        messages=[EventSucceededOwnerMessage]
+    )
+    def reopen_and_succeed(self, **kwargs):
+        states = [
+            ParticipantTransitions.values.new,
+            ParticipantTransitions.values.closed,
+            ParticipantTransitions.values.succeeded
+        ]
+        for member in self.instance.contributions.filter(status__in=states):
             member.activity = self.instance
             member.transitions.succeed()
             member.save()
@@ -174,7 +191,7 @@ class ParticipantTransitions(ContributionTransitions):
         follow(self.instance.user, self.instance.activity)
 
     @transition(
-        source=[values.new, values.no_show, values.rejected, values.withdrawn],
+        source='*',
         target=values.succeeded,
         conditions=[event_is_successful]
     )

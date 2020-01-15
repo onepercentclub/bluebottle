@@ -1,5 +1,9 @@
 from django.core import mail
 
+from bluebottle.assignments.tests.factories import AssignmentFactory
+from bluebottle.assignments.transitions import AssignmentTransitions
+from bluebottle.events.tests.factories import EventFactory
+from bluebottle.events.transitions import EventTransitions
 from bluebottle.fsm import TransitionNotPossible
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
 from bluebottle.funding.transitions import FundingTransitions
@@ -142,6 +146,31 @@ class InitiativeReviewTransitions(BluebottleTestCase):
         subject = 'Your initiative "{}" has been approved!'.format(self.initiative.title)
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
+
+    def test_approve_with_activities(self):
+        self.initiative.transitions.submit()
+        event = EventFactory.create(initiative=self.initiative)
+        assignment = AssignmentFactory.create(initiative=self.initiative)
+        funding = FundingFactory.create(initiative=self.initiative)
+
+        self.initiative.transitions.approve()
+        self.assertEqual(
+            self.initiative.status, ReviewTransitions.values.approved
+        )
+        # Event & assignment should have transitioned to 'open' now.
+        event.refresh_from_db()
+        self.assertEqual(
+            event.status, EventTransitions.values.open
+        )
+        assignment.refresh_from_db()
+        self.assertEqual(
+            assignment.status, AssignmentTransitions.values.open
+        )
+        # Funding should still be in review
+        funding.refresh_from_db()
+        self.assertEqual(
+            funding.status, FundingTransitions.values.in_review
+        )
 
     def test_close(self):
         self.initiative.transitions.submit()

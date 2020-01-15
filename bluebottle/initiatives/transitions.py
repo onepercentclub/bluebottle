@@ -95,11 +95,12 @@ class InitiativeReviewTransitions(ReviewTransitions):
         for activity in self.instance.activities.all():
             # Make sure that activity has the updated initiative status
             activity.initiative.status = self.instance.status
-            try:
-                activity.review_transitions.approve(send_messages=False)
-                activity.save()
-            except TransitionNotPossible:
-                pass
+            if not activity.needs_review:
+                try:
+                    activity.review_transitions.approve(send_messages=False)
+                    activity.save()
+                except TransitionNotPossible:
+                    pass
 
     @transition(
         source=[

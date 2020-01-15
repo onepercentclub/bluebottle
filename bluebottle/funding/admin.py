@@ -11,6 +11,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from django_summernote.widgets import SummernoteWidget
 from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
@@ -19,7 +20,7 @@ from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdm
 from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter
+from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter, DonationAdminPledgeFilter
 from bluebottle.funding.forms import RefundConfirmationForm
 from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
@@ -36,6 +37,8 @@ from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBan
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action, FSMAdminMixin, \
     BasePlatformSettingsAdmin
+from bluebottle.utils.forms import FSMModelForm
+from bluebottle.wallposts.admin import DonationWallpostInline, WallpostInline
 
 logger = logging.getLogger(__name__)
 
@@ -107,12 +110,13 @@ class FundingStatusFilter(SimpleListFilter):
                [(k, v) for k, v in FundingTransitions.values.choices if k != 'in_review']
 
 
-class PayoutInline(FSMAdminMixin, admin.StackedInline):
+class PayoutInline(FSMAdminMixin, admin.TabularInline):
 
     model = Payout
     readonly_fields = [
-        'total_amount', 'date_approved', 'date_started', 'date_completed',
-        'status', 'approve'
+        'payout_link', 'total_amount', 'provider', 'currency',
+        'date_approved', 'date_started', 'date_completed',
+        'approve'
     ]
 
     fields = readonly_fields
@@ -122,16 +126,33 @@ class PayoutInline(FSMAdminMixin, admin.StackedInline):
     def has_add_permission(self, request):
         return False
 
+    def payout_link(self, obj):
+        url = reverse('admin:funding_payout_change', args=(obj.id, ))
+        return format_html('<a href="{}">{}</a>', url, obj)
+
     def approve(self, obj):
         if obj.status == 'new':
             url = reverse('admin:funding_payout_transition', args=(obj.id, 'transitions', 'approve'))
-            return format_html('<a href="{}">{}</a>', url, _('Approve'))
+            return format_html('<a href="{}" class="button_select_option button">{}</a>', url, _('Approve'))
+        return obj.status
+    approve.short_description = _('Status')
+
+
+class FundingAdminForm(FSMModelForm):
+
+    class Meta:
+        model = Funding
+        fields = '__all__'
+        widgets = {
+            'description': SummernoteWidget(attrs={'height': 400})
+        }
 
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline)
+    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline, WallpostInline)
     base_model = Funding
+    form = FundingAdminForm
     date_hierarchy = 'transition_date'
     list_filter = [FundingStatusFilter, CurrencyFilter]
 
@@ -151,7 +172,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     def percentage_donated(self, obj):
         if obj.target and obj.target.amount:
-            return '{:.2f}%'.format((obj.amount_raised.amount / obj.target.amount) * 100)
+            return '{:.2f}%'.format((obj.amount_donated.amount / obj.target.amount) * 100)
         else:
             return '0%'
     percentage_donated.short_description = _('% donated')
@@ -168,7 +189,7 @@ class FundingAdmin(ActivityChildAdmin):
     amount_raised.short_description = _('amount donated + matched')
 
     def amount_donated(self, obj):
-        return obj.amount_raised
+        return obj.amount_donated
     amount_donated.short_description = _('amount donated')
 
     detail_fields = (
@@ -221,20 +242,43 @@ class FundingAdmin(ActivityChildAdmin):
     payout_links.short_description = _('Payouts')
 
     def combined_status(self, obj):
-        if obj.status == 'in_review':
+        if obj.review_status != ActivityReviewTransitions.values.approved:
             return obj.review_status
         return obj.status
     combined_status.short_description = _('status')
 
 
+class DonationAdminForm(forms.ModelForm):
+    class Meta:
+        model = Donation
+        exclude = ()
+
+    def __init__(self, *args, **kwargs):
+        super(DonationAdminForm, self).__init__(*args, **kwargs)
+        if self.instance:
+            if self.instance.id:
+                # You can only select a reward if the project is set on the donation
+                self.fields['reward'].queryset = Reward.objects.filter(activity=self.instance.activity)
+            else:
+                self.fields['reward'].queryset = Reward.objects.none()
+
+
 @admin.register(Donation)
 class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     model = Donation
+    form = DonationAdminForm
+
     raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'status', 'payment_link', 'reward']
+    readonly_fields = ['payment_link', 'status', 'payment_link', ]
     list_display = ['transition_date', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', ]
-    list_filter = [DonationAdminStatusFilter, DonationAdminCurrencyFilter]
+    list_filter = [
+        DonationAdminStatusFilter,
+        DonationAdminCurrencyFilter,
+        DonationAdminPledgeFilter,
+    ]
     date_hierarchy = 'transition_date'
+
+    inlines = [DonationWallpostInline]
 
     fields = ['transition_date', 'created', 'activity', 'user', 'amount', 'reward',
               'anonymous', 'name',
@@ -258,7 +302,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
         if obj.anonymous:
             return format_html('<i style="color: #999">anonymous</i>')
         if obj.user:
-            user_url = reverse('admin:funding_funding_change', args=(obj.user.id,))
+            user_url = reverse('admin:members_member_change', args=(obj.user.id,))
             return format_html(u'<a href="{}">{}</a>', user_url, obj.user.full_name)
         return format_html('<i style="color: #999">guest</i>')
 
@@ -407,8 +451,8 @@ class PayoutAccountFundingLinkMixin(object):
 class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner',)
-    readonly_fields = ('status',)
-    fields = ('owner', 'status', 'transitions')
+    readonly_fields = ['status', 'created']
+    fields = ['owner', 'status', 'created', 'transitions', 'reviewed']
     show_in_index = True
 
 
@@ -419,7 +463,7 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     list_filter = ('reviewed', PolymorphicChildModelFilter)
     raw_id_fields = ('owner',)
     show_in_index = True
-
+    search_fields = ['stripepayoutaccount__account_id']
     ordering = ('-created',)
     child_models = [
         StripePayoutAccount,
@@ -442,6 +486,10 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
     list_filter = ('reviewed', PolymorphicChildModelFilter)
     raw_id_fields = ('connect_account',)
     show_in_index = True
+    search_fields = ['externalaccount__account_id',
+                     'flutterwavebankaccount__account_holder_name',
+                     'pledgebankaccount__account_holder_name',
+                     ]
 
     ordering = ('-created',)
     child_models = [
@@ -469,13 +517,12 @@ class BankAccountInline(TabularInline):
 class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
     model = PlainPayoutAccount
     inlines = [BankAccountInline]
+    fields = PayoutAccountChildAdmin.fields + ['document']
 
-    fields = PayoutAccountChildAdmin.fields + ('document',)
 
-
-class DonationInline(admin.TabularInline):
+class DonationInline(PaymentLinkMixin, admin.TabularInline):
     model = Donation
-    readonly_fields = ('created', 'amount', 'status')
+    readonly_fields = ('created', 'amount', 'status', 'payment_link')
     fields = readonly_fields
     extra = 0
     can_delete = False

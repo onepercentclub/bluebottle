@@ -62,7 +62,8 @@ class MemberSerializer(ModelSerializer):
         model = Member
         fields = (
             'id', 'first_name', 'last_name', 'initials', 'avatar',
-            'full_name', 'short_name', 'is_active', 'date_joined', 'about_me'
+            'full_name', 'short_name', 'is_active', 'date_joined',
+            'about_me', 'is_co_financer'
         )
 
     class JSONAPIMeta:
@@ -109,7 +110,8 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     activities = FilteredPolymorphicResourceRelatedField(
         filter_backend=ActivityFilter,
         polymorphic_serializer=ActivityListSerializer,
-        many=True, read_only=True
+        many=True,
+        read_only=True
     )
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
@@ -171,6 +173,7 @@ class InitiativeListSerializer(ModelSerializer):
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
+    transitions = AvailableTransitionsField()
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -188,11 +191,11 @@ class InitiativeListSerializer(ModelSerializer):
         fields = (
             'id', 'title', 'pitch', 'categories',
             'owner', 'activity_manager',
-            'slug', 'has_organization',
+            'slug', 'has_organization', 'transitions',
             'story', 'image', 'theme', 'place', 'location'
         )
 
-        meta_fields = ('permissions', 'status', 'created', )
+        meta_fields = ('permissions', 'status', 'created', 'transitions',)
 
     class JSONAPIMeta:
         included_resources = [

@@ -3,19 +3,25 @@ from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
 from bluebottle.tasks.models import Skill
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.forms import FSMModelForm
+from bluebottle.wallposts.admin import WallpostInline
 
 
 class AssignmentAdminForm(FSMModelForm):
     class Meta:
         model = Assignment
         fields = '__all__'
+        widgets = {
+            'description': SummernoteWidget(attrs={'height': 400})
+        }
 
 
 class ApplicantInline(admin.TabularInline):
@@ -23,7 +29,7 @@ class ApplicantInline(admin.TabularInline):
 
     raw_id_fields = ('user', )
     readonly_fields = ('applicant', 'status', 'created', 'motivation')
-    fields = ('applicant', 'time_spent', 'status', 'created', 'motivation')
+    fields = ('applicant', 'user', 'time_spent', 'status', 'created', 'motivation')
     extra = 0
 
     can_delete = False
@@ -45,6 +51,8 @@ class ApplicantAdmin(ContributionChildAdmin):
     form = ApplicantAdminForm
     list_display = ['user', 'status', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
+
+    date_hierarchy = 'transition_date'
 
     export_to_csv_fields = (
         ('status', 'Status'),
@@ -76,7 +84,7 @@ class ExpertiseFilter(admin.SimpleListFilter):
 @admin.register(Assignment)
 class AssignmentAdmin(ActivityChildAdmin):
     form = AssignmentAdminForm
-    inlines = (ApplicantInline, MessageAdminInline)
+    inlines = (ApplicantInline, MessageAdminInline, WallpostInline)
 
     date_hierarchy = 'end_date'
 
@@ -120,3 +128,16 @@ class AssignmentAdmin(ActivityChildAdmin):
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            # If we created a new applicant through admin then
+            # set it to succeeded when assignment is succeeded
+            if (instance.__class__ == Applicant and
+                    not instance.pk and
+                    form.instance.status == AssignmentTransitions.values.succeeded):
+                instance.time_spent = form.instance.duration
+                instance.status = ApplicantTransitions.values.succeeded
+            instance.save()
+        formset.save_m2m()

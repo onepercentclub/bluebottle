@@ -123,7 +123,7 @@ class ImageSerializer(DocumentSerializer):
             try:
                 relationship = getattr(obj, self.relationship)
                 parent_id = getattr(obj, self.relationship).get().pk
-                hash = md5.new(obj.file.name).hexdigest()
+                hash = md5.new(obj.file.name.encode('utf-8')).hexdigest()
                 return dict(
                     (
                         key,

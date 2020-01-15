@@ -12,5 +12,5 @@ If this means you can’t make it anymore, please let your activity manager know
 {% endblock %}
 
 {% block action %}
-   {% trans 'Goto event' context 'email' %}: {{ obj.get_absolute_url }}
+   {% trans 'Go to event' context 'email' %} {{ obj.get_absolute_url }}
 {% endblock %}`

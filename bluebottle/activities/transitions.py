@@ -86,12 +86,25 @@ class ActivityReviewTransitions(ReviewTransitions):
         self.instance.transitions.close()
 
     @transition(
-        source=[ReviewTransitions.values.closed],
+        source=ReviewTransitions.values.closed,
         target=ReviewTransitions.values.draft,
         permissions=[can_review]
     )
     def resubmit(self):
-        self.instance.transitions.resubmit()
+        if self.instance.status != ActivityTransitions.values.in_review:
+            self.instance.transitions.resubmit()
+
+    @transition(
+        source=[
+            ReviewTransitions.values.draft,
+            ReviewTransitions.values.submitted,
+            ReviewTransitions.values.needs_work
+        ],
+        target=ReviewTransitions.values.closed,
+        permissions=[is_activity_manager]
+    )
+    def delete(self):
+        self.instance.transitions.delete()
 
 
 class ActivityTransitions(ModelTransitions):
@@ -100,6 +113,7 @@ class ActivityTransitions(ModelTransitions):
         open = ChoiceItem('open', _('open'))
         succeeded = ChoiceItem('succeeded', _('succeeded'))
         closed = ChoiceItem('closed', _('closed'))
+        deleted = ChoiceItem('deleted', _('deleted'))
 
     default = values.in_review
 
@@ -124,11 +138,23 @@ class ActivityTransitions(ModelTransitions):
         pass
 
     @transition(
-        source=[values.closed],
+        source=[
+            values.closed,
+            values.deleted
+        ],
         target=values.in_review,
         permissions=[can_approve],
     )
     def resubmit(self):
+        if self.instance.review_status == ActivityReviewTransitions.values.closed:
+            self.instance.review_transitions.resubmit()
+
+    @transition(
+        source=[values.in_review],
+        target=values.deleted,
+        permissions=[is_system]
+    )
+    def delete(self):
         pass
 
 

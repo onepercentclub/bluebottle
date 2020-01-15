@@ -12,6 +12,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db import models
+from django.forms import BaseInlineFormSet
 from django.forms.models import ModelFormMetaclass
 from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
@@ -31,7 +32,7 @@ from bluebottle.funding.models import Donation
 from bluebottle.geo.admin import PlaceInline
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative
-from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings
+from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings, UserActivity
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
@@ -163,6 +164,29 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm))
             extra.value = self.cleaned_data.get(field.slug, None)
             extra.save()
         return member
+
+
+class LimitModelFormset(BaseInlineFormSet):
+    """ Base Inline formset to limit inline Model query results. """
+    LIMIT = 20
+
+    def __init__(self, *args, **kwargs):
+        super(LimitModelFormset, self).__init__(*args, **kwargs)
+        _kwargs = {self.fk.name: kwargs['instance']}
+        self.queryset = kwargs['queryset'].filter(**_kwargs).order_by('-id')[:self.LIMIT]
+
+
+class UserActivityInline(admin.TabularInline):
+
+    readonly_fields = ['created', 'user', 'path']
+    extra = 0
+    model = UserActivity
+    can_delete = False
+
+    formset = LimitModelFormset
+
+    def has_add_permission(self, request):
+        return False
 
 
 class MemberAdmin(UserAdmin):
@@ -310,7 +334,7 @@ class MemberAdmin(UserAdmin):
                     'date_joined', 'is_active', 'login_as_link')
     ordering = ('-date_joined', 'email',)
 
-    inlines = (PlaceInline, )
+    inlines = (PlaceInline, UserActivityInline)
 
     def initiatives(self, obj):
         initiatives = []

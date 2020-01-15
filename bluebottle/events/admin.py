@@ -5,9 +5,11 @@ from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.events.models import Event, Participant
+from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.forms import FSMModelForm
+from bluebottle.wallposts.admin import WallpostInline
 
 
 class EventAdminForm(FSMModelForm):
@@ -47,6 +49,8 @@ class ParticipantAdmin(ContributionChildAdmin):
     list_display = ['user', 'status', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
+    date_hierarchy = 'transition_date'
+
     export_to_csv_fields = (
         ('status', 'Status'),
         ('created', 'Created'),
@@ -61,7 +65,7 @@ class ParticipantAdmin(ContributionChildAdmin):
 @admin.register(Event)
 class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
-    inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
+    inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline, WallpostInline)
     list_display = [
         '__unicode__', 'initiative', 'status',
         'highlight', 'start_date', 'start_time', 'duration', 'created'
@@ -107,3 +111,16 @@ class EventAdmin(ActivityChildAdmin):
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            # If we created a new participant through admin then
+            # set it to succeeded when event is succeeded
+            if (instance.__class__ == Participant and
+                    not instance.pk and
+                    form.instance.status == EventTransitions.values.succeeded):
+                instance.time_spent = form.instance.duration
+                instance.status = ParticipantTransitions.values.succeeded
+            instance.save()
+        formset.save_m2m()

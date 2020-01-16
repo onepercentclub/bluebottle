@@ -1,11 +1,7 @@
 import json
 
-from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
-from django.utils.timezone import now
 
-from bluebottle.clients.models import Client
-from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import (
     HomePage,
 )
@@ -16,8 +12,6 @@ class Command(BaseCommand):
     help = 'Dump content pages to json'
 
     def add_arguments(self, parser):
-        parser.add_argument('--tenant', '-s', action='store', dest='tenant',
-                            help="The tenant to dump pages for")
         parser.add_argument('--file', '-f', type=str, default=None, action='store')
 
     def _get_fields(self, block):
@@ -53,39 +47,33 @@ class Command(BaseCommand):
         return data
 
     def handle(self, *args, **options):
-        client = Client.objects.get(schema_name=options['tenant'])
+        data = []
+        page = HomePage.objects.get(pk=1)
 
-        print "Dumping pages for {}".format(client.name)
+        data.append({
+            'model': 'HomePage',
+            'app': 'cms',
+            'properties': {},
+            'data': self._dump(page)
+        })
 
-        with LocalTenant(client, clear_tenant=True):
-            ContentType.objects.clear_cache()
-            data = []
-            page = HomePage.objects.get(pk=1)
-
+        for page in Page.objects.all():
             data.append({
-                'model': 'HomePage',
-                'app': 'cms',
-                'properties': {},
+                'model': 'Page',
+                'app': 'pages',
+                'properties': {
+                    'title': page.title,
+                    'slug': page.slug,
+                    'status': page.status,
+                    'language': page.language,
+                    'full_page': page.full_page,
+                    'publication_date': page.publication_date.strftime('%Y-%m-%d %H:%M')
+                },
                 'data': self._dump(page)
             })
-
-            for page in Page.objects.all():
-                data.append({
-                    'model': 'Page',
-                    'app': 'pages',
-                    'properties': {
-                        'title': page.title,
-                        'slug': page.slug,
-                        'status': page.status,
-                        'language': page.language,
-                        'full_page': page.full_page,
-                        'publication_date': now().strftime('%Y-%m-%d %H:%M')
-                    },
-                    'data': self._dump(page)
-                })
-            if options['file']:
-                text_file = open(options['file'], "w")
-                text_file.write(json.dumps(data))
-                text_file.close()
-            else:
-                print json.dumps(data)
+        if options['file']:
+            text_file = open(options['file'], "w")
+            text_file.write(json.dumps(data))
+            text_file.close()
+        else:
+            print json.dumps(data)

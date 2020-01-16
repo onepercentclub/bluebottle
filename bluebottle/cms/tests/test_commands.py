@@ -164,8 +164,8 @@ class PageDumpCommandsTestCase(BluebottleTestCase):
         items = homepage.content.get_content_items()
         self.assertEqual(items[0].type, 'slides')
         self.assertEqual(items[1].type, 'steps')
-        self.assertEqual(len(items[1].items), 3)
+        self.assertEqual(items[1].items.count(), 3)
 
         page = Page.objects.first()
         items = page.content.get_content_items()
-        self.assertEqual(items[0].type, 'text')
+        self.assertEqual(items[0].__class__.__name__, 'TextItem')

@@ -88,9 +88,9 @@ PAGE_DUMP = [
         u'properties': {
             u'status': u'published',
             u'language': u'en',
-            u'title': u'Page Title 0',
+            u'title': u'About this platform',
             u'publication_date': '2020-01-01 00:00',
-            u'slug': u'slug-0',
+            u'slug': u'about',
             u'full_page': False
         }
     }
@@ -140,7 +140,12 @@ class PageDumpCommandsTestCase(BluebottleTestCase):
             sequence=3
         )
 
-        page = PageFactory.create(language='en', publication_date='2020-01-01 00:00+00:00')
+        page = PageFactory.create(
+            slug='about',
+            title='About this platform',
+            language='en',
+            publication_date='2020-01-01 00:00+00:00'
+        )
         create_content_item(
             TextItem,
             create_placeholder(page=page, slot='blog_contents'),

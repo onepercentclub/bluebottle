@@ -1,4 +1,6 @@
 from django.http import HttpResponse
+from django.utils.html import strip_tags
+
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 import icalendar
@@ -130,7 +132,7 @@ class EventIcalView(RetrieveAPIView):
         event.add('summary', instance.title)
         event.add(
             'description',
-            '{}\n{}'.format(instance.description, instance.get_absolute_url())
+            '{}\n{}'.format(strip_tags(instance.description), instance.get_absolute_url())
         )
         event.add('url', instance.get_absolute_url())
         event.add('dtstart', instance.start)

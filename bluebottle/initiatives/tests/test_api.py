@@ -432,6 +432,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data['relationships']['activities']['data']), 1)
         self.assertEqual(data['relationships']['activities']['data'][0]['id'], unicode(event.pk))
         self.assertEqual(data['relationships']['activities']['data'][0]['type'], 'activities/events')
         activity_data = get_include(response, 'activities/events')
@@ -447,6 +448,17 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 {'type': included['type'], 'id': included['id']} for included in response.json()['included']
             )
         )
+
+    def test_deleted_activities(self):
+        EventFactory.create(initiative=self.initiative, status='deleted')
+        response = self.client.get(
+            self.url,
+            user=self.owner
+        )
+
+        data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data['relationships']['activities']['data']), 0)
 
     def test_get_stats(self):
         event = EventFactory.create(initiative=self.initiative, status='succeeded')

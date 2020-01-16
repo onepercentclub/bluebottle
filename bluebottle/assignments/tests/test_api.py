@@ -222,11 +222,13 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         review_transitions = [
+            {u'available': True, u'name': u'delete', u'target': u'closed'},
             {u'available': False, u'name': u'submit', u'target': u'submitted'},
             {u'available': False, u'name': u'close', u'target': u'closed'},
             {u'available': False, u'name': u'approve', u'target': u'approved'}
         ]
         transitions = [
+            {u'available': False, u'name': u'delete', u'target': u'deleted'},
             {u'available': False, u'name': u'reviewed', u'target': u'open'}
         ]
         self.assertEqual(data['data']['meta']['review-transitions'], review_transitions)
@@ -252,11 +254,13 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         review_transitions = [
+            {u'available': True, u'name': u'delete', u'target': u'closed'},
             {u'available': True, u'name': u'submit', u'target': u'submitted'},
             {u'available': False, u'name': u'close', u'target': u'closed'},
             {u'available': False, u'name': u'approve', u'target': u'approved'}
         ]
         transitions = [
+            {u'available': False, u'name': u'delete', u'target': u'deleted'},
             {u'available': False, u'name': u'reviewed', u'target': u'open'}
         ]
         self.assertEqual(data['data']['meta']['review-transitions'], review_transitions)
@@ -292,6 +296,23 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['included'][0]['type'], 'activities/assignments')
         self.assertEqual(data['included'][0]['attributes']['review-status'], 'approved')
+
+    def test_delete_by_owner(self):
+        # Owner can delete the event
+
+        self.review_data['data']['attributes']['transition'] = 'delete'
+
+        response = self.client.post(
+            self.review_transition_url,
+            json.dumps(self.review_data),
+            user=self.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['type'], 'activities/assignments')
+        self.assertEqual(data['included'][0]['attributes']['review-status'], 'closed')
+        self.assertEqual(data['included'][0]['attributes']['status'], 'deleted')
 
     def test_submit_other_user(self):
         # Other user can't submit the assignment

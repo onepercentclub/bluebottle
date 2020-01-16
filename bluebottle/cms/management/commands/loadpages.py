@@ -6,16 +6,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from fluent_contents.models import Placeholder, ContentItem
 
-from bluebottle.clients.models import Client
-from bluebottle.clients.utils import LocalTenant
-
 
 class Command(BaseCommand):
     help = 'Dump content pages to json'
 
     def add_arguments(self, parser):
-        parser.add_argument('--tenant', '-s', action='store', dest='tenant',
-                            help="The tenant to dump pages for")
         parser.add_argument('--file', '-f', type=str, default=None, action='store')
 
     def create_block(self, block, placeholder):
@@ -37,47 +32,42 @@ class Command(BaseCommand):
                 )
 
     def handle(self, *args, **options):
-        client = Client.objects.get(schema_name=options['tenant'])
-
-        print "Loading pages for tenant {}".format(client.name)
-
         with open(options['file']) as json_file:
             data = json.load(json_file)
+        for page_data in data:
 
-        with LocalTenant(client, clear_tenant=True):
-            ContentType.objects.clear_cache()
-            for page_data in data:
-
-                if page_data['model'] == 'Page':
-                    print 'Loading {} {}'.format(page_data['model'], page_data['properties']['title'])
-                    model = apps.get_model(page_data['app'], page_data['model'])
-                    page, _c = model.objects.get_or_create(
-                        language=page_data['properties']['language'],
-                        slug=page_data['properties']['slug'],
-                        defaults=page_data['properties']
-                    )
-                    page_type = ContentType.objects.get_for_model(page)
-                    slot = 'blog_contents'
-                else:
-                    print 'Loading {}'.format(page_data['model'])
-                    model = apps.get_model(page_data['app'], page_data['model'])
-                    page, _c = model.objects.get_or_create(
-                        defaults=page_data['properties']
-                    )
-                    page_type = ContentType.objects.get_for_model(page)
-                    slot = 'content'
-
-                (placeholder, _created) = Placeholder.objects.get_or_create(
-                    parent_id=page.pk,
-                    parent_type_id=page_type.pk,
-                    slot=slot,
-                    role='m'
+            if page_data['model'] == 'Page':
+                print 'Loading {} {}'.format(page_data['model'], page_data['properties']['title'])
+                model = apps.get_model(page_data['app'], page_data['model'])
+                # Make publication_date tz aware
+                page_data['properties']['publication_date'] += '+00:00'
+                page, _c = model.objects.get_or_create(
+                    language=page_data['properties']['language'],
+                    slug=page_data['properties']['slug'],
+                    defaults=page_data['properties']
                 )
+                page_type = ContentType.objects.get_for_model(page)
+                slot = 'blog_contents'
+            else:
+                print 'Loading {}'.format(page_data['model'])
+                model = apps.get_model(page_data['app'], page_data['model'])
+                page, _c = model.objects.get_or_create(
+                    defaults=page_data['properties']
+                )
+                page_type = ContentType.objects.get_for_model(page)
+                slot = 'content'
 
-                for item in ContentItem.objects.filter(parent_id=page.pk, parent_type=page_type):
-                    item.delete()
+            (placeholder, _created) = Placeholder.objects.get_or_create(
+                parent_id=page.pk,
+                parent_type_id=page_type.pk,
+                slot=slot,
+                role='m'
+            )
 
-                for block in page_data['data']:
-                    self.create_block(
-                        block, placeholder
-                    )
+            for item in ContentItem.objects.filter(parent_id=page.pk, parent_type=page_type):
+                item.delete()
+
+            for block in page_data['data']:
+                self.create_block(
+                    block, placeholder
+                )

@@ -35,14 +35,14 @@ class Command(BaseCommand):
                 })
 
             data.append({
-                'language': site_links.language,
+                'language': site_links.language.code,
                 'has_copyright': site_links.has_copyright,
                 'groups': groups
 
             })
         if options['file']:
             text_file = open(options['file'], "w")
-            text_file.write(json.dumps(data))
+            text_file.write(json.dumps(data, indent=2))
             text_file.close()
         else:
             print json.dumps(data)

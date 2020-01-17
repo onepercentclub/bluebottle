@@ -73,7 +73,7 @@ class Command(BaseCommand):
             })
         if options['file']:
             text_file = open(options['file'], "w")
-            text_file.write(json.dumps(data))
+            text_file.write(json.dumps(data, indent=2))
             text_file.close()
         else:
             print json.dumps(data)

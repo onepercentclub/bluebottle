@@ -477,6 +477,8 @@ class UserVerificationSerializer(serializers.Serializer):
 
 
 class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
+    background = SorlImageField('1408x1080', crop='center')
+
     class Meta:
         model = MemberPlatformSettings
         fields = (

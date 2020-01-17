@@ -206,7 +206,11 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
 
         response = self.client.put(
             reverse('user-signup-token-confirm', args=(TimestampSigner().sign(member.pk), )),
-            {'password': password}
+            {
+                'password': password,
+                'first_name': 'Tester',
+                'last_name': 'de Test'
+            }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -214,6 +218,8 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
 
         self.assertEqual(member.is_active, True)
         self.assertTrue(member.check_password(password))
+        self.assertEqual(member.first_name, 'Tester')
+        self.assertEqual(member.last_name, 'de Test')
 
         profile_response = self.client.get(
             reverse('user-current'),

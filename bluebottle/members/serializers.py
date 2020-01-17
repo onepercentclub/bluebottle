@@ -342,9 +342,12 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
     password = PasswordField(required=True, max_length=128)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
 
+    first_name = serializers.CharField(max_length=100)
+    last_name = serializers.CharField(max_length=100)
+
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'password', 'jwt_token', )
+        fields = ('id', 'password', 'jwt_token', 'first_name', 'last_name', )
 
     def validate_password(self, password):
         return make_password(password)

@@ -388,6 +388,7 @@ class ESPaginator(Paginator):
 
 class JsonApiPagination(JsonApiPageNumberPagination):
     page_size = 8
+    max_page_size = None
     django_paginator_class = ESPaginator
 
 

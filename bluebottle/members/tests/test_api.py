@@ -104,13 +104,13 @@ class SignUpTokenTestCase(BluebottleTestCase):
     def test_create_already_active(self):
         email = 'test@example.com'
 
-        member = Member.objects.create(email=email, is_active=True)
+        Member.objects.create(email=email, is_active=True)
 
         response = self.client.post(reverse('user-signup-token'), {'email': email})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        self.assertTrue(member.is_active)
+        self.assertEqual(response.json()['email'][0], 'member with this email address already exists.')
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_create_correct_domain(self):
         email = 'test@example.com'

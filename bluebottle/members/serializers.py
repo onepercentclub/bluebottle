@@ -316,6 +316,11 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
                 ('Only emails for the domain {} are allowed').format(settings.email_domain)
             )
 
+        if len(BB_USER_MODEL.objects.filter(email=email, is_active=True)):
+            raise serializers.ValidationError(
+                ('member with this email address already exists.').format(settings.email_domain)
+            )
+
         return email
 
     def create(self, validated_data):

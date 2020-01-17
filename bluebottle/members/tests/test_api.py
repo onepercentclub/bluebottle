@@ -215,6 +215,12 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         self.assertEqual(member.is_active, True)
         self.assertTrue(member.check_password(password))
 
+        profile_response = self.client.get(
+            reverse('user-current'),
+            token='JWT {}'.format(response.json()['jwt_token'])
+        )
+        self.assertEqual(profile_response.status_code, status.HTTP_200_OK)
+
     def test_confirm_expired_token(self):
         email = 'test@example.com'
         password = 'test@example.com'

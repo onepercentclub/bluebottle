@@ -334,9 +334,12 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
     users (POST) and should not be used for listing,
     editing or viewing users.
     """
+    password = PasswordField(required=True, max_length=128)
+    jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
+
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'password')
+        fields = ('id', 'password', 'jwt_token', )
 
     def validate_password(self, password):
         return make_password(password)

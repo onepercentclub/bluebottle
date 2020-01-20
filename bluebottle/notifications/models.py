@@ -67,3 +67,14 @@ class NotificationPlatformSettings(BasePlatformSettings):
     class Meta:
         verbose_name_plural = _('notification settings')
         verbose_name = _('notification settings')
+
+
+class NotificationModelMixin(object):
+    """
+    This should be imported by models that need to trigger
+    messages on change.
+    """
+
+    @classmethod
+    def get_messages(cls, old, new):
+        return []

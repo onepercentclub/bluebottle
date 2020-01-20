@@ -8,7 +8,7 @@ from fluent_contents.models import Placeholder, ContentItem
 
 
 class Command(BaseCommand):
-    help = 'Dump content pages to json'
+    help = 'Load content pages from json'
 
     def add_arguments(self, parser):
         parser.add_argument('--file', '-f', type=str, default=None, action='store')

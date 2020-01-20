@@ -24,7 +24,7 @@ from bluebottle.cms.models import (
     LinksContent, WelcomeContent, StepsContent
 )
 from bluebottle.contentplugins.models import PictureItem
-from bluebottle.pages.models import DocumentItem, ImageTextItem
+from bluebottle.pages.models import DocumentItem, ImageTextItem, ActionItem, ColumnsItem
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory, StepFactory,
@@ -418,6 +418,28 @@ class HomePageTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['blocks'][0]['type'], 'links')
+
+    def test_action(self):
+        block = ActionItem.objects.create_for_placeholder(self.placeholder)
+        block.link = '/pages/start'
+        block.title = 'Start an initiative'
+        block.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'action')
+        self.assertEqual(response.data['blocks'][0]['link'], '/pages/start')
+        self.assertEqual(response.data['blocks'][0]['title'], 'Start an initiative')
+
+    def test_columns(self):
+        block = ColumnsItem.objects.create_for_placeholder(self.placeholder)
+        block.text1 = 'Some text'
+        block.text2 = 'More text'
+        block.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'columns')
+        self.assertEqual(response.data['blocks'][0]['text1'], 'Some text')
+        self.assertEqual(response.data['blocks'][0]['text2'], 'More text')
 
     def test_steps(self):
         block = StepsContent.objects.create_for_placeholder(self.placeholder)

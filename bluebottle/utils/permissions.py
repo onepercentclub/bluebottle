@@ -1,4 +1,5 @@
 import logging
+from memoize import memoize
 
 from rest_framework import permissions
 
@@ -163,9 +164,13 @@ class ResourcePermission(BasePermission, permissions.DjangoModelPermissions):
     def has_object_action_permission(self, action, user, obj):
         return True
 
+    @memoize()
     def has_action_permission(self, action, user, model_cls):
         perms = self.get_required_permissions(action, model_cls)
         return user.has_perms(perms)
+
+    def __repr__(self):
+        return 'ResourcePermission'
 
 
 class ResourceOwnerPermission(ResourcePermission):

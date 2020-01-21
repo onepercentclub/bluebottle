@@ -156,7 +156,8 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
     if not kwargs.get('site'):
         kwargs.update({
             'site': tenant_url(),
-            'tenant': connection.tenant.client_name
+            'tenant': connection.tenant.client_name,
+            'tenant_name': connection.tenant.name
         })
     mail_settings = MailPlatformSettings.load().__dict__
     mail_settings['contact_email'] = properties.CONTACT_EMAIL

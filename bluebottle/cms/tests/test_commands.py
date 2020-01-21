@@ -4,11 +4,11 @@ from django.core.management import call_command
 from fluent_contents.plugins.text.models import TextItem
 from fluent_contents.tests.factories import create_content_item, create_placeholder
 
-from bluebottle.cms.models import HomePage, SlidesContent, StepsContent, Step
+from bluebottle.cms.models import HomePage, SlidesContent, StepsContent, Step, SiteLinks, LinkGroup, Link
 from bluebottle.pages.models import Page
 from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.utils import BluebottleTestCase
-
+from bluebottle.utils.models import Language
 
 PAGE_DUMP = [
     {
@@ -95,12 +95,68 @@ PAGE_DUMP = [
         }
     }
 ]
+LINK_DUMP = [
+    {
+        u'language': u'en',
+        u'groups': [{
+            u'title': u'Main',
+            u'name': u'main',
+            u'links': [
+                {
+                    u'component_id': None,
+                    u'title': u'Start your initiative',
+                    u'component': u'initiatives.start',
+                    u'external_link': None,
+                    u'highlight': False,
+                    u'link_order': 1
+                }, {
+                    u'component_id': u'about',
+                    u'title': u'About this platform',
+                    u'component': u'pages',
+                    u'external_link': None,
+                    u'highlight': False,
+                    u'link_order': 2
+                },
+                {
+                    u'component_id': None,
+                    u'title': u'',
+                    u'component': None,
+                    u'external_link': u'https://example.com',
+                    u'highlight': False,
+                    u'link_order': 3
+                }
+            ],
+            u'group_order': 1
+        }, {
+            u'title': u'Info',
+            u'name': u'info',
+            u'links': [
+                {
+                    u'component_id': u'story',
+                    u'title': u'Our story',
+                    u'component': u'pages',
+                    u'external_link': None,
+                    u'highlight': False,
+                    u'link_order': 4
+                }, {
+                    u'component_id': u'how-it-works',
+                    u'title': u'How it works',
+                    u'component': u'pages',
+                    u'external_link': None,
+                    u'highlight': False,
+                    u'link_order': 5
+                }
+            ],
+            u'group_order': 2
+        }],
+        u'has_copyright': True
+    }
+]
 
 
 class PageDumpCommandsTestCase(BluebottleTestCase):
 
     def test_dumppages(self):
-        self.maxDiff = 1000
         HomePage.objects.all().delete()
         homepage = HomePage.objects.create(pk=1)
         placeholder = create_placeholder(page=homepage, slot='content')
@@ -174,3 +230,68 @@ class PageDumpCommandsTestCase(BluebottleTestCase):
         page = Page.objects.first()
         items = page.content.get_content_items()
         self.assertEqual(items[0].__class__.__name__, 'TextItem')
+
+
+class LinkDumpCommandsTestCase(BluebottleTestCase):
+
+    def test_dumplinks(self):
+        en = Language.objects.get(code='en')
+        sl = SiteLinks.objects.create(language=en)
+        lg = LinkGroup.objects.create(
+            name='main',
+            title='Main',
+            site_links=sl
+        )
+        Link.objects.create(
+            component='initiatives.start',
+            title='Start your initiative',
+            link_group=lg
+        )
+        Link.objects.create(
+            component='pages',
+            component_id='about',
+            title='About this platform',
+            link_group=lg
+        )
+        Link.objects.create(
+            external_link='https://example.com',
+            link_group=lg
+        )
+
+        lg = LinkGroup.objects.create(
+            name='info',
+            title='Info',
+            site_links=sl
+        )
+        Link.objects.create(
+            component='pages',
+            component_id='story',
+            title='Our story',
+            link_group=lg
+        )
+        Link.objects.create(
+            component='pages',
+            component_id='how-it-works',
+            title='How it works',
+            link_group=lg
+        )
+
+        call_command('dumplinks', '-f', 'test_links.json')
+        json_file = open("test_links.json", "r")
+        test_output = json.load(json_file)
+
+        self.assertEqual(test_output, LINK_DUMP)
+
+    def test_loadlinks(self):
+        with open('test_links.json', 'w') as f:
+            json.dump(LINK_DUMP, f)
+
+        call_command('loadlinks', '-f', 'test_links.json')
+        site_links = SiteLinks.objects.get()
+        groups = site_links.link_groups.all()
+        self.assertEqual(groups[0].name, 'main')
+        self.assertEqual(groups[1].name, 'info')
+        self.assertEqual(groups[0].links.count(), 3)
+        self.assertEqual(groups[1].links.count(), 2)
+
+        self.assertEqual(groups[0].links.first().component, 'initiatives.start')

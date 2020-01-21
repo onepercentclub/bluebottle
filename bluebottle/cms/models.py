@@ -206,6 +206,10 @@ class QuotesContent(TitledContent):
     def __unicode__(self):
         return unicode(self.quotes)
 
+    @property
+    def items(self):
+        return self.quotes
+
 
 class StatsContent(TitledContent):
     type = 'statistics'
@@ -213,6 +217,10 @@ class StatsContent(TitledContent):
 
     class Meta:
         verbose_name = _('Platform Statistics')
+
+    @property
+    def items(self):
+        return self.stats
 
     def __unicode__(self):
         return unicode(self.stats)
@@ -421,6 +429,10 @@ class StepsContent(TitledContent):
 
     def __unicode__(self):
         return unicode(_('Steps'))
+
+    @property
+    def items(self):
+        return self.steps
 
 
 class LocationsContent(TitledContent):

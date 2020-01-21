@@ -42,7 +42,7 @@ class ActionItem(ContentItem):
     title = models.CharField(_('title'), max_length=100)
 
     def __str__(self):
-        return Truncator(strip_tags(self.text)).words(20)
+        return Truncator(strip_tags(self.title)).words(20)
 
     class Meta:
         verbose_name = _('Call to action')
@@ -65,7 +65,7 @@ class ColumnsItem(ContentItem):
         verbose_name_plural = _('Text in columns')
 
     def __str__(self):
-        return Truncator(strip_tags(self.text)).words(20)
+        return Truncator(strip_tags(self.text1)).words(20)
 
     def full_clean(self, *args, **kwargs):
         # This is called by the form when all values are assigned.

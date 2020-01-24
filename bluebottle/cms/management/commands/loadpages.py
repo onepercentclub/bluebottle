@@ -6,6 +6,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from fluent_contents.models import Placeholder, ContentItem
 
+from bluebottle.utils.models import Language
+
 
 class Command(BaseCommand):
     help = 'Load content pages from json'
@@ -39,10 +41,11 @@ class Command(BaseCommand):
             if page_data['model'] == 'Page':
                 print 'Loading {} {}'.format(page_data['model'], page_data['properties']['title'])
                 model = apps.get_model(page_data['app'], page_data['model'])
+                language = Language.objects.get(code=page_data['properties']['language'])
                 # Make publication_date tz aware
                 page_data['properties']['publication_date'] += '+00:00'
                 page, _c = model.objects.get_or_create(
-                    language=page_data['properties']['language'],
+                    language=language,
                     slug=page_data['properties']['slug'],
                     defaults=page_data['properties']
                 )

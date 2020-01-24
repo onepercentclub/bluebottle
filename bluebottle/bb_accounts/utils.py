@@ -17,6 +17,9 @@ def send_welcome_mail(user=None):
         with TenantLanguage(user.primary_language):
             subject = _("Welcome to %(site_name)s") % {'site_name': tenant_name()}
 
+    from bluebottle.members.models import MemberPlatformSettings
+    settings = MemberPlatformSettings.objects.get()
+
     data = {
         'email': user.email,
         'site': tenant_url(),
@@ -24,7 +27,7 @@ def send_welcome_mail(user=None):
         'user': user,
         'first_name': user.first_name,
         'contact_email': properties.CONTACT_EMAIL,
-        'closed_site': properties.CLOSED_SITE,
+        'closed_site': settings.closed,
         'token': default_token_generator.make_token(user),
         'uid': int_to_base36(user.pk),
         'LANGUAGE_CODE': user.primary_language,

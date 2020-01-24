@@ -227,6 +227,33 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         )
         self.assertEqual(profile_response.status_code, status.HTTP_200_OK)
 
+    def test_confirm_twice(self):
+        email = 'test@example.com'
+        password = 'test@example.com'
+
+        member = Member.objects.create(email=email, is_active=False)
+
+        response = self.client.put(
+            reverse('user-signup-token-confirm', args=(TimestampSigner().sign(member.pk), )),
+            {
+                'password': password,
+                'first_name': 'Tester',
+                'last_name': 'de Test'
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.put(
+            reverse('user-signup-token-confirm', args=(TimestampSigner().sign(member.pk), )),
+            {
+                'password': password,
+                'first_name': 'Tester',
+                'last_name': 'de Test'
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()['id'], 'Confirmation token is already used')
+
     def test_confirm_expired_token(self):
         email = 'test@example.com'
         password = 'test@example.com'

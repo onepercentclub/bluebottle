@@ -69,8 +69,16 @@ class PayoutTestCase(BluebottleTestCase):
         self.funding.save()
 
         for donation in DonationFactory.create_batch(
-                5,
+                3,
                 amount=Money(150, 'EUR'),
+                activity=self.funding,
+                status='succeeded'):
+            StripePaymentFactory.create(donation=donation)
+
+        for donation in DonationFactory.create_batch(
+                2,
+                amount=Money(200, 'USD'),
+                payout_amount=(150, 'EUR'),
                 activity=self.funding,
                 status='succeeded'):
             StripePaymentFactory.create(donation=donation)

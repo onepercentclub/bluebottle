@@ -445,13 +445,13 @@ class Payout(TransitionsMixin, models.Model):
                 raise AssertionError('Payout without donations already started!')
         ready_donations = activity.contributions.filter(status='succeeded', donation__payout__isnull=True)
         groups = set([
-            (don.amount_currency, don.payment.provider) for don in
+            (don.payout_amount_currency, don.payment.provider) for don in
             ready_donations
         ])
         for currency, provider in groups:
             donations = [
                 don for don in
-                ready_donations.filter(donation__amount_currency=currency)
+                ready_donations.filter(donation__payout_amount_currency=currency)
                 if don.payment.provider == provider
             ]
             payout = cls.objects.create(
@@ -466,7 +466,7 @@ class Payout(TransitionsMixin, models.Model):
     @property
     def total_amount(self):
         if self.currency:
-            return Money(self.donations.aggregate(total=Sum('amount'))['total'] or 0, self.currency)
+            return Money(self.donations.aggregate(total=Sum('payout_amount'))['total'] or 0, self.currency)
         return self.donations.aggregate(total=Sum('amount'))['total']
 
     class Meta():
@@ -479,6 +479,7 @@ class Payout(TransitionsMixin, models.Model):
 
 class Donation(Contribution):
     amount = MoneyField()
+    payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
     reward = models.ForeignKey(Reward, null=True, blank=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, blank=True, related_name="donations")
@@ -493,6 +494,9 @@ class Donation(Contribution):
     def save(self, *args, **kwargs):
         if not self.user and not self.client_secret:
             self.client_secret = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
+
+        if not self.payout_amount:
+            self.payout_amount = self.amount
 
         super(Donation, self).save(*args, **kwargs)
 

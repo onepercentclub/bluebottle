@@ -107,6 +107,7 @@
           "source_transfer": null,
           "statement_descriptor": null,
           "status": "succeeded",
+          "transfer": "tr_something",
           "transfer_data": null,
           "transfer_group": null
         }

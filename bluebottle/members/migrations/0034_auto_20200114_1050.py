@@ -24,7 +24,7 @@ def migrate_settings(apps, schema_editor):
 
     try:
         if properties.TOKEN_AUTH:
-            settings.login_methods = ['sso']
+            settings.login_methods = ['SSO']
     except AttributeError:
         pass
 

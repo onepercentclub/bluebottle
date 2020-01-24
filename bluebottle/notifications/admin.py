@@ -1,10 +1,15 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.admin.options import csrf_protect_m
 from django.contrib.contenttypes.admin import GenericTabularInline
+from django.forms import Textarea, TextInput
 from django.template.response import TemplateResponse
 from django.utils.translation import ugettext_lazy as _
+from django_summernote.widgets import SummernoteWidget
+from parler.admin import TranslatableAdmin
+from parler.forms import TranslatableModelForm, TranslatedField
 
-from bluebottle.notifications.models import Message, NotificationPlatformSettings
+from bluebottle.notifications.models import Message, NotificationPlatformSettings, MessageTemplate
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
 
 
@@ -81,3 +86,40 @@ class NotificationAdminMixin(object):
             "admin/change_confirmation.html",
             "admin/change_confirmation.html"
         ], context)
+
+
+class MessageTemplateAdminCreateForm(forms.ModelForm):
+    class Meta:
+        model = MessageTemplate
+        fields = ['message']
+
+
+class MessageTemplateAdminForm(TranslatableModelForm):
+
+    subject = TranslatedField(widget=TextInput(attrs={'size': 60}))
+    body_html = TranslatedField(
+        form_class=forms.CharField,
+        widget=SummernoteWidget(attrs={'height': 300, 'width': 650})
+    )
+    body_txt = TranslatedField(widget=Textarea(attrs={'rows': 12, 'cols': 80}))
+
+    class Meta:
+        model = MessageTemplate
+        fields = ['message', 'subject', 'body_html', 'body_txt']
+
+
+@admin.register(MessageTemplate)
+class MessageTemplateAdmin(TranslatableAdmin):
+
+    add_form = MessageTemplateAdminCreateForm
+    form = MessageTemplateAdminForm
+
+    def get_form(self, request, obj=None, **kwargs):
+        """
+        Use special form during creation
+        """
+        defaults = {}
+        if obj is None:
+            defaults['form'] = self.add_form
+        defaults.update(kwargs)
+        return super(MessageTemplateAdmin, self).get_form(request, obj, **defaults)

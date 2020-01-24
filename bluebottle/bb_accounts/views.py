@@ -180,9 +180,14 @@ class SignUpTokenConfirmation(generics.UpdateAPIView):
     def get_object(self):
         try:
             signer = TimestampSigner()
-            return self.queryset.get(
+            member = self.queryset.get(
                 pk=signer.unsign(self.kwargs['pk'], max_age=timedelta(hours=2))
             )
+
+            if member.is_active:
+                raise ValidationError({'id': _('Confirmation token is already used')})
+
+            return member
         except SignatureExpired:
             raise ValidationError({'id': _('Confirmation token is expired')})
         except BadSignature:

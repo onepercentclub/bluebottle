@@ -280,9 +280,10 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
 
     inlines = [DonationWallpostInline]
 
-    fields = ['transition_date', 'created', 'activity', 'user', 'amount', 'reward',
-              'anonymous', 'name', 'payout_amount',
-              'status', 'payment_link']
+    fields = [
+        'transition_date', 'created', 'activity', 'user', 'amount', 'payout_amount',
+        'reward', 'anonymous', 'name', 'status', 'payment_link'
+    ]
 
     export_to_csv_fields = (
         ('status', 'Status'),

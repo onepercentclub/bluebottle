@@ -17988,8 +17988,8 @@ COPY public.celery_tasksetmeta (id, taskset_id, result, date_done, hidden) FROM 
 --
 
 COPY public.clients_client (id, domain_url, schema_name, name, client_name, created, updated) FROM stdin;
-1	testserver2	test2		test2	2019-11-06 16:27:21.845785+01	2019-11-06 16:27:21.845812+01
-2	testserver	test		test	2019-11-06 16:30:20.790107+01	2019-11-06 16:30:20.790151+01
+1	testserver2	test2 Test Too	test2	2019-11-06 16:27:21.845785+01	2019-11-06 16:27:21.845812+01
+2	testserver	test  Test	test	2019-11-06 16:30:20.790107+01	2019-11-06 16:30:20.790151+01
 \.
 
 

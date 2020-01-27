@@ -3,7 +3,9 @@ from django.contrib import admin
 from django.contrib.admin.options import csrf_protect_m
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.forms import Textarea, TextInput
+from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 from parler.admin import TranslatableAdmin
@@ -114,6 +116,8 @@ class MessageTemplateAdmin(TranslatableAdmin):
     add_form = MessageTemplateAdminCreateForm
     form = MessageTemplateAdminForm
 
+    readonly_fields = ('placeholders',)
+
     def get_form(self, request, obj=None, **kwargs):
         """
         Use special form during creation
@@ -123,3 +127,15 @@ class MessageTemplateAdmin(TranslatableAdmin):
             defaults['form'] = self.add_form
         defaults.update(kwargs)
         return super(MessageTemplateAdmin, self).get_form(request, obj, **defaults)
+
+    def placeholders(self, obj):
+        data = {
+            'placeholders': [
+                ('{site}', _('URL of the platform')),
+                ('{site_name}', _('Mame of the platform')),
+                ('{first_name}', _('First name of the recipient')),
+                ('{contact_email}', _('Contact email of platform'))
+            ]
+        }
+        html = mark_safe(render_to_string("admin/notifications/placeholders.html", data))
+        return html

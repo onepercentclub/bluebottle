@@ -88,10 +88,15 @@ class MessageTemplate(TranslatableModel):
         ('bluebottle.members.messages.AccountActivationMessage', _('Member activated')),
     )
 
-    message = models.CharField(_('Message'), choices=MESSAGES, unique=True, max_length=500)
+    message = models.CharField(
+        _('Message'), choices=MESSAGES,
+        unique=True, max_length=500)
 
     translations = TranslatedFields(
         subject=models.CharField(_('Subject'), max_length=200),
         body_html=models.TextField(_('Body (html)'), blank=True),
-        body_txt=models.TextField(_('Body (plain)'), blank=True)
+        body_txt=models.TextField(_('Body (text)'), blank=True)
     )
+
+    def get_message_class(self):
+        return get_class(self.message)

@@ -1,6 +1,5 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
@@ -26,7 +25,6 @@ class Message(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
-    context = JSONField(blank=True, null=True)
 
     def get_adapter(self):
         adapter_name = 'bluebottle.notifications.adapters.{}.{}MessageAdapter'.format(

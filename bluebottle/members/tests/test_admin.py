@@ -13,6 +13,7 @@ from tenant_schemas.urlresolvers import reverse
 
 from bluebottle.members.admin import MemberAdmin, MemberChangeForm, MemberCreationForm
 from bluebottle.members.models import CustomMemberFieldSettings, Member, CustomMemberField
+from bluebottle.notifications.models import MessageTemplate
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
 
@@ -118,13 +119,13 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, 'Resend welcome email')
 
-        welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'user_id': user.id})
-        response = self.client.get(welkcome_email_url)
+        welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'user_id': user.id})
+        response = self.client.get(welcome_email_url)
         self.assertEquals(response.status_code, 302)
-        welkcome_email_mail = mail.outbox[0]
-        self.assertEqual(welkcome_email_mail.to, [user.email])
+        welcome_email = mail.outbox[0]
+        self.assertEqual(welcome_email.to, [user.email])
         self.assertTrue(
-            'Welcome {}'.format(user.first_name) in welkcome_email_mail.body
+            'Welcome {}'.format(user.first_name) in welcome_email.body
         )
 
     def test_resend_welcome_anonymous(self):
@@ -349,3 +350,48 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(headers[12], 'Best friend')
         self.assertEqual(data[0], 'stimpy')
         self.assertEqual(data[12], 'Ren Höek')
+
+
+@override_settings(SEND_WELCOME_MAIL=True)
+class AccountMailAdminTest(BluebottleAdminTestCase):
+    def setUp(self):
+        super(AccountMailAdminTest, self).setUp()
+        self.add_member_url = reverse('admin:members_member_add')
+        self.client.force_login(self.superuser)
+
+        # Create custom account activation email
+        message = MessageTemplate.objects.create(
+            message='bluebottle.members.messages.AccountActivationMessage'
+        )
+        message.set_current_language('en')
+        message.subject = 'You have been assimilated to {site_name}'
+        message.body_html = 'You are no longer {first_name}.<br/><h1>We are borg</h1>'
+        message.body_txt = 'You are no longer {first_name}.\nWe are borg'
+        message.save()
+
+    def test_create_user(self):
+        mail.outbox = []
+        BlueBottleUserFactory.create(
+            first_name='Bob',
+            email='bob@bob.com',
+            primary_language='en'
+        )
+        welcome_email = mail.outbox[0]
+        self.assertEqual(welcome_email.to, ['bob@bob.com'])
+        self.assertEqual(welcome_email.subject, 'You have been assimilated to Test')
+        self.assertTrue('You are no longer Bob.' in welcome_email.body)
+        self.assertTrue('We are borg' in welcome_email.body)
+
+    def test_resend_welcome(self):
+        user = BlueBottleUserFactory.create(
+            first_name='Bob',
+            email='bob@bob.com',
+            primary_language='en'
+        )
+
+        welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'user_id': user.id})
+        self.client.get(welkcome_email_url)
+        welcome_email = mail.outbox[1]
+        self.assertEqual(welcome_email.subject, 'You have been assimilated to Test')
+        self.assertEqual(welcome_email.to, ['bob@bob.com'])
+        self.assertTrue('We are borg' in welcome_email.body)

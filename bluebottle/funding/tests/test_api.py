@@ -668,6 +668,8 @@ class DonationTestCase(BluebottleTestCase):
         donation = get_included(response, 'contributions/donations')
         self.assertEqual(donation['relationships']['user']['data']['id'], unicode(self.user.pk))
 
+        self.assertTrue(response.json()['data']['attributes']['is-follower'])
+
     def test_donate_anonymous(self):
         self.data['data']['attributes']['anonymous'] = True
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)

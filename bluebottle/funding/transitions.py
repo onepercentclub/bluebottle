@@ -11,6 +11,9 @@ from bluebottle.funding.messages import (
     DonationRefundedDonorMessage, FundingRealisedOwnerMessage,
     FundingClosedMessage, FundingPartiallyFundedMessage
 )
+
+from bluebottle.follow.models import follow, unfollow
+
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.wallposts.models import Wallpost, SystemWallpost
 
@@ -130,7 +133,8 @@ class DonationTransitions(ContributionTransitions):
         ]
     )
     def refund(self):
-        pass
+        if self.instance.user:
+            unfollow(self.instance.user, self.instance.activity)
 
     @transition(
         source=[values.new, values.succeeded],
@@ -139,6 +143,8 @@ class DonationTransitions(ContributionTransitions):
     def fail(self):
         # Remove walposts related to this donation
         Wallpost.objects.filter(donation=self.instance).all().delete()
+        if self.instance.user:
+            unfollow(self.instance.user, self.instance.activity)
 
     @transition(
         source=[values.new, values.failed],
@@ -149,6 +155,9 @@ class DonationTransitions(ContributionTransitions):
         ]
     )
     def succeed(self):
+        if self.instance.user:
+            follow(self.instance.user, self.instance.activity)
+
         parent = self.instance.fundraiser or self.instance.activity
         SystemWallpost.objects.get_or_create(
             author=self.instance.user,

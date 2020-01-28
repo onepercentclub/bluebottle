@@ -16,7 +16,6 @@ from bluebottle.utils.admin import BasePlatformSettingsAdmin
 
 
 class MessageAdminInline(GenericTabularInline):
-
     model = Message
 
     readonly_fields = ['sent', 'subject', 'recipient']
@@ -97,7 +96,6 @@ class MessageTemplateAdminCreateForm(forms.ModelForm):
 
 
 class MessageTemplateAdminForm(TranslatableModelForm):
-
     subject = TranslatedField(widget=TextInput(attrs={'size': 60}))
     body_html = TranslatedField(
         form_class=forms.CharField,
@@ -112,11 +110,17 @@ class MessageTemplateAdminForm(TranslatableModelForm):
 
 @admin.register(MessageTemplate)
 class MessageTemplateAdmin(TranslatableAdmin):
-
     add_form = MessageTemplateAdminCreateForm
     form = MessageTemplateAdminForm
 
     readonly_fields = ('placeholders',)
+
+    list_display = ['message']
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return []
+        return super(MessageTemplateAdmin, self).get_readonly_fields(request, obj=obj)
 
     def get_form(self, request, obj=None, **kwargs):
         """
@@ -132,7 +136,7 @@ class MessageTemplateAdmin(TranslatableAdmin):
         data = {
             'placeholders': [
                 ('{site}', _('URL of the platform')),
-                ('{site_name}', _('Mame of the platform')),
+                ('{site_name}', _('Name of the platform')),
                 ('{first_name}', _('First name of the recipient')),
                 ('{contact_email}', _('Contact email of platform'))
             ]

@@ -97,6 +97,3 @@ class MessageTemplate(TranslatableModel):
         body_html=models.TextField(_('Body (html)'), blank=True),
         body_txt=models.TextField(_('Body (text)'), blank=True)
     )
-
-    def get_message_class(self):
-        return get_class(self.message)

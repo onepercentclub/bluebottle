@@ -107,9 +107,13 @@ class EventTasksTestCase(BluebottleTestCase):
         ParticipantFactory.create_batch(3, activity=event, status='new')
         ParticipantFactory.create(activity=event, status='withdrawn')
 
+        tenant = connection.tenant
         check_event_reminder()
 
         recipients = [message.to[0] for message in mail.outbox]
+
+        with LocalTenant(tenant, clear_tenant=True):
+            event.refresh_from_db()
 
         for participant in event.contributions.all():
             if participant.status == 'new':

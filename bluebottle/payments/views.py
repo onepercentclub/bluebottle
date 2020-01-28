@@ -1,29 +1,21 @@
-from ipware.ip import get_ip
-
+from django.utils.translation import ugettext as _
 from rest_framework import status
 from rest_framework.exceptions import ParseError
 from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from django.conf import settings
-from django.utils.translation import ugettext as _
 from bluebottle.bb_orders.permissions import IsOrderCreator
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.permissions import CanAccessPaymentMethod
 from bluebottle.payments.serializers import ManageOrderPaymentSerializer
 from bluebottle.payments.services import get_payment_methods, PaymentService
-from bluebottle.utils.utils import get_country_code_by_ip
 
 
 class PaymentMethodList(APIView):
     def get(self, request, *args, **kwargs):
         country = request.GET.get('country')
-
-        if not country and not getattr(settings, 'SKIP_IP_LOOKUP', False):
-            ip = get_ip(request)
-            country = get_country_code_by_ip(ip)
 
         # Payment methods are loaded from the settings so they
         # aren't translated at run time. We need to do it manually
@@ -45,10 +37,6 @@ class PaymentMethodList(APIView):
 class PayoutAccountPaymentMethodList(APIView):
     def get(self, pk, request, *args, **kwargs):
         country = request.GET.get('country')
-
-        if not country and not getattr(settings, 'SKIP_IP_LOOKUP', False):
-            ip = get_ip(request)
-            country = get_country_code_by_ip(ip)
 
         # Payment methods are loaded from the settings so they
         # aren't translated at run time. We need to do it manually

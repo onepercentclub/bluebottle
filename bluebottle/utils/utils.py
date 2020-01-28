@@ -1,13 +1,10 @@
 import json
 import logging
-import socket
 import urllib
 from collections import namedtuple
 from importlib import import_module
 
 import bleach
-import pygeoip
-from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Permission, Group
 from django.core.exceptions import ObjectDoesNotExist
@@ -219,41 +216,6 @@ class InvalidIpError(Exception):
 
     def __str__(self):
         return repr(self.value)
-
-
-def get_country_by_ip(ip_address=None):
-    """
-    Returns the country associated with the IP address. Uses pygeoip
-    library which is based on
-    """
-    if not ip_address:
-        return None
-
-    try:
-        socket.inet_aton(ip_address)
-    except socket.error:
-        raise InvalidIpError("Invalid IP address")
-
-    gip = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
-    return gip.country_name_by_addr(ip_address)
-
-
-def get_country_code_by_ip(ip_address=None):
-    """
-    Returns the country associated with the IP address. Uses pygeoip
-    library which is based on
-    the popular Maxmind's GeoIP C API
-    """
-    if not ip_address:
-        return None
-
-    try:
-        socket.inet_aton(ip_address)
-    except socket.error:
-        raise InvalidIpError("Invalid IP address")
-
-    gip = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
-    return gip.country_code_by_name(ip_address)
 
 
 def update_group_permissions(label, group_perms, apps):

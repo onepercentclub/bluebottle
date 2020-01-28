@@ -495,6 +495,9 @@ class Donation(Contribution):
         if not self.user and not self.client_secret:
             self.client_secret = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
 
+        if not self.contribution_date:
+            self.contribution_date = self.created
+
         if not self.payout_amount:
             self.payout_amount = self.amount
 

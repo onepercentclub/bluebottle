@@ -6,6 +6,10 @@ from bluebottle.initiatives.models import Initiative
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.geo.models import Geolocation
 from bluebottle.categories.models import Category
+from bluebottle.activities.models import Activity
+from bluebottle.events.models import Event
+from bluebottle.assignments.models import Assignment
+from bluebottle.funding.models import Funding
 from bluebottle.members.models import Member
 
 
@@ -36,6 +40,10 @@ class InitiativeDocument(DocType):
         'full_name': fields.TextField()
     })
     activity_manager = fields.NestedField(properties={
+        'id': fields.KeywordField(),
+        'full_name': fields.TextField()
+    })
+    activity_owners = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'full_name': fields.TextField()
     })
@@ -73,7 +81,7 @@ class InitiativeDocument(DocType):
     class Meta:
         model = Initiative
         related_models = (
-            Geolocation, Member, ProjectTheme
+            Geolocation, Member, ProjectTheme, Event, Funding, Assignment
         )
 
     def get_queryset(self):
@@ -86,3 +94,11 @@ class InitiativeDocument(DocType):
             return related_instance.initiative_set.all()
         if isinstance(related_instance, Member):
             return list(related_instance.own_initiatives.all()) + list(related_instance.review_initiatives.all())
+        if isinstance(related_instance, Activity):
+            return [related_instance.initiative]
+
+    def prepare_activity_owners(self, instance):
+        return [
+            {'id': activity.owner.pk, 'full_name': activity.owner.full_name}
+            for activity in instance.activities.all()
+        ]

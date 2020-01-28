@@ -38,7 +38,7 @@ from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action, FSMAdminMixin, \
     BasePlatformSettingsAdmin
 from bluebottle.utils.forms import FSMModelForm
-from bluebottle.wallposts.admin import DonationWallpostInline, WallpostInline
+from bluebottle.wallposts.admin import DonationWallpostInline
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class FundingAdminForm(FSMModelForm):
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline, WallpostInline)
+    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline, ) + ActivityChildAdmin.inlines
     base_model = Funding
     form = FundingAdminForm
     date_hierarchy = 'transition_date'

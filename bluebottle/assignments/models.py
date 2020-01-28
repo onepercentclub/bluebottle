@@ -1,7 +1,10 @@
+import datetime
+
 from django.db import models
 from django.db.models import SET_NULL, Count, Sum
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
+from django.utils.timezone import get_current_timezone
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
@@ -178,6 +181,9 @@ class Applicant(Contribution):
 
     def save(self, *args, **kwargs):
         created = self.pk is None
+
+        if not self.contribution_date:
+            self.contribution_date = get_current_timezone().localize(datetime.datetime(self.activity.end_date.year, self.activity.end_date.month, self.activity.end_date.day))
 
         # Fail the self if hours are set to 0
         if self.status == ApplicantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:

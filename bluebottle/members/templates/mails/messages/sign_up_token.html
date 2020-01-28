@@ -1,0 +1,15 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with context='email' %}
+Click the link below to create a password and activate your account. <br>
+
+The link will expire in 2 hours.
+{% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{site}}/signup/?token={{custom_message}}&email={{to.email}}"
+       class="action-email">{% trans 'Create your password' context 'email' %}</a>
+{% endblock %}`

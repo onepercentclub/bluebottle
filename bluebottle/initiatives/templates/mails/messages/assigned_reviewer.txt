@@ -1,0 +1,16 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=to.first_name initiative_title=obj.title admin_email=settings.contact_email context 'email' %}
+Hi {{ recipient_name }},
+You are assigned as reviewer for "{{ initiative_title }}".
+If you have any questions please contact {{ admin_email }}
+
+{% endblocktrans %}
+
+{% endblock %}
+
+{% block action %}
+   {% trans 'View initiative' context 'email' %}: {{ obj.get_admin_url }}
+{% endblock %}`

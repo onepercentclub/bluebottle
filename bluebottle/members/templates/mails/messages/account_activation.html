@@ -5,7 +5,7 @@
 {% if body_html %}
     {{ body_html }}
 {% else %}
-{% blocktrans with first_name=obj.first_name %}
+{% blocktrans %}
 <h1>Welcome {{ first_name }}</h1>
 <p class="lead">You’re now officially part of the {{ site_name }} community. Connect, share and work with others on initiatives that you care about.</p>
 {% endblocktrans %}

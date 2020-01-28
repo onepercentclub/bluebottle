@@ -3,6 +3,7 @@ from operator import attrgetter
 
 from django.contrib.admin.options import get_content_type_for_model
 from django.db import connection
+from django.utils import translation
 from django.utils.html import format_html
 
 from bluebottle.clients import properties
@@ -58,6 +59,7 @@ class TransitionMessage(object):
         custom_message = self.options.get('custom_message', '')
         custom_template = self.get_message_template()
         for recipient in self.get_recipients():
+            translation.activate(recipient.primary_language)
             if once:
                 try:
                     Message.objects.get(

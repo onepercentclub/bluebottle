@@ -15,7 +15,7 @@ from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.news.models import NewsItem
-from bluebottle.pages.models import Page, DocumentItem, ImageTextItem
+from bluebottle.pages.models import Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem
 from bluebottle.projects.models import Project
 from bluebottle.statistics.statistics import Statistics
 
@@ -352,6 +352,22 @@ class LinkSerializer(serializers.ModelSerializer):
         fields = ('id', 'image', 'action_link', 'action_text', )
 
 
+class ActionSerializer(ItemSerializer):
+    item_type = 'action'
+
+    class Meta:
+        model = ActionItem
+        fields = ('id', 'type', 'link', 'title', )
+
+
+class ColumnsSerializer(ItemSerializer):
+    item_type = 'columns'
+
+    class Meta:
+        model = ColumnsItem
+        fields = ('id', 'type', 'text1', 'text2', )
+
+
 class LinksContentSerializer(serializers.ModelSerializer):
     links = LinkSerializer(many=True)
 
@@ -525,6 +541,10 @@ class BlockSerializer(serializers.Serializer):
             serializer = ImageTextItemSerializer
         elif isinstance(obj, ActivitiesContent):
             serializer = ActivitiesContentSerializer
+        elif isinstance(obj, ActionItem):
+            serializer = ActionSerializer
+        elif isinstance(obj, ColumnsItem):
+            serializer = ColumnsSerializer
         else:
             serializer = DefaultBlockSerializer
 

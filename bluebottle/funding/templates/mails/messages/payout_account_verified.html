@@ -4,7 +4,7 @@
 
 {% block content %}
     <p class="donation-intro">
-        {% blocktrans with recipient_name=to.first_name platform_name=tenant context 'email' %}
+        {% blocktrans with recipient_name=to.first_name platform_name=tenant_name context 'email' %}
             Hi {{ recipient_name }},<br/>
            
             Good news! Your identity is verified and you’re all good to go. 
@@ -16,7 +16,7 @@
 {% endblock content %} 
 
 {% block action %}
-    <a href="{{ site }}{{ obj.funding.get_absolute_url }}" class="action-email">
+    <a href="{{ obj.funding.get_absolute_url }}" class="action-email">
        {% trans 'Go to your activity' context 'email' %}:
     </a>
 {% endblock %}`

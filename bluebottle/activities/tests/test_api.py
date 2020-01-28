@@ -629,6 +629,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], unicode(second.pk))
         self.assertEqual(data['data'][2]['id'], unicode(first.pk))
 
+    def test_get_large_page(self):
+        initiative = InitiativeFactory.create()
+        EventFactory.create_batch(
+            105,
+            review_status='approved',
+            status='open',
+            initiative=initiative,
+        )
+        response = self.client.get(
+            self.url + '?page[size]=105',
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+        self.assertEqual(len(response.json()['data']), 105)
+
 
 class ActivityRelatedImageAPITestCase(BluebottleTestCase):
     def setUp(self):

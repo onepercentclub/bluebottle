@@ -16,7 +16,7 @@ class StripePaymentTransitions(PaymentTransitions):
     def request_refund(self):
         intent = self.instance.payment_intent.intent
 
-        intent.charges[0].refund(
+        intent.charges.data[0].refund(
             reverse_transfer=True,
         )
 

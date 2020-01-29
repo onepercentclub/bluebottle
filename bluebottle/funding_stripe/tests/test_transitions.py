@@ -39,8 +39,10 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
         payment_intent = stripe.PaymentIntent('some intent id')
 
         charge = stripe.Charge('charge-id')
+        charges = stripe.ListObject()
+        charges.data = [charge]
 
-        payment_intent.charges = [charge]
+        payment_intent.charges = charges
 
         with mock.patch('stripe.PaymentIntent.retrieve', return_value=payment_intent):
             with mock.patch('stripe.Charge.refund') as refund_mock:

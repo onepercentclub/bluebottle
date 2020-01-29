@@ -607,24 +607,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['meta']['pagination']['count'], 3)
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
-
-    def test_filter_owner_activity(self):
-        InitiativeFactory.create_batch(4, status='submitted')
-
-        with_activity = InitiativeFactory.create(status='submitted')
-        activity = EventFactory.create(owner=self.owner, initiative=with_activity)
-
-        response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
-        )
-
-        data = json.loads(response.content)
-
-        self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['relationships']['activities']['data'][0]['id'], unicode(activity.pk))
 
     def test_filter_location(self):
         location = LocationFactory.create()

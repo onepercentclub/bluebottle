@@ -13,6 +13,7 @@ def migrate_funding(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('activities', '0015_auto_20200128_1045'),
         ('funding', '0050_auto_20200124_1230'),
     ]
 

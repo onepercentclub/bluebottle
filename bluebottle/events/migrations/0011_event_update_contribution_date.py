@@ -19,6 +19,7 @@ def migrate_events(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
+        ('activities', '0015_auto_20200128_1045'),
         ('events', '0010_auto_20190816_1327'),
     ]
 

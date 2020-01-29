@@ -20,6 +20,7 @@ def migrate_assignments(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('activities', '0015_auto_20200128_1045'),
         ('assignments', '0012_auto_20190913_1547'),
     ]
 

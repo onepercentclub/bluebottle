@@ -183,7 +183,13 @@ class Applicant(Contribution):
         created = self.pk is None
 
         if not self.contribution_date:
-            self.contribution_date = get_current_timezone().localize(datetime.datetime(self.activity.end_date.year, self.activity.end_date.month, self.activity.end_date.day))
+            self.contribution_date = get_current_timezone().localize(
+                datetime.datetime(
+                    self.activity.end_date.year,
+                    self.activity.end_date.month,
+                    self.activity.end_date.day
+                )
+            )
 
         # Fail the self if hours are set to 0
         if self.status == ApplicantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:

@@ -127,4 +127,12 @@ class ApplicantTestCase(BluebottleTestCase):
         applicant.time_spent = 10
         applicant.save()
         self.assertEqual(applicant.status, 'succeeded')
-        self.assertEqual(applicant.contribution_date, get_current_timezone().localize(datetime(assignment.end_date.year, assignment.end_date.month, assignment.end_date.day)))
+        self.assertEqual(
+            applicant.contribution_date, get_current_timezone().localize(
+                datetime(
+                    assignment.end_date.year,
+                    assignment.end_date.month,
+                    assignment.end_date.day
+                )
+            )
+        )

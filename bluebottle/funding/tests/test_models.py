@@ -162,4 +162,3 @@ class PayoutTestCase(BluebottleTestCase):
 
     def test_donation_contribution_date(self):
         self.assertEqual(self.donation.contribution_date, self.donation.created)
-

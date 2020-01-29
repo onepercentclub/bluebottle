@@ -132,6 +132,31 @@ class ImageTextItem(ContentItem):
             self.text_final = None
 
 
+class ImageTextRoundItem(ContentItem):
+    text = PluginHtmlField(_('text'), blank=True)
+    text_final = models.TextField(editable=False, blank=True, null=True)
+    image = PluginImageField(_("Image"), upload_to='pages')
+
+    objects = ContentItemManager()
+
+    class Meta:
+        verbose_name = _('Text + Round Image')
+        verbose_name_plural = _('Text + Round Image')
+
+    def __str__(self):
+        return Truncator(strip_tags(self.text)).words(20)
+
+    def full_clean(self, *args, **kwargs):
+        # This is called by the form when all values are assigned.
+        # The pre filters are applied here, so any errors also appear as ValidationError.
+        super(ImageTextRoundItem, self).full_clean(*args, **kwargs)
+
+        self.text, self.text_final = apply_filters(self, self.text, field_name='text')
+        if self.text_final == self.text:
+            # No need to store duplicate content:
+            self.text_final = None
+
+
 class Page(PublishableModel):
     """
     Slides for homepage.
@@ -159,6 +184,7 @@ class Page(PublishableModel):
         'ColumnsPlugin',
         'ActionPlugin',
         'ImageTextPlugin',
+        'ImageTextRoundPlugin',
         'OEmbedPlugin',
         'RawHtmlPlugin',
         'PicturePlugin',

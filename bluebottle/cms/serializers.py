@@ -15,7 +15,7 @@ from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.news.models import NewsItem
-from bluebottle.pages.models import Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem
+from bluebottle.pages.models import Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem, ImageTextRoundItem
 from bluebottle.projects.models import Project
 from bluebottle.statistics.statistics import Statistics
 
@@ -67,6 +67,15 @@ class ImageTextItemSerializer(ItemSerializer):
     class Meta:
         model = ImageTextItem
         fields = ('id', 'text', 'image', 'ratio', 'align', 'type', )
+
+
+class ImageTextRoundItemSerializer(ItemSerializer):
+    image = ImageSerializer()
+    item_type = 'image-text-round'
+
+    class Meta:
+        model = ImageTextItem
+        fields = ('id', 'text', 'image', 'type', )
 
 
 class PictureItemSerializer(ItemSerializer):
@@ -539,6 +548,8 @@ class BlockSerializer(serializers.Serializer):
             serializer = PictureItemSerializer
         elif isinstance(obj, ImageTextItem):
             serializer = ImageTextItemSerializer
+        elif isinstance(obj, ImageTextRoundItem):
+            serializer = ImageTextRoundItemSerializer
         elif isinstance(obj, ActivitiesContent):
             serializer = ActivitiesContentSerializer
         elif isinstance(obj, ActionItem):

@@ -4,6 +4,7 @@ from django.contrib.admin.options import csrf_protect_m
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.forms import Textarea, TextInput
 from django.template.loader import render_to_string
+from django.db import router, transaction
 from django.template.response import TemplateResponse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -42,6 +43,10 @@ class NotificationAdminMixin(object):
         """
         Determines the HttpResponse for the change_view stage.
         """
+        if not object_id:
+            with transaction.atomic(using=router.db_for_write(self.model)):
+                return self._changeform_view(request, object_id, form_url, extra_context)
+
         obj = self.model.objects.get(pk=object_id)
         new = None
         ModelForm = self.get_form(request, obj)

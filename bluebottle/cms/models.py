@@ -547,7 +547,9 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         metadata_title=models.CharField(
             max_length=100, null=True, blank=True),
         metadata_description=models.TextField(
-            null=True, blank=True)
+            null=True, blank=True),
+        metadata_keywords=models.CharField(
+            max_length=300, null=True, blank=True)
     )
 
     class Meta:

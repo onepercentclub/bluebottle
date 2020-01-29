@@ -21,6 +21,7 @@ class Migration(migrations.Migration):
                 ('language_code', models.CharField(db_index=True, max_length=15, verbose_name='Language')),
                 ('metadata_title', models.CharField(blank=True, max_length=100, null=True)),
                 ('metadata_description', models.TextField(blank=True, null=True)),
+                ('metadata_keywords', models.CharField(blank=True, max_length=300, null=True)),
             ],
             options={
                 'managed': True,

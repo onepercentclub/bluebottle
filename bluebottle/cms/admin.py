@@ -147,7 +147,7 @@ class HomePageAdmin(BasePlatformSettingsAdmin, PlaceholderFieldAdmin, Translatab
     fields = ('content', )
 
 
-class SitePlatformSettingsAdmin(BasePlatformSettingsAdmin):
+class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
     pass
 
 

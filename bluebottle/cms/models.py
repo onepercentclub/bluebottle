@@ -530,9 +530,7 @@ class WelcomeContent(ContentItem):
         return unicode(_('Welcome'))
 
 
-class SitePlatformSettings(BasePlatformSettings):
-    logo = models.ImageField(null=True, blank=True, upload_to='site_content/')
-
+class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     contact_email = models.EmailField(null=True, blank=True)
     contact_phone = models.CharField(max_length=100, null=True, blank=True)
     copyright = models.CharField(max_length=100, null=True, blank=True)
@@ -544,6 +542,13 @@ class SitePlatformSettings(BasePlatformSettings):
         validators=[FileExtensionValidator(allowed_extensions=['svg'])]
     )
     favicon = models.ImageField(null=True, blank=True, upload_to='site_content/')
+
+    translations = TranslatedFields(
+        metadata_title=models.CharField(
+            max_length=100, null=True, blank=True),
+        metadata_description=models.TextField(
+            null=True, blank=True)
+    )
 
     class Meta:
         verbose_name_plural = _('site platform settings')

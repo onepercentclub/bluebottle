@@ -79,9 +79,13 @@ class TransitionMessage(object):
 
             if not custom_message and custom_template:
                 custom_template.set_current_language(recipient.primary_language)
-                subject = custom_template.subject.format(**context)
-                body_html = format_html(custom_template.body_html.format(**context))
-                body_txt = custom_template.body_txt.format(**context)
+                try:
+                    subject = custom_template.subject.format(**context)
+                    body_html = format_html(custom_template.body_html.format(**context))
+                    body_txt = custom_template.body_txt.format(**context)
+                except custom_template.DoesNotExist:
+                    # Translation for current lagnuage not set, use default.
+                    pass
 
             yield Message(
                 template=self.get_template(),

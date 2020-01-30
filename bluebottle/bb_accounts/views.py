@@ -185,11 +185,11 @@ class SignUpTokenConfirmation(generics.UpdateAPIView):
             )
 
             if member.is_active:
-                raise ValidationError({'id': _('Confirmation token is already used')})
+                raise ValidationError({'id': _('The link to activate your account has already been used.')})
 
             return member
         except SignatureExpired:
-            raise ValidationError({'id': _('Confirmation token is expired')})
+            raise ValidationError({'id': _('The link to activate your account is expired. Please sign up again.')})
         except BadSignature:
             raise ValidationError({'id': _('Confirmation token is not signed correctly')})
 

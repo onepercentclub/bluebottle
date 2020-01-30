@@ -252,7 +252,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['id'], 'Confirmation token is already used')
+        self.assertEqual(response.json()['id'], 'The link to activate your account has already been used.')
 
     def test_confirm_expired_token(self):
         email = 'test@example.com'
@@ -271,7 +271,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['id'], 'Confirmation token is expired')
+        self.assertEqual(response.json()['id'], 'The link to activate your account is expired. Please sign up again.')
 
         member.refresh_from_db()
 

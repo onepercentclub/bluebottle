@@ -292,7 +292,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
             {'password': password}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()['id'], 'Confirmation token is not signed correctly')
+        self.assertEqual(response.json()['id'], 'Something went wrong on our side. Please sign up again.')
 
         member.refresh_from_db()
 

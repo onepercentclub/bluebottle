@@ -191,7 +191,7 @@ class SignUpTokenConfirmation(generics.UpdateAPIView):
         except SignatureExpired:
             raise ValidationError({'id': _('The link to activate your account is expired. Please sign up again.')})
         except BadSignature:
-            raise ValidationError({'id': _('Confirmation token is not signed correctly')})
+            raise ValidationError({'id': _('Something went wrong on our side. Please sign up again.')})
 
     def perform_update(self, serializer):
         serializer.save(is_active=True)

@@ -189,7 +189,7 @@ class SignUpTokenConfirmation(generics.UpdateAPIView):
 
             return member
         except SignatureExpired:
-            raise ValidationError({'id': _('The link to activate your account is expired. Please sign up again.')})
+            raise ValidationError({'id': _('The link to activate your account has expired. Please sign up again.')})
         except BadSignature:
             raise ValidationError({'id': _('Something went wrong on our side. Please sign up again.')})
 

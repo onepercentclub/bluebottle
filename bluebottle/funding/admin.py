@@ -270,7 +270,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     form = DonationAdminForm
 
     raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'status', 'payment_link', 'payout_amount']
+    readonly_fields = ['payment_link', 'status', 'payment_link', 'payout_amount', 'contribution_date']
     list_display = ['transition_date', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', ]
     list_filter = [
         DonationAdminStatusFilter,
@@ -283,7 +283,8 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
 
     fields = [
         'transition_date', 'created', 'activity', 'user', 'amount', 'payout_amount',
-        'reward', 'anonymous', 'name', 'status', 'payment_link'
+        'reward', 'anonymous', 'name', 'status', 'payment_link',
+        'contribution_date',
     ]
 
     export_to_csv_fields = (
@@ -297,6 +298,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
         ('fundraiser', 'Fundraiser'),
         ('name', 'name'),
         ('anonymous', 'Anonymous'),
+        ('contribution_date', 'Contribution Date'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

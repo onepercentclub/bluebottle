@@ -282,7 +282,8 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     inlines = [DonationWallpostInline]
 
     fields = [
-        'transition_date', 'created', 'activity', 'user', 'amount', 'payout_amount',
+        'transition_date', 'contribution_date', 'created',
+        'activity', 'user', 'amount', 'payout_amount',
         'reward', 'anonymous', 'name', 'status', 'payment_link'
     ]
 

@@ -717,6 +717,33 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 200, 'currency': 'EUR'})
 
+    def test_update_set_donor_name(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+
+        patch_data = {
+            'data': {
+                'type': 'contributions/donations',
+                'id': data['data']['id'],
+                'attributes': {
+                    'amount': {'amount': 200, 'currency': 'EUR'},
+                    'name': 'Pietje'
+                },
+            }
+        }
+
+        response = self.client.patch(update_url, json.dumps(patch_data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['attributes']['name'], 'Pietje')
+
     def test_update_change_user(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
 

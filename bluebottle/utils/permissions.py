@@ -3,7 +3,7 @@ from memoize import memoize
 
 from rest_framework import permissions
 
-from tenant_extras.utils import get_tenant_properties
+from bluebottle.members.models import MemberPlatformSettings
 
 logger = logging.getLogger(__name__)
 
@@ -206,7 +206,8 @@ class TenantConditionalOpenClose(BasePermission):
 
     def has_object_action_permission(self, action, user, obj):
         try:
-            if get_tenant_properties('CLOSED_SITE'):
+            settings = MemberPlatformSettings.objects.get()
+            if settings.closed:
                 return user and user.is_authenticated()
         except AttributeError:
             pass
@@ -214,7 +215,8 @@ class TenantConditionalOpenClose(BasePermission):
 
     def has_action_permission(self, action, user, model_cls):
         try:
-            if get_tenant_properties('CLOSED_SITE'):
+            settings = MemberPlatformSettings.objects.get()
+            if settings.closed:
                 return user and user.is_authenticated()
         except AttributeError:
             pass

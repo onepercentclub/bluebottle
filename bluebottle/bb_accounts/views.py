@@ -1,18 +1,21 @@
+from datetime import timedelta
 from django.utils.timezone import now
 import json
 import requests
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.template import loader
 from django.contrib.auth.tokens import default_token_generator
+from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
+from django.template import loader
 from django.http import Http404
 from django.utils.http import base36_to_int, int_to_base36
+from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 
 from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied, NotAuthenticated
+from rest_framework.exceptions import PermissionDenied, NotAuthenticated, ValidationError
 
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -30,8 +33,8 @@ from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
     PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
     UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
-    EmailSetSerializer, PasswordUpdateSerializer,
-    UserActivitySerializer)
+    EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
+    SignUpTokenConfirmationSerializer, UserActivitySerializer)
 from bluebottle.members.tokens import login_token_generator
 
 USER_MODEL = get_user_model()
@@ -155,6 +158,43 @@ class Logout(generics.CreateAPIView):
             self.request.user.save()
 
         return response.Response('', status=status.HTTP_204_NO_CONTENT)
+
+
+class SignUpToken(generics.CreateAPIView):
+    """
+    Request a signup token
+
+    """
+    queryset = USER_MODEL.objects.all()
+    serializer_class = SignUpTokenSerializer
+
+
+class SignUpTokenConfirmation(generics.UpdateAPIView):
+    """
+    Confirm a signup token
+
+    """
+    queryset = USER_MODEL.objects.all()
+    serializer_class = SignUpTokenConfirmationSerializer
+
+    def get_object(self):
+        try:
+            signer = TimestampSigner()
+            member = self.queryset.get(
+                pk=signer.unsign(self.kwargs['pk'], max_age=timedelta(hours=2))
+            )
+
+            if member.is_active:
+                raise ValidationError({'id': _('The link to activate your account has already been used.')})
+
+            return member
+        except SignatureExpired:
+            raise ValidationError({'id': _('The link to activate your account has expired. Please sign up again.')})
+        except BadSignature:
+            raise ValidationError({'id': _('Something went wrong on our side. Please sign up again.')})
+
+    def perform_update(self, serializer):
+        serializer.save(is_active=True)
 
 
 class UserCreate(generics.CreateAPIView):

@@ -69,8 +69,16 @@ class PayoutTestCase(BluebottleTestCase):
         self.funding.save()
 
         for donation in DonationFactory.create_batch(
-                5,
+                3,
                 amount=Money(150, 'EUR'),
+                activity=self.funding,
+                status='succeeded'):
+            StripePaymentFactory.create(donation=donation)
+
+        for donation in DonationFactory.create_batch(
+                2,
+                amount=Money(200, 'USD'),
+                payout_amount=(150, 'EUR'),
                 activity=self.funding,
                 status='succeeded'):
             StripePaymentFactory.create(donation=donation)
@@ -87,6 +95,8 @@ class PayoutTestCase(BluebottleTestCase):
             activity=self.funding,
             status='succeeded')
         PledgePaymentFactory.create(donation=donation)
+
+        self.donation = donation
 
         for donation in DonationFactory.create_batch(
                 5,
@@ -149,3 +159,6 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEqual(self.funding.payouts.all()[1].total_amount, Money(1000, 'USD'))
         self.assertEqual(self.funding.payouts.all()[2].total_amount, Money(2250, 'EUR'))
         self.assertEqual(self.funding.payouts.all()[3].total_amount, Money(750, 'EUR'))
+
+    def test_donation_contribution_date(self):
+        self.assertEqual(self.donation.contribution_date, self.donation.created)

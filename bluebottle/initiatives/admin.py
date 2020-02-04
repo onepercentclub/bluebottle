@@ -98,10 +98,14 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, FSM
         ('place', 'Place'),
         ('location', 'Location'),
         ('organization', 'Organization'),
-        ('owner', 'Owner'),
-        ('activity_manager', 'Activity Manager'),
-        ('promoter', 'Promoter'),
-        ('reviewer', 'Reviewer'),
+        ('owner__full_name', 'Owner'),
+        ('owner__email', 'Owner email'),
+        ('activity_manager__full_name', 'Activity Manager'),
+        ('activity_manager__email', 'Activity Manager email'),
+        ('promotor__full_name', 'Promotor'),
+        ('promotor__email', 'Promotor email'),
+        ('reviewer__full_name', 'Reviewer'),
+        ('reviewer__email', 'Reviewer email'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

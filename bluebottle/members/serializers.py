@@ -2,6 +2,9 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation
 from django.contrib.auth.hashers import make_password
+
+from django.core.signing import TimestampSigner
+
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
@@ -11,6 +14,7 @@ from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import LocationSerializer, PlaceSerializer
 from bluebottle.members.models import MemberPlatformSettings, UserActivity
+from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
@@ -290,6 +294,65 @@ class PasswordField(serializers.CharField):
         return self.hidden_password_string
 
 
+class SignUpTokenSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating users. This can only be used for creating
+    users (POST) and should not be used for listing,
+    editing or viewing users.
+    """
+    email = serializers.EmailField(max_length=254)
+
+    class Meta:
+        model = BB_USER_MODEL
+        fields = ('id', 'email')
+
+    def validate_email(self, email):
+        settings = MemberPlatformSettings.objects.get()
+        if (
+            settings.email_domain and
+            not email.endswith('@{}'.format(settings.email_domain))
+        ):
+            raise serializers.ValidationError(
+                ('Only emails for the domain {} are allowed').format(settings.email_domain)
+            )
+
+        if len(BB_USER_MODEL.objects.filter(email=email, is_active=True)):
+            raise serializers.ValidationError(
+                ('member with this email address already exists.').format(settings.email_domain)
+            )
+
+        return email
+
+    def create(self, validated_data):
+        (instance, _) = BB_USER_MODEL.objects.get_or_create(
+            email=validated_data['email'], defaults={'is_active': False}
+        )
+        token = TimestampSigner().sign(instance.pk)
+        SignUptokenMessage(instance, custom_message=token).compose_and_send()
+
+        return instance
+
+
+class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating users. This can only be used for creating
+    users (POST) and should not be used for listing,
+    editing or viewing users.
+    """
+    password = PasswordField(required=True, max_length=128)
+    jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
+
+    first_name = serializers.CharField(max_length=100)
+    last_name = serializers.CharField(max_length=100)
+
+    class Meta:
+        model = BB_USER_MODEL
+        fields = ('id', 'password', 'jwt_token', 'first_name', 'last_name', )
+
+    def validate_password(self, password):
+        return make_password(password)
+
+
 class UserCreateSerializer(serializers.ModelSerializer):
     """
     Serializer for creating users. This can only be used for creating
@@ -299,6 +362,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     email_confirmation = serializers.EmailField(
         label=_('password_confirmation'), max_length=254, required=False)
     password = PasswordField(required=True, max_length=128)
+    token = serializers.CharField(required=False, max_length=128)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
     primary_language = serializers.CharField(required=False)
 
@@ -332,16 +396,19 @@ class UserCreateSerializer(serializers.ModelSerializer):
         if 'email_confirmation' in data and data['email'] != data['email_confirmation']:
             raise serializers.ValidationError(_('Email confirmation mismatch'))
 
-        return data
+        settings = MemberPlatformSettings.objects.get()
 
-    def create(self, validated_data):
-        validated_data['password'] = make_password(validated_data['password'])
-        return super(UserCreateSerializer, self).create(validated_data)
+        if settings.confirm_signup:
+            raise serializers.ValidationError({'token': _('Signup requires a confirmation token')})
+
+        data['password'] = make_password(data['password'])
+
+        return data
 
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'first_name', 'last_name', 'email_confirmation',
-                  'email', 'password', 'jwt_token', 'primary_language')
+                  'email', 'password', 'token', 'jwt_token', 'primary_language')
 
 
 class PasswordResetSerializer(serializers.Serializer):
@@ -410,11 +477,18 @@ class UserVerificationSerializer(serializers.Serializer):
 
 
 class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
+    background = SorlImageField('1408x1080', crop='center')
+
     class Meta:
         model = MemberPlatformSettings
         fields = (
             'require_consent',
             'consent_link',
+            'closed',
+            'email_domain',
+            'confirm_signup',
+            'login_methods',
+            'background',
         )
 
 

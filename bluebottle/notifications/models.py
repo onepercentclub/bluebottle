@@ -12,7 +12,6 @@ from .signals import *  # noqa
 
 
 class Message(models.Model):
-
     recipient = models.ForeignKey('members.Member')
     sent = models.DateTimeField(null=True, blank=True)
     adapter = models.CharField(max_length=30, default='email')

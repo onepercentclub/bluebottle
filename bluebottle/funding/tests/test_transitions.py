@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from django.core import mail
-from django.utils.timezone import now
+from django.utils.timezone import now, get_current_timezone
 from moneyed import Money
 
 from bluebottle.fsm import TransitionNotPossible
@@ -54,9 +54,19 @@ class FundingTestCase(BluebottleAdminTestCase):
         funding.review_transitions.submit()
         funding.review_transitions.approve()
 
+        deadline = now() + timedelta(days=30)
         self.assertAlmostEqual(
             funding.deadline,
-            (now() + timedelta(days=30)).replace(hour=23, minute=59, second=59),
+            get_current_timezone().localize(
+                datetime(
+                    deadline.year,
+                    deadline.month,
+                    deadline.day,
+                    hour=23,
+                    minute=59,
+                    second=59
+                )
+            ),
             delta=timedelta(seconds=1)
         )
 

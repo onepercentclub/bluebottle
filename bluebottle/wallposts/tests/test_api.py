@@ -762,6 +762,7 @@ class FundingWallpostTest(BluebottleTestCase):
         self.assertEqual(
             response.data['results'][0]['donation'],
             {
+                'name': None,
                 'fundraiser': None,
                 'amount': {'currency': 'EUR', 'amount': 35.00},
                 'user': None,
@@ -772,3 +773,30 @@ class FundingWallpostTest(BluebottleTestCase):
             }
         )
         self.assertEqual(response.data['results'][1]['donation'], None)
+
+    def test_wallposts_with_fake_name(self):
+        self.donation = DonationFactory(
+            amount=Money(35, 'EUR'),
+            user=None,
+            name='Tante Ans',
+            activity=self.funding
+        )
+        self.donation.transitions.succeed()
+        self.donation.save()
+
+        response = self.client.get(self.updates_url, token=self.owner_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(
+            response.data['results'][0]['donation'],
+            {
+                'name': 'Tante Ans',
+                'fundraiser': None,
+                'amount': {'currency': 'EUR', 'amount': 35.00},
+                'user': None,
+                'anonymous': False,
+                'reward': None,
+                'type': 'contributions/donations',
+                'id': self.donation.id
+            }
+        )

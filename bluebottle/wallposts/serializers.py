@@ -88,6 +88,7 @@ class WallpostDonationSerializer(serializers.ModelSerializer):
             'id',
             'user',
             'amount',
+            'name',
             'fundraiser',
             'reward',
             'anonymous',)

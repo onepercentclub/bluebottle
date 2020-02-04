@@ -171,7 +171,7 @@ class FundingAdmin(ActivityChildAdmin):
     ]
 
     def percentage_donated(self, obj):
-        if obj.target and obj.target.amount:
+        if obj.target and obj.target.amount and obj.amount_donated.amount:
             return '{:.2f}%'.format((obj.amount_donated.amount / obj.target.amount) * 100)
         else:
             return '0%'
@@ -270,7 +270,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     form = DonationAdminForm
 
     raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'status', 'payment_link', 'payout_amount']
+    readonly_fields = ['payment_link', 'status', 'payment_link', 'payout_amount', 'contribution_date']
     list_display = ['transition_date', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', ]
     list_filter = [
         DonationAdminStatusFilter,
@@ -298,6 +298,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
         ('fundraiser', 'Fundraiser'),
         ('name', 'name'),
         ('anonymous', 'Anonymous'),
+        ('contribution_date', 'Contribution Date'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

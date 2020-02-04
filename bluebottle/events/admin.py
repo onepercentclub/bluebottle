@@ -58,6 +58,7 @@ class ParticipantAdmin(ContributionChildAdmin):
         ('user__full_name', 'Owner'),
         ('user__email', 'Email'),
         ('time_spent', 'Time Spent'),
+        ('contribution_date', 'Contribution Date'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
@@ -89,7 +90,7 @@ class EventAdmin(ActivityChildAdmin):
         'registration_deadline',
         'is_online',
         'location',
-        'location_hint'
+        'location_hint',
     )
 
     export_to_csv_fields = (

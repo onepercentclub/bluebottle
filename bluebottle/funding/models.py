@@ -129,7 +129,11 @@ class DeadlineValidator(Validator):
     field = 'deadline'
 
     def is_valid(self):
-        return self.instance.duration or (self.instance.deadline and self.instance.deadline > now())
+        return (
+            self.instance.status not in ('in_review', 'open') or
+            self.instance.duration or
+            (self.instance.deadline and self.instance.deadline > now())
+        )
 
 
 class BudgetLineValidator(Validator):

@@ -1,4 +1,5 @@
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 from bluebottle.utils.transitions import ReviewTransitions
 
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -64,6 +65,14 @@ class ActivityReviewTransitions(ReviewTransitions):
         except TransitionNotPossible:
             pass
 
+        try:
+            from bluebottle.activities.models import Organizer
+            organizer = self.instance.contributions.instance_of(Organizer).get()
+            organizer.transitions.succeed()
+            organizer.save()
+        except (TransitionNotPossible, Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
+            pass
+
     @transition(
         source=[ReviewTransitions.values.submitted],
         target=ReviewTransitions.values.needs_work,
@@ -83,6 +92,14 @@ class ActivityReviewTransitions(ReviewTransitions):
         permissions=[can_review]
     )
     def close(self):
+        try:
+            from bluebottle.activities.models import Organizer
+            organizer = self.instance.contributions.instance_of(Organizer).get()
+            organizer.transitions.close()
+            organizer.save()
+        except (TransitionNotPossible, Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
+            pass
+
         self.instance.transitions.close()
 
     @transition(
@@ -184,3 +201,19 @@ class ContributionTransitions(ModelTransitions):
     )
     def close(self):
         self.instance.transitions.close()
+
+
+class OrganizerTransitions(ContributionTransitions):
+    @transition(
+        source=['new', 'closed'],
+        target=ContributionTransitions.values.succeeded,
+    )
+    def succeed(self):
+        self.instance.contribution_date = timezone.now()
+
+    @transition(
+        source=['new', 'closed'],
+        target=ContributionTransitions.values.closed,
+    )
+    def close(self):
+        self.instance.contribution_date = timezone.now()

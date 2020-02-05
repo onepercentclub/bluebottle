@@ -10,7 +10,9 @@ from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from polymorphic.models import PolymorphicModel
 from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.transitions import ActivityReviewTransitions
-from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.activities.transitions import (
+    ActivityTransitions, ContributionTransitions, OrganizerTransitions
+)
 from bluebottle.follow.models import Follow
 from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -85,6 +87,8 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
 
         super(Activity, self).save(**kwargs)
 
+        Organizer.objects.get_or_create(activity=self, user=self.owner)
+
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
@@ -113,6 +117,23 @@ class Contribution(TransitionsMixin, PolymorphicModel):
 
     class Meta:
         ordering = ('-created',)
+
+
+class Organizer(Contribution):
+    transitions = TransitionManager(OrganizerTransitions, 'status')
+
+    class Meta:
+        verbose_name = _("organizer")
+        verbose_name_plural = _("Participants")
+
+    class JSONAPIMeta:
+        resource_name = 'contributions/organizers'
+
+    def save(self, *args, **kwargs):
+        if not self.contribution_date:
+            self.contribution_date = self.activity.created
+
+        super(Organizer, self).save()
 
 
 from bluebottle.activities.signals import *  # noqa

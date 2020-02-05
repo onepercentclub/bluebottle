@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.core import mail
 from django.utils.timezone import now
 
+from bluebottle.activities.transitions import OrganizerTransitions
 from bluebottle.events.models import Event, Participant
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
@@ -24,9 +25,23 @@ class EventTransitionOpenTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory.create(first_name='Nono')
         self.event = EventFactory.create(title='', initiative=self.initiative, owner=user)
 
+    def test_review(self):
+        self.initiative = InitiativeFactory.create()
+        event = EventFactory.create(title='', initiative=self.initiative)
+
+        self.assertEqual(event.status, EventTransitions.values.in_review)
+        self.assertEqual(event.review_status, ReviewTransitions.values.draft)
+
+        organizer = event.contributions.get()
+        self.assertEqual(organizer.status, OrganizerTransitions.values.new)
+        self.assertEqual(organizer.user, event.owner)
+
     def test_default_status(self):
         self.assertEqual(
             self.event.status, EventTransitions.values.in_review
+        )
+        self.assertEqual(
+            len(self.event.contributions.all()), 1
         )
 
     def test_open(self):
@@ -41,6 +56,9 @@ class EventTransitionOpenTestCase(BluebottleTestCase):
         self.assertEqual(
             event.status, EventTransitions.values.open
         )
+        organizer = self.event.contributions.get()
+        self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
+        self.assertEqual(organizer.user, self.event.owner)
 
     def test_complete_not_approved(self):
         self.event.title = 'Some title'
@@ -128,6 +146,10 @@ class EventReviewTransitionTestCase(BluebottleTestCase):
         self.event.refresh_from_db()
         self.assertEqual(self.event.review_status, ReviewTransitions.values.closed)
         self.assertEqual(self.event.status, EventTransitions.values.closed)
+
+        organizer = self.event.contributions.get()
+        self.assertEqual(organizer.status, OrganizerTransitions.values.closed)
+        self.assertEqual(organizer.user, self.event.owner)
 
 
 class EventTransitionTestCase(BluebottleTestCase):

@@ -95,7 +95,7 @@ class FundingTransitions(ActivityTransitions):
         target=values.refunded,
     )
     def refund(self):
-        for donation in self.instance.contributions.filter(status__in=['succeeded']).all():
+        for donation in self.instance.donations.filter(status__in=['succeeded']).all():
             donation.payment.transitions.request_refund()
             donation.payment.save()
         for payout in self.instance.payouts.all():

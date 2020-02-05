@@ -5,11 +5,13 @@ from django.core import mail
 from django.utils.timezone import now
 from moneyed import Money
 
+from bluebottle.activities.models import Organizer
+from bluebottle.activities.transitions import ActivityReviewTransitions, OrganizerTransitions
 from bluebottle.fsm import TransitionNotPossible
 from bluebottle.funding.tasks import check_funding_end
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, \
     BudgetLineFactory, BankAccountFactory
-from bluebottle.funding.transitions import DonationTransitions
+from bluebottle.funding.transitions import DonationTransitions, FundingTransitions
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -38,6 +40,28 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.review_transitions.approve()
         BudgetLineFactory.create_batch(4, activity=self.funding, amount=Money(125, 'EUR'))
         mail.outbox = []
+
+    def test_review(self):
+        initiative = InitiativeFactory.create()
+        funding = FundingFactory.create(title='', initiative=initiative)
+
+        self.assertEqual(funding.status, FundingTransitions.values.in_review)
+        self.assertEqual(funding.review_status, ActivityReviewTransitions.values.draft)
+
+        organizer = funding.contributions.get()
+        self.assertEqual(organizer.status, OrganizerTransitions.values.new)
+        self.assertEqual(organizer.user, funding.owner)
+
+    def test_default_status(self):
+        self.assertEqual(
+            self.funding.status, FundingTransitions.values.open
+        )
+        self.assertEqual(
+            self.funding.review_status, ActivityReviewTransitions.values.approved
+        )
+        organizer = self.funding.contributions.get()
+        self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
+        self.assertEqual(organizer.user, self.funding.owner)
 
     def test_approve_deadline(self):
         funding = FundingFactory.create(
@@ -116,6 +140,9 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 5)
         self.assertEqual(mail.outbox[4].subject, u'You successfully completed your crowdfunding campaign! 🎉')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[4].body)
+
+        organizer = self.funding.contributions.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
 
     def test_extend(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))

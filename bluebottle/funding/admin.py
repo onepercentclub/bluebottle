@@ -227,7 +227,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     def donations_link(self, obj):
         url = reverse('admin:funding_donation_changelist')
-        total = obj.contributions.filter(status=DonationTransitions.values.succeeded).count()
+        total = obj.donations.filter(status=DonationTransitions.values.succeeded).count()
         return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
     donations_link.short_description = _("Donations")
 

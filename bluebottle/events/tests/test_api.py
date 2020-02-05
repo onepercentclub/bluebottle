@@ -642,7 +642,7 @@ class ParticipantTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             event_data['data']['attributes']['stats']['committed_count'],
-            1
+            2
         )
 
         self.assertEqual(

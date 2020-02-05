@@ -49,12 +49,13 @@ class AssignmentTransitions(ActivityTransitions):
         messages=[AssignmentCompletedMessage]
     )
     def succeed(self, **kwargs):
+        from bluebottle.assignments.models import Applicant
         source_states = [
             ApplicantTransitions.values.new,
             ApplicantTransitions.values.accepted,
             ApplicantTransitions.values.active,
         ]
-        for member in self.instance.contributions.filter(status__in=source_states):
+        for member in self.instance.contributions.instance_of(Applicant).filter(status__in=source_states):
             member.activity = self.instance
             member.transitions.succeed()
             member.save()

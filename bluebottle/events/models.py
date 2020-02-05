@@ -116,7 +116,7 @@ class Event(Activity):
 
     @property
     def participants(self):
-        return self.contributions.filter(
+        return self.contributions.instance_of(Participant).filter(
             status__in=[ParticipantTransitions.values.new,
                         ParticipantTransitions.values.succeeded]
         )

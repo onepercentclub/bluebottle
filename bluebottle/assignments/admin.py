@@ -59,10 +59,12 @@ class ApplicantAdmin(ContributionChildAdmin):
         ('status', 'Status'),
         ('created', 'Created'),
         ('activity', 'Activity'),
-        ('owner', 'Owner'),
+        ('user__full_name', 'Owner'),
+        ('user__email', 'Email'),
         ('motivation', 'Motivation'),
         ('time_spent', 'Time Spent'),
         ('document', 'Document'),
+        ('contribution_date', 'Contribution Date'),
     )
 
     actions = [
@@ -125,7 +127,8 @@ class AssignmentAdmin(ActivityChildAdmin):
         ('end_date', 'End Date'),
         ('duration', 'Duration'),
         ('registration_deadline', 'Registration Deadline'),
-        ('owner', 'Owner'),
+        ('owner__full_name', 'Owner'),
+        ('owner__email', 'Email'),
         ('capacity', 'Capacity'),
         ('is_online', 'Will be hosted online?'),
         ('location', 'Location'),

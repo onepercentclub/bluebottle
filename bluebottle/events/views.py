@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.utils.html import strip_tags
+from django.utils.timezone import utc
 
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -135,8 +136,8 @@ class EventIcalView(RetrieveAPIView):
             '{}\n{}'.format(strip_tags(instance.description), instance.get_absolute_url())
         )
         event.add('url', instance.get_absolute_url())
-        event.add('dtstart', instance.start)
-        event.add('dtend', instance.end)
+        event.add('dtstart', instance.start.astimezone(utc))
+        event.add('dtend', instance.end.astimezone(utc))
         event['uid'] = instance.uid
 
         organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))

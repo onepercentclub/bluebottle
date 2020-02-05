@@ -202,6 +202,9 @@ class Participant(Contribution):
     def save(self, *args, **kwargs):
         created = self.pk is None
 
+        if not self.contribution_date:
+            self.contribution_date = self.activity.start
+
         # Fail the self if hours are set to 0
         if self.status == ParticipantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:
             self.transitions.close()

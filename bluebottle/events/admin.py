@@ -55,8 +55,10 @@ class ParticipantAdmin(ContributionChildAdmin):
         ('status', 'Status'),
         ('created', 'Created'),
         ('activity', 'Activity'),
-        ('owner', 'Owner'),
+        ('user__full_name', 'Owner'),
+        ('user__email', 'Email'),
         ('time_spent', 'Time Spent'),
+        ('contribution_date', 'Contribution Date'),
     )
 
     actions = [
@@ -91,7 +93,7 @@ class EventAdmin(ActivityChildAdmin):
         'registration_deadline',
         'is_online',
         'location',
-        'location_hint'
+        'location_hint',
     )
 
     export_to_csv_fields = (
@@ -105,7 +107,8 @@ class EventAdmin(ActivityChildAdmin):
         ('duration', 'Duration'),
         ('end', 'End'),
         ('registration_deadline', 'Registration Deadline'),
-        ('owner', 'Owner'),
+        ('owner__full_name', 'Owner'),
+        ('owner__email', 'Email'),
         ('capacity', 'Capacity'),
         ('is_online', 'Will be hosted online?'),
         ('location', 'Location'),

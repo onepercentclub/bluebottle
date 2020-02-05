@@ -65,10 +65,13 @@ class ActivityReviewTransitions(ReviewTransitions):
         except TransitionNotPossible:
             pass
 
-        from bluebottle.activities.models import Organizer
-        organizer = self.instance.contributions.instance_of(Organizer).get()
-        organizer.transitions.succeed()
-        organizer.save()
+        try:
+            from bluebottle.activities.models import Organizer
+            organizer = self.instance.contributions.instance_of(Organizer).get()
+            organizer.transitions.succeed()
+            organizer.save()
+        except (TransitionNotPossible, Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
+            pass
 
     @transition(
         source=[ReviewTransitions.values.submitted],
@@ -89,13 +92,13 @@ class ActivityReviewTransitions(ReviewTransitions):
         permissions=[can_review]
     )
     def close(self):
-        from bluebottle.activities.models import Organizer
-
-        organizer = self.instance.contributions.instance_of(Organizer).get()
-        organizer.transitions.close()
-        organizer.save()
-
-        self.instance.transitions.close()
+        try:
+            from bluebottle.activities.models import Organizer
+            organizer = self.instance.contributions.instance_of(Organizer).get()
+            organizer.transitions.close()
+            organizer.save()
+        except (TransitionNotPossible, Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
+            pass
 
     @transition(
         source=ReviewTransitions.values.closed,

@@ -60,10 +60,12 @@ class Event(Activity):
 
     @property
     def stats(self):
-        stats = self.contributions.filter(
+        contributions = self.contributions.instance_of(Participant)
+
+        stats = contributions.filter(
             status=ParticipantTransitions.values.succeeded).\
             aggregate(count=Count('user__id'), hours=Sum('participant__time_spent'))
-        committed = self.contributions.filter(
+        committed = contributions.filter(
             status=ParticipantTransitions.values.new).\
             aggregate(committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent'))
         stats.update(committed)

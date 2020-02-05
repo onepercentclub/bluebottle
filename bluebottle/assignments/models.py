@@ -72,10 +72,12 @@ class Assignment(Activity):
 
     @property
     def stats(self):
-        stats = self.contributions.filter(
+        contributions = self.contributions.instance_of(Applicant)
+
+        stats = contributions.filter(
             status=ApplicantTransitions.values.succeeded).\
             aggregate(count=Count('user__id'), hours=Sum('applicant__time_spent'))
-        committed = self.contributions.filter(
+        committed = contributions.filter(
             status__in=[
                 ApplicantTransitions.values.active,
                 ApplicantTransitions.values.accepted]).\

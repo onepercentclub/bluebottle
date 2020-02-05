@@ -13,7 +13,9 @@ class DonationListFilter(DjangoFilterBackend):
     Filter that shows only successful contributions
     """
     def filter_queryset(self, request, queryset, view):
-        queryset = queryset.instance_of(Donation).filter(status__in=[
+        queryset = queryset.prefetch_related(
+            'activity', 'user'
+        ).instance_of(Donation).filter(status__in=[
             DonationTransitions.values.succeeded
         ])
 

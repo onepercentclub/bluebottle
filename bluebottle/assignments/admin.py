@@ -63,6 +63,7 @@ class ApplicantAdmin(ContributionChildAdmin):
         ('motivation', 'Motivation'),
         ('time_spent', 'Time Spent'),
         ('document', 'Document'),
+        ('contribution_date', 'Contribution Date'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

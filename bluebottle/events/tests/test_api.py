@@ -385,6 +385,10 @@ class EventIcalTestCase(BluebottleTestCase):
         for ical_event in calendar.walk('vevent'):
             self.assertAlmostEqual(ical_event['dtstart'].dt, event.start, delta=timedelta(seconds=10))
             self.assertAlmostEqual(ical_event['dtend'].dt, event.end, delta=timedelta(seconds=10))
+
+            self.assertEqual(ical_event['dtstart'].dt.tzinfo, utc)
+            self.assertEqual(ical_event['dtend'].dt.tzinfo, utc)
+
             self.assertEqual(str(ical_event['summary']), event.title)
             self.assertEqual(
                 str(ical_event['description']),

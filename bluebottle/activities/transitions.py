@@ -100,6 +100,8 @@ class ActivityReviewTransitions(ReviewTransitions):
         except (TransitionNotPossible, Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
             pass
 
+        self.instance.transitions.close()
+
     @transition(
         source=ReviewTransitions.values.closed,
         target=ReviewTransitions.values.draft,

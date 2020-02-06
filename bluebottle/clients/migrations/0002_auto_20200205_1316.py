@@ -24,13 +24,12 @@ def create_update_function(apps, schema_editor):
     """
 
     if connection.tenant.schema_name == 'public':
-        schema_editor.execute(function_sql)
+        schema_editor.execute(function_sql, params=None)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('activities', '0016_auto_20200205_1139'),
         ('clients', '0001_initial'),
     ]
 

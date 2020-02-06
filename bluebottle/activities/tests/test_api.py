@@ -120,31 +120,50 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], unicode(activity.pk))
 
-    def test_deadline(self):
+    def test_activity_end(self):
         event = EventFactory.create(
             review_status='approved',
-            start_date=datetime.date(2019, 1, 14)
+            start_date=datetime.date(2019, 1, 4)
         )
         EventFactory.create(
             review_status='approved',
-            start_date=datetime.date(2019, 4, 14)
+            start_date=datetime.date(2019, 4, 8)
         )
-        date_assignment = AssignmentFactory.create(
+
+        on_date_assignment = AssignmentFactory.create(
             review_status='approved',
-            end_date=datetime.date(2019, 1, 14),
+            end_date=datetime.date(2019, 1, 12),
             end_date_type='on_date'
         )
         AssignmentFactory.create(
             review_status='approved',
-            end_date=datetime.date(2019, 4, 14),
+            end_date=datetime.date(2019, 4, 16),
             end_date_type='on_date'
         )
         deadline_assignment = AssignmentFactory.create(
             review_status='approved',
-            end_date=datetime.date(2019, 4, 14),
+            end_date=datetime.date(2019, 1, 20),
             end_date_type='deadline'
         )
-        FundingFactory.create(review_status='approved')
+
+        #Feature is not dealing with time. Disabling timezone check for test
+        with override_settings(USE_TZ=False):
+            funding = FundingFactory.create(
+                review_status='approved',
+                deadline=datetime.date(2019, 1, 24),
+            )
+            FundingFactory.create(
+                review_status='approved',
+                deadline=datetime.date(2019, 4, 28),
+            )
+
+        response = self.client.get(
+            self.url + '?filter[date]=2019-04-01',
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 3)
 
         response = self.client.get(
             self.url + '?filter[date]=2019-01-01',
@@ -152,13 +171,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 3)
+        self.assertEqual(data['meta']['pagination']['count'], 4)
 
         found = [item['id'] for item in data['data']]
 
         self.assertTrue(unicode(event.pk) in found)
-        self.assertTrue(unicode(date_assignment.pk) in found)
+        self.assertTrue(unicode(on_date_assignment.pk) in found)
         self.assertTrue(unicode(deadline_assignment.pk) in found)
+        self.assertTrue(unicode(funding.pk) in found)
 
     def test_search(self):
         first = EventFactory.create(

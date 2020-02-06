@@ -1,10 +1,12 @@
 from datetime import timedelta
 
 from django.core import mail
+from django.db import connection
 from django.utils.timezone import now
 
 from bluebottle.assignments.tasks import check_assignment_reminder
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.tests.factories import (
     InitiativePlatformSettingsFactory, InitiativeFactory
 )
@@ -38,10 +40,13 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         withdrawn.transitions.withdraw()
 
         mail.outbox = []
+        tenant = connection.tenant
         check_assignment_reminder()
 
-        recipients = [message.to[0] for message in mail.outbox]
+        with LocalTenant(tenant, clear_tenant=True):
+            assignment.refresh_from_db()
 
+        recipients = [message.to[0] for message in mail.outbox]
         for applicant in assignment.contributions.all():
             if applicant.status == 'new':
                 self.assertTrue(applicant.user.email in recipients)

@@ -1,6 +1,7 @@
 import json
 
 from django.urls import reverse
+from djmoney.money import Money
 from mock import patch
 from rest_framework import status
 
@@ -14,14 +15,18 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_inc
 success_response = {
     'status': 'success',
     'data': {
-        'status': 'successful'
+        'status': 'successful',
+        'amount': 1000,
+        'currency': 'NGN'
     }
 }
 
 failed_response = {
     'status': 'success',
     'data': {
-        'status': 'failed'
+        'status': 'failed',
+        'amount': 1000,
+        'currency': 'NGN'
     }
 }
 
@@ -39,7 +44,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
         self.funding = FundingFactory.create(initiative=self.initiative)
-        self.donation = DonationFactory.create(activity=self.funding, user=self.user)
+        self.donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'NGN'), user=self.user)
 
         self.payment_url = reverse('flutterwave-payment-list')
 
@@ -85,6 +90,18 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['attributes']['tx-ref'], self.tx_ref)
         self.donation.refresh_from_db()
         self.assertEqual(self.donation.status, DonationTransitions.values.failed)
+
+    @patch('bluebottle.funding_flutterwave.utils.post', return_value=success_response)
+    def test_create_payment_duplicate(self, flutterwave_post):
+        response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        new_donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'NGN'), user=self.user)
+        self.data['data']['relationships']['donation']['data']['id'] = new_donation.id
+
+        response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class FlutterwavePayoutAccountTestCase(BluebottleTestCase):

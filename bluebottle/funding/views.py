@@ -149,9 +149,11 @@ class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
 
 
 class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
-    queryset = Funding.objects.all()
-    serializer_class = FundingSerializer
+    queryset = Funding.objects.select_related(
+        'initiative', 'initiative__owner',
+    ).prefetch_related('rewards')
 
+    serializer_class = FundingSerializer
     permission_classes = (
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )

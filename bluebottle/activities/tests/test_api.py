@@ -120,7 +120,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], unicode(activity.pk))
 
-    def test_activity_end(self):
+    def test_activity_date(self):
         event = EventFactory.create(
             review_status='approved',
             start_date=datetime.date(2019, 1, 4)
@@ -146,7 +146,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             end_date_type='deadline'
         )
 
-        #Feature is not dealing with time. Disabling timezone check for test
+        # Feature is not dealing with time. Disabling timezone check for test
         with override_settings(USE_TZ=False):
             funding = FundingFactory.create(
                 review_status='approved',
@@ -309,16 +309,16 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], unicode(second.pk))
         self.assertEqual(data['data'][2]['id'], unicode(third.pk))
 
-    def test_sort_created(self):
+    def test_sort_activity_date(self):
         first = EventFactory.create(review_status='approved')
         second = EventFactory.create(review_status='approved')
         third = EventFactory.create(review_status='approved')
 
-        first.created = datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
+        first.start_date = datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
         first.save()
-        second.created = datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+        second.start_date = datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
         second.save()
-        third.created = datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
+        third.start_date = datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
         third.save()
 
         response = self.client.get(

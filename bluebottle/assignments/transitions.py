@@ -219,13 +219,7 @@ class ApplicantTransitions(ContributionTransitions):
     def succeed(self):
         follow(self.instance.user, self.instance.activity)
         if not self.instance.time_spent:
-            duration = 0
-            if self.instance.activity.duration:
-                duration = duration + self.instance.activity.duration
-            if self.instance.activity.preparation and self.instance.activity.end_date_type =='on_date':
-                duration = duration + self.instance.activity.preparation
-            if duration:
-                self.instance.time_spent = duration
+            self.instance.time_spent = self.instance.activity.duration + (self.instance.activity.preparation or 0)
 
     @transition(
         field='status',

@@ -48,7 +48,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(funding.status, FundingTransitions.values.in_review)
         self.assertEqual(funding.review_status, ActivityReviewTransitions.values.draft)
 
-        organizer = funding.contributions.get()
+        organizer = funding.contributions.instance_of(Organizer).get()
         self.assertEqual(organizer.status, OrganizerTransitions.values.new)
         self.assertEqual(organizer.user, funding.owner)
 
@@ -59,7 +59,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(
             self.funding.review_status, ActivityReviewTransitions.values.approved
         )
-        organizer = self.funding.contributions.get()
+        organizer = self.funding.contributions.instance_of(Organizer).get()
         self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
         self.assertEqual(organizer.user, self.funding.owner)
 

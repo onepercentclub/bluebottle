@@ -16,7 +16,8 @@ class DonationListFilter(DjangoFilterBackend):
         queryset = queryset.prefetch_related(
             'activity', 'user'
         ).filter(status__in=[
-            DonationTransitions.values.succeeded
+            DonationTransitions.values.succeeded,
+            DonationTransitions.values.activity_refunded
         ])
 
         return super(DonationListFilter, self).filter_queryset(request, queryset, view)

@@ -149,3 +149,23 @@ class FundingTestCase(BluebottleAdminTestCase):
             TransitionNotPossible,
             self.funding.transitions.extend
         )
+
+    def test_refund(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(50, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+
+        self.funding.deadline = now() - timedelta(days=1)
+        self.funding.save()
+        check_funding_end()
+
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, 'partially_funded')
+        self.funding.transitions.refund()
+
+        for contribution in self.funding.contributions.all():
+            self.assertEqual(contribution.status, DonationTransitions.values.activity_refunded)
+
+        self.funding.update_amounts()
+        self.assertEqual(
+            self.funding.amount_raised, donation.amount
+        )

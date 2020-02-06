@@ -38,7 +38,11 @@ class Assignment(Activity):
     end_date = models.DateField(
         _('end date'), null=True, blank=True,
         help_text=_('Either the deadline or the date it will take place.'))
+    start_time = models.TimeField(
+        _('start time'), null=True, blank=True,
+        help_text=_('On the specific task date, the start time.'))
     duration = models.FloatField(_('number of hours per person'), null=True, blank=True)
+    preparation = models.FloatField(_('number of hours required for preparation'), null=True, blank=True)
     end_date_type = models.CharField(
         _('date type'), max_length=50, null=True, default=None, blank=True,
         help_text=_('Does the task have a deadline or does it take place on a specific date.'),

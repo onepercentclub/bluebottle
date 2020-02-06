@@ -126,7 +126,6 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
 
     def test_enough_donations(self):
-        organizer = self.funding.contributions.instance_of(Organizer).get()
         donation = DonationFactory.create(activity=self.funding, amount=Money(300, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         donation = DonationFactory.create(activity=self.funding, amount=Money(450, 'EUR'))
@@ -142,6 +141,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(mail.outbox[4].subject, u'You successfully completed your crowdfunding campaign! 🎉')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[4].body)
 
+        self.funding.refresh_from_db()
         organizer = self.funding.contributions.instance_of(Organizer).get()
         self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
 

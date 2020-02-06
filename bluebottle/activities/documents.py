@@ -83,6 +83,8 @@ class ActivityDocument(DocType):
     contributions = fields.DateField()
     contribution_count = fields.IntegerField()
 
+    activity_date = fields.DateField()
+
     class Meta:
         model = Activity
 

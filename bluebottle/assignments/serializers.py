@@ -34,7 +34,7 @@ class AssignmentListSerializer(BaseActivityListSerializer):
             'duration',
             'location',
             'permissions',
-            'end_time',
+            'start_time',
             'preparation',
         )
 

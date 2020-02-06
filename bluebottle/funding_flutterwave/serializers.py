@@ -5,7 +5,6 @@ from bluebottle.funding_flutterwave.models import FlutterwavePayment, Flutterwav
 
 
 class FlutterwavePaymentSerializer(PaymentSerializer):
-    tx_ref = serializers.CharField(required=True)
 
     class Meta(PaymentSerializer.Meta):
         model = FlutterwavePayment

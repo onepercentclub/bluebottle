@@ -488,6 +488,7 @@ class MemberAdmin(UserAdmin):
 
         user = Member.objects.get(pk=user_id)
         send_welcome_mail(user)
+
         message = _('User {name} will receive an welcome email.').format(name=user.full_name)
         self.message_user(request, message)
 

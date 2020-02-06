@@ -22,6 +22,7 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
 
         tenant2, _created = get_tenant_model().objects.get_or_create(
             domain_url='testserver2',
+            name='Test Too',
             schema_name='test2',
             client_name='test2')
 
@@ -32,6 +33,7 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
 
         tenant, _created = get_tenant_model().objects.get_or_create(
             domain_url='testserver',
+            name='Test',
             schema_name='test',
             client_name='test')
 

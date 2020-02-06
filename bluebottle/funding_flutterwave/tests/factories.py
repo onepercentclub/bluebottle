@@ -7,6 +7,7 @@ from bluebottle.funding_flutterwave.models import FlutterwavePayment, Flutterwav
 class FlutterwavePaymentFactory(factory.DjangoModelFactory):
 
     donation = factory.SubFactory(DonationFactory)
+    tx_ref = factory.Sequence(lambda n: 'uid-{0}'.format(n))
 
     class Meta(object):
         model = FlutterwavePayment

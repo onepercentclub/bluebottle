@@ -150,7 +150,7 @@ class FundingAdminForm(FSMModelForm):
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline, ) + ActivityChildAdmin.inlines
+    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline, )
     base_model = Funding
     form = FundingAdminForm
     date_hierarchy = 'transition_date'

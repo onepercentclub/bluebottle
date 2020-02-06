@@ -126,6 +126,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
 
     def test_enough_donations(self):
+        organizer = self.funding.contributions.instance_of(Organizer).get()
         donation = DonationFactory.create(activity=self.funding, amount=Money(300, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         donation = DonationFactory.create(activity=self.funding, amount=Money(450, 'EUR'))

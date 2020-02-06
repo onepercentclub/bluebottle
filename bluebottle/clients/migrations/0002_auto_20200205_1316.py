@@ -10,7 +10,6 @@ def create_update_function(apps, schema_editor):
         CREATE OR REPLACE FUNCTION refresh_union_view(table_name text) RETURNS void AS $$
         DECLARE
           schema TEXT;
-          result RECORD;
           sql TEXT := '';
         BEGIN
           FOR schema IN SELECT schema_name FROM clients_client
@@ -24,20 +23,14 @@ def create_update_function(apps, schema_editor):
         $$ LANGUAGE plpgsql;
     """
 
-    trigger_sql = """
-        CREATE TRIGGER added_client
-        AFTER INSERT ON clients_client
-        EXECUTE SELECT refresh_union_view('contributions');    
-    """
-
     if connection.tenant.schema_name == 'public':
         schema_editor.execute(function_sql)
-        schema_editor.execute(trigger_sql)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('')
         ('clients', '0001_initial'),
     ]
 

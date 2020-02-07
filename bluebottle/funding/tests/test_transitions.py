@@ -120,8 +120,11 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.save()
 
         # Run scheduled task
+        tenant = connection.tenant
         check_funding_end()
-        self.funding.refresh_from_db()
+        with LocalTenant(tenant, clear_tenant=True):
+            self.funding.refresh_from_db()
+
         self.assertEqual(self.funding.status, 'partially_funded')
         self.assertEqual(len(mail.outbox), 3)
         self.assertEqual(mail.outbox[2].subject, 'Your crowdfunding campaign deadline passed')
@@ -137,11 +140,9 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
 
-        tenant = connection.tenant
-
         # Run scheduled task
+        tenant = connection.tenant
         check_funding_end()
-
         with LocalTenant(tenant, clear_tenant=True):
             self.funding.refresh_from_db()
 
@@ -158,9 +159,13 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
-        check_funding_end()
 
-        self.funding.refresh_from_db()
+        # Run scheduled task
+        tenant = connection.tenant
+        check_funding_end()
+        with LocalTenant(tenant, clear_tenant=True):
+            self.funding.refresh_from_db()
+
         self.assertEqual(self.funding.status, 'succeeded')
 
         self.funding.deadline = now() + timedelta(days=1)
@@ -175,9 +180,13 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
-        check_funding_end()
 
-        self.funding.refresh_from_db()
+        # Run scheduled task
+        tenant = connection.tenant
+        check_funding_end()
+        with LocalTenant(tenant, clear_tenant=True):
+            self.funding.refresh_from_db()
+
         self.assertEqual(self.funding.status, 'succeeded')
 
         self.assertRaises(

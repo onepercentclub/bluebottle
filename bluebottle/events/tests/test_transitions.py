@@ -235,15 +235,14 @@ class EventTransitionTestCase(BluebottleTestCase):
 
     def test_close(self):
         participant = ParticipantFactory.create(activity=self.event)
+        mail.outbox = []
         self.event.transitions.close()
-
         self.assertEqual(
             self.event.status,
             EventTransitions.values.closed
         )
-        self.assertEqual(len(mail.outbox), 3)
-        self.assertEqual(mail.outbox[2].subject, 'Your event "{}" has been closed'.format(self.event.title))
-        self.assertTrue("Hi Nono,", mail.outbox[2].body)
+        self.assertEqual(mail.outbox[0].subject, 'Your event "{}" has been closed'.format(self.event.title))
+        self.assertTrue("Hi Nono,", mail.outbox[0].body)
 
         participant.refresh_from_db()
         self.assertEqual(participant.status, ParticipantTransitions.values.closed)

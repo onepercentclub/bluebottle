@@ -48,6 +48,23 @@ class BankaccountsDashboardModule(DashboardModule):
         ]
 
 
+class PaymentDashboardModule(DashboardModule):
+    title = _('Payment lists')
+    template = 'dashboard/payment_lists.html'
+
+    def init_with_context(self, context):
+        self.children = [
+            {
+                'name': '{} {}'.format(provider.name.title(), _('Payments')),
+                'url':
+                    'admin:funding_stripe_stripepayment_changelist'
+                    if provider.name == 'stripe'
+                    else 'admin:funding_{0}_{0}payment_changelist'.format(provider.name.lower())
+            }
+            for provider in PaymentProvider.objects.all()
+        ]
+
+
 class AppIndexDashboard(DefaultAppIndexDashboard):
 
     def init_with_context(self, context):
@@ -55,3 +72,4 @@ class AppIndexDashboard(DefaultAppIndexDashboard):
         self.children.append(RecentFunding())
         self.children.append(PayoutsReadForApprovalDashboardModule())
         self.children.append(BankaccountsDashboardModule())
+        self.children.append(PaymentDashboardModule())

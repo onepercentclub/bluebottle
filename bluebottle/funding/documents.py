@@ -27,3 +27,6 @@ class FundingDocument(ActivityDocument):
 
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)
+
+    def prepare_activity_date(self, instance):
+        return instance.deadline

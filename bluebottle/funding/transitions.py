@@ -115,7 +115,7 @@ class FundingTransitions(ActivityTransitions):
         permissions=[ActivityTransitions.can_approve],
     )
     def close(self):
-        pass
+        self.instance.review_transitions.organizer_close()
 
 
 class DonationTransitions(ContributionTransitions):

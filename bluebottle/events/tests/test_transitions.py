@@ -172,6 +172,9 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             self.event.status, EventTransitions.values.open
         )
+        # Should have one contribution for the organizer
+        self.assertEqual(self.event.contributions.count(), 1)
+        self.assertEqual(self.event.contributions.first().status, u'succeeded')
 
     def test_full(self):
         ParticipantFactory.create(activity=self.event)
@@ -269,6 +272,7 @@ class EventTransitionTestCase(BluebottleTestCase):
 
         participant.refresh_from_db()
         self.assertEqual(participant.status, ParticipantTransitions.values.closed)
+        self.assertEqual(self.event.contributions.first().status, u'closed')
 
     def test_extend(self):
         self.event.transitions.close()
@@ -295,6 +299,45 @@ class EventTransitionTestCase(BluebottleTestCase):
             TransitionNotPossible,
             self.event.transitions.extend
         )
+
+    def test_new_event_for_running_initiative(self):
+        owner = BlueBottleUserFactory.create(
+            first_name='Me'
+        )
+        new_event = EventFactory.create(
+            initiative=self.initiative,
+            owner=owner,
+            capacity=1
+        )
+        new_event.review_transitions.submit()
+        new_event.save()
+        organizer = new_event.contributions.first()
+
+        self.assertEqual(organizer.status, u'succeeded')
+
+        new_event.transitions.close()
+        new_event.save()
+        organizer.refresh_from_db()
+
+        self.assertEqual(organizer.status, u'closed')
+
+        new_event.transitions.reopen()
+        new_event.save()
+        organizer.refresh_from_db()
+
+        self.assertEqual(organizer.status, u'succeeded')
+
+        # Test that changing the owner will also change the contribution user
+        self.assertEqual(organizer.user.first_name, u'Me')
+
+        new_owner = BlueBottleUserFactory.create(
+            first_name='Myself'
+        )
+
+        new_event.owner = new_owner
+        new_event.save()
+        organizer.refresh_from_db()
+        self.assertEqual(organizer.user.first_name, u'Myself')
 
 
 class ParticipantTransitionTestCase(BluebottleTestCase):

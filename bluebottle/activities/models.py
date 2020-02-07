@@ -86,8 +86,12 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
             self.owner = self.initiative.owner
 
         super(Activity, self).save(**kwargs)
-
-        Organizer.objects.get_or_create(activity=self, user=self.owner)
+        Organizer.objects.update_or_create(
+            activity=self,
+            defaults={
+                'user': self.owner
+            }
+        )
 
     def get_absolute_url(self):
         domain = get_current_host()
@@ -123,8 +127,8 @@ class Organizer(Contribution):
     transitions = TransitionManager(OrganizerTransitions, 'status')
 
     class Meta:
-        verbose_name = _("organizer")
-        verbose_name_plural = _("Participants")
+        verbose_name = _("Organizer")
+        verbose_name_plural = _("Organizers")
 
     class JSONAPIMeta:
         resource_name = 'contributions/organizers'
@@ -137,4 +141,4 @@ class Organizer(Contribution):
 
 
 from bluebottle.activities.signals import *  # noqa
-from bluebottle.activities.wallposts import *  # noqa
+from bluebottle.activities.wallposts import *  # noqaq

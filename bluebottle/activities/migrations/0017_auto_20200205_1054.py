@@ -8,6 +8,9 @@ def create_organizers(apps, schema_editor):
     Activity = apps.get_model('activities', 'Activity')
     Organizer = apps.get_model('activities', 'Organizer')
 
+    ContentType = apps.get_model('contenttypes', 'ContentType')
+    organizer_ctype = ContentType.objects.get_for_model(Organizer)
+
     for activity in Activity.objects.all():
         if activity.review_status == 'approved':
             status = 'succeeded'
@@ -16,11 +19,14 @@ def create_organizers(apps, schema_editor):
         else:
             status = 'new'
 
-        Organizer.objects.get_or_create(
+        Organizer.objects.update_or_create(
+            polymorphic_ctype=organizer_ctype,
             activity=activity,
-            user=activity.owner,
-            status=status,
-            contribution_date=activity.created
+            defaults={
+                'user': activity.owner,
+                'status': status,
+                'contribution_date': activity.created
+            }
         )
 
 
@@ -30,5 +36,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(create_organizers),
+        migrations.RunPython(create_organizers, migrations.RunPython.noop),
     ]

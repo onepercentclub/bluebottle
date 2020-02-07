@@ -37,21 +37,23 @@ class ActivityReviewTransitions(ReviewTransitions):
             return _('Please make sure the initiative is approved')
 
     def organizer_succeed(self):
+        from bluebottle.activities.models import Organizer, Contribution
         try:
-            from bluebottle.activities.models import Organizer
             organizer = self.instance.contributions.instance_of(Organizer).get()
             organizer.transitions.succeed()
             organizer.save()
-        except (TransitionNotPossible, Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
+        except (TransitionNotPossible, Contribution.DoesNotExist,
+                Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
             pass
 
     def organizer_close(self):
+        from bluebottle.activities.models import Organizer, Contribution
         try:
-            from bluebottle.activities.models import Organizer
             organizer = self.instance.contributions.instance_of(Organizer).get()
             organizer.transitions.close()
             organizer.save()
-        except (TransitionNotPossible, Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
+        except (TransitionNotPossible, Contribution.DoesNotExist,
+                Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
             pass
 
     @transition(

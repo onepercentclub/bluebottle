@@ -2,11 +2,13 @@
 from datetime import timedelta
 
 from django.core import mail
+from django.db import connection
 from django.utils.timezone import now
 from moneyed import Money
 
 from bluebottle.activities.models import Organizer
 from bluebottle.activities.transitions import ActivityReviewTransitions, OrganizerTransitions
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.fsm import TransitionNotPossible
 from bluebottle.funding.tasks import check_funding_end
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, \
@@ -135,13 +137,18 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
 
+        tenant = connection.tenant
+
         # Run scheduled task
         check_funding_end()
+
+        with LocalTenant(tenant, clear_tenant=True):
+            self.funding.refresh_from_db()
+
         self.assertEqual(len(mail.outbox), 5)
         self.assertEqual(mail.outbox[4].subject, u'You successfully completed your crowdfunding campaign! 🎉')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[4].body)
 
-        self.funding.refresh_from_db()
         organizer = self.funding.contributions.instance_of(Organizer).get()
         self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
 

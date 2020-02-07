@@ -2,11 +2,13 @@
 from datetime import timedelta
 
 from django.core import mail
+from django.db import connection
 from django.utils.timezone import now
 from moneyed import Money
 
 from bluebottle.activities.models import Organizer
 from bluebottle.activities.transitions import ActivityReviewTransitions, OrganizerTransitions
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.fsm import TransitionNotPossible
 from bluebottle.funding.tasks import check_funding_end
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, \
@@ -89,8 +91,13 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(self.funding.status, 'open')
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
+
+        # Run scheduled task
+        tenant = connection.tenant
         check_funding_end()
-        self.funding.refresh_from_db()
+        with LocalTenant(tenant, clear_tenant=True):
+            self.funding.refresh_from_db()
+
         self.assertEqual(self.funding.status, 'closed')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Your crowdfunding campaign has been closed')
@@ -118,8 +125,11 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.save()
 
         # Run scheduled task
+        tenant = connection.tenant
         check_funding_end()
-        self.funding.refresh_from_db()
+        with LocalTenant(tenant, clear_tenant=True):
+            self.funding.refresh_from_db()
+
         self.assertEqual(self.funding.status, 'partially_funded')
         self.assertEqual(len(mail.outbox), 3)
         self.assertEqual(mail.outbox[2].subject, 'Your crowdfunding campaign deadline passed')
@@ -136,12 +146,15 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.save()
 
         # Run scheduled task
+        tenant = connection.tenant
         check_funding_end()
+        with LocalTenant(tenant, clear_tenant=True):
+            self.funding.refresh_from_db()
+
         self.assertEqual(len(mail.outbox), 5)
         self.assertEqual(mail.outbox[4].subject, u'You successfully completed your crowdfunding campaign! 🎉')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[4].body)
 
-        self.funding.refresh_from_db()
         organizer = self.funding.contributions.instance_of(Organizer).get()
         self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
 
@@ -151,9 +164,13 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
-        check_funding_end()
 
-        self.funding.refresh_from_db()
+        # Run scheduled task
+        tenant = connection.tenant
+        check_funding_end()
+        with LocalTenant(tenant, clear_tenant=True):
+            self.funding.refresh_from_db()
+
         self.assertEqual(self.funding.status, 'succeeded')
 
         self.funding.deadline = now() + timedelta(days=1)
@@ -168,12 +185,42 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
-        check_funding_end()
 
-        self.funding.refresh_from_db()
+        # Run scheduled task
+        tenant = connection.tenant
+        check_funding_end()
+        with LocalTenant(tenant, clear_tenant=True):
+            self.funding.refresh_from_db()
+
         self.assertEqual(self.funding.status, 'succeeded')
 
         self.assertRaises(
             TransitionNotPossible,
             self.funding.transitions.extend
         )
+
+    def test_new_funding_for_running_initiative(self):
+        new_funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=Money(500, 'EUR'),
+            deadline=now() + timedelta(weeks=2),
+            bank_account=BankAccountFactory.create()
+        )
+        BudgetLineFactory.create(activity=new_funding)
+        new_funding.bank_account.reviewed = True
+        new_funding.review_transitions.submit()
+        new_funding.review_transitions.approve()
+
+        organizer = new_funding.contributions.first()
+
+        self.assertEqual(organizer.status, u'succeeded')
+
+        new_funding.transitions.close()
+        new_funding.save()
+        organizer.refresh_from_db()
+        self.assertEqual(organizer.status, u'closed')
+
+        new_funding.transitions.reopen()
+        new_funding.save()
+        organizer.refresh_from_db()
+        self.assertEqual(organizer.status, u'succeeded')

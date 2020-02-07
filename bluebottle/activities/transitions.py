@@ -36,6 +36,26 @@ class ActivityReviewTransitions(ReviewTransitions):
         if not self.instance.initiative.status == ReviewTransitions.values.approved:
             return _('Please make sure the initiative is approved')
 
+    def organizer_succeed(self):
+        from bluebottle.activities.models import Organizer, Contribution
+        try:
+            organizer = self.instance.contributions.instance_of(Organizer).get()
+            organizer.transitions.succeed()
+            organizer.save()
+        except (TransitionNotPossible, Contribution.DoesNotExist,
+                Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
+            pass
+
+    def organizer_close(self):
+        from bluebottle.activities.models import Organizer, Contribution
+        try:
+            organizer = self.instance.contributions.instance_of(Organizer).get()
+            organizer.transitions.close()
+            organizer.save()
+        except (TransitionNotPossible, Contribution.DoesNotExist,
+                Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
+            pass
+
     @transition(
         source=ReviewTransitions.values.draft,
         target=ReviewTransitions.values.submitted,
@@ -65,13 +85,7 @@ class ActivityReviewTransitions(ReviewTransitions):
         except TransitionNotPossible:
             pass
 
-        try:
-            from bluebottle.activities.models import Organizer
-            organizer = self.instance.contributions.instance_of(Organizer).get()
-            organizer.transitions.succeed()
-            organizer.save()
-        except (TransitionNotPossible, Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
-            pass
+        self.organizer_succeed()
 
     @transition(
         source=[ReviewTransitions.values.submitted],
@@ -92,14 +106,7 @@ class ActivityReviewTransitions(ReviewTransitions):
         permissions=[can_review]
     )
     def close(self):
-        try:
-            from bluebottle.activities.models import Organizer
-            organizer = self.instance.contributions.instance_of(Organizer).get()
-            organizer.transitions.close()
-            organizer.save()
-        except (TransitionNotPossible, Organizer.DoesNotExist, Organizer.MultipleObjectsReturned):
-            pass
-
+        self.organizer_close()
         self.instance.transitions.close()
 
     @transition(
@@ -152,7 +159,7 @@ class ActivityTransitions(ModelTransitions):
         permissions=[can_approve],
     )
     def reopen(self):
-        pass
+        self.instance.review_transitions.organizer_succeed()
 
     @transition(
         source=[
@@ -172,7 +179,7 @@ class ActivityTransitions(ModelTransitions):
         permissions=[is_system]
     )
     def delete(self):
-        pass
+        self.instance.review_transitions.organizer_close()
 
 
 class ContributionTransitions(ModelTransitions):
@@ -205,14 +212,20 @@ class ContributionTransitions(ModelTransitions):
 
 class OrganizerTransitions(ContributionTransitions):
     @transition(
-        source=['new', 'closed'],
+        source=[
+            ContributionTransitions.values.new,
+            ContributionTransitions.values.closed,
+        ],
         target=ContributionTransitions.values.succeeded,
     )
     def succeed(self):
         self.instance.contribution_date = timezone.now()
 
     @transition(
-        source=['new', 'closed'],
+        source=[
+            ContributionTransitions.values.new,
+            ContributionTransitions.values.succeeded,
+        ],
         target=ContributionTransitions.values.closed,
     )
     def close(self):

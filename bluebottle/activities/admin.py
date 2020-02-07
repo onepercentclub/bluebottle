@@ -44,6 +44,8 @@ class OrganizerAdmin(ContributionChildAdmin):
     list_display = ['user', 'status', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
+    readonly_fields = ContributionChildAdmin.readonly_fields + ['status', 'created', 'transition_date']
+
     date_hierarchy = 'contribution_date'
 
     export_to_csv_fields = (

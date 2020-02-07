@@ -223,3 +223,26 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             assignment.status, AssignmentTransitions.values.open
         )
+
+    def test_new_assignment_for_running_initiative(self):
+        new_assignment = AssignmentFactory.create(
+            initiative=self.initiative,
+            capacity=1
+        )
+        new_assignment.review_transitions.submit()
+        new_assignment.save()
+        organizer = new_assignment.contributions.first()
+
+        self.assertEqual(organizer.status, u'succeeded')
+
+        new_assignment.transitions.close()
+        new_assignment.save()
+        organizer.refresh_from_db()
+
+        self.assertEqual(organizer.status, u'closed')
+
+        new_assignment.transitions.reopen()
+        new_assignment.save()
+        organizer.refresh_from_db()
+
+        self.assertEqual(organizer.status, u'succeeded')

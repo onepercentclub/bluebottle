@@ -278,9 +278,14 @@ class EventTransitionTestCase(BluebottleTestCase):
 class ParticipantTransitionTestCase(BluebottleTestCase):
     def setUp(self):
         super(ParticipantTransitionTestCase, self).setUp()
-        self.initiative = InitiativeFactory.create()
+        owner = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(
+            activity_manager=owner
+        )
         self.event = EventFactory.create(
-            initiative=self.initiative, capacity=1
+            initiative=self.initiative,
+            owner=owner,
+            capacity=1
         )
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
@@ -303,10 +308,14 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             len(self.event.participants), 1
         )
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 3)
         self.assertEqual(
             mail.outbox[1].subject,
             'You were added to the event "{}"'.format(self.event.title)
+        )
+        self.assertEqual(
+            mail.outbox[2].subject,
+            'A new member just signed up for your event "{}"'.format(self.event.title)
         )
 
     def test_withdraw(self):
@@ -375,9 +384,9 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             len(self.event.participants), 0
         )
-        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(len(mail.outbox), 4)
         self.assertEqual(
-            mail.outbox[2].subject,
+            mail.outbox[3].subject,
             'Your status for "{}" was changed to "not going"'.format(self.event.title)
         )
 

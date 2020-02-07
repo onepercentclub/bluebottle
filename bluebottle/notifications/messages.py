@@ -58,7 +58,9 @@ class TransitionMessage(object):
     def get_messages(self, once=False):
         custom_message = self.options.get('custom_message', '')
         custom_template = self.get_message_template()
-        for recipient in self.get_recipients():
+        # Remove duplicates from recipients
+        recipients = list(set(self.get_recipients()))
+        for recipient in recipients:
             translation.activate(recipient.primary_language)
             if once:
                 try:

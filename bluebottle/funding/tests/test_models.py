@@ -55,6 +55,35 @@ class FundingTestCase(BluebottleTestCase):
         for reward in funding.rewards.all():
             self.assertEqual(str(reward.amount.currency), 'USD')
 
+    def test_deadline_in_past(self):
+        funding = FundingFactory.create(
+            target=Money(100, 'EUR'), deadline=now() - timedelta(days=10), status='in_review'
+        )
+
+        errors = list(funding.errors)
+        self.assertEqual(len(errors), 3)
+
+        self.assertEqual(errors[1].message, ['Make sure deadline is in the future'])
+
+    def test_deadline_in_past_with_duration(self):
+        funding = FundingFactory.create(
+            target=Money(100, 'EUR'),
+            deadline=now() - timedelta(days=10),
+            duration=10,
+            status='in_review'
+        )
+
+        errors = list(funding.errors)
+        self.assertEqual(len(errors), 2)
+
+    def test_deadline_in_past_succeeded(self):
+        funding = FundingFactory.create(
+            target=Money(100, 'EUR'), deadline=now() - timedelta(days=10), status='succeeded'
+        )
+
+        errors = list(funding.errors)
+        self.assertEqual(len(errors), 2)
+
 
 class PayoutTestCase(BluebottleTestCase):
 

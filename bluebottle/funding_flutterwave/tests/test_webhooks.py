@@ -22,7 +22,9 @@ flutterwave_settings = {
 success_response = {
     'status': 'success',
     'data': {
-        'status': 'successful'
+        'status': 'successful',
+        'amount': 1000,
+        'currency': 'NGN'
     }
 }
 

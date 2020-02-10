@@ -1,8 +1,10 @@
 from datetime import timedelta
 
 from django.core import mail
+from django.db import connection
 from django.utils.timezone import now
 
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.events.models import Event
 from bluebottle.events.tasks import check_event_end, check_event_start, check_event_reminder
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
@@ -79,9 +81,11 @@ class EventTasksTestCase(BluebottleTestCase):
         event.save()
 
         self.assertEqual(event.status, 'running')
+        tenant = connection.tenant
         check_event_start()
         check_event_end()
-        event = Event.objects.get(pk=event.pk)
+        with LocalTenant(tenant, clear_tenant=True):
+            event = Event.objects.get(pk=event.pk)
         self.assertEqual(event.status, EventTransitions.values.succeeded)
 
         self.assertEqual(len(mail.outbox), 1)
@@ -103,9 +107,13 @@ class EventTasksTestCase(BluebottleTestCase):
         ParticipantFactory.create_batch(3, activity=event, status='new')
         ParticipantFactory.create(activity=event, status='withdrawn')
 
+        tenant = connection.tenant
         check_event_reminder()
 
         recipients = [message.to[0] for message in mail.outbox]
+
+        with LocalTenant(tenant, clear_tenant=True):
+            event.refresh_from_db()
 
         for participant in event.contributions.all():
             if participant.status == 'new':

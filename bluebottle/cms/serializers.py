@@ -628,6 +628,9 @@ class SitePlatformSettingsSerializer(serializers.ModelSerializer):
             'powered_by_link',
             'powered_by_logo',
             'powered_by_text',
+            'metadata_title',
+            'metadata_description',
+            'metadata_keywords',
             'logo',
             'favicons'
         )

@@ -133,7 +133,7 @@ class EventIcalView(RetrieveAPIView):
         event.add('summary', instance.title)
         event.add(
             'description',
-            '{}\n{}'.format(strip_tags(instance.description), instance.get_absolute_url())
+            u'{}\n{}'.format(strip_tags(instance.description), instance.get_absolute_url())
         )
         event.add('url', instance.get_absolute_url())
         event.add('dtstart', instance.start.astimezone(utc))

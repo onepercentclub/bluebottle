@@ -61,7 +61,7 @@ class Assignment(Activity):
     def required_fields(self):
         fields = [
             'title', 'description', 'end_date_type', 'end_date',
-            'registration_deadline', 'capacity', 'duration', 'is_online',
+            'capacity', 'duration', 'is_online',
             'expertise'
         ]
 
@@ -72,10 +72,12 @@ class Assignment(Activity):
 
     @property
     def stats(self):
-        stats = self.contributions.filter(
+        contributions = self.contributions.instance_of(Applicant)
+
+        stats = contributions.filter(
             status=ApplicantTransitions.values.succeeded).\
             aggregate(count=Count('user__id'), hours=Sum('applicant__time_spent'))
-        committed = self.contributions.filter(
+        committed = contributions.filter(
             status__in=[
                 ApplicantTransitions.values.active,
                 ApplicantTransitions.values.accepted]).\
@@ -109,7 +111,7 @@ class Assignment(Activity):
             ApplicantTransitions.values.active,
             ApplicantTransitions.values.succeeded
         ]
-        return self.contributions.filter(status__in=accepted_states)
+        return self.contributions.instance_of(Applicant).filter(status__in=accepted_states)
 
     def registration_deadline_passed(self):
         # If registration deadline passed

@@ -129,7 +129,11 @@ class DeadlineValidator(Validator):
     field = 'deadline'
 
     def is_valid(self):
-        return self.instance.duration or (self.instance.deadline and self.instance.deadline > now())
+        return (
+            self.instance.status not in ('in_review', 'open') or
+            self.instance.duration or
+            (self.instance.deadline and self.instance.deadline > now())
+        )
 
 
 class BudgetLineValidator(Validator):
@@ -200,6 +204,10 @@ class Funding(Activity):
         cache.delete(cache_key)
 
     @property
+    def donations(self):
+        return self.contributions.instance_of(Donation)
+
+    @property
     def amount_donated(self):
         """
         The sum of all contributions (donations) converted to the targets currency
@@ -207,11 +215,11 @@ class Funding(Activity):
         cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
-            totals = self.contributions.filter(
+            totals = self.donations.filter(
                 status__in=(
                     DonationTransitions.values.succeeded,
                     DonationTransitions.values.activity_refunded,
-                ),
+                )
             ).values(
                 'donation__amount_currency'
             ).annotate(
@@ -234,7 +242,7 @@ class Funding(Activity):
         cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
-            totals = self.contributions.filter(
+            totals = self.donations.filter(
                 status__in=(
                     DonationTransitions.values.succeeded,
                     DonationTransitions.values.activity_refunded,
@@ -257,7 +265,7 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) converted to the targets currency
         """
-        totals = self.contributions.filter(
+        totals = self.donations.filter(
             status__in=(
                 DonationTransitions.values.succeeded,
                 DonationTransitions.values.activity_refunded,
@@ -292,7 +300,7 @@ class Funding(Activity):
 
     @property
     def stats(self):
-        stats = self.contributions.filter(
+        stats = self.donations.filter(
             status=FundingTransitions.values.succeeded
         ).aggregate(
             count=Count('user__id')
@@ -452,7 +460,7 @@ class Payout(TransitionsMixin, models.Model):
                 payout.delete()
             elif payout.donations.count() == 0:
                 raise AssertionError('Payout without donations already started!')
-        ready_donations = activity.contributions.filter(status='succeeded', donation__payout__isnull=True)
+        ready_donations = activity.donations.filter(status='succeeded', donation__payout__isnull=True)
         groups = set([
             (don.payout_amount_currency, don.payment.provider) for don in
             ready_donations

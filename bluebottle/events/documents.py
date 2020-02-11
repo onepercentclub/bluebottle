@@ -41,3 +41,6 @@ class EventDocument(ActivityDocument):
         if not instance.is_online and instance.location:
             position = instance.location.position
             return {'lat': position.get_y(), 'lon': position.get_x()}
+
+    def prepare_activity_date(self, instance):
+        return instance.start_date

@@ -21,6 +21,7 @@ from bluebottle.utils.admin import BasePlatformSettingsAdmin
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 
+@admin.register(LinkPermission)
 class LinkPermissionAdmin(admin.ModelAdmin):
     model = LinkPermission
 
@@ -40,6 +41,7 @@ class LinkInline(SortableStackedInline):
     )
 
 
+@admin.register(LinkGroup)
 class LinkGroupAdmin(NonSortableParentAdmin):
     model = LinkGroup
     inlines = [LinkInline]
@@ -74,6 +76,7 @@ class LinkGroupInline(SortableTabularInline):
     edit_url.short_name = 'Edit group'
 
 
+@admin.register(SiteLinks)
 class SiteLinksAdmin(NonSortableParentAdmin):
     model = SiteLinks
     inlines = [LinkGroupInline]
@@ -123,6 +126,7 @@ class GreetingInline(NestedStackedInline):
     extra = 0
 
 
+@admin.register(ResultPage)
 class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
@@ -139,6 +143,7 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParen
     fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
+@admin.register(HomePage)
 class HomePageAdmin(BasePlatformSettingsAdmin, PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
@@ -147,13 +152,7 @@ class HomePageAdmin(BasePlatformSettingsAdmin, PlaceholderFieldAdmin, Translatab
     fields = ('content', )
 
 
-class SitePlatformSettingsAdmin(BasePlatformSettingsAdmin):
-    pass
+@admin.register(SitePlatformSettings)
+class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
 
-
-admin.site.register(ResultPage, ResultPageAdmin)
-admin.site.register(HomePage, HomePageAdmin)
-admin.site.register(SiteLinks, SiteLinksAdmin)
-admin.site.register(LinkGroup, LinkGroupAdmin)
-admin.site.register(LinkPermission, LinkPermissionAdmin)
-admin.site.register(SitePlatformSettings, SitePlatformSettingsAdmin)
+    exclude = ('logo', 'favicon')

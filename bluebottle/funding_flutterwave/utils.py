@@ -2,6 +2,7 @@ import requests
 from django.core.exceptions import ImproperlyConfigured
 
 from bluebottle.funding.exception import PaymentException
+from bluebottle.funding.transitions import PaymentTransitions
 
 
 def post(url, data):
@@ -25,12 +26,24 @@ def check_payment_status(payment):
         'txref': payment.tx_ref,
         'SECKEY': provider.private_settings['sec_key']
     }
-    data = post(verify_url, data)
+    try:
+        data = post(verify_url, data)
+    except PaymentException:
+        if payment.status != PaymentTransitions.values.failed:
+            payment.transitions.fail()
+        payment.save()
+        return payment
+
     payment.update_response = data
+    if payment.donation.amount != data['data']['amount']:
+        payment.donation.amount = data['data']['amount']
+        payment.donation.save()
     if data['data']['status'] == 'successful':
-        payment.transitions.succeed()
+        if payment.status != PaymentTransitions.values.succeeded:
+            payment.transitions.succeed()
     else:
-        payment.transitions.fail()
+        if payment.status != PaymentTransitions.values.failed:
+            payment.transitions.fail()
     payment.save()
     return payment
 

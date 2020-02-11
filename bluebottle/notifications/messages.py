@@ -59,43 +59,44 @@ class TransitionMessage(object):
         custom_message = self.options.get('custom_message', '')
         custom_template = self.get_message_template()
         for recipient in self.get_recipients():
-            translation.activate(recipient.primary_language)
-            if once:
-                try:
-                    Message.objects.get(
-                        template=self.get_template(),
-                        recipient=recipient,
-                        content_type=get_content_type_for_model(self.obj),
-                        object_id=self.obj.pk
-                    )
-                    continue
-                except Message.DoesNotExist:
-                    pass
-            context = self.get_context(recipient)
-            subject = self.subject.format(**context)
+            with translation.override(recipient.primary_language):
+                if once:
+                    try:
+                        Message.objects.get(
+                            template=self.get_template(),
+                            recipient=recipient,
+                            content_type=get_content_type_for_model(self.obj),
+                            object_id=self.obj.pk
+                        )
+                        continue
+                    except Message.DoesNotExist:
+                        pass
 
-            body_html = None
-            body_txt = None
+                context = self.get_context(recipient)
+                subject = self.subject.format(**context)
 
-            if not custom_message and custom_template:
-                custom_template.set_current_language(recipient.primary_language)
-                try:
-                    subject = custom_template.subject.format(**context)
-                    body_html = format_html(custom_template.body_html.format(**context))
-                    body_txt = custom_template.body_txt.format(**context)
-                except custom_template.DoesNotExist:
-                    # Translation for current lagnuage not set, use default.
-                    pass
+                body_html = None
+                body_txt = None
 
-            yield Message(
-                template=self.get_template(),
-                subject=subject,
-                content_object=self.obj,
-                recipient=recipient,
-                body_html=body_html,
-                body_txt=body_txt,
-                custom_message=custom_message
-            )
+                if not custom_message and custom_template:
+                    custom_template.set_current_language(recipient.primary_language)
+                    try:
+                        subject = custom_template.subject.format(**context)
+                        body_html = format_html(custom_template.body_html.format(**context))
+                        body_txt = custom_template.body_txt.format(**context)
+                    except custom_template.DoesNotExist:
+                        # Translation for current lagnuage not set, use default.
+                        pass
+
+                yield Message(
+                    template=self.get_template(),
+                    subject=subject,
+                    content_object=self.obj,
+                    recipient=recipient,
+                    body_html=body_html,
+                    body_txt=body_txt,
+                    custom_message=custom_message
+                )
 
     def get_recipients(self):
         return [self.obj.owner]

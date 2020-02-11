@@ -58,7 +58,7 @@ class EventTransitions(ActivityTransitions):
         permissions=[ActivityTransitions.can_approve]
     )
     def reopen(self):
-        pass
+        self.instance.review_transitions.organizer_succeed()
 
     @transition(
         source=[values.full, values.open],
@@ -97,6 +97,7 @@ class EventTransitions(ActivityTransitions):
             member.activity = self.instance
             member.transitions.succeed()
             member.save()
+        self.instance.review_transitions.organizer_succeed()
 
     @transition(
         source='*',
@@ -108,6 +109,7 @@ class EventTransitions(ActivityTransitions):
         for participant in self.instance.participants:
             participant.transitions.close()
             participant.save()
+        self.instance.review_transitions.organizer_close()
 
     @transition(
         source=values.closed,

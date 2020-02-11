@@ -74,7 +74,7 @@ class EventStatisticsTest(StatisticsTest):
     def test_open(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.event.review_transitions.submit()
+        self.event.refresh_from_db()
 
         self.initiative.save()
         self.event.save()
@@ -95,7 +95,7 @@ class EventStatisticsTest(StatisticsTest):
     def test_succeeded(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.event.review_transitions.submit()
+        self.event.refresh_from_db()
         self.event.transitions.start()
         self.event.transitions.succeed()
 
@@ -118,7 +118,7 @@ class EventStatisticsTest(StatisticsTest):
     def test_closed(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.event.review_transitions.submit()
+        self.event.refresh_from_db()
         self.event.transitions.start()
         self.event.transitions.succeed()
         self.event.transitions.close()
@@ -142,7 +142,7 @@ class EventStatisticsTest(StatisticsTest):
     def test_participant(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.event.review_transitions.submit()
+        self.event.refresh_from_db()
         ParticipantFactory.create(activity=self.event, user=self.other_user)
         self.event.transitions.start()
         self.event.transitions.succeed()
@@ -172,7 +172,7 @@ class EventStatisticsTest(StatisticsTest):
     def test_participant_withdrawn(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.event.review_transitions.submit()
+        self.event.refresh_from_db()
         contribution = ParticipantFactory.create(activity=self.event, user=self.other_user)
         contribution.transitions.withdraw()
         contribution.save()
@@ -204,7 +204,7 @@ class EventStatisticsTest(StatisticsTest):
     def test_participant_noshow(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.event.review_transitions.submit()
+        self.event.refresh_from_db()
         contribution = ParticipantFactory.create(activity=self.event, user=self.other_user)
         self.event.transitions.start()
         self.event.transitions.succeed()
@@ -249,7 +249,7 @@ class AssignmentStatisticsTest(StatisticsTest):
     def test_open(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.assignment.review_transitions.submit()
+        self.assignment.refresh_from_db()
 
         self.initiative.save()
         self.assignment.save()
@@ -270,7 +270,7 @@ class AssignmentStatisticsTest(StatisticsTest):
     def test_succeeded(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.assignment.review_transitions.submit()
+        self.assignment.refresh_from_db()
         self.assignment.transitions.start()
         self.assignment.transitions.succeed()
 
@@ -293,7 +293,7 @@ class AssignmentStatisticsTest(StatisticsTest):
     def test_closed(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.assignment.review_transitions.submit()
+        self.assignment.refresh_from_db()
         self.assignment.transitions.start()
         self.assignment.transitions.succeed()
         self.assignment.transitions.close()
@@ -317,7 +317,7 @@ class AssignmentStatisticsTest(StatisticsTest):
     def test_participant(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.assignment.review_transitions.submit()
+        self.assignment.refresh_from_db()
         contribution = ApplicantFactory.create(activity=self.assignment, user=self.other_user)
         contribution.transitions.accept()
         contribution.save()
@@ -352,7 +352,7 @@ class AssignmentStatisticsTest(StatisticsTest):
     def test_participant_withdrawn(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.assignment.review_transitions.submit()
+        self.assignment.refresh_from_db()
         contribution = ApplicantFactory.create(activity=self.assignment, user=self.other_user)
         contribution.transitions.withdraw()
         contribution.save()
@@ -384,7 +384,7 @@ class AssignmentStatisticsTest(StatisticsTest):
     def test_participant_rejected(self):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
-        self.assignment.review_transitions.submit()
+        self.assignment.refresh_from_db()
         contribution = ApplicantFactory.create(activity=self.assignment, user=self.other_user)
         contribution.transitions.reject()
         self.assignment.transitions.start()
@@ -775,7 +775,7 @@ class StatisticsDateTest(BluebottleTestCase):
             stats.events_succeeded, 3
         )
         self.assertEqual(
-            stats.people_involved, 2
+            stats.people_involved, 5
         )
 
     def test_end(self):

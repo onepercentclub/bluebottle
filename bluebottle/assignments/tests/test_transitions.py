@@ -4,7 +4,8 @@ from datetime import timedelta
 from django.core import mail
 from django.utils.timezone import now
 
-from bluebottle.activities.transitions import ActivityReviewTransitions
+from bluebottle.activities.models import Organizer
+from bluebottle.activities.transitions import ActivityReviewTransitions, OrganizerTransitions
 from bluebottle.assignments.models import Assignment
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
@@ -30,7 +31,7 @@ class AssignmentTransitionMessagesTestCase(BluebottleTestCase):
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
         self.initiative.save()
-        self.assignment.review_transitions.approve()
+        self.assignment.refresh_from_db()
         self.assignment.transitions.start()
         self.assignment.save()
         mail.outbox = []
@@ -81,6 +82,17 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             initiative=self.initiative,
             owner=user)
 
+    def test_new(self):
+        initiative = InitiativeFactory.create()
+        assignment = AssignmentFactory.create(title='', initiative=initiative)
+
+        self.assertEqual(assignment.status, AssignmentTransitions.values.in_review)
+        self.assertEqual(assignment.review_status, ActivityReviewTransitions.values.draft)
+
+        organizer = assignment.contributions.get()
+        self.assertEqual(organizer.status, OrganizerTransitions.values.new)
+        self.assertEqual(organizer.user, assignment.owner)
+
     def test_default_status(self):
         self.assertEqual(
             self.assignment.status, AssignmentTransitions.values.in_review
@@ -88,6 +100,9 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             self.assignment.review_status, ActivityReviewTransitions.values.draft
         )
+        organizer = self.assignment.contributions.get()
+        self.assertEqual(organizer.status, OrganizerTransitions.values.new)
+        self.assertEqual(organizer.user, self.assignment.owner)
 
     def test_submit(self):
         self.assignment.review_transitions.submit()
@@ -98,6 +113,10 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             self.assignment.review_status, ActivityReviewTransitions.values.approved
         )
 
+        organizer = self.assignment.contributions.get()
+        self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
+        self.assertEqual(organizer.user, self.assignment.owner)
+
     def test_review(self):
         self.assignment.review_transitions.approve()
         self.assertEqual(
@@ -106,6 +125,9 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             self.assignment.review_status, ActivityReviewTransitions.values.approved
         )
+        organizer = self.assignment.contributions.get()
+        self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
+        self.assertEqual(organizer.user, self.assignment.owner)
 
     def test_close(self):
         self.assignment.review_transitions.approve()
@@ -165,6 +187,8 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             applicant.status, ApplicantTransitions.values.succeeded
         )
+        organizer = self.assignment.contributions.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
 
     def test_applied_should_succeed(self):
         self.assignment.review_transitions.approve()
@@ -199,3 +223,26 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             assignment.status, AssignmentTransitions.values.open
         )
+
+    def test_new_assignment_for_running_initiative(self):
+        new_assignment = AssignmentFactory.create(
+            initiative=self.initiative,
+            capacity=1
+        )
+        new_assignment.review_transitions.submit()
+        new_assignment.save()
+        organizer = new_assignment.contributions.first()
+
+        self.assertEqual(organizer.status, u'succeeded')
+
+        new_assignment.transitions.close()
+        new_assignment.save()
+        organizer.refresh_from_db()
+
+        self.assertEqual(organizer.status, u'closed')
+
+        new_assignment.transitions.reopen()
+        new_assignment.save()
+        organizer.refresh_from_db()
+
+        self.assertEqual(organizer.status, u'succeeded')

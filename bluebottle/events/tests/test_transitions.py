@@ -19,7 +19,6 @@ class EventTransitionOpenTestCase(BluebottleTestCase):
         super(EventTransitionOpenTestCase, self).setUp()
 
         self.initiative = InitiativeFactory.create()
-        self.initiative.transitions.submit()
         self.initiative.save()
 
         user = BlueBottleUserFactory.create(first_name='Nono')
@@ -45,11 +44,11 @@ class EventTransitionOpenTestCase(BluebottleTestCase):
         )
 
     def test_open(self):
+        self.initiative.transitions.submit()
         self.initiative.transitions.approve()
         self.initiative.save()
 
         self.event.title = 'Some title'
-        self.event.review_transitions.submit()
         self.event.save()
 
         event = Event.objects.get(pk=self.event.pk)
@@ -73,6 +72,7 @@ class EventTransitionOpenTestCase(BluebottleTestCase):
         self.event.title = 'Some title'
         self.event.save()
 
+        self.initiative.transitions.submit()
         self.initiative.transitions.approve()
         self.initiative.save()
 
@@ -83,6 +83,7 @@ class EventTransitionOpenTestCase(BluebottleTestCase):
         )
 
     def test_approve_initiative_incomplete(self, **kwargs):
+        self.initiative.transitions.submit()
         self.initiative.transitions.approve()
         self.initiative.save()
 
@@ -101,24 +102,18 @@ class EventReviewTransitionTestCase(BluebottleTestCase):
 
         self.event = EventFactory.create(initiative=self.initiative, owner=self.initiative.owner)
 
-    def test_submit_initiative(self):
-        self.initiative.transitions.submit()
-        self.event.refresh_from_db()
-
-        self.assertEqual(self.initiative.status, ReviewTransitions.values.submitted)
+    def test_is_submitted(self):
         self.assertEqual(self.event.review_status, ReviewTransitions.values.submitted)
         self.assertEqual(self.event.status, EventTransitions.values.in_review)
 
     def test_submit_incomplete_activity(self):
-        self.event.title = ''
-        self.event.save()
+        event = EventFactory.create(title='', initiative=self.initiative, owner=self.initiative.owner)
         self.initiative.transitions.submit()
-
-        self.event.refresh_from_db()
+        event.refresh_from_db()
 
         self.assertEqual(self.initiative.status, ReviewTransitions.values.submitted)
-        self.assertEqual(self.event.review_status, ReviewTransitions.values.draft)
-        self.assertEqual(self.event.status, EventTransitions.values.in_review)
+        self.assertEqual(event.review_status, ReviewTransitions.values.draft)
+        self.assertEqual(event.status, EventTransitions.values.in_review)
 
     def test_approve_initiative(self):
         self.initiative.transitions.submit()
@@ -134,7 +129,6 @@ class EventReviewTransitionTestCase(BluebottleTestCase):
         self.initiative.transitions.approve()
 
         event = EventFactory.create(initiative=self.initiative, owner=self.initiative.owner)
-        event.review_transitions.submit()
 
         self.assertEqual(event.review_status, ReviewTransitions.values.approved)
         self.assertEqual(event.status, EventTransitions.values.open)
@@ -161,7 +155,6 @@ class EventTransitionTestCase(BluebottleTestCase):
             initiative=self.initiative,
             capacity=1
         )
-        self.event.review_transitions.submit()
         self.event.save()
         self.initiative.transitions.submit()
         self.initiative.transitions.approve()
@@ -309,9 +302,8 @@ class EventTransitionTestCase(BluebottleTestCase):
             owner=owner,
             capacity=1
         )
-        new_event.review_transitions.submit()
         new_event.save()
-        organizer = new_event.contributions.first()
+        organizer = new_event.contributions.get()
 
         self.assertEqual(organizer.status, u'succeeded')
 

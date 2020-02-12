@@ -95,31 +95,6 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 
     def test_default_status(self):
         self.assertEqual(
-            self.assignment.status, AssignmentTransitions.values.in_review
-        )
-        self.assertEqual(
-            self.assignment.review_status, ActivityReviewTransitions.values.draft
-        )
-        organizer = self.assignment.contributions.get()
-        self.assertEqual(organizer.status, OrganizerTransitions.values.new)
-        self.assertEqual(organizer.user, self.assignment.owner)
-
-    def test_submit(self):
-        self.assignment.review_transitions.submit()
-        self.assertEqual(
-            self.assignment.status, AssignmentTransitions.values.open
-        )
-        self.assertEqual(
-            self.assignment.review_status, ActivityReviewTransitions.values.approved
-        )
-
-        organizer = self.assignment.contributions.get()
-        self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
-        self.assertEqual(organizer.user, self.assignment.owner)
-
-    def test_review(self):
-        self.assignment.review_transitions.approve()
-        self.assertEqual(
             self.assignment.status, AssignmentTransitions.values.open
         )
         self.assertEqual(
@@ -130,8 +105,6 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(organizer.user, self.assignment.owner)
 
     def test_close(self):
-        self.assignment.review_transitions.approve()
-
         applicant = ApplicantFactory.create(activity=self.assignment)
         applicant.transitions.accept()
         applicant.save()
@@ -151,16 +124,12 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         )
 
     def test_start_no_applicants(self):
-        self.assignment.review_transitions.approve()
-        self.assignment.save()
         assignment = Assignment.objects.get(pk=self.assignment.pk)
         self.assertEqual(
             assignment.status, AssignmentTransitions.values.open
         )
 
     def test_happy_life_cycle(self):
-        self.assignment.review_transitions.approve()
-        self.assignment.save()
         applicant = ApplicantFactory.create(activity=self.assignment)
         self.assertEqual(
             applicant.status, ApplicantTransitions.values.new
@@ -191,8 +160,6 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
 
     def test_applied_should_succeed(self):
-        self.assignment.review_transitions.approve()
-        self.assignment.save()
         applicant = ApplicantFactory.create(activity=self.assignment)
         self.assertEqual(
             applicant.status, ApplicantTransitions.values.new
@@ -206,8 +173,6 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         )
 
     def test_full(self):
-        self.assignment.review_transitions.approve()
-        self.assignment.save()
         applicants = ApplicantFactory.create_batch(3, activity=self.assignment)
         for applicant in applicants:
             applicant.transitions.accept()
@@ -229,8 +194,6 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             initiative=self.initiative,
             capacity=1
         )
-        new_assignment.review_transitions.submit()
-        new_assignment.save()
         organizer = new_assignment.contributions.first()
 
         self.assertEqual(organizer.status, u'succeeded')

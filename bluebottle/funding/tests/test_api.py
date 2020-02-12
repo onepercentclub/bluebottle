@@ -1282,7 +1282,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
         ) as verified:
             verified.return_value = True
 
-            self.funding.review_transitions.submit()
             self.funding.review_transitions.approve()
 
         for i in range(5):
@@ -1360,7 +1359,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
         )
         self.funding.save()
 
-        self.funding.review_transitions.submit()
         self.funding.review_transitions.approve()
 
         for i in range(5):
@@ -1404,7 +1402,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
         )
         self.funding.save()
 
-        self.funding.review_transitions.submit()
         self.funding.review_transitions.approve()
 
         for i in range(5):
@@ -1447,7 +1444,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
         )
         self.funding.save()
 
-        self.funding.review_transitions.submit()
         self.funding.review_transitions.approve()
 
         for i in range(5):
@@ -1490,7 +1486,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
         )
         self.funding.save()
 
-        self.funding.review_transitions.submit()
         self.funding.review_transitions.approve()
 
         for i in range(5):
@@ -1534,7 +1529,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
         BudgetLineFactory.create(activity=self.funding)
         self.funding.save()
 
-        self.funding.review_transitions.submit()
         self.funding.review_transitions.approve()
 
         for i in range(5):

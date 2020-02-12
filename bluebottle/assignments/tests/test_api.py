@@ -190,7 +190,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
                     'resource': {
                         'data': {
                             'type': 'activities/assignments',
-                            'id': self.assignment.pk
+                            'id': self.assignment_incomplete.pk
                         }
                     }
                 }
@@ -254,14 +254,15 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         review_transitions = [
-            {u'available': True, u'name': u'delete', u'target': u'closed'},
-            {u'available': True, u'name': u'submit', u'target': u'submitted'},
             {u'available': False, u'name': u'close', u'target': u'closed'},
-            {u'available': False, u'name': u'approve', u'target': u'approved'}
         ]
         transitions = [
-            {u'available': False, u'name': u'delete', u'target': u'deleted'},
-            {u'available': False, u'name': u'reviewed', u'target': u'open'}
+            {u'available': True, u'name': u'reopen', u'target': u'open'},
+            {u'available': True, u'name': u'lock', u'target': u'full'},
+            {u'available': True, u'name': u'start', u'target': u'running'},
+            {u'available': False, u'name': u'succeed', u'target': u'succeeded'},
+            {u'available': False, u'name': u'expire', u'target': u'closed'},
+            {u'available': False, u'name': u'close', u'target': u'closed'},
         ]
         self.assertEqual(data['data']['meta']['review-transitions'], review_transitions)
         self.assertEqual(data['data']['meta']['transitions'], transitions)
@@ -285,18 +286,6 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             )
         )
 
-    def test_submit_owner(self):
-        # Owner can submit the assignment
-        response = self.client.post(
-            self.review_transition_url,
-            json.dumps(self.review_data),
-            user=self.owner
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        data = json.loads(response.content)
-        self.assertEqual(data['included'][0]['type'], 'activities/assignments')
-        self.assertEqual(data['included'][0]['attributes']['review-status'], 'approved')
-
     def test_delete_by_owner(self):
         # Owner can delete the event
 
@@ -313,32 +302,6 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(data['included'][0]['type'], 'activities/assignments')
         self.assertEqual(data['included'][0]['attributes']['review-status'], 'closed')
         self.assertEqual(data['included'][0]['attributes']['status'], 'deleted')
-
-    def test_submit_other_user(self):
-        # Other user can't submit the assignment
-        response = self.client.post(
-            self.review_transition_url,
-            json.dumps(self.review_data),
-            user=self.other_user
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        data = json.loads(response.content)
-        self.assertEqual(data['errors'][0], "Transition is not available")
-
-    def test_submit_manager(self):
-        # Activity manager can submit the assignment
-        response = self.client.post(
-            self.review_transition_url,
-            json.dumps(self.review_data),
-            user=self.manager
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        data = json.loads(response.content)
-
-        self.assertEqual(data['included'][0]['type'], 'activities/assignments')
-        self.assertEqual(data['included'][0]['attributes']['review-status'], 'approved')
 
     def test_approve_owner(self):
         # Owner should not be allowed to approve own assignment
@@ -391,7 +354,6 @@ class ApplicantAPITestCase(BluebottleTestCase):
             duration=4,
             owner=self.owner,
             title="Make coffee")
-        self.assignment.review_transitions.submit()
         self.apply_data = {
             'data': {
                 'type': 'contributions/applicants',
@@ -519,8 +481,6 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.initiative.transitions.approve()
         self.initiative.save()
         self.assignment = AssignmentFactory.create(owner=self.owner, initiative=self.initiative)
-        self.assignment.review_transitions.submit()
-        self.assignment.save()
         document = DocumentFactory.create()
         self.applicant = ApplicantFactory.create(activity=self.assignment, document=document, user=self.user)
         self.participant_url = reverse('applicant-detail', args=(self.applicant.id,))

@@ -1,8 +1,7 @@
-from datetime import timedelta
+from datetime import timedelta, date
 
 from django.core import mail
 from django.db import connection
-from django.utils.timezone import now
 
 from bluebottle.assignments.tasks import check_assignment_reminder
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
@@ -27,7 +26,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
     def test_assignment_reminder_task(self):
         user = BlueBottleUserFactory.create(first_name='Nono')
-        end = now() + timedelta(days=4)
+        end = date.today() + timedelta(days=4)
         assignment = AssignmentFactory.create(
             owner=user,
             status='open',
@@ -65,7 +64,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
     def test_assignment_reminder_task_twice(self):
         user = BlueBottleUserFactory.create(first_name='Nono')
-        end = now() + timedelta(days=4)
+        end = date.today() + timedelta(days=4)
         assignment = AssignmentFactory.create(
             owner=user,
             status='open',

@@ -114,6 +114,7 @@ class Event(Activity):
             self.end = self.start + datetime.timedelta(hours=self.duration)
 
         self.check_capacity(save=False)
+
         return super(Event, self).save(*args, **kwargs)
 
     @property

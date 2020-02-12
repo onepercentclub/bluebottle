@@ -155,7 +155,7 @@ class ActivityTransitions(ModelTransitions):
 
     @transition(
         source=values.closed,
-        target=values.in_review,
+        target=values.open,
         permissions=[can_approve],
     )
     def reopen(self):

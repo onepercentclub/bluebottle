@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
 
-from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
+from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin, TransitionNotPossible
 
 from polymorphic.models import PolymorphicModel
 from bluebottle.initiatives.models import Initiative
@@ -86,12 +86,23 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
             self.owner = self.initiative.owner
 
         super(Activity, self).save(**kwargs)
+
         Organizer.objects.update_or_create(
             activity=self,
             defaults={
                 'user': self.owner
             }
         )
+
+        if self.review_status in (
+            ActivityReviewTransitions.values.needs_work,
+            ActivityReviewTransitions.values.draft
+        ):
+            try:
+                self.review_transitions.submit()
+                super(Activity, self).save()
+            except TransitionNotPossible:
+                pass
 
     def get_absolute_url(self):
         domain = get_current_host()

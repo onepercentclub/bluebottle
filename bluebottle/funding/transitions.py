@@ -131,6 +131,7 @@ class FundingTransitions(ActivityTransitions):
 class DonationTransitions(ContributionTransitions):
     class values(ContributionTransitions.values):
         refunded = ChoiceItem('refunded', _('refunded'))
+        activity_refunded = ChoiceItem('activity_refunded', _('activity refunded'))
 
     def funding_is_open(self):
         return self.instance.activity.status == FundingTransitions.values.open
@@ -143,6 +144,17 @@ class DonationTransitions(ContributionTransitions):
         ]
     )
     def refund(self):
+        if self.instance.user:
+            unfollow(self.instance.user, self.instance.activity)
+
+    @transition(
+        source=[values.new, values.succeeded],
+        target=values.activity_refunded,
+        messages=[
+            DonationRefundedDonorMessage
+        ]
+    )
+    def refund_activity(self):
         if self.instance.user:
             unfollow(self.instance.user, self.instance.activity)
 
@@ -218,10 +230,17 @@ class PaymentTransitions(ModelTransitions):
     )
     def refund(self):
         try:
-            self.instance.donation.transitions.refund()
+            if self.instance.donation.activity.status in (
+                FundingTransitions.values.refunded, FundingTransitions.values.partially_funded
+            ):
+                self.instance.donation.transitions.refund_activity()
+            else:
+                self.instance.donation.transitions.refund()
+
             self.instance.donation.save()
         except TransitionNotPossible:
             pass
+
         self.instance.donation.activity.update_amounts()
 
 

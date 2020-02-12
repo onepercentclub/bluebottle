@@ -216,7 +216,10 @@ class Funding(Activity):
         total = cache.get(cache_key)
         if not total:
             totals = self.donations.filter(
-                status=FundingTransitions.values.succeeded
+                status__in=(
+                    DonationTransitions.values.succeeded,
+                    DonationTransitions.values.activity_refunded,
+                )
             ).values(
                 'donation__amount_currency'
             ).annotate(
@@ -240,7 +243,10 @@ class Funding(Activity):
         total = cache.get(cache_key)
         if not total:
             totals = self.donations.filter(
-                status=FundingTransitions.values.succeeded,
+                status__in=(
+                    DonationTransitions.values.succeeded,
+                    DonationTransitions.values.activity_refunded,
+                ),
                 donation__payment__pledgepayment__isnull=True
             ).values(
                 'donation__amount_currency'
@@ -260,7 +266,10 @@ class Funding(Activity):
         The sum of all contributions (donations) converted to the targets currency
         """
         totals = self.donations.filter(
-            status=FundingTransitions.values.succeeded,
+            status__in=(
+                DonationTransitions.values.succeeded,
+                DonationTransitions.values.activity_refunded,
+            ),
             donation__payment__pledgepayment__isnull=False
         ).values(
             'donation__amount_currency'

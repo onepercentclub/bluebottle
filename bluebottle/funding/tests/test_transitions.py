@@ -209,6 +209,31 @@ class FundingTestCase(BluebottleAdminTestCase):
             self.funding.transitions.extend
         )
 
+    def test_refund(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(50, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+
+        self.funding.deadline = now() - timedelta(days=1)
+        self.funding.save()
+
+        tenant = connection.tenant
+        check_funding_end()
+
+        with LocalTenant(tenant, clear_tenant=True):
+            self.funding.refresh_from_db()
+
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, 'partially_funded')
+        self.funding.transitions.refund()
+
+        for contribution in self.funding.donations.all():
+            self.assertEqual(contribution.status, DonationTransitions.values.activity_refunded)
+
+        self.funding.update_amounts()
+        self.assertEqual(
+            self.funding.amount_raised, donation.amount
+        )
+
     def test_new_funding_for_running_initiative(self):
         new_funding = FundingFactory.create(
             initiative=self.initiative,

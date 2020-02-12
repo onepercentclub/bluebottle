@@ -241,7 +241,7 @@ class PayoutTransitions(ModelTransitions):
         started = ChoiceItem('started', _('started'))
         succeeded = ChoiceItem('succeeded', _('succeeded'))
         failed = ChoiceItem('failed', _('failed'))
-        cancelled = ChoiceItem('activity-refunded', _('cancelled'))
+        cancelled = ChoiceItem('cancelled', _('cancelled'))
 
     @transition(
         source=['*'],

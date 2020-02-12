@@ -174,12 +174,18 @@ class ActivityTransitions(ModelTransitions):
             self.instance.review_transitions.resubmit()
 
     @transition(
-        source=[values.in_review],
+        source=[
+            values.closed,
+            values.deleted,
+            values.in_review,
+        ],
         target=values.deleted,
         permissions=[is_system]
     )
     def delete(self):
         self.instance.review_transitions.organizer_close()
+        if self.instance.review_status != ReviewTransitions.values.closed:
+            self.instance.review_transitions.delete(cascade=False)
 
 
 class ContributionTransitions(ModelTransitions):

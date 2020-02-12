@@ -150,14 +150,14 @@ class Funding(Activity):
         _('deadline'),
         null=True,
         blank=True,
-        help_text=_('If you enter a deadline, leave the duration field empty.')
+        help_text=_('If you enter a deadline, leave the duration field empty. This will override the duration.')
     )
 
     duration = models.PositiveIntegerField(
         _('duration'),
         null=True,
         blank=True,
-        help_text=_('If you enter a duration, leave the deadline field empty.')
+        help_text=_('If you enter a duration, leave the deadline field empty for it to be automatically calculated.')
     )
 
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)

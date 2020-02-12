@@ -14,6 +14,10 @@ from bluebottle.activities.serializers import (
     ActivityListSerializer,
     ContributionListSerializer
 )
+from bluebottle.assignments.models import Applicant
+from bluebottle.events.models import Participant
+from bluebottle.funding.models import Donation
+
 from bluebottle.files.views import ImageContentView
 from bluebottle.files.models import RelatedImage
 from bluebottle.transitions.views import TransitionList
@@ -79,6 +83,8 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
     def get_queryset(self):
         return Contribution.objects.prefetch_related(
             'user', 'activity'
+        ).instance_of(
+            Donation, Applicant, Participant
         ).filter(
             user=self.request.user
         ).exclude(

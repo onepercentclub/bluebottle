@@ -17,6 +17,7 @@ from bluebottle.follow.models import follow, unfollow
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.utils.transitions import ReviewTransitions
 from bluebottle.wallposts.models import Wallpost, SystemWallpost
+from django.utils.timezone import get_current_timezone
 
 
 class FundingTransitions(ActivityTransitions):
@@ -62,7 +63,16 @@ class FundingTransitions(ActivityTransitions):
             self.instance.review_transitions.approve()
         if self.instance.duration and not self.instance.deadline:
             deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
-            self.instance.deadline = deadline.replace(hour=23, minute=59, second=59)
+            self.instance.deadline = get_current_timezone().localize(
+                datetime.datetime(
+                    deadline.year,
+                    deadline.month,
+                    deadline.day,
+                    hour=23,
+                    minute=59,
+                    second=59
+                )
+            )
 
     @transition(
         source=values.open,
@@ -116,7 +126,7 @@ class FundingTransitions(ActivityTransitions):
         target=values.refunded,
     )
     def refund(self):
-        for donation in self.instance.contributions.filter(status__in=['succeeded']).all():
+        for donation in self.instance.donations.filter(status__in=['succeeded']).all():
             donation.payment.transitions.request_refund()
             donation.payment.save()
         for payout in self.instance.payouts.all():
@@ -136,12 +146,13 @@ class FundingTransitions(ActivityTransitions):
         permissions=[ActivityTransitions.can_approve],
     )
     def close(self):
-        pass
+        self.instance.review_transitions.organizer_close()
 
 
 class DonationTransitions(ContributionTransitions):
     class values(ContributionTransitions.values):
         refunded = ChoiceItem('refunded', _('refunded'))
+        activity_refunded = ChoiceItem('activity_refunded', _('activity refunded'))
 
     def funding_is_open(self):
         return self.instance.activity.status == FundingTransitions.values.open
@@ -154,6 +165,17 @@ class DonationTransitions(ContributionTransitions):
         ]
     )
     def refund(self):
+        if self.instance.user:
+            unfollow(self.instance.user, self.instance.activity)
+
+    @transition(
+        source=[values.new, values.succeeded],
+        target=values.activity_refunded,
+        messages=[
+            DonationRefundedDonorMessage
+        ]
+    )
+    def refund_activity(self):
         if self.instance.user:
             unfollow(self.instance.user, self.instance.activity)
 
@@ -229,10 +251,17 @@ class PaymentTransitions(ModelTransitions):
     )
     def refund(self):
         try:
-            self.instance.donation.transitions.refund()
+            if self.instance.donation.activity.status in (
+                FundingTransitions.values.refunded, FundingTransitions.values.partially_funded
+            ):
+                self.instance.donation.transitions.refund_activity()
+            else:
+                self.instance.donation.transitions.refund()
+
             self.instance.donation.save()
         except TransitionNotPossible:
             pass
+
         self.instance.donation.activity.update_amounts()
 
 

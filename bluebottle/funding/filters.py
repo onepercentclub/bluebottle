@@ -3,7 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 from rest_framework_json_api.django_filters import DjangoFilterBackend
 
-from bluebottle.funding.models import PaymentProvider
+from bluebottle.funding.models import PaymentProvider, Donation
 from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_pledge.models import PledgePayment
 
@@ -15,8 +15,9 @@ class DonationListFilter(DjangoFilterBackend):
     def filter_queryset(self, request, queryset, view):
         queryset = queryset.prefetch_related(
             'activity', 'user'
-        ).filter(status__in=[
-            DonationTransitions.values.succeeded
+        ).instance_of(Donation).filter(status__in=[
+            DonationTransitions.values.succeeded,
+            DonationTransitions.values.activity_refunded
         ])
 
         return super(DonationListFilter, self).filter_queryset(request, queryset, view)

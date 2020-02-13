@@ -12,7 +12,7 @@ The new date is: {{ assignment_date }}.
 {% endblock %}
 
 {% block action %}
-    <a href="{{ site }}{{ obj.get_absolute_url }}" class="action-email">
+    <a href="{{ obj.get_absolute_url }}" class="action-email">
        {% trans 'Go to task' context 'email' %}
     </a>
 {% endblock %}`

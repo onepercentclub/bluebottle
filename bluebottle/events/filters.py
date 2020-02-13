@@ -1,6 +1,7 @@
 from django.db.models import Q
 from rest_framework_json_api.django_filters import DjangoFilterBackend
 
+from bluebottle.events.models import Participant
 from bluebottle.events.transitions import ParticipantTransitions
 
 
@@ -24,5 +25,7 @@ class ParticipantListFilter(DjangoFilterBackend):
                 ParticipantTransitions.values.new,
                 ParticipantTransitions.values.succeeded
             ])
+
+        queryset = queryset.instance_of(Participant)
 
         return super(ParticipantListFilter, self).filter_queryset(request, queryset, view)

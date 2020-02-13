@@ -164,7 +164,6 @@ class IntentWebHookView(View):
                         transfer.amount / 100.0, transfer.currency
                     )
                     payment.donation.save()
-
                     payment.save()
 
                 return HttpResponse('Updated payment')

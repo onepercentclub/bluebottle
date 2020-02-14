@@ -74,7 +74,7 @@ class TransitionMessage(object):
                         pass
 
                 context = self.get_context(recipient)
-                subject = self.subject.format(**context)
+                subject = unicode(self.subject.format(**context))
 
                 body_html = None
                 body_txt = None

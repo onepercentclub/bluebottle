@@ -35,11 +35,16 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=[values.full, values.open],
+        source=[
+            values.full,
+            values.closed,
+            values.deleted,
+            values.open
+        ],
         target=values.open,
     )
     def reopen(self, **kwargs):
-        pass
+        self.instance.review_transitions.organizer_succeed()
 
     @transition(
         field='status',
@@ -49,12 +54,13 @@ class AssignmentTransitions(ActivityTransitions):
         messages=[AssignmentCompletedMessage]
     )
     def succeed(self, **kwargs):
+        from bluebottle.assignments.models import Applicant
         source_states = [
             ApplicantTransitions.values.new,
             ApplicantTransitions.values.accepted,
             ApplicantTransitions.values.active,
         ]
-        for member in self.instance.contributions.filter(status__in=source_states):
+        for member in self.instance.contributions.instance_of(Applicant).filter(status__in=source_states):
             member.activity = self.instance
             member.transitions.succeed()
             member.save()
@@ -78,6 +84,7 @@ class AssignmentTransitions(ActivityTransitions):
             member.activity = self.instance
             member.transitions.succeed()
             member.save()
+        self.instance.review_transitions.organizer_succeed()
 
     @transition(
         field='status',
@@ -90,6 +97,7 @@ class AssignmentTransitions(ActivityTransitions):
         for member in self.instance.accepted_applicants:
             member.transitions.close()
             member.save()
+        self.instance.review_transitions.organizer_close()
 
     @transition(
         field='status',

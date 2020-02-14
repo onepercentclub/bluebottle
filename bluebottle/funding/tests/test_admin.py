@@ -82,7 +82,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, 'refunded')
         donation.refresh_from_db()
-        self.assertEqual(donation.status, 'refunded')
+        self.assertEqual(donation.status, 'activity_refunded')
         payment.refresh_from_db()
         self.assertEqual(payment.status, 'refunded')
 

@@ -9,3 +9,5 @@ DATABASES = {
         "PASSWORD": "",
     },
 }
+
+SLOW_TEST_THRESHOLD_MS = 1000

@@ -250,7 +250,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
     def test_readonly_fields(self):
         fields = self.member_admin.get_readonly_fields(self.request, self.member)
         expected_fields = set((
-            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_user',
+            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'events', 'assignments', 'funding',
             'is_superuser'
@@ -261,7 +261,7 @@ class MemberAdminFieldsTest(BluebottleTestCase):
     def test_readonly_fields_create(self):
         fields = self.member_admin.get_readonly_fields(self.request)
         expected_fields = set((
-            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_user',
+            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'events', 'assignments', 'funding',
             'is_superuser'

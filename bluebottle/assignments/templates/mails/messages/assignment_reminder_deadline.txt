@@ -7,6 +7,8 @@ Hi {{ recipient_name }},
 On {{ deadline }} your task "{{ title }}" is due. That's in 5 days!
 
 If you still have some work to do, this is the moment.
+
+If you are unable to participate, please withdraw via the platform so that others can take your place.
 {% endblocktrans %}
 {% endblock %}
 

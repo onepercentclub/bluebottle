@@ -9,6 +9,7 @@ from django.utils.timezone import utc
 from requests.models import PreparedRequest
 
 from timezonefinder import TimezoneFinder
+
 import pytz
 
 from bluebottle.activities.models import Activity, Contribution

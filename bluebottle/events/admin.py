@@ -70,11 +70,11 @@ class EventAdmin(ActivityChildAdmin):
     inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline, WallpostInline)
     list_display = [
         '__unicode__', 'initiative', 'status',
-        'highlight', 'start_date', 'start_time', 'duration', 'created'
+        'highlight', 'start', 'duration', 'created'
     ]
     search_fields = ['title', 'description']
     list_filter = ['status', 'is_online']
-    date_hierarchy = 'start_date'
+    date_hierarchy = 'start'
 
     base_model = Event
 
@@ -84,8 +84,7 @@ class EventAdmin(ActivityChildAdmin):
     detail_fields = (
         'description',
         'capacity',
-        'start_date',
-        'start_time',
+        'start',
         'duration',
         'registration_deadline',
         'is_online',
@@ -99,8 +98,7 @@ class EventAdmin(ActivityChildAdmin):
         ('status', 'Status'),
         ('created', 'Created'),
         ('initiative__title', 'Initiative'),
-        ('start_date', 'Start Date'),
-        ('start_time', 'Start Time'),
+        ('start', 'Start'),
         ('duration', 'Duration'),
         ('end', 'End'),
         ('registration_deadline', 'Registration Deadline'),

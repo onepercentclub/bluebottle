@@ -1,10 +1,12 @@
-import datetime
 
 from django.db import models
 from django.db.models import SET_NULL, Count, Sum
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
-from django.utils.timezone import get_current_timezone
+
+from timezonefinder import TimezoneFinder
+
+import pytz
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
@@ -15,6 +17,9 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import Validator
 
 
+tf = TimezoneFinder()
+
+
 class RegistrationDeadlineValidator(Validator):
     field = 'registration_deadline'
     code = 'registration_deadline'
@@ -23,8 +28,8 @@ class RegistrationDeadlineValidator(Validator):
     def is_valid(self):
         return (
             not self.instance.registration_deadline or
-            not self.instance.end_date or
-            self.instance.registration_deadline < self.instance.end_date
+            not self.instance.end or
+            self.instance.registration_deadline < self.instance.end
         )
 
 
@@ -41,6 +46,12 @@ class Assignment(Activity):
     start_time = models.TimeField(
         _('start time'), null=True, blank=True,
         help_text=_('On the specific task date, the start time.'))
+
+    date = models.DateTimeField(
+        _('date'), null=True, blank=True,
+        help_text=_('Either the start date or the deadline of the task')
+    )
+
     duration = models.FloatField(_('number of hours per person'), null=True, blank=True)
     preparation = models.FloatField(
         _('number of hours required for preparation'),
@@ -67,7 +78,7 @@ class Assignment(Activity):
     @property
     def required_fields(self):
         fields = [
-            'title', 'description', 'end_date_type', 'end_date',
+            'title', 'description', 'end_date_type', 'date',
             'capacity', 'duration', 'is_online',
             'expertise'
         ]
@@ -76,6 +87,19 @@ class Assignment(Activity):
             fields.append('location')
 
         return fields
+
+    @property
+    def local_date(self):
+        if self.location and self.location.position:
+            tz_name = tf.timezone_at(
+                lng=self.location.position.x,
+                lat=self.location.position.y
+            )
+            tz = pytz(tz_name)
+
+            return self.date.as_timezone(tz)
+        else:
+            return self.date
 
     @property
     def stats(self):
@@ -194,13 +218,7 @@ class Applicant(Contribution):
         created = self.pk is None
 
         if not self.contribution_date:
-            self.contribution_date = get_current_timezone().localize(
-                datetime.datetime(
-                    self.activity.end_date.year,
-                    self.activity.end_date.month,
-                    self.activity.end_date.day
-                )
-            )
+            self.contribution_date = self.activity.end
 
         # Fail the self if hours are set to 0
         if self.status == ApplicantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:

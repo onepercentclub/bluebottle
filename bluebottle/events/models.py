@@ -8,12 +8,18 @@ from django.utils.timezone import utc
 
 from requests.models import PreparedRequest
 
+from timezonefinder import TimezoneFinder
+import pytz
+
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
 from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import Validator
+
+
+tf = TimezoneFinder()
 
 
 class RegistrationDeadlineValidator(Validator):
@@ -71,6 +77,19 @@ class Event(Activity):
             aggregate(committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent'))
         stats.update(committed)
         return stats
+
+    @property
+    def local_start(self):
+        if self.location and self.location.position:
+            tz_name = tf.timezone_at(
+                lng=self.location.position.x,
+                lat=self.location.position.y
+            )
+            tz = pytz(tz_name)
+
+            return self.start.as_timezone(tz)
+        else:
+            return self.start
 
     class Meta:
         verbose_name = _("Event")

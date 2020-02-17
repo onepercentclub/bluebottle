@@ -76,7 +76,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory.create()
         self.assignment = AssignmentFactory.create(
             end_date_type='deadline',
-            end_date=(now() + timedelta(weeks=2)).date(),
+            date=now() + timedelta(weeks=2),
             registration_deadline=(now() + timedelta(weeks=1)).date(),
             capacity=3,
             initiative=self.initiative,

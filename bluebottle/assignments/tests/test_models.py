@@ -1,5 +1,5 @@
-from datetime import timedelta, date, datetime
-from django.utils.timezone import get_current_timezone
+from datetime import timedelta
+from django.utils.timezone import now
 
 from django.core import mail
 
@@ -36,7 +36,7 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment = AssignmentFactory(
             title='Test Title',
             status='open',
-            end_date=date.today() + timedelta(days=4),
+            date=now() + timedelta(days=4),
         )
         ApplicantFactory.create_batch(3, activity=assignment, status='new')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
@@ -44,7 +44,7 @@ class AssignmentTestCase(BluebottleTestCase):
 
         mail.outbox = []
 
-        assignment.end_date = assignment.end_date + timedelta(days=1)
+        assignment.date = assignment.date + timedelta(days=1)
         assignment.save()
 
         recipients = [message.to[0] for message in mail.outbox]
@@ -59,7 +59,7 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment = AssignmentFactory(
             title='Test Title',
             status='open',
-            end_date=date.today() + timedelta(days=4),
+            date=now() + timedelta(days=4),
         )
         ApplicantFactory.create_batch(3, activity=assignment, status='new')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
@@ -76,7 +76,7 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment = AssignmentFactory(
             title='Test Title',
             status='open',
-            end_date=date.today() + timedelta(days=4),
+            date=now() + timedelta(days=4),
             capacity=3,
         )
         ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
@@ -92,7 +92,7 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment = AssignmentFactory(
             title='Test Title',
             status='open',
-            end_date=date.today() + timedelta(days=4),
+            date=now() + timedelta(days=4),
             capacity=3,
         )
         applicants = ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
@@ -110,7 +110,7 @@ class ApplicantTestCase(BluebottleTestCase):
         assignment = AssignmentFactory(
             title='Test Title',
             status='open',
-            end_date=date.today() + timedelta(days=4),
+            date=now() + timedelta(days=4),
         )
 
         applicant = ApplicantFactory.create(activity=assignment)
@@ -128,11 +128,6 @@ class ApplicantTestCase(BluebottleTestCase):
         applicant.save()
         self.assertEqual(applicant.status, 'succeeded')
         self.assertEqual(
-            applicant.contribution_date, get_current_timezone().localize(
-                datetime(
-                    assignment.end_date.year,
-                    assignment.end_date.month,
-                    assignment.end_date.day
-                )
-            )
+            applicant.contribution_date,
+            assignment.date
         )

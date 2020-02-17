@@ -28,8 +28,8 @@ class RegistrationDeadlineValidator(Validator):
     def is_valid(self):
         return (
             not self.instance.registration_deadline or
-            not self.instance.end or
-            self.instance.registration_deadline < self.instance.end
+            not self.instance.date or
+            self.instance.registration_deadline < self.instance.date.date()
         )
 
 

@@ -34,6 +34,8 @@ class AssignmentListSerializer(BaseActivityListSerializer):
             'duration',
             'location',
             'permissions',
+            'start_time',
+            'preparation',
         )
 
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
@@ -80,6 +82,8 @@ class AssignmentSerializer(BaseActivitySerializer):
             'location',
             'permissions',
             'contributions',
+            'start_time',
+            'preparation',
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

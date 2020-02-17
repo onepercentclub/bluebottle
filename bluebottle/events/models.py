@@ -31,8 +31,8 @@ class RegistrationDeadlineValidator(Validator):
     def is_valid(self):
         return (
             not self.instance.registration_deadline or (
-                self.instance.start_date and
-                self.instance.registration_deadline < self.instance.start_date
+                self.instance.start and
+                self.instance.registration_deadline < self.instance.start.date()
             )
         )
 
@@ -59,7 +59,7 @@ class Event(Activity):
 
     @property
     def required_fields(self):
-        fields = ['title', 'description', 'start_date', 'start_time', 'duration', 'is_online', ]
+        fields = ['title', 'description', 'start', 'duration', 'is_online', ]
 
         if not self.is_online:
             fields.append('location')
@@ -86,9 +86,8 @@ class Event(Activity):
                 lng=self.location.position.x,
                 lat=self.location.position.y
             )
-            tz = pytz(tz_name)
-
-            return self.start.as_timezone(tz)
+            tz = pytz.timezone(tz_name)
+            return self.start.astimezone(tz).replace(tzinfo=None)
         else:
             return self.start
 

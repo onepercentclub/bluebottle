@@ -95,9 +95,9 @@ class Assignment(Activity):
                 lng=self.location.position.x,
                 lat=self.location.position.y
             )
-            tz = pytz(tz_name)
+            tz = pytz.timezone(tz_name)
 
-            return self.date.as_timezone(tz)
+            return self.date.astimezone(tz)
         else:
             return self.date
 

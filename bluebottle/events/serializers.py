@@ -86,6 +86,7 @@ class EventListSerializer(BaseActivityListSerializer):
             'capacity',
             'start_date',
             'start_time',
+            'start',
             'duration',
             'is_online',
             'location',
@@ -126,6 +127,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
             'capacity',
             'start_date',
             'start_time',
+            'start',
             'duration',
             'is_online',
             'location',
@@ -157,7 +159,7 @@ class TinyEventSerializer(BaseTinyActivitySerializer):
 
     class Meta(BaseTinyActivitySerializer.Meta):
         model = Event
-        fields = BaseTinyActivitySerializer.Meta.fields + ('start_time', 'start_date', 'duration')
+        fields = BaseTinyActivitySerializer.Meta.fields + ('start_time', 'start_date', 'start', 'duration')
 
     class JSONAPIMeta(BaseTinyActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/events'

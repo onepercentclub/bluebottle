@@ -4,7 +4,7 @@ from django.db import models, connection
 from django.db.models import Count, Sum
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
-from django.utils.timezone import get_current_timezone, utc
+from django.utils.timezone import utc
 
 from requests.models import PreparedRequest
 
@@ -41,6 +41,7 @@ class Event(Activity):
 
     start_date = models.DateField(_('start date'), null=True, blank=True)
     start_time = models.TimeField(_('start time'), null=True, blank=True)
+    start = models.DateTimeField(_('Start'), null=True, blank=True)
     duration = models.FloatField(_('duration'), null=True, blank=True)
     end = models.DateTimeField(_('end'), null=True, blank=True)
     registration_deadline = models.DateField(_('deadline to apply'), null=True, blank=True)
@@ -98,16 +99,6 @@ class Event(Activity):
             self.transitions.reopen()
             if save:
                 self.save()
-
-    @property
-    def start(self):
-        if self.start_time and self.start_date:
-            return get_current_timezone().localize(
-                datetime.datetime.combine(
-                    self.start_date,
-                    self.start_time
-                )
-            )
 
     def save(self, *args, **kwargs):
         if self.start and self.duration:

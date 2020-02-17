@@ -218,7 +218,7 @@ class Applicant(Contribution):
         created = self.pk is None
 
         if not self.contribution_date:
-            self.contribution_date = self.activity.end
+            self.contribution_date = self.activity.date
 
         # Fail the self if hours are set to 0
         if self.status == ApplicantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:

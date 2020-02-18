@@ -1,9 +1,13 @@
 from django.core import mail
 from django.test import TestCase
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.events.tests.factories import EventFactory
+from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.wallposts import MediaWallpostFactory, ReactionFactory
-from bluebottle.follow.tests.factories import InitiativeFollowFactory
+from bluebottle.follow.tests.factories import (
+    EventFollowFactory, FundingFollowFactory
+)
 
 
 class InitiativeWallpostTestCase(TestCase):
@@ -12,15 +16,36 @@ class InitiativeWallpostTestCase(TestCase):
         self.initiative = InitiativeFactory.create()
 
         self.follower = BlueBottleUserFactory.create()
-        InitiativeFollowFactory.create(
-            user=self.follower, instance=self.initiative
+        EventFollowFactory.create(
+            instance=EventFactory.create(
+                review_status='approved',
+                initiative=self.initiative
+            ),
+            user=self.follower
         )
-        InitiativeFollowFactory.create(
-            user=BlueBottleUserFactory(campaign_notifications=False),
-            instance=self.initiative
+        FundingFollowFactory.create(
+            instance=FundingFactory.create(
+                review_status='approved',
+                initiative=self.initiative
+            ),
+            user=self.follower
         )
 
-        InitiativeFollowFactory.create(user=self.initiative.owner, instance=self.initiative)
+        EventFollowFactory.create(
+            instance=EventFactory.create(
+                review_status='approved',
+                initiative=self.initiative
+            ),
+            user=BlueBottleUserFactory(campaign_notifications=False),
+        )
+
+        EventFollowFactory.create(
+            instance=EventFactory.create(
+                review_status='approved',
+                initiative=self.initiative
+            ),
+            user=self.initiative.owner
+        )
 
     def test_wallpost(self):
         wallpost_user = BlueBottleUserFactory.create()

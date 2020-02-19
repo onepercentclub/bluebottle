@@ -8,6 +8,8 @@ Hi {{ recipient_name }},
 Heads up: The date of your task "{{ assignment_title }}" has been changed.
 
 The new date is: {{ assignment_date }}.
+
+If you are unable to participate, please withdraw via the platform so that others can take your place.
 {% endblocktrans %}
 
 {% endblock %}

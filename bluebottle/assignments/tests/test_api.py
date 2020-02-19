@@ -36,7 +36,7 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
                 'type': 'activities/assignments',
                 'attributes': {
                     'title': 'Business plan Young Freddy',
-                    'end_date': str((now() + timedelta(days=21)).date()),
+                    'date': str((now() + timedelta(days=21))),
                     'end_date_type': 'deadline',
                     'duration': 8,
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
@@ -64,7 +64,7 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
                 'type': 'activities/assignments',
                 'attributes': {
                     'title': '',
-                    'end_date': str((now() + timedelta(days=21)).date()),
+                    'date': str((now() + timedelta(days=21))),
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'description': 'Help Young Freddy write a business plan'
                 },
@@ -104,7 +104,7 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
                 'type': 'activities/assignments',
                 'attributes': {
                     'title': '',
-                    'end_date': str((now() + timedelta(days=21)).date()),
+                    'date': str((now() + timedelta(days=21))),
                     'registration_deadline': str((now() + timedelta(days=22)).date()),
                     'description': 'Help Young Freddy write a business plan'
                 },
@@ -168,7 +168,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             is_online=None,
             duration=None,
             end_date_type=None,
-            end_date=None
+            date=None
         )
         self.assignment = AssignmentFactory.create(
             owner=self.owner,
@@ -418,7 +418,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         no_show.transitions.accept()
         no_show.save()
 
-        self.assignment.end_date = now()
+        self.assignment.date = now()
         self.assignment.transitions.succeed()
         self.assignment.save()
 

@@ -1294,7 +1294,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
 
         for i in range(5):
             donation = DonationFactory.create(
-                amount=Money(200, 'EUR'),
+                amount=Money(300, 'USD'),
+                payout_amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
             )
             with mock.patch('stripe.Source.modify'):
@@ -1348,6 +1349,14 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
 
         self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)
+        self.assertEqual(
+            sum(
+                donation['attributes']['amount']['amount']
+                for donation in data['included']
+                if donation['type'] == 'contributions/donations'
+            ),
+            1000.0
+        )
 
     def test_get_vitepay_payout(self):
         VitepayPaymentProvider.objects.all().delete()

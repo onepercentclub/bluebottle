@@ -11,7 +11,7 @@ from bluebottle.events.messages import (
     ParticipantApplicationMessage,
     ParticipantRejectedMessage,
 
-)
+    ParticipantApplicationManagerMessage)
 
 from bluebottle.follow.models import follow, unfollow
 from bluebottle.fsm import transition
@@ -160,6 +160,10 @@ class ParticipantTransitions(ContributionTransitions):
     @transition(
         source=[ContributionTransitions.values.new],
         target=ContributionTransitions.values.new,
+        messages=[
+            ParticipantApplicationMessage,
+            ParticipantApplicationManagerMessage,
+        ]
     )
     def initiate(self):
         pass

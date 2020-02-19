@@ -486,19 +486,11 @@ class EventTransitionTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        review_transitions = [
-            {u'available': False, u'name': u'needs_work', u'target': u'needs_work'},
-            {u'available': True, u'name': u'delete', u'target': u'closed'},
-            {u'available': False, u'name': u'close', u'target': u'closed'},
-            {u'available': False, u'name': u'approve', u'target': u'approved'}
-        ]
-        transitions = [
-            {u'available': False, u'name': u'delete', u'target': u'deleted'},
-            {u'available': False, u'name': u'reviewed', u'target': u'open'},
-            {u'available': False, u'name': u'close', u'target': u'closed'}
-        ]
-        self.assertEqual(data['data']['meta']['review-transitions'], review_transitions)
-        self.assertEqual(data['data']['meta']['transitions'], transitions)
+        self.assertEqual(
+            data['data']['meta']['review-transitions'],
+            [{u'available': True, u'name': u'delete', u'target': u'closed'}],
+        )
+        self.assertEqual(data['data']['meta']['transitions'], [])
 
     def test_delete_by_owner(self):
         # Owner can delete the event

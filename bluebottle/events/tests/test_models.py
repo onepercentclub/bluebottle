@@ -39,7 +39,6 @@ class EventTestCase(BluebottleTestCase):
             capacity=10,
             initiative=InitiativeFactory.create(status='approved')
         )
-        event.review_transitions.submit()
 
         ParticipantFactory.create_batch(10, activity=event, status='new')
         self.assertEqual(event.status, 'full')
@@ -54,7 +53,6 @@ class EventTestCase(BluebottleTestCase):
             capacity=10,
             initiative=InitiativeFactory.create(status='approved')
         )
-        event.review_transitions.submit()
 
         ParticipantFactory.create_batch(10, activity=event, status='new')
         self.assertEqual(event.status, 'full')
@@ -74,7 +72,6 @@ class EventTestCase(BluebottleTestCase):
             capacity=10,
             initiative=InitiativeFactory.create(status='approved')
         )
-        event.review_transitions.submit()
 
         ParticipantFactory.create_batch(10, activity=event, status='new')
         self.assertEqual(event.status, 'full')
@@ -94,7 +91,6 @@ class EventTestCase(BluebottleTestCase):
             initiative=InitiativeFactory.create(status='approved'),
             capacity=None
         )
-        event.review_transitions.submit()
 
         ParticipantFactory.create(activity=event, status='new')
         self.assertEqual(event.status, 'open')

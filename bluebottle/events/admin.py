@@ -48,6 +48,7 @@ class ParticipantAdmin(ContributionChildAdmin):
     form = ParticipantAdminForm
     list_display = ['user', 'status', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
+    readonly_fields = ContributionChildAdmin.readonly_fields + ['time_spent', ]
 
     date_hierarchy = 'transition_date'
 

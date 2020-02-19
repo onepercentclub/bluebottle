@@ -57,10 +57,11 @@ class ActivityReviewTransitions(ReviewTransitions):
             pass
 
     @transition(
-        source=ReviewTransitions.values.draft,
+        source=[ReviewTransitions.values.draft, ReviewTransitions.values.needs_work],
         target=ReviewTransitions.values.submitted,
         conditions=[is_complete, is_valid],
-        permissions=[is_activity_manager]
+        permissions=[is_activity_manager],
+        automatic=True
     )
     def submit(self):
         if (
@@ -72,12 +73,12 @@ class ActivityReviewTransitions(ReviewTransitions):
     @transition(
         source=[
             ReviewTransitions.values.submitted,
-            ReviewTransitions.values.draft,
             ReviewTransitions.values.needs_work
         ],
         target=ReviewTransitions.values.approved,
         conditions=[is_complete, is_valid, initiative_is_approved],
-        permissions=[can_review]
+        permissions=[can_review],
+        automatic=True
     )
     def approve(self):
         try:
@@ -90,7 +91,8 @@ class ActivityReviewTransitions(ReviewTransitions):
     @transition(
         source=[ReviewTransitions.values.submitted],
         target=ReviewTransitions.values.needs_work,
-        permissions=[can_review]
+        permissions=[can_review],
+        automatic=False
     )
     def needs_work(self):
         pass
@@ -103,7 +105,8 @@ class ActivityReviewTransitions(ReviewTransitions):
             ReviewTransitions.values.needs_work
         ],
         target=ReviewTransitions.values.closed,
-        permissions=[can_review]
+        permissions=[can_review],
+        automatic=False
     )
     def close(self):
         self.organizer_close()
@@ -112,9 +115,10 @@ class ActivityReviewTransitions(ReviewTransitions):
     @transition(
         source=ReviewTransitions.values.closed,
         target=ReviewTransitions.values.draft,
-        permissions=[can_review]
+        permissions=[can_review],
+        automatic=False
     )
-    def resubmit(self):
+    def reopen(self):
         if self.instance.status != ActivityTransitions.values.in_review:
             self.instance.transitions.resubmit()
 
@@ -125,7 +129,8 @@ class ActivityReviewTransitions(ReviewTransitions):
             ReviewTransitions.values.needs_work
         ],
         target=ReviewTransitions.values.closed,
-        permissions=[is_activity_manager]
+        permissions=[is_activity_manager],
+        automatic=False
     )
     def delete(self):
         self.instance.transitions.delete()
@@ -157,6 +162,7 @@ class ActivityTransitions(ModelTransitions):
         source=values.closed,
         target=values.open,
         permissions=[can_approve],
+        automatic=False
     )
     def reopen(self):
         self.instance.review_transitions.organizer_succeed()
@@ -168,6 +174,7 @@ class ActivityTransitions(ModelTransitions):
         ],
         target=values.in_review,
         permissions=[can_approve],
+        automatic=False
     )
     def resubmit(self):
         if self.instance.review_status == ActivityReviewTransitions.values.closed:
@@ -176,7 +183,8 @@ class ActivityTransitions(ModelTransitions):
     @transition(
         source=[values.in_review],
         target=values.deleted,
-        permissions=[is_system]
+        permissions=[is_system],
+        automatic=False
     )
     def delete(self):
         self.instance.review_transitions.organizer_close()

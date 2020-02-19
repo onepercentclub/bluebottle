@@ -36,9 +36,6 @@ class EventTasksTestCase(BluebottleTestCase):
             duration=3
         )
 
-        event.review_transitions.submit()
-        event.save()
-
         ParticipantFactory.create(activity=event)
 
         self.assertEqual(event.status, 'open')
@@ -55,9 +52,6 @@ class EventTasksTestCase(BluebottleTestCase):
             start_date=start.date(),
             duration=3
         )
-
-        event.review_transitions.submit()
-        event.save()
 
         self.assertEqual(event.status, 'open')
         check_event_start()
@@ -76,11 +70,8 @@ class EventTasksTestCase(BluebottleTestCase):
             start_date=start.date(),
             duration=1
         )
-        event.review_transitions.submit()
-        event.transitions.start()
-        event.save()
+        ParticipantFactory.create_batch(3, activity=event, status='new')
 
-        self.assertEqual(event.status, 'running')
         tenant = connection.tenant
         check_event_start()
         check_event_end()
@@ -88,9 +79,9 @@ class EventTasksTestCase(BluebottleTestCase):
             event = Event.objects.get(pk=event.pk)
         self.assertEqual(event.status, EventTransitions.values.succeeded)
 
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'You completed your event "{}"!'.format(event.title))
-        self.assertTrue("Hi Nono,", mail.outbox[0].body)
+        self.assertEqual(len(mail.outbox), 4)
+        self.assertEqual(mail.outbox[-1].subject, 'You completed your event "{}"!'.format(event.title))
+        self.assertTrue("Hi Nono,", mail.outbox[-1].body)
 
     def test_event_reminder_task(self):
         user = BlueBottleUserFactory.create(first_name='Nono')

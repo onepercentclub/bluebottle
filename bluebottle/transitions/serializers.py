@@ -22,12 +22,15 @@ class AvailableTransitionsField(ReadOnlyField):
             {
                 'name': transition.name,
                 'target': transition.target,
-                'available': (
-                    transition.is_possible(value.transitions) and
-                    (user and transition.is_allowed(transitions, user))
-                ),
+                'available': True,
             }
             for transition in transitions.all_transitions
+            if (
+                    transition.is_possible(value.transitions) and
+                    (user and transition.is_allowed(transitions, user)) and
+                    not transition.options.get('automatic')
+
+                )
         )
 
     def get_attribute(self, instance):

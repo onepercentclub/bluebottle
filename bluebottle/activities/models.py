@@ -5,13 +5,13 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
 
-from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin, TransitionNotPossible
+from bluebottle.fsm import TransitionsMixin
+from bluebottle.fsm.state import StateManager, AutomaticStateTransitionMixin
 
 from polymorphic.models import PolymorphicModel
 from bluebottle.initiatives.models import Initiative
-from bluebottle.activities.transitions import ActivityReviewTransitions
-from bluebottle.activities.transitions import (
-    ActivityTransitions, ContributionTransitions, OrganizerTransitions
+from bluebottle.activities.states import (
+    ActivityStateMachine, ReviewStateMachine, OrganizerStateMachine
 )
 from bluebottle.follow.models import Follow
 from bluebottle.utils.models import ValidatedModelMixin
@@ -36,13 +36,9 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
         null=True, blank=True
     )
 
-    status = FSMField(
-        default=ActivityTransitions.default
-    )
+    status = models.CharField(max_length=40)
 
-    review_status = FSMField(
-        default=ActivityReviewTransitions.default
-    )
+    review_status = models.CharField(max_length=40)
 
     initiative = models.ForeignKey(Initiative, related_name='activities')
 
@@ -55,10 +51,10 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
     followers = GenericRelation('follow.Follow', object_id_field='instance_id')
     messages = GenericRelation('notifications.Message')
 
-    review_transitions = TransitionManager(ActivityReviewTransitions, 'review_status')
     follows = GenericRelation(Follow, object_id_field='instance_id')
 
-    needs_review = False
+    states = StateManager(ActivityStateMachine, 'status')
+    review_states = StateManager(ReviewStateMachine, 'review_status')
 
     @property
     def stats(self):
@@ -94,16 +90,6 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
             }
         )
 
-        if self.review_status in (
-            ActivityReviewTransitions.values.needs_work,
-            ActivityReviewTransitions.values.draft
-        ):
-            try:
-                self.review_transitions.submit()
-                super(Activity, self).save()
-            except TransitionNotPossible:
-                pass
-
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
@@ -114,9 +100,7 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
 
 
 class Contribution(TransitionsMixin, PolymorphicModel):
-    status = FSMField(
-        default=ContributionTransitions.values.new,
-    )
+    status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
@@ -134,8 +118,8 @@ class Contribution(TransitionsMixin, PolymorphicModel):
         ordering = ('-created',)
 
 
-class Organizer(Contribution):
-    transitions = TransitionManager(OrganizerTransitions, 'status')
+class Organizer(AutomaticStateTransitionMixin, Contribution):
+    states = StateManager(OrganizerStateMachine, 'status')
 
     class Meta:
         verbose_name = _("Organizer")

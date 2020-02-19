@@ -9,9 +9,10 @@ from django.utils.timezone import get_current_timezone, utc
 from requests.models import PreparedRequest
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
-from bluebottle.follow.models import follow
+from bluebottle.events.transitions import ParticipantTransitions
+from bluebottle.events.states import EventStateMachine, ParticipantStateMachine
 from bluebottle.fsm import TransitionManager
+from bluebottle.fsm.state import StateManager, AutomaticStateTransitionMixin
 from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import Validator
 
@@ -30,7 +31,7 @@ class RegistrationDeadlineValidator(Validator):
         )
 
 
-class Event(Activity):
+class Event(AutomaticStateTransitionMixin, Activity):
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
     automatically_accept = models.BooleanField(default=True)
 
@@ -45,9 +46,9 @@ class Event(Activity):
     end = models.DateTimeField(_('end'), null=True, blank=True)
     registration_deadline = models.DateField(_('deadline to apply'), null=True, blank=True)
 
-    transitions = TransitionManager(EventTransitions, 'status')
-
     validators = [RegistrationDeadlineValidator]
+
+    states = StateManager(EventStateMachine, 'status')
 
     @property
     def required_fields(self):
@@ -89,16 +90,6 @@ class Event(Activity):
     class JSONAPIMeta:
         resource_name = 'activities/events'
 
-    def check_capacity(self, save=True):
-        if self.capacity and len(self.participants) >= self.capacity and self.status == EventTransitions.values.open:
-            self.transitions.full()
-            if save:
-                self.save()
-        elif self.capacity and len(self.participants) < self.capacity and self.status == EventTransitions.values.full:
-            self.transitions.reopen()
-            if save:
-                self.save()
-
     @property
     def start(self):
         if self.start_time and self.start_date:
@@ -113,16 +104,17 @@ class Event(Activity):
         if self.start and self.duration:
             self.end = self.start + datetime.timedelta(hours=self.duration)
 
-        self.check_capacity(save=False)
+        super(Event, self).save(*args, **kwargs)
 
-        return super(Event, self).save(*args, **kwargs)
+        for contribution in self.contributions.all():
+            contribution.states.transition(save=True)
 
     @property
     def participants(self):
-        return self.contributions.instance_of(Participant).filter(
+        return self.contributions.filter(
             status__in=[ParticipantTransitions.values.new,
                         ParticipantTransitions.values.succeeded]
-        )
+        ).instance_of(Participant)
 
     @property
     def uid(self):
@@ -179,9 +171,11 @@ class Event(Activity):
         return prepared_request.url
 
 
-class Participant(Contribution):
+class Participant(AutomaticStateTransitionMixin, Contribution):
     time_spent = models.FloatField(default=0)
     transitions = TransitionManager(ParticipantTransitions, 'status')
+
+    states = StateManager(ParticipantStateMachine, 'status')
 
     class Meta:
         verbose_name = _("Participant")
@@ -203,28 +197,12 @@ class Participant(Contribution):
         resource_name = 'contributions/participants'
 
     def save(self, *args, **kwargs):
-        created = self.pk is None
-
         if not self.contribution_date:
             self.contribution_date = self.activity.start
 
-        # Fail the self if hours are set to 0
-        if self.status == ParticipantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:
-            self.transitions.close()
-        # Succeed self if the hours are set to an amount
-        elif self.status in [
-            ParticipantTransitions.values.failed,
-            ParticipantTransitions.values.closed
-        ] and self.time_spent not in [None, '0', 0.0]:
-            self.transitions.succeed()
-
         super(Participant, self).save(*args, **kwargs)
 
-        if created and self.status == 'new':
-            self.transitions.initiate()
-            follow(self.user, self.activity)
-
-        self.activity.check_capacity()
+        self.activity.states.transition(save=True)
 
     def delete(self, *args, **kwargs):
         super(Participant, self).delete(*args, **kwargs)

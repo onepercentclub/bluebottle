@@ -19,9 +19,9 @@ class ReviewStateMachine(ProxiedStateMachine):
 
     initiate = EmptyState().to(draft)
 
-    submit = draft.to(submitted, conditions=[is_complete])
+    submit = draft.to(submitted, name=_('Submit'), conditions=[is_complete], automatic=False)
     approve = submitted.to(
-        approved, conditions=[is_complete]
+        approved, name=_('Approve'), conditions=[is_complete], automatic=False
     )
-    close = (draft | submitted | approved).to(closed)
-    reopen = closed.to(draft)
+    close = (draft | submitted | approved).to(closed, name=_('Close'), automatic=False)
+    reopen = closed.to(draft, name=_('Reopen'), automatic=False)

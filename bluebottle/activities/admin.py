@@ -83,10 +83,10 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     readonly_fields = [
         'created',
         'updated',
-        'status',
-        'review_status',
         'valid',
         'complete',
+        'status',
+        'review_status',
         'transition_date',
         'stats_data']
 
@@ -108,13 +108,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             return [
                 'complete',
                 'valid',
-                'review_status',
                 'review_states',
             ]
         return [
             'complete',
             'valid',
-            'status',
             'states',
         ]
 

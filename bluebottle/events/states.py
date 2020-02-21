@@ -22,13 +22,13 @@ class EventStateMachine(ActivityStateMachine):
         return not self.is_full()
 
     def has_finished(self):
-        return self.instance.end < timezone.now()
+        return self.instance.end and self.instance.end < timezone.now()
 
     def has_not_finished(self):
         return not self.has_finished()
 
     def has_participants(self):
-        return len(self.instance.participants)
+        return len(self.instance.participants) > 0
 
     def has_no_participants(self):
         return not self.has_participants()
@@ -45,8 +45,10 @@ class EventStateMachine(ActivityStateMachine):
         conditions=[has_finished, has_participants],
         messages=[EventSucceededOwnerMessage]
     )
-    close = (full | ActivityStateMachine.open | ActivityStateMachine.closed).to(
-        ActivityStateMachine.succeeded, conditions=[has_finished, has_no_participants]
+    close = (full | ActivityStateMachine.open | ActivityStateMachine.succeeded).to(
+        ActivityStateMachine.closed,
+        conditions=[has_finished, has_no_participants],
+        messages=[EventClosedOwnerMessage]
     )
 
     reopen = (ActivityStateMachine.succeeded | ActivityStateMachine.closed).to(

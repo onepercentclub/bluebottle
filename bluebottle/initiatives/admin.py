@@ -9,12 +9,13 @@ from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.geo.models import Location, Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
-from bluebottle.utils.admin import FSMAdmin, BasePlatformSettingsAdmin, export_as_csv_action
-from bluebottle.utils.forms import FSMModelForm
+from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action
+from bluebottle.fsm.admin import StateMachineAdmin
+from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.wallposts.admin import WallpostInline
 
 
-class InitiativeAdminForm(FSMModelForm):
+class InitiativeAdminForm(StateMachineModelForm):
 
     class Meta:
         model = Initiative
@@ -68,7 +69,7 @@ class InitiativeCountryFilter(admin.SimpleListFilter):
 
 
 @admin.register(Initiative)
-class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, FSMAdmin):
+class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, StateMachineAdmin):
 
     form = InitiativeAdminForm
 
@@ -83,7 +84,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, FSM
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
 
-    readonly_fields = ['status', 'link', 'created', 'updated']
+    readonly_fields = ['link', 'created', 'updated']
 
     ordering = ('-created', )
 
@@ -138,7 +139,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, FSM
                 'has_organization', 'organization', 'organization_contact')}),
             (_('Review'), {'fields': (
                 'reviewer', 'activity_manager',
-                'promoter', 'status', 'transitions')}),
+                'promoter', 'states')}),
         )
 
     inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]

@@ -7,7 +7,8 @@ class TransitionNotPossible(Exception):
 
 
 class Transition(object):
-    def __init__(self, sources, target, automatic=True, conditions=None, **options):
+    def __init__(self, sources, target, name=None, automatic=True, conditions=None, **options):
+        self.name = name
         self.sources = sources
         self.target = target
         self.automatic = automatic
@@ -55,6 +56,9 @@ class Transition(object):
 
     def __repr__(self):
         return '<Transition from {} to {}>'.format(self.sources, self.target)
+
+    def __unicode__(self):
+        return unicode(self.name or self.field)
 
 
 pre_state_transition = Signal(providing_args=['instance', 'transition', 'kwargs'])
@@ -127,6 +131,9 @@ class State(object):
     def __repr__(self):
         return '<State {}>'.format(self.name)
 
+    def __unicode__(self):
+        return unicode(self.name)
+
 
 class EmptyState(State):
     _instance = None
@@ -185,6 +192,12 @@ class StateMachine(object):
 
             if initial_transitions:
                 getattr(self, initial_transitions[0].field)()
+
+    @property
+    def current_state(self):
+        for state in self.states.values():
+            if state.value == self.state:
+                return state
 
     def possible_transitions(self, **kwargs):
         result = []

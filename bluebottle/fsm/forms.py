@@ -23,15 +23,14 @@ class StateMachineModelFormMetaClass(ModelFormMetaclass):
 class StateMachineModelForm(forms.ModelForm):
     __metaclass__ = StateMachineModelFormMetaClass
 
-    def __init__(self, _request=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(StateMachineModelForm, self).__init__(*args, **kwargs)
         for field in self.state_machine_fields:
             manager = getattr(self.instance, field)
             transitions = manager.possible_transitions()
 
             self.fields[field].widget.attrs['obj'] = self.instance
-            self.fields[manager.field].choices = [(state.name, state.value) for state in manager.states.values()]
-            self.fields[manager.field].widget.attrs['readonly'] = True
+            self.fields[field].widget.attrs['value'] = manager.current_state
 
             def get_url(name):
                 url_name = 'admin:{}_{}_state_transition'.format(
@@ -43,7 +42,8 @@ class StateMachineModelForm(forms.ModelForm):
                 )
 
             self.fields[field].choices = [
-                (get_url(transition.field), transition.field) for transition in transitions
+                (get_url(transition.field), unicode(transition)) for transition in transitions
+                if not transition.automatic
             ]
 
     @property

@@ -20,13 +20,20 @@ class ReviewStateMachine(ProxiedStateMachine):
     def initiative_is_approved(self):
         return self.instance.initiative.status == 'approved'
 
-    initiate = EmptyState().to(draft)
+    def initiative_is_not_approved(self):
+        return not self.initiative_is_approved()
 
-    submit = draft.to(submitted, conditions=[is_complete])
+    initiate = EmptyState().to(draft, name=_('Initiate'))
+
+    submit = draft.to(submitted, name=_('Submit'), conditions=[is_complete])
     approve = submitted.to(
-        approved, conditions=[is_complete, initiative_is_approved]
+        approved,
+        conditions=[is_complete, initiative_is_approved]
     )
     close = (draft | submitted | approved).to(closed, automatic=False)
+    close_because_of_initiative = (draft | submitted | approved).to(
+        closed, conditions=[initiative_is_not_approved]
+    )
     reopen = closed.to(draft, automatic=False)
 
 
@@ -52,7 +59,7 @@ class ActivityStateMachine(ProxiedStateMachine):
 
 class ContributionStateMachine(ProxiedStateMachine):
     new = State(_('new'), 'new')
-    succeeded = State(_('succeeded!!!'), 'succeeded')
+    succeeded = State(_('succeeded'), 'succeeded')
     failed = State(_('failed'), 'failed')
     closed = State(_('closed'), 'closed')
 

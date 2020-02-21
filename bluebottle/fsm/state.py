@@ -1,3 +1,4 @@
+from django.utils.translation import ugettext_lazy as _
 from django.dispatch import Signal
 
 
@@ -18,14 +19,20 @@ class Transition(object):
         return [source.value for source in self.sources]
 
     def is_valid(self, machine):
-        return all(condition(machine) for condition in self.conditions)
+        if not all(condition(machine) for condition in self.conditions):
+            raise TransitionNotPossible(
+                _('Conditions not met for transition')
+            )
 
     def can_execute(self, machine):
-        return self.is_valid(machine) and machine.state in self.source_values
+        self.is_valid(machine)
+
+        if machine.state not in self.source_values:
+            raise TransitionNotPossible(
+                _('Cannot transition from {}').format(machine.state)
+            )
 
     def on_execute(self, machine):
-        print 'Performing transition for {}: {}'.format(machine.instance.__class__, self)
-
         machine.state = self.target.value
 
         try:
@@ -34,14 +41,8 @@ class Transition(object):
             pass
 
     def execute(self, machine, **kwargs):
-        if self.can_execute(machine, **kwargs):
-            self.on_execute(machine, **kwargs)
-        else:
-            raise TransitionNotPossible(
-                'Transition from {} to {} not possible'.format(
-                    machine.state, self.target.value
-                )
-            )
+        self.can_execute(machine, **kwargs)
+        self.on_execute(machine, **kwargs)
 
     def __get__(self, instance, owner):
         if instance:
@@ -68,8 +69,12 @@ class DjangoTransition(Transition):
     def can_execute(self, machine, user=None, **kwargs):
         result = super(DjangoTransition, self).can_execute(machine)
 
-        if self.permission:
-            return result and user and self.permission(machine, user)
+        if self.permission and user and not self.permission(machine, user):
+            raise TransitionNotPossible(
+                _('You are not allowed to perform this transition')
+            )
+
+            return result and (not user or self.permission(machine, user))
         else:
             return result
 
@@ -181,17 +186,21 @@ class StateMachine(object):
             if initial_transitions:
                 getattr(self, initial_transitions[0].field)()
 
-    @property
-    def possible_transitions(self):
-        return [
-            transition for transition in self.transitions.values()
-            if transition.can_execute(self)
-        ]
+    def possible_transitions(self, **kwargs):
+        result = []
+        for transition in self.transitions.values():
+            try:
+                transition.can_execute(self, **kwargs)
+                result.append(transition)
+            except TransitionNotPossible:
+                pass
+
+        return result
 
     @property
     def automatic_transition(self):
         automatic_transitions = [
-            transition for transition in self.possible_transitions
+            transition for transition in self.possible_transitions()
             if transition.automatic
         ]
 
@@ -231,7 +240,8 @@ class StateManager(object):
         if not hasattr(cls, '_state_machines'):
             cls._state_machines = []
 
-        cls._state_machines.append(name)
+        if name not in cls._state_machines:
+            cls._state_machines.append(name)
         setattr(cls, name, self)
 
     def __get__(self, instance, owner):

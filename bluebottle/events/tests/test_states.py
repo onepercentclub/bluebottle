@@ -118,7 +118,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
             start=timezone.now() + timedelta(hours=1),
             duration=1
         )
-        ParticipantFactory.create_batch(activity=event)
+        ParticipantFactory.create(activity=event)
 
         future = timezone.now() + timedelta(hours=4)
         with mock.patch.object(timezone, 'now', return_value=future):
@@ -128,3 +128,33 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         for participant in event.contributions.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
+
+    def test_succeed_when_passed(self):
+        event = EventFactory.create(
+            initiative=self.initiative,
+            start=timezone.now() - timedelta(hours=1),
+            duration=1
+        )
+        ParticipantFactory.create(activity=event)
+
+        self.assertEqual(event.status, EventStateMachine.succeeded.value)
+
+        for participant in event.contributions.instance_of(Participant):
+            self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
+
+    def test_succeed_change_start(self):
+        event = EventFactory.create(
+            initiative=self.initiative,
+            start=timezone.now() - timedelta(hours=1),
+            duration=1
+        )
+        ParticipantFactory.create(activity=event)
+
+        event.start = timezone.now() + timedelta(hours=1)
+        event.save()
+
+        self.assertEqual(event.status, EventStateMachine.open.value)
+
+        for participant in event.contributions.instance_of(Participant):
+            self.assertEqual(participant.status, ParticipantStateMachine.new.value)
+

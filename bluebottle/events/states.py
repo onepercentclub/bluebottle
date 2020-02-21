@@ -18,6 +18,9 @@ class EventStateMachine(ActivityStateMachine):
     def is_full(self):
         return len(self.instance.participants) >= self.instance.capacity
 
+    def is_not_full(self):
+        return not self.is_full()
+
     def has_finished(self):
         return self.instance.end < timezone.now()
 
@@ -32,6 +35,9 @@ class EventStateMachine(ActivityStateMachine):
 
     fill = ActivityStateMachine.open.to(
         full, conditions=[is_full]
+    )
+    unfill = full.to(
+        ActivityStateMachine.open, conditions=[is_not_full]
     )
 
     succeed = (full | ActivityStateMachine.open | ActivityStateMachine.closed).to(
@@ -61,19 +67,28 @@ class ParticipantStateMachine(ContributionStateMachine):
         return self.instance.user == user
 
     def is_activity_owner(self, user):
-        return self.instance.activity.owner == user
+        return user.is_staff or self.instance.activity.owner == user
 
     withdraw = ContributionStateMachine.new.to(withdrawn, automatic=False, permission=is_user)
+    unwithdraw = withdrawn.to(ContributionStateMachine.new, automatic=False, permission=is_user)
     reject = ContributionStateMachine.new.to(
         rejected,
         automatic=False,
         messages=[ParticipantRejectedMessage],
         permission=is_activity_owner
     )
-    mark_absent = ContributionStateMachine.succeeded.to(no_show, automatic=False)
+    unreject = rejected.to(
+        ContributionStateMachine.new,
+        automatic=False,
+        messages=[ParticipantRejectedMessage],
+        permission=is_activity_owner
+    )
 
-    reaccept = (withdrawn | rejected | no_show).to(
-        ContributionStateMachine.new, automatic=False
+    mark_absent = ContributionStateMachine.succeeded.to(
+        no_show, automatic=False, permission=is_activity_owner
+    )
+    mark_present = no_show.to(
+        ContributionStateMachine.succeeded, automatic=False, permission=is_activity_owner
     )
 
     succeed = ContributionStateMachine.new.to(

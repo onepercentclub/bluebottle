@@ -16,17 +16,17 @@ from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.funding.models import Funding, Donation
 from bluebottle.funding.transitions import FundingTransitions
-from bluebottle.utils.admin import FSMAdmin
+from bluebottle.fsm.admin import StateMachineAdmin
 from bluebottle.wallposts.admin import WallpostInline
 
 
-class ContributionChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
+class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Contribution
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
     list_filter = ['status', ]
     ordering = ('-created', )
     show_in_index = True
-    readonly_fields = ['contribution_date']
+    readonly_fields = ['contribution_date', 'created', 'activity']
 
     def activity_link(self, obj):
         url = reverse("admin:{}_{}_change".format(
@@ -59,7 +59,7 @@ class OrganizerAdmin(ContributionChildAdmin):
 
 
 @admin.register(Contribution)
-class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
+class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Contribution
     child_models = (Participant, Donation, Applicant, Organizer)
     list_display = ['created', 'contribution_date', 'owner', 'type', 'activity', 'status']
@@ -72,7 +72,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
         return obj.get_real_instance_class()._meta.verbose_name
 
 
-class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
+class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline, WallpostInline)
@@ -106,28 +106,17 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
             ActivityReviewTransitions.values.closed
         ]:
             return [
-                'title',
                 'complete',
                 'valid',
                 'review_status',
-                'review_transitions',
-                'transition_date'
+                'review_states',
             ]
         return [
             'complete',
             'valid',
             'status',
-            'transitions',
-            'transition_date'
+            'states',
         ]
-
-    status_fields = (
-        'complete',
-        'valid',
-        'status',
-        'transitions',
-        'transition_date'
-    )
 
     detail_fields = (
         'description',
@@ -150,11 +139,14 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     stats_data.short_description = _('Statistics')
 
     def valid(self, obj):
-        if not obj.review_transitions.is_valid() and not obj.review_transitions.initiative_is_approved():
+        errors = list(obj.errors)
+
+        if not errors and obj.review_states.initiative_is_approved():
             return '-'
-        errors = obj.review_transitions.is_valid() or []
-        if obj.review_transitions.initiative_is_approved():
-            errors += [obj.review_transitions.initiative_is_approved()]
+
+        if not obj.review_states.initiative_is_approved():
+            errors.append(_('The initiative is not approved'))
+
         return format_html("<ul>{}</ul>", format_html("".join([
             format_html(u"<li>{}</li>", value) for value in errors
         ])))
@@ -162,12 +154,18 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     valid.short_description = _('Validation errors')
 
     def complete(self, obj):
-        if not obj.review_transitions.is_complete():
+        required = list(obj.required)
+        if not required:
             return '-'
-        return format_html("<ul>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in obj.review_transitions.is_complete()
-        ])))
 
+        errors = [
+            obj._meta.get_field(field).verbose_name
+            for field in required
+        ]
+
+        return format_html("<ul>{}</ul>", format_html("".join([
+            format_html(u"<li>{}</li>", value) for value in errors
+        ])))
     complete.short_description = _('Missing data')
 
 
@@ -189,7 +187,7 @@ class ActivityStatusFilter(SimpleListFilter):
 
 
 @admin.register(Activity)
-class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
+class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
     date_hierarchy = 'transition_date'

@@ -8,11 +8,11 @@ from bluebottle.events.models import Event, Participant
 from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import export_as_csv_action
-from bluebottle.utils.forms import FSMModelForm
+from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.wallposts.admin import WallpostInline
 
 
-class EventAdminForm(FSMModelForm):
+class EventAdminForm(StateMachineModelForm):
 
     class Meta:
         model = Event
@@ -36,10 +36,10 @@ class ParticipantInline(admin.TabularInline):
         return format_html('<a href="{}">{}</a>', url, obj.id)
 
 
-class ParticipantAdminForm(FSMModelForm):
+class ParticipantAdminForm(StateMachineModelForm):
     class Meta:
         model = Participant
-        exclude = ['status', ]
+        exclude = ('transition_date', )
 
 
 @admin.register(Participant)

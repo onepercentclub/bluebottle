@@ -52,7 +52,7 @@ class ActivityStateMachine(ProxiedStateMachine):
 
 class ContributionStateMachine(ProxiedStateMachine):
     new = State(_('new'), 'new')
-    succeeded = State(_('succeeded'), 'succeeded')
+    succeeded = State(_('succeeded!!!'), 'succeeded')
     failed = State(_('failed'), 'failed')
     closed = State(_('closed'), 'closed')
 

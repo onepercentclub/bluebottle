@@ -142,7 +142,7 @@ class FundingAdminForm(FSMModelForm):
 
     class Meta:
         model = Funding
-        fields = '__all__'
+        exclude = ('contribution_date', )
         widgets = {
             'description': SummernoteWidget(attrs={'height': 400})
         }

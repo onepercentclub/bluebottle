@@ -16,7 +16,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
     def setUp(self):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
-        self.initiative.states.approve()
+        self.initiative.states.approve(save=True)
 
         self.event = EventFactory.create(
             title='',
@@ -157,4 +157,3 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         for participant in event.contributions.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.new.value)
-

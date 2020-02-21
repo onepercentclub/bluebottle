@@ -241,7 +241,7 @@ class StateManager(object):
             cls._state_machines = []
 
         if name not in cls._state_machines:
-            cls._state_machines.append(name)
+            cls._state_machines.insert(0, name)
         setattr(cls, name, self)
 
     def __get__(self, instance, owner):

@@ -67,6 +67,13 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment.end_date_type = 'deadline'
         assignment.save()
 
+        self.assertEqual(
+            assignment.end_date_type, 'deadline'
+        )
+        self.assertIsNone(
+            assignment.preparation
+        )
+
     def test_date_not_changed(self):
         assignment = AssignmentFactory(
             title='Test Title',

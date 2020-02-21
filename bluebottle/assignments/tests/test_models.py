@@ -55,6 +55,18 @@ class AssignmentTestCase(BluebottleTestCase):
             else:
                 self.assertFalse(participant.user.email in recipients)
 
+    def test_end_date_type_changed(self):
+        assignment = AssignmentFactory(
+            title='Test Title',
+            status='open',
+            end_date_type='on_date',
+            preparation=5,
+            date=now() + timedelta(days=4),
+        )
+
+        assignment.end_date_type = 'deadline'
+        assignment.save()
+
     def test_date_not_changed(self):
         assignment = AssignmentFactory(
             title='Test Title',

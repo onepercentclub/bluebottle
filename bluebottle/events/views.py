@@ -22,7 +22,7 @@ from bluebottle.transitions.views import TransitionList
 
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, ListCreateAPIView, JsonApiViewMixin,
-    RetrieveAPIView
+    PrivateFileView
 )
 
 
@@ -119,13 +119,12 @@ class ParticipantTransitionList(TransitionList):
     }
 
 
-class EventIcalView(RetrieveAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ActivityOwnerPermission),
-    )
+class EventIcalView(PrivateFileView):
     queryset = Event.objects.exclude(status='closed')
 
-    def retrieve(self, *args, **kwargs):
+    max_age = 30 * 60  # half an hour
+
+    def get(self, *args, **kwargs):
         instance = self.get_object()
         calendar = icalendar.Calendar()
 

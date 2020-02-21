@@ -1,5 +1,3 @@
-from django.urls import reverse
-
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework import serializers
 
@@ -11,6 +9,7 @@ from bluebottle.activities.utils import (
 )
 from bluebottle.events.filters import ParticipantListFilter
 from bluebottle.events.models import Event, Participant
+from bluebottle.utils.utils import reverse_signed
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 from bluebottle.utils.serializers import NoCommitMixin
@@ -117,7 +116,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
 
     def get_links(self, instance):
         return {
-            'ical': reverse('event-ical', args=(instance.pk, )),
+            'ical': reverse_signed('event-ical', args=(instance.pk, )),
             'google': instance.google_calendar_link,
             'outlook': instance.outlook_link,
         }

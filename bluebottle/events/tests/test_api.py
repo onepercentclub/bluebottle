@@ -353,17 +353,21 @@ class EventAPITestCase(BluebottleTestCase):
             outlook_query['enddt'][0], unicode(event.end.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
         )
 
-        self.assertEqual(
-            links['ical'], reverse('event-ical', args=(event.pk, ))
+        self.assertTrue(
+            links['ical'].startswith(reverse('event-ical', args=(event.pk, )))
         )
 
 
 class EventIcalTestCase(BluebottleTestCase):
     def test_get(self):
         event = EventFactory.create(title='Pollute Katwijk Beach')
-        event_url = reverse('event-ical', args=(event.pk,))
 
+        event_url = reverse('event-detail', args=(event.pk,))
         response = self.client.get(event_url)
+        ical_url = response.json()['data']['attributes']['links']['ical']
+
+        response = self.client.get(ical_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.get('content-type'), 'text/calendar')
         self.assertEqual(
@@ -387,6 +391,20 @@ class EventIcalTestCase(BluebottleTestCase):
             )
             self.assertEqual(str(ical_event['url']), event.get_absolute_url())
             self.assertEqual(str(ical_event['organizer']), 'MAILTO:{}'.format(event.owner.email))
+
+    def test_get_no_signature(self):
+        event = EventFactory.create(title='Pollute Katwijk Beach')
+
+        ical_url = reverse('event-ical', args=(event.pk,))
+        response = self.client.get(ical_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_wrong_signature(self):
+        event = EventFactory.create(title='Pollute Katwijk Beach')
+
+        ical_url = reverse('event-ical', args=(event.pk,))
+        response = self.client.get('{}?signature=ewiorjewoijical_url'.format(ical_url))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class EventValidationTestCase(BluebottleTestCase):

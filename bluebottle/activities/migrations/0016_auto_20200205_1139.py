@@ -36,6 +36,9 @@ def create_contribution_view(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('events', '0011_event_update_contribution_date'),
+        ('funding', '0052_auto_20200205_1710'),
+        ('assignments', '0013_assignment_update_contribution_date'),
         ('activities', '0015_auto_20200128_1045'),
     ]
 

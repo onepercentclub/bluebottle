@@ -117,6 +117,11 @@ class EventAdmin(ActivityChildAdmin):
 
     def save_formset(self, request, form, formset, change):
         instances = formset.save(commit=False)
+
+        # Deletes participants one by one because default farmset.save() behavior was overriden
+        for obj in formset.deleted_objects:
+            obj.delete()
+
         for instance in instances:
             # If we created a new participant through admin then
             # set it to succeeded when event is succeeded

@@ -117,7 +117,6 @@ class EventAdmin(ActivityChildAdmin):
 
     def save_formset(self, request, form, formset, change):
         instances = formset.save(commit=False)
-
         for instance in instances:
             # If we created a new participant through admin then
             # set it to succeeded when event is succeeded
@@ -127,8 +126,4 @@ class EventAdmin(ActivityChildAdmin):
                 instance.time_spent = form.instance.duration
                 instance.status = ParticipantTransitions.values.succeeded
             instance.save()
-        formset.save_m2m()
-
-        # Deletes participants one by one because default formset.save() behavior was overriden
-        for deletedObject in formset.deleted_objects:
-            deletedObject.delete()
+        formset.save()

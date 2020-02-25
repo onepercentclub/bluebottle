@@ -126,4 +126,4 @@ class EventAdmin(ActivityChildAdmin):
                 instance.time_spent = form.instance.duration
                 instance.status = ParticipantTransitions.values.succeeded
             instance.save()
-        formset.save()
+        super(EventAdmin, self).save_formset(request, form, formset, change)

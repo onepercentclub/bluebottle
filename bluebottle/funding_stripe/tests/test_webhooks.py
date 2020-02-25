@@ -2,7 +2,9 @@ import json
 
 import bunch
 import mock
+from moneyed import Money
 import stripe
+
 from django.urls import reverse
 from django.core import mail
 from rest_framework import status
@@ -59,6 +61,13 @@ class IntentWebhookTestCase(BluebottleTestCase):
             data = json.load(hook_file)
             data['object']['id'] = self.intent.intent_id
 
+        transfer = stripe.Transfer(data['object']['charges']['data'][0]['transfer'])
+        transfer.update({
+            'id': data['object']['charges']['data'][0]['transfer'],
+            'amount': 2500,
+            'currency': 'eur'
+        })
+
         with mock.patch(
             'stripe.Webhook.construct_event',
             return_value=MockEvent(
@@ -67,23 +76,28 @@ class IntentWebhookTestCase(BluebottleTestCase):
             'stripe.PaymentIntent.retrieve',
             return_value=self.stripe_payment_intent
         ):
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            # Stripe might send double success webhooks
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            with mock.patch(
+                'stripe.Transfer.retrieve',
+                return_value=transfer
+            ):
+                response = self.client.post(
+                    self.webhook,
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                # Stripe might send double success webhooks
+                response = self.client.post(
+                    self.webhook,
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.intent.refresh_from_db()
         payment = self.intent.payment
         donation = Donation.objects.get(pk=self.donation.pk)
 
         self.assertEqual(donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(donation.payout_amount, Money(25, 'EUR'))
         self.assertEqual(payment.status, StripePaymentTransitions.values.succeeded)
         self.assertEqual(payment.payment_method, 'stripe-visa')
         self.donation.refresh_from_db()
@@ -126,6 +140,13 @@ class IntentWebhookTestCase(BluebottleTestCase):
             data = json.load(hook_file)
             data['object']['id'] = self.intent.intent_id
 
+        transfer = stripe.Transfer(data['object']['charges']['data'][0]['transfer'])
+        transfer.update({
+            'id': data['object']['charges']['data'][0]['transfer'],
+            'amount': 2500,
+            'currency': 'eur'
+        })
+
         with mock.patch(
             'stripe.Webhook.construct_event',
             return_value=MockEvent(
@@ -135,11 +156,15 @@ class IntentWebhookTestCase(BluebottleTestCase):
             'stripe.PaymentIntent.retrieve',
             return_value=self.stripe_payment_intent
         ):
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            with mock.patch(
+                'stripe.Transfer.retrieve',
+                return_value=transfer
+            ):
+                response = self.client.post(
+                    self.webhook,
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_refund.json') as hook_file:
             data = json.load(hook_file)
@@ -291,7 +316,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
         data = {
             'object': {
-                'id': self.payment.charge_token
+                'id': self.payment.charge_token,
             }
         }
 
@@ -301,6 +326,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                 'charge.pending', data
             )
         ):
+
             response = self.client.post(
                 self.webhook,
                 HTTP_STRIPE_SIGNATURE='some signature'
@@ -311,20 +337,33 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
         self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.pending)
 
+        data['object']['transfer'] = 'tr_some_id'
+
+        transfer = stripe.Transfer(data['object']['transfer'])
+        transfer.update({
+            'amount': 2500,
+            'currency': 'eur'
+        })
+
         with mock.patch(
             'stripe.Webhook.construct_event',
             return_value=MockEvent(
                 'charge.succeeded', data
             )
         ):
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            with mock.patch(
+                'stripe.Transfer.retrieve',
+                return_value=transfer
+            ):
+                response = self.client.post(
+                    self.webhook,
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
         self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(self.donation.payout_amount, Money(25, 'EUR'))
         self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.succeeded)
 
     def test_charge_succeeded(self):
@@ -334,9 +373,15 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
         data = {
             'object': {
-                'id': self.payment.charge_token
+                'id': self.payment.charge_token,
+                'transfer': 'tr_some_id'
             }
         }
+        transfer = stripe.Transfer(data['object']['transfer'])
+        transfer.update({
+            'amount': 2500,
+            'currency': 'eur'
+        })
 
         with mock.patch(
             'stripe.Webhook.construct_event',
@@ -344,20 +389,25 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                 'charge.succeeded', data
             )
         ):
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            # Stripe might send double success webhooks
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            with mock.patch(
+                'stripe.Transfer.retrieve',
+                return_value=transfer
+            ):
+                response = self.client.post(
+                    self.webhook,
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                # Stripe might send double success webhooks
+                response = self.client.post(
+                    self.webhook,
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
         self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(self.donation.payout_amount, Money(25, 'EUR'))
         self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.succeeded)
         self.assertEqual(self.payment.payment_method, 'stripe-ideal')
 

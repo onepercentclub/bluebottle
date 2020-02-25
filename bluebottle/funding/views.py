@@ -149,9 +149,11 @@ class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
 
 
 class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
-    queryset = Funding.objects.all()
-    serializer_class = FundingSerializer
+    queryset = Funding.objects.select_related(
+        'initiative', 'initiative__owner',
+    ).prefetch_related('rewards')
 
+    serializer_class = FundingSerializer
     permission_classes = (
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
@@ -331,7 +333,11 @@ class SupportersExportView(PrivateFileView):
         writer = csv.writer(response)
 
         writer.writerow([field[1] for field in self.fields])
-        for donation in instance.contributions.filter(status='succeeded'):
+        for donation in instance.contributions.filter(
+            status='succeeded'
+        ).instance_of(
+            Donation
+        ):
             writer.writerow([
                 prep_field(request, donation, field[0]) for field in self.fields
             ])

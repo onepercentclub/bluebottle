@@ -181,3 +181,4 @@ class ParticipantTestCase(BluebottleTestCase):
         participant.time_spent = 10
         participant.save()
         self.assertEqual(participant.status, 'succeeded')
+        self.assertEqual(participant.contribution_date, event.start)

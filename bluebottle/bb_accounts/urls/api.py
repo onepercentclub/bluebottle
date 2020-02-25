@@ -1,9 +1,11 @@
 from django.conf.urls import url
 
-from ..views import (
+from bluebottle.bb_accounts.views import UserActivityDetail
+from bluebottle.bb_accounts.views import (
     ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
     PasswordReset, PasswordSet, UserVerification, UserDataExport, EmailSetView,
-    PasswordSetView, TokenLogin, Logout, MemberDetail
+    PasswordSetView, TokenLogin, Logout, MemberDetail, SignUpToken,
+    SignUpTokenConfirmation
 )
 
 # Public User API:
@@ -21,8 +23,11 @@ from ..views import (
 
 
 urlpatterns = [
+    url(r'^signup-token$', SignUpToken.as_view(), name='user-signup-token'),
+    url(r'^signup-token-confirm/(?P<pk>\d+\:.+)$', SignUpTokenConfirmation.as_view(), name='user-signup-token-confirm'),
     url(r'^$', UserCreate.as_view(), name='user-user-create'),
     url(r'^current$', CurrentUser.as_view(), name='user-current'),
+    url(r'^activities/$', UserActivityDetail.as_view(), name='user-activity'),
     url(r'^email$', EmailSetView.as_view(), name='user-set-email'),
     url(r'^password$', PasswordSetView.as_view(), name='user-set-password'),
     url(r'^logout$', Logout.as_view(), name='user-logout'),

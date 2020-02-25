@@ -1,6 +1,7 @@
 from django.db.models import Q
 from rest_framework_json_api.django_filters import DjangoFilterBackend
 
+from bluebottle.assignments.models import Applicant
 from bluebottle.assignments.transitions import ApplicantTransitions
 
 
@@ -11,7 +12,7 @@ class ApplicantListFilter(DjangoFilterBackend):
     """
     def filter_queryset(self, request, queryset, view):
         if request.user.is_authenticated():
-            queryset = queryset.filter(
+            queryset = queryset.instance_of(Applicant).filter(
                 Q(user=request.user) |
                 Q(activity__owner=request.user) |
                 Q(activity__initiative__activity_manager=request.user) |
@@ -22,7 +23,7 @@ class ApplicantListFilter(DjangoFilterBackend):
                 ])
             )
         else:
-            queryset = queryset.filter(status__in=[
+            queryset = queryset.instance_of(Applicant).filter(status__in=[
                 ApplicantTransitions.values.new,
                 ApplicantTransitions.values.succeeded
             ])

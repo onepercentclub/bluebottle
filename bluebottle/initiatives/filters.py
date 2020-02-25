@@ -42,11 +42,13 @@ class InitiativeSearchFilter(ElasticSearchFilter):
                 filters.append(Term(status='approved'))
 
             return filters
-        elif 'owner.id' in fields:
+        elif 'owner.id' in fields and request.user.is_authenticated:
+            value = request.user.pk
             return [
-                Term(owner_id=request.user.id) |
-                Term(activity_manager_id=request.user.id) |
-                Term(promoter_id=request.user.id) |
+                Nested(path='owner', query=Term(owner__id=value)) |
+                Nested(path='promoter', query=Term(promoter__id=value)) |
+                Nested(path='activity_manager', query=Term(activity_manager__id=value)) |
+                Nested(path='activity_owners', query=Term(activity_owners__id=value)) |
                 Term(status='approved')
             ]
         else:
@@ -59,6 +61,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
             return Q(
                 Nested(path='owner', query=Term(**{field: value})) |
                 Nested(path='promoter', query=Term(promoter__id=value)) |
+                Nested(path='activity_owners', query=Term(activity_owners__id=value)) |
                 Nested(path='activity_manager', query=Term(activity_manager__id=value))
             )
 

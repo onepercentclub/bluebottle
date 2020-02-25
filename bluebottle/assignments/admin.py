@@ -12,6 +12,7 @@ from bluebottle.tasks.models import Skill
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.forms import FSMModelForm
+from bluebottle.wallposts.admin import WallpostInline
 
 
 class AssignmentAdminForm(FSMModelForm):
@@ -51,14 +52,18 @@ class ApplicantAdmin(ContributionChildAdmin):
     list_display = ['user', 'status', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
+    date_hierarchy = 'transition_date'
+
     export_to_csv_fields = (
         ('status', 'Status'),
         ('created', 'Created'),
         ('activity', 'Activity'),
-        ('owner', 'Owner'),
+        ('user__full_name', 'Owner'),
+        ('user__email', 'Email'),
         ('motivation', 'Motivation'),
         ('time_spent', 'Time Spent'),
         ('document', 'Document'),
+        ('contribution_date', 'Contribution Date'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
@@ -81,7 +86,7 @@ class ExpertiseFilter(admin.SimpleListFilter):
 @admin.register(Assignment)
 class AssignmentAdmin(ActivityChildAdmin):
     form = AssignmentAdminForm
-    inlines = (ApplicantInline, MessageAdminInline)
+    inlines = (ApplicantInline, MessageAdminInline, WallpostInline)
 
     date_hierarchy = 'end_date'
 
@@ -118,7 +123,8 @@ class AssignmentAdmin(ActivityChildAdmin):
         ('end_date', 'End Date'),
         ('duration', 'Duration'),
         ('registration_deadline', 'Registration Deadline'),
-        ('owner', 'Owner'),
+        ('owner__full_name', 'Owner'),
+        ('owner__email', 'Email'),
         ('capacity', 'Capacity'),
         ('is_online', 'Will be hosted online?'),
         ('location', 'Location'),

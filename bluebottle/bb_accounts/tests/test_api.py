@@ -353,6 +353,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         """
         Test creating a user with the api and activating the new user.
         """
+        mail.outbox = []
         # Create a user.
         new_user_email = 'nijntje27@hetkonijntje.nl'
         new_user_password = 'test-password'

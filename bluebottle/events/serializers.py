@@ -1,4 +1,6 @@
 from rest_framework.validators import UniqueTogetherValidator
+from rest_framework import serializers
+
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
@@ -7,6 +9,7 @@ from bluebottle.activities.utils import (
 )
 from bluebottle.events.filters import ParticipantListFilter
 from bluebottle.events.models import Event, Participant
+from bluebottle.utils.utils import reverse_signed
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 from bluebottle.utils.serializers import NoCommitMixin
@@ -107,6 +110,14 @@ class EventListSerializer(BaseActivityListSerializer):
 class EventSerializer(NoCommitMixin, BaseActivitySerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
     contributions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
+    links = serializers.SerializerMethodField()
+
+    def get_links(self, instance):
+        return {
+            'ical': reverse_signed('event-ical', args=(instance.pk, )),
+            'google': instance.google_calendar_link,
+            'outlook': instance.outlook_link,
+        }
 
     class Meta(BaseActivitySerializer.Meta):
         model = Event
@@ -121,6 +132,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
             'permissions',
             'registration_deadline',
             'contributions',
+            'links'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

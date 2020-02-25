@@ -57,6 +57,20 @@ class ParticipantApplicationMessage(TransitionMessage):
         return [self.obj.user]
 
 
+class ParticipantApplicationManagerMessage(TransitionMessage):
+    subject = _('A new member just signed up for your event "{title}"')
+    template = 'messages/participant_application_manager'
+    context = {
+        'title': 'activity.title'
+    }
+
+    def get_recipients(self):
+        return [
+            self.obj.activity.owner,
+            self.obj.activity.initiative.activity_manager
+        ]
+
+
 class ParticipantRejectedMessage(TransitionMessage):
     subject = _('Your status for "{title}" was changed to "not going"')
     template = 'messages/participant_rejected'

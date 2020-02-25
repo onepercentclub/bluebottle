@@ -236,6 +236,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['cms.change_sitelinks']
             },
             {
+                'name': 'notifications.messagetemplate',
+                'label': _('Email templates'),
+                'permissions': ['notifications.change_messagetemplate']
+            },
+            {
                 'name': 'redirects.redirect',
                 'permissions': ['redirects.change_redirect']
             },

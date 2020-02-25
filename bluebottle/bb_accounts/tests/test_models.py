@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.tasks.models import TaskMember
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -163,7 +164,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
     @override_settings(SEND_WELCOME_MAIL=True,
                        CELERY_MAIL=False)
-    @patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_welcome_mail_closed(self):
         """
         Test that a welcome mail is sent when a user is created when the
@@ -171,6 +171,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         """
 
         mail.outbox = []
+        MemberPlatformSettings.objects.update(closed=True)
 
         self.assertEqual(len(mail.outbox), 0)
         new_user = BlueBottleUserFactory.create(
@@ -187,13 +188,12 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
     @override_settings(SEND_WELCOME_MAIL=True,
                        CELERY_MAIL=False)
-    @patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_welcome_mail_closed_remote_id(self):
         """
         Test that a welcome mail is sent when a user is created when the
         setting are enabled
         """
-
+        MemberPlatformSettings.objects.update(closed=True)
         mail.outbox = []
 
         self.assertEqual(len(mail.outbox), 0)

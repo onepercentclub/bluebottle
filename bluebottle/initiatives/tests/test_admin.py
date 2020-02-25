@@ -10,8 +10,8 @@ from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.admin import InitiativeAdmin
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleAdminTestCase
 
 
 class TestInitiativeAdmin(BluebottleAdminTestCase):
@@ -143,3 +143,56 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
 
         messages = list(get_messages(response.wsgi_request))
         self.assertEqual(messages[0].message, 'Transition not allowed: submit')
+
+    def test_add_reviewer(self):
+        self.client.force_login(self.superuser)
+        user = BlueBottleUserFactory.create()
+        admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
+        data = {
+            'title': self.initiative.title,
+            'slug': self.initiative.slug,
+            'owner': self.initiative.owner_id,
+            'image': '',
+            'video_url': '',
+            'pitch': self.initiative.pitch,
+            'story': self.initiative.story,
+            'theme': self.initiative.theme_id,
+            'place': self.initiative.place_id,
+            'has_organization': 2,
+            'organization': '',
+            'organization_contact': '',
+            'reviewer': self.initiative.reviewer_id,
+            'activity_manager': self.initiative.activity_manager_id,
+            'promoter': '',
+            '_continue': 'Save and continue editing',
+            'activities-TOTAL_FORMS': '0',
+            'activities-INITIAL_FORMS': '0',
+            'notifications-message-content_type-object_id-TOTAL_FORMS': '0',
+            'notifications-message-content_type-object_id-INITIAL_FORMS': '0',
+            'wallposts-wallpost-content_type-object_id-TOTAL_FORMS': '0',
+            'wallposts-wallpost-content_type-object_id-INITIAL_FORMS': '0'
+        }
+        response = self.client.post(admin_url, data)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response.url, admin_url)
+
+        data['reviewer'] = user.id
+
+        # Should show confirmation page
+        response = self.client.post(admin_url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, 'Are you sure?')
+
+        data['confirm'] = 'True'
+        data['send_messages'] = 'on'
+        response = self.client.post(admin_url, data)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response.url, admin_url)
+        self.initiative.refresh_from_db()
+        self.assertEqual(self.initiative.reviewer, user)
+
+        # Should send out one mail that contains admin url and contact email
+        self.assertEqual(len(mail.outbox), 1)
+        admin_url = '/admin/initiatives/initiative/{}/change'.format(self.initiative.id)
+        self.assertTrue(admin_url in mail.outbox[0].body)
+        self.assertTrue('contact@my-bluebottle-project.com' in mail.outbox[0].body)

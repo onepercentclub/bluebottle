@@ -1,0 +1,16 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with recipient_name=to.first_name applicant_name=obj.user.full_name title=obj.activity.title context 'email' %}
+        Hi {{ recipient_name }},
+        <br>
+        {{ applicant_name }} signed up for your event {{ title }}! Give the new attendee a warm welcome.
+.
+    {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ obj.activity.get_absolute_url }}"
+       class="action-email">{% trans 'Go to event page' context 'email' %}</a>
+{% endblock %}`

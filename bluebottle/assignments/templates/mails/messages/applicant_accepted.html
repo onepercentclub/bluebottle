@@ -8,6 +8,8 @@
         {% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
             Hi {{ recipient_name }},<br>
             Good news, you have been accepted for the task "{{ assignment_title }}"!
+            <br>
+            <i>If you are unable to participate, please withdraw via the platform so that others can take your place.</i>
         {% endblocktrans %}
     {% endif %}
 {% endblock %}

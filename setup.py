@@ -72,6 +72,7 @@ install_requires = [
     'geocoder==1.37.0',
     'gunicorn==19.7.1',
     'html5lib==1.0b10',
+    'icalendar==4.0.4',
     'influxdb==4.1.1',
     'lipisha==0.2.4',
     'lxml==4.3.0',

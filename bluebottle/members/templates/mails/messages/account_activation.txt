@@ -2,20 +2,26 @@
 {% load i18n %}
 
 {% block content %}
+{% if body_txt %}
+{{ body_txt }}
+{% else %}
 {% blocktrans %}
 Welcome {{ first_name }}
 
 You’re now officially part of the {{ site_name }} community. Connect, share and work with others on initiatives that you care about.
 
 {% endblocktrans %}
-{% endblock %}
 
-{% block action %}
-{% trans "Take me there" context 'email' %}: {{ site }}{% if closed_site and not user.remote_id %}/partner{% endif %}
-{% endblock %}
-
-{% block post_action %}
 {% blocktrans %}
 If you have any questions please don’t hesitate to contact {{ contact_email }}.
 {% endblocktrans %}
+{% endif %}
+{% endblock %}
+
+{% block action %}
+{% if token %}
+{% trans "Set password" context 'email' %}: {{ site }}/setpassword/{{ uid }}-{{ token }}/
+{% else %}
+{% trans "Take me there" context 'email' %}: {{ site }}{% if closed_site and not user.remote_id %}/partner{% endif %}
+{% endif %}
 {% endblock %}

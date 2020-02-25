@@ -1,8 +1,9 @@
 import logging
+from memoize import memoize
 
 from rest_framework import permissions
 
-from tenant_extras.utils import get_tenant_properties
+from bluebottle.members.models import MemberPlatformSettings
 
 logger = logging.getLogger(__name__)
 
@@ -163,9 +164,13 @@ class ResourcePermission(BasePermission, permissions.DjangoModelPermissions):
     def has_object_action_permission(self, action, user, obj):
         return True
 
+    @memoize()
     def has_action_permission(self, action, user, model_cls):
         perms = self.get_required_permissions(action, model_cls)
         return user.has_perms(perms)
+
+    def __repr__(self):
+        return 'ResourcePermission'
 
 
 class ResourceOwnerPermission(ResourcePermission):
@@ -201,7 +206,8 @@ class TenantConditionalOpenClose(BasePermission):
 
     def has_object_action_permission(self, action, user, obj):
         try:
-            if get_tenant_properties('CLOSED_SITE'):
+            settings = MemberPlatformSettings.objects.get()
+            if settings.closed:
                 return user and user.is_authenticated()
         except AttributeError:
             pass
@@ -209,7 +215,8 @@ class TenantConditionalOpenClose(BasePermission):
 
     def has_action_permission(self, action, user, model_cls):
         try:
-            if get_tenant_properties('CLOSED_SITE'):
+            settings = MemberPlatformSettings.objects.get()
+            if settings.closed:
                 return user and user.is_authenticated()
         except AttributeError:
             pass

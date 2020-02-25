@@ -6,7 +6,6 @@ from bluebottle.fsm import transition, TransitionNotPossible
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.messages import PayoutAccountRejected, PayoutAccountVerified
 from bluebottle.funding.transitions import PaymentTransitions, PayoutAccountTransitions
-from bluebottle.funding_stripe.utils import stripe
 
 
 class StripePaymentTransitions(PaymentTransitions):
@@ -15,9 +14,9 @@ class StripePaymentTransitions(PaymentTransitions):
         target=PaymentTransitions.values.refund_requested
     )
     def request_refund(self):
-        intent = stripe.PaymentIntent.retrieve(self.instance.intent_id)
+        intent = self.instance.payment_intent.intent
 
-        intent.charges[0].refund(
+        intent.charges.data[0].refund(
             reverse_transfer=True,
         )
 

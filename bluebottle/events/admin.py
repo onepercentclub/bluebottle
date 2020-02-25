@@ -9,6 +9,7 @@ from bluebottle.events.transitions import EventTransitions, ParticipantTransitio
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.forms import FSMModelForm
+from bluebottle.wallposts.admin import WallpostInline
 
 
 class EventAdminForm(FSMModelForm):
@@ -48,12 +49,16 @@ class ParticipantAdmin(ContributionChildAdmin):
     list_display = ['user', 'status', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
+    date_hierarchy = 'transition_date'
+
     export_to_csv_fields = (
         ('status', 'Status'),
         ('created', 'Created'),
         ('activity', 'Activity'),
-        ('owner', 'Owner'),
+        ('user__full_name', 'Owner'),
+        ('user__email', 'Email'),
         ('time_spent', 'Time Spent'),
+        ('contribution_date', 'Contribution Date'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
@@ -62,7 +67,7 @@ class ParticipantAdmin(ContributionChildAdmin):
 @admin.register(Event)
 class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
-    inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
+    inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline, WallpostInline)
     list_display = [
         '__unicode__', 'initiative', 'status',
         'highlight', 'start_date', 'start_time', 'duration', 'created'
@@ -85,7 +90,7 @@ class EventAdmin(ActivityChildAdmin):
         'registration_deadline',
         'is_online',
         'location',
-        'location_hint'
+        'location_hint',
     )
 
     export_to_csv_fields = (
@@ -99,7 +104,8 @@ class EventAdmin(ActivityChildAdmin):
         ('duration', 'Duration'),
         ('end', 'End'),
         ('registration_deadline', 'Registration Deadline'),
-        ('owner', 'Owner'),
+        ('owner__full_name', 'Owner'),
+        ('owner__email', 'Email'),
         ('capacity', 'Capacity'),
         ('is_online', 'Will be hosted online?'),
         ('location', 'Location'),

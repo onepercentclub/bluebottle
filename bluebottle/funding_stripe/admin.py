@@ -17,17 +17,16 @@ from bluebottle.payments.exception import PaymentException
 
 @admin.register(StripePayment)
 class StripePaymentAdmin(PaymentChildAdmin):
+    raw_id_fields = PaymentChildAdmin.raw_id_fields + ['payment_intent']
     base_model = StripePayment
-    raw_id_fields = ['payment_intent', 'donation']
-
-    readonly_fields = PaymentChildAdmin.readonly_fields + ('status',)
+    list_display = ['created', 'donation', 'status']
+    search_fields = ['paymentintent__intent_id']
 
 
 @admin.register(PaymentIntent)
 class StripePaymentIntentAdmin(admin.ModelAdmin):
     base_model = PaymentIntent
-    raw_id_fields = ['donation']
-    readonly_fields = ('payment_link',)
+    readonly_fields = PaymentChildAdmin.readonly_fields + ('status',)
 
     list_filter = ('payment__status', )
 

@@ -28,7 +28,7 @@ class CountryFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Country
 
-    name = factory.Sequence(lambda n: 'Country_{0}'.format(n))
+    name = factory.Faker('country')
     subregion = factory.SubFactory(SubRegionFactory)
 
 
@@ -67,6 +67,13 @@ class GeolocationFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Geolocation
 
-    locality = factory.Faker('text')
+    street = factory.Faker('street_name')
+    street_number = factory.Faker('building_number')
+    locality = factory.Faker('city')
     position = Point(13.4, 52.5)
     country = factory.SubFactory(CountryFactory)
+    formatted_address = factory.LazyAttribute(
+        lambda o: '{} {} {} {}'.format(
+            o.street, o.street_number, o.locality, o.country.name
+        )
+    )

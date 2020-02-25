@@ -1,0 +1,11 @@
+{% load i18n %}
+{% trans 'You can use these placeholders in subject or body' %}:
+
+<table>
+    {% for placeholder, help in  placeholders %}
+        <tr>
+            <td>{{ placeholder }}</td>
+            <td>{{ help }}</td>
+        </tr>
+    {% endfor %}
+</table>

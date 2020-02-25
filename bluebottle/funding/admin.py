@@ -62,7 +62,7 @@ class BudgetLineInline(admin.TabularInline):
 
 class RewardInline(admin.TabularInline):
     model = Reward
-    readonly_fields = ('link', 'amount', 'description', 'limit')
+    readonly_fields = ('link', 'amount', 'description',)
     extra = 0
 
     def link(self, obj):

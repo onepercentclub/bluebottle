@@ -296,6 +296,7 @@ class PrivateFileView(DetailView):
             field = getattr(getattr(self.get_object(), self.relation), self.field)
         else:
             field = getattr(self.get_object(), self.field)
+
         filename = os.path.basename(field.name)
         content_type = mimetypes.guess_type(filename)[0]
         response = HttpResponse()

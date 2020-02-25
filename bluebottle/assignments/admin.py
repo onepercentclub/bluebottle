@@ -121,7 +121,7 @@ class AssignmentAdmin(ActivityChildAdmin):
         ('initiative__title', 'Initiative'),
         ('expertise', 'Expertise'),
         ('end_date_type', 'End Time Type'),
-        ('end', 'End Date'),
+        ('date', 'End Date'),
         ('duration', 'Duration'),
         ('preparation', 'Preparation'),
         ('registration_deadline', 'Registration Deadline'),

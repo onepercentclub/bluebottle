@@ -26,10 +26,8 @@ class StripePaymentAdmin(PaymentChildAdmin):
 @admin.register(PaymentIntent)
 class StripePaymentIntentAdmin(admin.ModelAdmin):
     base_model = PaymentIntent
-    readonly_fields = PaymentChildAdmin.readonly_fields + ('status',)
 
     list_filter = ('payment__status', )
-
     list_display = ('intent_id', 'status')
 
     def payment_link(self, obj):

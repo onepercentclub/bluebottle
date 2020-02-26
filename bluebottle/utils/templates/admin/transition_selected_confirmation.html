@@ -58,7 +58,8 @@
             <input type="checkbox" checked id="send_messages" name="send_messages">
             <label for="send_messages">
                 {% trans "Send messages triggered by this transition" %}
-            </label>
+            </label><br />
+            <small>{% trans "Some transitions won't send out any emails. This is just to suppress the ones that would." %}</small>
         </div>
         <br>
         <input type="hidden" name="action" value="bulk_transition" />

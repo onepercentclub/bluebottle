@@ -11,12 +11,21 @@ from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmi
     BankAccountChildAdmin
 from bluebottle.funding.models import BankAccount, Payment, PaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount, \
-    StripeSourcePayment, ExternalAccount
+    StripeSourcePayment, ExternalAccount, PaymentIntent
 
 
 @admin.register(StripePayment)
 class StripePaymentAdmin(PaymentChildAdmin):
+    raw_id_fields = PaymentChildAdmin.raw_id_fields + ['payment_intent']
     base_model = StripePayment
+    list_display = ['created', 'donation', 'status']
+    search_fields = ['paymentintent__intent_id']
+
+
+@admin.register(PaymentIntent)
+class StripePaymentIntentAdmin(admin.ModelAdmin):
+    model = PaymentIntent
+    raw_id_fields = ['donation']
 
 
 @admin.register(StripeSourcePayment)

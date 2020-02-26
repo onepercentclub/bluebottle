@@ -52,10 +52,14 @@ class FundingTransitions(ActivityTransitions):
         if errors:
             return errors
 
+    def initiative_is_approved(self):
+        if not self.instance.initiative.status == ReviewTransitions.values.approved:
+            return _('Please make sure the initiative is approved')
+
     @transition(
         source=values.in_review,
         target=values.open,
-        conditions=[is_complete, is_valid],
+        conditions=[is_complete, is_valid, initiative_is_approved],
         permissions=[ActivityTransitions.can_approve],
     )
     def reviewed(self):

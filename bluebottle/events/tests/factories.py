@@ -25,6 +25,7 @@ class EventFactory(factory.DjangoModelFactory):
     automatically_accept = True
     is_online = False
 
+    registration_deadline = (now() + timedelta(weeks=2)).date()
     start_date = (now() + timedelta(weeks=4)).date()
     start_time = (now() + timedelta(weeks=4)).time()
     duration = 100

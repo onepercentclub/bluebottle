@@ -9,7 +9,6 @@ from bluebottle.events.transitions import EventTransitions, ParticipantTransitio
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.forms import FSMModelForm
-from bluebottle.wallposts.admin import WallpostInline
 
 
 class EventAdminForm(FSMModelForm):
@@ -67,7 +66,7 @@ class ParticipantAdmin(ContributionChildAdmin):
 @admin.register(Event)
 class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
-    inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline, WallpostInline)
+    inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
     list_display = [
         '__unicode__', 'initiative', 'status',
         'highlight', 'start_date', 'start_time', 'duration', 'created'

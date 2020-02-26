@@ -5,13 +5,13 @@
 {% blocktrans with recipient_name=to.first_name title=obj.content_object.title author_name=obj.author.first_name text=obj.text|truncatechars:250 context 'email' %}
 Hi {{ recipient_name }},
 
-{{ author_name }} added a new post on a initiative you follow:
+{{ author_name }} added a new post on {{ title }}:
 
 '{{ text }}'
 {% endblocktrans %}
 {% endblock %}
 {% block action %}
-{% trans 'View post' context 'email' %}: {{ obj.content_object.get_absolute_url }}
+{% trans 'View update' context 'email' %}: {{ obj.content_object.get_absolute_url }}
 {% endblock %}`
 
 {% block unsubscribe %}

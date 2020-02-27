@@ -59,7 +59,7 @@
             <label for="send_messages">
                 {% trans "Send messages triggered by this transition" %}
             </label><br />
-            <small>{% trans "Some transitions won't send out any emails. This is just to suppress the ones that would." %}</small>
+            <small>{% trans "Some transitions send out an email, but not all. Deselect this option to not send any emails." %}</small>
         </div>
         <br>
         <input type="hidden" name="action" value="bulk_transition" />

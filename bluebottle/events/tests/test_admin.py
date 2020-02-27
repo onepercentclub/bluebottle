@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+from datetime import timedelta
 
 from django.contrib.admin.sites import AdminSite
 from django.urls.base import reverse
+from django.utils.timezone import now
 from rest_framework import status
 
 from bluebottle.events.models import Event, Participant
@@ -13,7 +15,10 @@ class TestEventAdmin(BluebottleAdminTestCase):
     def setUp(self):
         super(TestEventAdmin, self).setUp()
         self.site = AdminSite()
-        self.event = EventFactory.create(status='created')
+        self.event = EventFactory.create(
+            registration_deadline=(now() + timedelta(weeks=2)).date(),
+            status='created'
+        )
         self.event_url = reverse('admin:events_event_change', args=(self.event.id,))
         self.event.save()
 

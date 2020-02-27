@@ -10,6 +10,7 @@ from bluebottle.funding_stripe.tests.factories import (
     StripePaymentFactory, StripePayoutAccountFactory, ExternalAccountFactory,
 )
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding_stripe.tests.utils import create_mock_intent
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -31,7 +32,9 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
             status='succeeded'
         )
 
-        self.payment = StripePaymentFactory.create(donation=donation)
+        self.payment_intent = create_mock_intent()
+        with mock.patch('stripe.PaymentIntent.retrieve', return_value=self.payment_intent):
+            self.payment = StripePaymentFactory.create(donation=donation)
         super(StripePaymentTransitionsTestCase, self).setUp()
 
     def test_refund(self):
@@ -44,7 +47,7 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
 
         payment_intent.charges = charges
 
-        with mock.patch('stripe.PaymentIntent.retrieve', return_value=payment_intent):
+        with mock.patch('stripe.PaymentIntent.retrieve', return_value=self.payment_intent):
             with mock.patch('stripe.Charge.refund') as refund_mock:
                 self.payment.transitions.request_refund()
 

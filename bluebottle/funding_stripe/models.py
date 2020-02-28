@@ -353,6 +353,8 @@ class StripePayoutAccount(PayoutAccount):
             missing = requirements.currently_due + requirements.eventually_due + requirements.past_due
             if self.account.requirements.disabled_reason:
                 missing += [self.account.requirements.disabled_reason]
+            if account_details.verification.document.details:
+                missing += [account_details.verification.document.details]
             return missing
         return []
 

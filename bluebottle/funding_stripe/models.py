@@ -365,12 +365,8 @@ class StripePayoutAccount(PayoutAccount):
         if self.account:
             del self.account
         account_details = getattr(self.account, 'individual', None)
-
         if account_details:
-            if account_details.verification.status == 'unverified':
-                if self.status != PayoutAccountTransitions.values.rejected:
-                    self.transitions.reject()
-            elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
+            if len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
                 if self.status != PayoutAccountTransitions.values.verified:
                     self.transitions.verify()
             elif len(self.missing_fields):
@@ -458,10 +454,14 @@ class StripePayoutAccount(PayoutAccount):
             'payouts': {
                 'schedule': {
                     'interval': 'manual'
-                }
+                },
+                'statement_descriptor': statement_descriptor
             },
             'payments': {
                 'statement_descriptor': statement_descriptor
+            },
+            'card_payments': {
+                'statement_descriptor_prefix': statement_descriptor
             }
         }
 

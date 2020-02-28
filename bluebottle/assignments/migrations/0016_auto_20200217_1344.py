@@ -10,13 +10,17 @@ def set_date(apps, schema_editor):
     Assignment = apps.get_model('assignments', 'Assignment')
 
     for assignment in Assignment.objects.all():
-        if assignment.start_time and assignment.start_date:
-            assignment.date = get_current_timezone().localize(
-                datetime.datetime.combine(
-                    assignment.end_date,
-                    assignment.start_time
+        if assignment.start_date:
+            if assignment.start_time:
+                assignment.date = get_current_timezone().localize(
+                    datetime.datetime.combine(
+                        assignment.end_date,
+                        assignment.start_time
+                    )
                 )
-            )
+            else:
+                assignment.date = assignment.end_date
+
             assignment.save()
 
 

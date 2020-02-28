@@ -15,7 +15,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
     document = activity
 
     sort_fields = {
-        'date': ('-created', ),
+        'date': ('-activity_date', ),
         'alphabetical': ('title_keyword', ),
         'popularity': 'popularity',
     }
@@ -159,7 +159,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
         date = dateutil.parser.parse(value).date()
         start = date.replace(date.year, date.month, 1)
         end = start + dateutil.relativedelta.relativedelta(day=31)
-        return Range(date={'gt': start, 'lt': end}) | Range(deadline={'gt': start})
+        return Range(activity_date={'gt': start, 'lt': end})
 
     def get_default_filters(self, request):
         permission = 'activities.api_read_activity'
@@ -195,7 +195,7 @@ class ActivityFilter(DjangoFilterBackend):
                 DQ(initiative__activity_manager=request.user) |
                 DQ(initiative__owner=request.user) |
                 DQ(status__in=self.public_statuses)
-            )
+            ).exclude(status=ActivityTransitions.values.deleted)
         else:
             queryset = queryset.filter(status__in=self.public_statuses)
 

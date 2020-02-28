@@ -129,7 +129,11 @@ class DeadlineValidator(Validator):
     field = 'deadline'
 
     def is_valid(self):
-        return self.instance.duration or (self.instance.deadline and self.instance.deadline > now())
+        return (
+            self.instance.status not in ('in_review', 'open') or
+            self.instance.duration or
+            (self.instance.deadline and self.instance.deadline > now())
+        )
 
 
 class BudgetLineValidator(Validator):
@@ -146,14 +150,14 @@ class Funding(Activity):
         _('deadline'),
         null=True,
         blank=True,
-        help_text=_('If you enter a deadline, leave the duration field empty.')
+        help_text=_('If you enter a deadline, leave the duration field empty. This will override the duration.')
     )
 
     duration = models.PositiveIntegerField(
         _('duration'),
         null=True,
         blank=True,
-        help_text=_('If you enter a duration, leave the deadline field empty.')
+        help_text=_('If you enter a duration, leave the deadline field empty for it to be automatically calculated.')
     )
 
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
@@ -200,6 +204,10 @@ class Funding(Activity):
         cache.delete(cache_key)
 
     @property
+    def donations(self):
+        return self.contributions.instance_of(Donation)
+
+    @property
     def amount_donated(self):
         """
         The sum of all contributions (donations) converted to the targets currency
@@ -207,8 +215,11 @@ class Funding(Activity):
         cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
-            totals = self.contributions.filter(
-                status=FundingTransitions.values.succeeded
+            totals = self.donations.filter(
+                status__in=(
+                    DonationTransitions.values.succeeded,
+                    DonationTransitions.values.activity_refunded,
+                )
             ).values(
                 'donation__amount_currency'
             ).annotate(
@@ -231,8 +242,11 @@ class Funding(Activity):
         cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
-            totals = self.contributions.filter(
-                status=FundingTransitions.values.succeeded,
+            totals = self.donations.filter(
+                status__in=(
+                    DonationTransitions.values.succeeded,
+                    DonationTransitions.values.activity_refunded,
+                ),
                 donation__payment__pledgepayment__isnull=True
             ).values(
                 'donation__amount_currency'
@@ -251,8 +265,11 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) converted to the targets currency
         """
-        totals = self.contributions.filter(
-            status=FundingTransitions.values.succeeded,
+        totals = self.donations.filter(
+            status__in=(
+                DonationTransitions.values.succeeded,
+                DonationTransitions.values.activity_refunded,
+            ),
             donation__payment__pledgepayment__isnull=False
         ).values(
             'donation__amount_currency'
@@ -283,7 +300,7 @@ class Funding(Activity):
 
     @property
     def stats(self):
-        stats = self.contributions.filter(
+        stats = self.donations.filter(
             status=FundingTransitions.values.succeeded
         ).aggregate(
             count=Count('user__id')
@@ -443,15 +460,15 @@ class Payout(TransitionsMixin, models.Model):
                 payout.delete()
             elif payout.donations.count() == 0:
                 raise AssertionError('Payout without donations already started!')
-        ready_donations = activity.contributions.filter(status='succeeded', donation__payout__isnull=True)
+        ready_donations = activity.donations.filter(status='succeeded', donation__payout__isnull=True)
         groups = set([
-            (don.amount_currency, don.payment.provider) for don in
+            (don.payout_amount_currency, don.payment.provider) for don in
             ready_donations
         ])
         for currency, provider in groups:
             donations = [
                 don for don in
-                ready_donations.filter(donation__amount_currency=currency)
+                ready_donations.filter(donation__payout_amount_currency=currency)
                 if don.payment.provider == provider
             ]
             payout = cls.objects.create(
@@ -466,7 +483,7 @@ class Payout(TransitionsMixin, models.Model):
     @property
     def total_amount(self):
         if self.currency:
-            return Money(self.donations.aggregate(total=Sum('amount'))['total'] or 0, self.currency)
+            return Money(self.donations.aggregate(total=Sum('payout_amount'))['total'] or 0, self.currency)
         return self.donations.aggregate(total=Sum('amount'))['total']
 
     class Meta():
@@ -479,6 +496,7 @@ class Payout(TransitionsMixin, models.Model):
 
 class Donation(Contribution):
     amount = MoneyField()
+    payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
     reward = models.ForeignKey(Reward, null=True, blank=True, related_name="donations")
     fundraiser = models.ForeignKey(Fundraiser, null=True, blank=True, related_name="donations")
@@ -493,6 +511,12 @@ class Donation(Contribution):
     def save(self, *args, **kwargs):
         if not self.user and not self.client_secret:
             self.client_secret = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
+
+        if not self.contribution_date:
+            self.contribution_date = self.created
+
+        if not self.payout_amount:
+            self.payout_amount = self.amount
 
         super(Donation, self).save(*args, **kwargs)
 

@@ -6,7 +6,7 @@
 Hi {{ recipient_name }},
 The date and time for "{{ event_title }}" has been changed to {{ event_date }} {{ event_time }}
 
-If this means you can’t make it anymore, please let your activity manager know so they can prepare accordingly.
+If you are unable to participate, please withdraw via the platform so that others can take your place.
 {% endblocktrans %}
 
 {% endblock %}

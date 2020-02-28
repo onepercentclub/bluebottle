@@ -1,8 +1,8 @@
 from django.db import models
 from django.db.models import Max
 from django.db.models.deletion import SET_NULL
-from django.contrib.contenttypes.fields import GenericRelation
 from django.template.defaultfilters import slugify
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
@@ -13,9 +13,10 @@ from multiselectfield import MultiSelectField
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField
 from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
-from bluebottle.follow.models import Follow
 from bluebottle.geo.models import Geolocation, Location
+from bluebottle.initiatives.messages import AssignedReviewerMessage
 from bluebottle.initiatives.transitions import InitiativeReviewTransitions
+from bluebottle.notifications.models import NotificationModelMixin
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.models import BasePlatformSettings, Validator, ValidatedModelMixin
@@ -35,7 +36,7 @@ class UniqueTitleValidator(Validator):
         )
 
 
-class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
+class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, models.Model):
     status = FSMField(
         default=InitiativeReviewTransitions.values.draft,
         choices=InitiativeReviewTransitions.values.choices,
@@ -43,6 +44,13 @@ class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
     )
 
     title = models.CharField(_('title'), max_length=255)
+
+    @classmethod
+    def get_messages(cls, old, new):
+        messages = []
+        if old.reviewer != new.reviewer and new.reviewer is not None:
+            messages.append(AssignedReviewerMessage)
+        return messages
 
     owner = models.ForeignKey(
         'members.Member',
@@ -122,8 +130,6 @@ class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
     )
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
-    follows = GenericRelation(Follow, object_id_field='instance_id')
-
     class Meta:
         verbose_name = _("Initiative")
         verbose_name_plural = _("Initiatives")
@@ -198,6 +204,12 @@ class Initiative(TransitionsMixin, ValidatedModelMixin, models.Model):
         domain = get_current_host()
         language = get_current_language()
         link = format_html('{}/{}/initiatives/details/{}/{}', domain, language, self.id, self.slug)
+        return link
+
+    def get_admin_url(self):
+        domain = get_current_host()
+        url = reverse('admin:initiatives_initiative_change', args=(self.id,))
+        link = format_html('{}/{}', domain, url)
         return link
 
     def save(self, **kwargs):

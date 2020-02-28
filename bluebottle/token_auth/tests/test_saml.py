@@ -74,6 +74,29 @@ class TestSAMLTokenAuthentication(TestCase):
             self.assertEqual(user.email, 'smartin@yaco.es')
             self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
 
+    def test_auth_succes_missing_field(self):
+        settings = dict(**TOKEN_AUTH_SETTINGS)
+        settings['assertion_mapping']['is_staff'] = 'test'
+
+        with self.settings(TOKEN_AUTH=settings):
+
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = RequestFactory().post('/sso/auth', HTTP_HOST='www.stuff.com', data={'SAMLResponse': response})
+            auth_backend = SAMLAuthentication(request)
+
+            user, created = auth_backend.authenticate()
+
+            self.assertTrue(created)
+
+            self.assertEqual(user.username, 'smartin')
+            self.assertEqual(user.email, 'smartin@yaco.es')
+            self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
+
     def test_with_existing_without_email(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             # Create user with empty email

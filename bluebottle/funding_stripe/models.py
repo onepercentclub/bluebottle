@@ -64,6 +64,9 @@ class PaymentIntent(models.Model):
     class JSONAPIMeta:
         resource_name = 'payments/stripe-payment-intents'
 
+    def __unicode__(self):
+        return self.intent_id
+
 
 class StripePayment(Payment):
     payment_intent = models.OneToOneField(PaymentIntent, related_name='payment')
@@ -81,6 +84,7 @@ class StripePayment(Payment):
 
     def update(self):
         intent = self.payment_intent.intent
+
         if len(intent.charges) == 0:
             # No charge. Do we still need to charge?
             self.transitions.fail()
@@ -91,9 +95,15 @@ class StripePayment(Payment):
         elif intent.status == 'failed' and self.status != StripePaymentTransitions.values.failed:
             self.transitions.fail()
             self.save()
-        elif intent.status == 'succeeded' and self.status != StripePaymentTransitions.values.succeeded:
-            self.transitions.succeed()
-            self.save()
+        elif intent.status == 'succeeded':
+            transfer = stripe.Transfer.retrieve(intent.charges.data[0].transfer)
+            self.donation.payout_amount = Money(
+                transfer.amount / 100.0, transfer.currency
+            )
+            self.donation.save()
+            if self.status != StripePaymentTransitions.values.succeeded:
+                self.transitions.succeed()
+                self.save()
 
 
 class StripeSourcePayment(Payment):

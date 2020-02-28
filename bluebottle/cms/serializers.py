@@ -15,7 +15,7 @@ from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.news.models import NewsItem
-from bluebottle.pages.models import Page, DocumentItem, ImageTextItem
+from bluebottle.pages.models import Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem, ImageTextRoundItem
 from bluebottle.projects.models import Project
 from bluebottle.statistics.statistics import Statistics
 
@@ -67,6 +67,15 @@ class ImageTextItemSerializer(ItemSerializer):
     class Meta:
         model = ImageTextItem
         fields = ('id', 'text', 'image', 'ratio', 'align', 'type', )
+
+
+class ImageTextRoundItemSerializer(ItemSerializer):
+    image = ImageSerializer()
+    item_type = 'image-text-round'
+
+    class Meta:
+        model = ImageTextItem
+        fields = ('id', 'text', 'image', 'type', )
 
 
 class PictureItemSerializer(ItemSerializer):
@@ -352,6 +361,22 @@ class LinkSerializer(serializers.ModelSerializer):
         fields = ('id', 'image', 'action_link', 'action_text', )
 
 
+class ActionSerializer(ItemSerializer):
+    item_type = 'action'
+
+    class Meta:
+        model = ActionItem
+        fields = ('id', 'type', 'link', 'title', )
+
+
+class ColumnsSerializer(ItemSerializer):
+    item_type = 'columns'
+
+    class Meta:
+        model = ColumnsItem
+        fields = ('id', 'type', 'text1', 'text2', )
+
+
 class LinksContentSerializer(serializers.ModelSerializer):
     links = LinkSerializer(many=True)
 
@@ -523,8 +548,14 @@ class BlockSerializer(serializers.Serializer):
             serializer = PictureItemSerializer
         elif isinstance(obj, ImageTextItem):
             serializer = ImageTextItemSerializer
+        elif isinstance(obj, ImageTextRoundItem):
+            serializer = ImageTextRoundItemSerializer
         elif isinstance(obj, ActivitiesContent):
             serializer = ActivitiesContentSerializer
+        elif isinstance(obj, ActionItem):
+            serializer = ActionSerializer
+        elif isinstance(obj, ColumnsItem):
+            serializer = ColumnsSerializer
         else:
             serializer = DefaultBlockSerializer
 
@@ -597,6 +628,9 @@ class SitePlatformSettingsSerializer(serializers.ModelSerializer):
             'powered_by_link',
             'powered_by_logo',
             'powered_by_text',
+            'metadata_title',
+            'metadata_description',
+            'metadata_keywords',
             'logo',
             'favicons'
         )

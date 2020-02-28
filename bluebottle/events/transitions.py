@@ -11,7 +11,7 @@ from bluebottle.events.messages import (
     ParticipantApplicationMessage,
     ParticipantRejectedMessage,
 
-)
+    ParticipantApplicationManagerMessage)
 
 from bluebottle.follow.models import follow, unfollow
 from bluebottle.fsm import transition
@@ -58,7 +58,7 @@ class EventTransitions(ActivityTransitions):
         permissions=[ActivityTransitions.can_approve]
     )
     def reopen(self):
-        pass
+        self.instance.review_transitions.organizer_succeed()
 
     @transition(
         source=[values.full, values.open],
@@ -97,6 +97,7 @@ class EventTransitions(ActivityTransitions):
             member.activity = self.instance
             member.transitions.succeed()
             member.save()
+        self.instance.review_transitions.organizer_succeed()
 
     @transition(
         source='*',
@@ -108,6 +109,7 @@ class EventTransitions(ActivityTransitions):
         for participant in self.instance.participants:
             participant.transitions.close()
             participant.save()
+        self.instance.review_transitions.organizer_close()
 
     @transition(
         source=values.closed,
@@ -151,7 +153,10 @@ class ParticipantTransitions(ContributionTransitions):
     @transition(
         source=[ContributionTransitions.values.new],
         target=ContributionTransitions.values.new,
-        messages=[ParticipantApplicationMessage]
+        messages=[
+            ParticipantApplicationMessage,
+            ParticipantApplicationManagerMessage,
+        ]
     )
     def initiate(self):
         pass

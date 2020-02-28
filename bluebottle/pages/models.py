@@ -36,6 +36,53 @@ class DocumentItem(ContentItem):
         verbose_name_plural = _('Document')
 
 
+class ActionItem(ContentItem):
+
+    link = models.CharField(_('link'), max_length=200)
+    title = models.CharField(_('title'), max_length=100)
+
+    def __str__(self):
+        return Truncator(strip_tags(self.title)).words(20)
+
+    class Meta:
+        verbose_name = _('Call to action')
+        verbose_name_plural = _('Call to actions')
+
+
+class ColumnsItem(ContentItem):
+    """
+    A snippet of HTML text to display on a page.
+    """
+    text1 = PluginHtmlField(_('text left'), blank=True)
+    text1_final = models.TextField(editable=False, blank=True, null=True)
+    text2 = PluginHtmlField(_('text right'), blank=True)
+    text2_final = models.TextField(editable=False, blank=True, null=True)
+
+    objects = ContentItemManager()
+
+    class Meta:
+        verbose_name = _('Text in columns')
+        verbose_name_plural = _('Text in columns')
+
+    def __str__(self):
+        return Truncator(strip_tags(self.text1)).words(20)
+
+    def full_clean(self, *args, **kwargs):
+        # This is called by the form when all values are assigned.
+        # The pre filters are applied here, so any errors also appear as ValidationError.
+        super(ColumnsItem, self).full_clean(*args, **kwargs)
+
+        self.text1, self.text1_final = apply_filters(self, self.text1, field_name='text1')
+        if self.text1_final == self.text1:
+            # No need to store duplicate content:
+            self.text1_final = None
+
+        self.text2, self.text2_final = apply_filters(self, self.text2, field_name='text2')
+        if self.text2_final == self.text2:
+            # No need to store duplicate content:
+            self.text2_final = None
+
+
 class ImageTextItem(ContentItem):
     """
     A snippet of HTML text to display on a page.
@@ -85,6 +132,31 @@ class ImageTextItem(ContentItem):
             self.text_final = None
 
 
+class ImageTextRoundItem(ContentItem):
+    text = PluginHtmlField(_('text'), blank=True)
+    text_final = models.TextField(editable=False, blank=True, null=True)
+    image = PluginImageField(_("Image"), upload_to='pages')
+
+    objects = ContentItemManager()
+
+    class Meta:
+        verbose_name = _('Text + Round Image')
+        verbose_name_plural = _('Text + Round Image')
+
+    def __str__(self):
+        return Truncator(strip_tags(self.text)).words(20)
+
+    def full_clean(self, *args, **kwargs):
+        # This is called by the form when all values are assigned.
+        # The pre filters are applied here, so any errors also appear as ValidationError.
+        super(ImageTextRoundItem, self).full_clean(*args, **kwargs)
+
+        self.text, self.text_final = apply_filters(self, self.text, field_name='text')
+        if self.text_final == self.text:
+            # No need to store duplicate content:
+            self.text_final = None
+
+
 class Page(PublishableModel):
     """
     Slides for homepage.
@@ -109,7 +181,10 @@ class Page(PublishableModel):
         choices=lazy(get_languages, tuple)())
     body = PlaceholderField('blog_contents', plugins=[
         'TextPlugin',
+        'ColumnsPlugin',
+        'ActionPlugin',
         'ImageTextPlugin',
+        'ImageTextRoundPlugin',
         'OEmbedPlugin',
         'RawHtmlPlugin',
         'PicturePlugin',
@@ -118,6 +193,10 @@ class Page(PublishableModel):
     # This should not be nessecary, but fixes deletion of some pages
     # See https://github.com/edoburu/django-fluent-contents/issues/19
     contentitem_set = ContentItemRelation()
+
+    @property
+    def content(self):
+        return self.body
 
     class Meta:
         ordering = ('language', 'slug')

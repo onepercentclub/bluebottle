@@ -24,7 +24,7 @@ from bluebottle.cms.models import (
     LinksContent, WelcomeContent, StepsContent
 )
 from bluebottle.contentplugins.models import PictureItem
-from bluebottle.pages.models import DocumentItem, ImageTextItem
+from bluebottle.pages.models import DocumentItem, ImageTextItem, ActionItem, ColumnsItem
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory, StepFactory,
@@ -419,6 +419,28 @@ class HomePageTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['blocks'][0]['type'], 'links')
 
+    def test_action(self):
+        block = ActionItem.objects.create_for_placeholder(self.placeholder)
+        block.link = '/pages/start'
+        block.title = 'Start an initiative'
+        block.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'action')
+        self.assertEqual(response.data['blocks'][0]['link'], '/pages/start')
+        self.assertEqual(response.data['blocks'][0]['title'], 'Start an initiative')
+
+    def test_columns(self):
+        block = ColumnsItem.objects.create_for_placeholder(self.placeholder)
+        block.text1 = 'Some text'
+        block.text2 = 'More text'
+        block.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'columns')
+        self.assertEqual(response.data['blocks'][0]['text1'], 'Some text')
+        self.assertEqual(response.data['blocks'][0]['text2'], 'More text')
+
     def test_steps(self):
         block = StepsContent.objects.create_for_placeholder(self.placeholder)
         image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
@@ -608,13 +630,20 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.init_projects()
 
     def test_site_platform_settings_header(self):
-        SitePlatformSettings.objects.create(
+        settings = SitePlatformSettings.objects.create(
             contact_email='info@example.com',
             contact_phone='+31207158980',
             copyright='GoodUp',
             powered_by_text='Powered by',
             powered_by_link='https://goodup.com'
         )
+        settings.set_current_language('en')
+        settings.metadata_title = "Let's do some good!"
+        settings.metadata_description = "Join our platform and start fulfilling your purpose!"
+        settings.metadata_keywords = "Do-good, Awesome, Purpose"
+        settings.set_current_language('nl')
+        settings.metadata_title = "Doe es iets goeds!"
+        settings.save()
 
         response = self.client.get(reverse('settings'))
         self.assertEqual(response.data['platform']['content']['contact_email'], 'info@example.com')
@@ -622,6 +651,15 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['copyright'], 'GoodUp')
         self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
         self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://goodup.com')
+        self.assertEqual(response.data['platform']['content']['metadata_title'], "Let's do some good!")
+        self.assertEqual(
+            response.data['platform']['content']['metadata_description'],
+            "Join our platform and start fulfilling your purpose!"
+        )
+
+        response = self.client.get(reverse('settings'), HTTP_X_APPLICATION_LANGUAGE='nl')
+        self.assertEqual(response.data['platform']['content']['metadata_title'], "Doe es iets goeds!")
+        self.assertEqual(response.data['platform']['content']['metadata_description'], None)
 
     def test_site_platform_settings_favicons(self):
         favicon = File(open('./bluebottle/projects/test_images/upload.png'))

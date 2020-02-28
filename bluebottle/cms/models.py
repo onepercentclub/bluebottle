@@ -206,6 +206,10 @@ class QuotesContent(TitledContent):
     def __unicode__(self):
         return unicode(self.quotes)
 
+    @property
+    def items(self):
+        return self.quotes
+
 
 class StatsContent(TitledContent):
     type = 'statistics'
@@ -213,6 +217,10 @@ class StatsContent(TitledContent):
 
     class Meta:
         verbose_name = _('Platform Statistics')
+
+    @property
+    def items(self):
+        return self.stats
 
     def __unicode__(self):
         return unicode(self.stats)
@@ -422,6 +430,10 @@ class StepsContent(TitledContent):
     def __unicode__(self):
         return unicode(_('Steps'))
 
+    @property
+    def items(self):
+        return self.steps
+
 
 class LocationsContent(TitledContent):
     type = 'locations'
@@ -518,9 +530,7 @@ class WelcomeContent(ContentItem):
         return unicode(_('Welcome'))
 
 
-class SitePlatformSettings(BasePlatformSettings):
-    logo = models.ImageField(null=True, blank=True, upload_to='site_content/')
-
+class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     contact_email = models.EmailField(null=True, blank=True)
     contact_phone = models.CharField(max_length=100, null=True, blank=True)
     copyright = models.CharField(max_length=100, null=True, blank=True)
@@ -532,6 +542,15 @@ class SitePlatformSettings(BasePlatformSettings):
         validators=[FileExtensionValidator(allowed_extensions=['svg'])]
     )
     favicon = models.ImageField(null=True, blank=True, upload_to='site_content/')
+
+    translations = TranslatedFields(
+        metadata_title=models.CharField(
+            max_length=100, null=True, blank=True),
+        metadata_description=models.TextField(
+            null=True, blank=True),
+        metadata_keywords=models.CharField(
+            max_length=300, null=True, blank=True)
+    )
 
     class Meta:
         verbose_name_plural = _('site platform settings')

@@ -26,6 +26,17 @@ class InitiativeClosedOwnerMessage(TransitionMessage):
     }
 
 
+class AssignedReviewerMessage(TransitionMessage):
+    subject = _('You are assigned to review "{initiative_title}".')
+    template = 'messages/assigned_reviewer'
+    context = {
+        'initiative_title': 'title'
+    }
+
+    def get_recipients(self):
+        return [self.obj.reviewer]
+
+
 class InitiativeWallpostOwnerMessage(TransitionMessage):
     subject = _('{author} commented on your initiative')
     template = 'messages/initiative_wallpost_owner'
@@ -77,10 +88,14 @@ class InitiativeWallpostFollowerMessage(TransitionMessage):
 
     def get_recipients(self):
         initiative = self.obj.content_object
-        follows = initiative.follows.filter(
-            user__campaign_notifications=True
-        ).exclude(
-            user__in=(self.obj.author, self.obj.content_object.owner)
-        )
+        follows = []
+        for activity in initiative.activities.filter(
+            review_status='approved'
+        ):
+            follows += activity.follows.filter(
+                user__campaign_notifications=True
+            ).exclude(
+                user__in=(self.obj.author, initiative.owner)
+            )
 
-        return [follow.user for follow in follows]
+        return set(follow.user for follow in follows)

@@ -425,7 +425,7 @@ class DonationListSerializer(BaseContributionListSerializer):
 
     class Meta(BaseContributionListSerializer.Meta):
         model = Donation
-        fields = BaseContributionListSerializer.Meta.fields + ('amount', 'fundraiser', 'reward', 'anonymous',)
+        fields = BaseContributionListSerializer.Meta.fields + ('amount', 'fundraiser', 'name', 'reward', 'anonymous',)
         meta_fields = ('created', 'updated', )
 
     class JSONAPIMeta(BaseContributionListSerializer.JSONAPIMeta):
@@ -462,7 +462,7 @@ class DonationSerializer(BaseContributionSerializer):
 
     class Meta(BaseContributionSerializer.Meta):
         model = Donation
-        fields = BaseContributionSerializer.Meta.fields + ('amount', 'fundraiser', 'reward', 'anonymous',)
+        fields = BaseContributionSerializer.Meta.fields + ('amount', 'fundraiser', 'name', 'reward', 'anonymous',)
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/donations'
@@ -592,7 +592,7 @@ class PayoutBankAccountSerializer(PolymorphicModelSerializer):
 
 class PayoutDonationSerializer(serializers.ModelSerializer):
     # For Payout service
-    amount = MoneySerializer()
+    amount = MoneySerializer(source='payout_amount')
 
     class Meta:
         fields = (

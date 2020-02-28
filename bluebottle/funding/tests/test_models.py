@@ -54,6 +54,35 @@ class FundingTestCase(BluebottleTestCase):
         for reward in funding.rewards.all():
             self.assertEqual(str(reward.amount.currency), 'USD')
 
+    def test_deadline_in_past(self):
+        funding = FundingFactory.create(
+            target=Money(100, 'EUR'), deadline=now() - timedelta(days=10), status='in_review'
+        )
+
+        errors = list(funding.errors)
+        self.assertEqual(len(errors), 3)
+
+        self.assertEqual(errors[1].message, ['Make sure deadline is in the future'])
+
+    def test_deadline_in_past_with_duration(self):
+        funding = FundingFactory.create(
+            target=Money(100, 'EUR'),
+            deadline=now() - timedelta(days=10),
+            duration=10,
+            status='in_review'
+        )
+
+        errors = list(funding.errors)
+        self.assertEqual(len(errors), 2)
+
+    def test_deadline_in_past_succeeded(self):
+        funding = FundingFactory.create(
+            target=Money(100, 'EUR'), deadline=now() - timedelta(days=10), status='succeeded'
+        )
+
+        errors = list(funding.errors)
+        self.assertEqual(len(errors), 2)
+
 
 class PayoutTestCase(BluebottleTestCase):
 
@@ -69,8 +98,16 @@ class PayoutTestCase(BluebottleTestCase):
         self.funding.save()
 
         for donation in DonationFactory.create_batch(
-                5,
+                3,
                 amount=Money(150, 'EUR'),
+                activity=self.funding,
+                status='succeeded'):
+            StripePaymentFactory.create(donation=donation)
+
+        for donation in DonationFactory.create_batch(
+                2,
+                amount=Money(200, 'USD'),
+                payout_amount=(150, 'EUR'),
                 activity=self.funding,
                 status='succeeded'):
             StripePaymentFactory.create(donation=donation)
@@ -87,6 +124,8 @@ class PayoutTestCase(BluebottleTestCase):
             activity=self.funding,
             status='succeeded')
         PledgePaymentFactory.create(donation=donation)
+
+        self.donation = donation
 
         for donation in DonationFactory.create_batch(
                 5,
@@ -149,3 +188,6 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEqual(self.funding.payouts.all()[1].total_amount, Money(1000, 'USD'))
         self.assertEqual(self.funding.payouts.all()[2].total_amount, Money(2250, 'EUR'))
         self.assertEqual(self.funding.payouts.all()[3].total_amount, Money(750, 'EUR'))
+
+    def test_donation_contribution_date(self):
+        self.assertEqual(self.donation.contribution_date, self.donation.created)

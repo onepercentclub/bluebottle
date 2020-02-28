@@ -1,4 +1,3 @@
-import mock
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from djmoney.money import Money
@@ -7,6 +6,7 @@ from rest_framework import status
 from bluebottle.events.tests.factories import EventFactory
 from bluebottle.funding.tests.factories import DonationFactory, FundingFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -472,19 +472,19 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', False)
     def test_open_api_readonly_permission_noauth(self):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
+        MemberPlatformSettings.objects.update(closed=True)
         response = self.client.get(self.wallpost_url,
                                    {'parent_id': self.some_project.slug,
                                     'parent_type': 'project'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_closed_api_readonly_permission_auth(self):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
+        MemberPlatformSettings.objects.update(closed=False)
         response = self.client.get(self.wallpost_url,
                                    {'parent_id': self.some_project.slug,
                                     'parent_type': 'project'},
@@ -762,6 +762,7 @@ class FundingWallpostTest(BluebottleTestCase):
         self.assertEqual(
             response.data['results'][0]['donation'],
             {
+                'name': None,
                 'fundraiser': None,
                 'amount': {'currency': 'EUR', 'amount': 35.00},
                 'user': None,
@@ -772,3 +773,30 @@ class FundingWallpostTest(BluebottleTestCase):
             }
         )
         self.assertEqual(response.data['results'][1]['donation'], None)
+
+    def test_wallposts_with_fake_name(self):
+        self.donation = DonationFactory(
+            amount=Money(35, 'EUR'),
+            user=None,
+            name='Tante Ans',
+            activity=self.funding
+        )
+        self.donation.transitions.succeed()
+        self.donation.save()
+
+        response = self.client.get(self.updates_url, token=self.owner_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(
+            response.data['results'][0]['donation'],
+            {
+                'name': 'Tante Ans',
+                'fundraiser': None,
+                'amount': {'currency': 'EUR', 'amount': 35.00},
+                'user': None,
+                'anonymous': False,
+                'reward': None,
+                'type': 'contributions/donations',
+                'id': self.donation.id
+            }
+        )

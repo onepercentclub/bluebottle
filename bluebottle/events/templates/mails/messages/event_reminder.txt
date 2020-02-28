@@ -7,6 +7,8 @@ Hi {{ recipient_name }},
 "{{ event_title }}" will take place in 5 days.
 
 Want to know about the latest updates? Check out the event on {{url}} to stay informed.
+
+If you are unable to participate, please withdraw via the platform so that others can take your place.
 {% endblocktrans %}
 
 {% endblock %}

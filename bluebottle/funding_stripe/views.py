@@ -1,9 +1,13 @@
 from django.http import HttpResponse
 from django.views.generic import View
+
+from moneyed import Money
+
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+
 
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.permissions import PaymentPermission
@@ -155,6 +159,11 @@ class IntentWebHookView(View):
                 payment = self.get_payment(event.data.object.id)
                 if payment.status != PaymentTransitions.values.succeeded:
                     payment.transitions.succeed()
+                    transfer = stripe.Transfer.retrieve(event.data.object.charges.data[0].transfer)
+                    payment.donation.payout_amount = Money(
+                        transfer.amount / 100.0, transfer.currency
+                    )
+                    payment.donation.save()
                     payment.save()
 
                 return HttpResponse('Updated payment')
@@ -235,6 +244,12 @@ class SourceWebHookView(View):
             if event.type == 'charge.succeeded':
                 payment = self.get_payment_from_charge(event.data.object.id)
                 if payment.status != PaymentTransitions.values.succeeded:
+                    transfer = stripe.Transfer.retrieve(event.data.object.transfer)
+                    payment.donation.payout_amount = Money(
+                        transfer.amount / 100.0, transfer.currency
+                    )
+                    payment.donation.save()
+
                     payment.transitions.succeed()
                     payment.save()
 

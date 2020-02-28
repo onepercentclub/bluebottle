@@ -241,6 +241,21 @@ class FundingDetailTestCase(BluebottleTestCase):
             deadline=now() + timedelta(days=15)
         )
 
+        BudgetLineFactory.create(activity=self.funding)
+
+        self.funding.bank_account = ExternalAccountFactory.create(
+            account_id='some-external-account-id'
+        )
+        self.funding.save()
+
+        with mock.patch(
+            'bluebottle.funding_stripe.models.ExternalAccount.verified', new_callable=mock.PropertyMock
+        ) as verified:
+            verified.return_value = True
+
+            self.funding.review_transitions.submit()
+            self.funding.review_transitions.approve()
+
         self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
 
     def test_view_funding_owner(self):
@@ -668,6 +683,8 @@ class DonationTestCase(BluebottleTestCase):
         donation = get_included(response, 'contributions/donations')
         self.assertEqual(donation['relationships']['user']['data']['id'], unicode(self.user.pk))
 
+        self.assertTrue(response.json()['data']['attributes']['is-follower'])
+
     def test_donate_anonymous(self):
         self.data['data']['attributes']['anonymous'] = True
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
@@ -714,6 +731,33 @@ class DonationTestCase(BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 200, 'currency': 'EUR'})
+
+    def test_update_set_donor_name(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+
+        update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
+
+        patch_data = {
+            'data': {
+                'type': 'contributions/donations',
+                'id': data['data']['id'],
+                'attributes': {
+                    'amount': {'amount': 200, 'currency': 'EUR'},
+                    'name': 'Pietje'
+                },
+            }
+        }
+
+        response = self.client.patch(update_url, json.dumps(patch_data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['attributes']['name'], 'Pietje')
 
     def test_update_change_user(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
@@ -1266,7 +1310,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
 
         for i in range(5):
             donation = DonationFactory.create(
-                amount=Money(200, 'EUR'),
+                amount=Money(300, 'USD'),
+                payout_amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
             )
             with mock.patch('stripe.Source.modify'):
@@ -1320,6 +1365,14 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
 
         self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)
+        self.assertEqual(
+            sum(
+                donation['attributes']['amount']['amount']
+                for donation in data['included']
+                if donation['type'] == 'contributions/donations'
+            ),
+            1000.0
+        )
 
     def test_get_vitepay_payout(self):
         VitepayPaymentProvider.objects.all().delete()

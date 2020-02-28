@@ -8,6 +8,8 @@ Hi {{ recipient_name }},
 On {{ deadline}} your task "{{ title }}" will take place. That's in 5 days!
 
 If you still need to make some preparations, this is the moment.
+
+If you are unable to participate, please withdraw via the platform so that others can take your place.
 {% endblocktrans %}
 {% endblock %}
 {% block action %}

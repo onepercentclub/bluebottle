@@ -316,7 +316,7 @@ class EventAPITestCase(BluebottleTestCase):
 
     def test_get_event_calendar_links(self):
         event = EventFactory.create(title='Pollute Katwijk Beach')
-        event.description = u"Just kidding, <br/>we're going to clean it up of course 😉"
+        event.description = u"Just kidding, <br/>we're going&nbsp;to clean it up of course 😉"
         event.save()
         event_url = reverse('event-detail', args=(event.pk,))
         response = self.client.get(event_url, user=self.user)
@@ -332,7 +332,7 @@ class EventAPITestCase(BluebottleTestCase):
         self.assertEqual(google_query['location'][0], event.location.formatted_address)
         self.assertEqual(google_query['text'][0], event.title)
         self.assertEqual(google_query['uid'][0], 'test-event-{}'.format(event.pk))
-        details = "Just kidding, we're going to clean it up of course \xf0\x9f\x98\x89\n" \
+        details = "Just kidding, we're going\xc2\xa0to clean it up of course \xf0\x9f\x98\x89\n" \
                   "http://testserver/en/initiatives/activities/details/" \
                   "event/{}/pollute-katwijk-beach".format(event.id)
         self.assertEqual(google_query['details'][0], details)
@@ -362,17 +362,21 @@ class EventAPITestCase(BluebottleTestCase):
             outlook_query['enddt'][0], unicode(event.end.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
         )
 
-        self.assertEqual(
-            links['ical'], reverse('event-ical', args=(event.pk, ))
+        self.assertTrue(
+            links['ical'].startswith(reverse('event-ical', args=(event.pk, )))
         )
 
 
 class EventIcalTestCase(BluebottleTestCase):
     def test_get(self):
         event = EventFactory.create(title='Pollute Katwijk Beach')
-        event_url = reverse('event-ical', args=(event.pk,))
 
+        event_url = reverse('event-detail', args=(event.pk,))
         response = self.client.get(event_url)
+        ical_url = response.json()['data']['attributes']['links']['ical']
+
+        response = self.client.get(ical_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.get('content-type'), 'text/calendar')
         self.assertEqual(
@@ -385,6 +389,10 @@ class EventIcalTestCase(BluebottleTestCase):
         for ical_event in calendar.walk('vevent'):
             self.assertAlmostEqual(ical_event['dtstart'].dt, event.start, delta=timedelta(seconds=10))
             self.assertAlmostEqual(ical_event['dtend'].dt, event.end, delta=timedelta(seconds=10))
+
+            self.assertEqual(ical_event['dtstart'].dt.tzinfo, utc)
+            self.assertEqual(ical_event['dtend'].dt.tzinfo, utc)
+
             self.assertEqual(str(ical_event['summary']), event.title)
             self.assertEqual(
                 str(ical_event['description']),
@@ -392,6 +400,20 @@ class EventIcalTestCase(BluebottleTestCase):
             )
             self.assertEqual(str(ical_event['url']), event.get_absolute_url())
             self.assertEqual(str(ical_event['organizer']), 'MAILTO:{}'.format(event.owner.email))
+
+    def test_get_no_signature(self):
+        event = EventFactory.create(title='Pollute Katwijk Beach')
+
+        ical_url = reverse('event-ical', args=(event.pk,))
+        response = self.client.get(ical_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_wrong_signature(self):
+        event = EventFactory.create(title='Pollute Katwijk Beach')
+
+        ical_url = reverse('event-ical', args=(event.pk,))
+        response = self.client.get('{}?signature=ewiorjewoijical_url'.format(ical_url))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class EventValidationTestCase(BluebottleTestCase):
@@ -483,11 +505,13 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         review_transitions = [
+            {u'available': True, u'name': u'delete', u'target': u'closed'},
             {u'available': True, u'name': u'submit', u'target': u'submitted'},
             {u'available': False, u'name': u'close', u'target': u'closed'},
             {u'available': False, u'name': u'approve', u'target': u'approved'}
         ]
         transitions = [
+            {u'available': False, u'name': u'delete', u'target': u'deleted'},
             {u'available': False, u'name': u'reviewed', u'target': u'open'},
             {u'available': False, u'name': u'close', u'target': u'closed'}
         ]
@@ -508,7 +532,6 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.assertEqual(data['errors'][0], "Transition is not available")
 
     def test_submit_owner(self):
-
         # Owner can submit the event
         response = self.client.post(
             self.review_transition_url,
@@ -520,6 +543,23 @@ class EventTransitionTestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['included'][0]['type'], 'activities/events')
         self.assertEqual(data['included'][0]['attributes']['review-status'], 'submitted')
+
+    def test_delete_by_owner(self):
+        # Owner can delete the event
+
+        self.review_data['data']['attributes']['transition'] = 'delete'
+
+        response = self.client.post(
+            self.review_transition_url,
+            json.dumps(self.review_data),
+            user=self.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][0]['type'], 'activities/events')
+        self.assertEqual(data['included'][0]['attributes']['review-status'], 'closed')
+        self.assertEqual(data['included'][0]['attributes']['status'], 'deleted')
 
     def test_submit_manager(self):
 

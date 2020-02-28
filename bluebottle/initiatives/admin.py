@@ -8,7 +8,7 @@ from polymorphic.admin import PolymorphicInlineSupportMixin
 from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.geo.models import Location, Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
-from bluebottle.notifications.admin import MessageAdminInline
+from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.utils.admin import FSMAdmin, BasePlatformSettingsAdmin, export_as_csv_action
 from bluebottle.utils.forms import FSMModelForm
 from bluebottle.wallposts.admin import WallpostInline
@@ -68,7 +68,7 @@ class InitiativeCountryFilter(admin.SimpleListFilter):
 
 
 @admin.register(Initiative)
-class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
+class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, FSMAdmin):
 
     form = InitiativeAdminForm
 
@@ -98,10 +98,14 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
         ('place', 'Place'),
         ('location', 'Location'),
         ('organization', 'Organization'),
-        ('owner', 'Owner'),
-        ('activity_manager', 'Activity Manager'),
-        ('promoter', 'Promoter'),
-        ('reviewer', 'Reviewer'),
+        ('owner__full_name', 'Owner'),
+        ('owner__email', 'Owner email'),
+        ('activity_manager__full_name', 'Activity Manager'),
+        ('activity_manager__email', 'Activity Manager email'),
+        ('promotor__full_name', 'Promotor'),
+        ('promotor__email', 'Promotor email'),
+        ('reviewer__full_name', 'Reviewer'),
+        ('reviewer__email', 'Reviewer email'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

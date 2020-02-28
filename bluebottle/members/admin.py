@@ -101,6 +101,10 @@ class CustomMemberFieldSettingsInline(SortableTabularInline):
 
 
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
+    fields = (
+        'closed', 'confirm_signup', 'login_methods',
+        'email_domain', 'background', 'require_consent', 'consent_link',
+    )
 
     inlines = [
         CustomMemberFieldSettingsInline
@@ -223,6 +227,7 @@ class MemberAdmin(UserAdmin):
                             'last_name',
                             'username',
                             'phone_number',
+                            'login_as_link',
                             'reset_password',
                             'resend_welcome_link',
                             'last_login',
@@ -283,7 +288,7 @@ class MemberAdmin(UserAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = [
             'date_joined', 'last_login',
-            'updated', 'deleted', 'login_as_user',
+            'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'events', 'assignments', 'funding'
         ]
@@ -423,13 +428,6 @@ class MemberAdmin(UserAdmin):
             welcome_mail_url, _("Resend welcome email"),
         )
 
-    def login_as_user(self, obj):
-        return format_html(
-            u"<a href='/login/user/{}'>{}</a>",
-            obj.id,
-            _('Login as user')
-        )
-
     def get_inline_instances(self, request, obj=None):
         """ Override get_inline_instances so that the add form does not show inlines """
         if not obj:
@@ -440,7 +438,10 @@ class MemberAdmin(UserAdmin):
         urls = super(MemberAdmin, self).get_urls()
 
         extra_urls = [
-            url(r'^login-as/(?P<user_id>\d+)/$', self.admin_site.admin_view(self.login_as)),
+            url(r'^login-as/(?P<user_id>\d+)/$',
+                self.admin_site.admin_view(self.login_as),
+                name='members_member_login_as'
+                ),
             url(r'^password-reset/(?P<user_id>\d+)/$',
                 self.send_password_reset_mail,
                 name='auth_user_password_reset_mail'
@@ -484,6 +485,7 @@ class MemberAdmin(UserAdmin):
 
         user = Member.objects.get(pk=user_id)
         send_welcome_mail(user)
+
         message = _('User {name} will receive an welcome email.').format(name=user.full_name)
         self.message_user(request, message)
 
@@ -498,11 +500,12 @@ class MemberAdmin(UserAdmin):
         return response
 
     def login_as_link(self, obj):
+        url = reverse('admin:members_member_login_as', args=(obj.id,))
         return format_html(
-            u"<a target='_blank' href='{}members/member/login-as/{}/'>{}</a>",
-            reverse('admin:index'), obj.pk, _('Login as user')
+            u"<a target='_blank' href='{}'>{}</a>",
+            url, _('Login as user')
         )
-    login_as_link.short_description = _('Login as link')
+    login_as_link.short_description = _('Login as')
 
     def has_delete_permission(self, request, obj=None):
         return False

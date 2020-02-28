@@ -38,7 +38,7 @@ from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action, FSMAdminMixin, \
     BasePlatformSettingsAdmin
 from bluebottle.utils.forms import FSMModelForm
-from bluebottle.wallposts.admin import DonationWallpostInline, WallpostInline
+from bluebottle.wallposts.admin import DonationWallpostInline
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class BudgetLineInline(admin.TabularInline):
 
 class RewardInline(admin.TabularInline):
     model = Reward
-    readonly_fields = ('link', 'amount', 'description', 'limit')
+    readonly_fields = ('link', 'amount', 'description',)
     extra = 0
 
     def link(self, obj):
@@ -150,7 +150,7 @@ class FundingAdminForm(FSMModelForm):
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline, WallpostInline)
+    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline, )
     base_model = Funding
     form = FundingAdminForm
     date_hierarchy = 'transition_date'
@@ -167,10 +167,11 @@ class FundingAdmin(ActivityChildAdmin):
     list_display = [
         '__unicode__', 'initiative', 'created', 'combined_status',
         'highlight', 'deadline', 'percentage_donated', 'percentage_matching'
+
     ]
 
     def percentage_donated(self, obj):
-        if obj.target and obj.target.amount:
+        if obj.target and obj.target.amount and obj.amount_donated.amount:
             return '{:.2f}%'.format((obj.amount_donated.amount / obj.target.amount) * 100)
         else:
             return '0%'
@@ -214,7 +215,8 @@ class FundingAdmin(ActivityChildAdmin):
         ('duration', 'Duration'),
         ('target', 'Target'),
         ('country', 'Country'),
-        ('owner', 'Owner'),
+        ('owner__full_name', 'Owner'),
+        ('owner__email', 'Email'),
         ('amount_matching', 'Amount Matching'),
         ('bank_account', 'Bank Account'),
         ('amount_donated', 'Amount Donatated'),
@@ -225,7 +227,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     def donations_link(self, obj):
         url = reverse('admin:funding_donation_changelist')
-        total = obj.contributions.filter(status=DonationTransitions.values.succeeded).count()
+        total = obj.donations.filter(status=DonationTransitions.values.succeeded).count()
         return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
     donations_link.short_description = _("Donations")
 
@@ -268,7 +270,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     form = DonationAdminForm
 
     raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'status', 'payment_link', ]
+    readonly_fields = ['payment_link', 'status', 'payment_link', 'payout_amount', 'contribution_date']
     list_display = ['transition_date', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', ]
     list_filter = [
         DonationAdminStatusFilter,
@@ -279,20 +281,24 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
 
     inlines = [DonationWallpostInline]
 
-    fields = ['transition_date', 'created', 'activity', 'user', 'amount', 'reward',
-              'anonymous', 'name',
-              'status', 'payment_link']
+    fields = [
+        'transition_date', 'contribution_date', 'created',
+        'activity', 'user', 'amount', 'payout_amount',
+        'reward', 'anonymous', 'name', 'status', 'payment_link'
+    ]
 
     export_to_csv_fields = (
         ('status', 'Status'),
         ('created', 'Created'),
         ('activity', 'Activity'),
-        ('owner', 'Owner'),
+        ('user__full_name', 'Owner'),
+        ('user__email', 'Email'),
         ('amount', 'Amount'),
         ('reward', 'Reward'),
         ('fundraiser', 'Fundraiser'),
         ('name', 'name'),
         ('anonymous', 'Anonymous'),
+        ('contribution_date', 'Contribution Date'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
@@ -458,7 +464,7 @@ class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 @admin.register(PayoutAccount)
 class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     base_model = PayoutAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed',)
+    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'owner',)
     list_filter = ('reviewed', PolymorphicChildModelFilter)
     raw_id_fields = ('owner',)
     show_in_index = True

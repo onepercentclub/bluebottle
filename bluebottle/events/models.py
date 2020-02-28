@@ -1,4 +1,5 @@
 import datetime
+from HTMLParser import HTMLParser
 
 from django.db import models, connection
 from django.db.models import Count, Sum
@@ -60,10 +61,12 @@ class Event(Activity):
 
     @property
     def stats(self):
-        stats = self.contributions.filter(
+        contributions = self.contributions.instance_of(Participant)
+
+        stats = contributions.filter(
             status=ParticipantTransitions.values.succeeded).\
             aggregate(count=Count('user__id'), hours=Sum('participant__time_spent'))
-        committed = self.contributions.filter(
+        committed = contributions.filter(
             status=ParticipantTransitions.values.new).\
             aggregate(committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent'))
         stats.update(committed)
@@ -116,7 +119,7 @@ class Event(Activity):
 
     @property
     def participants(self):
-        return self.contributions.filter(
+        return self.contributions.instance_of(Participant).filter(
             status__in=[ParticipantTransitions.values.new,
                         ParticipantTransitions.values.succeeded]
         )
@@ -140,7 +143,11 @@ class Event(Activity):
             'dates': '{}/{}'.format(
                 format_date(self.start), format_date(self.end)
             ),
-            'details': u'{}\n{}'.format(strip_tags(self.description), self.get_absolute_url()),
+            'details': HTMLParser().unescape(
+                u'{}\n{}'.format(
+                    strip_tags(self.description), self.get_absolute_url()
+                )
+            ),
             'uid': self.uid,
         }
 
@@ -166,7 +173,11 @@ class Event(Activity):
             'subject': self.title,
             'startdt': format_date(self.start),
             'enddt': format_date(self.end),
-            'body': u'{}\n{}'.format(strip_tags(self.description), self.get_absolute_url()),
+            'body': HTMLParser().unescape(
+                u'{}\n{}'.format(
+                    strip_tags(self.description), self.get_absolute_url()
+                )
+            ),
         }
 
         if self.location:
@@ -201,6 +212,9 @@ class Participant(Contribution):
 
     def save(self, *args, **kwargs):
         created = self.pk is None
+
+        if not self.contribution_date:
+            self.contribution_date = self.activity.start
 
         # Fail the self if hours are set to 0
         if self.status == ParticipantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:

@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.utils.html import strip_tags
+from django.utils.timezone import utc
 
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -21,7 +22,7 @@ from bluebottle.transitions.views import TransitionList
 
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, ListCreateAPIView, JsonApiViewMixin,
-    RetrieveAPIView
+    PrivateFileView
 )
 
 
@@ -118,13 +119,12 @@ class ParticipantTransitionList(TransitionList):
     }
 
 
-class EventIcalView(RetrieveAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ActivityOwnerPermission),
-    )
+class EventIcalView(PrivateFileView):
     queryset = Event.objects.exclude(status='closed')
 
-    def retrieve(self, *args, **kwargs):
+    max_age = 30 * 60  # half an hour
+
+    def get(self, *args, **kwargs):
         instance = self.get_object()
         calendar = icalendar.Calendar()
 
@@ -132,11 +132,11 @@ class EventIcalView(RetrieveAPIView):
         event.add('summary', instance.title)
         event.add(
             'description',
-            '{}\n{}'.format(strip_tags(instance.description), instance.get_absolute_url())
+            u'{}\n{}'.format(strip_tags(instance.description), instance.get_absolute_url())
         )
         event.add('url', instance.get_absolute_url())
-        event.add('dtstart', instance.start)
-        event.add('dtend', instance.end)
+        event.add('dtstart', instance.start.astimezone(utc))
+        event.add('dtend', instance.end.astimezone(utc))
         event['uid'] = instance.uid
 
         organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))

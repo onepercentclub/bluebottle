@@ -350,12 +350,10 @@ class StripePayoutAccount(PayoutAccount):
         account_details = getattr(self.account, 'individual', None)
         if account_details:
             requirements = account_details.requirements
-            return (
-                requirements.currently_due +
-                requirements.eventually_due +
-                requirements.past_due +
-                [self.account.requirements.disabled_reason]
-            )
+            missing = requirements.currently_due + requirements.eventually_due + requirements.past_due
+            if self.account.requirements.disabled_reason:
+                missing += [self.account.requirements.disabled_reason]
+            return missing
         return []
 
     @property
@@ -371,7 +369,9 @@ class StripePayoutAccount(PayoutAccount):
             del self.account
         account_details = getattr(self.account, 'individual', None)
         if account_details:
-            if self.account.requirements.disabled_reason:
+            if account_details.verification.document.details:
+                self.transitions.reject()
+            elif self.account.requirements.disabled_reason:
                 self.transitions.reject()
             elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
                 if self.status != PayoutAccountTransitions.values.verified:
@@ -384,8 +384,7 @@ class StripePayoutAccount(PayoutAccount):
                     # Submit to transition to pending again
                     self.transitions.submit()
             else:
-                if self.status != PayoutAccountTransitions.values.rejected:
-                    self.transitions.reject()
+                self.transitions.reject()
         else:
             if self.status != PayoutAccountTransitions.values.rejected:
                 self.transitions.reject()

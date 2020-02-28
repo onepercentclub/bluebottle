@@ -12,13 +12,17 @@ def set_start(apps, schema_editor):
     Event = apps.get_model('events', 'Event')
 
     for event in Event.objects.all():
-        if event.start_time and event.start_date:
-            event.start = get_current_timezone().localize(
-                datetime.datetime.combine(
-                    event.start_date,
-                    event.start_time
+        if event.start_date:
+            if event.start_time:
+                event.start = get_current_timezone().localize(
+                    datetime.datetime.combine(
+                        event.start_date,
+                        event.start_time
+                    )
                 )
-            )
+            else:
+                event.start = event.start_date
+
             event.save()
 
 

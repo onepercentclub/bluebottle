@@ -531,7 +531,7 @@ class Donation(Contribution):
         verbose_name_plural = _('Donations')
 
     def __unicode__(self):
-        return u'{}'.format(self.amount)
+        return u'{} | {}'.format(self.user, self.amount)
 
     class JSONAPIMeta:
         resource_name = 'contributions/donations'

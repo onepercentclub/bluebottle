@@ -148,6 +148,7 @@ class StripePayoutAccountTransitions(PayoutAccountTransitions):
 
     @transition(
         source=[
+            PayoutAccountTransitions.values.rejected,
             PayoutAccountTransitions.values.pending,
             PayoutAccountTransitions.values.incomplete,
             PayoutAccountTransitions.values.verified,

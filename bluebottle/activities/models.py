@@ -5,20 +5,17 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
 
-from bluebottle.fsm import TransitionsMixin
-from bluebottle.fsm.state import StateManager, AutomaticStateTransitionMixin
+from bluebottle.fsm.triggers import TriggerMixin
 
 from polymorphic.models import PolymorphicModel
 from bluebottle.initiatives.models import Initiative
-from bluebottle.activities.states import (
-    ActivityStateMachine, ReviewStateMachine, OrganizerStateMachine
-)
+from bluebottle.activities.effects import Complete
 from bluebottle.follow.models import Follow
 from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
 
 
-class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
+class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('owner'),
@@ -53,8 +50,7 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
 
-    states = StateManager(ActivityStateMachine, 'status')
-    review_states = StateManager(ReviewStateMachine, 'review_status')
+    triggers = [Complete, ]
 
     @property
     def stats(self):
@@ -83,13 +79,6 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
 
         super(Activity, self).save(**kwargs)
 
-        Organizer.objects.update_or_create(
-            activity=self,
-            defaults={
-                'user': self.owner
-            }
-        )
-
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
@@ -98,8 +87,12 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
                            self.__class__.__name__.lower(), self.pk, self.slug)
         return link
 
+    @property
+    def organizer(self):
+        return self.contributions.instance_of(Organizer).first()
 
-class Contribution(TransitionsMixin, PolymorphicModel):
+
+class Contribution(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
@@ -118,9 +111,7 @@ class Contribution(TransitionsMixin, PolymorphicModel):
         ordering = ('-created',)
 
 
-class Organizer(AutomaticStateTransitionMixin, Contribution):
-    states = StateManager(OrganizerStateMachine, 'status')
-
+class Organizer(Contribution):
     class Meta:
         verbose_name = _("Organizer")
         verbose_name_plural = _("Organizers")
@@ -137,3 +128,4 @@ class Organizer(AutomaticStateTransitionMixin, Contribution):
 
 from bluebottle.activities.signals import *  # noqa
 from bluebottle.activities.wallposts import *  # noqa
+from bluebottle.activities.states import *  # noqa

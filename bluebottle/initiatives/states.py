@@ -1,9 +1,15 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.state import ProxiedStateMachine, State, EmptyState
+from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition
+from bluebottle.initiatives.effects import ApproveActivity
+
+from bluebottle.initiatives.models import Initiative
 
 
-class ReviewStateMachine(ProxiedStateMachine):
+class ReviewStateMachine(ModelStateMachine):
+    field = 'status'
+    model = Initiative
+
     draft = State(_('draft'), 'draft')
     submitted = State(_('submitted'), 'submitted')
     needs_work = State(_('needs work'), 'needs_work')
@@ -17,11 +23,32 @@ class ReviewStateMachine(ProxiedStateMachine):
     def is_valid(self):
         return not list(self.instance.errors)
 
-    initiate = EmptyState().to(draft)
+    initiate = Transition(EmptyState(), draft)
 
-    submit = draft.to(submitted, name=_('Submit'), conditions=[is_complete], automatic=False)
-    approve = submitted.to(
-        approved, name=_('Approve'), conditions=[is_complete], automatic=False
+    submit = Transition(
+        draft,
+        submitted,
+        name=_('Submit'),
+        conditions=[is_complete],
+        automatic=False
     )
-    close = (draft | submitted | approved).to(closed, name=_('Close'), automatic=False)
-    reopen = closed.to(draft, name=_('Reopen'), automatic=False)
+    approve = Transition(
+        submitted,
+        approved,
+        name=_('Approve'),
+        conditions=[is_complete],
+        automatic=False,
+        effects=[ApproveActivity]
+    )
+    close = Transition(
+        (draft, submitted, approved),
+        closed,
+        name=_('Close'),
+        automatic=False
+    )
+    reopen = Transition(
+        closed,
+        draft,
+        name=_('Reopen'),
+        automatic=False
+    )

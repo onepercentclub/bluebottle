@@ -14,9 +14,7 @@ import pytz
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.events.transitions import ParticipantTransitions
-from bluebottle.events.states import EventStateMachine, ParticipantStateMachine
 from bluebottle.fsm import TransitionManager
-from bluebottle.fsm.state import StateManager, AutomaticStateTransitionMixin
 from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import Validator
 
@@ -38,7 +36,7 @@ class RegistrationDeadlineValidator(Validator):
         )
 
 
-class Event(AutomaticStateTransitionMixin, Activity):
+class Event(Activity):
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
     automatically_accept = models.BooleanField(default=True)
 
@@ -55,8 +53,6 @@ class Event(AutomaticStateTransitionMixin, Activity):
     registration_deadline = models.DateField(_('deadline to apply'), null=True, blank=True)
 
     validators = [RegistrationDeadlineValidator]
-
-    states = StateManager(EventStateMachine, 'status')
 
     @property
     def required_fields(self):
@@ -115,9 +111,6 @@ class Event(AutomaticStateTransitionMixin, Activity):
             self.end = self.start + datetime.timedelta(hours=self.duration)
 
         super(Event, self).save(*args, **kwargs)
-
-        for contribution in self.contributions.all():
-            contribution.states.transition(save=True)
 
     @property
     def participants(self):
@@ -181,11 +174,9 @@ class Event(AutomaticStateTransitionMixin, Activity):
         return prepared_request.url
 
 
-class Participant(AutomaticStateTransitionMixin, Contribution):
+class Participant(Contribution):
     time_spent = models.FloatField(default=0)
     transitions = TransitionManager(ParticipantTransitions, 'status')
-
-    states = StateManager(ParticipantStateMachine, 'status')
 
     class Meta:
         verbose_name = _("Participant")
@@ -212,11 +203,13 @@ class Participant(AutomaticStateTransitionMixin, Contribution):
 
         super(Participant, self).save(*args, **kwargs)
 
-        self.activity.states.transition(save=True)
-
     def delete(self, *args, **kwargs):
         super(Participant, self).delete(*args, **kwargs)
 
         self.activity.check_capacity()
 
-from bluebottle.events.signals import *  # noqa
+    def __unicode__(self):
+        return _('Participant (%s)') % self.user
+
+from bluebottle.events.states import *  # noqa
+from bluebottle.events.effects import *  # noqa

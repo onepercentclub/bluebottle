@@ -4,10 +4,9 @@ from django.core.urlresolvers import reverse
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect
-from django.template import loader
 from django.template.response import TemplateResponse
+from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.utils.forms import TransitionConfirmationForm
 
@@ -25,6 +24,41 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
 
 class StateMachineAdminMixin(object):
     form = StateMachineModelForm
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        """
+        Determines the HttpResponse for the change_view stage.
+        """
+        if object_id and request.method == 'POST' and not request.POST.get('confirm', False):
+            obj = self.model.objects.get(pk=object_id)
+            ModelForm = self.get_form(request, obj)
+            form = ModelForm(request.POST, request.FILES, instance=obj)
+            new_obj = self.save_form(request, form, change=True)
+
+            effects = list(new_obj.all_effects)
+
+            if effects:
+                context = dict(
+                    obj=obj,
+                    title=_('Are you sure'),
+                    post=request.POST,
+                    opts=self.model._meta,
+                    media=self.media,
+                    effects=effects
+                )
+
+                return TemplateResponse(
+                    request, "admin/change_effects_confirmation.html", context
+                )
+
+        return super(StateMachineAdminMixin, self).changeform_view(request, object_id, form_url, extra_context)
+
+    def save_model(self, request, obj, form, change):
+        """
+        Given a model instance save it to the database.
+        """
+        send_messages = request.POST.get('send_messages') == 'on'
+        obj.save(send_messages=send_messages)
 
     def get_transition(self, instance, name, field_name):
         transitions = getattr(instance, field_name).all_transitions
@@ -58,39 +92,22 @@ class StateMachineAdminMixin(object):
             if form.is_valid():
                 send_messages = form.cleaned_data['send_messages']
 
-                try:
-                    getattr(state_machine, transition_name)(
-                        send_messages=send_messages,
-                        user=request.user,
-                        save=True
-                    )
+                getattr(state_machine, transition_name)(
+                    user=request.user,
+                )
+                instance.save(send_messages=send_messages)
 
-                    log_action(
-                        instance,
-                        request.user,
-                        'Changed status to {}'.format(transition.target.value)
-                    )
+                log_action(
+                    instance,
+                    request.user,
+                    'Changed status to {}'.format(transition.target.value)
+                )
 
-                    return HttpResponseRedirect(link)
-                except TransitionNotPossible:
-                    errors = transition.errors(instance.transitions)
-                    if errors:
-                        template = loader.get_template(
-                            'admin/transition_errors.html'
-                        )
-                        error_message = template.render({'errors': errors})
-                    else:
-                        error_message = 'Transition not allowed: {}'.format(transition.name)
+                return HttpResponseRedirect(link)
 
-                    messages.error(request, error_message)
-
-                    return HttpResponseRedirect(link)
-
-        notifications = []
-        transition_messages = transition.options.get('messages', [])
-
-        for message in transition_messages:
-            notifications += message(instance).get_messages()
+        effects = []
+        for effect in transition.effects:
+            effects += effect(instance).all_effects()
 
         context = dict(
             self.admin_site.each_context(request),
@@ -101,7 +118,7 @@ class StateMachineAdminMixin(object):
             pk=instance.pk,
             form=form,
             source=instance.status,
-            notifications=notifications,
+            effects=effects,
             target=transition.target.name,
         )
 

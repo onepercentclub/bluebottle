@@ -1,9 +1,24 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.state import ProxiedStateMachine, State, EmptyState
+from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition
+from bluebottle.fsm.effects import Effect, TransitionEffect, RelatedTransitionEffect
+
+from bluebottle.activities.models import Organizer, Activity
 
 
-class ReviewStateMachine(ProxiedStateMachine):
+class CreateOrganizer(Effect):
+    post_save = True
+
+    def execute(self):
+        Organizer.objects.get_or_create(activity=self.instance)
+
+
+class ReviewStateMachine(ModelStateMachine):
+    field = 'review_status'
+    name = 'review_states'
+
+    model = Activity
+
     draft = State(_('draft'), 'draft')
     submitted = State(_('submitted'), 'submitted')
     needs_work = State(_('needs work'), 'needs_work')
@@ -23,77 +38,90 @@ class ReviewStateMachine(ProxiedStateMachine):
     def initiative_is_not_approved(self):
         return not self.initiative_is_approved()
 
-    initiate = EmptyState().to(draft, name=_('Initiate'))
+    initiate = Transition(
+        EmptyState(),
+        draft,
+        name=_('Initiate')
+    )
 
-    submit = draft.to(submitted, name=_('Submit'), conditions=[is_complete])
-    approve = submitted.to(
+    submit = Transition(
+        draft,
+        submitted,
+        name=_('Submit'),
+        effects=[
+            TransitionEffect('approve', 'review_states', conditions=[initiative_is_approved])
+        ]
+    )
+
+    approve = Transition(
+        (draft, submitted, ),
         approved,
-        conditions=[is_complete, initiative_is_approved]
+        name=_('Approve'),
+        automatic=False,
+        effects=[
+            TransitionEffect('approve'),
+            RelatedTransitionEffect('organizer', 'succeed')
+        ]
     )
-    close = (draft | submitted | approved).to(closed, automatic=False)
-    close_because_of_initiative = (draft | submitted | approved).to(
-        closed, conditions=[initiative_is_not_approved]
+
+    close = Transition(
+        (draft, submitted, approved, ),
+        closed,
+        name=_('Close'),
+        automatic=False,
+        effects=[TransitionEffect('review', 'states'), RelatedTransitionEffect('organizer', 'closed')]
     )
-    reopen = closed.to(draft, automatic=False)
+    close_because_of_initiative = Transition(
+        (draft, submitted, approved, ),
+        closed,
+    )
+    reopen = Transition(
+        closed,
+        draft,
+        name=_('Reopen'),
+        automatic=False,
+        effects=[RelatedTransitionEffect('organizers', 'reset')]
+    )
 
 
-class ActivityStateMachine(ProxiedStateMachine):
+class ActivityStateMachine(ModelStateMachine):
     in_review = State(_('in review'), 'in_review')
     open = State(_('open'), 'open')
     succeeded = State(_('succeeded'), 'succeeded')
     closed = State(_('closed'), 'closed')
 
-    def is_approved(self):
-        return self.instance.review_status == ReviewStateMachine.approved.value
-
-    def is_not_approved(self):
-        return not self.is_approved
-
-    initiate = EmptyState().to(in_review)
-
-    approve = in_review.to(open, conditions=[is_approved])
-    unreview = (open | succeeded | closed).to(
-        in_review, conditions=[is_not_approved]
+    initiate = Transition(
+        EmptyState(),
+        in_review,
+        effects=[CreateOrganizer]
     )
 
+    approve = Transition(in_review, open)
+    unreview = Transition((open, succeeded, closed, ), in_review)
 
-class ContributionStateMachine(ProxiedStateMachine):
+
+class ContributionStateMachine(ModelStateMachine):
     new = State(_('new'), 'new')
     succeeded = State(_('succeeded'), 'succeeded')
     failed = State(_('failed'), 'failed')
     closed = State(_('closed'), 'closed')
 
-    def activity_is_closed(self):
-        return self.instance.activity.review_status in (
-            ReviewStateMachine.closed.value, ReviewStateMachine.deleted.value
-        )
-
-    def activity_is_succeeded(self):
-        return self.instance.activity.status == ActivityStateMachine.succeeded.value
-
-    def activity_is_open(self):
-        return self.instance.activity.status == ActivityStateMachine.open.value
-
-    initiate = EmptyState().to(new)
-
-    close = (new | succeeded | failed).to(
-        closed, conditions=[activity_is_closed]
+    initiate = Transition(EmptyState(), new)
+    close = Transition(
+        (new, succeeded, failed, ),
+        closed
     )
 
 
 class OrganizerStateMachine(ContributionStateMachine):
-    def activity_is_approved(self):
-        return self.instance.activity.review_status == ReviewStateMachine.approved.value
+    model = Organizer
 
-    def activity_is_not_approved(self):
-        return not self.activity_is_approved
-
-    succeed = (ContributionStateMachine.new | ContributionStateMachine.failed).to(
-        ContributionStateMachine.succeeded,
-        conditions=[activity_is_approved]
+    succeed = Transition(
+        (ContributionStateMachine.new, ContributionStateMachine.failed, ),
+        ContributionStateMachine.succeeded
     )
 
-    reset = (ContributionStateMachine.succeeded | ContributionStateMachine.closed).to(
+    reset = Transition(
+        (ContributionStateMachine.succeeded, ContributionStateMachine.closed, ),
         ContributionStateMachine.new,
-        conditions=[activity_is_not_approved]
     )

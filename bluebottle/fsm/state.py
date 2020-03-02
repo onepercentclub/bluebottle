@@ -6,13 +6,21 @@ class TransitionNotPossible(Exception):
     pass
 
 
-class Transition(object):
-    def __init__(self, sources, target, name=None, automatic=True, conditions=None, **options):
+class BaseTransition(object):
+    def __init__(self, sources, target, name=None, automatic=True, conditions=None, effects=None, **options):
         self.name = name
+
+        if not isinstance(sources, (list, tuple)):
+            sources = (sources, )
+
         self.sources = sources
         self.target = target
         self.automatic = automatic
         self.conditions = conditions or []
+        self.effects = effects or []
+
+        assert not (not self.automatic and not self.name), 'Automatic transitions should have a name'
+
         self.options = options
 
     @property
@@ -30,16 +38,11 @@ class Transition(object):
 
         if machine.state not in self.source_values:
             raise TransitionNotPossible(
-                _('Cannot transition from {}').format(machine.state)
+                _('Cannot transition from {} to {}').format(machine.state, self.target)
             )
 
     def on_execute(self, machine):
         machine.state = self.target.value
-
-        try:
-            getattr(machine, 'on_{}'.format(self.field))()
-        except AttributeError:
-            pass
 
     def execute(self, machine, **kwargs):
         self.can_execute(machine, **kwargs)
@@ -65,15 +68,15 @@ pre_state_transition = Signal(providing_args=['instance', 'transition', 'kwargs'
 post_state_transition = Signal(providing_args=['instance', 'transition', 'kwargs'])
 
 
-class DjangoTransition(Transition):
-    def __init__(self, *args, **kwargs):
+class Transition(BaseTransition):
+    def __init__(self, sources, target, *args, **kwargs):
         self.permission = kwargs.get('permission')
-        super(DjangoTransition, self).__init__(*args, **kwargs)
+        super(Transition, self).__init__(sources, target, *args, **kwargs)
 
     def can_execute(self, machine, user=None, **kwargs):
-        result = super(DjangoTransition, self).can_execute(machine)
+        result = super(Transition, self).can_execute(machine)
 
-        if self.permission and user and not self.permission(machine, user):
+        if self.permission and user and not user.is_staff and not self.permission(machine, user):
             raise TransitionNotPossible(
                 _('You are not allowed to perform this transition')
             )
@@ -82,7 +85,7 @@ class DjangoTransition(Transition):
         else:
             return result
 
-    def on_execute(self, machine, save=False, **kwargs):
+    def on_execute(self, machine, save=False, effects=True, **kwargs):
         pre_state_transition.send(
             sender=machine.instance.__class__,
             instance=machine.instance,
@@ -90,7 +93,10 @@ class DjangoTransition(Transition):
             **kwargs
         )
 
-        super(DjangoTransition, self).on_execute(machine)
+        super(Transition, self).on_execute(machine)
+
+        for effect in self.effects:
+            machine.instance._effects += effect(machine.instance).all_effects()
 
         if save:
             machine.save()
@@ -103,30 +109,12 @@ class DjangoTransition(Transition):
         )
 
 
-class CombinedStates(object):
-    def __init__(self, states, transition_class):
-        self.states = states
-        self.transition_class = transition_class
-
-    def __or__(self, other):
-        return CombinedStates(self.states + [other], self.transition_class)
-
-    def to(self, target, **kwargs):
-        return self.transition_class(self.states, target, **kwargs)
-
-
 class State(object):
-    transition_class = DjangoTransition
+    transition_class = Transition
 
     def __init__(self, name, value=None):
         self.name = name
         self.value = value
-
-    def to(self, target, **kwargs):
-        return self.transition_class([self], target, **kwargs)
-
-    def __or__(self, other):
-        return CombinedStates([self, other], self.transition_class)
 
     def __repr__(self):
         return '<State {}>'.format(self.name)
@@ -178,20 +166,20 @@ class StateMachineMeta(type):
 class StateMachine(object):
     __metaclass__ = StateMachineMeta
 
-    def __init__(self):
-        if self.state == '':
-            initial_transitions = [
-                transition
-                for transition in self.transitions.values()
-                if EmptyState() in transition.sources
-            ]
-            if (len(initial_transitions)) > 1:
-                raise AssertionError(
-                    'Found multiple transitions from empty state'
-                )
+    @property
+    def initial_transition(self):
+        initial_transitions = [
+            transition
+            for transition in self.transitions.values()
+            if EmptyState() in transition.sources
+        ]
+        if (len(initial_transitions)) > 1:
+            raise AssertionError(
+                'Found multiple transitions from empty state'
+            )
 
-            if initial_transitions:
-                getattr(self, initial_transitions[0].field)()
+        if initial_transitions:
+            return initial_transitions[0]
 
     @property
     def current_state(self):
@@ -210,27 +198,33 @@ class StateMachine(object):
 
         return result
 
-    @property
-    def automatic_transition(self):
-        automatic_transitions = [
-            transition for transition in self.possible_transitions()
-            if transition.automatic
-        ]
 
-        if len(automatic_transitions) == 1:
-            return automatic_transitions[0]
+class ModelStateMachineMeta(StateMachineMeta):
+    def __new__(cls, name, bases, dct):
+        if 'field' not in dct:
+            dct['field'] = 'status'
 
-    def transition(self, save=False):
-        while self.automatic_transition:
-            getattr(self, self.automatic_transition.field)(save=save)
+        if 'name' not in dct:
+            dct['name'] = 'states'
+
+        result = StateMachineMeta.__new__(cls, name, bases, dct)
+
+        if hasattr(result, 'model'):
+            if not hasattr(result.model, '_state_machines'):
+                result.model._state_machines = {}
+
+            result.model._state_machines[result.name] = result
+
+        return result
 
 
-class ProxiedStateMachine(StateMachine):
-    def __init__(self, instance, field):
+class ModelStateMachine(StateMachine):
+    __metaclass__ = ModelStateMachineMeta
+
+    def __init__(self, instance):
         self.instance = instance
-        self.field = field
 
-        super(ProxiedStateMachine, self).__init__()
+        super(ModelStateMachine, self).__init__()
 
     @property
     def state(self):
@@ -242,31 +236,3 @@ class ProxiedStateMachine(StateMachine):
 
     def save(self):
         self.instance.save()
-
-
-class StateManager(object):
-    def __init__(self, machine_class, field):
-        self.machine_class = machine_class
-        self.field = field
-
-    def contribute_to_class(self, cls, name):
-        if not hasattr(cls, '_state_machines'):
-            cls._state_machines = []
-
-        if name not in cls._state_machines:
-            cls._state_machines.insert(0, name)
-        setattr(cls, name, self)
-
-    def __get__(self, instance, owner):
-        if instance:
-            return self.machine_class(instance, self.field)
-        else:
-            return self
-
-
-class AutomaticStateTransitionMixin(object):
-    def save(self, *args, **kwargs):
-        for field in self._state_machines:
-            getattr(self, field).transition()
-
-        super(AutomaticStateTransitionMixin, self).save(*args, **kwargs)

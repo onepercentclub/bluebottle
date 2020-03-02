@@ -13,14 +13,10 @@ from multiselectfield import MultiSelectField
 
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField
-from bluebottle.fsm import TransitionManager, TransitionsMixin
-from bluebottle.fsm.state import StateManager
+from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.follow.models import Follow
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.messages import AssignedReviewerMessage
-from bluebottle.initiatives.transitions import InitiativeReviewTransitions
-from bluebottle.initiatives.states import ReviewStateMachine
-from bluebottle.notifications.models import NotificationModelMixin
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.models import BasePlatformSettings, Validator, ValidatedModelMixin
@@ -40,7 +36,7 @@ class UniqueTitleValidator(Validator):
         )
 
 
-class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, models.Model):
+class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
     status = models.CharField(max_length=40)
     title = models.CharField(_('title'), max_length=255)
 
@@ -147,15 +143,8 @@ class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, 
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
 
-    transitions = TransitionManager(InitiativeReviewTransitions, 'status')
-    states = StateManager(ReviewStateMachine, 'status')
-
     class JSONAPIMeta:
         resource_name = 'initiatives'
-
-    def __init__(self, *args, **kwargs):
-        super(Initiative, self).__init__(*args, **kwargs)
-        self.states = ReviewStateMachine(self, 'status')
 
     def __unicode__(self):
         return self.title or str(_('-empty-'))
@@ -253,10 +242,6 @@ class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, 
 
         super(Initiative, self).save(**kwargs)
 
-        for activity in self.activities.all():
-            activity.review_states.transition(save=True)
-            activity.states.transition(save=True)
-
 
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
@@ -297,3 +282,4 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
 
 from bluebottle.initiatives.wallposts import *  # noqa
+from bluebottle.initiatives.states import *  # noqa

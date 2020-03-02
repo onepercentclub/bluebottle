@@ -99,11 +99,13 @@ class AssignmentAdmin(ActivityChildAdmin):
     )
     search_fields = ['title', 'description']
     list_filter = ['status', ExpertiseFilter, 'is_online']
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['local_date', ]
 
     detail_fields = (
         'description',
         'capacity',
         'date',
+        'local_date',
         'end_date_type',
         'registration_deadline',
         'duration',

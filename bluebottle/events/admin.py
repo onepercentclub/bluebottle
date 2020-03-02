@@ -78,13 +78,14 @@ class EventAdmin(ActivityChildAdmin):
 
     base_model = Event
 
-    readonly_fields = ActivityChildAdmin.readonly_fields
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['local_start', ]
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
 
     detail_fields = (
         'description',
         'capacity',
         'start',
+        'local_start',
         'duration',
         'registration_deadline',
         'is_online',

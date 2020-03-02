@@ -302,6 +302,7 @@ class PayoutAccountTransitions(ModelTransitions):
     class values(DjangoChoices):
         new = ChoiceItem('new', _('new'))
         pending = ChoiceItem('pending', _('pending'))
+        incomplete = ChoiceItem('incomplete', _('incomplete'))
         verified = ChoiceItem('verified', _('verified'))
         rejected = ChoiceItem('rejected', _('rejected'))
 

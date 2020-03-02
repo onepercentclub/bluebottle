@@ -429,33 +429,18 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.other_user = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create(activity_manager=self.manager)
-        self.event = EventFactory.create(owner=self.owner, initiative=self.initiative)
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+        self.event = EventFactory.create(owner=self.owner, initiative=self.initiative, title='')
 
         self.event_url = reverse('event-detail', args=(self.event.id,))
-        self.transition_url = reverse('event-transition-list')
         self.review_transition_url = reverse('activity-review-transition-list')
 
         self.review_data = {
             'data': {
                 'type': 'activities/review-transitions',
                 'attributes': {
-                    'transition': 'submit',
-                },
-                'relationships': {
-                    'resource': {
-                        'data': {
-                            'type': 'activities/events',
-                            'id': self.event.pk
-                        }
-                    }
-                }
-            }
-        }
-        self.data = {
-            'data': {
-                'type': 'event-transitions',
-                'attributes': {
-                    'transition': 'close',
+                    'transition': 'delete',
                 },
                 'relationships': {
                     'resource': {
@@ -501,10 +486,10 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.assertEqual(data['included'][0]['attributes']['status'], 'deleted')
 
     def test_close(self):
-        self.data['data']['attributes']['transition'] = 'close'
+        self.review_data['data']['attributes']['transition'] = 'close'
         response = self.client.post(
-            self.transition_url,
-            json.dumps(self.data),
+            self.review_transition_url,
+            json.dumps(self.review_data),
             user=self.owner
         )
 
@@ -513,10 +498,10 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.assertEqual(data['errors'][0], "Transition is not available")
 
     def test_approve(self):
-        self.data['data']['attributes']['transition'] = 'approve'
+        self.review_data['data']['attributes']['transition'] = 'approve'
         response = self.client.post(
-            self.transition_url,
-            json.dumps(self.data),
+            self.review_transition_url,
+            json.dumps(self.review_data),
             user=self.owner
         )
 
@@ -533,8 +518,8 @@ class ParticipantTestCase(BluebottleTestCase):
         self.participant = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create()
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve()
         self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)
 
         self.participant_url = reverse('participant-list')
@@ -641,7 +626,7 @@ class ParticipantTestCase(BluebottleTestCase):
                 transition['name'] for transition in data['data']['meta']['transitions']
                 if transition['available']
             ],
-            ['initiate', 'withdraw', 'close']
+            [u'withdraw']
         )
 
     def test_possible_transitions_other_user(self):
@@ -657,10 +642,7 @@ class ParticipantTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(
-            [
-                transition['name'] for transition in data['data']['meta']['transitions']
-                if transition['available']],
-            ['initiate', 'close']
+            data['data']['meta']['transitions'], []
         )
 
 
@@ -672,8 +654,8 @@ class ParticipantListFilterCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
 
         self.initiative = InitiativeFactory.create()
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve()
         self.event = EventFactory(
             title='Test Title',
             status='open',
@@ -686,9 +668,6 @@ class ParticipantListFilterCase(BluebottleTestCase):
         ParticipantFactory.create_batch(3, activity=self.event, status='new')
         ParticipantFactory.create_batch(2, activity=self.event, status='closed')
         ParticipantFactory.create_batch(3, status='new')
-        self.event.transitions.start()
-        self.event.transitions.succeed()
-        self.event.save()
 
         self.participant_url = reverse('participant-list')
         self.event_url = reverse('event-detail', args=(self.event.pk,))
@@ -770,8 +749,8 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.participant_user = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create()
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve()
         self.initiative.save()
 
         self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)

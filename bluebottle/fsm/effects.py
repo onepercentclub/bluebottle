@@ -6,6 +6,7 @@ class Effect(object):
     save = False
     post_save = False
     conditions = []
+    display = True
 
     def __init__(self, instance):
         self.instance = instance
@@ -70,14 +71,15 @@ class BaseTransitionEffect(Effect):
     def __eq__(self, other):
         return (
             isinstance(other, BaseTransitionEffect) and
-            self.transition == other.transition
+            self.transition == other.transition and
+            self.instance == other.instance
         )
 
     def __repr__(self):
         return '<Effect: {}>'.format(self.transition)
 
     def __unicode__(self):
-        return _('Transition to %s') % unicode(self.transition.target)
+        return _('Transition %s to %s') % (unicode(self.instance), unicode(self.transition.target))
 
 
 def TransitionEffect(transition_name, field='states', conditions=None, save=False, post_save=False):
@@ -98,6 +100,7 @@ def TransitionEffect(transition_name, field='states', conditions=None, save=Fals
 
 class BaseRelatedTransitionEffect(Effect):
     post_save = True
+    display = False
 
     transition_effect_class = None
 

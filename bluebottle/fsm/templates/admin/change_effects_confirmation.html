@@ -26,9 +26,11 @@
         {% endblocktrans %}
         <ul>
             {% for effect in effects %}
-                <li>
-                    <b>{{effect}}</b>
-                </li>
+                {% if effect.display %}
+                    <li>
+                        <b>{{effect}}</b>
+                    </li>
+                {% endif %}
             {% endfor %}
         </ul>
     {% endif %}

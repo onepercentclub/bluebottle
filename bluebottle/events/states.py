@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from bluebottle.fsm.state import State, EmptyState, Transition
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect, Effect
+from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
 
 from bluebottle.events.models import Event, Participant
@@ -24,6 +25,12 @@ class SetTimeSpent(Effect):
         if not self.instance.time_spent:
             self.instance.time_spent = self.instance.activity.duration
 
+    def __unicode__(self):
+        return _('Set time spent to {} on {}').format(
+            self.instance.activity.duration,
+            self.instance
+        )
+
 
 class ResetTimeSpent(Effect):
     post_save = False
@@ -31,6 +38,11 @@ class ResetTimeSpent(Effect):
     def execute(self):
         if self.instance.time_spent == self.instance.activity.duration:
             self.instance.time_spent = 0
+
+    def __unicode__(self):
+        return _('Reset time spent to 0 on {}').format(
+            self.instance
+        )
 
 
 class EventStateMachine(ActivityStateMachine):
@@ -140,6 +152,7 @@ class ParticipantStateMachine(ContributionStateMachine):
             ),
             NotificationEffect(ParticipantApplicationManagerMessage),
             NotificationEffect(ParticipantApplicationMessage),
+            FollowActivityEffect,
         ]
     )
     withdraw = Transition(
@@ -148,15 +161,21 @@ class ParticipantStateMachine(ContributionStateMachine):
         name=_('Withdraw'),
         automatic=False,
         permission=is_user,
-        effects=[RelatedTransitionEffect('activity', 'unfill', conditions=[event_will_become_open])]
+        effects=[
+            RelatedTransitionEffect('activity', 'unfill', conditions=[event_will_become_open]),
+            UnFollowActivityEffect
+        ]
     )
-    join = Transition(
+    reapply = Transition(
         withdrawn,
         ContributionStateMachine.new,
         name=_('Join'),
         automatic=False,
         permission=is_user,
-        effects=[RelatedTransitionEffect('activity', 'fill', conditions=[event_will_become_full])]
+        effects=[
+            RelatedTransitionEffect('activity', 'fill', conditions=[event_will_become_full]),
+            FollowActivityEffect
+        ]
     )
     reject = Transition(
         ContributionStateMachine.new,
@@ -166,6 +185,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         effects=[
             RelatedTransitionEffect('activity', 'unfill'),
             NotificationEffect(ParticipantRejectedMessage),
+            UnFollowActivityEffect
         ],
         permission=is_activity_owner
     )
@@ -175,7 +195,8 @@ class ParticipantStateMachine(ContributionStateMachine):
         name=_('Re-accept'),
         automatic=False,
         effects=[
-            RelatedTransitionEffect('activity', 'fill', conditions=[event_will_become_full])
+            RelatedTransitionEffect('activity', 'fill', conditions=[event_will_become_full]),
+            FollowActivityEffect
         ],
         permission=is_activity_owner
     )
@@ -190,7 +211,9 @@ class ParticipantStateMachine(ContributionStateMachine):
             ResetTimeSpent,
             RelatedTransitionEffect(
                 'activity', 'close',
-                conditions=[event_is_finished, event_will_be_empty])
+                conditions=[event_is_finished, event_will_be_empty]
+            ),
+            UnFollowActivityEffect
         ]
     )
     mark_present = Transition(
@@ -203,7 +226,9 @@ class ParticipantStateMachine(ContributionStateMachine):
             SetTimeSpent,
             RelatedTransitionEffect(
                 'activity', 'succeed',
-                conditions=[event_is_finished])
+                conditions=[event_is_finished]
+            ),
+            FollowActivityEffect
         ]
     )
 
@@ -221,5 +246,5 @@ class ParticipantStateMachine(ContributionStateMachine):
     reset = Transition(
         ContributionStateMachine.succeeded,
         ContributionStateMachine.new,
-        effects=[ResetTimeSpent]
+        effects=[ResetTimeSpent, UnFollowActivityEffect]
     )

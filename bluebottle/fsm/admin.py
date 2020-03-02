@@ -123,7 +123,7 @@ class StateMachineAdminMixin(object):
         )
 
         return TemplateResponse(
-            request, 'admin/transition_confirmation.html', context
+            request, 'admin/change_effects_confirmation.html', context
         )
 
     def get_urls(self):

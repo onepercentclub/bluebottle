@@ -20,7 +20,7 @@ from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
-from bluebottle.transitions.serializers import (
+from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
 from bluebottle.utils.fields import SafeField, ValidationErrorsField, RequiredErrorsField
@@ -121,7 +121,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     required = RequiredErrorsField()
 
     stats = serializers.ReadOnlyField()
-    transitions = AvailableTransitionsField()
+    transitions = AvailableTransitionsField(source='states')
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -173,7 +173,7 @@ class InitiativeListSerializer(ModelSerializer):
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
-    transitions = AvailableTransitionsField()
+    transitions = AvailableTransitionsField(source='states')
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -329,7 +329,7 @@ class InitiativeSubmitSerializer(ModelSerializer):
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Initiative.objects.all())
-    field = 'transitions'
+    field = 'states'
     included_serializers = {
         'resource': 'bluebottle.initiatives.serializers.InitiativeSerializer',
     }

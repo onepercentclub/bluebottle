@@ -14,6 +14,7 @@ class BaseNotificationEffect(Effect):
 
     def __unicode__(self):
         message = self.message(self.instance)
+
         recipients = message.get_recipients()
         recipients_text = (u', ').join(recipient.email for recipient in recipients[:2])
 

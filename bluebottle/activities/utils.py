@@ -5,7 +5,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.members.models import Member
-from bluebottle.transitions.serializers import AvailableTransitionsField
+from bluebottle.fsm.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -18,8 +18,8 @@ class BaseActivitySerializer(ModelSerializer):
     review_status = FSMField(read_only=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
-    transitions = AvailableTransitionsField()
-    review_transitions = AvailableTransitionsField()
+    transitions = AvailableTransitionsField(source='states')
+    review_transitions = AvailableTransitionsField(source='review_states')
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
@@ -201,7 +201,7 @@ class BaseContributionSerializer(ModelSerializer):
     user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
     permissions = ResourcePermissionField('project_detail', view_args=('pk',))
-    transitions = AvailableTransitionsField()
+    transitions = AvailableTransitionsField(source='states')
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',

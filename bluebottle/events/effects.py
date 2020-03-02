@@ -35,6 +35,7 @@ class Finished(ModelChangedTrigger):
     @property
     def is_valid(self):
         return (
+            self.instance.duration and
             self.instance.start + timedelta(hours=self.instance.duration) < timezone.now() and
             self.instance.status not in ('succeeded', 'closed', )
         )

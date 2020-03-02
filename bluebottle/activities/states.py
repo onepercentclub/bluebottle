@@ -12,6 +12,9 @@ class CreateOrganizer(Effect):
     def execute(self):
         Organizer.objects.get_or_create(activity=self.instance)
 
+    def __unicode__(self):
+        return _('Create organizer for the activity')
+
 
 class ReviewStateMachine(ModelStateMachine):
     field = 'review_status'
@@ -38,6 +41,12 @@ class ReviewStateMachine(ModelStateMachine):
     def initiative_is_not_approved(self):
         return not self.initiative_is_approved()
 
+    def is_staff(self, user):
+        return user.is_staff
+
+    def is_owner(self, user):
+        return user == self.instance.owner
+
     initiate = Transition(
         EmptyState(),
         draft,
@@ -57,9 +66,7 @@ class ReviewStateMachine(ModelStateMachine):
         (draft, submitted, ),
         approved,
         name=_('Approve'),
-        automatic=False,
         effects=[
-            TransitionEffect('approve'),
             RelatedTransitionEffect('organizer', 'succeed')
         ]
     )
@@ -69,12 +76,19 @@ class ReviewStateMachine(ModelStateMachine):
         closed,
         name=_('Close'),
         automatic=False,
-        effects=[TransitionEffect('review', 'states'), RelatedTransitionEffect('organizer', 'closed')]
+        permission=is_staff,
+        effects=[TransitionEffect('review', 'states'), RelatedTransitionEffect('organizer', 'close')]
     )
-    close_because_of_initiative = Transition(
-        (draft, submitted, approved, ),
+
+    delete = Transition(
+        draft,
         closed,
+        name=_('Delete'),
+        automatic=False,
+        permissions=is_owner,
+        effects=[TransitionEffect('delete', 'states'), RelatedTransitionEffect('organizer', 'close')]
     )
+
     reopen = Transition(
         closed,
         draft,
@@ -88,6 +102,7 @@ class ActivityStateMachine(ModelStateMachine):
     in_review = State(_('in review'), 'in_review')
     open = State(_('open'), 'open')
     succeeded = State(_('succeeded'), 'succeeded')
+    deleted = State(_('deleted'), 'deleted')
     closed = State(_('closed'), 'closed')
 
     initiate = Transition(
@@ -97,6 +112,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     approve = Transition(in_review, open)
+    delete = Transition(in_review, deleted)
     unreview = Transition((open, succeeded, closed, ), in_review)
 
 

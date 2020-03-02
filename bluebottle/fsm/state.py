@@ -33,8 +33,12 @@ class BaseTransition(object):
                 _('Conditions not met for transition')
             )
 
-    def can_execute(self, machine):
+    def can_execute(self, machine, automatic=True, **kwargs):
         self.is_valid(machine)
+        if not automatic and self.automatic:
+            raise TransitionNotPossible(
+                _('Cannot transition from {} to {}').format(machine.state, self.target)
+            )
 
         if machine.state not in self.source_values:
             raise TransitionNotPossible(
@@ -74,7 +78,7 @@ class Transition(BaseTransition):
         super(Transition, self).__init__(sources, target, *args, **kwargs)
 
     def can_execute(self, machine, user=None, **kwargs):
-        result = super(Transition, self).can_execute(machine)
+        result = super(Transition, self).can_execute(machine, **kwargs)
 
         if self.permission and user and not user.is_staff and not self.permission(machine, user):
             raise TransitionNotPossible(

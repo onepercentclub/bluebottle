@@ -5,7 +5,7 @@
     {% blocktrans with recipient_name=to.first_name title=obj.wallpost.content_object.title author_name=obj.author.first_name context 'email' %}
         Hi {{ recipient_name }},
         <br><br>
-        {{ author_name }} responded to your update on '{{ title }}' wall.
+        {{ author_name }} responded to your update on '{{ title }}'.
     {% endblocktrans %}
 {% endblock %}
 

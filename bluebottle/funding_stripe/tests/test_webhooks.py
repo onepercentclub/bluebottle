@@ -515,10 +515,17 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                 'currently_due': [],
                 'past_due': [],
                 'pending_verification': [],
+                'disabled_reason': ''
             },
             'individual': {
                 'verification': {
                     'status': 'verified',
+                    'document': {
+                        "back": None,
+                        "details": None,
+                        "details_code": None,
+                        "front": "file_12345"
+                    }
                 },
                 'requirements': {
                     'eventually_due': [],
@@ -611,7 +618,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.connect_account.individual.requirements.eventually_due = []
         self.connect_account.individual.requirements.currently_due = ['dob.day']
         self.connect_account.individual.requirements.past_due = []
-        self.connect_account.individual.requirements.pending_verification = ['document.front']
+        self.connect_account.individual.requirements.pending_verification = []
 
         with mock.patch(
             'stripe.Webhook.construct_event',
@@ -690,7 +697,43 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             }
         }
 
-        self.connect_account.individual.verification.status = 'unverified'
+        self.connect_account.requirements.disabled_reason = "you're up to no good"
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'account.updated', data
+            )
+        ):
+            with mock.patch('stripe.Account.retrieve', return_value=self.connect_account):
+                response = self.client.post(
+                    reverse('stripe-connect-webhook'),
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
+
+        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.rejected)
+
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject, u'Your identity verification needs some work'
+        )
+        self.assertTrue(
+            self.funding.get_absolute_url() in message.body
+        )
+
+    def test_document_rejected(self):
+        data = {
+            "object": {
+                "id": self.payout_account.account_id,
+                "object": "account"
+            }
+        }
+
+        self.connect_account.individual.verification.document.details = "this passport smells fishy"
+
         with mock.patch(
             'stripe.Webhook.construct_event',
             return_value=MockEvent(

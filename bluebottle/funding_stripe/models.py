@@ -351,9 +351,9 @@ class StripePayoutAccount(PayoutAccount):
         if account_details:
             requirements = account_details.requirements
             missing = requirements.currently_due + requirements.eventually_due + requirements.past_due
-            if self.account.requirements.disabled_reason:
+            if getattr(self.account.requirements, 'disabled_reason', None):
                 missing += [self.account.requirements.disabled_reason]
-            if account_details.verification.document.details:
+            if getattr(account_details.verification, 'document', None):
                 missing += [account_details.verification.document.details]
             return missing
         return []
@@ -371,11 +371,12 @@ class StripePayoutAccount(PayoutAccount):
             del self.account
         account_details = getattr(self.account, 'individual', None)
         if account_details:
-            if account_details.verification.document.details:
-                if self.status != PayoutAccountTransitions.values.reject:
+            if getattr(account_details.verification, 'document', None) and \
+                    account_details.verification.document.details:
+                if self.status != PayoutAccountTransitions.values.rejected:
                     self.transitions.reject()
-            elif self.account.requirements.disabled_reason:
-                if self.status != PayoutAccountTransitions.values.reject:
+            elif getattr(self.account.requirements, 'disabled_reason', None):
+                if self.status != PayoutAccountTransitions.values.rejected:
                     self.transitions.reject()
             elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
                 if self.status != PayoutAccountTransitions.values.verified:
@@ -383,12 +384,12 @@ class StripePayoutAccount(PayoutAccount):
             elif len(self.missing_fields):
                 if self.status != PayoutAccountTransitions.values.incomplete:
                     self.transitions.set_incomplete()
-            elif account_details.verification.status == 'pending' or len(self.pending_fields):
+            elif len(self.pending_fields):
                 if self.status != PayoutAccountTransitions.values.pending:
                     # Submit to transition to pending again
                     self.transitions.submit()
             else:
-                if self.status != PayoutAccountTransitions.values.reject:
+                if self.status != PayoutAccountTransitions.values.rejected:
                     self.transitions.reject()
         else:
             if self.status != PayoutAccountTransitions.values.rejected:

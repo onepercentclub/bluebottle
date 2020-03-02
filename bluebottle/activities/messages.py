@@ -3,11 +3,11 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class ActivityWallpostOwnerMessage(TransitionMessage):
-    subject = _('{author} commented on your activity')
+    subject = _("You have a new post on '{title}'")
     template = 'messages/activity_wallpost_owner'
 
     context = {
-        'author': 'author.first_name'
+        'title': 'content_object.title'
     }
 
     def get_recipients(self):
@@ -18,11 +18,11 @@ class ActivityWallpostOwnerMessage(TransitionMessage):
 
 
 class ActivityWallpostReactionMessage(TransitionMessage):
-    subject = _('{author} replied on your comment')
+    subject = _("You have a new post on '{title}'")
     template = 'messages/activity_wallpost_reaction'
 
     context = {
-        'author': 'author.first_name'
+        'title': 'content_object.title'
     }
 
     def get_recipients(self):
@@ -30,11 +30,11 @@ class ActivityWallpostReactionMessage(TransitionMessage):
 
 
 class ActivityWallpostOwnerReactionMessage(TransitionMessage):
-    subject = _('{author} commented on your activity')
+    subject = _("You have a new post on '{title}'")
     template = 'messages/activity_wallpost_owner_reaction'
 
     context = {
-        'author': 'author.first_name'
+        'title': 'content_object.title'
     }
 
     def get_recipients(self):
@@ -45,7 +45,7 @@ class ActivityWallpostOwnerReactionMessage(TransitionMessage):
 
 
 class ActivityWallpostFollowerMessage(TransitionMessage):
-    subject = _("New post on '{title}'")
+    subject = _("Update from '{title}'")
     template = 'messages/activity_wallpost_follower'
     context = {
         'title': 'content_object.title'

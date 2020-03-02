@@ -38,11 +38,11 @@ class AssignedReviewerMessage(TransitionMessage):
 
 
 class InitiativeWallpostOwnerMessage(TransitionMessage):
-    subject = _('{author} commented on your initiative')
+    subject = _("You have a new post on '{initiative_title}'")
     template = 'messages/initiative_wallpost_owner'
 
     context = {
-        'author': 'author.first_name'
+        'initiative_title': 'title'
     }
 
     def get_recipients(self):
@@ -53,11 +53,11 @@ class InitiativeWallpostOwnerMessage(TransitionMessage):
 
 
 class InitiativeWallpostReactionMessage(TransitionMessage):
-    subject = _('{author} replied on your comment')
+    subject = _("You have a new post on '{initiative_title}")
     template = 'messages/initiative_wallpost_reaction'
 
     context = {
-        'author': 'author.first_name'
+        'initiative_title': 'title'
     }
 
     def get_recipients(self):
@@ -65,11 +65,11 @@ class InitiativeWallpostReactionMessage(TransitionMessage):
 
 
 class InitiativeWallpostOwnerReactionMessage(TransitionMessage):
-    subject = _('{author} commented on your initiative')
+    subject = _("You have a new post on '{initiative_title}")
     template = 'messages/initiative_wallpost_owner_reaction'
 
     context = {
-        'author': 'author.first_name'
+        'initiative_title': 'title'
     }
 
     def get_recipients(self):
@@ -80,7 +80,7 @@ class InitiativeWallpostOwnerReactionMessage(TransitionMessage):
 
 
 class InitiativeWallpostFollowerMessage(TransitionMessage):
-    subject = _("New post on '{title}'")
+    subject = _("Update from '{title}'")
     template = 'messages/initiative_wallpost_follower'
     context = {
         'title': 'content_object.title'

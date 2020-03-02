@@ -353,7 +353,8 @@ class StripePayoutAccount(PayoutAccount):
             missing = requirements.currently_due + requirements.eventually_due + requirements.past_due
             if getattr(self.account.requirements, 'disabled_reason', None):
                 missing += [self.account.requirements.disabled_reason]
-            if getattr(account_details.verification, 'document', None):
+            if getattr(account_details.verification, 'document', None) and \
+                    account_details.verification.document.details:
                 missing += [account_details.verification.document.details]
             return missing
         return []

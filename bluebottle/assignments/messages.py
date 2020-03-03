@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from bluebottle.notifications.messages import TransitionMessage
-from bluebottle.assignments.models import Applicant
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -63,6 +62,7 @@ class AssignmentDateChanged(TransitionMessage):
     }
 
     def get_recipients(self):
+        from bluebottle.assignments.models import Applicant
         return [
             contribution.user for contribution
             in self.obj.contributions.instance_of(Applicant).filter(status='new')
@@ -77,6 +77,7 @@ class AssignmentReminderOnDate(TransitionMessage):
     }
 
     def get_recipients(self):
+        from bluebottle.assignments.models import Applicant
         return [
             contribution.user for contribution
             in self.obj.contributions.instance_of(Applicant).filter(status='new')
@@ -91,6 +92,7 @@ class AssignmentReminderDeadline(TransitionMessage):
     }
 
     def get_recipients(self):
+        from bluebottle.assignments.models import Applicant
         return [
             contribution.user for contribution
             in self.obj.contributions.instance_of(Applicant).filter(status='new')

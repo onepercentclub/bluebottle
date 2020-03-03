@@ -3,6 +3,7 @@ from django.utils.timezone import now
 
 from django.core import mail
 
+from bluebottle.assignments.models import Applicant
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -49,7 +50,7 @@ class AssignmentTestCase(BluebottleTestCase):
 
         recipients = [message.to[0] for message in mail.outbox]
 
-        for participant in assignment.contributions.all():
+        for participant in assignment.contributions.instance_of(Applicant).all():
             if participant.status == 'new':
                 self.assertTrue(participant.user.email in recipients)
             else:

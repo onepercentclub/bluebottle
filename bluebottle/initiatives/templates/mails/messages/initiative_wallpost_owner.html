@@ -11,6 +11,6 @@
 {% endblock %}
 
 {% block action %}
-    <a href="{{ obj.get_absolute_url }}"
+    <a href="{{ obj.content_object.get_absolute_url }}"
        class="action-email">{% trans 'View comment' context 'email' %}</a>
 {% endblock %}`

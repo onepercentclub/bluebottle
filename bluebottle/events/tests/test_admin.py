@@ -84,7 +84,11 @@ class TestEventAdmin(BluebottleAdminTestCase):
         }
 
         response = self.client.post(url, data)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(
+            response.status_code, status.HTTP_302_FOUND,
+            'Deleting applicants failed. '
+            'Did you change admin fields for EventAdmin? '
+            'Please adjust the data in this test.')
         self.event.refresh_from_db()
         self.assertEqual(self.event.title, 'New title')
         self.assertEqual(Participant.objects.count(), 1)

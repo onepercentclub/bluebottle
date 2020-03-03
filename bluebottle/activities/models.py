@@ -102,6 +102,11 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
         return link
 
 
+def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
+    # This fixing deleting related polymorphic objects through admin
+    return models.CASCADE(collector, field, sub_objs.non_polymorphic(), using)
+
+
 class Contribution(TransitionsMixin, PolymorphicModel):
     status = FSMField(
         default=ContributionTransitions.values.new,
@@ -112,7 +117,7 @@ class Contribution(TransitionsMixin, PolymorphicModel):
     transition_date = models.DateTimeField(null=True, blank=True)
     contribution_date = models.DateTimeField()
 
-    activity = models.ForeignKey(Activity, related_name='contributions')
+    activity = models.ForeignKey(Activity, related_name='contributions', on_delete=NON_POLYMORPHIC_CASCADE)
     user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True, blank=True)
 
     @property

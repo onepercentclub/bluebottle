@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.core import mail
 from django.utils.timezone import now
 
+from bluebottle.events.models import Participant
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -128,7 +129,7 @@ class EventTestCase(BluebottleTestCase):
 
         recipients = [message.to[0] for message in mail.outbox]
 
-        for participant in event.contributions.all():
+        for participant in event.contributions.instance_of(Participant):
             if participant.status == 'new':
                 self.assertTrue(participant.user.email in recipients)
             else:

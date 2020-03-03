@@ -322,8 +322,16 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                         metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.user.pk},
                         requested_capabilities=['legacy_payments'],
                         settings={
-                            'payments': {'statement_descriptor': 'tst--'},
-                            'payouts': {'schedule': {'interval': 'manual'}}
+                            'card_payments': {
+                                'statement_descriptor_prefix': u'tst--'
+                            },
+                            'payments': {
+                                'statement_descriptor': u'tst--'
+                            },
+                            'payouts': {
+                                'statement_descriptor': u'tst--',
+                                'schedule': {'interval': 'manual'}
+                            }
                         },
                         # business_type='individual',
                         type='custom'
@@ -347,7 +355,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['data']['meta']['required-fields'],
-            ['country', 'external_accounts', 'individual.first_name']
+            [u'country', u'external_accounts', u'individual.first_name']
         )
         self.assertEqual(
             data['data']['attributes']['account']['individual']['first_name'],
@@ -394,7 +402,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['data']['meta']['required-fields'],
-            ['country', 'external_accounts', 'individual.first_name']
+            [u'country', u'external_accounts', u'individual.first_name']
         )
         self.assertEqual(
             data['data']['attributes']['account']['individual']['first_name'],

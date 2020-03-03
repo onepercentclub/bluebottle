@@ -1,4 +1,5 @@
 import datetime
+from HTMLParser import HTMLParser
 
 from django.db import models, connection
 from django.db.models import Count, Sum
@@ -152,7 +153,11 @@ class Event(Activity):
             'dates': '{}/{}'.format(
                 format_date(self.start), format_date(self.end)
             ),
-            'details': u'{}\n{}'.format(strip_tags(self.description), self.get_absolute_url()),
+            'details': HTMLParser().unescape(
+                u'{}\n{}'.format(
+                    strip_tags(self.description), self.get_absolute_url()
+                )
+            ),
             'uid': self.uid,
         }
 
@@ -178,7 +183,11 @@ class Event(Activity):
             'subject': self.title,
             'startdt': format_date(self.start),
             'enddt': format_date(self.end),
-            'body': u'{}\n{}'.format(strip_tags(self.description), self.get_absolute_url()),
+            'body': HTMLParser().unescape(
+                u'{}\n{}'.format(
+                    strip_tags(self.description), self.get_absolute_url()
+                )
+            ),
         }
 
         if self.location:
@@ -239,5 +248,6 @@ class Participant(Contribution):
         super(Participant, self).delete(*args, **kwargs)
 
         self.activity.check_capacity()
+
 
 from bluebottle.events.signals import *  # noqa

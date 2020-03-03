@@ -241,6 +241,21 @@ class FundingDetailTestCase(BluebottleTestCase):
             deadline=now() + timedelta(days=15)
         )
 
+        BudgetLineFactory.create(activity=self.funding)
+
+        self.funding.bank_account = ExternalAccountFactory.create(
+            account_id='some-external-account-id'
+        )
+        self.funding.save()
+
+        with mock.patch(
+            'bluebottle.funding_stripe.models.ExternalAccount.verified', new_callable=mock.PropertyMock
+        ) as verified:
+            verified.return_value = True
+
+            self.funding.review_transitions.submit()
+            self.funding.review_transitions.approve()
+
         self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
 
     def test_view_funding_owner(self):

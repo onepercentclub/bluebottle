@@ -345,18 +345,50 @@ class StripePayoutAccount(PayoutAccount):
         if not self.account.external_accounts.total_count > 0:
             yield 'external_account'
 
+    @property
+    def missing_fields(self):
+        account_details = getattr(self.account, 'individual', None)
+        if account_details:
+            requirements = account_details.requirements
+            missing = requirements.currently_due + requirements.eventually_due + requirements.past_due
+            if getattr(self.account.requirements, 'disabled_reason', None):
+                missing += [self.account.requirements.disabled_reason]
+            if getattr(account_details.verification, 'document', None) and \
+                    account_details.verification.document.details:
+                missing += [account_details.verification.document.details]
+            return missing
+        return []
+
+    @property
+    def pending_fields(self):
+        account_details = getattr(self.account, 'individual', None)
+        if account_details:
+            requirements = account_details.requirements
+            return requirements.pending_verification
+        return []
+
     def check_status(self):
         if self.account:
             del self.account
         account_details = getattr(self.account, 'individual', None)
-
         if account_details:
-            if account_details.verification.status == 'verified':
+            if getattr(account_details.verification, 'document', None) and \
+                    account_details.verification.document.details:
+                if self.status != PayoutAccountTransitions.values.rejected:
+                    self.transitions.reject()
+            elif getattr(self.account.requirements, 'disabled_reason', None):
+                if self.status != PayoutAccountTransitions.values.rejected:
+                    self.transitions.reject()
+            elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
                 if self.status != PayoutAccountTransitions.values.verified:
                     self.transitions.verify()
-            elif account_details.verification.status == 'pending':
+            elif len(self.missing_fields):
+                if self.status != PayoutAccountTransitions.values.incomplete:
+                    self.transitions.set_incomplete()
+            elif len(self.pending_fields):
                 if self.status != PayoutAccountTransitions.values.pending:
-                    self.transitions.pending()
+                    # Submit to transition to pending again
+                    self.transitions.submit()
             else:
                 if self.status != PayoutAccountTransitions.values.rejected:
                     self.transitions.reject()
@@ -366,7 +398,6 @@ class StripePayoutAccount(PayoutAccount):
 
         externals = self.account['external_accounts']['data']
         for external in externals:
-            print external
             external_account, _created = ExternalAccount.objects.get_or_create(
                 account_id=external['id']
             )
@@ -436,10 +467,14 @@ class StripePayoutAccount(PayoutAccount):
             'payouts': {
                 'schedule': {
                     'interval': 'manual'
-                }
+                },
+                'statement_descriptor': statement_descriptor
             },
             'payments': {
                 'statement_descriptor': statement_descriptor
+            },
+            'card_payments': {
+                'statement_descriptor_prefix': statement_descriptor
             }
         }
 

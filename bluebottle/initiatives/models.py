@@ -3,11 +3,8 @@ from django.db.models import Max
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.urls import reverse
-from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
-
 from moneyed import Money
-
 from multiselectfield import MultiSelectField
 
 from bluebottle.clients import properties
@@ -203,13 +200,13 @@ class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, 
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        link = format_html('{}/{}/initiatives/details/{}/{}', domain, language, self.id, self.slug)
+        link = '{}/{}/initiatives/details/{}/{}'.format(domain, language, self.id, self.slug)
         return link
 
     def get_admin_url(self):
         domain = get_current_host()
         url = reverse('admin:initiatives_initiative_change', args=(self.id,))
-        link = format_html('{}/{}', domain, url)
+        link = '{}/{}'.format(domain, url)
         return link
 
     def save(self, **kwargs):

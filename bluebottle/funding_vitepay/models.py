@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm import TransitionManager
@@ -51,7 +50,7 @@ class VitepayPayment(Payment):
     def save(self, *args, **kwargs):
         if not self.unique_id:
             provider = VitepayPaymentProvider.objects.get()
-            self.unique_id = format_html("{}-{}", provider.prefix, self.donation.id)
+            self.unique_id = "{}-{}".format(provider.prefix, self.donation.id)
         super(VitepayPayment, self).save(*args, **kwargs)
 
 

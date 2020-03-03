@@ -22,7 +22,7 @@ class AssignmentFactory(factory.DjangoModelFactory):
     is_online = True
     duration = 4
     end_date_type = 'deadline'
-    end_date = (now() + timedelta(weeks=3)).date()
+    date = now() + timedelta(weeks=3)
     capacity = 3
     registration_deadline = (now() + timedelta(weeks=2)).date()
 

@@ -67,7 +67,7 @@ class EventStatisticsTest(StatisticsTest):
         self.event = EventFactory.create(
             owner=self.some_user,
             initiative=self.initiative,
-            start_date=timezone.now() - datetime.timedelta(hours=1),
+            start=timezone.now() - datetime.timedelta(hours=1),
             duration=0.1
         )
 
@@ -242,7 +242,7 @@ class AssignmentStatisticsTest(StatisticsTest):
             owner=self.some_user,
             initiative=self.initiative,
             registration_deadline=(timezone.now() + datetime.timedelta(hours=24)).date(),
-            end_date=(timezone.now() + datetime.timedelta(hours=48)).date(),
+            date=(timezone.now() + datetime.timedelta(hours=48)),
             duration=0.1
         )
 

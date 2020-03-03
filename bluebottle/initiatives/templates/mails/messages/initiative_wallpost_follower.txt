@@ -15,7 +15,7 @@ Hi {{ recipient_name }},
 {% endblock %}`
 
 {% block unsubscribe %}
-{% blocktrans with context 'email'%}
+{% blocktrans context 'email'%}
 You received this email because you support {{ title }}.
 Don't want to receive initiative updates anymore?
 Unsubscribe via your account page:

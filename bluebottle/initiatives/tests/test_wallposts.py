@@ -50,7 +50,9 @@ class InitiativeWallpostTestCase(TestCase):
     def test_wallpost(self):
         wallpost_user = BlueBottleUserFactory.create()
         MediaWallpostFactory.create(
-            content_object=self.initiative, author=wallpost_user, email_followers=False
+            content_object=self.initiative,
+            author=wallpost_user,
+            email_followers=False
         )
 
         self.assertEqual(len(mail.outbox), 1)
@@ -64,7 +66,9 @@ class InitiativeWallpostTestCase(TestCase):
 
     def test_wallpost_owner(self):
         MediaWallpostFactory.create(
-            content_object=self.initiative, author=self.initiative.owner, email_followers=True
+            content_object=self.initiative,
+            author=self.initiative.owner,
+            email_followers=True
         )
         self.assertEqual(len(mail.outbox), 1)
 
@@ -74,12 +78,20 @@ class InitiativeWallpostTestCase(TestCase):
             follow_mail.subject,
             "Update from '{}'".format(self.initiative.title)
         )
+        self.assertTrue(
+            '{} posted an update to {}'.format(
+                self.initiative.owner.first_name,
+                self.initiative.title)
+            in follow_mail.body
+        )
 
     def test_reaction(self):
         reaction_user = BlueBottleUserFactory.create()
         wallpost_user = BlueBottleUserFactory.create()
         wallpost = MediaWallpostFactory.create(
-            content_object=self.initiative, author=wallpost_user, email_followers=True
+            content_object=self.initiative,
+            author=wallpost_user,
+            email_followers=True
         )
 
         mail.outbox = []

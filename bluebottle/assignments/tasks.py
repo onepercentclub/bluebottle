@@ -25,12 +25,30 @@ def check_assignment_registration_deadline():
         with LocalTenant(tenant, clear_tenant=True):
             # Close assignments passed registration_deadline
             assignments = Assignment.objects.filter(
-                date__lte=now(),
+                registration_deadline__lte=now(),
                 status__in=['full', 'open']
             ).all()
 
             for assignment in assignments:
                 assignment.registration_deadline_passed()
+
+
+@periodic_task(
+    run_every=(crontab(minute='*/15')),
+    name="check_assignment_start_date",
+    ignore_result=True
+)
+def check_assignment_start_date():
+    for tenant in Client.objects.all():
+        with LocalTenant(tenant, clear_tenant=True):
+            # Close assignments passed registration_deadline
+            assignments = Assignment.objects.filter(
+                date__lte=now(),
+                status__in=['full', 'open']
+            ).all()
+
+            for assignment in assignments:
+                assignment.start_date_passed()
 
 
 @periodic_task(
@@ -43,7 +61,7 @@ def check_assignment_end_date():
         with LocalTenant(tenant, clear_tenant=True):
             # Close assignments passed end_date
             assignments = Assignment.objects.filter(
-                date__lte=now(),
+                end_date__lt=now().date(),
                 status__in=['full', 'open', 'running']
             ).all()
 

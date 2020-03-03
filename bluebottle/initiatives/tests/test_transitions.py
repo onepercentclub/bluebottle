@@ -146,6 +146,10 @@ class InitiativeReviewTransitions(BluebottleTestCase):
         subject = 'Your initiative "{}" has been approved!'.format(self.initiative.title)
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
+        self.assertTrue(
+            'Good news, your initiative "{}" has been approved!'.format(self.initiative.title)
+            in mail.outbox[0].body
+        )
 
     def test_approve_with_activities(self):
         self.initiative.transitions.submit()

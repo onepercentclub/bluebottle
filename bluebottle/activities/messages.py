@@ -22,7 +22,7 @@ class ActivityWallpostReactionMessage(TransitionMessage):
     template = 'messages/activity_wallpost_reaction'
 
     context = {
-        'title': 'content_object.title'
+        'title': 'wallpost.content_object.title'
     }
 
     def get_recipients(self):
@@ -34,7 +34,7 @@ class ActivityWallpostOwnerReactionMessage(TransitionMessage):
     template = 'messages/activity_wallpost_owner_reaction'
 
     context = {
-        'title': 'content_object.title'
+        'title': 'wallpost.content_object.title'
     }
 
     def get_recipients(self):

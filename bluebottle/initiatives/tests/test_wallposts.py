@@ -59,7 +59,7 @@ class InitiativeWallpostTestCase(TestCase):
 
         self.assertEqual(
             owner_mail.subject,
-            '{} commented on your initiative'.format(wallpost_user.first_name)
+            "You have a new post on '{}'".format(self.initiative.title)
         )
 
     def test_wallpost_owner(self):
@@ -72,7 +72,7 @@ class InitiativeWallpostTestCase(TestCase):
 
         self.assertEqual(
             follow_mail.subject,
-            "New post on '{}'".format(self.initiative.title)
+            "Update from '{}'".format(self.initiative.title)
         )
 
     def test_reaction(self):
@@ -94,11 +94,11 @@ class InitiativeWallpostTestCase(TestCase):
 
         self.assertEqual(
             wallpost_owner_mail.subject,
-            "{} replied on your comment".format(reaction_user.first_name)
+            "You have a new post on '{}'".format(self.initiative.title)
         )
         owner_mail = mail.outbox[1]
 
         self.assertEqual(
             owner_mail.subject,
-            "{} commented on your initiative".format(reaction_user.first_name)
+            "You have a new post on '{}'".format(self.initiative.title)
         )

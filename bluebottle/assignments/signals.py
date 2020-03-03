@@ -10,5 +10,5 @@ def send_date_change(sender, instance, *args, **kwargs):
     if instance.pk:
         current = Assignment.objects.get(pk=instance.pk)
 
-        if current.end_date != instance.end_date:
+        if current.date != instance.date:
             AssignmentDateChanged(instance).compose_and_send()

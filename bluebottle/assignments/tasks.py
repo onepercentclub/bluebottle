@@ -25,7 +25,7 @@ def check_assignment_registration_deadline():
         with LocalTenant(tenant, clear_tenant=True):
             # Close assignments passed registration_deadline
             assignments = Assignment.objects.filter(
-                end_date__lte=now(),
+                date__lte=now(),
                 status__in=['full', 'open']
             ).all()
 
@@ -43,7 +43,7 @@ def check_assignment_end_date():
         with LocalTenant(tenant, clear_tenant=True):
             # Close assignments passed end_date
             assignments = Assignment.objects.filter(
-                end_date__lte=now(),
+                date__lte=now(),
                 status__in=['full', 'open', 'running']
             ).all()
 
@@ -61,7 +61,7 @@ def check_assignment_reminder():
         with LocalTenant(tenant, clear_tenant=True):
             # Close assignment that are over
             assignments = Assignment.objects.filter(
-                end_date__lte=now() + timedelta(days=5),
+                date__lte=now() + timedelta(days=5),
                 status__in=['open', 'full'],
             ).all()
 

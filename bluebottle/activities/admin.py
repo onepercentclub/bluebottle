@@ -243,7 +243,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
         link.short_description = _('View on site')
 
     class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'link', 'start_date', 'start_time', 'duration', 'status']
+        readonly_fields = ['activity_link', 'link', 'start', 'duration', 'status']
         fields = readonly_fields
         model = Event
 
@@ -253,7 +253,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
         model = Funding
 
     class AssignmentInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'link', 'end_date', 'duration', 'status']
+        readonly_fields = ['activity_link', 'link', 'date', 'duration', 'status']
         fields = readonly_fields
         model = Assignment
 

@@ -70,6 +70,9 @@ class MessageTestCase(BluebottleTestCase):
 
         message.compose_and_send()
         self.assertEquals(len(mail.outbox), 2)
-        self.assertEqual(mail.outbox[0].subject, "Test message")
-        self.assertEqual(mail.outbox[1].subject, "Test bericht")
-        self.assertTrue('This is a test message' in mail.outbox[1].body)
+        for message in mail.outbox:
+            if message.to[0] == english.email:
+                self.assertEqual(message.subject, 'Test message')
+                self.assertTrue('This is a test message' in message.body)
+            if message.to[0] == dutch.email:
+                self.assertEqual(message.subject, 'Test bericht')

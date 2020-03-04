@@ -31,8 +31,7 @@ class EventTasksTestCase(BluebottleTestCase):
         start = now() - timedelta(hours=1)
         event = EventFactory.create(
             initiative=self.initiative,
-            start_time=start.time(),
-            start_date=start.date(),
+            start=start,
             duration=3
         )
 
@@ -51,8 +50,7 @@ class EventTasksTestCase(BluebottleTestCase):
         start = now() - timedelta(hours=1)
         event = EventFactory.create(
             initiative=self.initiative,
-            start_time=start.time(),
-            start_date=start.date(),
+            start=start,
             duration=3
         )
 
@@ -72,8 +70,7 @@ class EventTasksTestCase(BluebottleTestCase):
             owner=user,
             initiative=self.initiative,
             title='Finish them translations, Rolfertjan!',
-            start_time=start.time(),
-            start_date=start.date(),
+            start=start,
             duration=1
         )
         event.review_transitions.submit()
@@ -99,8 +96,7 @@ class EventTasksTestCase(BluebottleTestCase):
             owner=user,
             status='open',
             initiative=self.initiative,
-            start_time=start.time(),
-            start_date=start.date(),
+            start=start,
             duration=1
         )
 
@@ -138,8 +134,7 @@ class EventTasksTestCase(BluebottleTestCase):
             owner=user,
             status='open',
             initiative=self.initiative,
-            start_time=start.time(),
-            start_date=start.date(),
+            start=start,
             duration=1
         )
 

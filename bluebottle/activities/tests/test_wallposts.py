@@ -36,6 +36,10 @@ class ActivityWallpostTestCase(TestCase):
             owner_mail.subject,
             "You have a new post on '{}'".format(self.activity.title)
         )
+        self.assertTrue(
+            "{} posted a comment to '{}'.".format(wallpost_user.first_name, self.activity.title)
+            in owner_mail.body
+        )
 
     def test_wallpost_owner(self):
         MediaWallpostFactory.create(

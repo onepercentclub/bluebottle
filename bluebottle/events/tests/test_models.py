@@ -11,6 +11,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class EventTestCase(BluebottleTestCase):
 
     def test_event_properties(self):
+
         start = now() - timedelta(hours=1)
         event = EventFactory.create(
             title='The greatest event',
@@ -38,7 +39,9 @@ class EventTestCase(BluebottleTestCase):
             initiative=InitiativeFactory.create(status='approved')
         )
 
-        ParticipantFactory.create_batch(10, activity=event, status='new')
+        ParticipantFactory.create_batch(event.capacity, activity=event)
+        event.refresh_from_db()
+
         self.assertEqual(event.status, 'full')
 
     def test_reopen_changed_capacity(self):
@@ -51,7 +54,9 @@ class EventTestCase(BluebottleTestCase):
             initiative=InitiativeFactory.create(status='approved')
         )
 
-        ParticipantFactory.create_batch(10, activity=event, status='new')
+        ParticipantFactory.create_batch(event.capacity, activity=event)
+
+        event.refresh_from_db()
         self.assertEqual(event.status, 'full')
 
         event.capacity = 20
@@ -69,7 +74,9 @@ class EventTestCase(BluebottleTestCase):
             initiative=InitiativeFactory.create(status='approved')
         )
 
-        ParticipantFactory.create_batch(10, activity=event, status='new')
+        ParticipantFactory.create_batch(10, activity=event)
+
+        event.refresh_from_db()
         self.assertEqual(event.status, 'full')
 
         event.participants[0].delete()
@@ -145,29 +152,3 @@ class EventTestCase(BluebottleTestCase):
         event.save()
 
         self.assertEqual(len(mail.outbox), 0)
-
-
-class ParticipantTestCase(BluebottleTestCase):
-
-    def test_applicant_status_change_on_time_spent(self):
-        event = EventFactory(
-            title='Test Title',
-            status='open',
-            start=now()
-        )
-
-        participant = ParticipantFactory.create(activity=event)
-        event.transitions.start()
-        event.end = now()
-        event.transitions.succeed()
-        event.save()
-        participant.refresh_from_db()
-
-        self.assertEqual(participant.status, 'succeeded')
-        participant.time_spent = 0
-        participant.save()
-        self.assertEqual(participant.status, 'closed')
-        participant.time_spent = 10
-        participant.save()
-        self.assertEqual(participant.status, 'succeeded')
-        self.assertEqual(participant.contribution_date, event.start)

@@ -1,10 +1,10 @@
-class ModelChangedTrigger(object):
+class ModelTrigger(object):
     def __init__(self, instance):
         self.instance = instance
 
     @property
     def is_valid(self):
-        return self.instance.field_is_changed(self.field)
+        return False
 
     @property
     def current_effects(self):
@@ -13,6 +13,21 @@ class ModelChangedTrigger(object):
 
             if effect.is_valid:
                 yield effect
+
+
+class ModelChangedTrigger(ModelTrigger):
+    @property
+    def is_valid(self):
+        return self.instance.field_is_changed(self.field)
+
+
+class ModelDeletedTrigger(object):
+    def __init__(self, instance):
+        self.instance = instance
+
+    @property
+    def is_valid(self):
+        pass
 
 
 class TriggerMixin(object):
@@ -83,3 +98,6 @@ class TriggerMixin(object):
             effect.do(post_save=True)
 
         self._effects = []
+
+    def delete(self, *args, **kwargs):
+        return super(TriggerMixin, self).delete(*args, **kwargs)

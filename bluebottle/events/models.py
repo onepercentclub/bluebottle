@@ -203,11 +203,6 @@ class Participant(Contribution):
 
         super(Participant, self).save(*args, **kwargs)
 
-    def delete(self, *args, **kwargs):
-        super(Participant, self).delete(*args, **kwargs)
-
-        self.activity.check_capacity()
-
     def __unicode__(self):
         return _('Participant (%s)') % self.user
 

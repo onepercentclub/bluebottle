@@ -67,6 +67,7 @@ class ReviewStateMachine(ModelStateMachine):
         approved,
         name=_('Approve'),
         effects=[
+            TransitionEffect('approve'),
             RelatedTransitionEffect('organizer', 'succeed')
         ]
     )

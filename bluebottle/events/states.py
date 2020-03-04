@@ -2,8 +2,14 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 
 from bluebottle.fsm.state import State, EmptyState, Transition
-from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect, Effect
-from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
+from bluebottle.fsm.effects import (
+    TransitionEffect,
+    RelatedTransitionEffect,
+    Effect
+)
+from bluebottle.follow.effects import (
+    FollowActivityEffect, UnFollowActivityEffect
+)
 from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
 
 from bluebottle.events.models import Event, Participant
@@ -74,7 +80,10 @@ class EventStateMachine(ActivityStateMachine):
         ActivityStateMachine.open,
         name=_('Approve'),
         effects=[
-            TransitionEffect('close', conditions=[should_finish, has_no_participants]),
+            TransitionEffect(
+                'close',
+                conditions=[should_finish, has_no_participants]
+            ),
         ]
     )
 
@@ -135,6 +144,9 @@ class ParticipantStateMachine(ContributionStateMachine):
 
     def event_is_finished(self):
         return self.instance.activity.start < timezone.now()
+
+    def event_is_not_finished(self):
+        return not self.instance.activity.start < timezone.now()
 
     def event_will_be_empty(self):
         return len(self.instance.activity.participants) == 1

@@ -1,13 +1,13 @@
 from datetime import timedelta
 from django.utils import timezone
 
-from bluebottle.fsm.effects import TransitionEffect
+from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.fsm.triggers import ModelChangedTrigger
+from bluebottle.fsm.triggers import ModelChangedTrigger, ModelDeletedTrigger
 
-from bluebottle.events.models import Event
+from bluebottle.events.models import Event, Participant
 from bluebottle.events.messages import EventDateChanged
-from bluebottle.events.states import EventStateMachine
+from bluebottle.events.states import EventStateMachine, ParticipantStateMachine
 
 
 class CapacityChanged(ModelChangedTrigger):
@@ -47,3 +47,26 @@ class Finished(ModelChangedTrigger):
 
 
 Event.triggers += [CapacityChanged, DateChanged, Finished]
+
+
+class ParticipantDeleted(ModelDeletedTrigger):
+    field = 'start'
+
+    effects = [
+        RelatedTransitionEffect(
+            'activity',
+            'close',
+            conditions=[ParticipantStateMachine.event_is_finished, ParticipantStateMachine.will_be_empty]
+        ),
+        RelatedTransitionEffect(
+            'activity',
+            'reopen',
+            conditions=[
+                ParticipantStateMachine.event_will_become_open,
+                ParticipantStateMachine.event_is_not_finished
+            ],
+        ),
+    ]
+
+
+Participant.triggers += [ParticipantDeleted]

@@ -200,8 +200,7 @@ class EventTransitionTestCase(BluebottleTestCase):
     def test_start(self):
         ParticipantFactory.create(activity=self.event)
         start = now() - timedelta(days=1)
-        self.event.start_time = start.time()
-        self.event.start_date = start.date()
+        self.event.start = start
         self.event.transitions.start()
 
         self.assertEqual(
@@ -213,8 +212,7 @@ class EventTransitionTestCase(BluebottleTestCase):
         ParticipantFactory.create(activity=self.event)
 
         start = now() + timedelta(days=1)
-        self.event.start_time = start.time()
-        self.event.start_date = start.date()
+        self.event.start = start
 
         self.assertRaises(
             TransitionNotPossible,
@@ -225,8 +223,7 @@ class EventTransitionTestCase(BluebottleTestCase):
         participant = ParticipantFactory.create(activity=self.event)
 
         start = now() - timedelta(days=1)
-        self.event.start_time = start.time()
-        self.event.start_date = start.date()
+        self.event.start = start
         self.event.duration = 12
         self.event.save()
 
@@ -247,8 +244,7 @@ class EventTransitionTestCase(BluebottleTestCase):
     def test_succeeded_date_in_future(self):
         ParticipantFactory.create(activity=self.event)
         start = now() - timedelta(days=1)
-        self.event.start_time = start.time()
-        self.event.start_date = start.date()
+        self.event.start = start
 
         self.event.transitions.start()
         self.event.duration = 48
@@ -277,8 +273,7 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.event.transitions.close()
 
         start = now() + timedelta(days=1)
-        self.event.start_time = start.time()
-        self.event.start_date = start.date()
+        self.event.start = start
 
         self.event.transitions.extend()
 
@@ -291,8 +286,7 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.event.transitions.close()
 
         start = now() - timedelta(days=1)
-        self.event.start_time = start.time()
-        self.event.start_date = start.date()
+        self.event.start = start
 
         self.assertRaises(
             TransitionNotPossible,
@@ -480,8 +474,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
     def test_success(self):
         start = now() - timedelta(days=2)
-        self.event.start_time = start.time()
-        self.event.start_date = start.date()
+        self.event.start = start
         self.event.duration = 24
         self.event.save()
 
@@ -507,8 +500,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
     def test_no_show(self):
         start = now() - timedelta(days=1)
-        self.event.start_time = start.time()
-        self.event.start_date = start.date()
+        self.event.start = start
         self.event.duration = 12
         self.event.save()
 
@@ -537,8 +529,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
     def test_no_show_other_user(self):
         start = now() - timedelta(days=1)
-        self.event.start_time = start.time()
-        self.event.start_date = start.date()
+        self.event.start = start
         self.event.duration = 12
         self.event.save()
 
@@ -592,8 +583,7 @@ class EventTransitionValidationTestCase(BluebottleTestCase):
         start = now() - timedelta(weeks=2)
         event = EventFactory.create(
             registration_deadline=(now() + timedelta(weeks=3)).date(),
-            start_time=start.time(),
-            start_date=start.date(),
+            start=start
         )
         self.assertEqual(
             event.status,
@@ -615,8 +605,7 @@ class EventTransitionValidationTestCase(BluebottleTestCase):
         start = now() - timedelta(weeks=2)
         event = EventFactory.create(
             registration_deadline=None,
-            start_time=start.time(),
-            start_date=start.date(),
+            start=start
         )
         self.assertEqual(
             event.status,

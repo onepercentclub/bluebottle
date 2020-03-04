@@ -123,26 +123,26 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_activity_date(self):
         event = EventFactory.create(
             review_status='approved',
-            start_date=datetime.date(2019, 1, 4)
+            start=get_current_timezone().localize(datetime.datetime(2019, 1, 4))
         )
         EventFactory.create(
             review_status='approved',
-            start_date=datetime.date(2019, 4, 8)
+            start=get_current_timezone().localize(datetime.datetime(2019, 4, 8))
         )
 
         on_date_assignment = AssignmentFactory.create(
             review_status='approved',
-            end_date=datetime.date(2019, 1, 12),
+            date=get_current_timezone().localize(datetime.datetime(2019, 1, 12)),
             end_date_type='on_date'
         )
         AssignmentFactory.create(
             review_status='approved',
-            end_date=datetime.date(2019, 4, 16),
+            date=get_current_timezone().localize(datetime.datetime(2019, 4, 16)),
             end_date_type='on_date'
         )
         deadline_assignment = AssignmentFactory.create(
             review_status='approved',
-            end_date=datetime.date(2019, 1, 20),
+            date=get_current_timezone().localize(datetime.datetime(2019, 1, 20)),
             end_date_type='deadline'
         )
 
@@ -314,11 +314,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second = EventFactory.create(review_status='approved')
         third = EventFactory.create(review_status='approved')
 
-        first.start_date = datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
+        first.start = datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
         first.save()
-        second.start_date = datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+        second.start = datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
         second.save()
-        third.start_date = datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
+        third.start = datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
         third.save()
 
         response = self.client.get(
@@ -795,8 +795,7 @@ class ContributionListAPITestCase(BluebottleTestCase):
 
         for i in data['included']:
             if i['type'] == 'activities/events':
-                self.assertTrue('start-time' in i['attributes'])
-                self.assertTrue('start-date' in i['attributes'])
+                self.assertTrue('start' in i['attributes'])
                 self.assertTrue('duration' in i['attributes'])
                 self.assertTrue('slug' in i['attributes'])
                 self.assertTrue('title' in i['attributes'])

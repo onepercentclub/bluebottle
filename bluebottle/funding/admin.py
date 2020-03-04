@@ -62,7 +62,7 @@ class BudgetLineInline(admin.TabularInline):
 
 class RewardInline(admin.TabularInline):
     model = Reward
-    readonly_fields = ('link', 'amount', 'description', 'limit')
+    readonly_fields = ('link', 'amount', 'description',)
     extra = 0
 
     def link(self, obj):
@@ -476,7 +476,7 @@ class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 @admin.register(PayoutAccount)
 class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     base_model = PayoutAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed',)
+    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'owner',)
     list_filter = ('reviewed', PolymorphicChildModelFilter)
     raw_id_fields = ('owner',)
     show_in_index = True

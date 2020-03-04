@@ -1,8 +1,9 @@
-from datetime import timedelta, date, time
+from datetime import timedelta
 
 from django.core import mail
 from django.utils.timezone import now
 
+from bluebottle.events.models import Participant
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -14,8 +15,7 @@ class EventTestCase(BluebottleTestCase):
         start = now() - timedelta(hours=1)
         event = EventFactory.create(
             title='The greatest event',
-            start_date=start.date(),
-            start_time=start.time(),
+            start=start,
             duration=3,
             capacity=10
         )
@@ -33,8 +33,7 @@ class EventTestCase(BluebottleTestCase):
         start = now() + timedelta(hours=2)
         event = EventFactory.create(
             title='The greatest event',
-            start_date=start.date(),
-            start_time=start.time(),
+            start=start,
             duration=1,
             capacity=10,
             initiative=InitiativeFactory.create(status='approved')
@@ -48,8 +47,7 @@ class EventTestCase(BluebottleTestCase):
         start = now() + timedelta(hours=2)
         event = EventFactory.create(
             title='The greatest event',
-            start_date=start.date(),
-            start_time=start.time(),
+            start=start,
             duration=1,
             capacity=10,
             initiative=InitiativeFactory.create(status='approved')
@@ -68,8 +66,7 @@ class EventTestCase(BluebottleTestCase):
         start = now() + timedelta(hours=2)
         event = EventFactory.create(
             title='The greatest event',
-            start_date=start.date(),
-            start_time=start.time(),
+            start=start,
             duration=1,
             capacity=10,
             initiative=InitiativeFactory.create(status='approved')
@@ -88,8 +85,7 @@ class EventTestCase(BluebottleTestCase):
         start = now() + timedelta(hours=1)
         event = EventFactory.create(
             title='The greatest event',
-            start_date=start.date(),
-            start_time=start.time(),
+            start=start,
             duration=3,
             initiative=InitiativeFactory.create(status='approved'),
             capacity=None
@@ -121,20 +117,19 @@ class EventTestCase(BluebottleTestCase):
         event = EventFactory(
             title='Test Title',
             status='open',
-            start_date=date.today() + timedelta(days=4),
-            start_time=time(10, 0)
+            start=now() + timedelta(days=4),
         )
         ParticipantFactory.create_batch(3, activity=event, status='new')
         ParticipantFactory.create(activity=event, status='withdrawn')
 
         mail.outbox = []
 
-        event.start_date = event.start_date + timedelta(days=1)
+        event.start = event.start + timedelta(days=1)
         event.save()
 
         recipients = [message.to[0] for message in mail.outbox]
 
-        for participant in event.contributions.all():
+        for participant in event.contributions.instance_of(Participant):
             if participant.status == 'new':
                 self.assertTrue(participant.user.email in recipients)
             else:
@@ -144,8 +139,7 @@ class EventTestCase(BluebottleTestCase):
         event = EventFactory(
             title='Test Title',
             status='open',
-            start_date=date.today() + timedelta(days=4),
-            start_time=time(10, 0)
+            start=now() + timedelta(days=4),
         )
         ParticipantFactory.create_batch(3, activity=event, status='new')
         ParticipantFactory.create(activity=event, status='withdrawn')
@@ -164,7 +158,7 @@ class ParticipantTestCase(BluebottleTestCase):
         event = EventFactory(
             title='Test Title',
             status='open',
-            start_date=now().date()
+            start=now()
         )
 
         participant = ParticipantFactory.create(activity=event)

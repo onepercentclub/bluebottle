@@ -76,11 +76,13 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory.create()
         self.assignment = AssignmentFactory.create(
             end_date_type='deadline',
-            end_date=(now() + timedelta(weeks=2)).date(),
+            date=now() + timedelta(weeks=2),
             registration_deadline=(now() + timedelta(weeks=1)).date(),
             capacity=3,
             initiative=self.initiative,
-            owner=user)
+            owner=user,
+            duration=10,
+        )
 
     def test_new(self):
         initiative = InitiativeFactory.create()
@@ -203,6 +205,32 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         applicant.refresh_from_db()
         self.assertEqual(
             applicant.status, ApplicantTransitions.values.succeeded
+        )
+
+    def test_time_spent_deadline(self):
+        self.assignment.review_transitions.approve()
+        self.assignment.save()
+        applicant = ApplicantFactory.create(activity=self.assignment)
+        self.assignment.transitions.start()
+        self.assignment.transitions.succeed()
+        self.assignment.save()
+        applicant.refresh_from_db()
+        self.assertEqual(
+            applicant.time_spent, self.assignment.duration
+        )
+
+    def test_time_spent_on_date(self):
+        self.assignment.end_date_type = 'on_date'
+        self.assignment.preparation = 5
+        self.assignment.review_transitions.approve()
+        self.assignment.save()
+        applicant = ApplicantFactory.create(activity=self.assignment)
+        self.assignment.transitions.start()
+        self.assignment.transitions.succeed()
+        self.assignment.save()
+        applicant.refresh_from_db()
+        self.assertEqual(
+            applicant.time_spent, self.assignment.duration + self.assignment.preparation
         )
 
     def test_full(self):

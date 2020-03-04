@@ -57,7 +57,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
         tenant.save()
 
         with mock.patch(
-            'stripe.Account.create', return_value=self.connect_account
+                'stripe.Account.create', return_value=self.connect_account
         ) as create:
             self.check.save()
             create.assert_called_with(
@@ -66,8 +66,16 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},
                 requested_capabilities=['legacy_payments'],
                 settings={
-                    'payments': {'statement_descriptor': u'GoDoGood'},
-                    'payouts': {'schedule': {'interval': 'manual'}}
+                    'card_payments': {
+                        'statement_descriptor_prefix': 'GoDoGood'
+                    },
+                    'payments': {
+                        'statement_descriptor': 'GoDoGood'
+                    },
+                    'payouts': {
+                        'statement_descriptor': 'GoDoGood',
+                        'schedule': {'interval': 'manual'}
+                    }
                 },
                 type='custom'
             )
@@ -81,17 +89,17 @@ class ConnectAccountTestCase(BluebottleTestCase):
 
     def test_save_already_created(self):
         with mock.patch(
-            'stripe.Account.create', return_value=self.connect_account
+                'stripe.Account.create', return_value=self.connect_account
         ) as create:
             with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
+                    'stripe.Account.retrieve', return_value=self.connect_account
             ):
                 self.check.save()
                 self.assertEqual(create.call_count, 0)
 
     def test_update(self):
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.check.save()
 
@@ -106,7 +114,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
 
     def test_account(self):
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ) as retrieve:
             self.assertTrue(isinstance(self.check.account, stripe.Account))
             self.assertEqual(self.check.account.id, self.connect_account.id)
@@ -116,22 +124,22 @@ class ConnectAccountTestCase(BluebottleTestCase):
     def test_complete(self):
         self.connect_account.individual.requirements.eventually_due = []
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.assertTrue(self.check.complete)
 
     def test_not_verified(self):
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.assertFalse(self.check.verified)
 
     def test_required(self):
         with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
+                'stripe.CountrySpec.retrieve', return_value=self.country_spec
         ):
             with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
+                    'stripe.Account.retrieve', return_value=self.connect_account
             ):
                 self.assertEqual(
                     list(self.check.required),
@@ -141,13 +149,13 @@ class ConnectAccountTestCase(BluebottleTestCase):
     def test_disabled(self):
         self.connect_account.requirements.disabled = True
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.assertTrue(self.check.disabled)
 
     def test_not_disabled(self):
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.assertFalse(self.check.disabled)
 
@@ -175,7 +183,7 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
         })
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.check = StripePayoutAccount(
                 owner=BlueBottleUserFactory.create(), country=country, account_id=account_id
@@ -208,10 +216,10 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
     def test_save(self):
         self.external_account.account_id = None
         with mock.patch(
-            'stripe.Account.create_external_account', return_value=self.connect_account
+                'stripe.Account.create_external_account', return_value=self.connect_account
         ) as create:
             with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
+                    'stripe.Account.retrieve', return_value=self.connect_account
             ):
                 self.external_account.create('some-token')
                 create.assert_called_with(
@@ -235,10 +243,10 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
 
     def test_retrieve(self):
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=self.connect_external_account
+                    'stripe.ListObject.retrieve', return_value=self.connect_external_account
             ) as retrieve_external_account:
                 self.assertEqual(
                     self.external_account.account.id,
@@ -258,10 +266,10 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
         self.connect_account.external_accounts = list_object
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=self.connect_external_account
+                    'stripe.ListObject.retrieve', return_value=self.connect_external_account
             ) as retrieve_external_account:
                 self.assertEqual(
                     self.external_account.account.id,

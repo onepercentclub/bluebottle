@@ -105,6 +105,7 @@ class StripePayoutAccountTransitions(PayoutAccountTransitions):
         source=[
             PayoutAccountTransitions.values.new,
             PayoutAccountTransitions.values.verified,
+            PayoutAccountTransitions.values.incomplete,
             PayoutAccountTransitions.values.rejected
         ],
         target=PayoutAccountTransitions.values.pending
@@ -114,7 +115,19 @@ class StripePayoutAccountTransitions(PayoutAccountTransitions):
 
     @transition(
         source=[
+            PayoutAccountTransitions.values.new,
             PayoutAccountTransitions.values.pending,
+            PayoutAccountTransitions.values.rejected
+        ],
+        target=PayoutAccountTransitions.values.incomplete
+    )
+    def set_incomplete(self):
+        pass
+
+    @transition(
+        source=[
+            PayoutAccountTransitions.values.pending,
+            PayoutAccountTransitions.values.incomplete,
             PayoutAccountTransitions.values.rejected,
             PayoutAccountTransitions.values.new
         ],
@@ -135,7 +148,9 @@ class StripePayoutAccountTransitions(PayoutAccountTransitions):
 
     @transition(
         source=[
+            PayoutAccountTransitions.values.rejected,
             PayoutAccountTransitions.values.pending,
+            PayoutAccountTransitions.values.incomplete,
             PayoutAccountTransitions.values.verified,
             PayoutAccountTransitions.values.new,
         ],

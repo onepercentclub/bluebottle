@@ -1,7 +1,6 @@
 from django.db import models
 from django.db.models import Max
 from django.db.models.deletion import SET_NULL
-from django.contrib.contenttypes.fields import GenericRelation
 from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils.html import format_html
@@ -14,7 +13,6 @@ from multiselectfield import MultiSelectField
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField
 from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
-from bluebottle.follow.models import Follow
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.messages import AssignedReviewerMessage
 from bluebottle.initiatives.transitions import InitiativeReviewTransitions
@@ -131,8 +129,6 @@ class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, 
         related_name='initiatives'
     )
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
-
-    follows = GenericRelation(Follow, object_id_field='instance_id')
 
     class Meta:
         verbose_name = _("Initiative")

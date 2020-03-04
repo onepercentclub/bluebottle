@@ -147,7 +147,7 @@ class InitiativeReviewTransitions(BluebottleTestCase):
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
         self.assertTrue(
-            "Good news, your initiative <i>{}</i> has been approved!".format(self.initiative.title)
+            'Good news, your initiative "{}" has been approved!'.format(self.initiative.title)
             in mail.outbox[0].body
         )
 

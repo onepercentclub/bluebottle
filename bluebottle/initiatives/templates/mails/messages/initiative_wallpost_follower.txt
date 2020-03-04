@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with recipient_name=to.first_name title=obj.content_object.title author_name=obj.author.first_name text=obj.text|truncatechars:250 context 'email' %}
+{% blocktrans with recipient_name=to.first_name author_name=obj.author.first_name text=obj.text|truncatechars:250 context 'email' %}
 Hi {{ recipient_name }},
 
 {{ author_name }} posted an update to {{ title }}:
@@ -15,7 +15,7 @@ Hi {{ recipient_name }},
 {% endblock %}`
 
 {% block unsubscribe %}
-{% blocktrans with title=obj.content_object.title context 'email'%}
+{% blocktrans context 'email'%}
 You received this email because you support {{ title }}.
 Don't want to receive initiative updates anymore?
 Unsubscribe via your account page:

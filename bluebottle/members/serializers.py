@@ -73,7 +73,7 @@ class UserPermissionsSerializer(serializers.Serializer):
 
     project_list = PermissionField('project_list')
     project_manage_list = PermissionField('project_manage_list')
-    homepage = PermissionField('homepage', view_args=('primary_language', ))
+    homepage = PermissionField('home-page-detail')
 
     class Meta:
         fields = [

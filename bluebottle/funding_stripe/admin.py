@@ -11,12 +11,21 @@ from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmi
     BankAccountChildAdmin
 from bluebottle.funding.models import BankAccount, Payment, PaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount, \
-    StripeSourcePayment, ExternalAccount
+    StripeSourcePayment, ExternalAccount, PaymentIntent
 
 
 @admin.register(StripePayment)
 class StripePaymentAdmin(PaymentChildAdmin):
+    raw_id_fields = PaymentChildAdmin.raw_id_fields + ['payment_intent']
     base_model = StripePayment
+    list_display = ['created', 'donation', 'status']
+    search_fields = ['paymentintent__intent_id']
+
+
+@admin.register(PaymentIntent)
+class StripePaymentIntentAdmin(admin.ModelAdmin):
+    model = PaymentIntent
+    raw_id_fields = ['donation']
 
 
 @admin.register(StripeSourcePayment)
@@ -104,12 +113,10 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
             elif obj.status == 'pending':
                 return _('Pending verification')
             else:
-                req = individual['requirements']
-                fields = req['currently_due'] + req['eventually_due'] + req['past_due']
                 template = loader.get_template(
                     'admin/funding_stripe/stripepayoutaccount/missing_fields.html'
                 )
-                return template.render({'fields': fields})
+                return template.render({'fields': obj.missing_fields})
 
         return _('All info missing')
     account_details.short_description = _('Details')

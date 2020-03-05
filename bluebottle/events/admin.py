@@ -9,7 +9,6 @@ from bluebottle.events.transitions import EventTransitions, ParticipantTransitio
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.forms import FSMModelForm
-from bluebottle.wallposts.admin import WallpostInline
 
 
 class EventAdminForm(FSMModelForm):
@@ -67,25 +66,25 @@ class ParticipantAdmin(ContributionChildAdmin):
 @admin.register(Event)
 class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
-    inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline, WallpostInline)
+    inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
     list_display = [
         '__unicode__', 'initiative', 'status',
-        'highlight', 'start_date', 'start_time', 'duration', 'created'
+        'highlight', 'start', 'duration', 'created'
     ]
     search_fields = ['title', 'description']
     list_filter = ['status', 'is_online']
-    date_hierarchy = 'start_date'
+    date_hierarchy = 'start'
 
     base_model = Event
 
-    readonly_fields = ActivityChildAdmin.readonly_fields
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['local_start', ]
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
 
     detail_fields = (
         'description',
         'capacity',
-        'start_date',
-        'start_time',
+        'start',
+        'local_start',
         'duration',
         'registration_deadline',
         'is_online',
@@ -99,8 +98,7 @@ class EventAdmin(ActivityChildAdmin):
         ('status', 'Status'),
         ('created', 'Created'),
         ('initiative__title', 'Initiative'),
-        ('start_date', 'Start Date'),
-        ('start_time', 'Start Time'),
+        ('start', 'Start'),
         ('duration', 'Duration'),
         ('end', 'End'),
         ('registration_deadline', 'Registration Deadline'),
@@ -126,4 +124,4 @@ class EventAdmin(ActivityChildAdmin):
                 instance.time_spent = form.instance.duration
                 instance.status = ParticipantTransitions.values.succeeded
             instance.save()
-        formset.save_m2m()
+        super(EventAdmin, self).save_formset(request, form, formset, change)

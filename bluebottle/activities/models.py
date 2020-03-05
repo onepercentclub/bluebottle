@@ -10,7 +10,9 @@ from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from polymorphic.models import PolymorphicModel
 from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.transitions import ActivityReviewTransitions
-from bluebottle.activities.transitions import ActivityTransitions, ContributionTransitions
+from bluebottle.activities.transitions import (
+    ActivityTransitions, ContributionTransitions, OrganizerTransitions
+)
 from bluebottle.follow.models import Follow
 from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -84,6 +86,12 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
             self.owner = self.initiative.owner
 
         super(Activity, self).save(**kwargs)
+        Organizer.objects.update_or_create(
+            activity=self,
+            defaults={
+                'user': self.owner
+            }
+        )
 
     def get_absolute_url(self):
         domain = get_current_host()
@@ -92,6 +100,11 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
                            domain, language,
                            self.__class__.__name__.lower(), self.pk, self.slug)
         return link
+
+
+def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
+    # This fixing deleting related polymorphic objects through admin
+    return models.CASCADE(collector, field, sub_objs.non_polymorphic(), using)
 
 
 class Contribution(TransitionsMixin, PolymorphicModel):
@@ -104,7 +117,7 @@ class Contribution(TransitionsMixin, PolymorphicModel):
     transition_date = models.DateTimeField(null=True, blank=True)
     contribution_date = models.DateTimeField()
 
-    activity = models.ForeignKey(Activity, related_name='contributions')
+    activity = models.ForeignKey(Activity, related_name='contributions', on_delete=NON_POLYMORPHIC_CASCADE)
     user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True, blank=True)
 
     @property
@@ -113,6 +126,23 @@ class Contribution(TransitionsMixin, PolymorphicModel):
 
     class Meta:
         ordering = ('-created',)
+
+
+class Organizer(Contribution):
+    transitions = TransitionManager(OrganizerTransitions, 'status')
+
+    class Meta:
+        verbose_name = _("Organizer")
+        verbose_name_plural = _("Organizers")
+
+    class JSONAPIMeta:
+        resource_name = 'contributions/organizers'
+
+    def save(self, *args, **kwargs):
+        if not self.contribution_date:
+            self.contribution_date = self.activity.created
+
+        super(Organizer, self).save()
 
 
 from bluebottle.activities.signals import *  # noqa

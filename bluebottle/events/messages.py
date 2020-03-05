@@ -26,9 +26,11 @@ class EventDateChanged(TransitionMessage):
     }
 
     def get_recipients(self):
+        from bluebottle.events.models import Participant
+
         return [
             contribution.user for contribution
-            in self.obj.contributions.filter(status='new')
+            in self.obj.contributions.instance_of(Participant).filter(status='new')
         ]
 
 
@@ -40,9 +42,11 @@ class EventReminder(TransitionMessage):
     }
 
     def get_recipients(self):
+        from bluebottle.events.models import Participant
+
         return [
             contribution.user for contribution
-            in self.obj.contributions.filter(status='new')
+            in self.obj.contributions.instance_of(Participant).filter(status='new')
         ]
 
 
@@ -55,6 +59,20 @@ class ParticipantApplicationMessage(TransitionMessage):
 
     def get_recipients(self):
         return [self.obj.user]
+
+
+class ParticipantApplicationManagerMessage(TransitionMessage):
+    subject = _('A new member just signed up for your event "{title}"')
+    template = 'messages/participant_application_manager'
+    context = {
+        'title': 'activity.title'
+    }
+
+    def get_recipients(self):
+        return [
+            self.obj.activity.owner,
+            self.obj.activity.initiative.activity_manager
+        ]
 
 
 class ParticipantRejectedMessage(TransitionMessage):

@@ -1,5 +1,3 @@
-from django.urls import reverse
-
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework import serializers
 
@@ -11,6 +9,7 @@ from bluebottle.activities.utils import (
 )
 from bluebottle.events.filters import ParticipantListFilter
 from bluebottle.events.models import Event, Participant
+from bluebottle.utils.utils import reverse_signed
 from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 from bluebottle.utils.serializers import NoCommitMixin
@@ -84,8 +83,8 @@ class EventListSerializer(BaseActivityListSerializer):
         model = Event
         fields = BaseActivityListSerializer.Meta.fields + (
             'capacity',
-            'start_date',
-            'start_time',
+            'start',
+            'local_start',
             'duration',
             'is_online',
             'location',
@@ -115,7 +114,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
 
     def get_links(self, instance):
         return {
-            'ical': reverse('event-ical', args=(instance.pk, )),
+            'ical': reverse_signed('event-ical', args=(instance.pk, )),
             'google': instance.google_calendar_link,
             'outlook': instance.outlook_link,
         }
@@ -124,8 +123,8 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
         model = Event
         fields = BaseActivitySerializer.Meta.fields + (
             'capacity',
-            'start_date',
-            'start_time',
+            'start',
+            'local_start',
             'duration',
             'is_online',
             'location',
@@ -157,7 +156,7 @@ class TinyEventSerializer(BaseTinyActivitySerializer):
 
     class Meta(BaseTinyActivitySerializer.Meta):
         model = Event
-        fields = BaseTinyActivitySerializer.Meta.fields + ('start_time', 'start_date', 'duration')
+        fields = BaseTinyActivitySerializer.Meta.fields + ('start', 'local_start', 'duration')
 
     class JSONAPIMeta(BaseTinyActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/events'

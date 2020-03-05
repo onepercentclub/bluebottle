@@ -32,7 +32,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
             owner=user,
             status='open',
             initiative=self.initiative,
-            end_date=end
+            date=end
         )
 
         ApplicantFactory.create_batch(3, activity=assignment, status='new')
@@ -70,7 +70,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
             owner=user,
             status='open',
             initiative=self.initiative,
-            end_date=end,
+            date=end,
         )
 
         ApplicantFactory.create_batch(3, activity=assignment, status='new')

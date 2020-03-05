@@ -23,8 +23,7 @@ def check_event_start():
         with LocalTenant(tenant, clear_tenant=True):
             # Start events that are running now
             events = Event.objects.filter(
-                start_date=now().date(),
-                start_time__lte=now().time(),
+                start__lte=now(),
                 status__in=['full', 'open']
             ).all()
 

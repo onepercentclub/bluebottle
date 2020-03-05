@@ -5,8 +5,10 @@
 {% blocktrans with recipient_name=to.first_name applicant_name=obj.user.first_name title=obj.activity.title context 'email' %}
 Hi {{ recipient_name }},
 
-You’ve been added to "{{ title }}". 
+You’ve been added to "{{ title }}".
 Check out the event page and leave a message to meet your fellow participants.
+
+If you are unable to participate, please withdraw via the platform so that others can take your place.
 {% endblocktrans %}
 {% endblock %}
 

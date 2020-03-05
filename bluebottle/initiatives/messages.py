@@ -88,9 +88,14 @@ class InitiativeWallpostFollowerMessage(TransitionMessage):
 
     def get_recipients(self):
         initiative = self.obj.content_object
-        follows = initiative.follows.filter(
-            user__campaign_notifications=True
-        ).exclude(
-            user__in=(self.obj.author, self.obj.content_object.owner)
-        )
-        return [follow.user for follow in follows]
+        follows = []
+        for activity in initiative.activities.filter(
+            review_status='approved'
+        ):
+            follows += activity.follows.filter(
+                user__campaign_notifications=True
+            ).exclude(
+                user__in=(self.obj.author, initiative.owner)
+            )
+
+        return set(follow.user for follow in follows)

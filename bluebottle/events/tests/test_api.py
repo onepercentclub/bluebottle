@@ -36,8 +36,7 @@ class EventAPITestCase(BluebottleTestCase):
                 'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start_date': str(start.date()),
-                    'start_time': str(start.time()),
+                    'start': str(start),
                     'duration': 4,
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
@@ -72,8 +71,7 @@ class EventAPITestCase(BluebottleTestCase):
                 'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start_date': str(start.date()),
-                    'start_time': str(start.time()),
+                    'start': str(start),
                     'duration': 4,
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
@@ -98,8 +96,7 @@ class EventAPITestCase(BluebottleTestCase):
             'data': {
                 'type': 'activities/events',
                 'attributes': {
-                    'start_date': str(start.date()),
-                    'start_time': str(start.time()),
+                    'start': str(start),
                     'duration': 4,
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
@@ -130,8 +127,7 @@ class EventAPITestCase(BluebottleTestCase):
             'data': {
                 'type': 'activities/events',
                 'attributes': {
-                    'start_date': str(start.date()),
-                    'start_time': str(start.time()),
+                    'start': str(start),
                     'is_online': False,
                     'duration': 4,
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
@@ -162,8 +158,7 @@ class EventAPITestCase(BluebottleTestCase):
             'data': {
                 'type': 'activities/events',
                 'attributes': {
-                    'start_date': str(start.date()),
-                    'start_time': str(start.time()),
+                    'start': str(start),
                     'is_online': True,
                     'duration': 4,
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
@@ -201,8 +196,7 @@ class EventAPITestCase(BluebottleTestCase):
                 'id': event.id,
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start_date': str(start.date()),
-                    'start_time': str(start.time()),
+                    'start': str(start),
                     'duration': 4,
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
@@ -236,8 +230,7 @@ class EventAPITestCase(BluebottleTestCase):
                 'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start_date': str(start.date()),
-                    'start_time': str(start.time()),
+                    'start': str(start),
                     'registration_deadline': str(registration.date()),
                     'capacity': 10,
                     'description': 'We will clean up the beach south of Katwijk'
@@ -263,8 +256,7 @@ class EventAPITestCase(BluebottleTestCase):
                 'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start_time': str((now() + timedelta(days=21)).time()),
-                    'end_time': str((now() + timedelta(days=21, hours=4)).time()),
+                    'start': str((now() + timedelta(days=21))),
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
                     'address': 'Zuid-Boulevard Katwijk aan Zee',
@@ -295,8 +287,7 @@ class EventAPITestCase(BluebottleTestCase):
                 'id': event.id,
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start_time': str(now() + timedelta(days=21)),
-                    'end_time': str(now() + timedelta(days=21, hours=4)),
+                    'start': str(now() + timedelta(days=21)),
                     'registration_deadline': str(now() + timedelta(days=14)),
                     'capacity': 10,
                     'address': 'Zuid-Boulevard Katwijk aan Zee',
@@ -316,7 +307,7 @@ class EventAPITestCase(BluebottleTestCase):
 
     def test_get_event_calendar_links(self):
         event = EventFactory.create(title='Pollute Katwijk Beach')
-        event.description = u"Just kidding, <br/>we're going to clean it up of course 😉"
+        event.description = u"Just kidding, <br/>we're going&nbsp;to clean it up of course 😉"
         event.save()
         event_url = reverse('event-detail', args=(event.pk,))
         response = self.client.get(event_url, user=self.user)
@@ -332,7 +323,7 @@ class EventAPITestCase(BluebottleTestCase):
         self.assertEqual(google_query['location'][0], event.location.formatted_address)
         self.assertEqual(google_query['text'][0], event.title)
         self.assertEqual(google_query['uid'][0], 'test-event-{}'.format(event.pk))
-        details = "Just kidding, we're going to clean it up of course \xf0\x9f\x98\x89\n" \
+        details = "Just kidding, we're going\xc2\xa0to clean it up of course \xf0\x9f\x98\x89\n" \
                   "http://testserver/en/initiatives/activities/details/" \
                   "event/{}/pollute-katwijk-beach".format(event.id)
         self.assertEqual(google_query['details'][0], details)
@@ -362,17 +353,21 @@ class EventAPITestCase(BluebottleTestCase):
             outlook_query['enddt'][0], unicode(event.end.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
         )
 
-        self.assertEqual(
-            links['ical'], reverse('event-ical', args=(event.pk, ))
+        self.assertTrue(
+            links['ical'].startswith(reverse('event-ical', args=(event.pk, )))
         )
 
 
 class EventIcalTestCase(BluebottleTestCase):
     def test_get(self):
         event = EventFactory.create(title='Pollute Katwijk Beach')
-        event_url = reverse('event-ical', args=(event.pk,))
 
+        event_url = reverse('event-detail', args=(event.pk,))
         response = self.client.get(event_url)
+        ical_url = response.json()['data']['attributes']['links']['ical']
+
+        response = self.client.get(ical_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.get('content-type'), 'text/calendar')
         self.assertEqual(
@@ -396,6 +391,20 @@ class EventIcalTestCase(BluebottleTestCase):
             )
             self.assertEqual(str(ical_event['url']), event.get_absolute_url())
             self.assertEqual(str(ical_event['organizer']), 'MAILTO:{}'.format(event.owner.email))
+
+    def test_get_no_signature(self):
+        event = EventFactory.create(title='Pollute Katwijk Beach')
+
+        ical_url = reverse('event-ical', args=(event.pk,))
+        response = self.client.get(ical_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_wrong_signature(self):
+        event = EventFactory.create(title='Pollute Katwijk Beach')
+
+        ical_url = reverse('event-ical', args=(event.pk,))
+        response = self.client.get('{}?signature=ewiorjewoijical_url'.format(ical_url))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class EventValidationTestCase(BluebottleTestCase):
@@ -737,8 +746,7 @@ class ParticipantListFilterCase(BluebottleTestCase):
         self.event = EventFactory(
             title='Test Title',
             status='open',
-            start_date=(now() - timedelta(hours=5)).date(),
-            start_time=(now() - timedelta(hours=5)).time(),
+            start=(now() - timedelta(hours=5)),
             owner=self.initiative.owner,
             initiative=self.initiative,
             duration=4

@@ -333,7 +333,11 @@ class SupportersExportView(PrivateFileView):
         writer = csv.writer(response)
 
         writer.writerow([field[1] for field in self.fields])
-        for donation in instance.contributions.filter(status='succeeded'):
+        for donation in instance.contributions.filter(
+            status='succeeded'
+        ).instance_of(
+            Donation
+        ):
             writer.writerow([
                 prep_field(request, donation, field[0]) for field in self.fields
             ])

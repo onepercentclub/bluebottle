@@ -8,11 +8,13 @@ Hi {{ recipient_name }},
 Heads up: The date of your task "{{ assignment_title }}" has been changed.
 <br><br>
 The new date is: {{ assignment_date }}.
+<br>
+<i>If you are unable to participate, please withdraw via the platform so that others can take your place.</i>
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-    <a href="{{ site }}{{ obj.get_absolute_url }}" class="action-email">
+    <a href="{{ obj.get_absolute_url }}" class="action-email">
        {% trans 'Go to task' context 'email' %}
     </a>
 {% endblock %}`

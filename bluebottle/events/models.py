@@ -1,12 +1,17 @@
 import datetime
+from HTMLParser import HTMLParser
 
 from django.db import models, connection
 from django.db.models import Count, Sum
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
-from django.utils.timezone import get_current_timezone, utc
+from django.utils.timezone import utc
 
 from requests.models import PreparedRequest
+
+from timezonefinder import TimezoneFinder
+
+import pytz
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
@@ -14,6 +19,9 @@ from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import Validator
+
+
+tf = TimezoneFinder()
 
 
 class RegistrationDeadlineValidator(Validator):
@@ -24,8 +32,8 @@ class RegistrationDeadlineValidator(Validator):
     def is_valid(self):
         return (
             not self.instance.registration_deadline or (
-                self.instance.start_date and
-                self.instance.registration_deadline < self.instance.start_date
+                self.instance.start and
+                self.instance.registration_deadline < self.instance.start.date()
             )
         )
 
@@ -41,6 +49,7 @@ class Event(Activity):
 
     start_date = models.DateField(_('start date'), null=True, blank=True)
     start_time = models.TimeField(_('start time'), null=True, blank=True)
+    start = models.DateTimeField(_('Start'), null=True, blank=True)
     duration = models.FloatField(_('duration'), null=True, blank=True)
     end = models.DateTimeField(_('end'), null=True, blank=True)
     registration_deadline = models.DateField(_('deadline to apply'), null=True, blank=True)
@@ -51,7 +60,7 @@ class Event(Activity):
 
     @property
     def required_fields(self):
-        fields = ['title', 'description', 'start_date', 'start_time', 'duration', 'is_online', ]
+        fields = ['title', 'description', 'start', 'duration', 'is_online', ]
 
         if not self.is_online:
             fields.append('location')
@@ -60,14 +69,28 @@ class Event(Activity):
 
     @property
     def stats(self):
-        stats = self.contributions.filter(
+        contributions = self.contributions.instance_of(Participant)
+
+        stats = contributions.filter(
             status=ParticipantTransitions.values.succeeded).\
             aggregate(count=Count('user__id'), hours=Sum('participant__time_spent'))
-        committed = self.contributions.filter(
+        committed = contributions.filter(
             status=ParticipantTransitions.values.new).\
             aggregate(committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent'))
         stats.update(committed)
         return stats
+
+    @property
+    def local_start(self):
+        if self.location and self.location.position:
+            tz_name = tf.timezone_at(
+                lng=self.location.position.x,
+                lat=self.location.position.y
+            )
+            tz = pytz.timezone(tz_name)
+            return self.start.astimezone(tz).replace(tzinfo=None)
+        else:
+            return self.start
 
     class Meta:
         verbose_name = _("Event")
@@ -97,16 +120,6 @@ class Event(Activity):
             if save:
                 self.save()
 
-    @property
-    def start(self):
-        if self.start_time and self.start_date:
-            return get_current_timezone().localize(
-                datetime.datetime.combine(
-                    self.start_date,
-                    self.start_time
-                )
-            )
-
     def save(self, *args, **kwargs):
         if self.start and self.duration:
             self.end = self.start + datetime.timedelta(hours=self.duration)
@@ -116,7 +129,7 @@ class Event(Activity):
 
     @property
     def participants(self):
-        return self.contributions.filter(
+        return self.contributions.instance_of(Participant).filter(
             status__in=[ParticipantTransitions.values.new,
                         ParticipantTransitions.values.succeeded]
         )
@@ -140,7 +153,11 @@ class Event(Activity):
             'dates': '{}/{}'.format(
                 format_date(self.start), format_date(self.end)
             ),
-            'details': u'{}\n{}'.format(strip_tags(self.description), self.get_absolute_url()),
+            'details': HTMLParser().unescape(
+                u'{}\n{}'.format(
+                    strip_tags(self.description), self.get_absolute_url()
+                )
+            ),
             'uid': self.uid,
         }
 
@@ -166,7 +183,11 @@ class Event(Activity):
             'subject': self.title,
             'startdt': format_date(self.start),
             'enddt': format_date(self.end),
-            'body': u'{}\n{}'.format(strip_tags(self.description), self.get_absolute_url()),
+            'body': HTMLParser().unescape(
+                u'{}\n{}'.format(
+                    strip_tags(self.description), self.get_absolute_url()
+                )
+            ),
         }
 
         if self.location:
@@ -227,5 +248,6 @@ class Participant(Contribution):
         super(Participant, self).delete(*args, **kwargs)
 
         self.activity.check_capacity()
+
 
 from bluebottle.events.signals import *  # noqa

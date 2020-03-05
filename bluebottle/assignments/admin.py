@@ -88,25 +88,28 @@ class AssignmentAdmin(ActivityChildAdmin):
     form = AssignmentAdminForm
     inlines = (ApplicantInline, MessageAdminInline, WallpostInline)
 
-    date_hierarchy = 'end_date'
+    date_hierarchy = 'date'
 
     model = Assignment
     raw_id_fields = ('owner', 'location')
 
     list_display = (
         '__unicode__', 'initiative', 'created', 'status', 'highlight',
-        'end_date', 'is_online', 'registration_deadline'
+        'date', 'is_online', 'registration_deadline'
     )
     search_fields = ['title', 'description']
     list_filter = ['status', ExpertiseFilter, 'is_online']
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['local_date', ]
 
     detail_fields = (
         'description',
         'capacity',
-        'end_date',
+        'date',
+        'local_date',
         'end_date_type',
         'registration_deadline',
         'duration',
+        'preparation',
         'expertise',
         'is_online',
         'location'
@@ -120,8 +123,9 @@ class AssignmentAdmin(ActivityChildAdmin):
         ('initiative__title', 'Initiative'),
         ('expertise', 'Expertise'),
         ('end_date_type', 'End Time Type'),
-        ('end_date', 'End Date'),
+        ('date', 'End Date'),
         ('duration', 'Duration'),
+        ('preparation', 'Preparation'),
         ('registration_deadline', 'Registration Deadline'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Email'),

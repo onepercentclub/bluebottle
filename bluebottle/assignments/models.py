@@ -1,10 +1,12 @@
-import datetime
 
 from django.db import models
 from django.db.models import SET_NULL, Count, Sum
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
-from django.utils.timezone import get_current_timezone
+
+from timezonefinder import TimezoneFinder
+
+import pytz
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
@@ -15,6 +17,9 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import Validator
 
 
+tf = TimezoneFinder()
+
+
 class RegistrationDeadlineValidator(Validator):
     field = 'registration_deadline'
     code = 'registration_deadline'
@@ -23,8 +28,8 @@ class RegistrationDeadlineValidator(Validator):
     def is_valid(self):
         return (
             not self.instance.registration_deadline or
-            not self.instance.end_date or
-            self.instance.registration_deadline < self.instance.end_date
+            not self.instance.date or
+            self.instance.registration_deadline < self.instance.date.date()
         )
 
 
@@ -38,7 +43,20 @@ class Assignment(Activity):
     end_date = models.DateField(
         _('end date'), null=True, blank=True,
         help_text=_('Either the deadline or the date it will take place.'))
+    start_time = models.TimeField(
+        _('start time'), null=True, blank=True,
+        help_text=_('On the specific task date, the start time.'))
+
+    date = models.DateTimeField(
+        _('date'), null=True, blank=True,
+        help_text=_('Either the start date or the deadline of the task')
+    )
+
     duration = models.FloatField(_('number of hours per person'), null=True, blank=True)
+    preparation = models.FloatField(
+        _('number of hours required for preparation'),
+        null=True, blank=True,
+        help_text=_('Only effective when task takes place on specific date.'))
     end_date_type = models.CharField(
         _('date type'), max_length=50, null=True, default=None, blank=True,
         help_text=_('Does the task have a deadline or does it take place on a specific date.'),
@@ -60,8 +78,8 @@ class Assignment(Activity):
     @property
     def required_fields(self):
         fields = [
-            'title', 'description', 'end_date_type', 'end_date',
-            'registration_deadline', 'capacity', 'duration', 'is_online',
+            'title', 'description', 'end_date_type', 'date',
+            'capacity', 'duration', 'is_online',
             'expertise'
         ]
 
@@ -71,11 +89,26 @@ class Assignment(Activity):
         return fields
 
     @property
+    def local_date(self):
+        if self.location and self.location.position:
+            tz_name = tf.timezone_at(
+                lng=self.location.position.x,
+                lat=self.location.position.y
+            )
+            tz = pytz.timezone(tz_name)
+
+            return self.date.astimezone(tz)
+        else:
+            return self.date
+
+    @property
     def stats(self):
-        stats = self.contributions.filter(
+        contributions = self.contributions.instance_of(Applicant)
+
+        stats = contributions.filter(
             status=ApplicantTransitions.values.succeeded).\
             aggregate(count=Count('user__id'), hours=Sum('applicant__time_spent'))
-        committed = self.contributions.filter(
+        committed = contributions.filter(
             status__in=[
                 ApplicantTransitions.values.active,
                 ApplicantTransitions.values.accepted]).\
@@ -109,7 +142,7 @@ class Assignment(Activity):
             ApplicantTransitions.values.active,
             ApplicantTransitions.values.succeeded
         ]
-        return self.contributions.filter(status__in=accepted_states)
+        return self.contributions.instance_of(Applicant).filter(status__in=accepted_states)
 
     def registration_deadline_passed(self):
         # If registration deadline passed
@@ -150,6 +183,8 @@ class Assignment(Activity):
                 self.save()
 
     def save(self, *args, **kwargs):
+        if self.preparation and self.end_date_type == "deadline":
+            self.preparation = None
         self.check_capacity(save=False)
         return super(Assignment, self).save(*args, **kwargs)
 
@@ -183,13 +218,7 @@ class Applicant(Contribution):
         created = self.pk is None
 
         if not self.contribution_date:
-            self.contribution_date = get_current_timezone().localize(
-                datetime.datetime(
-                    self.activity.end_date.year,
-                    self.activity.end_date.month,
-                    self.activity.end_date.day
-                )
-            )
+            self.contribution_date = self.activity.date
 
         # Fail the self if hours are set to 0
         if self.status == ApplicantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:

@@ -9,7 +9,7 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
     StackedPolymorphicInline)
 
-from bluebottle.activities.models import Activity, Contribution
+from bluebottle.activities.models import Activity, Contribution, Organizer
 from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.events.models import Event, Participant
@@ -38,13 +38,33 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     activity_link.short_description = _('Activity')
 
 
+@admin.register(Organizer)
+class OrganizerAdmin(ContributionChildAdmin):
+    model = Organizer
+    list_display = ['user', 'status', 'activity_link']
+    raw_id_fields = ('user', 'activity')
+
+    readonly_fields = ContributionChildAdmin.readonly_fields + ['status', 'created', 'transition_date']
+
+    date_hierarchy = 'contribution_date'
+
+    export_to_csv_fields = (
+        ('status', 'Status'),
+        ('created', 'Created'),
+        ('activity', 'Activity'),
+        ('user__full_name', 'Owner'),
+        ('user__email', 'Email'),
+        ('contribution_date', 'Contribution Date'),
+    )
+
+
 @admin.register(Contribution)
 class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     base_model = Contribution
-    child_models = (Participant, Donation, Applicant)
-    list_display = ['created', 'transition_date', 'owner', 'type', 'activity', 'status']
+    child_models = (Participant, Donation, Applicant, Organizer)
+    list_display = ['created', 'contribution_date', 'owner', 'type', 'activity', 'status']
     list_filter = (PolymorphicChildModelFilter, 'status')
-    date_hierarchy = 'transition_date'
+    date_hierarchy = 'contribution_date'
 
     ordering = ('-created', )
 
@@ -223,7 +243,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
         link.short_description = _('View on site')
 
     class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'link', 'start_date', 'start_time', 'duration', 'status']
+        readonly_fields = ['activity_link', 'link', 'start', 'duration', 'status']
         fields = readonly_fields
         model = Event
 
@@ -233,7 +253,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
         model = Funding
 
     class AssignmentInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'link', 'end_date', 'duration', 'status']
+        readonly_fields = ['activity_link', 'link', 'date', 'duration', 'status']
         fields = readonly_fields
         model = Assignment
 

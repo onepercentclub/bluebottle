@@ -26,7 +26,7 @@ class AssignmentListSerializer(BaseActivityListSerializer):
         model = Assignment
         fields = BaseActivityListSerializer.Meta.fields + (
             'is_online',
-            'end_date',
+            'date',
             'end_date_type',
             'registration_deadline',
             'capacity',
@@ -34,6 +34,7 @@ class AssignmentListSerializer(BaseActivityListSerializer):
             'duration',
             'location',
             'permissions',
+            'preparation',
         )
 
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
@@ -57,7 +58,7 @@ class TinyAssignmentSerializer(BaseTinyActivitySerializer):
 
     class Meta(BaseTinyActivitySerializer.Meta):
         model = Assignment
-        fields = BaseTinyActivitySerializer.Meta.fields + ('end_date', 'end_date_type')
+        fields = BaseTinyActivitySerializer.Meta.fields + ('end_date', 'end_date_type', 'date')
 
     class JSONAPIMeta(BaseTinyActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/assignments'
@@ -72,6 +73,7 @@ class AssignmentSerializer(BaseActivitySerializer):
         fields = BaseActivitySerializer.Meta.fields + (
             'is_online',
             'end_date',
+            'date',
             'end_date_type',
             'registration_deadline',
             'capacity',
@@ -80,6 +82,8 @@ class AssignmentSerializer(BaseActivitySerializer):
             'location',
             'permissions',
             'contributions',
+            'start_time',
+            'preparation',
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

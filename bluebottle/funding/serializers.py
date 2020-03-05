@@ -592,7 +592,7 @@ class PayoutBankAccountSerializer(PolymorphicModelSerializer):
 
 class PayoutDonationSerializer(serializers.ModelSerializer):
     # For Payout service
-    amount = MoneySerializer()
+    amount = MoneySerializer(source='payout_amount')
 
     class Meta:
         fields = (

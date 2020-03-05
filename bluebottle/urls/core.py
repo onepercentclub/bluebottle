@@ -29,8 +29,6 @@ urlpatterns = [
         include('bluebottle.bb_tasks.urls.media')),
     url(r'^api/geo/',
         include('bluebottle.geo.urls.api')),
-    url(r'^api/contact/',
-        include('bluebottle.contact.urls.api')),
     url(r'^api/news/',
         include('bluebottle.news.urls.api')),
     url(r'^api/pages/',

@@ -45,7 +45,6 @@ urlpatterns = [
         include('bluebottle.terms.urls.api')),
     url(r'^api/metadata/',
         include('bluebottle.utils.urls.api')),
-
     url(r'^api/orders/',
         include('bluebottle.bb_orders.urls.api')),
     url(r'^api/donations/',

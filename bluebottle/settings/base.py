@@ -353,7 +353,6 @@ TENANT_APPS = (
     'bluebottle.funding_lipisha',
 
     'bluebottle.tasks',
-    'bluebottle.homepage',
     'bluebottle.payouts',
     'bluebottle.payouts_dorado',
     'bluebottle.surveys',

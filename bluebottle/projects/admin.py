@@ -31,7 +31,6 @@ from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.clients import properties
-from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
 from bluebottle.payments.adapters import has_payment_prodiver
@@ -320,7 +319,7 @@ class ProjectLocationInline(LatLongMapPickerMixin, admin.StackedInline):
         return False
 
 
-class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):
+class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, admin.ModelAdmin):
     form = ProjectAdminForm
     date_hierarchy = 'deadline'
     ordering = ('-created',)

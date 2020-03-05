@@ -4,14 +4,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import permissions
 
-from bluebottle.bluebottle_drf2.views import (
-    RetrieveUpdateDeleteAPIView,
-    ListCreateAPIView
-)
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.fundraisers.serializers import BaseFundraiserSerializer
 from bluebottle.projects.models import Project
 from bluebottle.utils.permissions import TenantConditionalOpenClose
+from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
 
 class FundraiserListView(ListCreateAPIView):
@@ -54,7 +51,7 @@ class FundraiserListView(ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
-class FundraiserDetailView(RetrieveUpdateDeleteAPIView):
+class FundraiserDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Fundraiser.objects.all()
     serializer_class = BaseFundraiserSerializer
     permission_classes = (TenantConditionalOpenClose,

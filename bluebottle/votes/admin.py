@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
 
@@ -22,7 +21,7 @@ class ProjectFilter(admin.SimpleListFilter):
             return queryset
 
 
-class VoteAdmin(ImprovedModelForm, admin.ModelAdmin):
+class VoteAdmin(admin.ModelAdmin):
 
     raw_id_fields = ('voter', 'project')
     list_display = ('email', 'first_name', 'last_name', 'project',

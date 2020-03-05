@@ -11,10 +11,7 @@ class TestCeleryMail(BluebottleTestCase):
         msg = EmailMultiAlternatives(subject=s,
                                      body=s,
                                      to=['test@testing.com'])
-        try:
-            _send_celery_mail(msg)
-        except UnicodeEncodeError:
-            self.fail("Unicode string not handled correctly")
+        _send_celery_mail(msg)
 
     def test_handle_non_unicode_char(self):
         """ Test handling a non-unicode character in subject or body """
@@ -23,7 +20,3 @@ class TestCeleryMail(BluebottleTestCase):
                                      body=s,
                                      to=['test@testing.com'])
         _send_celery_mail(msg)
-
-
-class TestFacebookWallpost(BluebottleTestCase):
-    pass

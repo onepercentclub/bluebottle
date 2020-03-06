@@ -65,8 +65,29 @@ class TestExportAdmin(BluebottleTestCase):
             101
         )
         self.assertEqual(
+            book.sheet_by_name('Events').cell(0, 13).value,
+            'Start'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Events').cell(0, 14).value,
+            'Time needed'
+        )
+
+        self.assertEqual(
             book.sheet_by_name('Tasks').nrows,
             71
+        )
+        self.assertEqual(
+            book.sheet_by_name('Tasks').cell(0, 16).value,
+            'Preparation time'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Tasks').cell(0, 17).value,
+            'Start time'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Tasks').cell(0, 19).value,
+            'End date'
         )
 
     def test_export_custom_user_fields(self):

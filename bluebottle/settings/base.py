@@ -727,9 +727,10 @@ EXPORTDB_EXPORT_CONF = {
                 ('skill', 'Expertise'),
                 ('capacity', 'People needed'),
                 ('duration', 'Time needed'),
+                ('preparation', 'Preparation time'),
+                ('start_time', 'Start time'),
                 ('people_applied', 'People applied'),
-                ('time_spent', 'Time Spent'),
-                ('end_date', 'End date'),
+                ('end', 'End date'),
                 ('end_date_type', 'End date type'),
 
                 ('created', 'Date created'),
@@ -773,9 +774,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('location__country__alpha2_code', 'Country Code'),
 
                 ('capacity', 'People needed'),
+                ('start', 'Start'),
                 ('duration', 'Time needed'),
-                ('end_date', 'End date'),
-                ('end_date_type', 'End date type'),
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),

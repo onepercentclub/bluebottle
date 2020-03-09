@@ -503,12 +503,12 @@ LOGGING = {
             'formatter': 'json',
             'when': 'midnight',
         },
-        'file': {
+        'syslog': {
             'level': 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(PROJECT_ROOT, 'logs', 'api.log'),
-            'formatter': 'simple',
-            'when': 'midnight',
+            'class': 'logging.handlers.SysLogHandler',
+            'formatter': 'verbose',
+            'facility': 'local0',
+            'address': '/dev/log',
         },
         'default': {
             'level': 'INFO',
@@ -523,7 +523,7 @@ LOGGING = {
             'level': 'ERROR',
         },
         'bluebottle': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'syslog'],
             'propagate': True,
             'level': 'INFO',
         },

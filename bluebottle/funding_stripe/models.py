@@ -460,7 +460,7 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def account_settings(self):
-        statement_descriptor = connection.tenant.name[:21]
+        statement_descriptor = connection.tenant.name[:22]
         while len(statement_descriptor) < 5:
             statement_descriptor += '-'
         return {
@@ -474,7 +474,7 @@ class StripePayoutAccount(PayoutAccount):
                 'statement_descriptor': statement_descriptor
             },
             'card_payments': {
-                'statement_descriptor_prefix': statement_descriptor
+                'statement_descriptor_prefix': statement_descriptor[:10]
             }
         }
 

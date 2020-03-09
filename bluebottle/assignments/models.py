@@ -97,7 +97,7 @@ class Assignment(Activity):
             )
             tz = pytz.timezone(tz_name)
 
-            return self.date.astimezone(tz)
+            return self.date.astimezone(tz).replace(tzinfo=None)
         else:
             return self.date
 

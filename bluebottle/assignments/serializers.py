@@ -27,6 +27,7 @@ class AssignmentListSerializer(BaseActivityListSerializer):
         fields = BaseActivityListSerializer.Meta.fields + (
             'is_online',
             'date',
+            'local_date',
             'end_date_type',
             'registration_deadline',
             'capacity',
@@ -74,6 +75,7 @@ class AssignmentSerializer(BaseActivitySerializer):
             'is_online',
             'end_date',
             'date',
+            'local_date',
             'end_date_type',
             'registration_deadline',
             'capacity',

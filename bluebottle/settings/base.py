@@ -730,7 +730,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('preparation', 'Preparation time'),
                 ('start_time', 'Start time'),
                 ('people_applied', 'People applied'),
-                ('end', 'End date'),
+                ('date', 'End date'),
                 ('end_date_type', 'End date type'),
 
                 ('created', 'Date created'),

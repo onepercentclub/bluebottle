@@ -3,11 +3,11 @@ from operator import attrgetter
 
 from django.contrib.admin.options import get_content_type_for_model
 from django.db import connection
-from django.utils import translation
 from django.utils.html import format_html
 
 from bluebottle.clients import properties
 from bluebottle.notifications.models import Message, MessageTemplate
+from bluebottle.utils import translation
 
 
 class TransitionMessage(object):

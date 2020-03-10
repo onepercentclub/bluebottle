@@ -378,3 +378,13 @@ class NoCommitMixin():
             instance.save()
 
         return instance
+
+
+class TruncatedCharField(serializers.CharField):
+    def __init__(self, length, *args, **kwargs):
+        self.length = length
+
+        super(TruncatedCharField, self).__init__(*args, **kwargs)
+
+    def to_internal_value(self, data):
+        return data[:self.length]

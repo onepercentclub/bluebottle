@@ -581,3 +581,15 @@ class UserActivityTest(BluebottleTestCase):
         data = {'path': '/'}
         response = self.client.post(self.user_activity_url, data)
         self.assertEqual(response.status_code, 401)
+
+    def test_log_activity_long_path(self):
+        data = {'path': '/' + ('a' * 300)}
+        response = self.client.post(self.user_activity_url, data, token=self.user_token)
+        self.assertEqual(response.status_code, 201)
+
+        activity = UserActivity.objects.get()
+
+        self.assertEqual(
+            len(activity.path), 200
+        )
+        self.assertTrue(activity.path.startswith('/aaaaaaa'))

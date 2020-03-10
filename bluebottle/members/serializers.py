@@ -19,7 +19,7 @@ from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
 from bluebottle.tasks.models import Skill, Task, TaskMember
-from bluebottle.utils.serializers import PermissionField
+from bluebottle.utils.serializers import PermissionField, TruncatedCharField
 
 BB_USER_MODEL = get_user_model()
 
@@ -159,7 +159,7 @@ class UserActivitySerializer(serializers.ModelSerializer):
     """
     Serializer for user activity (log paths)
     """
-    path = serializers.CharField(required=False)
+    path = TruncatedCharField(length=200, required=False)
 
     class Meta:
         model = UserActivity

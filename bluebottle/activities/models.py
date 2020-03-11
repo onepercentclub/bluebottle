@@ -1,6 +1,5 @@
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
@@ -96,9 +95,12 @@ class Activity(TransitionsMixin, ValidatedModelMixin, PolymorphicModel):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        link = format_html("{}/{}/initiatives/activities/details/{}/{}/{}",
-                           domain, language,
-                           self.__class__.__name__.lower(), self.pk, self.slug)
+        link = u"{}/{}/initiatives/activities/details/{}/{}/{}".format(
+            domain, language,
+            self.__class__.__name__.lower(),
+            self.pk,
+            self.slug
+        )
         return link
 
 

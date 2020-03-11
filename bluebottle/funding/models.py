@@ -11,7 +11,6 @@ from django.db import models
 from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
 from django.utils.functional import cached_property
-from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
@@ -598,7 +597,7 @@ class PaymentMethod(object):
 
     @property
     def id(self):
-        return format_html("{}-{}", self.provider, self.code)
+        return "{}-{}".format(self.provider, self.code)
 
     @property
     def pk(self):

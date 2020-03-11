@@ -36,7 +36,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
             date=end
         )
 
-        ApplicantFactory.create_batch(3, activity=assignment, status='new')
+        ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
         withdrawn.transitions.withdraw()
 
@@ -49,7 +49,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         recipients = [message.to[0] for message in mail.outbox]
         for applicant in assignment.contributions.instance_of(Applicant).all():
-            if applicant.status == 'new':
+            if applicant.status == 'accepted':
                 self.assertTrue(applicant.user.email in recipients)
             else:
                 self.assertFalse(applicant.user.email in recipients)
@@ -57,7 +57,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         recipients = [message.to[0] for message in mail.outbox]
 
         for applicant in assignment.contributions.instance_of(Applicant).all():
-            if applicant.status == 'new':
+            if applicant.status == 'accepted':
                 self.assertTrue(applicant.user.email in recipients)
             else:
                 self.assertFalse(applicant.user.email in recipients)

@@ -40,6 +40,7 @@ class AssignmentTestCase(BluebottleTestCase):
             date=now() + timedelta(days=4),
         )
         ApplicantFactory.create_batch(3, activity=assignment, status='new')
+        ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
         withdrawn.transitions.withdraw()
 
@@ -48,13 +49,16 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment.date = assignment.date + timedelta(days=1)
         assignment.save()
 
-        recipients = [message.to[0] for message in mail.outbox]
+        messages = dict((message.to[0], message.body) for message in mail.outbox)
 
         for participant in assignment.contributions.instance_of(Applicant).all():
-            if participant.status == 'new':
-                self.assertTrue(participant.user.email in recipients)
+            if participant.status in ('new', 'accepted'):
+                self.assertTrue(participant.user.email in messages)
+                self.assertTrue(
+                    assignment.date.strftime('%B %d, %Y') in messages[participant.user.email]
+                )
             else:
-                self.assertFalse(participant.user.email in recipients)
+                self.assertFalse(participant.user.email in messages)
 
     def test_end_date_type_changed(self):
         assignment = AssignmentFactory(

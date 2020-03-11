@@ -65,7 +65,7 @@ class AssignmentDateChanged(TransitionMessage):
         from bluebottle.assignments.models import Applicant
         return [
             contribution.user for contribution
-            in self.obj.contributions.instance_of(Applicant).filter(status='new')
+            in self.obj.contributions.instance_of(Applicant).filter(status__in=('accepted', 'new', ))
         ]
 
 
@@ -80,7 +80,7 @@ class AssignmentReminderOnDate(TransitionMessage):
         from bluebottle.assignments.models import Applicant
         return [
             contribution.user for contribution
-            in self.obj.contributions.instance_of(Applicant).filter(status='new')
+            in self.obj.contributions.instance_of(Applicant).filter(status__in=('accepted', ))
         ]
 
 
@@ -95,5 +95,5 @@ class AssignmentReminderDeadline(TransitionMessage):
         from bluebottle.assignments.models import Applicant
         return [
             contribution.user for contribution
-            in self.obj.contributions.instance_of(Applicant).filter(status='new')
+            in self.obj.contributions.instance_of(Applicant).filter(status__in=('accepted', ))
         ]

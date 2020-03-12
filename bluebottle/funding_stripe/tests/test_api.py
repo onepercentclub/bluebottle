@@ -238,6 +238,8 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 }),
                 'requirements': bunch.bunchify({
                     'eventually_due': ['external_accounts', 'individual.dob.month'],
+                    'currently_due': [],
+                    'past_due': [],
                 })
             }),
             'requirements': bunch.bunchify({
@@ -297,6 +299,8 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 }),
                 'requirements': bunch.bunchify({
                     'eventually_due': ['external_accounts', 'individual.dob.month'],
+                    'currently_due': [],
+                    'past_due': [],
                 })
             }),
             'requirements': bunch.bunchify({
@@ -308,38 +312,37 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 'data': []
             })
         })
-        with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
-        ):
+        with mock.patch('stripe.CountrySpec.retrieve', return_value=self.country_spec):
             with mock.patch('stripe.Account.create', return_value=connect_account) as create_account:
                 with mock.patch('stripe.Account.modify', return_value=connect_account) as modify_account:
-                    response = self.client.post(
-                        self.account_list_url, data=json.dumps(self.data), user=self.user
-                    )
-                    create_account.assert_called_with(
-                        business_type='individual',
-                        country=self.data['data']['attributes']['country'],
-                        metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.user.pk},
-                        requested_capabilities=['legacy_payments'],
-                        settings={
-                            'card_payments': {
-                                'statement_descriptor_prefix': u'tst--'
+                    with mock.patch('stripe.Account.retrieve', return_value=connect_account):
+                        response = self.client.post(
+                            self.account_list_url, data=json.dumps(self.data), user=self.user
+                        )
+                        create_account.assert_called_with(
+                            business_type='individual',
+                            country=self.data['data']['attributes']['country'],
+                            metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.user.pk},
+                            requested_capabilities=['legacy_payments'],
+                            settings={
+                                'card_payments': {
+                                    'statement_descriptor_prefix': u'tst--'
+                                },
+                                'payments': {
+                                    'statement_descriptor': u'tst--'
+                                },
+                                'payouts': {
+                                    'statement_descriptor': u'tst--',
+                                    'schedule': {'interval': 'manual'}
+                                }
                             },
-                            'payments': {
-                                'statement_descriptor': u'tst--'
-                            },
-                            'payouts': {
-                                'statement_descriptor': u'tst--',
-                                'schedule': {'interval': 'manual'}
-                            }
-                        },
-                        # business_type='individual',
-                        type='custom'
-                    )
-                    modify_account.assert_called_with(
-                        'some-connect-id',
-                        account_token='some-account-token'
-                    )
+                            # business_type='individual',
+                            type='custom'
+                        )
+                        modify_account.assert_called_with(
+                            'some-connect-id',
+                            account_token='some-account-token'
+                        )
 
         data = json.loads(response.content)
 
@@ -377,12 +380,8 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get(self):
-        with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
-        ):
-            with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
-            ) as retrieve:
+        with mock.patch('stripe.CountrySpec.retrieve', return_value=self.country_spec):
+            with mock.patch('stripe.Account.retrieve', return_value=self.connect_account) as retrieve:
                 response = self.client.get(
                     self.account_url, user=self.user
                 )

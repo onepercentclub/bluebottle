@@ -203,6 +203,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         password = 'test@example.com'
 
         member = Member.objects.create(email=email, is_active=False)
+        mail.outbox = []
 
         response = self.client.put(
             reverse('user-signup-token-confirm', args=(TimestampSigner().sign(member.pk), )),
@@ -226,6 +227,8 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
             token='JWT {}'.format(response.json()['jwt_token'])
         )
         self.assertEqual(profile_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Welcome to Test!')
 
     def test_confirm_twice(self):
         email = 'test@example.com'

@@ -119,8 +119,10 @@ class AssignmentTestCase(BluebottleTestCase):
         self.assertEqual(assignment.status, 'open')
 
     def test_check_status_applicant_removed(self):
+        initiative = InitiativeFactory.create(status='approved')
         assignment = AssignmentFactory(
             title='Test Title',
+            initiative=initiative,
             status='open',
             date=now() + timedelta(days=4),
             registration_deadline=(now() + timedelta(days=2)).date(),

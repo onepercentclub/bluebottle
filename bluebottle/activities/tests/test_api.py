@@ -400,15 +400,31 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         skill = SkillFactory.create()
         self.owner.skills.add(skill)
         self.owner.save()
-
-        first = AssignmentFactory.create(review_status='approved', status='full')
+        initiative = InitiativeFactory.create(status='approved')
+        first = AssignmentFactory.create(
+            review_status='approved',
+            status='open',
+            capacity=3,
+            initiative=initiative)
         ApplicantFactory.create_batch(3, activity=first, status='accepted')
 
-        second = AssignmentFactory.create(review_status='approved', status='full', expertise=skill)
+        second = AssignmentFactory.create(
+            review_status='approved',
+            status='open',
+            initiative=initiative,
+            expertise=skill)
+
         ApplicantFactory.create_batch(3, activity=second, status='accepted')
 
-        third = AssignmentFactory.create(review_status='approved', status='open')
-        fourth = AssignmentFactory.create(review_status='approved', status='open', expertise=skill)
+        third = AssignmentFactory.create(
+            review_status='approved',
+            initiative=initiative,
+            status='open')
+        fourth = AssignmentFactory.create(
+            review_status='approved',
+            initiative=initiative,
+            status='open',
+            expertise=skill)
 
         response = self.client.get(
             self.url + '?sort=popularity',
@@ -461,15 +477,21 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_sort_matching_location(self):
         PlaceFactory.create(content_object=self.owner, position='10.0, 20.0')
-
-        first = AssignmentFactory.create(review_status='approved', status='full')
+        initiative = InitiativeFactory.create(status='approved')
+        first = AssignmentFactory.create(
+            review_status='approved',
+            status='open',
+            capacity=3,
+            initiative=initiative)
         ApplicantFactory.create_batch(3, activity=first, status='accepted')
 
         second = AssignmentFactory.create(
             review_status='approved',
-            status='full',
+            status='open',
             is_online=False,
-            location=GeolocationFactory.create(position=Point(20.0, 10))
+            location=GeolocationFactory.create(position=Point(20.0, 10)),
+            capacity=3,
+            initiative=initiative
         )
         ApplicantFactory.create_batch(3, activity=second, status='accepted')
 
@@ -509,17 +531,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         country1 = CountryFactory.create()
         country2 = CountryFactory.create()
 
-        initiative1 = InitiativeFactory.create(place=GeolocationFactory.create(country=country1))
-        initiative2 = InitiativeFactory.create(place=GeolocationFactory.create(country=country2))
-        initiative3 = InitiativeFactory.create(place=GeolocationFactory.create(country=country1))
-        initiative4 = InitiativeFactory.create(place=GeolocationFactory.create(country=country2))
+        initiative1 = InitiativeFactory.create(place=GeolocationFactory.create(country=country1), status='approved')
+        initiative2 = InitiativeFactory.create(place=GeolocationFactory.create(country=country2), status='approved')
+        initiative3 = InitiativeFactory.create(place=GeolocationFactory.create(country=country1), status='approved')
+        initiative4 = InitiativeFactory.create(place=GeolocationFactory.create(country=country2), status='approved')
 
-        first = AssignmentFactory.create(review_status='approved', status='full', initiative=initiative1)
+        first = AssignmentFactory.create(review_status='approved', status='open', capacity=3, initiative=initiative1)
         ApplicantFactory.create_batch(3, activity=first, status='accepted')
 
         second = AssignmentFactory.create(review_status='approved', status='open', initiative=initiative3)
 
-        third = AssignmentFactory.create(review_status='approved', status='full', initiative=initiative2)
+        third = AssignmentFactory.create(review_status='approved', status='open', capacity=3, initiative=initiative2)
         ApplicantFactory.create_batch(3, activity=third, status='accepted')
 
         AssignmentFactory.create(review_status='approved', status='open', initiative=initiative4)
@@ -539,13 +561,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_matching_office_location(self):
         self.owner.location = LocationFactory.create(position='10.0, 20.0')
         self.owner.save()
+        initiative = InitiativeFactory.create(status='approved')
 
-        first = AssignmentFactory.create(review_status='approved', status='full')
+        first = AssignmentFactory.create(
+            review_status='approved',
+            status='open',
+            capacity=3,
+            initiative=initiative)
         ApplicantFactory.create_batch(3, activity=first, status='accepted')
 
         second = AssignmentFactory.create(
             review_status='approved',
-            status='full',
+            status='open',
+            capacity=3,
+            initiative=initiative,
             is_online=False,
             location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )

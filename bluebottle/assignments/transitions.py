@@ -64,6 +64,7 @@ class AssignmentTransitions(ActivityTransitions):
             values.open
         ],
         target=values.open,
+        conditions=[is_complete, is_valid, initiative_is_approved],
     )
     def reopen(self, **kwargs):
         self.instance.review_transitions.organizer_succeed()
@@ -92,6 +93,7 @@ class AssignmentTransitions(ActivityTransitions):
         source=[values.closed],
         target=values.succeeded,
         permissions=[ActivityTransitions.is_system],
+        conditions=[is_complete, is_valid, initiative_is_approved],
         messages=[AssignmentCompletedMessage]
     )
     def reopen_and_succeed(self, **kwargs):
@@ -139,6 +141,7 @@ class AssignmentTransitions(ActivityTransitions):
             values.running
         ],
         target=values.open,
+        conditions=[is_complete, is_valid, initiative_is_approved],
     )
     def extend_end_date(self, **kwargs):
         pass

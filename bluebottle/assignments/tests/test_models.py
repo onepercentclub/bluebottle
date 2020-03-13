@@ -5,10 +5,15 @@ from django.core import mail
 
 from bluebottle.assignments.models import Applicant
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
 class AssignmentTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        self.initiative = InitiativeFactory.create(status='approved')
+
     def test_absolute_url(self):
         activity = AssignmentFactory()
         expected = 'http://testserver/en/initiatives/activities/' \
@@ -98,15 +103,16 @@ class AssignmentTestCase(BluebottleTestCase):
 
     def test_check_status_capacity_changed(self):
         assignment = AssignmentFactory(
+            initiative=self.initiative,
             title='Test Title',
             status='open',
             date=now() + timedelta(days=4),
+            registration_deadline=(now() + timedelta(days=2)).date(),
             capacity=3,
         )
         ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
 
         self.assertEqual(assignment.status, 'full')
-
         assignment.capacity = 10
         assignment.save()
 
@@ -117,6 +123,7 @@ class AssignmentTestCase(BluebottleTestCase):
             title='Test Title',
             status='open',
             date=now() + timedelta(days=4),
+            registration_deadline=(now() + timedelta(days=2)).date(),
             capacity=3,
         )
         applicants = ApplicantFactory.create_batch(3, activity=assignment, status='accepted')

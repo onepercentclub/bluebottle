@@ -20,6 +20,7 @@ from rest_framework.exceptions import PermissionDenied, NotAuthenticated, Valida
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.bb_accounts.permissions import CurrentUserPermission
+from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.members.models import UserActivity
 from bluebottle.utils.views import RetrieveAPIView, UpdateAPIView, JsonApiViewMixin, CreateAPIView
 
@@ -195,6 +196,7 @@ class SignUpTokenConfirmation(generics.UpdateAPIView):
 
     def perform_update(self, serializer):
         serializer.save(is_active=True)
+        send_welcome_mail(serializer.instance)
 
 
 class UserCreate(generics.CreateAPIView):

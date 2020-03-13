@@ -3,34 +3,34 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class InitiativeApproveOwnerMessage(TransitionMessage):
-    subject = _('Your initiative "{initiative_title}" has been approved!')
+    subject = _('Your initiative "{title}" has been approved!')
     template = 'messages/initiative_approved_owner'
     context = {
-        'initiative_title': 'title'
+        'title': 'title'
     }
 
 
 class InitiativeNeedsWorkOwnerMessage(TransitionMessage):
-    subject = _('Your initiative "{initiative_title}" needs work')
+    subject = _('Your initiative "{title}" needs work')
     template = 'messages/initiative_needs_work_owner'
     context = {
-        'initiative_title': 'title'
+        'title': 'title'
     }
 
 
 class InitiativeClosedOwnerMessage(TransitionMessage):
-    subject = _('Your initiative "{initiative_title}" has been closed')
+    subject = _('Your initiative "{title}" has been closed')
     template = 'messages/initiative_closed_owner'
     context = {
-        'initiative_title': 'title'
+        'title': 'title'
     }
 
 
 class AssignedReviewerMessage(TransitionMessage):
-    subject = _('You are assigned to review "{initiative_title}".')
+    subject = _('You are assigned to review "{title}".')
     template = 'messages/assigned_reviewer'
     context = {
-        'initiative_title': 'title'
+        'title': 'title'
     }
 
     def get_recipients(self):
@@ -38,11 +38,11 @@ class AssignedReviewerMessage(TransitionMessage):
 
 
 class InitiativeWallpostOwnerMessage(TransitionMessage):
-    subject = _('{author} commented on your initiative')
+    subject = _("You have a new post on '{title}'")
     template = 'messages/initiative_wallpost_owner'
 
     context = {
-        'author': 'author.first_name'
+        'title': 'content_object.title'
     }
 
     def get_recipients(self):
@@ -53,11 +53,11 @@ class InitiativeWallpostOwnerMessage(TransitionMessage):
 
 
 class InitiativeWallpostReactionMessage(TransitionMessage):
-    subject = _('{author} replied on your comment')
+    subject = _("You have a new post on '{title}'")
     template = 'messages/initiative_wallpost_reaction'
 
     context = {
-        'author': 'author.first_name'
+        'title': 'wallpost.content_object.title'
     }
 
     def get_recipients(self):
@@ -65,11 +65,11 @@ class InitiativeWallpostReactionMessage(TransitionMessage):
 
 
 class InitiativeWallpostOwnerReactionMessage(TransitionMessage):
-    subject = _('{author} commented on your initiative')
+    subject = _("You have a new post on '{title}'")
     template = 'messages/initiative_wallpost_owner_reaction'
 
     context = {
-        'author': 'author.first_name'
+        'title': 'wallpost.content_object.title'
     }
 
     def get_recipients(self):
@@ -80,7 +80,7 @@ class InitiativeWallpostOwnerReactionMessage(TransitionMessage):
 
 
 class InitiativeWallpostFollowerMessage(TransitionMessage):
-    subject = _("New post on '{title}'")
+    subject = _("Update from '{title}'")
     template = 'messages/initiative_wallpost_follower'
     context = {
         'title': 'content_object.title'

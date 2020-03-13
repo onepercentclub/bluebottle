@@ -1,6 +1,7 @@
 
 from django.db import models
 from django.db.models import SET_NULL, Count, Sum
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 
@@ -148,12 +149,24 @@ class Assignment(Activity):
         # If registration deadline passed
         # got applicants -> start
         # no applicants -> expire
+        if self.status in [AssignmentTransitions.values.full, AssignmentTransitions.values.open]:
+            if len(self.accepted_applicants) > 1:
+                self.transitions.lock()
+            else:
+                self.transitions.expire()
+            self.save()
+
+    def start_date_passed(self):
+        # If registration deadline passed
+        # got applicants -> start
+        # no applicants -> expire
         if self.status in [AssignmentTransitions.values.full,
                            AssignmentTransitions.values.open]:
             if len(self.accepted_applicants):
                 self.transitions.start()
             else:
                 self.transitions.expire()
+            self.save()
 
     def end_date_passed(self):
         # If end date passed
@@ -164,6 +177,7 @@ class Assignment(Activity):
                            AssignmentTransitions.values.open]:
             if len(self.accepted_applicants):
                 self.transitions.succeed()
+                self.save()
             else:
                 self.transitions.expire()
 
@@ -177,7 +191,8 @@ class Assignment(Activity):
             self.save()
         elif self.capacity \
                 and len(self.accepted_applicants) < self.capacity \
-                and self.status == AssignmentTransitions.values.full:
+                and self.status == AssignmentTransitions.values.full \
+                and self.registration_deadline >= now().date():
             self.transitions.reopen()
             if save:
                 self.save()

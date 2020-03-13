@@ -27,7 +27,7 @@ class AssignmentTransitions(ActivityTransitions):
 
     @transition(
         field='status',
-        source=values.open,
+        source=[values.open, values.full],
         target=values.full,
     )
     def lock(self, **kwargs):

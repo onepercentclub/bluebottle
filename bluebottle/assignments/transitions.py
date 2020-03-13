@@ -8,12 +8,34 @@ from bluebottle.assignments.messages import AssignmentCompletedMessage, Assignme
     AssignmentClosedMessage
 from bluebottle.follow.models import unfollow, follow
 from bluebottle.fsm import transition
+from bluebottle.utils.transitions import ReviewTransitions
 
 
 class AssignmentTransitions(ActivityTransitions):
     class values(ActivityTransitions.values):
         running = ChoiceItem('running', _('running'))
         full = ChoiceItem('full', _('full'))
+
+    def is_complete(self):
+        errors = [
+            _('{} is required').format(self.instance._meta.get_field(field).verbose_name)
+            for field in self.instance.required
+        ]
+
+        if errors:
+            return errors
+
+    def is_valid(self):
+        errors = [
+            error.message[0] for error in self.instance.errors
+        ]
+
+        if errors:
+            return errors
+
+    def initiative_is_approved(self):
+        if not self.instance.initiative.status == ReviewTransitions.values.approved:
+            return _('Please make sure the initiative is approved')
 
     @transition(
         field='status',
@@ -135,6 +157,7 @@ class AssignmentTransitions(ActivityTransitions):
     @transition(
         source=values.in_review,
         target=values.open,
+        conditions=[is_complete, is_valid, initiative_is_approved],
         permissions=[ActivityTransitions.can_approve]
     )
     def reviewed(self):

@@ -3,11 +3,12 @@ import json
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.geo.models import Country, Location
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.events.tests.factories import EventFactory
+from bluebottle.assignments.tests.factories import AssignmentFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
@@ -57,18 +58,31 @@ class CountryListTestCase(GeoTestCase):
 
 
 class UsedCountryListTestCase(GeoTestCase):
-    def setUp(self):
-        super(UsedCountryListTestCase, self).setUp()
-
-        campaign_status = ProjectPhase.objects.get(slug='campaign')
-        self.project = ProjectFactory.create(country=self.country_1,
-                                             status=campaign_status)
-
     """
     Test case for ``CountryList`` API view.
 
     Endpoint: /api/geo/used_countries
     """
+    def setUp(self):
+        super(UsedCountryListTestCase, self).setUp()
+
+        self.event = EventFactory.create(
+            review_status='approved', status='new'
+        )
+        EventFactory.create(
+            review_status='approved', status='new', location=self.event.location
+        )
+
+        self.assignment = AssignmentFactory.create(
+            review_status='approved', status='new'
+        )
+
+        EventFactory.create(
+            review_status='submitted', status='in_review'
+        )
+        self.initiative = InitiativeFactory.create(
+            status='approved'
+        )
 
     def test_api_used_country_list_endpoint(self):
         """
@@ -77,7 +91,13 @@ class UsedCountryListTestCase(GeoTestCase):
         response = self.client.get(reverse('used-country-list'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.json()), 3)
+
+        countries = [country['id'] for country in response.json()]
+
+        self.assertTrue(self.initiative.place.country.pk in countries)
+        self.assertTrue(self.event.location.country.pk in countries)
+        self.assertTrue(self.assignment.location.country.pk in countries)
 
 
 class LocationListTestCase(GeoTestCase):

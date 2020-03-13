@@ -1,9 +1,10 @@
+from django.db.models import Q
+
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.geo.models import Location, Country, Geolocation
 from bluebottle.geo.serializers import LocationSerializer, GeolocationSerializer
-from bluebottle.projects.models import Project
 from bluebottle.utils.views import TranslatedApiViewMixin, JsonApiViewMixin
 from .serializers import CountrySerializer
 
@@ -29,10 +30,12 @@ class CountryDetail(RetrieveAPIView):
 class UsedCountryList(CountryList):
     def get_queryset(self):
         qs = super(UsedCountryList, self).get_queryset()
-        project_country_ids = Project.objects.filter(
-            status__viewable=True).values_list('country', flat=True).distinct()
 
-        return qs.filter(id__in=project_country_ids)
+        return qs.filter(
+            Q(geolocation__initiative__status='approved') |
+            Q(geolocation__event__review_status='approved') |
+            Q(geolocation__assignment__review_status='approved')
+        ).distinct()
 
 
 class LocationList(ListAPIView):

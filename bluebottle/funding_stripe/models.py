@@ -387,7 +387,7 @@ class StripePayoutAccount(PayoutAccount):
                     self.transitions.set_incomplete()
             elif len(self.pending_fields):
                 if self.status != PayoutAccountTransitions.values.pending:
-                    # Submit to transition to pending again
+                    # Submit to transition to pending
                     self.transitions.submit()
             else:
                 if self.status != PayoutAccountTransitions.values.rejected:

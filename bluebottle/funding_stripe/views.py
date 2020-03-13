@@ -73,6 +73,7 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         serializer.save(owner=self.request.user)
         if token:
             serializer.instance.update(token)
+            serializer.instance.check_status()
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -101,6 +102,7 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
                     raise serializers.ValidationError(unicode(e))
 
         serializer.save()
+        serializer.instance.check_status()
 
 
 class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):

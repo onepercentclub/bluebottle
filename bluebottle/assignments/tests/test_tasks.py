@@ -38,8 +38,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         )
 
         ApplicantFactory.create_batch(2, activity=assignment, status='new')
-        accepted = ApplicantFactory.create(activity=assignment, status='new')
-        accepted.transitions.accept()
+        ApplicantFactory.create(activity=assignment, status='accepted')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
         withdrawn.transitions.withdraw()
 

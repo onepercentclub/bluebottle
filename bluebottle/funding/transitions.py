@@ -56,6 +56,27 @@ class FundingTransitions(ActivityTransitions):
         if not self.instance.deadline >= timezone.now():
             return _("The deadline of the activity should be in the future.")
 
+    def is_complete(self):
+        errors = [
+            _('{} is required').format(self.instance._meta.get_field(field).verbose_name)
+            for field in self.instance.required
+        ]
+
+        if errors:
+            return errors
+
+    def is_valid(self):
+        errors = [
+            error.message[0] for error in self.instance.errors
+        ]
+
+        if errors:
+            return errors
+
+    def initiative_is_approved(self):
+        if not self.instance.initiative.status == ReviewTransitions.values.approved:
+            return _('Please make sure the initiative is approved')
+
     @transition(
         source=values.in_review,
         target=values.open,

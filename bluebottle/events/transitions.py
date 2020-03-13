@@ -23,6 +23,27 @@ class EventTransitions(ActivityTransitions):
         full = ChoiceItem('full', _('full'))
         running = ChoiceItem('running', _('running'))
 
+    def is_complete(self):
+        errors = [
+            _('{} is required').format(self.instance._meta.get_field(field).verbose_name)
+            for field in self.instance.required
+        ]
+
+        if errors:
+            return errors
+
+    def is_valid(self):
+        errors = [
+            error.message[0] for error in self.instance.errors
+        ]
+
+        if errors:
+            return errors
+
+    def initiative_is_approved(self):
+        if not self.instance.initiative.status == ReviewTransitions.values.approved:
+            return _('Please make sure the initiative is approved')
+
     def can_start(self):
         if not self.instance.start:
             return _('Start date has not been set')
@@ -55,7 +76,8 @@ class EventTransitions(ActivityTransitions):
     @transition(
         source=[values.full, values.closed],
         target=values.open,
-        permissions=[ActivityTransitions.can_approve]
+        permissions=[ActivityTransitions.can_approve],
+        conditions=[is_complete, is_valid, initiative_is_approved],
     )
     def reopen(self):
         self.instance.review_transitions.organizer_succeed()
@@ -85,6 +107,7 @@ class EventTransitions(ActivityTransitions):
         source=[values.closed],
         target=values.succeeded,
         permissions=[ActivityTransitions.is_system],
+        conditions=[is_complete, is_valid, initiative_is_approved],
         messages=[EventSucceededOwnerMessage]
     )
     def reopen_and_succeed(self, **kwargs):
@@ -114,7 +137,7 @@ class EventTransitions(ActivityTransitions):
     @transition(
         source=values.closed,
         target=values.open,
-        conditions=[can_open]
+        conditions=[can_open, is_complete, is_valid, initiative_is_approved],
     )
     def extend(self):
         pass
@@ -122,6 +145,7 @@ class EventTransitions(ActivityTransitions):
     @transition(
         source=values.in_review,
         target=values.open,
+        conditions=[is_complete, is_valid, initiative_is_approved],
         permissions=[ActivityTransitions.can_approve]
     )
     def reviewed(self):

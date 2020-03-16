@@ -323,7 +323,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                             business_type='individual',
                             country=self.data['data']['attributes']['country'],
                             metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.user.pk},
-                            requested_capabilities=['legacy_payments'],
+                            requested_capabilities=['card_payments', 'transfers'],
                             settings={
                                 'card_payments': {
                                     'statement_descriptor_prefix': u'tst--'

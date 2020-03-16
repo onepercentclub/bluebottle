@@ -64,7 +64,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 business_type='individual',
                 country=self.check.country,
                 metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},
-                requested_capabilities=['legacy_payments'],
+                requested_capabilities=['card_payments', 'transfers'],
                 settings={
                     'card_payments': {
                         'statement_descriptor_prefix': 'GoDoGood'

@@ -22,6 +22,7 @@ class AssignmentFactory(factory.DjangoModelFactory):
     expertise = factory.SubFactory(SkillFactory)
     is_online = True
     duration = 4
+    preparation = 5
     end_date_type = 'deadline'
     date = now() + timedelta(weeks=3)
     capacity = 3

@@ -15,7 +15,7 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
         super(TestAssignmentAdmin, self).setUp()
         self.site = AdminSite()
         self.assignment_admin = AssignmentAdmin(Assignment, self.site)
-        self.assignment = AssignmentFactory.create(status='created')
+        self.assignment = AssignmentFactory.create(status='created', end_date_type='on_date')
         self.assignment_url = reverse('admin:assignments_assignment_change', args=(self.assignment.id,))
         self.assignment.save()
 
@@ -50,8 +50,8 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
             'end_date_type': self.assignment.end_date_type,
             'registration_deadline': str(self.assignment.registration_deadline),
             'duration': self.assignment.duration,
-            # 'preparation': self.assignment.preparation,
-            # 'expertise': self.assignment.expertise,
+            'preparation': self.assignment.preparation,
+            'expertise': self.assignment.expertise_id,
             'is_online': self.assignment.is_online,
             'location': self.assignment.location_id,
 
@@ -67,16 +67,16 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
             'contributions-0-contribution_ptr': self.applicants[0].contribution_ptr_id,
             'contributions-0-activity': self.assignment.id,
             'contributions-0-user': self.applicants[0].user_id,
-            # 'contributions-0-time_spent': self.applicants[0].time_spent,
+            'contributions-0-time_spent': self.applicants[0].time_spent,
             'contributions-0-DELETE': 'on',
             'contributions-1-contribution_ptr': self.applicants[1].contribution_ptr_id,
             'contributions-1-activity': self.assignment.id,
             'contributions-1-user': self.applicants[1].user_id,
-            # 'contributions-1-time_spent': self.applicants[1].time_spent,
+            'contributions-1-time_spent': self.applicants[1].time_spent,
             'contributions-2-contribution_ptr': self.applicants[2].contribution_ptr_id,
             'contributions-2-activity': self.assignment.id,
             'contributions-2-user': self.applicants[2].user_id,
-            # 'contributions-2-time_spent': self.applicants[2].time_spent,
+            'contributions-2-time_spent': self.applicants[2].time_spent,
             'contributions-2-DELETE': 'on',
         }
 

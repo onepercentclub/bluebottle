@@ -22,7 +22,6 @@ class AssignmentFactory(factory.DjangoModelFactory):
     expertise = factory.SubFactory(SkillFactory)
     is_online = True
     duration = 4
-    preparation = 5
     end_date_type = 'deadline'
     date = now() + timedelta(weeks=3)
     capacity = 3
@@ -37,4 +36,3 @@ class ApplicantFactory(factory.DjangoModelFactory):
 
     activity = factory.SubFactory(AssignmentFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
-    time_spent = 6

@@ -15,7 +15,7 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
         super(TestAssignmentAdmin, self).setUp()
         self.site = AdminSite()
         self.assignment_admin = AssignmentAdmin(Assignment, self.site)
-        self.assignment = AssignmentFactory.create(status='created', end_date_type='on_date')
+        self.assignment = AssignmentFactory.create(status='created', end_date_type='on_date', preparation=5,)
         self.assignment_url = reverse('admin:assignments_assignment_change', args=(self.assignment.id,))
         self.assignment.save()
 
@@ -35,7 +35,7 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
 
     def test_delete_applicant_assignment_admin(self):
         self.client.force_login(self.superuser)
-        self.applicants = ApplicantFactory.create_batch(3, activity=self.assignment)
+        self.applicants = ApplicantFactory.create_batch(3, activity=self.assignment, time_spent=6,)
         self.assertEqual(Applicant.objects.count(), 3)
         url = reverse('admin:assignments_assignment_change', args=(self.assignment.id,))
 

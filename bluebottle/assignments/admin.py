@@ -145,4 +145,4 @@ class AssignmentAdmin(ActivityChildAdmin):
                 instance.time_spent = form.instance.duration
                 instance.status = ApplicantTransitions.values.succeeded
             instance.save()
-        formset.save_m2m()
+        super(AssignmentAdmin, self).save_formset(request, form, formset, change)

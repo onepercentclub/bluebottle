@@ -37,3 +37,4 @@ class ApplicantFactory(factory.DjangoModelFactory):
 
     activity = factory.SubFactory(AssignmentFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
+    time_spent = 6

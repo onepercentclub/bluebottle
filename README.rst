@@ -68,3 +68,4 @@ easy to add BlueBottle to your Django project.
 Pull request - Testing, Reviewing and Merging Flow
 ------------
 https://www.lucidchart.com/invitations/accept/89cab398-8c15-4701-8897-d2fef42c0aa7
+

@@ -420,6 +420,10 @@ class StripePayoutAccount(PayoutAccount):
         return self._account
 
     def save(self, *args, **kwargs):
+
+        if self.account_id and self.country == self.account.country:
+            self.account_id = None
+
         if not self.account_id:
             url = self.owner.activities.first().get_absolute_url()
             if 'localhost' in url:
@@ -440,9 +444,6 @@ class StripePayoutAccount(PayoutAccount):
             for field in self.account.requirements.eventually_due:
                 if field not in self.eventually_due:
                     self.eventually_due.append(field)
-
-            if not self.country == self.account.country:
-                self.account_id = None
 
         super(StripePayoutAccount, self).save(*args, **kwargs)
 

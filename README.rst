@@ -55,16 +55,6 @@ The BlueBottle test suite can be run completely using:
 
     $ python manage.py test --settings=bluebottle.settings.testing
 
-Website developers
-------------------
-
-For those who want to use BlueBottle as kickstart for their own website, it's
-easy to add BlueBottle to your Django project.
-
-#. Install the latest development version::
-
-    $ pip install -e git://github.com/onepercentclub/bluebottle.git#egg=bluebottle
-
 Pull request - Testing, Reviewing and Merging Flow
 ------------
 https://www.lucidchart.com/invitations/accept/89cab398-8c15-4701-8897-d2fef42c0aa7

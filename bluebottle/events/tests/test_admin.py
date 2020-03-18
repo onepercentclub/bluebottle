@@ -86,7 +86,7 @@ class TestEventAdmin(BluebottleAdminTestCase):
         response = self.client.post(url, data)
         self.assertEqual(
             response.status_code, status.HTTP_302_FOUND,
-            'Deleting applicants failed. '
+            'Deleting participants failed. '
             'Did you change admin fields for EventAdmin? '
             'Please adjust the data in this test.')
         self.event.refresh_from_db()

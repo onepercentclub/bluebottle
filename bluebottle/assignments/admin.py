@@ -32,8 +32,6 @@ class ApplicantInline(admin.TabularInline):
     fields = ('applicant', 'user', 'time_spent', 'status', 'created', 'motivation')
     extra = 0
 
-    can_delete = False
-
     def applicant(self, obj):
         url = reverse('admin:assignments_applicant_change', args=(obj.id,))
         return format_html(u'<a href="{}">{}</a>', url, obj.user.full_name)
@@ -147,4 +145,4 @@ class AssignmentAdmin(ActivityChildAdmin):
                 instance.time_spent = form.instance.duration
                 instance.status = ApplicantTransitions.values.succeeded
             instance.save()
-        formset.save_m2m()
+        super(AssignmentAdmin, self).save_formset(request, form, formset, change)

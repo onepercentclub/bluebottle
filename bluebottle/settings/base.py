@@ -508,7 +508,7 @@ LOGGING = {
             'class': 'logging.handlers.SysLogHandler',
             'formatter': 'verbose',
             'facility': 'local0',
-            'address': '/dev/log',
+            'address': '/var/run/syslog',
         },
         'default': {
             'level': 'INFO',

@@ -421,7 +421,7 @@ class StripePayoutAccount(PayoutAccount):
 
     def save(self, *args, **kwargs):
 
-        if self.account_id and self.country == self.account.country:
+        if self.account_id and not self.country == self.account.country:
             self.account_id = None
 
         if not self.account_id:

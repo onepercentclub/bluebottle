@@ -508,7 +508,6 @@ LOGGING = {
             'class': 'logging.handlers.SysLogHandler',
             'formatter': 'verbose',
             'facility': 'local0',
-            'address': '/dev/log',
         },
         'default': {
             'level': 'INFO',

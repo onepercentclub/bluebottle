@@ -26,11 +26,19 @@ class ConnectAccountTestCase(BluebottleTestCase):
                     'status': 'verified',
                 },
                 'requirements': bunch.bunchify({
-                    'eventually_due': ['external_accounts', 'individual.dob.month'],
+                    'eventually_due': [
+                        'external_accounts',
+                        'individual.verification.document.front',
+                        'document_type',
+                    ]
                 }),
             }),
             'requirements': bunch.bunchify({
-                'eventually_due': ['external_accounts', 'individual.dob.month'],
+                'eventually_due': [
+                    'external_accounts',
+                    'individual.verification.document.front',
+                    'document_type',
+                ],
                 'disabled': False
             }),
             'external_accounts': bunch.bunchify({
@@ -61,10 +69,11 @@ class ConnectAccountTestCase(BluebottleTestCase):
         ) as create:
             self.check.save()
             create.assert_called_with(
+                business_profile={'url': 'https://testserver'},
                 business_type='individual',
                 country=self.check.country,
                 metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},
-                requested_capabilities=['legacy_payments'],
+                requested_capabilities=['transfers'],
                 settings={
                     'card_payments': {
                         'statement_descriptor_prefix': 'GoDoGood'
@@ -136,15 +145,13 @@ class ConnectAccountTestCase(BluebottleTestCase):
 
     def test_required(self):
         with mock.patch(
-                'stripe.CountrySpec.retrieve', return_value=self.country_spec
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
-            with mock.patch(
-                    'stripe.Account.retrieve', return_value=self.connect_account
-            ):
-                self.assertEqual(
-                    list(self.check.required),
-                    ['document_type', 'individual.verification.document.front', 'external_account']
-                )
+            self.check.save()
+            self.assertEqual(
+                list(self.check.required),
+                ['individual.verification.document.front', 'document_type', 'external_account']
+            )
 
     def test_disabled(self):
         self.connect_account.requirements.disabled = True

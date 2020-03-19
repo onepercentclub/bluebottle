@@ -320,6 +320,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                             self.account_list_url, data=json.dumps(self.data), user=self.user
                         )
                         create_account.assert_called_with(
+                            business_profile={'url': 'https://testserver'},
                             business_type='individual',
                             country=self.data['data']['attributes']['country'],
                             metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.user.pk},
@@ -358,7 +359,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['data']['meta']['required-fields'],
-            [u'country', u'external_accounts', u'individual.first_name']
+            [u'country', u'external_accounts', u'individual.dob']
         )
         self.assertEqual(
             data['data']['attributes']['account']['individual']['first_name'],
@@ -401,7 +402,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['data']['meta']['required-fields'],
-            [u'country', u'external_accounts', u'individual.first_name']
+            [u'country', u'external_accounts', u'individual.dob']
         )
         self.assertEqual(
             data['data']['attributes']['account']['individual']['first_name'],
@@ -506,6 +507,9 @@ class ExternalAccountsTestCase(BluebottleTestCase):
         self.connect_account.update({
             'country': country,
             'external_accounts': external_accounts,
+            'requirements': bunch.bunchify({
+                'eventually_due': ['document_type']
+            })
         })
 
         self.country_spec = stripe.CountrySpec(country)

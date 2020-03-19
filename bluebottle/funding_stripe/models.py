@@ -425,7 +425,11 @@ class StripePayoutAccount(PayoutAccount):
             self.account_id = None
 
         if not self.account_id:
-            url = self.owner.activities.first().get_absolute_url()
+            if len(self.owner.activities.all()):
+                url = self.owner.activities.first().get_absolute_url()
+            else:
+                url = 'https://{}'.format(connection.tenant.domain_url)
+
             if 'localhost' in url:
                 url = re.sub('localhost:\d{4}', 't.goodup.com', url)
 

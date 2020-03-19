@@ -1,4 +1,5 @@
 import factory.fuzzy
+import bunch
 import mock
 
 from bluebottle.funding.tests.factories import DonationFactory
@@ -53,7 +54,16 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
         account_id = 'acct_1234567890'
-        with mock.patch('stripe.Account.create', return_value=stripe.Account(id=account_id)):
+        account = stripe.Account(
+            id=account_id,
+        )
+        account.requirements = bunch.bunchify({
+            'eventually_due': [
+                'individual.first_name', 'individual.last_name'
+            ]
+        })
+
+        with mock.patch('stripe.Account.create', return_value=account):
             return super(StripePayoutAccountFactory, cls)._create(model_class, *args, **kwargs)
 
 

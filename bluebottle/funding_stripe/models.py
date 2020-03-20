@@ -342,8 +342,11 @@ class StripePayoutAccount(PayoutAccount):
                     except AttributeError:
                         yield field
             else:
-                value = attrgetter(field)(self)
-                if value in (None, ''):
+                try:
+                    value = attrgetter(field)(self)
+                    if value in (None, ''):
+                        yield field
+                except AttributeError:
                     yield field
 
         if not self.account.external_accounts.total_count > 0:

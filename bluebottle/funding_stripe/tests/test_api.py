@@ -320,7 +320,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                             self.account_list_url, data=json.dumps(self.data), user=self.user
                         )
                         create_account.assert_called_with(
-                            business_profile={'url': 'https://testserver'},
+                            business_profile={'url': 'https://testserver', 'mcc': '8398'},
                             business_type='individual',
                             country=self.data['data']['attributes']['country'],
                             metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.user.pk},

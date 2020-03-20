@@ -69,7 +69,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
         ) as create:
             self.check.save()
             create.assert_called_with(
-                business_profile={'url': 'https://testserver'},
+                business_profile={'url': 'https://testserver', 'mcc': '8398'},
                 business_type='individual',
                 country=self.check.country,
                 metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},

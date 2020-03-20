@@ -335,6 +335,15 @@ class StripePayoutAccount(PayoutAccount):
                             yield 'individual.dob'
                     except AttributeError:
                         yield 'individual.dob'
+                elif field == 'individual.verification.additional_document':
+                    try:
+                        if attrgetter(
+                            'individual.verification.additional_document.front'
+                        )(self.account) in (None, ''):
+                            yield field
+                    except AttributeError:
+                        yield field
+
                 else:
                     try:
                         if attrgetter(field)(self.account) in (None, ''):

@@ -439,7 +439,10 @@ class StripePayoutAccount(PayoutAccount):
                 settings=self.account_settings,
                 business_type='individual',
                 requested_capabilities=["transfers"],
-                business_profile={'url': url},
+                business_profile={
+                    'url': url,
+                    'mcc': '8398'
+                },
                 metadata=self.metadata
             )
             self.account_id = self._account.id

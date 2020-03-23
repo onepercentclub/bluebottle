@@ -18,7 +18,7 @@ class Effect(object):
         if self.is_valid and self.post_save == post_save:
             self.execute()
             if self.save:
-                self.instance.save()
+                self.instance.save(perform_effects=False)
 
     def all_effects(self, result=None):
         result = result or []

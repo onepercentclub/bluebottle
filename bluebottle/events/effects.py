@@ -31,6 +31,20 @@ class DateChanged(ModelChangedTrigger):
     ]
 
 
+class Started(ModelChangedTrigger):
+    @property
+    def is_valid(self):
+        return (
+            self.instance.duration and
+            self.instance.start < timezone.now() and
+            self.instance.status not in ('succeeded', 'closed', )
+        )
+
+    effects = [
+        TransitionEffect('start', conditions=[EventStateMachine.should_start, EventStateMachine.has_participants]),
+    ]
+
+
 class Finished(ModelChangedTrigger):
     @property
     def is_valid(self):
@@ -46,7 +60,7 @@ class Finished(ModelChangedTrigger):
     ]
 
 
-Event.triggers += [CapacityChanged, DateChanged, Finished]
+Event.triggers += [CapacityChanged, DateChanged, Started, Finished]
 
 
 class ParticipantDeleted(ModelDeletedTrigger):
@@ -56,11 +70,14 @@ class ParticipantDeleted(ModelDeletedTrigger):
         RelatedTransitionEffect(
             'activity',
             'close',
-            conditions=[ParticipantStateMachine.event_is_finished, ParticipantStateMachine.will_be_empty]
+            conditions=[
+                ParticipantStateMachine.event_is_finished,
+                ParticipantStateMachine.event_will_be_empty
+            ]
         ),
         RelatedTransitionEffect(
             'activity',
-            'reopen',
+            'unfill',
             conditions=[
                 ParticipantStateMachine.event_will_become_open,
                 ParticipantStateMachine.event_is_not_finished

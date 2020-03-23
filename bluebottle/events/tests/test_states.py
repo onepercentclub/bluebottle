@@ -160,7 +160,8 @@ class ActivityStateMachineTests(BluebottleTestCase):
     def test_mark_absent(self):
         event = EventFactory.create(
             initiative=self.initiative,
-            start=timezone.now() - timedelta(hours=1)
+            start=timezone.now() - timedelta(days=1),
+            duration=1
         )
         participant = ParticipantFactory.create(activity=event)
         self.assertEqual(event.status, EventStateMachine.succeeded.value)
@@ -177,7 +178,8 @@ class ActivityStateMachineTests(BluebottleTestCase):
     def test_mark_absent_no_change(self):
         event = EventFactory.create(
             initiative=self.initiative,
-            start=timezone.now() - timedelta(hours=1)
+            start=timezone.now() - timedelta(hours=1),
+            duration=1
         )
         ParticipantFactory.create(activity=event)
         participant = ParticipantFactory.create(activity=event)
@@ -196,7 +198,8 @@ class ActivityStateMachineTests(BluebottleTestCase):
     def test_mark_present(self):
         event = EventFactory.create(
             initiative=self.initiative,
-            start=timezone.now() - timedelta(hours=1)
+            start=timezone.now() - timedelta(days=1),
+            duration=1
         )
         participant = ParticipantFactory.create(activity=event)
         self.assertEqual(event.status, EventStateMachine.succeeded.value)
@@ -216,12 +219,12 @@ class ActivityStateMachineTests(BluebottleTestCase):
     def test_succeed_in_future(self):
         event = EventFactory.create(
             initiative=self.initiative,
-            start=timezone.now() + timedelta(hours=1),
+            start=timezone.now() + timedelta(days=1),
             duration=1
         )
         ParticipantFactory.create(activity=event)
 
-        future = timezone.now() + timedelta(hours=4)
+        future = timezone.now() + timedelta(days=2)
         with mock.patch.object(timezone, 'now', return_value=future):
             event.save()
 
@@ -234,7 +237,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
     def test_succeed_when_passed(self):
         event = EventFactory.create(
             initiative=self.initiative,
-            start=timezone.now() - timedelta(hours=1),
+            start=timezone.now() - timedelta(days=1),
             duration=1
         )
         ParticipantFactory.create(activity=event)

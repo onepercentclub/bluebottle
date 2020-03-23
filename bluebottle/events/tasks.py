@@ -1,7 +1,7 @@
 from datetime import timedelta
 from celery.schedules import crontab
 from celery.task import periodic_task
-from django.utils.timezone import now
+from django.utils import timezone
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -23,16 +23,11 @@ def check_event_start():
         with LocalTenant(tenant, clear_tenant=True):
             # Start events that are running now
             events = Event.objects.filter(
-                start__lte=now(),
+                start__lte=timezone.now(),
                 status__in=['full', 'open']
             ).all()
 
             for event in events:
-                if len(event.participants):
-                    event.transitions.start()
-                else:
-                    event.transitions.close()
-
                 event.save()
 
 
@@ -46,12 +41,11 @@ def check_event_end():
         with LocalTenant(tenant, clear_tenant=True):
             # Close events that are over
             events = Event.objects.filter(
-                end__lte=now(),
+                end__lte=timezone.now(),
                 status__in=['running']
             ).all()
 
             for event in events:
-                event.transitions.succeed()
                 event.save()
 
 
@@ -65,7 +59,7 @@ def check_event_reminder():
         with LocalTenant(tenant, clear_tenant=True):
             # Close events that are over
             events = Event.objects.filter(
-                end__lte=now() + timedelta(days=5),
+                end__lte=timezone.now() + timedelta(days=5),
                 status__in=['open', 'full'],
             ).all()
 

@@ -61,6 +61,9 @@ class EventStateMachine(ActivityStateMachine):
         return self.instance.capacity > len(self.instance.participants)
 
     def should_finish(self):
+        return self.instance.end < timezone.now()
+
+    def should_start(self):
         return self.instance.start < timezone.now()
 
     def should_open(self):
@@ -96,8 +99,13 @@ class EventStateMachine(ActivityStateMachine):
         ActivityStateMachine.open
     )
 
+    start = Transition(
+        [ActivityStateMachine.open, full],
+        is_running
+    )
+
     succeed = Transition(
-        (full, ActivityStateMachine.open, ActivityStateMachine.closed, ),
+        (full, is_running, ActivityStateMachine.open, ActivityStateMachine.closed, ),
         ActivityStateMachine.succeeded,
         effects=[
             NotificationEffect(EventSucceededOwnerMessage),
@@ -107,6 +115,7 @@ class EventStateMachine(ActivityStateMachine):
     close = Transition(
         (
             full,
+            is_running,
             ActivityStateMachine.open,
             ActivityStateMachine.succeeded,
             ActivityStateMachine.in_review,
@@ -143,7 +152,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         return activity.capacity == len(activity.participants)
 
     def event_is_finished(self):
-        return self.instance.activity.start < timezone.now()
+        return self.instance.activity.end < timezone.now()
 
     def event_is_not_finished(self):
         return not self.instance.activity.start < timezone.now()

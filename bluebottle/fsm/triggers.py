@@ -21,7 +21,7 @@ class ModelChangedTrigger(ModelTrigger):
         return self.instance.field_is_changed(self.field)
 
 
-class ModelDeletedTrigger(object):
+class ModelDeletedTrigger(ModelTrigger):
     def __init__(self, instance):
         self.instance = instance
 
@@ -81,13 +81,16 @@ class TriggerMixin(object):
     def field_is_changed(self, field):
         return self._initial_values[field] != getattr(self, field)
 
-    def save(self, send_messages=False, *args, **kwargs):
-        for machine_name in self._state_machines:
-            machine = getattr(self, machine_name)
-            if not machine.state and machine.initial_transition:
-                machine.initial_transition.execute(machine)
+    def save(self, send_messages=True, perform_effects=True, *args, **kwargs):
+        if perform_effects:
+            for machine_name in self._state_machines:
+                machine = getattr(self, machine_name)
+                if not machine.state and machine.initial_transition:
+                    machine.initial_transition.execute(machine)
 
-        effects = self._effects + self.all_effects
+            effects = self._effects + self.all_effects
+        else:
+            effects = []
 
         for effect in effects:
             effect.do(post_save=False)
@@ -100,4 +103,10 @@ class TriggerMixin(object):
         self._effects = []
 
     def delete(self, *args, **kwargs):
+        for trigger in self.triggers:
+            if issubclass(trigger, ModelDeletedTrigger):
+                for current_effect in trigger(self).current_effects:
+                    for effect in current_effect.all_effects():
+                        effect.do(post_save=True)
+
         return super(TriggerMixin, self).delete(*args, **kwargs)

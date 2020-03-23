@@ -721,7 +721,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             message.subject, u'Your identity verification needs some work'
         )
         self.assertTrue(
-            self.funding.get_absolute_url() in message.body
+            '/initiatives/activities/funding/kyc' in message.body
         )
 
     def test_document_rejected(self):
@@ -756,5 +756,5 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             message.subject, u'Your identity verification needs some work'
         )
         self.assertTrue(
-            self.funding.get_absolute_url() in message.body
+            '/initiatives/activities/funding/kyc' in message.body
         )

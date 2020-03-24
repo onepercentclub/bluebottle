@@ -335,6 +335,15 @@ class StripePayoutAccount(PayoutAccount):
                             yield 'individual.dob'
                     except AttributeError:
                         yield 'individual.dob'
+                elif field == 'individual.verification.additional_document':
+                    try:
+                        if attrgetter(
+                            'individual.verification.additional_document.front'
+                        )(self.account) in (None, ''):
+                            yield field
+                    except AttributeError:
+                        yield field
+
                 else:
                     try:
                         if attrgetter(field)(self.account) in (None, ''):
@@ -342,8 +351,11 @@ class StripePayoutAccount(PayoutAccount):
                     except AttributeError:
                         yield field
             else:
-                value = attrgetter(field)(self)
-                if value in (None, ''):
+                try:
+                    value = attrgetter(field)(self)
+                    if value in (None, ''):
+                        yield field
+                except AttributeError:
                     yield field
 
         if not self.account.external_accounts.total_count > 0:
@@ -439,7 +451,10 @@ class StripePayoutAccount(PayoutAccount):
                 settings=self.account_settings,
                 business_type='individual',
                 requested_capabilities=["transfers"],
-                business_profile={'url': url},
+                business_profile={
+                    'url': url,
+                    'mcc': '8398'
+                },
                 metadata=self.metadata
             )
             self.account_id = self._account.id

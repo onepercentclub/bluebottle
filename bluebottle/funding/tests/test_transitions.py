@@ -74,11 +74,16 @@ class FundingTestCase(BluebottleAdminTestCase):
             deadline=None,
             bank_account=BankAccountFactory.create()
         )
+
+        self.assertIsNone(funding.started)
+
         BudgetLineFactory.create(activity=funding)
         funding.bank_account.reviewed = True
 
         funding.review_transitions.submit()
         funding.review_transitions.approve()
+
+        self.assertIsInstance(funding.started, datetime)
 
         deadline = now() + timedelta(days=30)
         self.assertAlmostEqual(

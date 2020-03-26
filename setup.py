@@ -107,6 +107,7 @@ install_requires = [
     'stripe==2.33.0',
     'suds-jurko==0.6',
     'SurveyGizmo==1.2.2',
+    'tablib==0.14.0',
     'timezonefinder==3.4.2',
     'transifex-client==0.12.4',
     'unicodecsv==0.14.1',

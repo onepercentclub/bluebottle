@@ -5,6 +5,7 @@ from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from stripe.error import StripeError
 
 from bluebottle.clients import properties
 from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin, \
@@ -168,8 +169,11 @@ class StripeBankAccountAdmin(BankAccountChildAdmin):
         return super(StripeBankAccountAdmin, self).save_model(request, obj, form, change)
 
     def account_details(self, obj):
-        template = loader.get_template(
-            'admin/funding_stripe/stripebankaccount/detail_fields.html'
-        )
-        return template.render({'info': obj.account})
+        try:
+            template = loader.get_template(
+                'admin/funding_stripe/stripebankaccount/detail_fields.html'
+            )
+            return template.render({'info': obj.account})
+        except StripeError as e:
+            return "Error retrieving details: {}".format(e)
     account_details.short_description = _('Details')

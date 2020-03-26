@@ -149,6 +149,61 @@ class AssignmentDetailAPITestCase(BluebottleTestCase):
         self.assertEqual(response.data['status'], 'in_review')
 
 
+class AssignmentDetailApplicantsAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(AssignmentDetailApplicantsAPITestCase, self).setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=['assignment']
+        )
+
+        self.user = BlueBottleUserFactory()
+        self.owner = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory(owner=self.user)
+        self.assignment = AssignmentFactory.create(
+            initiative=self.initiative,
+            status='open',
+            owner=self.owner
+        )
+
+        self.client = JSONAPITestClient()
+        self.url = reverse('assignment-detail', args=(self.assignment.id,))
+
+        ApplicantFactory.create_batch(
+            5,
+            activity=self.assignment,
+            status='accepted'
+        )
+        ApplicantFactory.create_batch(
+            3,
+            activity=self.assignment,
+            status='new'
+        )
+        ApplicantFactory.create_batch(
+            2,
+            activity=self.assignment,
+            status='rejected'
+        )
+
+    def test_applicant_list_anonymous(self):
+        response = self.client.get(self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)['data']
+        self.assertEqual(data['relationships']['contributions']['meta']['count'], 8)
+
+    def test_applicant_list_authenticated(self):
+        response = self.client.get(self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)['data']
+        self.assertEqual(data['relationships']['contributions']['meta']['count'], 8)
+
+    def test_applicant_list_owner(self):
+        response = self.client.get(self.url, user=self.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)['data']
+        self.assertEqual(data['relationships']['contributions']['meta']['count'], 10)
+
+
 class AssignmentTransitionTestCase(BluebottleTestCase):
 
     def setUp(self):

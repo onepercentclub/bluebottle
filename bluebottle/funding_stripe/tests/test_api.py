@@ -533,6 +533,10 @@ class ExternalAccountsTestCase(BluebottleTestCase):
 
         self.url = reverse('connect-account-details', args=(self.check.id, ))
         self.external_account_url = reverse('stripe-external-account-list')
+        self.external_account_detail_url = reverse(
+            'stripe-external-account-detail',
+            args=(self.external_account.pk, )
+        )
 
     def test_get(self):
         with mock.patch(

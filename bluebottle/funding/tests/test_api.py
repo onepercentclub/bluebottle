@@ -184,6 +184,19 @@ class BudgetLineDetailTestCase(BluebottleTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_get_anonymous(self):
+        response = self.client.get(
+            self.update_url
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_other_user(self):
+        response = self.client.get(
+            self.update_url,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
 
 class RewardListTestCase(BluebottleTestCase):
     def setUp(self):
@@ -323,7 +336,6 @@ class RewardDetailTestCase(BluebottleTestCase):
             data=json.dumps(self.data)
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.reward.refresh_from_db()
 
     def test_update_other_user(self):
         response = self.client.patch(
@@ -332,7 +344,19 @@ class RewardDetailTestCase(BluebottleTestCase):
             user=BlueBottleUserFactory.create()
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.reward.refresh_from_db()
+
+    def test_get_anonymous(self):
+        response = self.client.get(
+            self.update_url
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_other_user(self):
+        response = self.client.get(
+            self.update_url,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class FundingDetailTestCase(BluebottleTestCase):

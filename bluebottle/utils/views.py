@@ -218,6 +218,12 @@ class RetrieveAPIView(ViewPermissionsMixin, generics.RetrieveAPIView):
 class RelatedPermissionMixin(object):
     related_permission_classes = {}
 
+    def check_object_permissions(self, request, obj):
+        self.check_related_object_permissions(request, obj)
+        super(RelatedPermissionMixin, self).check_object_permissions(
+            request, obj
+        )
+
     def check_related_object_permissions(self, request, obj):
         """
         Check if the request should be permitted for a given related object.
@@ -232,15 +238,10 @@ class RelatedPermissionMixin(object):
                     )
 
 
-class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView, RelatedPermissionMixin):
+class ListCreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, generics.ListCreateAPIView):
     permission_classes = (ResourcePermission,)
 
     def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
         self.check_object_permissions(
             self.request,
             serializer.Meta.model(**serializer.validated_data)
@@ -248,7 +249,7 @@ class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView, Relate
         serializer.save()
 
 
-class CreateAPIView(ViewPermissionsMixin, generics.CreateAPIView, RelatedPermissionMixin):
+class CreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, generics.CreateAPIView):
     permission_classes = (ResourcePermission,)
 
     def perform_create(self, serializer):
@@ -257,18 +258,18 @@ class CreateAPIView(ViewPermissionsMixin, generics.CreateAPIView, RelatedPermiss
                 self.request,
                 serializer.Meta.model(**serializer.validated_data)
             )
-            self.check_related_object_permissions(
-                self.request,
-                serializer.Meta.model(**serializer.validated_data)
-            )
         serializer.save()
 
 
-class RetrieveUpdateAPIView(ViewPermissionsMixin, generics.RetrieveUpdateAPIView):
+class RetrieveUpdateAPIView(
+    RelatedPermissionMixin, ViewPermissionsMixin, generics.RetrieveUpdateAPIView
+):
     base_permission_classes = (ResourcePermission,)
 
 
-class RetrieveUpdateDestroyAPIView(ViewPermissionsMixin, generics.RetrieveUpdateDestroyAPIView):
+class RetrieveUpdateDestroyAPIView(
+    RelatedPermissionMixin, ViewPermissionsMixin, generics.RetrieveUpdateDestroyAPIView
+):
     base_permission_classes = (ResourcePermission,)
 
 

@@ -7,13 +7,14 @@ from bluebottle.activities.models import Organizer, Activity
 
 
 class CreateOrganizer(Effect):
+    "Create an organizer for the event"
     post_save = True
 
     def execute(self):
         Organizer.objects.get_or_create(activity=self.instance)
 
     def __unicode__(self):
-        return _('Create organizer for the activity')
+        return unicode(_('Create organizer'))
 
 
 class ReviewStateMachine(ModelStateMachine):
@@ -100,11 +101,11 @@ class ReviewStateMachine(ModelStateMachine):
 
 
 class ActivityStateMachine(ModelStateMachine):
-    in_review = State(_('in review'), 'in_review')
-    open = State(_('open'), 'open')
-    succeeded = State(_('succeeded'), 'succeeded')
-    deleted = State(_('deleted'), 'deleted')
-    closed = State(_('closed'), 'closed')
+    in_review = State(_('in review'), 'in_review', _('Activity is not approved yet'))
+    open = State(_('open'), 'open', _('Activity is open, and accepting contributions'))
+    succeeded = State(_('succeeded'), 'succeeded', _('The activity is succeeded'))
+    deleted = State(_('deleted'), 'deleted', _('The activity has been deleted'))
+    closed = State(_('closed'), 'closed', _('The activity has been closed, and is not longer visible on the platform'))
 
     initiate = Transition(
         EmptyState(),

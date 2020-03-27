@@ -34,6 +34,7 @@ class DateChanged(ModelChangedTrigger):
 class Started(ModelChangedTrigger):
     @property
     def is_valid(self):
+        "The event has started"
         return (
             self.instance.duration and
             self.instance.start < timezone.now() and
@@ -48,6 +49,7 @@ class Started(ModelChangedTrigger):
 class Finished(ModelChangedTrigger):
     @property
     def is_valid(self):
+        "The event has ended"
         return (
             self.instance.duration and
             self.instance.start + timedelta(hours=self.instance.duration) < timezone.now() and

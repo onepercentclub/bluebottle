@@ -5,6 +5,8 @@ from bluebottle.follow.models import follow, unfollow
 
 
 class FollowActivityEffect(Effect):
+    "Follow the activity"
+
     post_save = True
 
     def execute(self, **kwargs):
@@ -18,6 +20,8 @@ class FollowActivityEffect(Effect):
 
 
 class UnFollowActivityEffect(Effect):
+    "Unfollow the activity"
+
     post_save = True
 
     def execute(self, **kwargs):

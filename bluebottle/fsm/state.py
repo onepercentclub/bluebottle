@@ -116,9 +116,10 @@ class Transition(BaseTransition):
 class State(object):
     transition_class = Transition
 
-    def __init__(self, name, value=None):
+    def __init__(self, name, value=None, description=''):
         self.name = name
         self.value = value
+        self.description = description
 
     def __repr__(self):
         return '<State {}>'.format(self.name)

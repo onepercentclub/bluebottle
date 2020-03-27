@@ -7,6 +7,7 @@ class Complete(ModelChangedTrigger):
 
     @property
     def is_valid(self):
+        "There are no errors or missing fields"
         return (
             not list(self.instance.errors) and
             not list(self.instance.required)

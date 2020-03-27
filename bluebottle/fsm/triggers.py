@@ -16,6 +16,8 @@ class ModelTrigger(object):
 
 
 class ModelChangedTrigger(ModelTrigger):
+    field = None
+
     @property
     def is_valid(self):
         return self.instance.field_is_changed(self.field)

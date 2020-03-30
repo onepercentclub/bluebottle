@@ -55,7 +55,8 @@ class AssignmentTestCase(BluebottleTestCase):
             if participant.status in ('new', 'accepted'):
                 self.assertTrue(participant.user.email in messages)
                 self.assertTrue(
-                    assignment.date.strftime('%B %d, %Y') in messages[participant.user.email]
+                    assignment.date.strftime('%B %d, %Y').replace(' 0', ' ') in
+                    messages[participant.user.email]
                 )
             else:
                 self.assertFalse(participant.user.email in messages)

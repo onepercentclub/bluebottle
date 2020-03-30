@@ -61,11 +61,17 @@ class FundingCurrencyValidator(object):
         self.fields = fields
         self.message = message or self.message
 
+    def set_context(self, serializer):
+        if serializer.instance:
+            self.activity = serializer.instance.activity
+
     def __call__(self, data):
+        activity = data.get('activity') or self.activity
         for field in self.fields:
             if (
-                data['activity'].target and
-                data[field].currency != data['activity'].target.currency
+                activity.target and
+                field in data and
+                data[field].currency != activity.target.currency
             ):
                 raise ValidationError(self.message)
 

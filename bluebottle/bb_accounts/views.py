@@ -19,7 +19,9 @@ from rest_framework.exceptions import PermissionDenied, NotAuthenticated, Valida
 
 from rest_framework_json_api.views import AutoPrefetchMixin
 
-from bluebottle.bb_accounts.permissions import CurrentUserPermission
+from bluebottle.bb_accounts.permissions import (
+    CurrentUserPermission, IsAuthenticatedOrOpenPermission
+)
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.members.models import UserActivity
 from bluebottle.utils.views import RetrieveAPIView, UpdateAPIView, JsonApiViewMixin, CreateAPIView
@@ -48,6 +50,8 @@ class UserProfileDetail(RetrieveAPIView):
     """
     queryset = USER_MODEL.objects.all()
     serializer_class = UserProfileSerializer
+
+    permission_classes = [IsAuthenticatedOrOpenPermission]
 
 
 class UserActivityDetail(CreateAPIView):

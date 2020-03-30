@@ -44,7 +44,6 @@ class AssignmentListSerializer(BaseActivityListSerializer):
             'location',
             'expertise',
         ]
-        resource_name = 'activities/assignments'
 
     included_serializers = dict(
         BaseActivityListSerializer.included_serializers,
@@ -97,7 +96,6 @@ class AssignmentSerializer(BaseActivitySerializer):
             'contributions.user',
             'contributions.document'
         ]
-        resource_name = 'activities/assignments'
 
     included_serializers = dict(
         BaseActivitySerializer.included_serializers,

@@ -17,15 +17,17 @@ class ApplicantListFilter(DjangoFilterBackend):
                 Q(activity__owner=request.user) |
                 Q(activity__initiative__activity_manager=request.user) |
                 Q(status__in=[
-                    ApplicantTransitions.values.active,
+                    ApplicantTransitions.values.new,
                     ApplicantTransitions.values.accepted,
+                    ApplicantTransitions.values.active,
                     ApplicantTransitions.values.succeeded
                 ])
             )
         else:
             queryset = queryset.instance_of(Applicant).filter(status__in=[
                 ApplicantTransitions.values.new,
+                ApplicantTransitions.values.accepted,
+                ApplicantTransitions.values.active,
                 ApplicantTransitions.values.succeeded
             ])
-
         return super(ApplicantListFilter, self).filter_queryset(request, queryset, view)

@@ -533,6 +533,10 @@ class ExternalAccountsTestCase(BluebottleTestCase):
 
         self.url = reverse('connect-account-details', args=(self.check.id, ))
         self.external_account_url = reverse('stripe-external-account-list')
+        self.external_account_detail_url = reverse(
+            'stripe-external-account-details',
+            args=(self.external_account.pk, )
+        )
 
     def test_get(self):
         with mock.patch(
@@ -648,3 +652,27 @@ class ExternalAccountsTestCase(BluebottleTestCase):
         self.assertEqual(
             external_account['last4'], self.connect_external_account.last4
         )
+
+    def test_get_external_account_detail(self):
+        response = self.client.get(
+            self.external_account_detail_url,
+            user=self.external_account.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['attributes']['account-id'],
+            'some-external-account-id'
+        )
+
+    def test_get_external_account_anonymous(self):
+        response = self.client.get(
+            self.external_account_detail_url
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_external_account_other_user(self):
+        response = self.client.get(
+            self.external_account_detail_url,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

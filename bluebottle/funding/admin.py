@@ -159,9 +159,8 @@ class FundingAdmin(ActivityChildAdmin):
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
 
-    updated_index = ActivityChildAdmin.basic_fields.index('updated') + 1
-    basic_fields = ActivityChildAdmin.basic_fields[0:updated_index] + \
-        ('started',) + ActivityChildAdmin.basic_fields[updated_index:]
+    basic_fields = ActivityChildAdmin.basic_fields[0:ActivityChildAdmin.basic_fields.index('updated') + 1] + \
+        ('started',) + ActivityChildAdmin.basic_fields[ActivityChildAdmin.basic_fields.index('updated') + 1:]
 
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         'amount_donated', 'amount_raised',

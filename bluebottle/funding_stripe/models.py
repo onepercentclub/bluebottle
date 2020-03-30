@@ -443,7 +443,7 @@ class StripePayoutAccount(PayoutAccount):
                 url = 'https://{}'.format(connection.tenant.domain_url)
 
             if 'localhost' in url:
-                url = re.sub('localhost:\d{4}', 't.goodup.com', url)
+                url = re.sub('localhost', 't.goodup.com', url)
 
             self._account = stripe.Account.create(
                 country=self.country,

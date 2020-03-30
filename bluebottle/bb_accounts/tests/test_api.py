@@ -18,6 +18,8 @@ from rest_framework import status
 
 from bluebottle.members.tokens import login_token_generator
 
+from bluebottle.members.models import MemberPlatformSettings
+
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
     OrganizationFactory, OrganizationContactFactory
@@ -126,6 +128,21 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
     def test_user_profile_unauthenticated(self):
         user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
+
+        response = self.client.get(user_profile_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_profile_detail_unauthenticated(self):
+        user_profile_url = reverse('user-profile-detail', kwargs={'pk': self.user_1.id})
+
+        response = self.client.get(user_profile_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_profile_detail_unauthenticated_closed(self):
+        user_profile_url = reverse('user-profile-detail', kwargs={'pk': self.user_1.id})
+        MemberPlatformSettings.objects.update_or_create(
+            closed=True,
+        )
 
         response = self.client.get(user_profile_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

@@ -5,8 +5,12 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, PlainPayoutAccountFactory
-from bluebottle.funding_pledge.tests.factories import PledgePaymentProviderFactory
+from bluebottle.funding.tests.factories import (
+    FundingFactory, DonationFactory, PlainPayoutAccountFactory
+)
+from bluebottle.funding_pledge.tests.factories import (
+    PledgePaymentProviderFactory, PledgeBankAccountFactory
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
@@ -71,10 +75,10 @@ class PaymentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PledgePayoutAccountTestCase(BluebottleTestCase):
+class PledgePayoutAccountListTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(PledgePayoutAccountTestCase, self).setUp()
+        super(PledgePayoutAccountListTestCase, self).setUp()
 
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
@@ -121,3 +125,78 @@ class PledgePayoutAccountTestCase(BluebottleTestCase):
         bank_details = get_included(response, 'payout-accounts/pledge-external-accounts')
         self.assertEqual(bank_details['attributes']['account-number'], '123456789')
         self.assertEqual(bank_details['attributes']['account-holder-name'], 'Habari Gani')
+
+
+class PledgePayoutAccountDetailTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(PledgePayoutAccountDetailTestCase, self).setUp()
+
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory.create()
+        PledgePaymentProviderFactory.create()
+
+        self.initiative.transitions.submit()
+        self.initiative.transitions.approve()
+        self.funding = FundingFactory.create(initiative=self.initiative)
+        self.payout_account = PlainPayoutAccountFactory.create(
+            status='verified',
+            owner=self.user
+        )
+        self.bank_account = PledgeBankAccountFactory.create(
+            connect_account=self.payout_account
+        )
+
+        self.bank_account_url = reverse(
+            'pledge-external-account-detail', args=(self.bank_account.pk, )
+        )
+
+        self.data = {
+            'data': {
+                'type': 'payout-accounts/pledge-external-accounts',
+                'id': self.bank_account.pk,
+                'attributes': {
+                    'account-number': '11111111',
+                },
+            }
+        }
+
+    def test_update(self):
+        response = self.client.patch(
+            self.bank_account_url, data=json.dumps(self.data), user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.bank_account.refresh_from_db()
+
+        self.assertEqual(
+            self.bank_account.account_number,
+            self.data['data']['attributes']['account-number']
+        )
+
+    def test_update_no_user(self):
+        response = self.client.patch(
+            self.bank_account_url, data=json.dumps(self.data)
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_no_user(self):
+        response = self.client.get(
+            self.bank_account_url
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_update_other_user(self):
+        response = self.client.patch(
+            self.bank_account_url,
+            data=json.dumps(self.data),
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_other_user(self):
+        response = self.client.get(
+            self.bank_account_url,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

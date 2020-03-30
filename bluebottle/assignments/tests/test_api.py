@@ -501,6 +501,8 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(data['data']['relationships']['document']['data']['id'], document_id)
         document = get_included(response, 'documents')
         self.assertTrue('.rtf' in document['meta']['filename'])
+        # Don't user actual file name
+        self.assertFalse('test.rtf' in document['meta']['filename'])
 
     def test_confirm_hours(self):
         self.assertEqual(self.assignment.status, 'open')

@@ -1,3 +1,4 @@
+import os
 import uuid
 
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -10,9 +11,15 @@ from bluebottle.files.fields import ImageField
 
 
 class File(models.Model):
+
+    def get_file_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = "%s.%s" % (uuid.uuid4(), ext)
+        return os.path.join('files', filename)
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateField(_('created'), default=timezone.now)
-    file = models.FileField(_('file'), upload_to='files')
+    file = models.FileField(_('file'), upload_to=get_file_path)
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('owner'),

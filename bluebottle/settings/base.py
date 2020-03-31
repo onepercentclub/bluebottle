@@ -279,7 +279,6 @@ SHARED_APPS = (
     'raven.contrib.django',
     'djcelery',
     'micawber.contrib.mcdjango',  # Embedding videos
-    'rest_framework',
     'loginas',
     'geoposition',
     'tenant_extras',
@@ -309,6 +308,8 @@ TENANT_APPS = (
     'bluebottle.bluebottle_dashboard',
     'jet',
     'jet.dashboard',
+
+    'rest_framework',
 
     'admin_tools',
     # 'admin_tools.theming',

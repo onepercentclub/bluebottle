@@ -162,7 +162,9 @@ class Logout(generics.CreateAPIView):
             self.request.user.last_logout = timezone.now()
             self.request.user.save()
 
-        return response.Response('', status=status.HTTP_204_NO_CONTENT)
+            return response.Response('', status=status.HTTP_204_NO_CONTENT)
+
+        return response.Response('', status=status.HTTP_401_UNAUTHORIZED)
 
 
 class SignUpToken(generics.CreateAPIView):

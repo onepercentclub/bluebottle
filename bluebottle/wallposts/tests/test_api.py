@@ -12,7 +12,7 @@ from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.wallposts import (
-    TextWallpostFactory, MediaWallpostFactory
+    TextWallpostFactory, MediaWallpostFactory, MediaWallpostPhotoFactory
 )
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.tests.test_unit import UserTestsMixin
@@ -800,3 +800,68 @@ class FundingWallpostTest(BluebottleTestCase):
                 'id': self.donation.id
             }
         )
+
+    def test_change_user(self):
+        wallpost = MediaWallpostFactory.create(content_object=self.funding)
+        author = wallpost.author
+
+        url = reverse('wallpost_detail', args=(wallpost.pk, ))
+
+        response = self.client.put(
+            url,
+            data={
+                'author': BlueBottleUserFactory.create().pk,
+                'parent_id': self.funding.pk,
+                'parent_type': 'funding'
+            },
+            token="JWT {0}".format(author.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        wallpost.refresh_from_db()
+        self.assertEqual(wallpost.author, author)
+
+
+class WallpostPhotoTest(BluebottleTestCase):
+    def setUp(self):
+        super(WallpostPhotoTest, self).setUp()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.funding = FundingFactory.create(target=Money(5000, 'EUR'), status='open', initiative=self.initiative)
+
+        self.wallpost = MediaWallpostFactory.create(content_object=self.funding)
+
+        self.photo = MediaWallpostPhotoFactory(
+            author=self.wallpost.author,
+            mediawallpost=MediaWallpostFactory.create(content_object=self.funding, author=self.wallpost.author)
+        )
+
+        self.url = reverse('mediawallpost_photo_detail', args=(self.photo.pk, ))
+
+    def test_photo(self):
+        response = self.client.put(
+            self.url,
+            data={
+                'mediawallpost': self.wallpost.pk
+            },
+            token="JWT {0}".format(self.photo.author.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_photo_different_wallpost_owner(self):
+        photo_author = BlueBottleUserFactory.create()
+        self.photo.author = photo_author
+        self.photo.mediawallpost = MediaWallpostFactory.create(content_object=self.funding, author=photo_author)
+        self.photo.save()
+
+        response = self.client.put(
+            self.url,
+            data={
+                'mediawallpost': self.wallpost.pk
+            },
+            token="JWT {0}".format(self.photo.author.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

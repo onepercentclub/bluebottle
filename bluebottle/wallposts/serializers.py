@@ -141,6 +141,12 @@ class MediaWallpostPhotoSerializer(serializers.ModelSerializer):
                                                        read_only=False,
                                                        queryset=MediaWallpost.objects)
 
+    def validate(self, data):
+        if 'mediawallpost' in data and data['mediawallpost'].author != self.instance.author:
+            raise ValidationError('Wallpost author and photo author should match')
+
+        return data
+
     class Meta:
         model = MediaWallpostPhoto
         fields = ('id', 'photo', 'mediawallpost')
@@ -210,6 +216,7 @@ class SystemWallpostSerializer(WallpostSerializerBase):
 
 class WallpostSerializer(serializers.ModelSerializer):
     type = serializers.ReadOnlyField(source='wallpost_type', required=False)
+    author = UserPreviewSerializer()
 
     def to_representation(self, obj):
         """

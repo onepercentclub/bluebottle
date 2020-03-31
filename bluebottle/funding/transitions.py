@@ -40,6 +40,7 @@ class FundingTransitions(ActivityTransitions):
         permissions=[ActivityTransitions.can_approve],
     )
     def reviewed(self):
+        self.instance.started = timezone.now()
         if self.instance.duration and not self.instance.deadline:
             deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
             self.instance.deadline = get_current_timezone().localize(

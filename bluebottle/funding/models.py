@@ -164,6 +164,11 @@ class Funding(Activity):
     country = models.ForeignKey('geo.Country', null=True, blank=True)
     bank_account = models.ForeignKey('funding.BankAccount', null=True, blank=True, on_delete=SET_NULL)
     transitions = TransitionManager(FundingTransitions, 'status')
+    started = models.DateTimeField(
+        _('started'),
+        null=True,
+        blank=True,
+    )
 
     needs_review = True
 

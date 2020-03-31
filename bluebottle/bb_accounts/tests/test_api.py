@@ -17,7 +17,6 @@ from django.utils.http import int_to_base36
 from rest_framework import status
 
 from bluebottle.members.tokens import login_token_generator
-
 from bluebottle.members.models import MemberPlatformSettings
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -382,6 +381,19 @@ class UserApiIntegrationTest(BluebottleTestCase):
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [new_user_email])
         self.assertTrue('Take me there: https://testserver\n' in welcome_email.body)
+
+    @override_settings(SEND_WELCOME_MAIL=True)
+    def test_user_create_closed_site(self):
+        """
+        Test creating a user with the api and activating the new user.
+        """
+        MemberPlatformSettings.objects.update_or_create(closed=True)
+
+        new_user_email = 'nijntje27@hetkonijntje.nl'
+        new_user_password = 'test-password'
+        response = self.client.post(self.user_create_api_url,
+                                    {'email': new_user_email, 'password': new_user_password})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
     def test_user_create_required_email(self):
         response = self.client.post(self.user_create_api_url, {'password': 'test-password'})

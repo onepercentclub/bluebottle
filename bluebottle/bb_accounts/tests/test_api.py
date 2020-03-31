@@ -354,6 +354,22 @@ class UserApiIntegrationTest(BluebottleTestCase):
                          {u'GET': True, u'OPTIONS': True})
         self.client.logout()
 
+    def test_logout_authenticated(self):
+        """
+        Test logout of authenticated user
+        """
+
+        response = self.client.post(reverse('user-logout'), token=self.user_1_token)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+
+    def test_logout_unauthenticated(self):
+        """
+        Test logout of unauthenticated user
+        """
+
+        response = self.client.post(reverse('user-logout'))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+
     def test_current_user_organization(self):
         """
         Test retrieving the currently logged in user with partner organization

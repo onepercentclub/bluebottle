@@ -387,6 +387,7 @@ class EmailSetTest(BluebottleTestCase):
             email='user@example.com'
         )
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.current_user_url = reverse('user-current')
 
         self.set_email_url = reverse('user-set-email')
 
@@ -400,9 +401,20 @@ class EmailSetTest(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['email'], 'new@example.com')
         self.assertTrue('password' not in response.data)
+        self.assertTrue('jwt_token' in response.data)
 
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, 'new@example.com')
+
+        old_token_response = self.client.get(
+            self.current_user_url, token=self.user_token
+        )
+        self.assertTrue(old_token_response.status_code, status.HTTP_403_FORBIDDEN)
+
+        new_token_response = self.client.get(
+            self.current_user_url, token='JWT {}'.format(response.data['jwt_token'])
+        )
+        self.assertTrue(new_token_response.status_code, status.HTTP_200_OK)
 
     def test_update_email_unauthenticated(self):
         response = self.client.put(
@@ -459,6 +471,7 @@ class PasswordSetTest(BluebottleTestCase):
         )
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
+        self.current_user_url = reverse('user-current')
         self.set_password_url = reverse('user-set-password')
 
     def test_update_paswword(self):
@@ -469,10 +482,21 @@ class PasswordSetTest(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        self.assertTrue('jwt_token' in response.data)
         self.assertTrue('password' not in response.data)
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('new-password'))
+
+        old_token_response = self.client.get(
+            self.current_user_url, token=self.user_token
+        )
+        self.assertTrue(old_token_response.status_code, status.HTTP_403_FORBIDDEN)
+
+        new_token_response = self.client.get(
+            self.current_user_url, token='JWT {}'.format(response.data['jwt_token'])
+        )
+        self.assertTrue(new_token_response.status_code, status.HTTP_200_OK)
 
     def test_update_password_unauthenticated(self):
         response = self.client.put(

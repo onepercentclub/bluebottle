@@ -275,6 +275,9 @@ class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
         if not self.request.user.check_password(password):
             raise PermissionDenied()
 
+        self.request.user.last_logout = now()
+        self.request.user.save()
+
         return super(PasswordProtectedMemberUpdateApiView, self).perform_update(serializer)
 
 

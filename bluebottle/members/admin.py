@@ -22,8 +22,6 @@ from django.utils.http import int_to_base36
 from django.utils.translation import ugettext_lazy as _
 from permissions_widget.forms import PermissionSelectMultipleField
 
-from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-
 from bluebottle.assignments.models import Applicant
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.bb_follow.models import Follow
@@ -34,13 +32,7 @@ from bluebottle.funding.models import Donation
 from bluebottle.geo.admin import PlaceInline
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative
-from bluebottle.members.models import (
-    CustomMemberFieldSettings,
-    CustomMemberField,
-    MemberPlatformSettings,
-    UserActivity,
-)
-from bluebottle.members.forms import LoginAsConfirmationForm
+from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings, UserActivity
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
@@ -499,11 +491,6 @@ class MemberAdmin(UserAdmin):
 
         return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))
 
-    @confirmation_form(
-        LoginAsConfirmationForm,
-        Member,
-        'admin/members/login_as.html'
-    )
     def login_as(self, request, *args, **kwargs):
         user = Member.objects.get(id=kwargs.get('user_id', None))
         template = loader.get_template('utils/login_with.html')

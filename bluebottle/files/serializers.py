@@ -7,7 +7,7 @@ from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
-from bluebottle.files.models import Document, Image
+from bluebottle.files.models import Document, Image, PrivateDocument
 from bluebottle.utils.utils import reverse_signed
 
 
@@ -19,7 +19,7 @@ class PrivateDocumentField(DocumentField):
     """
     Only users with right permissions can view these documents.
     """
-    queryset = Document.objects
+    queryset = PrivateDocument.objects
     permissions = []
 
     def __init__(self, permissions, **kwargs):
@@ -109,6 +109,11 @@ class PrivateDocumentSerializer(DocumentSerializer):
     def get_link(self, obj):
         parent_id = getattr(obj, self.relationship).get().pk
         return reverse_signed(self.content_view_name, args=(parent_id, ))
+
+    class Meta:
+        model = PrivateDocument
+        fields = ('id', 'file', 'filename', 'owner', 'link',)
+        meta_fields = ['filename']
 
 
 class ImageField(ResourceRelatedField):

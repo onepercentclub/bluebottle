@@ -8,7 +8,7 @@ from django.utils.timezone import now
 from rest_framework import status
 
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
-from bluebottle.files.tests.factories import DocumentFactory
+from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
@@ -576,7 +576,7 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.assignment = AssignmentFactory.create(owner=self.owner, initiative=self.initiative)
         self.assignment.review_transitions.submit()
         self.assignment.save()
-        document = DocumentFactory.create()
+        document = PrivateDocumentFactory.create()
         self.applicant = ApplicantFactory.create(activity=self.assignment, document=document, user=self.user)
         self.participant_url = reverse('applicant-detail', args=(self.applicant.id,))
         self.transition_data = {

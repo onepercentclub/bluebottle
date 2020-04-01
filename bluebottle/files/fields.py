@@ -1,7 +1,7 @@
 from django.db.models.fields.related import ForeignKey
 from django.forms import ModelChoiceField
 
-from bluebottle.files.widgets import ImageWidget, DocumentWidget
+from bluebottle.files.widgets import ImageWidget, DocumentWidget, PrivateDocumentWidget
 
 
 class ImageField(ForeignKey):
@@ -76,7 +76,7 @@ class PrivateDocumentField(ForeignKey):
         db = kwargs.pop('using', None)
         queryset = self.remote_field.model._default_manager.using(db)
         defaults = {
-            'widget': DocumentWidget,
+            'widget': PrivateDocumentWidget,
             'form_class': ModelChoiceField,
             'queryset': queryset,
             'to_field_name': self.remote_field.field_name,

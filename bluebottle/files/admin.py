@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from bluebottle.files.models import Image, Document
+from bluebottle.files.models import Image, Document, PrivateDocument
 
 
 class FileAdmin(admin.ModelAdmin):
@@ -15,6 +15,7 @@ class FileAdmin(admin.ModelAdmin):
     fields = ('file', 'owner')
 
 
+@admin.register(Image)
 class ImageAdmin(FileAdmin):
     model = Image
     readonly_fields = ('image', )
@@ -24,11 +25,11 @@ class ImageAdmin(FileAdmin):
         return format_html('<img src="{url}" height=200 />', url=obj.file.url)
 
 
-admin.site.register(Image, ImageAdmin)
-
-
+@admin.register(Document)
 class DocumentAdmin(FileAdmin):
     model = Document
 
 
-admin.site.register(Document, DocumentAdmin)
+@admin.register(PrivateDocument)
+class PrivateDocumentAdmin(FileAdmin):
+    model = PrivateDocument

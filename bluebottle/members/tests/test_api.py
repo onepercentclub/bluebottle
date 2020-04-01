@@ -553,7 +553,7 @@ class UserLogoutTest(BluebottleTestCase):
 
     def test_logout_no_token(self):
         response = self.client.post(self.logout_url)
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, 401)
 
     def test_logout_wrong_token(self):
         response = self.client.post(self.logout_url, token=self.user_token + '1234')

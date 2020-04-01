@@ -157,14 +157,14 @@ class Logout(generics.CreateAPIView):
     Log the user out
 
     """
+    permission_classes = (IsAuthenticated, )
+
     def create(self, request, *args, **kwargs):
         if self.request.user.is_authenticated:
             self.request.user.last_logout = timezone.now()
             self.request.user.save()
 
-            return response.Response('', status=status.HTTP_204_NO_CONTENT)
-
-        return response.Response('', status=status.HTTP_401_UNAUTHORIZED)
+        return response.Response('', status=status.HTTP_204_NO_CONTENT)
 
 
 class SignUpToken(generics.CreateAPIView):

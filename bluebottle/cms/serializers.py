@@ -631,6 +631,7 @@ class SitePlatformSettingsSerializer(serializers.ModelSerializer):
             'metadata_title',
             'metadata_description',
             'metadata_keywords',
+            'start_page',
             'logo',
             'favicons'
         )

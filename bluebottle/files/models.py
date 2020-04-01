@@ -40,6 +40,11 @@ class Document(File):
         resource_name = 'documents'
 
 
+class PrivateDocument(File):
+    class JSONAPIMeta:
+        resource_name = 'documents'
+
+
 class RelatedImage(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()

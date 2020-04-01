@@ -27,6 +27,7 @@ install_requires = [
     'django-admin-sortable==2.2.1',
     'django-admin-tools==0.8.1',
     'django-adminfilters==0.3',
+    'django-appconf==1.0.3',
     'django-celery==3.2.1',
     'django-choices==1.5.0',
     'django-cors-headers==2.1.0',

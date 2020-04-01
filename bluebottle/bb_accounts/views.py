@@ -157,6 +157,8 @@ class Logout(generics.CreateAPIView):
     Log the user out
 
     """
+    permission_classes = (IsAuthenticated, )
+
     def create(self, request, *args, **kwargs):
         if self.request.user.is_authenticated:
             self.request.user.last_logout = timezone.now()

@@ -74,6 +74,14 @@ class FileSerializer(ModelSerializer):
         return os.path.basename(instance.file.name)
 
 
+class PrivateFileSerializer(FileSerializer):
+
+    class Meta:
+        model = PrivateDocument
+        fields = ('id', 'file', 'filename', 'owner', )
+        meta_fields = ['filename']
+
+
 class DocumentSerializer(ModelSerializer):
     file = serializers.FileField(write_only=True)
     filename = serializers.SerializerMethodField()

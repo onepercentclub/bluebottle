@@ -463,7 +463,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
                 }
             }
         }
-        self.document_url = reverse('document-list')
+        self.private_document_url = reverse('private-document-list')
         self.document_path = './bluebottle/files/tests/files/test.rtf'
         mail.outbox = []
 
@@ -479,7 +479,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
     def test_apply_with_document(self):
         with open(self.document_path) as test_file:
             response = self.client.post(
-                self.document_url,
+                self.private_document_url,
                 test_file.read(),
                 content_type="text/rtf",
                 HTTP_CONTENT_DISPOSITION='attachment; filename="test.rtf"',

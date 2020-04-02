@@ -55,7 +55,7 @@ class PrivateDocument(File):
     file = models.FileField(_('file'), upload_to=get_private_path)
 
     class JSONAPIMeta:
-        resource_name = 'documents'
+        resource_name = 'private-documents'
 
 
 class RelatedImage(models.Model):

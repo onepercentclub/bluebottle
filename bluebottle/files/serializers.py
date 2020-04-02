@@ -21,6 +21,7 @@ class PrivateDocumentField(DocumentField):
     """
     queryset = PrivateDocument.objects
     permissions = []
+    model = PrivateDocument
 
     def __init__(self, permissions, **kwargs):
         self.permissions = permissions

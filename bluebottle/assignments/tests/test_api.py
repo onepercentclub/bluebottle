@@ -491,7 +491,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         document_id = data['data']['id']
         self.apply_data['data']['relationships']['document'] = {
             'data': {
-                'type': 'documents',
+                'type': 'private-documents',
                 'id': document_id
             }
         }
@@ -499,7 +499,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
         self.assertEqual(data['data']['relationships']['document']['data']['id'], document_id)
-        document = get_included(response, 'documents')
+        document = get_included(response, 'private-documents')
         self.assertTrue('.rtf' in document['meta']['filename'])
 
     def test_confirm_hours(self):

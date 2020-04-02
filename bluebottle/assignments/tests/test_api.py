@@ -601,7 +601,7 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         response = self.client.get(self.participant_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['document']['id'], str(self.applicant.document.id))
-        document = get_included(response, 'documents')
+        document = get_included(response, 'private-documents')
         document_url = document['attributes']['link']
 
         response = self.client.get(document_url, user=self.user)

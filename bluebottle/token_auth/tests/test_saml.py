@@ -2,6 +2,7 @@ import urlparse
 import os
 from mock import patch
 
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import TestCase, RequestFactory
 
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
@@ -20,9 +21,25 @@ class TestSAMLTokenAuthentication(TestCase):
     """
     Tests the Token Authentication backend.
     """
+    def setUp(self):
+        self.session_middleware = SessionMiddleware()
+
+    def _request(self, method, target, session=None, *args, **kwargs):
+        request = getattr(RequestFactory(), method)(target, *args, **kwargs)
+
+        middleware = SessionMiddleware()
+        middleware.process_request(request)
+        if session:
+            request.session.update(session)
+
+        request.session.save()
+
+        return request
+
     def test_sso_url(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
-            request = RequestFactory().get('/sso/redirect', HTTP_HOST='www.stuff.com')
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+
             auth_backend = SAMLAuthentication(request)
 
             sso_url = urlparse.urlparse(auth_backend.sso_url())
@@ -36,10 +53,14 @@ class TestSAMLTokenAuthentication(TestCase):
 
             self.assertTrue('SAMLRequest' in query)
             self.assertEqual(query['RelayState'][0], 'http://www.stuff.com/sso/redirect')
+            self.assertEqual(
+                request.session['saml_request_id'],
+                auth_backend.auth.get_last_request_id()
+            )
 
     def test_sso_url_custom_target(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
-            request = RequestFactory().get('/sso/redirect', HTTP_HOST='www.stuff.com')
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
             auth_backend = SAMLAuthentication(request)
 
             sso_url = urlparse.urlparse(auth_backend.sso_url(target_url='/test'))
@@ -63,7 +84,13 @@ class TestSAMLTokenAuthentication(TestCase):
             with open(filename) as response_file:
                 response = response_file.read()
 
-            request = RequestFactory().post('/sso/auth', HTTP_HOST='www.stuff.com', data={'SAMLResponse': response})
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
             auth_backend = SAMLAuthentication(request)
 
             user, created = auth_backend.authenticate()
@@ -73,6 +100,32 @@ class TestSAMLTokenAuthentication(TestCase):
             self.assertEqual(user.username, 'smartin')
             self.assertEqual(user.email, 'smartin@yaco.es')
             self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
+
+    @patch('bluebottle.token_auth.auth.saml.logger.error')
+    def test_auth_session_reuse(self, error):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '123'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
+            auth_backend = SAMLAuthentication(request)
+            self.assertRaises(
+                TokenAuthenticationError,
+                auth_backend.authenticate
+            )
+            error.assert_called_with(
+                'Saml login error: Session ids do not match'
+            )
 
     def test_auth_succes_missing_field(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)
@@ -86,7 +139,13 @@ class TestSAMLTokenAuthentication(TestCase):
             with open(filename) as response_file:
                 response = response_file.read()
 
-            request = RequestFactory().post('/sso/auth', HTTP_HOST='www.stuff.com', data={'SAMLResponse': response})
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
             auth_backend = SAMLAuthentication(request)
 
             user, created = auth_backend.authenticate()
@@ -112,7 +171,13 @@ class TestSAMLTokenAuthentication(TestCase):
             with open(filename) as response_file:
                 response = response_file.read()
 
-            request = RequestFactory().post('/sso/auth', HTTP_HOST='www.stuff.com', data={'SAMLResponse': response})
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
             auth_backend = SAMLAuthentication(request)
 
             user, created = auth_backend.authenticate()
@@ -138,7 +203,13 @@ class TestSAMLTokenAuthentication(TestCase):
             with open(filename) as response_file:
                 response = response_file.read()
 
-            request = RequestFactory().post('/sso/auth', HTTP_HOST='www.stuff.com', data={'SAMLResponse': response})
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
             auth_backend = SAMLAuthentication(request)
 
             # Login should stil work.
@@ -158,7 +229,13 @@ class TestSAMLTokenAuthentication(TestCase):
             with open(filename) as response_file:
                 response = response_file.read()
 
-            request = RequestFactory().post('/sso/auth', HTTP_HOST='www.stuff.com', data={'SAMLResponse': response})
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
             auth_backend = SAMLAuthentication(request)
 
             # Login should stil work.
@@ -178,8 +255,10 @@ class TestSAMLTokenAuthentication(TestCase):
             with open(filename) as response_file:
                 response = response_file.read()
 
-            request = RequestFactory().post(
+            request = self._request(
+                'post',
                 '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response, 'RelayState': '/test'}
             )
@@ -213,8 +292,10 @@ class TestSAMLTokenAuthentication(TestCase):
             with open(filename) as response_file:
                 response = response_file.read()
 
-            request = RequestFactory().post(
+            request = self._request(
+                'post',
                 '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
@@ -233,7 +314,12 @@ class TestSAMLTokenAuthentication(TestCase):
     @patch('bluebottle.token_auth.auth.saml.logger.error')
     def test_auth_no_response(self, error):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
-            request = RequestFactory().post('/sso/auth', HTTP_HOST='www.stuff.com')
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+            )
             auth_backend = SAMLAuthentication(request)
 
             self.assertRaises(
@@ -249,7 +335,7 @@ class TestSAMLTokenAuthentication(TestCase):
     def test_saml_request_omits_name_id_policy(self):
         # Make sure NameIDPolicy doesn't show up in SAMLReuqest
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
-            request = RequestFactory().get('/sso/redirect', HTTP_HOST='www.stuff.com')
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
             auth_backend = SAMLAuthentication(request)
 
             sso_url = urlparse.urlparse(auth_backend.sso_url())
@@ -271,7 +357,7 @@ class TestSAMLTokenAuthentication(TestCase):
     def test_saml_request_omits_authentication_context(self):
         # Make sure RequestedAuthnContext doesn't show up in SAMLReuqest
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
-            request = RequestFactory().get('/sso/redirect', HTTP_HOST='www.stuff.com')
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
             auth_backend = SAMLAuthentication(request)
 
             sso_url = urlparse.urlparse(auth_backend.sso_url())
@@ -292,7 +378,7 @@ class TestSAMLTokenAuthentication(TestCase):
     def test_saml_request_sets_authentication_context(self):
         # Make sure RequestedAuthnContext has right property in SAMLReuqest
         with self.settings(TOKEN_AUTH=TOKEN_AUTH2_SETTINGS):
-            request = RequestFactory().get('/sso/redirect', HTTP_HOST='www.stuff.com')
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
             auth_backend = SAMLAuthentication(request)
 
             sso_url = urlparse.urlparse(auth_backend.sso_url())

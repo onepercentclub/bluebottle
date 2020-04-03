@@ -97,8 +97,13 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertContains(response, 'Send reset password mail')
 
         # Assert password reset link sends the right email
-        reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'user_id': user.id})
-        response = self.client.get(reset_url)
+        reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
+
+        confirm_response = self.client.get(reset_url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue('Are you sure' in confirm_response.content)
+
+        response = self.client.post(reset_url, {'confirm': True})
         self.assertEquals(response.status_code, 302)
         reset_mail = mail.outbox[0]
         self.assertEqual(reset_mail.to, [user.email])
@@ -107,8 +112,8 @@ class MemberAdminTest(BluebottleAdminTestCase):
     def test_password_mail_anonymous(self):
         user = BlueBottleUserFactory.create()
         self.client.logout()
-        reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'user_id': user.id})
-        response = self.client.get(reset_url)
+        reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
+        response = self.client.post(reset_url, {'confirm': True})
         self.assertEquals(response.status_code, 403)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -119,8 +124,13 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, 'Resend welcome email')
 
-        welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'user_id': user.id})
-        response = self.client.get(welcome_email_url)
+        welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
+
+        confirm_response = self.client.get(welcome_email_url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue('Are you sure' in confirm_response.content)
+
+        response = self.client.post(welcome_email_url, {'confirm': True})
         self.assertEquals(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [user.email])
@@ -132,8 +142,8 @@ class MemberAdminTest(BluebottleAdminTestCase):
         user = BlueBottleUserFactory.create()
         self.client.logout()
 
-        welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'user_id': user.id})
-        response = self.client.get(welkcome_email_url)
+        welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
+        response = self.client.post(welkcome_email_url, {'confirm': True})
         self.assertEquals(response.status_code, 403)
 
 
@@ -395,7 +405,7 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
             primary_language='en'
         )
 
-        welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'user_id': user.id})
+        welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
         self.client.get(welkcome_email_url)
         welcome_email = mail.outbox[1]
         self.assertEqual(welcome_email.subject, 'You have been assimilated to Test')

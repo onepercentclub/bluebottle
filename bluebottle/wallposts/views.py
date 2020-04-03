@@ -181,7 +181,7 @@ class MediaWallpostDetail(TextWallpostDetail):
     serializer_class = MediaWallpostSerializer
 
 
-class WallpostDetail(RetrieveUpdateDestroyAPIView):
+class WallpostDetail(RetrieveUpdateDestroyAPIView, SetAuthorMixin):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (

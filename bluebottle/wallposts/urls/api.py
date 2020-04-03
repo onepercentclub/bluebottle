@@ -22,7 +22,7 @@ urlpatterns = [
     url(r'^photos/$', MediaWallpostPhotoList.as_view(),
         name='mediawallpost_photo_list'),
     url(r'^photos/(?P<pk>\d+)$', MediaWallpostPhotoDetail.as_view(),
-        name='mediawallpost_photo_list'),
+        name='mediawallpost_photo_detail'),
 
     url(r'^reactions/$', ReactionList.as_view(), name='wallpost_reaction_list'),
     url(r'^reactions/(?P<pk>\d+)$', ReactionDetail.as_view(),

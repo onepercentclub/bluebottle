@@ -32,6 +32,7 @@ from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 from bluebottle.initiatives.serializers import MemberSerializer
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
     PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
@@ -217,6 +218,9 @@ class UserCreate(generics.CreateAPIView):
         return "Users"
 
     def perform_create(self, serializer):
+        settings = MemberPlatformSettings.objects.get()
+        if settings.closed:
+            raise PermissionDenied()
         if 'primary_language' not in serializer.validated_data:
             serializer.save(primary_language=properties.LANGUAGE_CODE, is_active=True)
         else:
@@ -275,7 +279,7 @@ class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
         password = serializer.validated_data.pop('password')
 
         if not self.request.user.check_password(password):
-            raise PermissionDenied()
+            raise PermissionDenied('Platform is closed')
 
         self.request.user.last_logout = now()
         self.request.user.save()

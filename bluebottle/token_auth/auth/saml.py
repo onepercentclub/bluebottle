@@ -1,4 +1,5 @@
 import logging
+import urlparse
 
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.errors import OneLogin_Saml2_Error
@@ -46,7 +47,12 @@ class SAMLAuthentication(BaseTokenAuthentication):
 
     @property
     def target_url(self):
-        return self.request.POST.get('RelayState')
+        relay_state = self.request.POST.get('RelayState')
+        if relay_state:
+            scheme = urlparse.urlparse(relay_state).scheme
+
+            if scheme.startswith('http') or scheme == '':
+                return relay_state
 
     def get_metadata(self):
         base_path = self.settings.get('base_path', None)

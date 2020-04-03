@@ -187,6 +187,23 @@ class TestSAMLTokenAuthentication(TestCase):
 
             self.assertEqual(auth_backend.target_url, '/test')
 
+    def test_auth_custom_target_non_http(self):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = RequestFactory().post(
+                '/sso/auth',
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response, 'RelayState': 'javascript://alert("test")'}
+            )
+            auth_backend = SAMLAuthentication(request)
+
+            self.assertIsNone(auth_backend.target_url)
+
     @patch('bluebottle.token_auth.auth.saml.logger.error')
     def test_auth_invalid(self, error):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):

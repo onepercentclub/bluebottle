@@ -157,7 +157,6 @@ urlpatterns = [
         LoginWithView.as_view(), name='login-with'),
 
     url(r'^downloads/', include('bluebottle.projects.urls.media')),
-
 ]
 
 

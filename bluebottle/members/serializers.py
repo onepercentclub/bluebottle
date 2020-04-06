@@ -44,7 +44,7 @@ class PrivateProfileMixin(object):
         return data
 
 
-class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
+class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a subset of a member's public profile. This is usually
     embedded into other serializers.
@@ -52,7 +52,7 @@ class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         kwargs['read_only'] = True
-        super(UserPreviewSerializer, self).__init__(*args, **kwargs)
+        super(BaseUserPreviewSerializer, self).__init__(*args, **kwargs)
 
     avatar = SorlImageField('133x133', source='picture', crop='center')
 
@@ -60,6 +60,39 @@ class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
     short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
     is_active = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = BB_USER_MODEL
+        fields = ('id', 'first_name', 'last_name', 'initials',
+                  'avatar', 'full_name', 'short_name', 'is_active')
+
+
+class AnonymizedUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
+    """
+    Serializer for a subset of a member's public profile. This is usually
+    embedded into other serializers.
+    """
+
+    def __init__(self, *args, **kwargs):
+        kwargs['read_only'] = True
+        super(AnonymizedUserPreviewSerializer, self).__init__(*args, **kwargs)
+
+    id = 0
+
+    class Meta:
+        model = BB_USER_MODEL
+        fields = ('id', )
+
+
+class UserPreviewSerializer(serializers.ModelSerializer):
+    """
+    User preview serializer that respects anonymization_age
+    """
+
+    def to_representation(self, instance):
+        if self.parent.instance.anonymized:
+            return None
+        return BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
 
     class Meta:
         model = BB_USER_MODEL

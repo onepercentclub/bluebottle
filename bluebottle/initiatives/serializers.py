@@ -52,6 +52,24 @@ class CategorySerializer(ModelSerializer):
         resource_name = 'categories'
 
 
+class BaseMemberSerializer(ModelSerializer):
+    avatar = SorlImageField('133x133', source='picture', crop='center')
+    full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
+    short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
+
+    class Meta:
+        model = Member
+        fields = (
+            'id', 'first_name', 'last_name', 'initials', 'avatar',
+            'full_name', 'short_name', 'is_active', 'date_joined',
+            'about_me', 'is_co_financer'
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'members'
+
+
 class MemberSerializer(ModelSerializer):
     avatar = SorlImageField('133x133', source='picture', crop='center')
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
@@ -68,6 +86,11 @@ class MemberSerializer(ModelSerializer):
 
     class JSONAPIMeta:
         resource_name = 'members'
+
+    def to_representation(self, instance):
+        if self.context['parent'].anonymized:
+            return {}
+        return BaseMemberSerializer(instance, context=self.context).to_representation(instance)
 
 
 class InitiativeImageSerializer(ImageSerializer):

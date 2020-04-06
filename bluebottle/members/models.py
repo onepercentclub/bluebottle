@@ -72,6 +72,11 @@ class MemberPlatformSettings(BasePlatformSettings):
 
     background = models.ImageField(null=True, blank=True, upload_to='site_content/')
 
+    anonymization_age = models.IntegerField(
+        default=0,
+        help_text=_("The number of days after which user data should be anonymised. 0 for no anonymisation")
+    )
+
     class Meta:
         verbose_name_plural = _('member platform settings')
         verbose_name = _('member platform settings')

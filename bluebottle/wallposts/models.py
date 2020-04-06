@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from polymorphic.models import PolymorphicModel
 
+from bluebottle.utils.models import AnomizationMixin
 from .managers import ReactionManager, WallpostManager
 
 WALLPOST_TEXT_MAX_LENGTH = getattr(settings, 'WALLPOST_TEXT_MAX_LENGTH', 1000)
@@ -16,7 +17,7 @@ WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH',
                                        1000)
 
 
-class Wallpost(PolymorphicModel):
+class Wallpost(AnomizationMixin, PolymorphicModel):
     """
     The Wallpost base class. This class will never be used directly because the
     content of a Wallpost is always defined

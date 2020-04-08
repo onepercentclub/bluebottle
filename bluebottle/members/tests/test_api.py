@@ -66,6 +66,20 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         )
 
 
+class LoginTestCase(BluebottleTestCase):
+    """
+    Integration tests for the SignUp token api endpoint.
+    """
+    def setUp(self):
+        self.password = 'blablabla'
+        self.user = BlueBottleUserFactory.create(email='test@example.com', password=self.password)
+
+        super(LoginTestCase, self).setUp()
+
+    def test_failed_login(self):
+        pass
+
+
 @override_settings(SEND_WELCOME_MAIL=True)
 class SignUpTokenTestCase(BluebottleTestCase):
     """

@@ -27,6 +27,9 @@ class DummyUser(object):
     def get_jwt_token(self):
         return 'test-token'
 
+    def get_username(self):
+        return 'dummy'
+
     def save(self, *args, **kwargs):
         pass
 

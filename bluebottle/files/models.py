@@ -1,3 +1,4 @@
+import os
 import uuid
 
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -38,6 +39,23 @@ class Image(File):
 class Document(File):
     class JSONAPIMeta:
         resource_name = 'documents'
+
+
+def get_private_path(self, filename):
+    ext = filename.split('.')[-1]
+    filename = "%s.%s" % (uuid.uuid4(), ext)
+    upload_to = os.path.join('files', filename)
+    if not upload_to.startswith('private'):
+        upload_to = 'private/{}'.format(upload_to)
+    return upload_to
+
+
+class PrivateDocument(File):
+
+    file = models.FileField(_('file'), upload_to=get_private_path)
+
+    class JSONAPIMeta:
+        resource_name = 'private-documents'
 
 
 class RelatedImage(models.Model):

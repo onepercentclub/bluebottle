@@ -8,7 +8,7 @@ from django.utils.timezone import now
 from rest_framework import status
 
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
-from bluebottle.files.tests.factories import DocumentFactory
+from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
@@ -463,7 +463,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
                 }
             }
         }
-        self.document_url = reverse('document-list')
+        self.private_document_url = reverse('private-document-list')
         self.document_path = './bluebottle/files/tests/files/test.rtf'
         mail.outbox = []
 
@@ -479,7 +479,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
     def test_apply_with_document(self):
         with open(self.document_path) as test_file:
             response = self.client.post(
-                self.document_url,
+                self.private_document_url,
                 test_file.read(),
                 content_type="text/rtf",
                 HTTP_CONTENT_DISPOSITION='attachment; filename="test.rtf"',
@@ -491,7 +491,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         document_id = data['data']['id']
         self.apply_data['data']['relationships']['document'] = {
             'data': {
-                'type': 'documents',
+                'type': 'private-documents',
                 'id': document_id
             }
         }
@@ -499,7 +499,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
         self.assertEqual(data['data']['relationships']['document']['data']['id'], document_id)
-        document = get_included(response, 'documents')
+        document = get_included(response, 'private-documents')
         self.assertTrue('.rtf' in document['meta']['filename'])
 
     def test_confirm_hours(self):
@@ -576,7 +576,7 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.assignment = AssignmentFactory.create(owner=self.owner, initiative=self.initiative)
         self.assignment.review_transitions.submit()
         self.assignment.save()
-        document = DocumentFactory.create()
+        document = PrivateDocumentFactory.create()
         self.applicant = ApplicantFactory.create(activity=self.assignment, document=document, user=self.user)
         self.participant_url = reverse('applicant-detail', args=(self.applicant.id,))
         self.transition_data = {
@@ -601,7 +601,7 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         response = self.client.get(self.participant_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['document']['id'], str(self.applicant.document.id))
-        document = get_included(response, 'documents')
+        document = get_included(response, 'private-documents')
         document_url = document['attributes']['link']
 
         response = self.client.get(document_url, user=self.user)

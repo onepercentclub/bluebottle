@@ -133,7 +133,6 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
                                     token=self.other_token)
-
         self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_filtering_on_wallpost_list(self):
@@ -816,7 +815,7 @@ class FundingWallpostTest(BluebottleTestCase):
             },
             token="JWT {0}".format(author.get_jwt_token())
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         wallpost.refresh_from_db()
         self.assertEqual(wallpost.author, author)

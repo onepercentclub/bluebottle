@@ -168,4 +168,6 @@ class AnonymizationMixin(object):
     @property
     def anonymized(self):
         from bluebottle.members.models import MemberPlatformSettings
-        return self.created < (now() - timedelta(days=MemberPlatformSettings.load().anonymization_age))
+        anonymization_age = MemberPlatformSettings.load().anonymization_age
+        if anonymization_age:
+            return self.created < (now() - timedelta(days=anonymization_age))

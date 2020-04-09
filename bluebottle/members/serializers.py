@@ -60,11 +60,15 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
     short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
     is_active = serializers.BooleanField(read_only=True)
+    is_anonymous = False
+
+    def get_is_anonymous(self, obj):
+        return False
 
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'first_name', 'last_name', 'initials',
-                  'avatar', 'full_name', 'short_name', 'is_active')
+                  'avatar', 'full_name', 'short_name', 'is_active', 'is_anonymous')
 
 
 class AnonymizedUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
@@ -78,10 +82,11 @@ class AnonymizedUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSeri
         super(AnonymizedUserPreviewSerializer, self).__init__(*args, **kwargs)
 
     id = 0
+    is_anonymous = True
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', )
+        fields = ('id', 'is_anonymous')
 
 
 class UserPreviewSerializer(serializers.ModelSerializer):

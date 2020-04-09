@@ -57,14 +57,18 @@ class BaseMemberSerializer(ModelSerializer):
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
     is_active = serializers.BooleanField(read_only=True)
     short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
+    is_anonymous = serializers.SerializerMethodField()
 
     class Meta:
         model = Member
         fields = (
             'id', 'first_name', 'last_name', 'initials', 'avatar',
             'full_name', 'short_name', 'is_active', 'date_joined',
-            'about_me', 'is_co_financer'
+            'about_me', 'is_co_financer', 'is_anonymous'
         )
+
+    def get_is_anonymous(self, obj):
+        return False
 
     class JSONAPIMeta:
         resource_name = 'members'
@@ -81,7 +85,7 @@ class MemberSerializer(ModelSerializer):
         fields = (
             'id', 'first_name', 'last_name', 'initials', 'avatar',
             'full_name', 'short_name', 'is_active', 'date_joined',
-            'about_me', 'is_co_financer'
+            'about_me', 'is_co_financer', 'is_anonymous'
         )
 
     class JSONAPIMeta:

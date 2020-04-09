@@ -116,7 +116,7 @@ class UserPermissionsSerializer(serializers.Serializer):
         ]
 
 
-class CurrentUserSerializer(UserPreviewSerializer):
+class CurrentUserSerializer(BaseUserPreviewSerializer):
     """
     Serializer for the current authenticated user. This is the same as the
     serializer for the member preview with the

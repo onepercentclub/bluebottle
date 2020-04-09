@@ -163,7 +163,7 @@ class ValidatedModelMixin(object):
                 yield field
 
 
-class AnomizationMixin(object):
+class AnonymizationMixin(object):
 
     @property
     def anonymized(self):

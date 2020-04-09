@@ -88,8 +88,8 @@ class MemberSerializer(ModelSerializer):
         resource_name = 'members'
 
     def to_representation(self, instance):
-        if self.context['parent'].anonymized:
-            return {}
+        if getattr(self.context['parent'], 'anonymized', False):
+            return {"id": 0, "is_anonymous": True}
         return BaseMemberSerializer(instance, context=self.context).to_representation(instance)
 
 

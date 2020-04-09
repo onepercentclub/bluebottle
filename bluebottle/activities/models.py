@@ -13,11 +13,11 @@ from bluebottle.activities.transitions import (
     ActivityTransitions, ContributionTransitions, OrganizerTransitions
 )
 from bluebottle.follow.models import Follow
-from bluebottle.utils.models import ValidatedModelMixin, AnomizationMixin
+from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
 
 
-class Activity(TransitionsMixin, AnomizationMixin, ValidatedModelMixin, PolymorphicModel):
+class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('owner'),
@@ -109,7 +109,7 @@ def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
     return models.CASCADE(collector, field, sub_objs.non_polymorphic(), using)
 
 
-class Contribution(TransitionsMixin, AnomizationMixin, PolymorphicModel):
+class Contribution(TransitionsMixin, AnonymizationMixin, PolymorphicModel):
     status = FSMField(
         default=ContributionTransitions.values.new,
     )

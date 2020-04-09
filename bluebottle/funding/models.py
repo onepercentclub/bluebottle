@@ -30,7 +30,7 @@ from bluebottle.funding.transitions import (
     PayoutTransitions)
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
-from bluebottle.utils.models import Validator, ValidatedModelMixin, BasePlatformSettings
+from bluebottle.utils.models import Validator, ValidatedModelMixin, BasePlatformSettings, AnonymizationMixin
 
 
 class PaymentCurrency(models.Model):
@@ -394,7 +394,7 @@ class BudgetLine(models.Model):
         return u'{0} - {1}'.format(self.description, self.amount)
 
 
-class Fundraiser(models.Model):
+class Fundraiser(AnonymizationMixin, models.Model):
     owner = models.ForeignKey('members.Member', related_name="funding_fundraisers")
     activity = models.ForeignKey(
         'funding.Funding',
@@ -612,7 +612,7 @@ class PaymentMethod(object):
         resource_name = 'payments/payment-methods'
 
 
-class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
+class PayoutAccount(ValidatedModelMixin, AnonymizationMixin, PolymorphicModel, TransitionsMixin):
     status = FSMField(
         default=PayoutAccountTransitions.values.new
     )

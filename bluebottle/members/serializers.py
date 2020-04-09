@@ -90,8 +90,8 @@ class UserPreviewSerializer(serializers.ModelSerializer):
     """
 
     def to_representation(self, instance):
-        if self.parent.instance.anonymized:
-            return None
+        if self.parent and self.parent.instance and getattr(self.parent.instance, 'anonymized', False):
+            return {"id": 0, "is_anonymous": True}
         return BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
 
     class Meta:

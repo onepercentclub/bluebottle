@@ -14,12 +14,11 @@
 
 {% block content %}
 
-{% blocktrans %}
 <p>
-    We detected an abnormal amount of failed login attempts. Please verify you are not a script.
+  {% blocktrans %}
+      We detected an abnormal amount of failed login attempts. Please verify you are not a script.
+  {% endblocktrans %}
 </p>
-{% endblocktrans %}
-
 <form action="." method="post">
             {% csrf_token %}
 

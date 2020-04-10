@@ -90,7 +90,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
 
     def authenticate_request(self):
         try:
-            self.auth.process_response()
+            self.auth.process_response(self.request.session['saml_request_id'])
         except OneLogin_Saml2_Error, e:
             logger.error('Saml login error: {}'.format(e))
             raise TokenAuthenticationError(e)
@@ -98,10 +98,6 @@ class SAMLAuthentication(BaseTokenAuthentication):
         if self.auth.is_authenticated():
             user_data = self.auth.get_attributes()
             user_data['nameId'] = [self.auth.get_nameid()]
-
-            if self.request.session['saml_request_id'] != self.auth.get_session_index():
-                logger.error('Saml login error: Session ids do not match')
-                raise TokenAuthenticationError('Session ids do not match')
 
             return self.parse_user(user_data)
         else:

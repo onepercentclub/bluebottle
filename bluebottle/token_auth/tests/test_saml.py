@@ -103,7 +103,8 @@ class TestSAMLTokenAuthentication(TestCase):
 
     @patch('bluebottle.token_auth.auth.saml.logger.error')
     def test_auth_session_reuse(self, error):
-        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+        settings = dict(TOKEN_AUTH_SETTINGS, strict=True)
+        with self.settings(TOKEN_AUTH=settings):
 
             filename = os.path.join(
                 os.path.dirname(__file__), 'data/valid_response.xml.base64'
@@ -123,9 +124,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 TokenAuthenticationError,
                 auth_backend.authenticate
             )
-            error.assert_called_with(
-                'Saml login error: Session ids do not match'
-            )
+            error.assert_called()
 
     def test_auth_succes_missing_field(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)

@@ -2,6 +2,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group
 from django.template.response import TemplateResponse
 from django.http.response import HttpResponseForbidden
+from django.test.client import RequestFactory
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -23,7 +24,8 @@ class AdminPermissionsTest(BluebottleTestCase):
 
         # Login user
         self.assertTrue(
-            self.client.login(email=self.user.email, password='testing'))
+            self.client.login(request=RequestFactory().post('/'), email=self.user.email, password='testing')
+        )
 
     def tearDown(self):
         self.client.logout()
@@ -49,7 +51,7 @@ class AdminPermissionsTest(BluebottleTestCase):
         self.user.save()
 
         self.assertTrue(
-            self.client.login(email=self.user.email, password='testing'))
+            self.client.login(request=RequestFactory().post('/'), email=self.user.email, password='testing'))
 
         response = self.client.get(reverse('admin:auth_group_changelist'))
         self.assertIsInstance(response, TemplateResponse)

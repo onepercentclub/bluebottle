@@ -149,3 +149,14 @@ STRIPE = {
     'api_key': 'test-pub-key',
     'publishable_key': 'test-pub-key'
 }
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    },
+    'axes_cache': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
+
+AXES_CACHE = 'axes_cache'

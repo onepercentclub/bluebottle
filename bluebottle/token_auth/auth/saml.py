@@ -42,8 +42,13 @@ class SAMLAuthentication(BaseTokenAuthentication):
         self.auth = OneLogin_Saml2_Auth(get_saml_request(request), self.settings)
 
     def sso_url(self, target_url=None):
-        return self.auth.login(return_to=target_url,
-                               set_nameid_policy=False)
+        result = self.auth.login(
+            return_to=target_url,
+            set_nameid_policy=False
+        )
+        self.request.session['saml_request_id'] = self.auth.get_last_request_id()
+
+        return result
 
     @property
     def target_url(self):
@@ -93,6 +98,10 @@ class SAMLAuthentication(BaseTokenAuthentication):
         if self.auth.is_authenticated():
             user_data = self.auth.get_attributes()
             user_data['nameId'] = [self.auth.get_nameid()]
+
+            if self.request.session['saml_request_id'] != self.auth.get_session_index():
+                logger.error('Saml login error: Session ids do not match')
+                raise TokenAuthenticationError('Session ids do not match')
 
             return self.parse_user(user_data)
         else:

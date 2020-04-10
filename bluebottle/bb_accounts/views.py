@@ -17,7 +17,11 @@ from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated, ValidationError
 
+from rest_framework_jwt.views import ObtainJSONWebToken
+
 from rest_framework_json_api.views import AutoPrefetchMixin
+
+from axes.utils import reset
 
 from bluebottle.bb_accounts.permissions import (
     CurrentUserPermission, IsAuthenticatedOrOpenPermission
@@ -38,10 +42,36 @@ from bluebottle.members.serializers import (
     PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
     UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
     EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
-    SignUpTokenConfirmationSerializer, UserActivitySerializer)
+    SignUpTokenConfirmationSerializer, UserActivitySerializer,
+    CaptchaSerializer, AxesJSONWebTokenSerializer
+)
 from bluebottle.members.tokens import login_token_generator
+from bluebottle.utils.utils import get_client_ip
 
 USER_MODEL = get_user_model()
+
+
+class AxesObtainJSONWebToken(ObtainJSONWebToken):
+    """
+    API View that receives a POST with a user's username and password.
+
+    Returns a JSON Web Token that can be used for authenticated requests.
+    """
+    serializer_class = AxesJSONWebTokenSerializer
+
+
+class CaptchaVerification(generics.CreateAPIView):
+    serializer_class = CaptchaSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+
+        serializer.is_valid(raise_exception=True)
+
+        ip = get_client_ip(request)
+        reset(ip=ip)
+
+        return response.Response(status=status.HTTP_201_CREATED)
 
 
 class UserProfileDetail(RetrieveAPIView):

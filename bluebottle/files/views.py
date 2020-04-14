@@ -90,6 +90,11 @@ class ImageList(FileList):
 
     def perform_create(self, serializer):
         uploaded_file = self.request.FILES['file']
-        if not mime.from_buffer(uploaded_file.read()) == uploaded_file.content_type:
+        mime_type = mime.from_buffer(uploaded_file.read())
+        if not mime_type == uploaded_file.content_type:
             raise ValidationError('Mime-type does not match Content-Type')
+
+        if mime_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
+            raise ValidationError('Mime-type is not allowed for this endpoint')
+
         serializer.save(owner=self.request.user)

@@ -60,7 +60,7 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
     short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
     is_active = serializers.BooleanField(read_only=True)
-    is_anonymous = False
+    is_anonymous = serializers.SerializerMethodField()
 
     def get_is_anonymous(self, obj):
         return False
@@ -76,13 +76,16 @@ class AnonymizedUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSeri
     Serializer for a subset of a member's public profile. This is usually
     embedded into other serializers.
     """
+    is_anonymous = serializers.SerializerMethodField()
 
     def __init__(self, *args, **kwargs):
         kwargs['read_only'] = True
         super(AnonymizedUserPreviewSerializer, self).__init__(*args, **kwargs)
 
     id = 0
-    is_anonymous = True
+
+    def get_is_anonymous(self, obj):
+        return False
 
     class Meta:
         model = BB_USER_MODEL

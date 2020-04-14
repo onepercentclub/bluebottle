@@ -78,3 +78,14 @@ class FileListAPITestCase(TestCase):
             )
 
         self.assertEqual(response.status_code, 400)
+
+    def test_create_image_non_image_mime(self):
+        response = self.client.post(
+            self.image_url,
+            '<html><body></body></html>',
+            content_type="text/html",
+            HTTP_CONTENT_DISPOSITION='attachment; filename="base.html"',
+            user=self.owner
+        )
+
+        self.assertEqual(response.status_code, 400)

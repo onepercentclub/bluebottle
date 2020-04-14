@@ -54,9 +54,12 @@ class SAMLAuthentication(BaseTokenAuthentication):
     def target_url(self):
         relay_state = self.request.POST.get('RelayState')
         if relay_state:
-            scheme = urlparse.urlparse(relay_state).scheme
+            parsed = urlparse.urlparse(relay_state)
 
-            if scheme.startswith('http') or scheme == '':
+            if (
+                (parsed.scheme.startswith('http') and parsed.netloc == self.request.get_host()) or
+                (not parsed.scheme and not parsed.netloc and parsed.path.startswith('/'))
+            ):
                 return relay_state
 
     def get_metadata(self):

@@ -73,7 +73,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         response = self.client.get(reverse('organization_list'),
                                    user=self.user_1)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['meta']['pagination']['count'], 5)
 
     def test_api_organizations_search(self):
@@ -83,7 +83,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         # Search for organizations with "evil" in their name.
         url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'filter[search]': 'Evil'}))
         response = self.client.get(url, user=self.user_1)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Expect two organizations with 'ev'
         self.assertEqual(response.data['meta']['pagination']['count'], 1)
 
@@ -94,7 +94,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         """
         url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'filter[search]': 'Knight'}))
         response = self.client.get(url, user=self.user_1)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['meta']['pagination']['count'], 2)
 
     def test_api_organizations_search_case_insensitve(self):
@@ -103,7 +103,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         """
         url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'filter[search]': 'kids'}))
         response = self.client.get(url, user=self.user_1)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['meta']['pagination']['count'], 2)
 
 
@@ -119,7 +119,7 @@ class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
             reverse('organization_detail', kwargs={'pk': self.organization_1.pk})
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
@@ -149,7 +149,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         Tests that all organizations are returned if there is not a search term supplied.
         """
         response = self.client.get(reverse('organization_list'), user=self.user_1)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['meta']['pagination']['count'], 5)
 
     def test_api_manage_organizations_list_post(self):
@@ -163,7 +163,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             json.dumps(post_data),
             user=self.user_1)
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         org_id = response.data['id']
 
         # Check the data.
@@ -180,7 +180,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             reverse('organization_list'),
             json.dumps(self.post_data),
             user=self.user_1)
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Update description
         org_id = response.data['id']
@@ -193,12 +193,12 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             json.dumps(self.post_data),
             user=self.user_1)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Check the data.
         organization = Organization.objects.get(pk=org_id)
         self.assertEqual(organization.description, 'Bla bla')
 
-    def test_api_manage_organizations_update_not_allowed(self):
+    def test_api_manage_organizations_update_other_user(self):
         """
         Tests POSTing new data to the endpoint.
         """
@@ -206,18 +206,27 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             reverse('organization_list'),
             json.dumps(self.post_data),
             user=self.user_1)
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+        # Update description
         org_id = response.data['id']
         self.post_data['data']['id'] = org_id
         self.post_data['data']['attributes']['description'] = 'Bla bla'
         url = reverse('organization_detail', kwargs={'pk': org_id})
 
-        response = self.client.post(
+        response = self.client.put(
             url,
             json.dumps(self.post_data),
-            user=self.user_2)
-        self.assertEqual(response.status_code, 405)
+            user=BlueBottleUserFactory.create())
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.client.patch(
+            url,
+            json.dumps(self.post_data),
+            user=BlueBottleUserFactory.create())
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
@@ -245,7 +254,7 @@ class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
             user=self.user_1
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['name'], 'Brian Brown')
 
     def test_create_contact_without_phone(self):
@@ -265,7 +274,7 @@ class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
             user=self.user_1
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['name'], 'Brian Brown')
 
     def test_organization_contact(self):
@@ -276,7 +285,7 @@ class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
             user=self.user_1
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['name'], contact.name)
 
 
@@ -307,4 +316,4 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
                                                'pk': self.organization_1.pk}),
                                    user=self.user_1)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

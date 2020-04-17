@@ -3,7 +3,7 @@ from bluebottle.funding_pledge.models import PledgePayment, PledgeBankAccount
 from bluebottle.funding_pledge.permissions import PledgePaymentPermission
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding_pledge.serializers import PledgePaymentSerializer, PledgeBankAccountSerializer
-from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.permissions import IsOwner, IsAuthenticated
 from bluebottle.utils.views import ListCreateAPIView, JsonApiViewMixin, RetrieveUpdateAPIView
 
 
@@ -22,7 +22,11 @@ class PledgePaymentList(PaymentList):
 class PledgeBankAccountAccountList(JsonApiViewMixin, ListCreateAPIView):
     queryset = PledgeBankAccount.objects.all()
     serializer_class = PledgeBankAccountSerializer
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self, *args, **kwargs):
+        queryset = super(PledgeBankAccountAccountList, self).get_queryset(*args, **kwargs)
+        return queryset.filter(connect_account__owner=self.request.user)
 
     related_permission_classes = {
         'connect_account': [IsOwner]

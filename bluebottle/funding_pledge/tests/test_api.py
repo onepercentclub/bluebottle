@@ -126,6 +126,38 @@ class PledgePayoutAccountListTestCase(BluebottleTestCase):
         self.assertEqual(bank_details['attributes']['account-number'], '123456789')
         self.assertEqual(bank_details['attributes']['account-holder-name'], 'Habari Gani')
 
+    def test_get_bank_accounts_no_user(self):
+        response = self.client.post(self.bank_account_url, data=json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.get(
+            self.bank_account_url
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_bank_accounts_other_user(self):
+        response = self.client.post(self.bank_account_url, data=json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.get(
+            self.bank_account_url,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 0)
+
+    def test_get_accounts_no_user(self):
+        response = self.client.get(
+            self.payout_account_url
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_accounts_other_user(self):
+        response = self.client.get(
+            self.payout_account_url,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 0)
+
 
 class PledgePayoutAccountDetailTestCase(BluebottleTestCase):
 

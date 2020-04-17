@@ -801,7 +801,7 @@ class FundingWallpostTest(BluebottleTestCase):
             }
         )
 
-    def test_change_user(self):
+    def test_put(self):
         wallpost = MediaWallpostFactory.create(content_object=self.funding)
         author = wallpost.author
 
@@ -816,10 +816,7 @@ class FundingWallpostTest(BluebottleTestCase):
             },
             token="JWT {0}".format(author.get_jwt_token())
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        wallpost.refresh_from_db()
-        self.assertEqual(wallpost.author, author)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class WallpostPhotoTest(BluebottleTestCase):

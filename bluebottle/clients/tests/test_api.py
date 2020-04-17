@@ -137,11 +137,11 @@ class TestDefaultAPI(BluebottleTestCase):
         self.init_projects()
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.projects_url = reverse('project_list')
+        self.initiatives_url = reverse('initiative-list')
 
     def test_open_api(self):
         """ request open api, expect projects """
-        response = self.client.get(self.projects_url)
+        response = self.client.get(self.initiatives_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
@@ -152,7 +152,7 @@ class TestDefaultAPI(BluebottleTestCase):
             Permission.objects.get(codename='api_read_project')
         )
 
-        response = self.client.get(self.projects_url)
+        response = self.client.get(self.initiatives_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_closed_api_authenticated(self):

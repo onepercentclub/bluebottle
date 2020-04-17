@@ -1,29 +1,23 @@
+from axes.attempts import is_already_locked
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation, authenticate
 from django.contrib.auth.hashers import make_password
-
 from django.core.signing import TimestampSigner
-
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers, exceptions
-
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
-
-from axes.attempts import is_already_locked
 
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import LocationSerializer, PlaceSerializer
-from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.members.messages import SignUptokenMessage
+from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.organizations.serializers import OrganizationSerializer
-from bluebottle.projects.models import Project
-from bluebottle.donations.models import Donation
-from bluebottle.tasks.models import Skill, Task, TaskMember
+from bluebottle.tasks.models import Skill
 from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
 
 BB_USER_MODEL = get_user_model()
@@ -259,42 +253,6 @@ class UserDataExportSerializer(UserProfileSerializer):
     """
     Serializer for the a member's data dump.
     """
-    tasks = serializers.SerializerMethodField()
-    projects = serializers.SerializerMethodField()
-    task_members = serializers.SerializerMethodField()
-    donations = serializers.SerializerMethodField()
-
-    def get_tasks(self, obj):
-        from bluebottle.tasks.serializers import MyTasksSerializer
-
-        tasks = Task.objects.filter(author=obj)
-        return MyTasksSerializer(
-            tasks, many=True, context=self.context
-        ).to_representation(tasks)
-
-    def get_projects(self, obj):
-        from bluebottle.projects.serializers import ProjectSerializer
-
-        projects = Project.objects.filter(owner=obj)
-        return ProjectSerializer(
-            projects, many=True, context=self.context
-        ).to_representation(projects)
-
-    def get_task_members(self, obj):
-        from bluebottle.tasks.serializers import MyTaskMemberSerializer
-
-        task_members = TaskMember.objects.filter(member=obj)
-        return MyTaskMemberSerializer(
-            task_members, many=True, context=self.context
-        ).to_representation(task_members)
-
-    def get_donations(self, obj):
-        from bluebottle.donations.serializers import ManageDonationSerializer
-
-        donations = Donation.objects.filter(order__user=obj)
-        return ManageDonationSerializer(
-            donations, many=True, context=self.context
-        ).to_representation(donations)
 
     class Meta:
         model = BB_USER_MODEL
@@ -303,11 +261,8 @@ class UserDataExportSerializer(UserProfileSerializer):
             'url', 'full_name', 'short_name', 'initials', 'picture',
             'gender', 'first_name', 'last_name', 'phone_number',
             'primary_language', 'about_me', 'location', 'avatar',
-            'project_count', 'donation_count', 'date_joined',
-            'fundraiser_count', 'task_count', 'time_spent',
-            'tasks_performed', 'website', 'twitter', 'facebook',
-            'skypename', 'skills', 'favourite_themes',
-            'projects', 'tasks', 'task_members', 'donations'
+            'date_joined', 'website', 'twitter', 'facebook',
+            'skypename', 'skills', 'favourite_themes'
         )
 
 

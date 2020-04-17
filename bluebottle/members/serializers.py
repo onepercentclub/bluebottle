@@ -1,10 +1,13 @@
+from axes.attempts import is_already_locked
 from django import forms
 from django.conf import settings
-from django.contrib.auth import get_user_model, password_validation
+from django.contrib.auth import get_user_model, password_validation, authenticate
 from django.contrib.auth.hashers import make_password
 from django.core.signing import TimestampSigner
 from django.utils.translation import ugettext_lazy as _
-from rest_framework import serializers
+from rest_framework import serializers, exceptions
+from rest_framework_jwt.serializers import JSONWebTokenSerializer
+from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
@@ -15,9 +18,50 @@ from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.tasks.models import Skill
-from bluebottle.utils.serializers import PermissionField, TruncatedCharField
+from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
 
 BB_USER_MODEL = get_user_model()
+
+
+jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+
+class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
+    def validate(self, attrs):
+        credentials = {
+            self.username_field: attrs.get(self.username_field),
+            'password': attrs.get('password')
+        }
+
+        if all(credentials.values()):
+            request = self.context['request']
+
+            if is_already_locked(request):
+                raise exceptions.Throttled(
+                    600, 'Too many failed password attempts.'
+                )
+
+            user = authenticate(request, **credentials)
+
+            if user:
+                if not user.is_active:
+                    msg = _('User account is disabled.')
+                    raise serializers.ValidationError(msg)
+
+                payload = jwt_payload_handler(user)
+
+                return {
+                    'token': jwt_encode_handler(payload),
+                    'user': user
+                }
+            else:
+                msg = _('Unable to log in with provided credentials.')
+                raise serializers.ValidationError(msg)
+        else:
+            msg = _('Must include "{username_field}" and "password".')
+            msg = msg.format(username_field=self.username_field)
+            raise serializers.ValidationError(msg)
 
 
 class PrivateProfileMixin(object):
@@ -452,3 +496,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
 class TokenLoginSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=True)
     token = serializers.CharField(required=True)
+
+
+class CaptchaSerializer(serializers.Serializer):
+    token = CaptchaField(required=True)

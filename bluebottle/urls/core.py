@@ -4,7 +4,8 @@ from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
-from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
+from rest_framework_jwt.views import refresh_jwt_token
+from bluebottle.bb_accounts.views import AxesObtainJSONWebToken
 
 
 from bluebottle.auth.views import GetAuthToken
@@ -119,7 +120,7 @@ urlpatterns = [
         include('bluebottle.organizations.urls.api')),
 
     # JSON Web Token based authentication for Django REST framework
-    url(r'^api/token-auth/', obtain_jwt_token, name='token-auth'),
+    url(r'^api/token-auth/', AxesObtainJSONWebToken.as_view(), name='token-auth'),
 
     url(r'^api/token-auth-refresh/$', refresh_jwt_token),
 
@@ -144,7 +145,6 @@ urlpatterns = [
         LoginWithView.as_view(), name='login-with'),
 
     url(r'^downloads/', include('bluebottle.projects.urls.media')),
-
 ]
 
 

@@ -25,3 +25,16 @@ class DocumentWidget(Select):
         else:
             context['file'] = None
         return context
+
+
+class PrivateDocumentWidget(Select):
+    template_name = 'widgets/document.html'
+
+    def get_context(self, name, value, attrs):
+        context = super(PrivateDocumentWidget, self).get_context(name, value, attrs)
+        if value:
+            from bluebottle.files.models import PrivateDocument
+            context['file'] = PrivateDocument.objects.get(pk=value).file
+        else:
+            context['file'] = None
+        return context

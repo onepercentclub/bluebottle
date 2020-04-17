@@ -5,7 +5,7 @@ from bluebottle.bb_accounts.views import (
     ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
     PasswordReset, PasswordSet, UserVerification, UserDataExport, EmailSetView,
     PasswordSetView, TokenLogin, Logout, MemberDetail, SignUpToken,
-    SignUpTokenConfirmation
+    SignUpTokenConfirmation, CaptchaVerification
 )
 
 # Public User API:
@@ -27,6 +27,7 @@ urlpatterns = [
     url(r'^signup-token-confirm/(?P<pk>\d+\:.+)$', SignUpTokenConfirmation.as_view(), name='user-signup-token-confirm'),
     url(r'^$', UserCreate.as_view(), name='user-user-create'),
     url(r'^current$', CurrentUser.as_view(), name='user-current'),
+    url(r'^captcha$', CaptchaVerification.as_view(), name='captcha-verification'),
     url(r'^activities/$', UserActivityDetail.as_view(), name='user-activity'),
     url(r'^email$', EmailSetView.as_view(), name='user-set-email'),
     url(r'^password$', PasswordSetView.as_view(), name='user-set-password'),

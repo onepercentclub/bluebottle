@@ -5,6 +5,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
+from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
 
 from bluebottle.analytics.models import AnalyticsPlatformSettings, AnalyticsAdapter
@@ -126,7 +127,11 @@ class ClientSettingsTestCase(BluebottleTestCase):
         )
 
 
-class TestDefaultAPI(BluebottleTestCase):
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+class TestDefaultAPI(ESTestCase, BluebottleTestCase):
     """
     Test the default API, open and closed, authenticated or not
     with default permissions
@@ -149,7 +154,7 @@ class TestDefaultAPI(BluebottleTestCase):
         """ request closed api, expect 403 ? if not authenticated """
         anonymous = Group.objects.get(name='Anonymous')
         anonymous.permissions.remove(
-            Permission.objects.get(codename='api_read_project')
+            Permission.objects.get(codename='api_read_initiative')
         )
 
         response = self.client.get(self.initiatives_url)
@@ -157,7 +162,7 @@ class TestDefaultAPI(BluebottleTestCase):
 
     def test_closed_api_authenticated(self):
         """ request closed api, expect projects if authenticated """
-        response = self.client.get(self.projects_url, token=self.user_token)
+        response = self.client.get(self.initiatives_url, token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 

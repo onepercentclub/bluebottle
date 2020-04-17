@@ -798,6 +798,39 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['data'][1]['id'], unicode(first.pk))
         self.assertEqual(data['data'][2]['id'], unicode(second.pk))
 
+    def test_sort_activity_date(self):
+        first = InitiativeFactory.create(status='approved')
+        FundingFactory.create(
+            initiative=first,
+            deadline=datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
+        )
+        second = InitiativeFactory.create(status='approved')
+        EventFactory.create(
+            initiative=second,
+            start=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+        )
+        third = InitiativeFactory.create(status='approved')
+        EventFactory.create(
+            initiative=third,
+            start=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+        )
+        AssignmentFactory.create(
+            initiative=third,
+            date=datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
+        )
+
+        response = self.client.get(
+            self.url + '?sort=activity_date',
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 3)
+        self.assertEqual(data['data'][0]['id'], unicode(third.pk))
+        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][2]['id'], unicode(second.pk))
+
 
 class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
     def setUp(self):

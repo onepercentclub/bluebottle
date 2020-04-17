@@ -126,6 +126,16 @@ class Contribution(TransitionsMixin, PolymorphicModel):
     def owner(self):
         return self.user
 
+    @property
+    def date(self):
+        return self.activity.contribution_date
+
+    def save(self, *args, **kwargs):
+        if not self.contribution_date:
+            self.contribution_date = self.date
+
+        super(Contribution, self).save(*args, **kwargs)
+
     class Meta:
         ordering = ('-created',)
 

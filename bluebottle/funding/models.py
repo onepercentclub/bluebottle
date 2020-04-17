@@ -208,6 +208,10 @@ class Funding(Activity):
         cache.delete(cache_key)
 
     @property
+    def contribution_date(self):
+        return self.deadline
+
+    @property
     def donations(self):
         return self.contributions.instance_of(Donation)
 
@@ -516,13 +520,14 @@ class Donation(Contribution):
         if not self.user and not self.client_secret:
             self.client_secret = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
 
-        if not self.contribution_date:
-            self.contribution_date = self.created
-
         if not self.payout_amount:
             self.payout_amount = self.amount
 
         super(Donation, self).save(*args, **kwargs)
+
+    @property
+    def date(self):
+        return self.created
 
     @property
     def payment_method(self):

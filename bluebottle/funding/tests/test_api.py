@@ -1776,3 +1776,11 @@ class FundingAPIPermissionsTestCase(BluebottleTestCase):
         reward = RewardFactory.create()
         url = reverse('funding-reward-detail', args=(reward.id,))
         self.assertPostNotAllowed(url, self.user)
+
+    def test_donation_list(self):
+        DonationFactory.create(status='succeeded')
+        url = reverse('funding-donation-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        response = self.client.get(url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)

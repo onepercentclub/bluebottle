@@ -6,6 +6,7 @@ import datetime
 from django.db import migrations
 from django.utils.timezone import get_current_timezone
 
+
 def migrate_assignments(apps, schema_editor):
     Applicant = apps.get_model('assignments', 'Applicant')
 
@@ -17,6 +18,7 @@ def migrate_assignments(apps, schema_editor):
         )
         applicant.save()
 
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -25,5 +27,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-            migrations.RunPython(migrate_assignments,migrations.RunPython.noop)
+            migrations.RunPython(migrate_assignments, migrations.RunPython.noop)
     ]

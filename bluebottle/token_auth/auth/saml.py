@@ -42,16 +42,24 @@ class SAMLAuthentication(BaseTokenAuthentication):
         self.auth = OneLogin_Saml2_Auth(get_saml_request(request), self.settings)
 
     def sso_url(self, target_url=None):
-        return self.auth.login(return_to=target_url,
-                               set_nameid_policy=False)
+        result = self.auth.login(
+            return_to=target_url,
+            set_nameid_policy=False
+        )
+        self.request.session['saml_request_id'] = self.auth.get_last_request_id()
+
+        return result
 
     @property
     def target_url(self):
         relay_state = self.request.POST.get('RelayState')
         if relay_state:
-            scheme = urlparse.urlparse(relay_state).scheme
+            parsed = urlparse.urlparse(relay_state)
 
-            if scheme.startswith('http') or scheme == '':
+            if (
+                (parsed.scheme.startswith('http') and parsed.netloc == self.request.get_host()) or
+                (not parsed.scheme and not parsed.netloc and parsed.path.startswith('/'))
+            ):
                 return relay_state
 
     def get_metadata(self):
@@ -85,7 +93,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
 
     def authenticate_request(self):
         try:
-            self.auth.process_response()
+            self.auth.process_response(self.request.session['saml_request_id'])
         except OneLogin_Saml2_Error, e:
             logger.error('Saml login error: {}'.format(e))
             raise TokenAuthenticationError(e)

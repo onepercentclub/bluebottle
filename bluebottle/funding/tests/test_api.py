@@ -1733,3 +1733,54 @@ class PayoutDetailTestCase(BluebottleTestCase):
 
         payout.refresh_from_db()
         self.assertEqual(payout.status, 'started')
+
+
+class FundingAPIPermissionsTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(FundingAPIPermissionsTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory.create()
+
+    def assertPostNotAllowed(self, url, user=None):
+        data = self.client.get(url, user=user)
+        response = self.client.patch(url, data.data, user=user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_funding_detail(self):
+        funding = FundingFactory.create()
+        url = reverse('funding-detail', args=(funding.id,))
+        self.assertPostNotAllowed(url, self.user)
+
+    def test_funding_budgetline_list(self):
+        BudgetLineFactory.create()
+        url = reverse('funding-budget-line-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        response = self.client.get(url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_funding_budgetline_detail(self):
+        budget_line = BudgetLineFactory.create()
+        url = reverse('funding-budget-line-detail', args=(budget_line.id,))
+        self.assertPostNotAllowed(url, self.user)
+
+    def test_funding_reward_list(self):
+        url = reverse('funding-reward-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        response = self.client.get(url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_funding_reward_detail(self):
+        reward = RewardFactory.create()
+        url = reverse('funding-reward-detail', args=(reward.id,))
+        self.assertPostNotAllowed(url, self.user)
+
+    def test_donation_list(self):
+        DonationFactory.create(status='succeeded')
+        url = reverse('funding-donation-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        response = self.client.get(url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)

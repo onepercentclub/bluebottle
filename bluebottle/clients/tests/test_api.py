@@ -5,6 +5,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
+from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
 
 from bluebottle.analytics.models import AnalyticsPlatformSettings, AnalyticsAdapter
@@ -126,7 +127,11 @@ class ClientSettingsTestCase(BluebottleTestCase):
         )
 
 
-class TestDefaultAPI(BluebottleTestCase):
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+class TestDefaultAPI(ESTestCase, BluebottleTestCase):
     """
     Test the default API, open and closed, authenticated or not
     with default permissions
@@ -137,11 +142,11 @@ class TestDefaultAPI(BluebottleTestCase):
         self.init_projects()
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.projects_url = reverse('project_list')
+        self.initiatives_url = reverse('initiative-list')
 
     def test_open_api(self):
         """ request open api, expect projects """
-        response = self.client.get(self.projects_url)
+        response = self.client.get(self.initiatives_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
@@ -149,15 +154,15 @@ class TestDefaultAPI(BluebottleTestCase):
         """ request closed api, expect 403 ? if not authenticated """
         anonymous = Group.objects.get(name='Anonymous')
         anonymous.permissions.remove(
-            Permission.objects.get(codename='api_read_project')
+            Permission.objects.get(codename='api_read_initiative')
         )
 
-        response = self.client.get(self.projects_url)
+        response = self.client.get(self.initiatives_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_closed_api_authenticated(self):
         """ request closed api, expect projects if authenticated """
-        response = self.client.get(self.projects_url, token=self.user_token)
+        response = self.client.get(self.initiatives_url, token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 

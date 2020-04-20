@@ -2,8 +2,11 @@ import json
 import re
 from HTMLParser import HTMLParser
 
+from urllib2 import HTTPError
+from django.conf import settings
 from django.core.urlresolvers import resolve, reverse
 from django.core.validators import BaseValidator
+from django.http.request import validate_host
 from django.utils.translation import ugettext_lazy as _
 from moneyed import Money
 from rest_framework import serializers
@@ -11,7 +14,10 @@ from rest_framework.utils import model_meta
 from rest_framework_json_api.relations import SerializerMethodResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer as JSONAPIModelSerializer
 
+from captcha import client
+
 from bluebottle.utils.fields import FSMField
+from bluebottle.utils.utils import get_client_ip
 from .models import Address, Language
 from .validators import validate_postal_code
 
@@ -356,6 +362,28 @@ class RelatedField(serializers.Field):
             value = value.pk
 
         return value
+
+
+class CaptchaField(serializers.CharField):
+    def to_internal_value(self, data):
+        result = super(CaptchaField, self).to_internal_value(data)
+
+        try:
+            captcha = client.submit(
+                recaptcha_response=result,
+                private_key=settings.RECAPTCHA_PRIVATE_KEY,
+                remoteip=get_client_ip(self.context['request'])
+            )
+        except HTTPError:  # Catch timeouts, etc
+            raise serializers.ValidationError(
+                self.error_messages["captcha_error"],
+                code="captcha_error"
+            )
+
+        if not captcha.is_valid or not validate_host(captcha.extra_data['hostname'], settings.ALLOWED_HOSTS):
+            raise serializers.ValidationError('Captcha value is not valid')
+
+        return result
 
 
 class NoCommitMixin():

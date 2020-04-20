@@ -1,6 +1,7 @@
 import mock
 import time
 
+from captcha import client
 from django.db import connection
 from django.core import mail
 from django.core.urlresolvers import reverse
@@ -64,6 +65,81 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
             response.data['platform']['members']['consent_link'],
             '/pages/terms-and-conditions'
         )
+
+
+class LoginTestCase(BluebottleTestCase):
+    """
+    Integration tests for the SignUp token api endpoint.
+    """
+    def setUp(self):
+        self.password = 'blablabla'
+        self.email = 'test@example.com'
+        self.user = BlueBottleUserFactory.create(email=self.email, password=self.password)
+
+        super(LoginTestCase, self).setUp()
+
+    def test_login(self):
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        current_user_response = self.client.get(
+            reverse('user-current'), token='JWT {}'.format(response.json()['token'])
+        )
+
+        self.assertEqual(current_user_response.status_code, status.HTTP_200_OK)
+
+    def test_login_failed(self):
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_login_failed_multiple(self):
+        for i in range(0, 11):
+            response = self.client.post(
+                reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_login_failed_captcha(self):
+        for i in range(0, 11):
+            self.client.post(
+                reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
+            )
+
+        mock_response = client.RecaptchaResponse(True, extra_data={'hostname': 'testserver'})
+
+        with mock.patch.object(client, 'submit', return_value=mock_response):
+            captcha_response = self.client.post(
+                reverse('captcha-verification'), {'token': 'test-token'}
+            )
+
+        self.assertEqual(captcha_response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_login_inactive(self):
+        self.user.is_active = False
+        self.user.save()
+        response = self.client.post(
+            reverse('token-auth'), {'email': self.email, 'password': self.password}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 @override_settings(SEND_WELCOME_MAIL=True)

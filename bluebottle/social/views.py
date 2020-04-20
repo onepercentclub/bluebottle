@@ -20,7 +20,7 @@ def load_drf_strategy(request=None):
     redirect_uri='/static/assets/frontend/popup.html', load_strategy=load_drf_strategy
 )
 def store_token(request, backend):
-    return request.backend.auth_complete()
+    return request.backend.auth_complete(request=request)
 
 
 class AccessTokenView(APIView):

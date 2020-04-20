@@ -224,6 +224,7 @@ PASSWORD_HASHERS = (
 )
 
 AUTHENTICATION_BACKENDS = (
+    'axes.backends.AxesModelBackend',
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'social.backends.facebook.FacebookAppOAuth2',
     'django.contrib.auth.backends.ModelBackend',
@@ -279,7 +280,6 @@ SHARED_APPS = (
     'raven.contrib.django',
     'djcelery',
     'micawber.contrib.mcdjango',  # Embedding videos
-    'rest_framework',
     'loginas',
     'geoposition',
     'tenant_extras',
@@ -309,6 +309,8 @@ TENANT_APPS = (
     'bluebottle.bluebottle_dashboard',
     'jet',
     'jet.dashboard',
+
+    'rest_framework',
 
     'admin_tools',
     # 'admin_tools.theming',
@@ -429,6 +431,8 @@ TENANT_APPS = (
     'nested_inline',
     'permissions_widget',
     'django.forms',
+    'axes',
+    'captcha',
 )
 
 
@@ -995,4 +999,15 @@ JSON_API_FORMAT_FIELD_NAMES = 'dasherize'
 JSON_API_UNIFORM_EXCEPTIONS = True
 
 # Don't show url warnings
-SILENCED_SYSTEM_CHECKS = ['urls.W002']
+SILENCED_SYSTEM_CHECKS = ['urls.W002', 'captcha.recaptcha_test_key_error']
+
+AXES_LOCKOUT_URL = '/admin/locked/'
+AXES_FAILURE_LIMIT = 10
+AXES_COOLOFF_TIME = datetime.timedelta(minutes=10)
+AXES_META_PRECEDENCE_ORDER = [
+    'HTTP_X_FORWARDED_FOR',
+    'REMOTE_ADDR',
+]
+
+RECAPTCHA_PRIVATE_KEY = "6LdJvSUTAAAAALYWDHKOyhRkSt8MOAOW9ScSPcjS"
+RECAPTCHA_PUBLIC_KEY = "6LdJvSUTAAAAAMLwr45uU-qD7IScJM3US0J_RZQM"

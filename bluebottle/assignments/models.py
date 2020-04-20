@@ -11,7 +11,7 @@ import pytz
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
-from bluebottle.files.fields import DocumentField
+from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
@@ -209,7 +209,7 @@ class Applicant(Contribution):
     time_spent = models.FloatField(_('time spent'), null=True, blank=True)
     transitions = TransitionManager(ApplicantTransitions, 'status')
 
-    document = DocumentField(blank=True, null=True)
+    document = PrivateDocumentField(blank=True, null=True)
 
     class Meta:
         verbose_name = _("Applicant")

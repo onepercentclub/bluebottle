@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block usertools %}{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+
+{% block content %}
+
+<p>
+  {% blocktrans %}
+      We detected an abnormal amount of failed login attempts. Please verify you are not a script.
+  {% endblocktrans %}
+</p>
+<form action="." method="post">
+            {% csrf_token %}
+
+            {{ form.captcha.errors }}
+            {{ form.captcha }}
+
+            <div class="form-actions">
+                <input type="submit" value="Submit" />
+            </div>
+        </form>
+
+{% endblock %}

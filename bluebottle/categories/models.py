@@ -1,6 +1,7 @@
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
@@ -44,14 +45,34 @@ class Category(models.Model):
             .filter(status__slug__in=['campaign', 'done-complete', 'done-incomplete', 'voting', 'voting-done'])
 
 
-class CategoryContent(SortableMixin):
+class CategoryContent(SortableMixin, TranslatableModel):
     category = models.ForeignKey(Category, related_name='contents')
-    title = models.CharField(_('title'), max_length=60, help_text=_("Max: %(chars)s characters.") % {'chars': 60})
-    description = models.TextField(_('description'),
-                                   max_length=190,
-                                   blank=True,
-                                   default='',
-                                   help_text=_("Max: %(chars)s characters.") % {'chars': 190})
+    title_old = models.CharField(
+        _('title'),
+        max_length=60,
+        help_text=_("Max: %(chars)s characters.") % {'chars': 60})
+    description_old = models.TextField(
+        _('description'),
+        max_length=190,
+        blank=True,
+        default='',
+        help_text=_("Max: %(chars)s characters.") % {'chars': 190})
+
+    translations = TranslatedFields(
+        title=models.CharField(
+            _('title'),
+            max_length=60,
+            help_text=_("Max: %(chars)s characters.") % {'chars': 60}
+        ),
+        description=models.TextField(
+            _('description'),
+            max_length=190,
+            blank=True,
+            default='',
+            help_text=_("Max: %(chars)s characters.") % {'chars': 190}
+        )
+    )
+
     image = ImageField(_('image'),
                        max_length=255,
                        blank=True,

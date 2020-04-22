@@ -149,6 +149,10 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 3)
         self.assertEqual(mail.outbox[2].subject, 'Your crowdfunding campaign deadline passed')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
+        url = 'http://testserver/en/initiatives/activities/details/funding/{}/{}'.format(
+            self.funding.id, self.funding.slug
+        )
+        self.assertTrue(url in mail.outbox[0].body)
 
     def test_enough_donations(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(300, 'EUR'))

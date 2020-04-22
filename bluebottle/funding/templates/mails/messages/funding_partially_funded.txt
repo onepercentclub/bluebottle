@@ -9,3 +9,7 @@
         We will send you a follow-up email with more information soon.
     {% endblocktrans %}
 {% endblock content %} 
+
+{% block action %}
+   {% trans 'Go to campaign' context 'email' %}: {{ obj.get_absolute_url }}
+{% endblock %}`

@@ -393,8 +393,8 @@ class StripePayoutAccount(PayoutAccount):
                 if self.status != PayoutAccountTransitions.values.rejected:
                     self.transitions.reject()
             elif getattr(self.account.requirements, 'disabled_reason', None):
-                if self.status != PayoutAccountTransitions.values.rejected:
-                    self.transitions.reject()
+                if self.status != PayoutAccountTransitions.values.incomplete:
+                    self.transitions.set_incomplete()
             elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
                 if self.status != PayoutAccountTransitions.values.verified:
                     self.transitions.verify()

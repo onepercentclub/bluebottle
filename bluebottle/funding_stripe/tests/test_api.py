@@ -359,7 +359,14 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['data']['meta']['required-fields'],
-            [u'country', u'external_accounts', u'individual.dob']
+            [
+                u'country',
+                u'external_accounts',
+                u'individual.verification.additional_document',
+                u'document_type',
+                u'individual.verification.document.front',
+                u'individual.dob'
+            ]
         )
         self.assertEqual(
             data['data']['attributes']['account']['individual']['first_name'],
@@ -402,7 +409,14 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['data']['meta']['required-fields'],
-            [u'country', u'external_accounts', u'individual.dob']
+            [
+                u'country',
+                u'external_accounts',
+                u'individual.verification.additional_document',
+                u'document_type',
+                u'individual.verification.document.front',
+                u'individual.dob'
+            ]
         )
         self.assertEqual(
             data['data']['attributes']['account']['individual']['first_name'],

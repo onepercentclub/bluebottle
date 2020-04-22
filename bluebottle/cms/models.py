@@ -27,6 +27,7 @@ class ResultPage(TranslatableModel):
         'ProjectMapBlockPlugin',
         'ProjectsBlockPlugin',
         'QuotesBlockPlugin',
+        'ActivitiesBlockPlugin',
         'ShareResultsBlockPlugin',
         'StatsBlockPlugin',
         'SurveyBlockPlugin',

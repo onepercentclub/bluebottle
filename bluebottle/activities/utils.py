@@ -72,6 +72,7 @@ class BaseActivitySerializer(ModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'owner',
+            'image',
             'initiative',
             'initiative.place',
             'initiative.image',

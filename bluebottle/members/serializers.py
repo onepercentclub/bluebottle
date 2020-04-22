@@ -140,9 +140,13 @@ class UserPreviewSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         if self.parent.__class__.__name__ == 'ReactionSerializer':
             # For some reason self.parent.instance doesn't work on ReactionSerializer
-            wallpost = self.parent.parent.parent.instance
-            if wallpost.anonymized:
-                return {"id": 0, "is_anonymous": True}
+            if self.parent.instance:
+                if self.parent.instance.anonymized:
+                    return {"id": 0, "is_anonymous": True}
+            else:
+                wallpost = self.parent.parent.parent.instance
+                if wallpost.anonymized:
+                    return {"id": 0, "is_anonymous": True}
         if self.parent and self.parent.instance and getattr(self.parent.instance, 'anonymized', False):
             return {"id": 0, "is_anonymous": True}
         return BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)

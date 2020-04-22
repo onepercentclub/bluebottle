@@ -235,7 +235,7 @@ class SystemWallpost(Wallpost):
         return Truncator(self.text).words(10) or super(SystemWallpost, self).__unicode__()
 
 
-class Reaction(models.Model):
+class Reaction(AnonymizationMixin, models.Model):
     """
     A user reaction or comment to a Wallpost. This model is based on
     the Comments model from django.contrib.comments.

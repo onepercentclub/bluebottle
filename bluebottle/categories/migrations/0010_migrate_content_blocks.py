@@ -9,12 +9,27 @@ from tenant_extras.middleware import tenant_translation
 
 
 def migrate_content(apps, schema_editor):
-    CategoryContent = apps.get_model('categories', 'CategoryContent')
-    CategoryContentTranslation = apps.get_model('categories', 'CategoryContentTranslation')
     Client = apps.get_model('clients', 'Client')
     tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
-
     languages = get_languages()
+
+    Category = apps.get_model('categories', 'Category')
+    CategoryTranslation = apps.get_model('categories', 'CategoryTranslation')
+
+    for block in Category.objects.all():
+        for (language, _long_language) in languages:
+            activate(language)
+            _trans._active.value = tenant_translation(language, tenant.client_name)
+            CategoryTranslation.objects.create(
+                master_id=block.pk,
+                language_code=language,
+                title=block.title_old,
+                description=block.description_old
+            )
+
+    CategoryContent = apps.get_model('categories', 'CategoryContent')
+    CategoryContentTranslation = apps.get_model('categories', 'CategoryContentTranslation')
+
     for block in CategoryContent.objects.all():
         for (language, _long_language) in languages:
             activate(language)
@@ -24,6 +39,8 @@ def migrate_content(apps, schema_editor):
                 language_code=language,
                 title=block.title_old,
                 description=block.description_old,
+                link_url=block.link_url_old,
+                link_text=block.link_text_old,
             )
 
 

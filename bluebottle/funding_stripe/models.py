@@ -406,11 +406,11 @@ class StripePayoutAccount(PayoutAccount):
                     # Submit to transition to pending
                     self.transitions.submit()
             else:
-                if self.status != PayoutAccountTransitions.values.rejected:
-                    self.transitions.reject()
+                if self.status != PayoutAccountTransitions.values.incomplete:
+                    self.transitions.set_incomplete()
         else:
-            if self.status != PayoutAccountTransitions.values.rejected:
-                self.transitions.reject()
+            if self.status != PayoutAccountTransitions.values.incomplete:
+                self.transitions.set_incomplete()
 
         externals = self.account['external_accounts']['data']
         for external in externals:

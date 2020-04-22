@@ -313,8 +313,11 @@ class StripePayoutAccount(PayoutAccount):
             if 'individual.verification.document' in fields:
                 fields.remove('individual.verification.document')
 
-            fields.append('document_type')
-            fields.append('individual.verification.document.front')
+            if 'document_type' not in fields:
+                fields.append('document_type')
+
+            if 'individual.verification.document.front' not in fields:
+                fields.append('individual.verification.document.front')
 
             if self.document_type in self.document_spec['document_types_requiring_back']:
                 fields.append('individual.verification.document.back')

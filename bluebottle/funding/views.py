@@ -268,7 +268,7 @@ class PlainPayoutAccountDocumentDetail(PrivateFileView):
     field = 'file'
 
 
-class DonationList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
+class DonationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     queryset = Donation.objects.all()
     serializer_class = DonationCreateSerializer
 

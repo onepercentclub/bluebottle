@@ -1,6 +1,5 @@
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-
 from rest_framework import serializers
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
@@ -18,18 +17,18 @@ from bluebottle.projects.models import (
     ProjectBudgetLine, Project, ProjectImage,
     ProjectPlatformSettings, ProjectSearchFilter, ProjectLocation,
     ProjectAddOn, ProjectCreateTemplate)
+from bluebottle.projects.permissions import (
+    CanExportSupportersPermission
+)
 from bluebottle.tasks.models import Task, TaskMember, Skill
+from bluebottle.utils.fields import SafeField
 from bluebottle.utils.serializers import (
     MoneySerializer, ResourcePermissionField,
     RelatedResourcePermissionField,
 )
-from bluebottle.utils.fields import SafeField
-from bluebottle.projects.permissions import (
-    CanExportSupportersPermission
-)
 from bluebottle.utils.utils import get_class
-from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 from bluebottle.votes.models import Vote
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
@@ -87,13 +86,12 @@ class ProjectPermissionsSerializer(serializers.Serializer):
     def get_attribute(self, obj):
         return obj
 
-    rewards = RelatedResourcePermissionField('reward-list')
     donations = RelatedResourcePermissionField('order-manage-list')
     tasks = RelatedResourcePermissionField('task-list')
     manage_project = RelatedResourcePermissionField('project_manage_detail', view_args=('slug', ))
 
     class Meta:
-        fields = ('rewards', 'donations', 'tasks', 'manage_project')
+        fields = ('donations', 'tasks', 'manage_project')
 
 
 class BaseProjectAddOnSerializer(serializers.ModelSerializer):

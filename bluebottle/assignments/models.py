@@ -192,7 +192,7 @@ class Assignment(Activity):
         elif self.capacity \
                 and len(self.accepted_applicants) < self.capacity \
                 and self.status == AssignmentTransitions.values.full \
-                and self.registration_deadline >= now().date():
+                and (self.registration_deadline or self.date) >= now().date():
             self.transitions.reopen()
             if save:
                 self.save()

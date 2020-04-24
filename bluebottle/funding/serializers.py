@@ -234,12 +234,12 @@ class FundingListSerializer(BaseActivityListSerializer):
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
         resource_name = 'activities/fundings'
 
-    included_serializers = {
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
-        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
-        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-    }
+    included_serializers = dict(
+        BaseActivitySerializer.included_serializers,
+        **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        }
+    )
 
 
 class TinyFundingSerializer(BaseTinyActivitySerializer):

@@ -802,20 +802,30 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         first = InitiativeFactory.create(status='approved')
         FundingFactory.create(
             initiative=first,
+            review_status='approved',
             deadline=datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
         )
+        FundingFactory.create(
+            initiative=first,
+            review_status='submitted',
+            deadline=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+        )
+
         second = InitiativeFactory.create(status='approved')
         EventFactory.create(
             initiative=second,
+            review_status='approved',
             start=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
         )
         third = InitiativeFactory.create(status='approved')
         EventFactory.create(
             initiative=third,
+            review_status='approved',
             start=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
         )
         AssignmentFactory.create(
             initiative=third,
+            review_status='approved',
             date=datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
         )
 

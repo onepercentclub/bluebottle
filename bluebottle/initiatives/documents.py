@@ -103,6 +103,15 @@ class InitiativeDocument(DocType):
         if isinstance(related_instance, Activity):
             return [related_instance.initiative]
 
+    def prepare_activities(self, instance):
+        return [
+            {
+                'id': activity.pk,
+                'title': activity.title,
+                'contribution_date': activity.contribution_date
+            } for activity in instance.activities.filter(review_status='approved')
+        ]
+
     def prepare_activity_owners(self, instance):
         return [
             {'id': activity.owner.pk, 'full_name': activity.owner.full_name}

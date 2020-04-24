@@ -307,15 +307,20 @@ class StripePayoutAccount(PayoutAccount):
                     'tos_acceptance.ip', 'business_profile.url', 'business_profile.mcc',
                 ]
             ]
+            if 'individual.verification.additional_document' not in fields:
+                fields.append('individual.verification.additional_document')
 
             if 'individual.verification.document' in fields:
                 fields.remove('individual.verification.document')
 
+            if 'document_type' not in fields:
                 fields.append('document_type')
+
+            if 'individual.verification.document.front' not in fields:
                 fields.append('individual.verification.document.front')
 
-                if self.document_type in self.document_spec['document_types_requiring_back']:
-                    fields.append('individual.verification.document.back')
+            if self.document_type in self.document_spec['document_types_requiring_back']:
+                fields.append('individual.verification.document.back')
 
             dob_fields = [field for field in fields if '.dob' in field]
             if dob_fields:

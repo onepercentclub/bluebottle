@@ -28,7 +28,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 'requirements': bunch.bunchify({
                     'eventually_due': [
                         'external_accounts',
-                        'individual.verification.document.front',
+                        'individual.verification.document',
                         'document_type',
                     ]
                 }),
@@ -150,7 +150,12 @@ class ConnectAccountTestCase(BluebottleTestCase):
             self.check.save()
             self.assertEqual(
                 list(self.check.required),
-                ['individual.verification.document.front', 'document_type', 'external_account']
+                [
+                    'individual.verification.document.front',
+                    'document_type',
+                    'individual.verification.additional_document',
+                    'external_account'
+                ]
             )
 
     def test_disabled(self):

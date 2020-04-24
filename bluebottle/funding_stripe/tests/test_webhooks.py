@@ -689,7 +689,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
         self.assertEqual(payout_account.status, 'pending')
 
-    def test_rejected(self):
+    def test_disabled(self):
         data = {
             "object": {
                 "id": self.payout_account.account_id,
@@ -714,15 +714,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
-        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.rejected)
-
-        message = mail.outbox[0]
-        self.assertEqual(
-            message.subject, u'Your identity verification needs some work'
-        )
-        self.assertTrue(
-            '/initiatives/activities/funding/kyc' in message.body
-        )
+        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.incomplete)
 
     def test_document_rejected(self):
         data = {

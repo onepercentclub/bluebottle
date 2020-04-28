@@ -23,7 +23,12 @@ from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
-from bluebottle.utils.fields import SafeField, ValidationErrorsField, RequiredErrorsField
+from bluebottle.utils.fields import (
+    SafeField,
+    ValidationErrorsField,
+    RequiredErrorsField,
+    FSMField
+)
 from bluebottle.utils.serializers import (
     ResourcePermissionField, NoCommitMixin,
     FilteredPolymorphicResourceRelatedField)
@@ -102,6 +107,7 @@ class InitiativeMapSerializer(serializers.ModelSerializer):
 
 
 class InitiativeSerializer(NoCommitMixin, ModelSerializer):
+    status = FSMField(read_only=True)
     image = ImageField(required=False, allow_null=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
@@ -166,6 +172,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
 
 class InitiativeListSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
     image = ImageField(required=False, allow_null=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))

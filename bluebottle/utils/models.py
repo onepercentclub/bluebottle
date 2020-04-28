@@ -2,6 +2,7 @@ from operator import attrgetter
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
@@ -157,6 +158,9 @@ class ValidatedModelMixin(object):
     @property
     def required(self):
         for field in self.required_fields:
-            value = attrgetter(field)(self)
-            if value in (None, ''):
+            try:
+                value = attrgetter(field)(self)
+                if value in (None, ''):
+                    yield field
+            except ObjectDoesNotExist:
                 yield field

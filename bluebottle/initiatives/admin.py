@@ -84,7 +84,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
 
-    readonly_fields = ['link', 'created', 'updated']
+    readonly_fields = ['link', 'created', 'updated', 'valid', 'complete']
 
     ordering = ('-created', )
 
@@ -138,6 +138,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             (_('Organization'), {'fields': (
                 'has_organization', 'organization', 'organization_contact')}),
             (_('Review'), {'fields': (
+                'valid', 'complete',
                 'reviewer', 'activity_manager',
                 'promoter', 'states')}),
         )
@@ -147,6 +148,36 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     def link(self, obj):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title)
     link.short_description = _("Show on site")
+
+    def valid(self, obj):
+        errors = list(obj.errors)
+
+        if not errors and obj.review_states.initiative_is_approved():
+            return '-'
+
+        if not obj.review_states.initiative_is_approved():
+            errors.append(_('The initiative is not approved'))
+
+        return format_html("<ul>{}</ul>", format_html("".join([
+            format_html(u"<li>{}</li>", value) for value in errors
+        ])))
+
+    valid.short_description = _('Validation errors')
+
+    def complete(self, obj):
+        required = list(obj.required)
+        if not required:
+            return '-'
+
+        errors = [
+            obj._meta.get_field(field).verbose_name
+            for field in required
+        ]
+
+        return format_html("<ul>{}</ul>", format_html("".join([
+            format_html(u"<li>{}</li>", value) for value in errors
+        ])))
+    complete.short_description = _('Missing data')
 
     class Media:
         js = ('admin/js/inline-activities-add.js',)

@@ -26,7 +26,7 @@ class ReviewStateMachine(ModelStateMachine):
     initiate = Transition(EmptyState(), draft)
 
     submit = Transition(
-        draft,
+        [draft, needs_work],
         submitted,
         name=_('Submit'),
         conditions=[is_complete],
@@ -40,6 +40,15 @@ class ReviewStateMachine(ModelStateMachine):
         automatic=False,
         effects=[ApproveActivity]
     )
+
+    request_changes = Transition(
+        submitted,
+        needs_work,
+        name=_('Request Changes'),
+        conditions=[],
+        automatic=False,
+    )
+
     close = Transition(
         (draft, submitted, approved),
         closed,

@@ -103,6 +103,10 @@ class Assignment(Activity):
             return self.date
 
     @property
+    def contribution_date(self):
+        return self.date
+
+    @property
     def stats(self):
         contributions = self.contributions.instance_of(Applicant)
 
@@ -231,9 +235,6 @@ class Applicant(Contribution):
 
     def save(self, *args, **kwargs):
         created = self.pk is None
-
-        if not self.contribution_date:
-            self.contribution_date = self.activity.date
 
         # Fail the self if hours are set to 0
         if self.status == ApplicantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:

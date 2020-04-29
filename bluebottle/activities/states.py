@@ -1,6 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition
+from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition
 from bluebottle.fsm.effects import Effect, TransitionEffect, RelatedTransitionEffect
 
 from bluebottle.activities.models import Organizer, Activity
@@ -17,18 +17,19 @@ class CreateOrganizer(Effect):
         return unicode(_('Create organizer'))
 
 
-class ReviewStateMachine(ModelStateMachine):
-    field = 'review_status'
-    name = 'review_states'
-
+class ActivityStateMachine(ModelStateMachine):
     model = Activity
 
     draft = State(_('draft'), 'draft')
     submitted = State(_('submitted'), 'submitted')
     needs_work = State(_('needs work'), 'needs_work')
-    approved = State(_('approved'), 'approved')
-    closed = State(_('closed'), 'closed')
+
+    rejected = State(_('rejected'), 'rejected')
     deleted = State(_('deleted'), 'deleted')
+
+    open = State(_('open'), 'open', _('Activity is open, and accepting contributions'))
+    succeeded = State(_('succeeded'), 'succeeded', _('The activity is succeeded'))
+    closed = State(_('closed'), 'closed')
 
     def is_complete(self):
         return not list(self.instance.required)
@@ -51,7 +52,8 @@ class ReviewStateMachine(ModelStateMachine):
     initiate = Transition(
         EmptyState(),
         draft,
-        name=_('Initiate')
+        name=_('Initiate'),
+        effects=[CreateOrganizer]
     )
 
     submit = Transition(
@@ -59,63 +61,46 @@ class ReviewStateMachine(ModelStateMachine):
         submitted,
         name=_('Submit'),
         effects=[
-            TransitionEffect('approve', 'review_states', conditions=[initiative_is_approved])
+            TransitionEffect('approve', conditions=[initiative_is_approved])
         ]
     )
 
     approve = Transition(
-        (draft, submitted, ),
-        approved,
+        [draft, submitted, rejected],
+        open,
+        automatic=False,
+        permission=is_staff,
         name=_('Approve'),
         effects=[
-            TransitionEffect('approve'),
             RelatedTransitionEffect('organizer', 'succeed')
         ]
     )
 
-    close = Transition(
-        (draft, submitted, approved, ),
-        closed,
-        name=_('Close'),
+    reject = Transition(
+        AllStates(),
+        rejected,
+        name=_('Reject'),
         automatic=False,
         permission=is_staff,
-        effects=[TransitionEffect('review', 'states'), RelatedTransitionEffect('organizer', 'close')]
+        effects=[RelatedTransitionEffect('organizer', 'fail')]
+    )
+    accept = Transition(
+        rejected,
+        draft,
+        name=_('Accept'),
+        automatic=False,
+        permission=is_staff,
+        effects=[RelatedTransitionEffect('organizer', 'reset')]
     )
 
     delete = Transition(
-        draft,
-        closed,
+        [draft, needs_work, submitted],
+        deleted,
         name=_('Delete'),
         automatic=False,
         permissions=is_owner,
-        effects=[TransitionEffect('delete', 'states'), RelatedTransitionEffect('organizer', 'close')]
+        effects=[RelatedTransitionEffect('organizer', 'fail')]
     )
-
-    reopen = Transition(
-        closed,
-        draft,
-        name=_('Reopen'),
-        automatic=False,
-        effects=[RelatedTransitionEffect('organizers', 'reset')]
-    )
-
-
-class ActivityStateMachine(ModelStateMachine):
-    in_review = State(_('in review'), 'in_review', _('Activity is not approved yet'))
-    open = State(_('open'), 'open', _('Activity is open, and accepting contributions'))
-    succeeded = State(_('succeeded'), 'succeeded', _('The activity is succeeded'))
-    deleted = State(_('deleted'), 'deleted', _('The activity has been deleted'))
-    closed = State(_('closed'), 'closed', _('The activity has been closed, and is not longer visible on the platform'))
-
-    initiate = Transition(
-        EmptyState(),
-        in_review,
-        effects=[CreateOrganizer]
-    )
-
-    approve = Transition(in_review, open)
-    delete = Transition(in_review, deleted)
-    unreview = Transition((open, succeeded, closed, ), in_review)
 
 
 class ContributionStateMachine(ModelStateMachine):
@@ -138,7 +123,10 @@ class OrganizerStateMachine(ContributionStateMachine):
         (ContributionStateMachine.new, ContributionStateMachine.failed, ),
         ContributionStateMachine.succeeded
     )
-
+    fail = Transition(
+        AllStates(),
+        ContributionStateMachine.failed
+    )
     reset = Transition(
         (ContributionStateMachine.succeeded, ContributionStateMachine.closed, ),
         ContributionStateMachine.new,

@@ -2,7 +2,7 @@ from bluebottle.notifications.messages import TransitionMessage
 from django.utils.translation import ugettext_lazy as _
 
 
-class InitiativeApproveOwnerMessage(TransitionMessage):
+class InitiativeApprovedOwnerMessage(TransitionMessage):
     subject = _('Your initiative "{initiative_title}" has been approved!')
     template = 'messages/initiative_approved_owner'
     context = {
@@ -18,7 +18,7 @@ class InitiativeNeedsWorkOwnerMessage(TransitionMessage):
     }
 
 
-class InitiativeClosedOwnerMessage(TransitionMessage):
+class InitiativeRejectedOwnerMessage(TransitionMessage):
     subject = _('Your initiative "{initiative_title}" has been closed')
     template = 'messages/initiative_closed_owner'
     context = {

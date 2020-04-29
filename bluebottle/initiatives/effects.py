@@ -4,17 +4,28 @@ from bluebottle.fsm.effects import Effect, TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger
 
 
-class ApproveActivity(Effect):
+class ApproveActivities(Effect):
     post_save = True
     conditions = []
 
     def execute(self):
-        for activity in self.instance.activities.filter(review_status='submitted'):
-            activity.review_states.approve()
-            activity.save()
+        for activity in self.instance.activities.filter(status='submitted'):
+            activity.states.approve(save=True)
 
     def __unicode__(self):
         return _('Approve related activities')
+
+
+class RejectActivities(Effect):
+    post_save = True
+    conditions = []
+
+    def execute(self):
+        for activity in self.instance.activities.all():
+            activity.states.reject(save=True)
+
+    def __unicode__(self):
+        return _('Reject related activities')
 
 
 class Complete(ModelChangedTrigger):

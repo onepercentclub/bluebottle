@@ -3,7 +3,7 @@ from bluebottle.fsm.triggers import ModelChangedTrigger
 
 
 class Complete(ModelChangedTrigger):
-    effects = [TransitionEffect('submit', 'review_states')]
+    effects = [TransitionEffect('submit')]
 
     @property
     def is_valid(self):

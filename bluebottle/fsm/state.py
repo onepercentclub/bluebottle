@@ -40,7 +40,7 @@ class BaseTransition(object):
                 _('Cannot transition from {} to {}').format(machine.state, self.target)
             )
 
-        if machine.state not in self.source_values:
+        if machine.state not in self.source_values and AllStates() not in self.sources:
             raise TransitionNotPossible(
                 _('Cannot transition from {} to {}').format(machine.state, self.target)
             )
@@ -142,6 +142,23 @@ class EmptyState(State):
 
     def __repr__(self):
         return '<EmptyState {}>'.format(self.name)
+
+
+class AllStates(State):
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(AllStates, cls).__new__(
+                cls, *args, **kwargs)
+
+        return cls._instance
+
+    def __init__(self):
+        super(AllStates, self).__init__('all', '')
+
+    def __repr__(self):
+        return '<All States {}>'.format(self.name)
 
 
 class StateMachineMeta(type):

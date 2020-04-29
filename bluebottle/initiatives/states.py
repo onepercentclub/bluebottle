@@ -1,9 +1,12 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition
-from bluebottle.initiatives.effects import ApproveActivity
+from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition, AllStates
+from bluebottle.initiatives.effects import ApproveActivities, RejectActivities
+from bluebottle.initiatives.messages import InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage
 
 from bluebottle.initiatives.models import Initiative
+
+from bluebottle.notifications.effects import NotificationEffect
 
 
 class ReviewStateMachine(ModelStateMachine):
@@ -14,14 +17,28 @@ class ReviewStateMachine(ModelStateMachine):
     submitted = State(_('submitted'), 'submitted')
     needs_work = State(_('needs work'), 'needs_work')
     approved = State(_('approved'), 'approved')
-    closed = State(_('closed'), 'closed')
-    deleted = State(_('deleted'), 'deleted')
+    rejected = State(_('closed'), 'closed')
 
     def is_complete(self):
+        if self.instance.organization and list(self.instance.organization.required):
+            return False
+
+        if self.instance.organization_contact and list(self.instance.organization_contact.required):
+            return False
+
         return not list(self.instance.required)
 
     def is_valid(self):
+        if self.instance.organization and list(self.instance.organization.errors):
+            return False
+
+        if self.instance.organization_contact and list(self.instance.organization_contact.errors):
+            return False
+
         return not list(self.instance.errors)
+
+    def is_staff(self, user):
+        return user.is_staff
 
     initiate = Transition(EmptyState(), draft)
 
@@ -29,16 +46,17 @@ class ReviewStateMachine(ModelStateMachine):
         [draft, needs_work],
         submitted,
         name=_('Submit'),
-        conditions=[is_complete],
+        conditions=[is_complete, is_valid],
         automatic=False
     )
     approve = Transition(
         submitted,
         approved,
         name=_('Approve'),
-        conditions=[is_complete],
+        conditions=[is_complete, is_valid],
         automatic=False,
-        effects=[ApproveActivity]
+        permission=is_staff,
+        effects=[ApproveActivities, NotificationEffect(InitiativeApprovedOwnerMessage)]
     )
 
     request_changes = Transition(
@@ -48,16 +66,18 @@ class ReviewStateMachine(ModelStateMachine):
         conditions=[],
         automatic=False,
     )
-
-    close = Transition(
-        (draft, submitted, approved),
-        closed,
-        name=_('Close'),
-        automatic=False
+    reject = Transition(
+        AllStates(),
+        rejected,
+        name=_('Reject'),
+        automatic=False,
+        permission=is_staff,
+        effects=[RejectActivities, NotificationEffect(InitiativeRejectedOwnerMessage)]
     )
-    reopen = Transition(
-        closed,
+    accept = Transition(
+        rejected,
         draft,
-        name=_('Reopen'),
-        automatic=False
+        name=_('Accept'),
+        automatic=False,
+        permission=is_staff,
     )

@@ -35,7 +35,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     status = models.CharField(max_length=40)
 
-    review_status = models.CharField(max_length=40)
+    review_status = models.CharField(max_length=40, default='draft')
 
     initiative = models.ForeignKey(Initiative, related_name='activities')
 

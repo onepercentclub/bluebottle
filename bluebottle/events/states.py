@@ -88,10 +88,11 @@ class EventStateMachine(ActivityStateMachine):
     is_running = State(_('running'), 'running', _('The activity is currently running'))
 
     approve = Transition(
-        ActivityStateMachine.in_review,
+        [ActivityStateMachine.draft, ActivityStateMachine.submitted, ActivityStateMachine.rejected],
         ActivityStateMachine.open,
         name=_('Approve'),
         effects=[
+            RelatedTransitionEffect('organizer', 'succeed'),
             TransitionEffect(
                 'close',
                 conditions=[should_finish, has_no_participants]
@@ -123,11 +124,11 @@ class EventStateMachine(ActivityStateMachine):
     )
     close = Transition(
         (
+            ActivityStateMachine.draft,
             full,
             is_running,
             ActivityStateMachine.open,
             ActivityStateMachine.succeeded,
-            ActivityStateMachine.in_review,
         ),
         ActivityStateMachine.closed,
         effects=[NotificationEffect(EventClosedOwnerMessage)]
@@ -281,5 +282,5 @@ class ParticipantStateMachine(ContributionStateMachine):
     reset = Transition(
         ContributionStateMachine.succeeded,
         ContributionStateMachine.new,
-        effects=[ResetTimeSpent, UnFollowActivityEffect]
+        effects=[ResetTimeSpent]
     )

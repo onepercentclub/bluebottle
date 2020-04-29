@@ -86,7 +86,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'valid',
         'complete',
         'status',
-        'review_status',
         'transition_date',
         'stats_data']
 
@@ -100,21 +99,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'stats_data',
     )
 
-    def get_status_fields(self, request, obj=None):
-        if obj and obj.review_status not in [
-            ActivityReviewTransitions.values.approved,
-            ActivityReviewTransitions.values.closed
-        ]:
-            return [
-                'complete',
-                'valid',
-                'review_states',
-            ]
-        return [
-            'complete',
-            'valid',
-            'states',
-        ]
+    status_fields = (
+        'complete',
+        'valid',
+        'review_states',
+    )
 
     detail_fields = (
         'description',
@@ -125,7 +114,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return (
             (_('Basic'), {'fields': self.basic_fields}),
             (_('Details'), {'fields': self.detail_fields}),
-            (_('Status'), {'fields': self.get_status_fields(request, obj)}),
+            (_('Status'), {'fields': self.status_fields}),
         )
 
     def stats_data(self, obj):

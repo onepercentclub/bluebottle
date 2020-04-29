@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework import filters
 
-from bluebottle.utils.permissions import IsAuthenticated
+from bluebottle.utils.permissions import IsAuthenticated, IsOwnerOrReadOnly, IsOwner
 
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
 from rest_framework_json_api.parsers import JSONParser
@@ -46,7 +46,7 @@ class OrganizationContactDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIVie
 
     renderer_classes = (BluebottleJSONAPIRenderer, )
     parser_classes = (JSONParser, )
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, IsOwner)
     authentication_classes = (
         JSONWebTokenAuthentication,
     )
@@ -86,7 +86,7 @@ class OrganizationDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIView):
     model = Organization
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
     renderer_classes = (BluebottleJSONAPIRenderer, )
     parser_classes = (JSONParser, )
     authentication_classes = (

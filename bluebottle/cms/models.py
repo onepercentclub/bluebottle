@@ -27,6 +27,7 @@ class ResultPage(TranslatableModel):
         'ProjectMapBlockPlugin',
         'ProjectsBlockPlugin',
         'QuotesBlockPlugin',
+        'ActivitiesBlockPlugin',
         'ShareResultsBlockPlugin',
         'StatsBlockPlugin',
         'SurveyBlockPlugin',
@@ -549,7 +550,14 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         metadata_description=models.TextField(
             null=True, blank=True),
         metadata_keywords=models.CharField(
-            max_length=300, null=True, blank=True)
+            max_length=300, null=True, blank=True),
+        start_page=models.CharField(
+            max_length=100,
+            null=True,
+            blank=True,
+            help_text=_('Slug of the start initiative page')
+        ),
+
     )
 
     class Meta:

@@ -307,15 +307,20 @@ class StripePayoutAccount(PayoutAccount):
                     'tos_acceptance.ip', 'business_profile.url', 'business_profile.mcc',
                 ]
             ]
+            if 'individual.verification.additional_document' not in fields:
+                fields.append('individual.verification.additional_document')
 
             if 'individual.verification.document' in fields:
                 fields.remove('individual.verification.document')
 
+            if 'document_type' not in fields:
                 fields.append('document_type')
+
+            if 'individual.verification.document.front' not in fields:
                 fields.append('individual.verification.document.front')
 
-                if self.document_type in self.document_spec['document_types_requiring_back']:
-                    fields.append('individual.verification.document.back')
+            if self.document_type in self.document_spec['document_types_requiring_back']:
+                fields.append('individual.verification.document.back')
 
             dob_fields = [field for field in fields if '.dob' in field]
             if dob_fields:
@@ -393,8 +398,8 @@ class StripePayoutAccount(PayoutAccount):
                 if self.status != PayoutAccountTransitions.values.rejected:
                     self.transitions.reject()
             elif getattr(self.account.requirements, 'disabled_reason', None):
-                if self.status != PayoutAccountTransitions.values.rejected:
-                    self.transitions.reject()
+                if self.status != PayoutAccountTransitions.values.incomplete:
+                    self.transitions.set_incomplete()
             elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
                 if self.status != PayoutAccountTransitions.values.verified:
                     self.transitions.verify()
@@ -406,11 +411,11 @@ class StripePayoutAccount(PayoutAccount):
                     # Submit to transition to pending
                     self.transitions.submit()
             else:
-                if self.status != PayoutAccountTransitions.values.rejected:
-                    self.transitions.reject()
+                if self.status != PayoutAccountTransitions.values.incomplete:
+                    self.transitions.set_incomplete()
         else:
-            if self.status != PayoutAccountTransitions.values.rejected:
-                self.transitions.reject()
+            if self.status != PayoutAccountTransitions.values.incomplete:
+                self.transitions.set_incomplete()
 
         externals = self.account['external_accounts']['data']
         for external in externals:

@@ -92,6 +92,11 @@ class SAMLAuthentication(BaseTokenAuthentication):
         return data
 
     def authenticate_request(self):
+        if 'saml_request_id' not in self.request.session:
+            error = 'SAML request id missing from session'
+            logger.error('Saml login error: {}'.format(error))
+            raise TokenAuthenticationError(error)
+
         try:
             self.auth.process_response(self.request.session['saml_request_id'])
         except OneLogin_Saml2_Error, e:
@@ -99,6 +104,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
             raise TokenAuthenticationError(e)
 
         if self.auth.is_authenticated():
+            del self.request.session['saml_request_id']
             user_data = self.auth.get_attributes()
             user_data['nameId'] = [self.auth.get_nameid()]
 

@@ -689,7 +689,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
         self.assertEqual(payout_account.status, 'pending')
 
-    def test_rejected(self):
+    def test_disabled(self):
         data = {
             "object": {
                 "id": self.payout_account.account_id,
@@ -714,15 +714,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
-        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.rejected)
-
-        message = mail.outbox[0]
-        self.assertEqual(
-            message.subject, u'Your identity verification needs some work'
-        )
-        self.assertTrue(
-            '/initiatives/activities/funding/kyc' in message.body
-        )
+        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.incomplete)
 
     def test_document_rejected(self):
         data = {
@@ -757,4 +749,35 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         )
         self.assertTrue(
             '/initiatives/activities/funding/kyc' in message.body
+        )
+
+    def test_no_account(self):
+        data = {
+            "object": {
+                "id": self.payout_account.account_id,
+                "object": "account"
+            }
+        }
+
+        self.connect_account.individual = None
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'account.updated', data
+            )
+        ):
+            with mock.patch('stripe.Account.retrieve', return_value=self.connect_account):
+                response = self.client.post(
+                    reverse('stripe-connect-webhook'),
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
+
+        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.incomplete)
+
+        self.assertEqual(
+            len(mail.outbox), 0
         )

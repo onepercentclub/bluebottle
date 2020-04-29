@@ -31,7 +31,6 @@ urlpatterns = [
     url(r'^phases_log/(?P<pk>\d+)$', ProjectPhaseLogDetail.as_view(),
         name='project_phase_log'),
 
-
     url(r'^themes/$', ProjectThemeList.as_view(), name='project_theme_list'),
     url(r'^used_themes/$', ProjectUsedThemeList.as_view(), name='project_used_theme_list'),
     url(r'^themes/(?P<pk>\d+)$', ProjectThemeDetail.as_view(),

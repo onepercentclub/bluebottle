@@ -177,6 +177,8 @@ class Geolocation(models.Model):
 
     position = PointField()
 
+    anonymized = False
+
     class JSONAPIMeta:
         resource_name = 'locations'
 

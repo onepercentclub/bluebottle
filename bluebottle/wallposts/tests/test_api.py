@@ -133,7 +133,6 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
                                     token=self.other_token)
-
         self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_filtering_on_wallpost_list(self):

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from operator import attrgetter
 
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -160,3 +161,13 @@ class ValidatedModelMixin(object):
             value = attrgetter(field)(self)
             if value in (None, ''):
                 yield field
+
+
+class AnonymizationMixin(object):
+
+    @property
+    def anonymized(self):
+        from bluebottle.members.models import MemberPlatformSettings
+        anonymization_age = MemberPlatformSettings.load().anonymization_age
+        if anonymization_age:
+            return self.created < (now() - timedelta(days=anonymization_age))

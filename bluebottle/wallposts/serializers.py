@@ -22,7 +22,7 @@ class ReactionSerializer(serializers.ModelSerializer):
     """
     Serializer for Wallpost Reactions.
     """
-    author = UserPreviewSerializer()
+    author = UserPreviewSerializer(read_only=True)
     text = ContentTextField()
     wallpost = serializers.PrimaryKeyRelatedField(queryset=Wallpost.objects)
 
@@ -112,7 +112,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
     please subclass it.
     """
     type = serializers.ReadOnlyField(source='wallpost_type', required=False)
-    author = UserPreviewSerializer()
+    author = UserPreviewSerializer(read_only=True)
     parent_type = WallpostContentTypeField(slug_field='model',
                                            source='content_type')
     parent_id = WallpostParentIdField(source='object_id')

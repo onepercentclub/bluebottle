@@ -8,7 +8,7 @@ from fluent_contents.rendering import render_placeholder
 
 from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.models import PublishableModel
+from bluebottle.utils.models import PublishableModel, AnonymizationMixin
 from bluebottle.utils.serializers import MLStripper
 
 
@@ -16,7 +16,7 @@ def get_languages():
     return properties.LANGUAGES
 
 
-class NewsItem(PublishableModel):
+class NewsItem(AnonymizationMixin, PublishableModel):
 
     title = models.CharField(_("Title"), max_length=200)
     slug = models.SlugField(_("Slug"))

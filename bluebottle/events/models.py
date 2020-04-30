@@ -124,9 +124,14 @@ class Event(Activity):
             if save:
                 self.save()
 
-    def save(self, *args, **kwargs):
+    @property
+    def current_end(self):
         if self.start and self.duration:
-            self.end = self.start + datetime.timedelta(hours=self.duration)
+            return self.start + datetime.timedelta(hours=self.duration)
+
+
+    def save(self, *args, **kwargs):
+        self.end = self.current_end
 
         self.check_capacity(save=False)
         return super(Event, self).save(*args, **kwargs)

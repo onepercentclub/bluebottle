@@ -66,7 +66,7 @@ class EventStateMachine(ActivityStateMachine):
 
     def should_finish(self):
         "the end time has passed"
-        return self.instance.end and self.instance.end < timezone.now()
+        return self.instance.current_end and self.instance.current_end < timezone.now()
 
     def should_start(self):
         "the start time has passed"
@@ -165,7 +165,7 @@ class ParticipantStateMachine(ContributionStateMachine):
 
     def event_is_finished(self):
         "event is finished"
-        return self.instance.activity.end < timezone.now()
+        return self.instance.activity.current_end < timezone.now()
 
     def event_is_not_finished(self):
         "event is not finished"

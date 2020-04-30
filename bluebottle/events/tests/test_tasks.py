@@ -1,8 +1,9 @@
 from datetime import timedelta
+import mock
 
 from django.core import mail
 from django.db import connection
-from django.utils.timezone import now
+from django.utils import timezone
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.events.models import Event
@@ -28,15 +29,12 @@ class EventTasksTestCase(BluebottleTestCase):
         self.initiative.save()
 
     def test_event_start_task(self):
-        start = now() - timedelta(hours=1)
+        start = timezone.now() - timedelta(hours=1)
         event = EventFactory.create(
             initiative=self.initiative,
             start=start,
             duration=3
         )
-
-        event.review_transitions.submit()
-        event.save()
 
         ParticipantFactory.create(activity=event)
 
@@ -47,25 +45,22 @@ class EventTasksTestCase(BluebottleTestCase):
         self.assertEqual(event.status, 'running')
 
     def test_event_start_task_no_participants(self):
-        start = now() - timedelta(hours=1)
+        start = timezone.now() - timedelta(hours=1)
         event = EventFactory.create(
             initiative=self.initiative,
             start=start,
             duration=3
         )
 
-        event.review_transitions.submit()
-        event.save()
-
         self.assertEqual(event.status, 'open')
         check_event_start()
         check_event_end()
         event = Event.objects.get(pk=event.pk)
-        self.assertEqual(event.status, 'closed')
+        self.assertEqual(event.status, 'open')
 
     def test_event_end_task(self):
         user = BlueBottleUserFactory.create(first_name='Nono')
-        start = now() - timedelta(hours=5)
+        start = timezone.now() + timedelta(hours=5)
         event = EventFactory.create(
             owner=user,
             initiative=self.initiative,
@@ -73,25 +68,27 @@ class EventTasksTestCase(BluebottleTestCase):
             start=start,
             duration=1
         )
-        event.review_transitions.submit()
-        event.transitions.start()
-        event.save()
+        ParticipantFactory.create_batch(3, activity=event)
 
-        self.assertEqual(event.status, 'running')
         tenant = connection.tenant
-        check_event_start()
-        check_event_end()
+
+        future = timezone.now() + timedelta(hours=6)
+
+        with mock.patch.object(timezone, 'now', return_value=future):
+            check_event_start()
+            check_event_end()
+
         with LocalTenant(tenant, clear_tenant=True):
             event = Event.objects.get(pk=event.pk)
         self.assertEqual(event.status, EventTransitions.values.succeeded)
 
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'You completed your event "{}"!'.format(event.title))
-        self.assertTrue("Hi Nono,", mail.outbox[0].body)
+        self.assertEqual(len(mail.outbox), 10)
+        self.assertEqual(mail.outbox[-1].subject, 'You completed your event "{}"!'.format(event.title))
+        self.assertTrue("Hi Nono,", mail.outbox[-1].body)
 
     def test_event_reminder_task(self):
         user = BlueBottleUserFactory.create(first_name='Nono')
-        start = now() + timedelta(days=4)
+        start = timezone.now() + timedelta(days=4)
         event = EventFactory.create(
             owner=user,
             status='open',
@@ -129,7 +126,7 @@ class EventTasksTestCase(BluebottleTestCase):
 
     def test_event_reminder_task_twice(self):
         user = BlueBottleUserFactory.create(first_name='Nono')
-        start = now() + timedelta(days=4)
+        start = timezone.now() + timedelta(days=4)
         event = EventFactory.create(
             owner=user,
             status='open',

@@ -40,7 +40,7 @@ class ApplicantInline(admin.TabularInline):
 class ApplicantAdminForm(FSMModelForm):
     class Meta:
         model = Applicant
-        exclude = ['status', ]
+        exclude = ('transition_date', )
 
 
 @admin.register(Applicant)

@@ -27,10 +27,13 @@ class EventDateChanged(TransitionMessage):
 
     def get_recipients(self):
         from bluebottle.events.models import Participant
-
         return [
             contribution.user for contribution
-            in self.obj.contributions.instance_of(Participant).filter(status='new')
+            in self.obj.contributions.instance_of(
+                Participant
+            ).filter(
+                status__in=('new', 'succeeded', )
+            )
         ]
 
 

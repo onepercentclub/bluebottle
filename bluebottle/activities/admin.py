@@ -16,17 +16,17 @@ from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.funding.models import Funding, Donation
 from bluebottle.funding.transitions import FundingTransitions
-from bluebottle.utils.admin import FSMAdmin
+from bluebottle.fsm.admin import StateMachineAdmin
 from bluebottle.wallposts.admin import WallpostInline
 
 
-class ContributionChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
+class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Contribution
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
     list_filter = ['status', ]
     ordering = ('-created', )
     show_in_index = True
-    readonly_fields = ['contribution_date']
+    readonly_fields = ['contribution_date', 'created', 'activity', 'status']
 
     def activity_link(self, obj):
         url = reverse("admin:{}_{}_change".format(
@@ -59,7 +59,7 @@ class OrganizerAdmin(ContributionChildAdmin):
 
 
 @admin.register(Contribution)
-class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
+class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Contribution
     child_models = (Participant, Donation, Applicant, Organizer)
     list_display = ['created', 'contribution_date', 'owner', 'type', 'activity', 'status']
@@ -72,7 +72,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
         return obj.get_real_instance_class()._meta.verbose_name
 
 
-class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
+class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative']
     inlines = (FollowAdminInline, WallpostInline)
@@ -83,10 +83,10 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     readonly_fields = [
         'created',
         'updated',
-        'status',
-        'review_status',
         'valid',
+        'review_status',
         'complete',
+        'status',
         'transition_date',
         'stats_data']
 
@@ -100,33 +100,10 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         'stats_data',
     )
 
-    def get_status_fields(self, request, obj=None):
-        if obj and obj.review_status not in [
-            ActivityReviewTransitions.values.approved,
-            ActivityReviewTransitions.values.closed
-        ]:
-            return [
-                'title',
-                'complete',
-                'valid',
-                'review_status',
-                'review_transitions',
-                'transition_date'
-            ]
-        return [
-            'complete',
-            'valid',
-            'status',
-            'transitions',
-            'transition_date'
-        ]
-
     status_fields = (
         'complete',
         'valid',
-        'status',
-        'transitions',
-        'transition_date'
+        'states',
     )
 
     detail_fields = (
@@ -138,7 +115,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         return (
             (_('Basic'), {'fields': self.basic_fields}),
             (_('Details'), {'fields': self.detail_fields}),
-            (_('Status'), {'fields': self.get_status_fields(request, obj)}),
+            (_('Status'), {'fields': self.status_fields}),
         )
 
     def stats_data(self, obj):
@@ -150,11 +127,14 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     stats_data.short_description = _('Statistics')
 
     def valid(self, obj):
-        if not obj.review_transitions.is_valid() and not obj.review_transitions.initiative_is_approved():
+        errors = list(obj.errors)
+
+        if not errors and obj.states.initiative_is_approved():
             return '-'
-        errors = obj.review_transitions.is_valid() or []
-        if obj.review_transitions.initiative_is_approved():
-            errors += [obj.review_transitions.initiative_is_approved()]
+
+        if not obj.states.initiative_is_approved():
+            errors.append(_('The initiative is not approved'))
+
         return format_html("<ul>{}</ul>", format_html("".join([
             format_html(u"<li>{}</li>", value) for value in errors
         ])))
@@ -162,12 +142,18 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     valid.short_description = _('Validation errors')
 
     def complete(self, obj):
-        if not obj.review_transitions.is_complete():
+        required = list(obj.required)
+        if not required:
             return '-'
-        return format_html("<ul>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in obj.review_transitions.is_complete()
-        ])))
 
+        errors = [
+            obj._meta.get_field(field).verbose_name
+            for field in required
+        ]
+
+        return format_html("<ul>{}</ul>", format_html("".join([
+            format_html(u"<li>{}</li>", value) for value in errors
+        ])))
     complete.short_description = _('Missing data')
 
 
@@ -179,8 +165,9 @@ class ActivityStatusFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(
-                Q(status=self.value()) |
-                Q(review_status=self.value()))
+                Q(status=self.value())
+            )
+
         return queryset
 
     def lookups(self, request, model_admin):
@@ -189,7 +176,7 @@ class ActivityStatusFilter(SimpleListFilter):
 
 
 @admin.register(Activity)
-class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
+class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
     date_hierarchy = 'transition_date'
@@ -197,7 +184,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     list_filter = (PolymorphicChildModelFilter, ActivityStatusFilter, 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['__unicode__', 'created', 'type', 'combined_status',
+    list_display = ['__unicode__', 'created', 'type', 'status',
                     'link', 'highlight']
 
     search_fields = ('title', 'description', 'owner__first_name', 'owner__last_name')
@@ -211,12 +198,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
 
     def type(self, obj):
         return obj.get_real_instance_class()._meta.verbose_name
-
-    def combined_status(self, obj):
-        if obj.status == 'in_review':
-            return obj.review_status
-        return obj.status
-    combined_status.short_description = _('status')
 
 
 class ActivityAdminInline(StackedPolymorphicInline):

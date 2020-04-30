@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm import transition, TransitionNotPossible
-from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
+from bluebottle.initiatives.messages import InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage
 from bluebottle.utils.transitions import ReviewTransitions
 
 
@@ -88,7 +88,7 @@ class InitiativeReviewTransitions(ReviewTransitions):
     @transition(
         source=ReviewTransitions.values.submitted,
         target=ReviewTransitions.values.approved,
-        messages=[InitiativeApproveOwnerMessage],
+        messages=[InitiativeApprovedOwnerMessage],
         conditions=[is_complete]
     )
     def approve(self):
@@ -109,7 +109,7 @@ class InitiativeReviewTransitions(ReviewTransitions):
             ReviewTransitions.values.needs_work
         ],
         target=ReviewTransitions.values.closed,
-        messages=[InitiativeClosedOwnerMessage],
+        messages=[InitiativeRejectedOwnerMessage],
     )
     def close(self):
         for activity in self.instance.activities.all():

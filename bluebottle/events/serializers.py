@@ -10,7 +10,7 @@ from bluebottle.activities.utils import (
 from bluebottle.events.filters import ParticipantListFilter
 from bluebottle.events.models import Event, Participant
 from bluebottle.utils.utils import reverse_signed
-from bluebottle.transitions.serializers import TransitionSerializer
+from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 from bluebottle.utils.serializers import NoCommitMixin
 
@@ -62,7 +62,7 @@ class ParticipantSerializer(BaseContributionSerializer):
 
 class ParticipantTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Participant.objects.all())
-    field = 'transitions'
+    field = 'states'
     included_serializers = {
         'resource': 'bluebottle.events.serializers.ParticipantSerializer',
         'resource.activity': 'bluebottle.events.serializers.EventSerializer',
@@ -164,7 +164,7 @@ class TinyEventSerializer(BaseTinyActivitySerializer):
 
 class EventTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Event.objects.all())
-    field = 'transitions'
+    field = 'states'
     included_serializers = {
         'resource': 'bluebottle.events.serializers.EventSerializer',
     }

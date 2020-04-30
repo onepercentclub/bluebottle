@@ -48,31 +48,35 @@ class EventTransitions(ActivityTransitions):
     @transition(
         source=values.open,
         target=values.full,
+        automatic=True
     )
     def full(self):
         pass
 
     @transition(
-        source=[values.full, values.closed],
+        source=values.full,
         target=values.open,
-        permissions=[ActivityTransitions.can_approve]
+        permissions=[ActivityTransitions.can_approve],
+        automatic=True
     )
     def reopen(self):
-        self.instance.review_transitions.organizer_succeed()
+        pass
 
     @transition(
         source=[values.full, values.open],
         target=values.running,
-        conditions=[can_start]
+        conditions=[can_start],
+        automatic=True
     )
     def start(self, **kwargs):
         pass
 
     @transition(
-        source=values.running,
+        source=[values.running, values.closed],
         target=values.succeeded,
         conditions=[can_end],
-        messages=[EventSucceededOwnerMessage]
+        messages=[EventSucceededOwnerMessage],
+        automatic=True
     )
     def succeed(self):
         for member in self.instance.participants:
@@ -85,7 +89,8 @@ class EventTransitions(ActivityTransitions):
         source=[values.closed],
         target=values.succeeded,
         permissions=[ActivityTransitions.is_system],
-        messages=[EventSucceededOwnerMessage]
+        messages=[EventSucceededOwnerMessage],
+        automatic=True
     )
     def reopen_and_succeed(self, **kwargs):
         states = [
@@ -103,18 +108,19 @@ class EventTransitions(ActivityTransitions):
         source='*',
         target=values.closed,
         messages=[EventClosedOwnerMessage],
-        permissions=[ActivityTransitions.can_approve]
+        permissions=[ActivityTransitions.can_approve],
+        automatic=False
     )
     def close(self):
         for participant in self.instance.participants:
             participant.transitions.close()
             participant.save()
-        self.instance.review_transitions.organizer_close()
 
     @transition(
         source=values.closed,
         target=values.open,
-        conditions=[can_open]
+        conditions=[can_open],
+        automatic=False
     )
     def extend(self):
         pass
@@ -122,7 +128,8 @@ class EventTransitions(ActivityTransitions):
     @transition(
         source=values.in_review,
         target=values.open,
-        permissions=[ActivityTransitions.can_approve]
+        permissions=[ActivityTransitions.can_approve],
+        automatic=False
     )
     def reviewed(self):
         pass

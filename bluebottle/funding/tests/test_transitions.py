@@ -38,7 +38,6 @@ class FundingTestCase(BluebottleAdminTestCase):
         BudgetLineFactory.create(activity=self.funding)
         self.funding.bank_account.reviewed = True
 
-        self.funding.review_transitions.submit()
         self.funding.review_transitions.approve()
         BudgetLineFactory.create_batch(4, activity=self.funding, amount=Money(125, 'EUR'))
         mail.outbox = []
@@ -80,7 +79,6 @@ class FundingTestCase(BluebottleAdminTestCase):
         BudgetLineFactory.create(activity=funding)
         funding.bank_account.reviewed = True
 
-        funding.review_transitions.submit()
         funding.review_transitions.approve()
 
         self.assertIsInstance(funding.started, datetime)
@@ -256,7 +254,6 @@ class FundingTestCase(BluebottleAdminTestCase):
         )
         BudgetLineFactory.create(activity=new_funding)
         new_funding.bank_account.reviewed = True
-        new_funding.review_transitions.submit()
         new_funding.review_transitions.approve()
 
         organizer = new_funding.contributions.first()

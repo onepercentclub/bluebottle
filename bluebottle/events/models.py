@@ -14,8 +14,7 @@ from timezonefinder import TimezoneFinder
 import pytz
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
-from bluebottle.follow.models import follow
+from bluebottle.events.transitions import ParticipantTransitions
 from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import Validator
@@ -53,8 +52,6 @@ class Event(Activity):
     duration = models.FloatField(_('duration'), null=True, blank=True)
     end = models.DateTimeField(_('end'), null=True, blank=True)
     registration_deadline = models.DateField(_('deadline to apply'), null=True, blank=True)
-
-    transitions = TransitionManager(EventTransitions, 'status')
 
     validators = [RegistrationDeadlineValidator]
 
@@ -114,34 +111,22 @@ class Event(Activity):
     class JSONAPIMeta:
         resource_name = 'activities/events'
 
-    def check_capacity(self, save=True):
-        if self.capacity and len(self.participants) >= self.capacity and self.status == EventTransitions.values.open:
-            self.transitions.full()
-            if save:
-                self.save()
-        elif self.capacity and len(self.participants) < self.capacity and self.status == EventTransitions.values.full:
-            self.transitions.reopen()
-            if save:
-                self.save()
-
     @property
     def current_end(self):
         if self.start and self.duration:
             return self.start + datetime.timedelta(hours=self.duration)
 
-
     def save(self, *args, **kwargs):
         self.end = self.current_end
 
-        self.check_capacity(save=False)
-        return super(Event, self).save(*args, **kwargs)
+        super(Event, self).save(*args, **kwargs)
 
     @property
     def participants(self):
-        return self.contributions.instance_of(Participant).filter(
+        return self.contributions.filter(
             status__in=[ParticipantTransitions.values.new,
                         ParticipantTransitions.values.succeeded]
-        )
+        ).instance_of(Participant)
 
     @property
     def uid(self):
@@ -230,30 +215,14 @@ class Participant(Contribution):
         resource_name = 'contributions/participants'
 
     def save(self, *args, **kwargs):
-        created = self.pk is None
-
-        # Fail the self if hours are set to 0
-        if self.status == ParticipantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:
-            self.transitions.close()
-        # Succeed self if the hours are set to an amount
-        elif self.status in [
-            ParticipantTransitions.values.failed,
-            ParticipantTransitions.values.closed
-        ] and self.time_spent not in [None, '0', 0.0]:
-            self.transitions.succeed()
+        if not self.contribution_date:
+            self.contribution_date = self.activity.start
 
         super(Participant, self).save(*args, **kwargs)
 
-        if created and self.status == 'new':
-            self.transitions.initiate()
-            follow(self.user, self.activity)
-
-        self.activity.check_capacity()
-
-    def delete(self, *args, **kwargs):
-        super(Participant, self).delete(*args, **kwargs)
-
-        self.activity.check_capacity()
+    def __unicode__(self):
+        return _('Participant (%s)') % self.user
 
 
-from bluebottle.events.signals import *  # noqa
+from bluebottle.events.states import *  # noqa
+from bluebottle.events.effects import *  # noqa

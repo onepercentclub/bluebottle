@@ -17,7 +17,7 @@ from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
     DonationListSerializer, TinyFundingSerializer
 )
-from bluebottle.transitions.serializers import TransitionSerializer
+from bluebottle.fsm.serializers import TransitionSerializer
 
 
 class ActivityListSerializer(PolymorphicModelSerializer):
@@ -164,7 +164,7 @@ class ContributionListSerializer(PolymorphicModelSerializer):
 
 class ActivityReviewTransitionSerializer(TransitionSerializer):
     resource = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
-    field = 'review_transitions'
+    field = 'review_states'
     included_serializers = {
         'resource': 'bluebottle.activities.serializers.ActivitySerializer',
     }

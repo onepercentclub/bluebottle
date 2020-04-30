@@ -17,7 +17,7 @@ class ReviewStateMachine(ModelStateMachine):
     submitted = State(_('submitted'), 'submitted')
     needs_work = State(_('needs work'), 'needs_work')
     approved = State(_('approved'), 'approved')
-    rejected = State(_('closed'), 'closed')
+    rejected = State(_('rejected'), 'rejected')
 
     def is_complete(self):
         if self.instance.organization and list(self.instance.organization.required):

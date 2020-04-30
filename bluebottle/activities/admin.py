@@ -84,6 +84,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'created',
         'updated',
         'valid',
+        'review_status',
         'complete',
         'status',
         'transition_date',
@@ -102,7 +103,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     status_fields = (
         'complete',
         'valid',
-        'review_states',
+        'states',
     )
 
     detail_fields = (
@@ -128,10 +129,10 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     def valid(self, obj):
         errors = list(obj.errors)
 
-        if not errors and obj.review_states.initiative_is_approved():
+        if not errors and obj.states.initiative_is_approved():
             return '-'
 
-        if not obj.review_states.initiative_is_approved():
+        if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))
 
         return format_html("<ul>{}</ul>", format_html("".join([
@@ -164,8 +165,9 @@ class ActivityStatusFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(
-                Q(status=self.value()) |
-                Q(review_status=self.value()))
+                Q(status=self.value())
+            )
+
         return queryset
 
     def lookups(self, request, model_admin):
@@ -182,7 +184,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     list_filter = (PolymorphicChildModelFilter, ActivityStatusFilter, 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['__unicode__', 'created', 'type', 'combined_status',
+    list_display = ['__unicode__', 'created', 'type', 'status',
                     'link', 'highlight']
 
     search_fields = ('title', 'description', 'owner__first_name', 'owner__last_name')
@@ -196,12 +198,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
     def type(self, obj):
         return obj.get_real_instance_class()._meta.verbose_name
-
-    def combined_status(self, obj):
-        if obj.status == 'in_review':
-            return obj.review_status
-        return obj.status
-    combined_status.short_description = _('status')
 
 
 class ActivityAdminInline(StackedPolymorphicInline):

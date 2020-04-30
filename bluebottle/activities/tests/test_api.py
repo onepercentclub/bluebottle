@@ -1,28 +1,26 @@
 import datetime
 import json
+from datetime import timedelta
 
 from django.contrib.auth.models import Group, Permission
+from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
-
-from django.contrib.gis.geos import Point
-
 from django_elasticsearch_dsl.test import ESTestCase
-
 from rest_framework import status
 
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.files.tests.factories import ImageFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
-
-from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
-from bluebottle.test.factory_models.tasks import SkillFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
+from bluebottle.test.factory_models.tasks import SkillFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
@@ -849,3 +847,80 @@ class ContributionListAPITestCase(BluebottleTestCase):
         data = response.json()
 
         self.assertEqual(len(data['data']), 0)
+
+
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+@tag('elasticsearch')
+class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
+    def setUp(self):
+        super(ActivityAPIAnonymizationTestCase, self).setUp()
+        self.member_settings = MemberPlatformSettings.load()
+
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        last_year = now() - timedelta(days=400)
+        self.old_event = EventFactory.create(
+            created=last_year,
+            review_status='approved',
+            status='open'
+        )
+        ParticipantFactory.create(
+            activity=self.old_event,
+            created=last_year
+        )
+        ParticipantFactory.create(
+            activity=self.old_event
+        )
+
+        self.new_event = EventFactory.create(
+            review_status='approved',
+            status='open'
+        )
+        ParticipantFactory.create(
+            activity=self.new_event,
+            created=last_year
+        )
+        ParticipantFactory.create(
+            activity=self.new_event
+        )
+        self.new_url = reverse('event-detail', args=(self.new_event.id,))
+        self.old_url = reverse('event-detail', args=(self.old_event.id,))
+
+    def _get_members(self, data):
+        return [item for item in data['included'] if item['type'] == 'members' and item['attributes']['first-name']]
+
+    def _get_anonymous(self, data):
+        return [item for item in data['included'] if item['type'] == 'members' and item['attributes']['is-anonymous']]
+
+    def test_no_max_age(self):
+        response = self.client.get(self.old_url, user=self.owner)
+        data = json.loads(response.content)
+        members = self._get_members(data)
+        anonymous = self._get_anonymous(data)
+        self.assertEqual(len(members), 3)
+        self.assertEqual(len(anonymous), 0)
+        response = self.client.get(self.new_url, user=self.owner)
+        data = json.loads(response.content)
+        members = self._get_members(data)
+        anonymous = self._get_anonymous(data)
+        self.assertEqual(len(members), 3)
+        self.assertEqual(len(anonymous), 0)
+
+    def test_max_age(self):
+        self.member_settings.anonymization_age = 300
+        self.member_settings.save()
+        response = self.client.get(self.old_url, user=self.owner)
+        data = json.loads(response.content)
+        members = self._get_members(data)
+        anonymous = self._get_anonymous(data)
+        self.assertEqual(len(members), 1)
+        self.assertEqual(len(anonymous), 2)
+        response = self.client.get(self.new_url, user=self.owner)
+        data = json.loads(response.content)
+        members = self._get_members(data)
+        anonymous = self._get_anonymous(data)
+        self.assertEqual(len(members), 2)
+        self.assertEqual(len(anonymous), 1)

@@ -16,7 +16,7 @@ from bluebottle.initiatives.transitions import InitiativeReviewTransitions
 from bluebottle.notifications.models import NotificationModelMixin
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.models import BasePlatformSettings, Validator, ValidatedModelMixin
+from bluebottle.utils.models import BasePlatformSettings, Validator, ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
 
 
@@ -33,7 +33,7 @@ class UniqueTitleValidator(Validator):
         )
 
 
-class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, models.Model):
+class Initiative(TransitionsMixin, AnonymizationMixin, NotificationModelMixin, ValidatedModelMixin, models.Model):
     status = FSMField(
         default=InitiativeReviewTransitions.values.draft,
         choices=InitiativeReviewTransitions.values.choices,

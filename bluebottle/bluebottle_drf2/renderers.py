@@ -67,6 +67,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
 
             if isinstance(field, relations.ManyRelatedField):
                 serializer_class = included_serializers[field_name]
+                context['parent'] = resource_instance
                 field = serializer_class(relation_instance, many=True, context=context)
                 serializer_data = field.data
 
@@ -84,6 +85,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                         continue
 
                 serializer_class = included_serializers[field_name]
+                context['parent'] = resource_instance
                 field = serializer_class(relation_instance, many=many, context=context)
                 serializer_data = field.data
 

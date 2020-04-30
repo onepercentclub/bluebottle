@@ -142,7 +142,6 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         deadline = now() - timedelta(days=4)
         date = now() - timedelta(days=2)
-        end = now() - timedelta(days=1)
 
         assignment = AssignmentFactory.create(
             owner=user,
@@ -150,7 +149,6 @@ class AssignmentTasksTestCase(BluebottleTestCase):
             capacity=3,
             registration_deadline=deadline,
             initiative=self.initiative,
-            end_date=end.date(),
             date=date,
         )
 

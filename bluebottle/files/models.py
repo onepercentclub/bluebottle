@@ -8,9 +8,10 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.files.fields import ImageField
+from bluebottle.utils.models import AnonymizationMixin
 
 
-class File(models.Model):
+class File(AnonymizationMixin, models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateField(_('created'), default=timezone.now)
     file = models.FileField(_('file'), upload_to='files')

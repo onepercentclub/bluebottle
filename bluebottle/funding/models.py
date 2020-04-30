@@ -30,7 +30,7 @@ from bluebottle.funding.transitions import (
     PayoutTransitions)
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
-from bluebottle.utils.models import Validator, ValidatedModelMixin, BasePlatformSettings
+from bluebottle.utils.models import Validator, ValidatedModelMixin, BasePlatformSettings, AnonymizationMixin
 
 
 class PaymentCurrency(models.Model):
@@ -206,6 +206,10 @@ class Funding(Activity):
         cache.delete(cache_key)
         cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
         cache.delete(cache_key)
+
+    @property
+    def contribution_date(self):
+        return self.deadline
 
     @property
     def donations(self):
@@ -394,7 +398,7 @@ class BudgetLine(models.Model):
         return u'{0} - {1}'.format(self.description, self.amount)
 
 
-class Fundraiser(models.Model):
+class Fundraiser(AnonymizationMixin, models.Model):
     owner = models.ForeignKey('members.Member', related_name="funding_fundraisers")
     activity = models.ForeignKey(
         'funding.Funding',
@@ -516,13 +520,14 @@ class Donation(Contribution):
         if not self.user and not self.client_secret:
             self.client_secret = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
 
-        if not self.contribution_date:
-            self.contribution_date = self.created
-
         if not self.payout_amount:
             self.payout_amount = self.amount
 
         super(Donation, self).save(*args, **kwargs)
+
+    @property
+    def date(self):
+        return self.created
 
     @property
     def payment_method(self):
@@ -612,7 +617,7 @@ class PaymentMethod(object):
         resource_name = 'payments/payment-methods'
 
 
-class PayoutAccount(ValidatedModelMixin, PolymorphicModel, TransitionsMixin):
+class PayoutAccount(ValidatedModelMixin, AnonymizationMixin, PolymorphicModel, TransitionsMixin):
     status = FSMField(
         default=PayoutAccountTransitions.values.new
     )

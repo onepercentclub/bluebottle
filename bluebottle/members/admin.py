@@ -116,6 +116,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
     fields = (
         'closed', 'confirm_signup', 'login_methods',
         'email_domain', 'background', 'require_consent', 'consent_link',
+        'anonymization_age'
     )
 
     inlines = [

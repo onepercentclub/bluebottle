@@ -61,7 +61,7 @@ def check_assignment_end_date():
         with LocalTenant(tenant, clear_tenant=True):
             # Close assignments passed end_date
             assignments = Assignment.objects.filter(
-                end_date__lt=now().date(),
+                date__lt=now(),
                 status__in=['full', 'open', 'running']
             ).all()
 

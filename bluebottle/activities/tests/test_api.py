@@ -12,6 +12,7 @@ from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
 
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -35,6 +36,21 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.url = reverse('activity-list')
         self.owner = BlueBottleUserFactory.create()
+
+    def test_images(self):
+        EventFactory.create(
+            owner=self.owner, review_status='approved', image=ImageFactory.create()
+        )
+        AssignmentFactory.create(review_status='approved', image=ImageFactory.create())
+        FundingFactory.create(review_status='approved', image=ImageFactory.create())
+
+        response = self.client.get(self.url, user=self.owner)
+
+        for activity in response.json()['data']:
+            self.assertEqual(
+                activity['relationships']['image']['data']['type'],
+                'images'
+            )
 
     def test_no_filter(self):
         succeeded = EventFactory.create(

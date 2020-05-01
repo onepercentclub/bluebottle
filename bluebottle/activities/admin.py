@@ -93,6 +93,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     basic_fields = (
         'title',
         'slug',
+        'image',
         'initiative',
         'owner',
         'created',

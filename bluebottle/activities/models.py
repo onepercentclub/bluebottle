@@ -7,6 +7,8 @@ from django.contrib.contenttypes.fields import GenericRelation
 from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 
 from polymorphic.models import PolymorphicModel
+
+from bluebottle.files.fields import ImageField
 from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.activities.transitions import (
@@ -50,6 +52,8 @@ class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, Polymo
     description = models.TextField(
         _('description'), blank=True
     )
+
+    image = ImageField(blank=True, null=True)
 
     followers = GenericRelation('follow.Follow', object_id_field='instance_id')
     messages = GenericRelation('notifications.Message')

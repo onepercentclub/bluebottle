@@ -3,7 +3,7 @@ from django.conf.urls import url
 from bluebottle.activities.views import (
     ActivityList, ActivityDetail, ActivityReviewTransitionList,
     ContributionList, RelatedActivityImageList,
-    RelatedActivityImageContent,
+    RelatedActivityImageContent, ActivityImage
 )
 
 urlpatterns = [
@@ -21,6 +21,13 @@ urlpatterns = [
     url(r'^/(?P<pk>\d+)$',
         ActivityDetail.as_view(),
         name='activity-detail'),
+
+    url(
+        r'^/(?P<pk>\d+)/image/(?P<size>\d+x\d+)$',
+        ActivityImage.as_view(),
+        name='activity-image'
+    ),
+
 
     url(r'^/related-images$',
         RelatedActivityImageList.as_view(),

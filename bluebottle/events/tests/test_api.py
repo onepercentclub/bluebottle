@@ -3,6 +3,7 @@ import json
 from datetime import timedelta
 import urlparse
 
+from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now, utc
 
@@ -216,6 +217,58 @@ class EventAPITestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
+
+    @override_settings(DEBUG=False)
+    def test_update_event_image(self):
+        event = EventFactory.create(owner=self.user, title='Pollute Katwijk Beach')
+        event_url = reverse('event-detail', args=(event.pk,))
+
+        file_path = './bluebottle/files/tests/files/test-image.png'
+        with open(file_path) as test_file:
+            response = self.client.post(
+                reverse('image-list'),
+                test_file.read(),
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.jpg"',
+                user=self.user
+            )
+
+        file_data = json.loads(response.content)
+        data = {
+            'data': {
+                'type': 'activities/events',
+                'id': event.id,
+                'relationships': {
+                    'image': {
+                        'data': {
+                            'type': 'images',
+                            'id': file_data['data']['id']
+                        }
+                    }
+                }
+            }
+        }
+        response = self.client.patch(event_url, json.dumps(data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(
+            data['data']['relationships']['image']['data']['id'],
+            file_data['data']['id']
+        )
+
+        image = get_included(response, 'images')
+
+        response = self.client.get(
+            image['attributes']['links']['large'],
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            response['X-Accel-Redirect'].startswith(
+                '/media/cache/'
+            )
+        )
 
     def test_create_event_as_activity_manager(self):
         activity_manager = BlueBottleUserFactory.create()

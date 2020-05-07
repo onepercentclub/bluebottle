@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(help_text='Max: 60 characters.', max_length=60, verbose_name='title')),
                 ('description', models.TextField(blank=True, default=b'', help_text='Max: 190 characters.', max_length=190, verbose_name='description')),
                 ('link_text', models.CharField(blank=True, default='Read more', help_text='The link will only be displayed if an URL is provided. Max: 60 characters.', max_length=60, verbose_name='link name')),
-                ('link_url', models.CharField(blank=True, max_length=100, verbose_name='link url')),
+                ('link_url', models.CharField(blank=True, max_length=300, verbose_name='link url')),
             ],
             options={
                 'managed': True,

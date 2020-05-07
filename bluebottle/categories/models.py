@@ -68,7 +68,7 @@ class CategoryContent(SortableMixin, TranslatableModel):
         ),
         link_url=models.CharField(
             _("link url"),
-            max_length=100,
+            max_length=300,
             blank=True
         )
     )

@@ -158,12 +158,12 @@ class Funding(Activity):
         blank=True,
         help_text=_('If you enter a duration, leave the deadline field empty for it to be automatically calculated.')
     )
+    transitions = TransitionManager(FundingTransitions, 'status')
 
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     amount_matching = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     country = models.ForeignKey('geo.Country', null=True, blank=True)
     bank_account = models.ForeignKey('funding.BankAccount', null=True, blank=True, on_delete=SET_NULL)
-    transitions = TransitionManager(FundingTransitions, 'status')
     started = models.DateTimeField(
         _('started'),
         null=True,
@@ -715,3 +715,7 @@ class FundingPlatformSettings(BasePlatformSettings):
     class Meta:
         verbose_name_plural = _('funding settings')
         verbose_name = _('funding settings')
+
+
+from bluebottle.funding.states import *  # noqa
+from bluebottle.funding.effects import *  # noqa

@@ -56,7 +56,10 @@ class ReviewStateMachine(ModelStateMachine):
         conditions=[is_complete, is_valid],
         automatic=False,
         permission=is_staff,
-        effects=[ApproveActivities, NotificationEffect(InitiativeApprovedOwnerMessage)]
+        effects=[
+            ApproveActivities,
+            NotificationEffect(InitiativeApprovedOwnerMessage)
+        ]
     )
 
     request_changes = Transition(

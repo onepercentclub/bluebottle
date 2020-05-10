@@ -88,7 +88,12 @@ class EventStateMachine(ActivityStateMachine):
     is_running = State(_('running'), 'running', _('The activity is currently running'))
 
     approve = Transition(
-        [ActivityStateMachine.draft, ActivityStateMachine.submitted, ActivityStateMachine.rejected],
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.submitted,
+            ActivityStateMachine.rejected,
+            ActivityStateMachine.needs_work,
+        ],
         ActivityStateMachine.open,
         name=_('Approve'),
         effects=[

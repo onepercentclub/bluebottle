@@ -40,7 +40,6 @@ class StateMachineModelForm(forms.ModelForm):
                 return reverse(
                     url_name, args=(self.instance.pk, field, name)
                 )
-
             self.fields[field].choices = [
                 (get_url(transition.field), unicode(transition)) for transition in transitions
                 if not transition.automatic

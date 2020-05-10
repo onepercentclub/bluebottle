@@ -128,7 +128,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     def valid(self, obj):
         errors = list(obj.errors)
-
         if not errors and obj.states.initiative_is_approved():
             return '-'
 

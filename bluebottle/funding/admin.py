@@ -19,6 +19,7 @@ from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
+from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter, DonationAdminPledgeFilter
 from bluebottle.funding.forms import RefundConfirmationForm
@@ -138,7 +139,7 @@ class PayoutInline(FSMAdminMixin, admin.TabularInline):
     approve.short_description = _('Status')
 
 
-class FundingAdminForm(FSMModelForm):
+class FundingAdminForm(StateMachineModelForm):
 
     class Meta:
         model = Funding
@@ -150,7 +151,9 @@ class FundingAdminForm(FSMModelForm):
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline, )
+    # inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline, )
+    inlines = (BudgetLineInline, )
+
     base_model = Funding
     form = FundingAdminForm
     date_hierarchy = 'transition_date'

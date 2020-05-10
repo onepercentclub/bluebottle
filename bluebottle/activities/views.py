@@ -9,7 +9,6 @@ from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
-    ActivityReviewTransitionSerializer,
     RelatedActivityImageSerializer,
     ActivityListSerializer,
     ContributionListSerializer
@@ -128,8 +127,3 @@ class RelatedActivityImageContent(ImageContentView):
         )
 
     field = 'image'
-
-
-class ActivityReviewTransitionList(TransitionList):
-    serializer_class = ActivityReviewTransitionSerializer
-    queryset = Activity.objects.all()

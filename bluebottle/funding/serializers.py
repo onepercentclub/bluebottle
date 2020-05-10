@@ -292,7 +292,6 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             del fields['bank_account']
             del fields['required']
             del fields['errors']
-            del fields['review_status']
         return fields
 
     class Meta(BaseActivitySerializer.Meta):

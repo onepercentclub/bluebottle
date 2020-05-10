@@ -18,7 +18,8 @@ class CreateOrganizer(Effect):
 
 
 class ActivityStateMachine(ModelStateMachine):
-    model = Activity
+    # Setting this somehow causes spills between EventStatemachine & FundingStatemachine
+    # model = Activity
 
     draft = State(_('draft'), 'draft')
     submitted = State(_('submitted'), 'submitted')
@@ -57,7 +58,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     submit = Transition(
-        draft,
+        [draft, needs_work],
         submitted,
         name=_('Submit'),
         effects=[
@@ -66,7 +67,12 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     approve = Transition(
-        [draft, submitted, rejected],
+        [
+            draft,
+            submitted,
+            rejected,
+            needs_work
+        ],
         open,
         automatic=False,
         permission=is_staff,

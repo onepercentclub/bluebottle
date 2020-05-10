@@ -142,6 +142,9 @@ class Organizer(Contribution):
 
         super(Organizer, self).save()
 
+    def __unicode__(self):
+        return unicode(_("Organizer: {name}".format(name=self.user.full_name)))
+
 
 from bluebottle.activities.signals import *  # noqa
 from bluebottle.activities.wallposts import *  # noqa

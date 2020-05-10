@@ -22,14 +22,20 @@
     <p>{% blocktrans %}Are you sure you want to make these changes to {{ obj }}?{% endblocktrans %}</p>
     {% if effects %}
         {% blocktrans  %}
-            This will some side effects
+            This will have these effects
         {% endblocktrans %}
         <ul>
             {% for effect in effects %}
                 {% if effect.display %}
-                    <li>
-                        <b>{{effect}}</b>
-                    </li>
+                    {% if effect.html %}
+                        <li>
+                            {{effect.html}}
+                        </li>
+                    {% else %}
+                        <li>
+                            {{effect}}
+                        </li>
+                    {% endif %}
                 {% endif %}
             {% endfor %}
         </ul>

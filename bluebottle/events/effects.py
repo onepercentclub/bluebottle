@@ -1,6 +1,7 @@
 from datetime import timedelta
 from django.utils import timezone
 
+from bluebottle.activities.effects import Complete
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, ModelDeletedTrigger
@@ -62,7 +63,7 @@ class Finished(ModelChangedTrigger):
     ]
 
 
-Event.triggers += [CapacityChanged, DateChanged, Started, Finished]
+Event.triggers = [Complete, CapacityChanged, DateChanged, Started, Finished]
 
 
 class ParticipantDeleted(ModelDeletedTrigger):
@@ -88,4 +89,4 @@ class ParticipantDeleted(ModelDeletedTrigger):
     ]
 
 
-Participant.triggers += [ParticipantDeleted]
+Participant.triggers = [ParticipantDeleted]

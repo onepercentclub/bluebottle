@@ -19,7 +19,6 @@ class BaseActivitySerializer(ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
-    review_transitions = AvailableTransitionsField(source='review_states')
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
@@ -60,7 +59,6 @@ class BaseActivitySerializer(ModelSerializer):
         meta_fields = (
             'permissions',
             'transitions',
-            'review_transitions',
             'created',
             'updated',
             'errors',

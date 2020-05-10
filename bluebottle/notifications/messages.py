@@ -3,11 +3,14 @@ from operator import attrgetter
 
 from django.contrib.admin.options import get_content_type_for_model
 from django.db import connection
+from django.template import loader
 from django.utils.html import format_html
 
 from bluebottle.clients import properties
 from bluebottle.notifications.models import Message, MessageTemplate
 from bluebottle.utils import translation
+from bluebottle.utils.utils import get_current_language
+from django.utils.translation import ugettext_lazy as _
 
 
 class TransitionMessage(object):
@@ -22,6 +25,35 @@ class TransitionMessage(object):
     subject = 'Status changed'
     template = 'messages/base'
     context = {}
+
+    def get_generic_context(self):
+        from bluebottle.clients.utils import tenant_url
+        language = get_current_language()
+        tenant = connection.tenant
+        context = {
+            'site': tenant_url(),
+            'site_name': tenant.name,
+            'language': language,
+            'contact_email': properties.CONTACT_EMAIL,
+            'first_name': _('Name')
+        }
+        for key, item in self.context.items():
+            context[key] = attrgetter(item)(self.obj)
+
+        if 'context' in self.options:
+            context.update(self.options['context'])
+        return context
+
+    @property
+    def generic_subject(self):
+        context = self.get_generic_context()
+        return unicode(self.subject.format(**context))
+
+    @property
+    def generic_content(self):
+        context = self.get_generic_context()
+        template = loader.get_template("mails/{}.html".format(self.template))
+        return template.render(context)
 
     def get_context(self, recipient):
         from bluebottle.clients.utils import tenant_url

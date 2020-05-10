@@ -144,7 +144,7 @@ class TextWallpostAdmin(BaseWallpostAdmin):
 
     def donation_link(self, obj):
         if obj.donation:
-            link = reverse('admin:donations_donation_change', args=(obj.donation.id,))
+            link = reverse('admin:funding_donation_change', args=(obj.donation.id,))
             return format_html(
                 u"<a href='{}'>{}</a>",
                 link, obj.donation

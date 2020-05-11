@@ -38,11 +38,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_no_filter(self):
         succeeded = EventFactory.create(
-            owner=self.owner, review_status='approved', status='succeeded'
+            owner=self.owner, status='succeeded'
         )
-        open = EventFactory.create(review_status='approved', status='open')
-        EventFactory.create(status='in_review')
-        EventFactory.create(review_status='approved', status='closed')
+        open = EventFactory.create(status='open')
+        EventFactory.create(status='submitted')
+        EventFactory.create(status='closed')
 
         response = self.client.get(self.url, user=self.owner)
         data = json.loads(response.content)
@@ -54,11 +54,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_anonymous(self):
         succeeded = EventFactory.create(
-            owner=self.owner, review_status='approved', status='succeeded'
+            owner=self.owner, status='succeeded'
         )
-        open = EventFactory.create(review_status='approved', status='open')
-        EventFactory.create(status='in_review')
-        EventFactory.create(review_status='approved', status='closed')
+        open = EventFactory.create(status='open')
+        EventFactory.create(status='submitted')
+        EventFactory.create(status='closed')
 
         response = self.client.get(self.url)
         data = json.loads(response.content)
@@ -69,8 +69,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertTrue('meta' in data['data'][0])
 
     def test_filter_owner(self):
-        EventFactory.create(owner=self.owner, review_status='approved')
-        EventFactory.create(review_status='approved')
+        EventFactory.create(owner=self.owner, status='open')
+        EventFactory.create(status='open')
 
         response = self.client.get(
             self.url + '?filter[owner.id]={}'.format(self.owner.pk),
@@ -82,8 +82,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
 
     def test_only_owner_permission(self):
-        EventFactory.create(owner=self.owner, review_status='approved')
-        EventFactory.create(review_status='approved')
+        EventFactory.create(owner=self.owner, status='open')
+        EventFactory.create(status='open')
 
         authenticated = Group.objects.get(name='Authenticated')
         authenticated.permissions.remove(
@@ -105,9 +105,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_initiative_location(self):
         location = LocationFactory.create()
-        initiative = InitiativeFactory.create(status='approved', location=location)
-        activity = EventFactory.create(review_status='approved', initiative=initiative)
-        EventFactory.create(review_status='approved')
+        initiative = InitiativeFactory.create(status='open', location=location)
+        activity = EventFactory.create(status='open', initiative=initiative)
+        EventFactory.create(status='open')
 
         response = self.client.get(
             self.url + '?filter[initiative_location.id]={}'.format(location.pk),
@@ -120,26 +120,26 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_activity_date(self):
         event = EventFactory.create(
-            review_status='approved',
+            status='open',
             start=get_current_timezone().localize(datetime.datetime(2019, 1, 4))
         )
         EventFactory.create(
-            review_status='approved',
+            status='open',
             start=get_current_timezone().localize(datetime.datetime(2019, 4, 8))
         )
 
         on_date_assignment = AssignmentFactory.create(
-            review_status='approved',
+            status='open',
             date=get_current_timezone().localize(datetime.datetime(2019, 1, 12)),
             end_date_type='on_date'
         )
         AssignmentFactory.create(
-            review_status='approved',
+            status='open',
             date=get_current_timezone().localize(datetime.datetime(2019, 4, 16)),
             end_date_type='on_date'
         )
         deadline_assignment = AssignmentFactory.create(
-            review_status='approved',
+            status='open',
             date=get_current_timezone().localize(datetime.datetime(2019, 1, 20)),
             end_date_type='deadline'
         )
@@ -147,11 +147,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         # Feature is not dealing with time. Disabling timezone check for test
         with override_settings(USE_TZ=False):
             funding = FundingFactory.create(
-                review_status='approved',
+                status='open',
                 deadline=datetime.date(2019, 1, 24),
             )
             FundingFactory.create(
-                review_status='approved',
+                status='open',
                 deadline=datetime.date(2019, 4, 28),
             )
 
@@ -182,9 +182,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first = EventFactory.create(
             title='Lorem ipsum dolor sit amet',
             description="Lorem ipsum",
-            review_status='approved'
+            status='open'
         )
-        second = EventFactory.create(title='Lorem ipsum dolor sit amet', review_status='approved')
+        second = EventFactory.create(title='Lorem ipsum dolor sit amet', status='open')
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
@@ -201,9 +201,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first = EventFactory.create(
             title='Lorem ipsum dolor sit amet',
             description="Lorem ipsum",
-            review_status='approved'
+            status='open'
         )
-        second = FundingFactory.create(title='Lorem ipsum dolor sit amet', review_status='approved')
+        second = FundingFactory.create(title='Lorem ipsum dolor sit amet', status='open')
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
@@ -222,12 +222,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first = EventFactory.create(
             title='Something else',
             description='Lorem ipsum dolor sit amet',
-            review_status='approved'
+            status='open'
         )
         second = EventFactory.create(
             title='Lorem ipsum dolor sit amet',
             description="Something else",
-            review_status='approved'
+            status='open'
         )
 
         response = self.client.get(
@@ -245,14 +245,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         location = GeolocationFactory.create(formatted_address='Roggeveenstraat')
         first = EventFactory.create(
             location=location,
-            review_status='approved'
+            status='open'
         )
         second = EventFactory.create(
             title='Roggeveenstraat',
-            review_status='approved'
+            status='open'
         )
         EventFactory.create(
-            review_status='approved'
+            status='open'
         )
 
         response = self.client.get(
@@ -269,14 +269,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_search_initiative_title(self):
         first = EventFactory.create(
             initiative=InitiativeFactory.create(title='Test title'),
-            review_status='approved'
+            status='open'
         )
         second = EventFactory.create(
             title='Test title',
-            review_status='approved'
+            status='open'
         )
         EventFactory.create(
-            review_status='approved'
+            status='open'
         )
 
         response = self.client.get(
@@ -291,9 +291,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], unicode(first.pk))
 
     def test_sort_title(self):
-        second = EventFactory.create(title='B: something else', review_status='approved')
-        first = EventFactory.create(title='A: something', review_status='approved')
-        third = EventFactory.create(title='C: More', review_status='approved')
+        second = EventFactory.create(title='B: something else', status='open')
+        first = EventFactory.create(title='A: something', status='open')
+        third = EventFactory.create(title='C: More', status='open')
 
         response = self.client.get(
             self.url + '?sort=alphabetical',
@@ -308,16 +308,18 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][2]['id'], unicode(third.pk))
 
     def test_sort_activity_date(self):
-        first = EventFactory.create(review_status='approved')
-        second = EventFactory.create(review_status='approved')
-        third = EventFactory.create(review_status='approved')
-
-        first.start = datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
-        first.save()
-        second.start = datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
-        second.save()
-        third.start = datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
-        third.save()
+        first = EventFactory.create(
+            status='open',
+            start=now() + datetime.timedelta(days=10)
+        )
+        second = EventFactory.create(
+            status='open',
+            start=now() + datetime.timedelta(days=9)
+        )
+        third = EventFactory.create(
+            status='open',
+            start=now() + datetime.timedelta(days=11)
+        )
 
         response = self.client.get(
             self.url + '?sort=date',
@@ -332,18 +334,18 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][2]['id'], unicode(second.pk))
 
     def test_sort_matching_popularity(self):
-        first = EventFactory.create(review_status='approved')
-        second = EventFactory.create(review_status='approved')
+        first = EventFactory.create(status='open')
+        second = EventFactory.create(status='open')
         ParticipantFactory.create(
             activity=second, created=now() - datetime.timedelta(days=7)
         )
 
-        third = EventFactory.create(review_status='approved')
+        third = EventFactory.create(status='open')
         ParticipantFactory.create(
             activity=third, created=now() - datetime.timedelta(days=5)
         )
 
-        fourth = EventFactory.create(review_status='approved')
+        fourth = EventFactory.create(status='open')
         ParticipantFactory.create(
             activity=fourth, created=now() - datetime.timedelta(days=7)
         )
@@ -366,18 +368,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][3]['id'], unicode(first.pk))
 
     def test_sort_matching_status(self):
-        EventFactory.create(review_status='approved', status='closed')
-        second = EventFactory.create(review_status='approved', status='succeeded')
+        EventFactory.create(status='closed')
+        second = EventFactory.create(status='succeeded')
         ParticipantFactory.create(activity=second)
         third = EventFactory.create(
-            review_status='approved',
             status='open',
             capacity=1
         )
         ParticipantFactory.create(activity=third)
-        fourth = EventFactory.create(review_status='approved', status='running')
+        fourth = EventFactory.create(status='running')
         ParticipantFactory.create(activity=fourth)
-        fifth = EventFactory.create(review_status='approved', status='open')
+        fifth = EventFactory.create(status='open')
         ParticipantFactory.create(activity=fifth)
 
         response = self.client.get(
@@ -399,14 +400,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.owner.skills.add(skill)
         self.owner.save()
 
-        first = AssignmentFactory.create(review_status='approved', status='full')
+        first = AssignmentFactory.create(status='full')
         ApplicantFactory.create_batch(3, activity=first, status='accepted')
 
-        second = AssignmentFactory.create(review_status='approved', status='full', expertise=skill)
+        second = AssignmentFactory.create(status='full', expertise=skill)
         ApplicantFactory.create_batch(3, activity=second, status='accepted')
 
-        third = AssignmentFactory.create(review_status='approved', status='open')
-        fourth = AssignmentFactory.create(review_status='approved', status='open', expertise=skill)
+        third = AssignmentFactory.create(status='open')
+        fourth = AssignmentFactory.create(status='open', expertise=skill)
 
         response = self.client.get(
             self.url + '?sort=popularity',
@@ -429,18 +430,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         initiative = InitiativeFactory.create(theme=theme)
 
-        first = EventFactory.create(review_status='approved', status='open', capacity=1)
+        first = EventFactory.create(status='open', capacity=1)
         ParticipantFactory.create(activity=first)
         second = EventFactory.create(
-            review_status='approved',
             status='open',
             initiative=initiative,
             capacity=1
         )
         ParticipantFactory.create(activity=second)
-        third = EventFactory.create(review_status='approved', status='open')
+        third = EventFactory.create(status='open')
         ParticipantFactory.create(activity=third)
-        fourth = EventFactory.create(review_status='approved', status='open', initiative=initiative)
+        fourth = EventFactory.create(status='open', initiative=initiative)
         ParticipantFactory.create(activity=fourth)
 
         response = self.client.get(
@@ -460,11 +460,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_matching_location(self):
         PlaceFactory.create(content_object=self.owner, position='10.0, 20.0')
 
-        first = AssignmentFactory.create(review_status='approved', status='full')
+        first = AssignmentFactory.create(status='full')
         ApplicantFactory.create_batch(3, activity=first, status='accepted')
 
         second = AssignmentFactory.create(
-            review_status='approved',
             status='full',
             is_online=False,
             location=GeolocationFactory.create(position=Point(20.0, 10))
@@ -472,18 +471,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         ApplicantFactory.create_batch(3, activity=second, status='accepted')
 
         third = AssignmentFactory.create(
-            review_status='approved',
             status='open',
             is_online=False,
         )
         fourth = AssignmentFactory.create(
-            review_status='approved',
             status='open',
             is_online=False,
             location=GeolocationFactory.create(position=Point(21.0, 9.0))
         )
         fifth = AssignmentFactory.create(
-            review_status='approved',
             is_online=False,
             status='open', location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
@@ -512,15 +508,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         initiative3 = InitiativeFactory.create(place=GeolocationFactory.create(country=country1))
         initiative4 = InitiativeFactory.create(place=GeolocationFactory.create(country=country2))
 
-        first = AssignmentFactory.create(review_status='approved', status='full', initiative=initiative1)
+        first = AssignmentFactory.create(status='full', initiative=initiative1)
         ApplicantFactory.create_batch(3, activity=first, status='accepted')
 
-        second = AssignmentFactory.create(review_status='approved', status='open', initiative=initiative3)
+        second = AssignmentFactory.create(status='open', initiative=initiative3)
 
-        third = AssignmentFactory.create(review_status='approved', status='full', initiative=initiative2)
+        third = AssignmentFactory.create(status='full', initiative=initiative2)
         ApplicantFactory.create_batch(3, activity=third, status='accepted')
 
-        AssignmentFactory.create(review_status='approved', status='open', initiative=initiative4)
+        AssignmentFactory.create(status='open', initiative=initiative4)
 
         response = self.client.get(
             self.url + '?sort=popularity&filter[country]={}'.format(country1.id),
@@ -538,26 +534,23 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.owner.location = LocationFactory.create(position='10.0, 20.0')
         self.owner.save()
 
-        first = AssignmentFactory.create(review_status='approved', status='full')
+        first = AssignmentFactory.create(status='full')
         ApplicantFactory.create_batch(3, activity=first, status='accepted')
 
         second = AssignmentFactory.create(
-            review_status='approved',
             status='full',
             is_online=False,
             location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
         ApplicantFactory.create_batch(3, activity=second, status='accepted')
 
-        third = AssignmentFactory.create(review_status='approved', status='open')
+        third = AssignmentFactory.create(status='open')
         fourth = AssignmentFactory.create(
-            review_status='approved',
             status='open',
             is_online=False,
             location=GeolocationFactory.create(position=Point(21.0, 9.0))
         )
         fifth = AssignmentFactory.create(
-            review_status='approved',
             status='open',
             is_online=False,
             location=GeolocationFactory.create(position=Point(20.0, 10.0))
@@ -580,12 +573,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_sort_matching_created(self):
         first = EventFactory.create(
-            review_status='approved', status='open', created=now() - datetime.timedelta(days=7)
+            status='open', created=now() - datetime.timedelta(days=7)
         )
         second = EventFactory.create(
-            review_status='approved', status='open', created=now() - datetime.timedelta(days=5)
+            status='open', created=now() - datetime.timedelta(days=5)
         )
-        third = EventFactory.create(review_status='approved', status='open', created=now() - datetime.timedelta(days=1))
+        third = EventFactory.create(status='open', created=now() - datetime.timedelta(days=1))
 
         response = self.client.get(
             self.url + '?sort=popularity',
@@ -613,20 +606,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         initiative = InitiativeFactory.create(theme=theme)
 
         first = EventFactory.create(
-            review_status='approved',
             status='open',
             initiative=initiative,
             is_online=False
         )
         second = AssignmentFactory.create(
-            review_status='approved',
             status='open',
             location=GeolocationFactory.create(position=Point(21.0, 9.0)),
             initiative=initiative,
             is_online=False
         )
         third = AssignmentFactory.create(
-            review_status='approved',
             status='open',
             location=GeolocationFactory.create(position=Point(21.0, 9.0)),
             initiative=initiative,
@@ -651,7 +641,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         initiative = InitiativeFactory.create()
         EventFactory.create_batch(
             105,
-            review_status='approved',
             status='open',
             initiative=initiative,
         )
@@ -848,7 +837,6 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         last_year = now() - timedelta(days=400)
         self.old_event = EventFactory.create(
             created=last_year,
-            review_status='approved',
             status='open'
         )
         ParticipantFactory.create(
@@ -860,7 +848,6 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.new_event = EventFactory.create(
-            review_status='approved',
             status='open'
         )
         ParticipantFactory.create(

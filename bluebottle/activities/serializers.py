@@ -41,7 +41,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         model = Activity
         meta_fields = (
             'permissions',
-            'transitions', 'review_transitions',
+            'transitions',
             'created', 'updated',
         )
 
@@ -79,7 +79,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         model = Activity
         meta_fields = (
             'permissions',
-            'transitions', 'review_transitions',
+            'transitions',
             'created', 'updated',
             'errors', 'required',
         )
@@ -162,16 +162,17 @@ class ContributionListSerializer(PolymorphicModelSerializer):
         )
 
 
-class ActivityReviewTransitionSerializer(TransitionSerializer):
+class ActivityTransitionSerializer(TransitionSerializer):
     resource = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
-    field = 'review_states'
+    field = 'states'
+
     included_serializers = {
         'resource': 'bluebottle.activities.serializers.ActivitySerializer',
     }
 
     class JSONAPIMeta:
         included_resources = ['resource']
-        resource_name = 'activities/review-transitions'
+        resource_name = 'activities/transitions'
 
 
 class RelatedActivityImageSerializer(ModelSerializer):

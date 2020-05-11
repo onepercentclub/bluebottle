@@ -1,16 +1,16 @@
 from django.conf.urls import url
 
 from bluebottle.activities.views import (
-    ActivityList, ActivityDetail, ActivityReviewTransitionList,
+    ActivityList, ActivityDetail, ActivityTransitionList,
     ContributionList, RelatedActivityImageList,
     RelatedActivityImageContent,
 )
 
 urlpatterns = [
     url(
-        r'^/review-transitions$',
-        ActivityReviewTransitionList.as_view(),
-        name='activity-review-transition-list'),
+        r'^/transitions$',
+        ActivityTransitionList.as_view(),
+        name='activity-transition-list'),
     url(r'^$',
         ActivityList.as_view(),
         name='activity-list'),

@@ -169,11 +169,12 @@ class ActivitySearchFilter(ElasticSearchFilter):
                     path='owner',
                     query=Term(owner__id=request.user.pk)
                 ),
-                Terms(review_status=['approved']),
-                ~Term(status='closed')
+                ~Terms(status=['draft', 'needs_work', 'submitted', 'deleted', 'closed'])
             ]
         else:
-            return [Terms(review_status=['approved']), ~Term(status='closed')]
+            return [
+                ~Terms(status=['draft', 'needs_work', 'submitted', 'deleted', 'closed'])
+            ]
 
 
 class ActivityFilter(DjangoFilterBackend):

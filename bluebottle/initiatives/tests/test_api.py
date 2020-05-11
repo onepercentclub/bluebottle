@@ -409,9 +409,9 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(
             data['meta']['transitions'],
             [{
-                u'available': False,
-                u'name': u'submit',
-                u'target': u'submitted'
+                u'available': True,
+                u'name': u'request_changes',
+                u'target': u'needs_work'
             }])
         self.assertEqual(data['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
         self.assertEqual(data['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
@@ -853,37 +853,6 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
             owner=self.owner
         )
 
-    def test_transition_to_submitted(self):
-        data = {
-            'data': {
-                'type': 'initiative-transitions',
-                'attributes': {
-                    'transition': 'submit',
-                },
-                'relationships': {
-                    'resource': {
-                        'data': {
-                            'type': 'initiatives',
-                            'id': self.initiative.pk
-                        }
-                    }
-                }
-            }
-        }
-
-        response = self.client.post(
-            self.url,
-            json.dumps(data),
-            user=self.owner
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        data = json.loads(response.content)
-
-        initiative = Initiative.objects.get(pk=self.initiative.pk)
-        self.assertEqual(initiative.status, 'submitted')
-        self.assertTrue(data['data']['id'])
-        self.assertEqual(data['data']['attributes']['transition'], 'submit')
-
     def test_transition_disallowed(self):
         data = {
             'data': {
@@ -913,7 +882,7 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(data['errors'][0], u'Transition is not available')
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
-        self.assertEqual(initiative.status, 'draft')
+        self.assertEqual(initiative.status, 'submitted')
 
 
 class InitiativeRedirectTest(TestCase):

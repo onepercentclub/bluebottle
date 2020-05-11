@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition
 from bluebottle.fsm.effects import Effect, TransitionEffect, RelatedTransitionEffect
 
-from bluebottle.activities.models import Organizer, Activity
+from bluebottle.activities.models import Organizer
 
 
 class CreateOrganizer(Effect):
@@ -18,8 +18,6 @@ class CreateOrganizer(Effect):
 
 
 class ActivityStateMachine(ModelStateMachine):
-    model = Activity
-
     draft = State(_('draft'), 'draft')
     submitted = State(_('submitted'), 'submitted')
     needs_work = State(_('needs work'), 'needs_work')

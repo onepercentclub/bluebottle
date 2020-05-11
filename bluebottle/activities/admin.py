@@ -103,6 +103,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     status_fields = (
         'complete',
         'valid',
+        'status',
         'states',
     )
 

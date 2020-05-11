@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from django.utils import timezone
 
 from bluebottle.activities.effects import Complete
@@ -19,8 +17,14 @@ class Finished(ModelChangedTrigger):
         )
 
     effects = [
-        TransitionEffect('succeed', conditions=[FundingStateMachine.should_finish, FundingStateMachine.target_reached]),
-        TransitionEffect('close', conditions=[FundingStateMachine.should_finish, FundingStateMachine.target_not_reached]),
+        TransitionEffect(
+            'succeed',
+            conditions=[FundingStateMachine.should_finish, FundingStateMachine.target_reached]
+        ),
+        TransitionEffect(
+            'close',
+            conditions=[FundingStateMachine.should_finish, FundingStateMachine.target_not_reached]
+        ),
     ]
 
 

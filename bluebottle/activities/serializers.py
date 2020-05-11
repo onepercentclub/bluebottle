@@ -12,12 +12,10 @@ from bluebottle.events.serializers import (
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
-
 from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
     DonationListSerializer, TinyFundingSerializer
 )
-from bluebottle.fsm.serializers import TransitionSerializer
 
 
 class ActivityListSerializer(PolymorphicModelSerializer):

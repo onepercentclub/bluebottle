@@ -40,7 +40,7 @@ class BaseNotificationEffect(Effect):
 
 
 def NotificationEffect(_message):
-    
+
     class _NotificationEffect(BaseNotificationEffect):
         message = _message
 

@@ -1,9 +1,8 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition
+from bluebottle.activities.models import Organizer
 from bluebottle.fsm.effects import Effect, TransitionEffect, RelatedTransitionEffect
-
-from bluebottle.activities.models import Organizer, Activity
+from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition
 
 
 class CreateOrganizer(Effect):
@@ -90,10 +89,10 @@ class ActivityStateMachine(ModelStateMachine):
         permission=is_staff,
         effects=[RelatedTransitionEffect('organizer', 'fail')]
     )
-    accept = Transition(
-        rejected,
+    restore = Transition(
+        [rejected, closed, deleted],
         draft,
-        name=_('Accept'),
+        name=_('Restore'),
         automatic=False,
         permission=is_staff,
         effects=[RelatedTransitionEffect('organizer', 'reset')]

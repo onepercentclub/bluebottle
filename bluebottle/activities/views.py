@@ -1,11 +1,9 @@
 from django.contrib.contenttypes.models import ContentType
-
-from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_json_api.views import AutoPrefetchMixin
 
-
-from bluebottle.activities.models import Activity, Contribution
 from bluebottle.activities.filters import ActivitySearchFilter
+from bluebottle.activities.models import Activity, Contribution
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
@@ -15,11 +13,9 @@ from bluebottle.activities.serializers import (
 )
 from bluebottle.assignments.models import Applicant
 from bluebottle.events.models import Participant
-from bluebottle.funding.models import Donation
-
-from bluebottle.files.views import ImageContentView
 from bluebottle.files.models import RelatedImage
-from bluebottle.transitions.views import TransitionList
+from bluebottle.files.views import ImageContentView
+from bluebottle.funding.models import Donation
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission
 )

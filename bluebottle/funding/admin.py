@@ -35,10 +35,8 @@ from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvide
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
-from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action, FSMAdminMixin, \
     BasePlatformSettingsAdmin
-from bluebottle.utils.forms import FSMModelForm
 from bluebottle.wallposts.admin import DonationWallpostInline
 
 logger = logging.getLogger(__name__)
@@ -167,7 +165,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         'amount_donated', 'amount_raised',
-        'donations_link', 'payout_links', 'started'
+        'donations_link', 'payout_links', 'started', 'status'
     ]
 
     list_display = [

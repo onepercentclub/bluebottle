@@ -5,8 +5,7 @@ from bluebottle.activities.states import ActivityStateMachine, ContributionState
 
 from bluebottle.fsm.effects import (
     TransitionEffect,
-    RelatedTransitionEffect,
-    Effect
+    RelatedTransitionEffect
 )
 from bluebottle.fsm.state import Transition
 from bluebottle.funding.models import Funding, Donation, Payout
@@ -25,12 +24,10 @@ class FundingStateMachine(ActivityStateMachine):
             return _("The deadline of the activity should be in the future.")
 
     def target_reached(self):
-        # FIXME!!!
-        return True
+        return self.instance.amount_raised >= self.instance.target
 
     def target_not_reached(self):
-        # FIXME!!!
-        return False
+        return not self.target_reached
 
     submit = Transition(
         [

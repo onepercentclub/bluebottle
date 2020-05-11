@@ -28,9 +28,9 @@ def check_funding_end():
             ).all()
             for funding in activities:
                 if funding.amount_raised.amount == 0:
-                    funding.transitions.close()
+                    funding.states.close()
                 elif funding.amount_raised >= funding.target:
-                    funding.transitions.succeed()
+                    funding.states.succeed()
                 else:
-                    funding.transitions.partial()
+                    funding.states.partial()
                 funding.save()

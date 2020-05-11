@@ -48,9 +48,7 @@ class BudgetLineListTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
             owner=self.user,
@@ -133,9 +131,7 @@ class BudgetLineDetailTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
             owner=self.user,
@@ -204,9 +200,7 @@ class RewardListTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
             owner=self.user,
@@ -294,9 +288,7 @@ class RewardDetailTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
             owner=self.user,
@@ -371,10 +363,7 @@ class FundingDetailTestCase(BluebottleTestCase):
             owner=self.user,
             place=self.geolocation
         )
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.initiative.save()
+        self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
             initiative=self.initiative,
@@ -395,8 +384,8 @@ class FundingDetailTestCase(BluebottleTestCase):
         ) as verified:
             verified.return_value = True
 
-            self.funding.review_transitions.submit()
-            self.funding.review_transitions.approve()
+            self.funding.states.submit()
+            self.funding.states.approve()
 
         self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
 
@@ -624,10 +613,7 @@ class FundraiserListTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.initiative.save()
+        self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
             initiative=self.initiative,
@@ -772,9 +758,7 @@ class DonationTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
 
@@ -817,7 +801,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
         donation = Donation.objects.get(pk=data['data']['id'])
-        donation.transitions.succeed()
+        donation.states.succeed()
         donation.save()
 
         response = self.client.get(self.funding_url, user=self.user)
@@ -840,7 +824,7 @@ class DonationTestCase(BluebottleTestCase):
         donation = Donation.objects.get(pk=data['data']['id'])
         self.assertTrue(donation.user, self.user)
 
-        donation.transitions.succeed()
+        donation.states.succeed()
         donation.save()
 
         response = self.client.get(self.funding_url, user=self.user)
@@ -1413,10 +1397,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.initiative = InitiativeFactory.create(
             place=self.geolocation
         )
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.initiative.save()
+        self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
             initiative=self.initiative,
@@ -1439,7 +1420,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         ) as verified:
             verified.return_value = True
 
-            self.funding.review_transitions.approve()
+            self.funding.states.approve()
 
         for i in range(5):
             donation = DonationFactory.create(
@@ -1466,10 +1447,10 @@ class PayoutDetailTestCase(BluebottleTestCase):
             )
             with mock.patch('stripe.Source.modify'):
                 StripeSourcePaymentFactory.create(donation=donation)
-            donation.transitions.fail()
+            donation.states.fail()
             donation.save()
 
-        self.funding.transitions.succeed()
+        self.funding.states.succeed()
         self.funding.save()
 
         with mock.patch(
@@ -1525,7 +1506,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         )
         self.funding.save()
 
-        self.funding.review_transitions.approve()
+        self.funding.states.approve()
 
         for i in range(5):
             donation = DonationFactory.create(
@@ -1541,10 +1522,10 @@ class PayoutDetailTestCase(BluebottleTestCase):
                 status='new',
             )
             VitepayPaymentFactory.create(donation=donation)
-            donation.transitions.fail()
+            donation.states.fail()
             donation.save()
 
-        self.funding.transitions.succeed()
+        self.funding.states.succeed()
         self.funding.save()
 
         response = self.client.get(
@@ -1568,7 +1549,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         )
         self.funding.save()
 
-        self.funding.review_transitions.approve()
+        self.funding.states.approve()
 
         for i in range(5):
             donation = DonationFactory.create(
@@ -1584,10 +1565,10 @@ class PayoutDetailTestCase(BluebottleTestCase):
                 status='new',
             )
             LipishaPaymentFactory.create(donation=donation)
-            donation.transitions.fail()
+            donation.states.fail()
             donation.save()
 
-        self.funding.transitions.succeed()
+        self.funding.states.succeed()
         self.funding.save()
 
         response = self.client.get(
@@ -1610,7 +1591,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         )
         self.funding.save()
 
-        self.funding.review_transitions.approve()
+        self.funding.states.approve()
 
         for i in range(5):
             donation = DonationFactory.create(
@@ -1626,10 +1607,10 @@ class PayoutDetailTestCase(BluebottleTestCase):
                 status='new',
             )
             FlutterwavePaymentFactory.create(donation=donation)
-            donation.transitions.fail()
+            donation.states.fail()
             donation.save()
 
-        self.funding.transitions.succeed()
+        self.funding.states.succeed()
         self.funding.save()
 
         response = self.client.get(
@@ -1652,7 +1633,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         )
         self.funding.save()
 
-        self.funding.review_transitions.approve()
+        self.funding.states.approve()
 
         for i in range(5):
             donation = DonationFactory.create(
@@ -1668,10 +1649,10 @@ class PayoutDetailTestCase(BluebottleTestCase):
                 status='new',
             )
             PledgePaymentFactory.create(donation=donation)
-            donation.transitions.fail()
+            donation.states.fail()
             donation.save()
 
-        self.funding.transitions.succeed()
+        self.funding.states.succeed()
         self.funding.save()
 
         response = self.client.get(
@@ -1695,7 +1676,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         BudgetLineFactory.create(activity=self.funding)
         self.funding.save()
 
-        self.funding.review_transitions.approve()
+        self.funding.states.approve()
 
         for i in range(5):
             donation = DonationFactory.create(
@@ -1704,7 +1685,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             )
             PledgePaymentFactory.create(donation=donation)
 
-        self.funding.transitions.succeed()
+        self.funding.states.succeed()
         self.funding.save()
 
         payout = self.funding.payouts.first()

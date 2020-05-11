@@ -89,6 +89,15 @@ class ActivityStateMachine(ModelStateMachine):
         permission=is_staff,
         effects=[RelatedTransitionEffect('organizer', 'fail')]
     )
+
+    close = Transition(
+        open,
+        closed,
+        name=_('Close'),
+        automatic=True,
+        effects=[RelatedTransitionEffect('organizer', 'fail')]
+    )
+
     restore = Transition(
         [rejected, closed, deleted],
         draft,
@@ -105,6 +114,13 @@ class ActivityStateMachine(ModelStateMachine):
         automatic=False,
         permissions=is_owner,
         effects=[RelatedTransitionEffect('organizer', 'fail')]
+    )
+
+    succeed = Transition(
+        [open],
+        succeeded,
+        name=_('Succeed'),
+        automatic=True,
     )
 
 

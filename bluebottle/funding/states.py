@@ -7,8 +7,8 @@ from bluebottle.fsm.effects import (
     TransitionEffect,
     RelatedTransitionEffect
 )
-from bluebottle.fsm.state import Transition
-from bluebottle.funding.models import Funding, Donation, Payout
+from bluebottle.fsm.state import Transition, ModelStateMachine, State
+from bluebottle.funding.models import Funding, Donation, Payout, Payment
 
 
 class FundingStateMachine(ActivityStateMachine):
@@ -65,7 +65,46 @@ class FundingStateMachine(ActivityStateMachine):
 
 class DonationStateMachine(ContributionStateMachine):
     model = Donation
+    failed = State(_('failed'), 'failed')
+
+    fail = Transition(
+        [
+            ContributionStateMachine.new,
+            ContributionStateMachine.succeeded
+        ],
+        failed,
+        name=_('Fail'),
+        automatic=True
+    )
 
 
-class PayoutStateMachine(ContributionStateMachine):
+class PaymentStateMachine(ModelStateMachine):
+    model = Payment
+
+    new = State(_('new'), 'new')
+    pending = State(_('pending'), 'pending')
+    succeeded = State(_('succeeded'), 'succeeded')
+    failed = State(_('failed'), 'failed')
+
+    succeed = Transition(
+        [new, pending, failed],
+        succeeded,
+        name=_('Succeed'),
+        automatic=True
+    )
+
+    fail = Transition(
+        [new, pending, succeeded],
+        failed,
+        name=_('Fail'),
+        automatic=True
+    )
+
+
+class PayoutStateMachine(ModelStateMachine):
     model = Payout
+
+    new = State(_('new'), 'new')
+    pending = State(_('pending'), 'pending')
+    succeeded = State(_('succeeded'), 'succeeded')
+    failed = State(_('failed'), 'failed')

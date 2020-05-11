@@ -20,8 +20,8 @@ class FundingTestCase(BluebottleAdminTestCase):
     def setUp(self):
         super(FundingTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve()
         self.initiative.save()
         bank_account = BankAccountFactory.create()
         self.funding = FundingFactory.create(
@@ -30,7 +30,7 @@ class FundingTestCase(BluebottleAdminTestCase):
             bank_account=bank_account
         )
         BudgetLineFactory.create(activity=self.funding)
-        self.funding.review_transitions.submit()
+        self.funding.states.submit()
         self.funding.save()
         self.admin_url = reverse('admin:funding_funding_change', args=(self.funding.id, ))
 
@@ -58,7 +58,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_funding_admin_refund(self):
-        self.funding.review_transitions.approve()
+        self.funding.states.approve()
         self.funding.target = Money(100, 'EUR')
         donation = DonationFactory.create(
             activity=self.funding,
@@ -66,7 +66,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         payment = PledgePaymentFactory.create(donation=donation)
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
-        self.funding.transitions.partial()
+        self.funding.states.partial()
         self.funding.save()
 
         self.client.force_login(self.superuser)
@@ -87,7 +87,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(payment.status, 'refunded')
 
     def test_funding_admin_add_matching(self):
-        self.funding.review_transitions.approve()
+        self.funding.states.approve()
         self.funding.target = Money(100, 'EUR')
         donation = DonationFactory.create(
             activity=self.funding,
@@ -96,7 +96,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(self.funding.amount_raised, Money(70, 'EUR'))
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
-        self.funding.transitions.partial()
+        self.funding.states.partial()
         self.funding.save()
         self.assertEqual(self.funding.amount_raised, Money(70, 'EUR'))
 
@@ -124,8 +124,8 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
     def setUp(self):
         super(DonationAdminTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve()
         self.initiative.save()
         account = StripePayoutAccountFactory.create()
         bank_account = ExternalAccountFactory.create(connect_account=account)

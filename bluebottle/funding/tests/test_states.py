@@ -18,6 +18,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.save()
 
     def test_approve(self):
+        self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, FundingStateMachine.open.value)
         organizer = self.funding.contributions.get()

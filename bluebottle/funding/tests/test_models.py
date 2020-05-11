@@ -94,7 +94,7 @@ class PayoutTestCase(BluebottleTestCase):
             target=Money(4000, 'EUR'),
             bank_account=bank_account
         )
-        self.funding.transitions.reviewed()
+        self.funding.states.reviewed()
         self.funding.save()
 
         for donation in DonationFactory.create_batch(
@@ -142,7 +142,7 @@ class PayoutTestCase(BluebottleTestCase):
             StripePaymentFactory.create(donation=donation)
 
     def test_auto_generate_payouts(self):
-        self.funding.transitions.succeed()
+        self.funding.states.succeed()
         self.funding.save()
         self.assertEqual(self.funding.payouts.count(), 3)
 
@@ -170,7 +170,7 @@ class PayoutTestCase(BluebottleTestCase):
 
         with mock.patch('bluebottle.payouts_dorado.adapters.DoradoPayoutAdapter.trigger_payout'):
             for payout in self.funding.payouts.all():
-                payout.transitions.approve()
+                payout.states.approve()
                 payout.save()
 
         # More donations after approved payouts

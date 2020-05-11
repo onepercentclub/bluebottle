@@ -3,6 +3,7 @@ import random
 import string
 
 from babel.numbers import get_currency_name
+from bluebottle.fsm.triggers import TriggerMixin
 
 from django.db.models import Count
 from django.core.cache import cache
@@ -546,7 +547,7 @@ class Donation(Contribution):
         resource_name = 'contributions/donations'
 
 
-class Payment(TransitionsMixin, PolymorphicModel):
+class Payment(TriggerMixin, PolymorphicModel):
     status = FSMField(
         default=PaymentTransitions.values.new,
     )

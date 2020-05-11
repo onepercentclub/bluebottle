@@ -9,7 +9,7 @@ from django.db.models import F
 def merge_review_status(apps, schema_editor):
     Activity = apps.get_model('activities', 'Activity')
     Activity.objects.filter(status='in_review').update(status=F('review_status'))
-    Activity.objects.filter(status='closed').update(status='rejected')
+    Activity.objects.filter(review_status='closed').update(status='rejected')
 
 
 class Migration(migrations.Migration):

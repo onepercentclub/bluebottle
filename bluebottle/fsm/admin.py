@@ -130,7 +130,7 @@ class StateMachineAdminMixin(object):
         urls = super(StateMachineAdminMixin, self).get_urls()
         custom_urls = [
             url(
-                r'^(?P<pk>.+)/transitionPP/(?P<field_name>.+)/(?P<transition_name>.+)$',
+                r'^(?P<pk>.+)/transition/(?P<field_name>.+)/(?P<transition_name>.+)$',
                 self.admin_site.admin_view(self.transition),
                 name='{}_{}_state_transition'.format(
                     self.model._meta.app_label, self.model._meta.model_name

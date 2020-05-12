@@ -10,6 +10,9 @@ class PledgePayment(Payment):
     provider = 'pledge'
     transitions = TransitionManager(PledgePaymentTransitions, 'status')
 
+    def refund(self):
+        pass
+
 
 class PledgePaymentProvider(PaymentProvider):
     @property

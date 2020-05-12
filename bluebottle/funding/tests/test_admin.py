@@ -87,7 +87,9 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.target = Money(100, 'EUR')
         donation = DonationFactory.create(
             activity=self.funding,
-            amount=Money(70, 'EUR'))
+            amount=Money(70, 'EUR')
+        )
+        donation.states.succeed(save=True)
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(self.funding.amount_raised, Money(70, 'EUR'))
         self.funding.deadline = now() - timedelta(days=1)

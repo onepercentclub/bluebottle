@@ -6,11 +6,14 @@ from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates
 
 
 class CreateOrganizer(Effect):
-    "Create an organizer for the event"
+    "Create an organizer for the activity"
     post_save = True
 
     def execute(self):
-        Organizer.objects.get_or_create(activity=self.instance)
+        Organizer.objects.get_or_create(
+            activity=self.instance,
+            defaults={'user': self.instance.owner}
+        )
 
     def __unicode__(self):
         return unicode(_('Create organizer'))

@@ -2,14 +2,17 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
-
+from bluebottle.follow.effects import FollowActivityEffect
 from bluebottle.fsm.effects import (
     TransitionEffect,
     RelatedTransitionEffect
 )
 from bluebottle.fsm.state import Transition, ModelStateMachine, State
-from bluebottle.funding.effects import GeneratePayouts, RefundDonations
+from bluebottle.funding.effects import GeneratePayouts, GenerateDonationWallpost, \
+    RemoveDonationWallpost, UpdateFundingAmounts, RefundPaymentAtPSP
+from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage
 from bluebottle.funding.models import Funding, Donation, Payout, Payment
+from bluebottle.notifications.effects import NotificationEffect
 
 
 class FundingStateMachine(ActivityStateMachine):
@@ -76,6 +79,16 @@ class FundingStateMachine(ActivityStateMachine):
         ]
     )
 
+    recalculate = Transition(
+        ActivityStateMachine.succeeded,
+        ActivityStateMachine.succeeded,
+        name=_('Recalculate'),
+        automatic=False,
+        effects=[
+            GeneratePayouts
+        ]
+    )
+
     partial = Transition(
         [ActivityStateMachine.open, ActivityStateMachine.succeeded],
         partially_funded,
@@ -92,7 +105,7 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Refund'),
         automatic=False,
         effects=[
-            RefundDonations,
+            RelatedTransitionEffect('donations', 'activity_refund'),
             RelatedTransitionEffect('payouts', 'cancel')
         ]
     )
@@ -101,6 +114,8 @@ class FundingStateMachine(ActivityStateMachine):
 class DonationStateMachine(ContributionStateMachine):
     model = Donation
     failed = State(_('failed'), 'failed')
+    refunded = State(_('refunded'), 'refunded')
+    activity_refunded = State(_('activity_refunded'), 'activity_refunded')
 
     succeed = Transition(
         [
@@ -109,7 +124,14 @@ class DonationStateMachine(ContributionStateMachine):
         ],
         ContributionStateMachine.succeeded,
         name=_('Succeed'),
-        automatic=True
+        automatic=True,
+        effects=[
+            NotificationEffect(DonationSuccessActivityManagerMessage),
+            NotificationEffect(DonationSuccessDonorMessage),
+            GenerateDonationWallpost,
+            FollowActivityEffect,
+            UpdateFundingAmounts
+        ]
     )
 
     fail = Transition(
@@ -119,7 +141,40 @@ class DonationStateMachine(ContributionStateMachine):
         ],
         failed,
         name=_('Fail'),
-        automatic=True
+        automatic=True,
+        effects=[
+            RemoveDonationWallpost,
+            UpdateFundingAmounts
+        ]
+    )
+
+    refund = Transition(
+        [
+            ContributionStateMachine.new,
+            ContributionStateMachine.succeeded
+        ],
+        refunded,
+        name=_('Refund'),
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('payment', 'refund'),
+            RemoveDonationWallpost,
+            UpdateFundingAmounts
+        ]
+    )
+
+    activity_refund = Transition(
+        [
+            ContributionStateMachine.new,
+            ContributionStateMachine.succeeded,
+        ],
+        activity_refunded,
+        name=_('Activity refund'),
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('payment', 'refund'),
+            RemoveDonationWallpost
+        ]
     )
 
 
@@ -130,6 +185,8 @@ class PaymentStateMachine(ModelStateMachine):
     pending = State(_('pending'), 'pending')
     succeeded = State(_('succeeded'), 'succeeded')
     failed = State(_('failed'), 'failed')
+    refunded = State(_('refunded'), 'refunded')
+    activity_refunded = State(_('activity_refunded'), 'activity_refunded')
 
     succeed = Transition(
         [new, pending, failed],
@@ -143,6 +200,30 @@ class PaymentStateMachine(ModelStateMachine):
         failed,
         name=_('Fail'),
         automatic=True
+    )
+
+    refund = Transition(
+        [
+            ContributionStateMachine.succeeded
+        ],
+        refunded,
+        name=_('Refund'),
+        automatic=True,
+        effects=[
+            RefundPaymentAtPSP
+        ]
+    )
+
+    activity_refund = Transition(
+        [
+            ContributionStateMachine.succeeded
+        ],
+        activity_refunded,
+        name=_('Activity refund'),
+        automatic=True,
+        effects=[
+            RemoveDonationWallpost
+        ]
     )
 
 

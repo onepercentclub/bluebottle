@@ -10,7 +10,8 @@ class FollowActivityEffect(Effect):
     post_save = True
 
     def execute(self, **kwargs):
-        follow(self.instance.user, self.instance.activity)
+        if self.instance.user:
+            follow(self.instance.user, self.instance.activity)
 
     def __repr__(self):
         return '<Effect: Follow {} by {}>'.format(self.instance.activity, self.instance.user)
@@ -25,7 +26,8 @@ class UnFollowActivityEffect(Effect):
     post_save = True
 
     def execute(self, **kwargs):
-        unfollow(self.instance.user, self.instance.activity)
+        if self.instance.user:
+            unfollow(self.instance.user, self.instance.activity)
 
     def __repr__(self):
         return '<Effect: Unfollow {} by {}>'.format(self.instance.activity, self.instance.user)

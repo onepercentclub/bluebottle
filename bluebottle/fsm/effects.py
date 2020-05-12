@@ -118,10 +118,14 @@ class BaseRelatedTransitionEffect(Effect):
 
         if value:
             try:
-                for instance in value:
+                for instance in value.all():
                     yield instance
-            except TypeError:
-                yield value
+            except AttributeError:
+                try:
+                    for instance in value:
+                        yield instance
+                except TypeError:
+                    yield value
 
     @property
     def effects(self):

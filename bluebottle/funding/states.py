@@ -9,8 +9,9 @@ from bluebottle.fsm.effects import (
 )
 from bluebottle.fsm.state import Transition, ModelStateMachine, State
 from bluebottle.funding.effects import GeneratePayouts, GenerateDonationWallpost, \
-    RemoveDonationWallpost, UpdateFundingAmounts, RefundPaymentAtPSP
-from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage
+    RemoveDonationWallpost, UpdateFundingAmounts, RefundPaymentAtPSP, SetStartDate, SetDeadline
+from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
+    FundingPartiallyFundedMessage, FundingClosedMessage, FundingRealisedOwnerMessage
 from bluebottle.funding.models import Funding, Donation, Payout, Payment
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -62,11 +63,34 @@ class FundingStateMachine(ActivityStateMachine):
         automatic=False,
         effects=[
             RelatedTransitionEffect('organizer', 'succeed'),
+            SetStartDate,
+            SetDeadline,
             TransitionEffect(
                 'close',
                 conditions=[should_finish]
             ),
         ]
+    )
+
+    close = Transition(
+        [ActivityStateMachine.open],
+        ActivityStateMachine.closed,
+        name=_('Close'),
+        automatic=True,
+        effects=[
+            NotificationEffect(FundingClosedMessage)
+        ]
+    )
+
+    extend = Transition(
+        [
+            ActivityStateMachine.succeeded,
+            partially_funded,
+            ActivityStateMachine.closed,
+        ],
+        ActivityStateMachine.open,
+        name=_('Extend'),
+        automatic=True
     )
 
     succeed = Transition(
@@ -75,7 +99,8 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Succeed'),
         automatic=True,
         effects=[
-            GeneratePayouts
+            GeneratePayouts,
+            NotificationEffect(FundingRealisedOwnerMessage)
         ]
     )
 
@@ -95,7 +120,8 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Partial'),
         automatic=True,
         effects=[
-            GeneratePayouts
+            GeneratePayouts,
+            NotificationEffect(FundingPartiallyFundedMessage)
         ]
     )
 
@@ -188,18 +214,34 @@ class PaymentStateMachine(ModelStateMachine):
     refunded = State(_('refunded'), 'refunded')
     activity_refunded = State(_('activity_refunded'), 'activity_refunded')
 
+    authorize = Transition(
+        [new],
+        pending,
+        name=_('Authorize'),
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('donation', 'succeed')
+        ]
+    )
+
     succeed = Transition(
         [new, pending, failed],
         succeeded,
         name=_('Succeed'),
-        automatic=True
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('donation', 'succeed')
+        ]
     )
 
     fail = Transition(
         [new, pending, succeeded],
         failed,
         name=_('Fail'),
-        automatic=True
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('donation', 'fail')
+        ]
     )
 
     refund = Transition(
@@ -211,18 +253,6 @@ class PaymentStateMachine(ModelStateMachine):
         automatic=True,
         effects=[
             RefundPaymentAtPSP
-        ]
-    )
-
-    activity_refund = Transition(
-        [
-            ContributionStateMachine.succeeded
-        ],
-        activity_refunded,
-        name=_('Activity refund'),
-        automatic=True,
-        effects=[
-            RemoveDonationWallpost
         ]
     )
 

@@ -13,7 +13,7 @@ class Finished(ModelChangedTrigger):
         return (
             self.instance.deadline and
             self.instance.deadline < timezone.now() and
-            self.instance.status not in ('succeeded', 'closed', )
+            self.instance.status not in ('succeeded', 'partially_funded', 'closed', )
         )
 
     effects = [
@@ -28,4 +28,21 @@ class Finished(ModelChangedTrigger):
     ]
 
 
-Funding.triggers = [Complete, Finished]
+class Extend(ModelChangedTrigger):
+    @property
+    def is_valid(self):
+        return (
+            self.instance.deadline and
+            self.instance.deadline > timezone.now() and
+            self.instance.status in ('succeeded', 'partially_funded', 'closed', )
+        )
+
+    effects = [
+        TransitionEffect(
+            'extend',
+            conditions=[FundingStateMachine.is_complete, FundingStateMachine.is_valid]
+        )
+    ]
+
+
+Funding.triggers = [Complete, Finished, Extend]

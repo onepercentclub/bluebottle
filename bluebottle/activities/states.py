@@ -144,7 +144,10 @@ class OrganizerStateMachine(ContributionStateMachine):
     model = Organizer
 
     succeed = Transition(
-        (ContributionStateMachine.new, ContributionStateMachine.failed, ),
+        [
+            ContributionStateMachine.new,
+            ContributionStateMachine.failed
+        ],
         ContributionStateMachine.succeeded
     )
     fail = Transition(
@@ -152,6 +155,9 @@ class OrganizerStateMachine(ContributionStateMachine):
         ContributionStateMachine.failed
     )
     reset = Transition(
-        (ContributionStateMachine.succeeded, ContributionStateMachine.closed, ),
+        [
+            ContributionStateMachine.succeeded,
+            ContributionStateMachine.failed
+        ],
         ContributionStateMachine.new,
     )

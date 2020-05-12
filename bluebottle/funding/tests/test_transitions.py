@@ -23,8 +23,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         super(FundingTestCase, self).setUp()
         user = BlueBottleUserFactory.create(first_name='Jean Baptiste')
         self.initiative = InitiativeFactory.create(activity_manager=user)
-        self.initiative.states.approve()
-        self.initiative.save()
+        self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(
             owner=user,
             initiative=self.initiative,
@@ -42,7 +41,6 @@ class FundingTestCase(BluebottleAdminTestCase):
     def test_default_status(self):
         self.assertEqual(self.funding.status, self.funding.states.open.value)
         organizer = self.funding.contributions.instance_of(Organizer).get()
-        import ipdb; ipdb.set_trace()
         self.assertEqual(organizer.status, organizer.states.new.value)
         self.assertEqual(organizer.user, self.funding.owner)
 
@@ -52,8 +50,8 @@ class FundingTestCase(BluebottleAdminTestCase):
         BudgetLineFactory.create(activity=funding)
         payout_account = PlainPayoutAccountFactory.create()
         bank_account = BankAccountFactory.create(connect_account=payout_account)
-        self.funding.bank_account = bank_account
-        self.funding.save()
+        funding.bank_account = bank_account
+        funding.save()
         self.assertEqual(funding.status, funding.states.submitted.value)
         organizer = funding.contributions.instance_of(Organizer).get()
         self.assertEqual(organizer.status, organizer.states.new.value)
@@ -74,7 +72,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         BudgetLineFactory.create(activity=funding)
         funding.bank_account.reviewed = True
 
-        funding.states.approve()
+        funding.states.approve(save=True)
 
         self.assertIsInstance(funding.started, datetime)
 
@@ -117,6 +115,7 @@ class FundingTestCase(BluebottleAdminTestCase):
             user=user,
             activity=self.funding,
             amount=Money(50, 'EUR'))
+        donation.states.succeed(save=True)
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(donation.status, donation.states.succeeded.value)
         self.assertEqual(len(mail.outbox), 2)
@@ -192,7 +191,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.deadline = now() + timedelta(days=1)
         self.funding.save()
 
-        self.funding.states.extend()
+        # self.funding.states.extend()
         self.assertEqual(self.funding.status, 'open')
 
     def test_extend_past_deadline(self):
@@ -212,7 +211,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.assertRaises(
             TransitionNotPossible,
-            self.funding.states.extend
+            self.funding.states.extend(save=True)
         )
 
     def test_refund(self):
@@ -230,7 +229,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, 'partially_funded')
-        self.funding.states.refund()
+        self.funding.states.refund(save=True)
 
         for contribution in self.funding.donations.all():
             self.assertEqual(contribution.status, contribution.states.activity_refunded.value)
@@ -249,18 +248,18 @@ class FundingTestCase(BluebottleAdminTestCase):
         )
         BudgetLineFactory.create(activity=new_funding)
         new_funding.bank_account.reviewed = True
-        new_funding.states.approve()
-
+        new_funding.states.approve(save=True)
         organizer = new_funding.contributions.first()
-
         self.assertEqual(organizer.status, u'succeeded')
 
-        new_funding.states.close()
-        new_funding.save()
+        new_funding.states.reject(save=True)
         organizer.refresh_from_db()
-        self.assertEqual(organizer.status, u'closed')
+        self.assertEqual(organizer.status, u'failed')
 
-        new_funding.states.reopen()
-        new_funding.save()
+        new_funding.states.restore(save=True)
+        organizer.refresh_from_db()
+        self.assertEqual(organizer.status, u'new')
+
+        new_funding.states.approve(save=True)
         organizer.refresh_from_db()
         self.assertEqual(organizer.status, u'succeeded')

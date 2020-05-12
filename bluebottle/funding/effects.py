@@ -1,3 +1,7 @@
+import datetime
+
+from django.utils import timezone
+from django.utils.timezone import get_current_timezone
 from django.utils.translation import ugettext as _
 
 from bluebottle.fsm.effects import Effect
@@ -25,6 +29,39 @@ class UpdateFundingAmounts(Effect):
 
     def __unicode__(self):
         return _('Update funding amounts')
+
+
+class SetStartDate(Effect):
+    post_save = True
+    conditions = []
+
+    def execute(self):
+        self.instance.started = timezone.now()
+
+    def __unicode__(self):
+        return _('Set start date')
+
+
+class SetDeadline(Effect):
+    post_save = True
+    conditions = []
+
+    def execute(self):
+        if not self.instance.deadline:
+            deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
+            self.instance.deadline = get_current_timezone().localize(
+                datetime.datetime(
+                    deadline.year,
+                    deadline.month,
+                    deadline.day,
+                    hour=23,
+                    minute=59,
+                    second=59
+                )
+            )
+
+    def __unicode__(self):
+        return _('Set start date')
 
 
 class RefundPaymentAtPSP(Effect):

@@ -8,12 +8,16 @@ from bluebottle.fsm.effects import (
     RelatedTransitionEffect
 )
 from bluebottle.fsm.state import Transition, ModelStateMachine, State
+from bluebottle.funding.effects import GeneratePayouts
 from bluebottle.funding.models import Funding, Donation, Payout, Payment
 
 
 class FundingStateMachine(ActivityStateMachine):
 
     model = Funding
+
+    partially_funded = State(_('partially funded'), 'partially_funded')
+    refunded = State(_('refunded'), 'refund')
 
     def should_finish(self):
         """the deadline has passed"""
@@ -62,10 +66,30 @@ class FundingStateMachine(ActivityStateMachine):
         ]
     )
 
+    succeed = Transition(
+        [ActivityStateMachine.open, partially_funded],
+        ActivityStateMachine.succeeded,
+        name=_('Succeed'),
+        automatic=True,
+        effects=[
+            GeneratePayouts
+        ]
+    )
+
 
 class DonationStateMachine(ContributionStateMachine):
     model = Donation
     failed = State(_('failed'), 'failed')
+
+    succeed = Transition(
+        [
+            ContributionStateMachine.new,
+            ContributionStateMachine.failed
+        ],
+        ContributionStateMachine.succeeded,
+        name=_('Succeed'),
+        automatic=True
+    )
 
     fail = Transition(
         [
@@ -105,6 +129,14 @@ class PayoutStateMachine(ModelStateMachine):
     model = Payout
 
     new = State(_('new'), 'new')
+    approved = State(_('approve'), 'approve')
     pending = State(_('pending'), 'pending')
     succeeded = State(_('succeeded'), 'succeeded')
     failed = State(_('failed'), 'failed')
+
+    approve = Transition(
+        new,
+        approved,
+        name=_('Approve'),
+        automatic=False
+    )

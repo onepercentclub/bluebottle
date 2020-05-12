@@ -1,31 +1,15 @@
-from django.utils import timezone
+from django.utils.translation import ugettext as _
 
-from bluebottle.activities.effects import Complete
-from bluebottle.fsm.effects import TransitionEffect
-from bluebottle.fsm.triggers import ModelChangedTrigger
-from bluebottle.funding.models import Funding
-from bluebottle.funding.states import FundingStateMachine
+from bluebottle.fsm.effects import Effect
+from bluebottle.funding.models import Payout
 
 
-class Finished(ModelChangedTrigger):
-    @property
-    def is_valid(self):
-        return (
-            self.instance.deadline and
-            self.instance.deadline < timezone.now() and
-            self.instance.status not in ('succeeded', 'closed', )
-        )
+class GeneratePayouts(Effect):
+    post_save = True
+    conditions = []
 
-    effects = [
-        TransitionEffect(
-            'succeed',
-            conditions=[FundingStateMachine.should_finish, FundingStateMachine.target_reached]
-        ),
-        TransitionEffect(
-            'close',
-            conditions=[FundingStateMachine.should_finish, FundingStateMachine.target_not_reached]
-        ),
-    ]
+    def execute(self):
+        Payout.generate(self.instance)
 
-
-Funding.triggers = [Complete, Finished]
+    def __unicode__(self):
+        return _('Generate payouts')

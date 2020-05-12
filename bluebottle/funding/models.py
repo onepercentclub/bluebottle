@@ -441,7 +441,7 @@ class Fundraiser(AnonymizationMixin, models.Model):
         verbose_name_plural = _('fundraisers')
 
 
-class Payout(TransitionsMixin, models.Model):
+class Payout(TriggerMixin, models.Model):
     activity = models.ForeignKey(
         'funding.Funding',
         verbose_name=_("activity"),
@@ -720,3 +720,4 @@ class FundingPlatformSettings(BasePlatformSettings):
 
 from bluebottle.funding.states import *  # noqa
 from bluebottle.funding.effects import *  # noqa
+from bluebottle.funding.triggers import *  # noqa

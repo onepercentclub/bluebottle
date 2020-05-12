@@ -4,8 +4,6 @@ from bluebottle.activities.models import Organizer
 from bluebottle.fsm.effects import Effect, TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition
 
-from bluebottle.activities.models import Organizer
-
 
 class CreateOrganizer(Effect):
     "Create an organizer for the activity"

@@ -37,6 +37,9 @@ class FundingStateMachine(ActivityStateMachine):
     def target_not_reached(self):
         return not self.target_reached
 
+    def no_donations(self):
+        return not self.instance.amount_raised.amount
+
     submit = Transition(
         [
             ActivityStateMachine.draft,

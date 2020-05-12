@@ -94,8 +94,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(self.funding.amount_raised, Money(70, 'EUR'))
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
-        self.funding.states.partial()
-        self.funding.save()
+        self.funding.states.partial(save=True)
         self.assertEqual(self.funding.amount_raised, Money(70, 'EUR'))
 
         self.funding.amount_matching = Money(30, 'EUR')
@@ -106,6 +105,10 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
         self.assertContains(response, 'refund')
+        refund_url = reverse('admin:funding_funding_state_transition',
+                             args=(self.funding.id, 'states', 'refund'))
+        self.assertContains(response, refund_url)
+        self.assertContains(response, 'recalculate')
         recalculate_url = reverse('admin:funding_funding_state_transition',
                                   args=(self.funding.id, 'states', 'recalculate'))
 

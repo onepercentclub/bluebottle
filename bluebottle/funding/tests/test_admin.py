@@ -36,8 +36,8 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
         self.assertContains(response, 'approve')
-        reviewed_url = reverse('admin:funding_funding_transition',
-                               args=(self.funding.id, 'review_transitions', 'approve'))
+        reviewed_url = reverse('admin:funding_funding_state_transition',
+                               args=(self.funding.id, 'states', 'approve'))
         self.assertContains(response, reviewed_url)
 
     def test_funding_admin_review(self):
@@ -46,8 +46,8 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
         self.assertContains(response, 'approve')
-        reviewed_url = reverse('admin:funding_funding_transition',
-                               args=(self.funding.id, 'review_transitions', 'approve'))
+        reviewed_url = reverse('admin:funding_funding_state_transition',
+                               args=(self.funding.id, 'states', 'approve'))
 
         self.assertContains(response, reviewed_url)
         response = self.client.get(reviewed_url)
@@ -70,8 +70,8 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
         self.assertContains(response, 'refund')
-        refund_url = reverse('admin:funding_funding_transition',
-                             args=(self.funding.id, 'transitions', 'refund'))
+        refund_url = reverse('admin:funding_funding_state_transition',
+                             args=(self.funding.id, 'states', 'refund'))
 
         self.assertContains(response, refund_url)
         self.client.post(refund_url, {'confirm': True})
@@ -104,8 +104,8 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
         self.assertContains(response, 'refund')
-        recalculate_url = reverse('admin:funding_funding_transition',
-                                  args=(self.funding.id, 'transitions', 'recalculate'))
+        recalculate_url = reverse('admin:funding_funding_state_transition',
+                                  args=(self.funding.id, 'states', 'recalculate'))
 
         self.assertContains(response, recalculate_url)
         self.client.post(recalculate_url, {'confirm': True})

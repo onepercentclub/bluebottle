@@ -20,9 +20,7 @@ class FundingTestCase(BluebottleAdminTestCase):
     def setUp(self):
         super(FundingTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
-        self.initiative.states.submit()
-        self.initiative.states.approve()
-        self.initiative.save()
+        self.initiative.states.approve(save=True)
         bank_account = BankAccountFactory.create()
         self.funding = FundingFactory.create(
             owner=self.superuser,
@@ -30,8 +28,6 @@ class FundingTestCase(BluebottleAdminTestCase):
             bank_account=bank_account
         )
         BudgetLineFactory.create(activity=self.funding)
-        self.funding.states.submit()
-        self.funding.save()
         self.admin_url = reverse('admin:funding_funding_change', args=(self.funding.id, ))
 
     def test_funding_admin(self):
@@ -124,9 +120,7 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
     def setUp(self):
         super(DonationAdminTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
-        self.initiative.states.submit()
-        self.initiative.states.approve()
-        self.initiative.save()
+        self.initiative.states.approve(save=True)
         account = StripePayoutAccountFactory.create()
         bank_account = ExternalAccountFactory.create(connect_account=account)
 

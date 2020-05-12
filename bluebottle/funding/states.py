@@ -76,6 +76,16 @@ class FundingStateMachine(ActivityStateMachine):
         ]
     )
 
+    partial = Transition(
+        [ActivityStateMachine.open, ActivityStateMachine.succeeded],
+        partially_funded,
+        name=_('Partial'),
+        automatic=True,
+        effects=[
+            GeneratePayouts
+        ]
+    )
+
 
 class DonationStateMachine(ContributionStateMachine):
     model = Donation
@@ -130,7 +140,8 @@ class PayoutStateMachine(ModelStateMachine):
 
     new = State(_('new'), 'new')
     approved = State(_('approve'), 'approve')
-    pending = State(_('pending'), 'pending')
+    scheduled = State(_('scheduled'), 'scheduled')
+    started = State(_('started'), 'started')
     succeeded = State(_('succeeded'), 'succeeded')
     failed = State(_('failed'), 'failed')
 
@@ -139,4 +150,25 @@ class PayoutStateMachine(ModelStateMachine):
         approved,
         name=_('Approve'),
         automatic=False
+    )
+
+    start = Transition(
+        new,
+        started,
+        name=_('Start'),
+        automatic=True
+    )
+
+    reset = Transition(
+        [approved, scheduled, started, succeeded, failed],
+        new,
+        name=_('Reset'),
+        automatic=True
+    )
+
+    succeed = Transition(
+        [approved, scheduled, started, failed],
+        succeeded,
+        name=_('Succeed'),
+        automatic=True
     )

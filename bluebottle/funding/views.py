@@ -181,15 +181,15 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
         # related to this Funding.
         payout = serializer.instance
         if status == 'started':
-            payout.transitions.start()
+            payout.states.start()
         if status == 'scheduled':
-            payout.transitions.start()
+            payout.states.start()
         if status == 'new':
-            payout.transitions.draft()
+            payout.states.reset()
         if status == 'succeeded':
-            payout.transitions.succeed()
+            payout.states.succeed()
         if status == 'confirm':
-            payout.transitions.succeed()
+            payout.states.succeed()
         payout.save()
         return HttpResponse(200)
 

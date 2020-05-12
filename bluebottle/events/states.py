@@ -70,11 +70,11 @@ class EventStateMachine(ActivityStateMachine):
 
     def should_start(self):
         "the start time has passed"
-        return self.instance.start < timezone.now()
+        return self.instance.start and self.instance.start < timezone.now()
 
     def should_open(self):
         "the start time has not passed"
-        return self.instance.start > timezone.now()
+        return self.instance.start and self.instance.start > timezone.now()
 
     def has_participants(self):
         "there are participants"

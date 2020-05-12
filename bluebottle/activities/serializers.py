@@ -12,6 +12,7 @@ from bluebottle.events.serializers import (
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
+from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
     DonationListSerializer, TinyFundingSerializer
@@ -158,6 +159,19 @@ class ContributionListSerializer(PolymorphicModelSerializer):
         meta_fields = (
             'created', 'updated',
         )
+
+
+class ActivityTransitionSerializer(TransitionSerializer):
+    resource = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
+    field = 'states'
+
+    included_serializers = {
+        'resource': 'bluebottle.activities.serializers.ActivitySerializer',
+    }
+
+    class JSONAPIMeta:
+        included_resources = ['resource']
+        resource_name = 'activities/transitions'
 
 
 class RelatedActivityImageSerializer(ModelSerializer):

@@ -4,6 +4,8 @@ from bluebottle.activities.models import Organizer
 from bluebottle.fsm.effects import Effect, TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition
 
+from bluebottle.activities.models import Organizer
+
 
 class CreateOrganizer(Effect):
     "Create an organizer for the activity"
@@ -20,9 +22,6 @@ class CreateOrganizer(Effect):
 
 
 class ActivityStateMachine(ModelStateMachine):
-    # Setting this somehow causes spills between EventStatemachine & FundingStatemachine
-    # model = Activity
-
     draft = State(_('draft'), 'draft')
     submitted = State(_('submitted'), 'submitted')
     needs_work = State(_('needs work'), 'needs_work')

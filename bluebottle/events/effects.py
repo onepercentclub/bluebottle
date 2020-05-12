@@ -38,7 +38,7 @@ class Started(ModelChangedTrigger):
         "The event has started"
         return (
             self.instance.duration and
-            self.instance.start < timezone.now() and
+            (self.instance.start and self.instance.start < timezone.now()) and
             self.instance.status not in ('succeeded', 'closed', )
         )
 
@@ -53,7 +53,10 @@ class Finished(ModelChangedTrigger):
         "The event has ended"
         return (
             self.instance.duration and
-            self.instance.start + timedelta(hours=self.instance.duration) < timezone.now() and
+            (
+                self.instance.start and
+                self.instance.start + timedelta(hours=self.instance.duration) < timezone.now()
+            ) and
             self.instance.status not in ('succeeded', 'closed', )
         )
 

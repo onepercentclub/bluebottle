@@ -81,7 +81,7 @@ class TriggerMixin(object):
         return instance
 
     def field_is_changed(self, field):
-        return self._initial_values[field] != getattr(self, field)
+        return self._initial_values.get(field) != getattr(self, field)
 
     def save(self, send_messages=True, perform_effects=True, *args, **kwargs):
         if perform_effects:

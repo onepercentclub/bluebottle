@@ -7,6 +7,7 @@ from bluebottle.activities.models import Activity, Contribution
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
+    ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
     ActivityListSerializer,
     ContributionListSerializer
@@ -16,6 +17,7 @@ from bluebottle.events.models import Participant
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Donation
+from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission
 )
@@ -123,3 +125,8 @@ class RelatedActivityImageContent(ImageContentView):
         )
 
     field = 'image'
+
+
+class ActivityTransitionList(TransitionList):
+    serializer_class = ActivityTransitionSerializer
+    queryset = Activity.objects.all()

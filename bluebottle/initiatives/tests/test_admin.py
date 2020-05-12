@@ -21,8 +21,6 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.site = AdminSite()
         self.initiative_admin = InitiativeAdmin(Initiative, self.site)
         self.initiative = InitiativeFactory.create()
-        self.initiative.transitions.submit()
-        self.initiative.save()
 
     def test_initiative_admin(self):
         image = ImageFactory.create()

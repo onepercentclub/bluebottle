@@ -15,7 +15,6 @@ from bluebottle.utils.serializers import ResourcePermissionField
 class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
-    review_status = FSMField(read_only=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
@@ -50,7 +49,6 @@ class BaseActivitySerializer(ModelSerializer):
             'description',
             'is_follower',
             'status',
-            'review_status',
             'stats',
             'errors',
             'required',
@@ -78,7 +76,6 @@ class BaseActivitySerializer(ModelSerializer):
 class BaseActivityListSerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
-    review_status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
     is_follower = serializers.SerializerMethodField()
@@ -109,7 +106,6 @@ class BaseActivityListSerializer(ModelSerializer):
             'is_follower',
             'status',
             'stats',
-            'review_status',
         )
 
         meta_fields = (

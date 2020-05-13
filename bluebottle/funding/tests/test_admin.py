@@ -62,8 +62,6 @@ class FundingTestCase(BluebottleAdminTestCase):
         payment = PledgePaymentFactory.create(donation=donation)
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
-        self.funding.states.partial()
-        self.funding.save()
 
         self.client.force_login(self.superuser)
         response = self.client.get(self.admin_url)
@@ -94,9 +92,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(self.funding.amount_raised, Money(70, 'EUR'))
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
-        self.funding.states.partial(save=True)
         self.assertEqual(self.funding.amount_raised, Money(70, 'EUR'))
-
         self.funding.amount_matching = Money(30, 'EUR')
         self.funding.save()
 

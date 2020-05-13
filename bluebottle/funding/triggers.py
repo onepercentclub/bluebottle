@@ -32,27 +32,44 @@ class Finished(ModelChangedTrigger):
     ]
 
 
-class Extend(ModelChangedTrigger):
+class DeadlineChanged(ModelChangedTrigger):
     field = 'deadline'
-
-    @property
-    def is_valid(self):
-        return (
-            self.instance.deadline and
-            self.instance.deadline > timezone.now() and
-            self.instance.status in ('succeeded', 'partially_funded', 'closed', )
-        )
 
     effects = [
         TransitionEffect(
             'extend',
-            conditions=[FundingStateMachine.is_complete, FundingStateMachine.is_valid]
-        )
+            conditions=[
+                FundingStateMachine.is_complete,
+                FundingStateMachine.is_valid,
+                FundingStateMachine.deadline_in_future
+            ]
+        ),
+        TransitionEffect(
+            'succeed',
+            conditions=[
+                FundingStateMachine.should_finish,
+                FundingStateMachine.target_reached
+            ]
+        ),
+        TransitionEffect(
+            'partial',
+            conditions=[
+                FundingStateMachine.should_finish,
+                FundingStateMachine.target_not_reached
+            ]
+        ),
+        TransitionEffect(
+            'close',
+            conditions=[
+                FundingStateMachine.should_finish,
+                FundingStateMachine.no_donations
+            ]
+        ),
     ]
 
 
-class MatchingAmountChanged(ModelChangedTrigger):
-    field = 'start'
+class AmountChanged(ModelChangedTrigger):
+    field = 'target'
 
     effects = [
         TransitionEffect(
@@ -70,4 +87,8 @@ class MatchingAmountChanged(ModelChangedTrigger):
     ]
 
 
-Funding.triggers = [Complete, Finished, Extend]
+class MatchingAmountChanged(AmountChanged):
+    field = 'amount_matching'
+
+
+Funding.triggers = [Complete, Finished, DeadlineChanged, MatchingAmountChanged, AmountChanged]

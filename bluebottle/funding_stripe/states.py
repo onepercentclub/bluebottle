@@ -1,5 +1,6 @@
 """
-Payments: Extra states/transitions
+Payments:
+Extra states/transitions
 
 Charge
 Dispute
@@ -13,7 +14,8 @@ Request_refund
 
 
 """
-KYC
+PayoutAccount
+
 Reject
 Incomplete
 Verify

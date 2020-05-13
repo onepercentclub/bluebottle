@@ -9,7 +9,7 @@ from bluebottle.fsm.effects import (
 )
 from bluebottle.fsm.state import Transition, ModelStateMachine, State
 from bluebottle.funding.effects import GeneratePayouts, GenerateDonationWallpost, \
-    RemoveDonationWallpost, UpdateFundingAmounts, RefundPaymentAtPSP, SetStartDate, SetDeadline
+    RemoveDonationWallpost, UpdateFundingAmounts, RefundPaymentAtPSP, SetStartDate, SetDeadline, DeletePayouts
 from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
     FundingPartiallyFundedMessage, FundingClosedMessage, FundingRealisedOwnerMessage
 from bluebottle.funding.models import Funding, Donation, Payout, Payment, PayoutAccount
@@ -28,17 +28,19 @@ class FundingStateMachine(ActivityStateMachine):
         return self.instance.deadline and self.instance.deadline < timezone.now()
 
     def deadline_in_future(self):
-        if not self.instance.deadline >= timezone.now():
-            return _("The deadline of the activity should be in the future.")
+        return self.instance.deadline > timezone.now()
 
     def target_reached(self):
         return self.instance.amount_raised >= self.instance.target
 
     def target_not_reached(self):
-        return not self.target_reached
+        return self.instance.amount_raised.amount and self.instance.amount_raised < self.instance.target
 
     def no_donations(self):
         return not self.instance.amount_raised.amount
+
+    def can_approve(self, user):
+        return user.is_staff
 
     submit = Transition(
         [
@@ -64,6 +66,7 @@ class FundingStateMachine(ActivityStateMachine):
         ActivityStateMachine.open,
         name=_('Approve'),
         automatic=False,
+        permission=can_approve,
         effects=[
             RelatedTransitionEffect('organizer', 'succeed'),
             SetStartDate,
@@ -93,7 +96,10 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.open,
         name=_('Extend'),
-        automatic=True
+        automatic=True,
+        effects=[
+            DeletePayouts
+        ]
     )
 
     succeed = Transition(
@@ -124,7 +130,7 @@ class FundingStateMachine(ActivityStateMachine):
     )
 
     partial = Transition(
-        [ActivityStateMachine.open, ActivityStateMachine.succeeded],
+        [ActivityStateMachine.open, ActivityStateMachine.succeeded, ActivityStateMachine.closed],
         partially_funded,
         name=_('Partial'),
         automatic=True,
@@ -141,7 +147,7 @@ class FundingStateMachine(ActivityStateMachine):
         automatic=False,
         effects=[
             RelatedTransitionEffect('donations', 'activity_refund'),
-            RelatedTransitionEffect('payouts', 'cancel')
+            DeletePayouts
         ]
     )
 

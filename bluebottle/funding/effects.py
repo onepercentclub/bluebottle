@@ -20,6 +20,17 @@ class GeneratePayouts(Effect):
         return _('Generate payouts')
 
 
+class DeletePayouts(Effect):
+    post_save = True
+    conditions = []
+
+    def execute(self):
+        self.instance.payouts.all().delete()
+
+    def __unicode__(self):
+        return _('Delete related payouts')
+
+
 class UpdateFundingAmounts(Effect):
     post_save = True
     conditions = []

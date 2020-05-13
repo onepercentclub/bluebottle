@@ -95,12 +95,12 @@ class TriggerMixin(object):
             effects = []
 
         for effect in effects:
-            effect.do(post_save=False)
+            effect.do(post_save=False, send_messages=send_messages)
 
         super(TriggerMixin, self).save(*args, **kwargs)
 
         for effect in effects:
-            effect.do(post_save=True)
+            effect.do(post_save=True, send_messages=send_messages)
 
         self._effects = []
 

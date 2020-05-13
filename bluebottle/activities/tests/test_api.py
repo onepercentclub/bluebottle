@@ -7,7 +7,7 @@ from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
-from django.utils.timezone import get_current_timezone, now
+from django.utils.timezone import now
 from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
 
@@ -119,44 +119,46 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], unicode(activity.pk))
 
     def test_activity_date(self):
+        before = now() + datetime.timedelta(days=10)
+        after = now() + datetime.timedelta(days=20)
+
         event = EventFactory.create(
             status='open',
-            start=get_current_timezone().localize(datetime.datetime(2019, 1, 4))
+            start=before
         )
         EventFactory.create(
             status='open',
-            start=get_current_timezone().localize(datetime.datetime(2019, 4, 8))
+            start=after
         )
 
         on_date_assignment = AssignmentFactory.create(
             status='open',
-            date=get_current_timezone().localize(datetime.datetime(2019, 1, 12)),
+            date=before,
             end_date_type='on_date'
         )
         AssignmentFactory.create(
             status='open',
-            date=get_current_timezone().localize(datetime.datetime(2019, 4, 16)),
+            date=after,
             end_date_type='on_date'
         )
         deadline_assignment = AssignmentFactory.create(
             status='open',
-            date=get_current_timezone().localize(datetime.datetime(2019, 1, 20)),
+            date=before,
             end_date_type='deadline'
         )
 
         # Feature is not dealing with time. Disabling timezone check for test
-        with override_settings(USE_TZ=False):
-            funding = FundingFactory.create(
-                status='open',
-                deadline=datetime.date(2019, 1, 24),
-            )
-            FundingFactory.create(
-                status='open',
-                deadline=datetime.date(2019, 4, 28),
-            )
+        funding = FundingFactory.create(
+            status='open',
+            deadline=before
+        )
+        FundingFactory.create(
+            status='open',
+            deadline=after
+        )
 
         response = self.client.get(
-            self.url + '?filter[date]=2019-04-01',
+            self.url + '?filter[date]={}-{}-{}'.format(after.year, after.month, after.day),
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -164,7 +166,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 3)
 
         response = self.client.get(
-            self.url + '?filter[date]=2019-01-01',
+            self.url + '?filter[date]={}-{}-{}'.format(now().year, now().month, now().day),
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 

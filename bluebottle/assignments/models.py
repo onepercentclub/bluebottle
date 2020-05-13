@@ -10,10 +10,11 @@ from timezonefinder import TimezoneFinder
 import pytz
 
 from bluebottle.activities.models import Activity, Contribution
+from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.follow.models import follow
-from bluebottle.fsm import TransitionManager
+from bluebottle.fsm import TransitionManager, TransitionsMixin
 from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import Validator
 
@@ -34,7 +35,7 @@ class RegistrationDeadlineValidator(Validator):
         )
 
 
-class Assignment(Activity):
+class Assignment(Activity, TransitionsMixin):
 
     class EndDateTypes(DjangoChoices):
         deadline = ChoiceItem('deadline', label=_("Deadline"))
@@ -73,6 +74,7 @@ class Assignment(Activity):
         null=True, blank=True, on_delete=SET_NULL)
 
     transitions = TransitionManager(AssignmentTransitions, 'status')
+    review_transitions = TransitionManager(ActivityReviewTransitions, 'review_status')
 
     validators = [RegistrationDeadlineValidator]
 
@@ -208,7 +210,7 @@ class Assignment(Activity):
         return super(Assignment, self).save(*args, **kwargs)
 
 
-class Applicant(Contribution):
+class Applicant(Contribution, TransitionsMixin):
     motivation = models.TextField()
     time_spent = models.FloatField(_('time spent'), null=True, blank=True)
     transitions = TransitionManager(ApplicantTransitions, 'status')
@@ -257,3 +259,4 @@ class Applicant(Contribution):
         self.activity.check_capacity()
 
 from bluebottle.assignments.signals import *  # noqa
+from bluebottle.assignments.states import *  # noqa

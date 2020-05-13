@@ -18,27 +18,30 @@ class CategoriesTestCase(BluebottleTestCase):
         self.init_projects()
 
     def test_partner_project(self):
-        cat = {
+        category_details = {
             'title': 'Nice things',
             'description': 'Chit chat blah blah'
         }
 
-        CategoryFactory.create(**cat)
+        cat = CategoryFactory.create(**category_details)
+        cat.set_current_language('nl')
+        cat.title = 'Leuke dingen'
+        cat.save()
 
         url = reverse('category-list')
 
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_X_APPLICATION_LANGUAGE='en')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEquals(len(data), 1)
-        self.assertEquals(data[0]['title'], cat['title'])
+        self.assertEquals(data[0]['title'], 'Nice things')
 
-        # Confirm that we can restrieve dutch titles too.
-        response = self.client.get(url, {'language': 'nl'})
+        # Confirm that we can retrieve dutch titles too.
+        response = self.client.get(url, HTTP_X_APPLICATION_LANGUAGE='nl')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEquals(len(data), 1)
-        self.assertEquals(data[0]['title'], cat['title'])
+        self.assertEquals(data[0]['title'], 'Leuke dingen')
 
     def test_category_content(self):
         category_details = {

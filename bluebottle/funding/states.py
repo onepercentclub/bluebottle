@@ -2,7 +2,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
-from bluebottle.follow.effects import FollowActivityEffect
+from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import (
     TransitionEffect,
     RelatedTransitionEffect
@@ -11,7 +11,7 @@ from bluebottle.fsm.state import Transition, ModelStateMachine, State
 from bluebottle.funding.effects import GeneratePayouts, GenerateDonationWallpost, \
     RemoveDonationWallpost, UpdateFundingAmounts, RefundPaymentAtPSP, SetStartDate, SetDeadline, DeletePayouts
 from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
-    FundingPartiallyFundedMessage, FundingClosedMessage, FundingRealisedOwnerMessage
+    FundingPartiallyFundedMessage, FundingClosedMessage, FundingRealisedOwnerMessage, PayoutAccountVerified
 from bluebottle.funding.models import Funding, Donation, Payout, Payment, PayoutAccount
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -198,8 +198,9 @@ class DonationStateMachine(ContributionStateMachine):
         name=_('Refund'),
         automatic=True,
         effects=[
-            RelatedTransitionEffect('payment', 'refund'),
+            RelatedTransitionEffect('payment', 'request_refund'),
             RemoveDonationWallpost,
+            UnFollowActivityEffect,
             UpdateFundingAmounts
         ]
     )
@@ -213,7 +214,7 @@ class DonationStateMachine(ContributionStateMachine):
         name=_('Activity refund'),
         automatic=True,
         effects=[
-            RelatedTransitionEffect('payment', 'refund'),
+            RelatedTransitionEffect('payment', 'request_refund'),
             RemoveDonationWallpost
         ]
     )
@@ -227,7 +228,7 @@ class PaymentStateMachine(ModelStateMachine):
     succeeded = State(_('succeeded'), 'succeeded')
     failed = State(_('failed'), 'failed')
     refunded = State(_('refunded'), 'refunded')
-    activity_refunded = State(_('activity_refunded'), 'activity_refunded')
+    refund_requested = State(_('refund requested'), 'refund_requested')
 
     authorize = Transition(
         [new],
@@ -259,16 +260,25 @@ class PaymentStateMachine(ModelStateMachine):
         ]
     )
 
+    request_refund = Transition(
+        [
+            ContributionStateMachine.succeeded
+        ],
+        refund_requested,
+        name=_('Request refund'),
+        automatic=True,
+        effects=[
+            RefundPaymentAtPSP
+        ]
+    )
+
     refund = Transition(
         [
             ContributionStateMachine.succeeded
         ],
         refunded,
         name=_('Refund'),
-        automatic=True,
-        effects=[
-            RefundPaymentAtPSP
-        ]
+        automatic=True
     )
 
 
@@ -320,3 +330,46 @@ class PayoutStateMachine(ModelStateMachine):
 
 class PayoutAccountStateMachine(ModelStateMachine):
     model = PayoutAccount
+
+    new = State(_('new'), 'new')
+    pending = State(_('pending'), 'pending')
+    verified = State(_('verified'), 'verified')
+    rejected = State(_('rejected'), 'rejected')
+    incomplete = State(_('incomplete'), 'incomplete')
+
+    def can_approve(self, user):
+        return user.is_staff
+
+    submit = Transition(
+        [new, incomplete],
+        pending,
+        name=_('submit'),
+        automatic=False
+    )
+
+    verify = Transition(
+        [new, incomplete, rejected],
+        verified,
+        name=_('Verify'),
+        automatic=False,
+        permission=can_approve,
+        effects=[
+            NotificationEffect(PayoutAccountVerified),
+            # Check if we can approve connected funding activities
+        ]
+    )
+
+    rejected = Transition(
+        [new, incomplete, verified],
+        rejected,
+        name=_('rejected'),
+        automatic=False
+    )
+
+    set_incomplete = Transition(
+        [new, rejected, verified],
+        incomplete,
+        name=_('set_incomplete'),
+        automatic=False
+    )
+

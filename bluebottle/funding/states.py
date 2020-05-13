@@ -108,10 +108,16 @@ class FundingStateMachine(ActivityStateMachine):
     )
 
     recalculate = Transition(
-        ActivityStateMachine.succeeded,
+        [
+            ActivityStateMachine.succeeded,
+            partially_funded
+        ],
         ActivityStateMachine.succeeded,
         name=_('Recalculate'),
         automatic=False,
+        conditions=[
+            target_reached
+        ],
         effects=[
             GeneratePayouts
         ]

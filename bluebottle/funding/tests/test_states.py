@@ -67,7 +67,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, FundingStateMachine.open.value)
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        payment = PledgePaymentFactory.create(donation=donation)
+        PledgePaymentFactory.create(donation=donation)
         # Changing the deadline to the past should trigger a transition
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
@@ -84,7 +84,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, FundingStateMachine.open.value)
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        payment = PledgePaymentFactory.create(donation=donation)
+        PledgePaymentFactory.create(donation=donation)
         # Changing the deadline to the past should trigger a transition
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
@@ -95,5 +95,3 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.save()
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
-
-

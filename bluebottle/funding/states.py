@@ -372,4 +372,3 @@ class PayoutAccountStateMachine(ModelStateMachine):
         name=_('set_incomplete'),
         automatic=False
     )
-

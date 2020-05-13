@@ -11,7 +11,7 @@ RESOURCE_TYPES = [{
         {
             "schema":
             "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
-            "required": True
+            "required": False
         }
     ],
     "meta": {

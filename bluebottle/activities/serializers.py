@@ -30,17 +30,6 @@ class ActivityImageSerializer(ImageSerializer):
     relationship = 'activity_set'
 
 
-class ActivityImageSerializer(ImageSerializer):
-    sizes = {
-        'preview': '300x168',
-        'small': '320x180',
-        'large': '600x337',
-        'cover': '960x540'
-    }
-    content_view_name = 'activity-image'
-    relationship = 'activity_set'
-
-
 class ActivityListSerializer(PolymorphicModelSerializer):
 
     polymorphic_serializers = [

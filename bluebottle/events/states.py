@@ -28,7 +28,7 @@ class SetTimeSpent(Effect):
     "Set time spent on participants"
     post_save = False
 
-    def execute(self):
+    def execute(self, **kwargs):
         if not self.instance.time_spent:
             self.instance.time_spent = self.instance.activity.duration
 
@@ -43,7 +43,7 @@ class ResetTimeSpent(Effect):
     "Set time spent to 0 if it was not overriden"
     post_save = False
 
-    def execute(self):
+    def execute(self, **kwargs):
         if self.instance.time_spent == self.instance.activity.duration:
             self.instance.time_spent = 0
 

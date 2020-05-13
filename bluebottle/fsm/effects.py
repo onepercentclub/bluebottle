@@ -14,9 +14,9 @@ class Effect(object):
     def __eq__(self, other):
         return self.instance == other.instance and type(self) == type(other)
 
-    def do(self, post_save):
+    def do(self, post_save, **kwargs):
         if self.is_valid and self.post_save == post_save:
-            self.execute()
+            self.execute(**kwargs)
             if self.save:
                 self.instance.save(perform_effects=False)
 
@@ -34,7 +34,7 @@ class Effect(object):
 
         return result
 
-    def execute(self):
+    def execute(self, **kwargs):
         pass
 
     @property
@@ -65,7 +65,7 @@ class BaseTransitionEffect(Effect):
         for effect_class in self.transition.effects:
             yield effect_class(self.instance)
 
-    def execute(self):
+    def execute(self, **kwargs):
         self.transition.execute(self.machine, effects=False)
 
     def __eq__(self, other):
@@ -132,10 +132,10 @@ class BaseRelatedTransitionEffect(Effect):
         for instance in self.instances:
             yield self.transition_effect_class(instance)
 
-    def do(self, post_save):
+    def do(self, post_save, **kwargs):
         if self.is_valid and self.post_save == post_save:
             for effect in self.effects:
-                effect.do(post_save)
+                effect.do(post_save, **kwargs)
 
     def all_effects(self, result=None):
         result = super(BaseRelatedTransitionEffect, self).all_effects(result)

@@ -8,7 +8,7 @@ class ApproveActivities(Effect):
     post_save = True
     conditions = []
 
-    def execute(self):
+    def execute(self, **kwargs):
         for activity in self.instance.activities.filter(status='submitted'):
             activity.states.approve(save=True)
 
@@ -20,7 +20,7 @@ class RejectActivities(Effect):
     post_save = True
     conditions = []
 
-    def execute(self):
+    def execute(self, **kwargs):
         for activity in self.instance.activities.all():
             activity.states.reject(save=True)
 

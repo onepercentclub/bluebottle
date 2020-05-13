@@ -13,7 +13,7 @@ class GeneratePayouts(Effect):
     post_save = True
     conditions = []
 
-    def execute(self):
+    def execute(self, **kwargs):
         Payout.generate(self.instance)
 
     def __unicode__(self):
@@ -24,7 +24,7 @@ class UpdateFundingAmounts(Effect):
     post_save = True
     conditions = []
 
-    def execute(self):
+    def execute(self, **kwargs):
         self.instance.activity.update_amounts()
 
     def __unicode__(self):
@@ -35,7 +35,7 @@ class SetStartDate(Effect):
     post_save = True
     conditions = []
 
-    def execute(self):
+    def execute(self, **kwargs):
         self.instance.started = timezone.now()
 
     def __unicode__(self):
@@ -46,7 +46,7 @@ class SetDeadline(Effect):
     post_save = True
     conditions = []
 
-    def execute(self):
+    def execute(self, **kwargs):
         if not self.instance.deadline:
             deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
             self.instance.deadline = get_current_timezone().localize(
@@ -68,7 +68,7 @@ class RefundPaymentAtPSP(Effect):
     post_save = True
     conditions = []
 
-    def execute(self):
+    def execute(self, **kwargs):
         self.instance.refund()
 
     def __unicode__(self):
@@ -79,7 +79,7 @@ class GenerateDonationWallpost(Effect):
     post_save = True
     conditions = []
 
-    def execute(self):
+    def execute(self, **kwargs):
         SystemWallpost.objects.get_or_create(
             author=self.instance.user,
             donation=self.instance,
@@ -97,7 +97,7 @@ class RemoveDonationWallpost(Effect):
     post_save = True
     conditions = []
 
-    def execute(self):
+    def execute(self, **kwargs):
         SystemWallpost.objects.filter(
             author=self.instance.user,
             donation=self.instance,

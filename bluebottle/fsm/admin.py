@@ -88,6 +88,10 @@ class StateMachineAdminMixin(object):
         state_machine = getattr(instance, field_name)
         transition = state_machine.transitions[transition_name]
 
+        if transition not in state_machine.possible_transitions():
+            messages.error(request, 'Transition not possible: {}'.format(transition.name))
+            return HttpResponseRedirect(link)
+
         if 'confirm' in request.POST and request.POST['confirm']:
             if form.is_valid():
                 send_messages = form.cleaned_data['send_messages']

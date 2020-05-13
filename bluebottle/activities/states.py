@@ -9,7 +9,7 @@ class CreateOrganizer(Effect):
     "Create an organizer for the activity"
     post_save = True
 
-    def execute(self):
+    def execute(self, **kwargs):
         Organizer.objects.get_or_create(
             activity=self.instance,
             defaults={'user': self.instance.owner}
@@ -88,6 +88,15 @@ class ActivityStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_staff,
         effects=[RelatedTransitionEffect('organizer', 'fail')]
+    )
+
+    accept = Transition(
+        rejected,
+        draft,
+        name=_('Accept'),
+        automatic=False,
+        permission=is_staff,
+        effects=[RelatedTransitionEffect('organizer', 'succeed')]
     )
 
     close = Transition(

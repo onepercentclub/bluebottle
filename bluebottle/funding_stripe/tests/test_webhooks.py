@@ -44,8 +44,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create()
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.approve(save=True)
 
         self.bank_account = ExternalAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
@@ -187,8 +186,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         StripePaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.approve(save=True)
 
         self.bank_account = ExternalAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
@@ -291,8 +289,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
     def test_charge_pending(self):
         self.payment.charge_token = 'some-charge-token'
-        self.payment.transitions.charge()
-        self.payment.save()
+        self.payment.states.charge(save=True)
 
         data = {
             'object': {
@@ -348,8 +345,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
     def test_charge_succeeded(self):
         self.payment.charge_token = 'some-charge-token'
-        self.payment.transitions.charge()
-        self.payment.save()
+        self.payment.states.charge(save=True)
 
         data = {
             'object': {
@@ -392,8 +388,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
     def test_charge_failed(self):
         self.payment.charge_token = 'some-charge-token'
-        self.payment.transitions.charge()
-        self.payment.save()
+        self.payment.states.charge(save=True)
 
         data = {
             'object': {
@@ -419,9 +414,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
     def test_charge_refunded(self):
         self.payment.charge_token = 'some-charge-token'
-        self.payment.transitions.charge()
-        self.payment.transitions.succeed()
-        self.payment.save()
+        self.payment.states.charge(save=True)
+        self.payment.states.succeed(save=True)
 
         data = {
             'object': {
@@ -447,9 +441,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
     def test_charge_dispute_closed(self):
         self.payment.charge_token = 'some-charge-token'
-        self.payment.transitions.charge()
-        self.payment.transitions.succeed()
-        self.payment.save()
+        self.payment.states.charge(save=True)
+        self.payment.states.succeed(save=True)
 
         data = {
             'object': {

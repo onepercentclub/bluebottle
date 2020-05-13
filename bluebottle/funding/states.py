@@ -12,7 +12,7 @@ from bluebottle.funding.effects import GeneratePayouts, GenerateDonationWallpost
     RemoveDonationWallpost, UpdateFundingAmounts, RefundPaymentAtPSP, SetStartDate, SetDeadline
 from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
     FundingPartiallyFundedMessage, FundingClosedMessage, FundingRealisedOwnerMessage
-from bluebottle.funding.models import Funding, Donation, Payout, Payment
+from bluebottle.funding.models import Funding, Donation, Payout, Payment, PayoutAccount
 from bluebottle.notifications.effects import NotificationEffect
 
 
@@ -310,3 +310,9 @@ class PayoutStateMachine(ModelStateMachine):
         name=_('Cancel'),
         automatic=True
     )
+
+
+class PayoutAccountStateMachine(ModelStateMachine):
+    model = PayoutAccount
+
+

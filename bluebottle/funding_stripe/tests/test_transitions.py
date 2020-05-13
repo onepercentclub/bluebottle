@@ -22,8 +22,7 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
             target=Money(4000, 'EUR'),
             bank_account=bank_account
         )
-        self.funding.transitions.reviewed()
-        self.funding.save()
+        self.funding.states.approve(save=True)
 
         donation = DonationFactory.create(
             amount=Money(150, 'EUR'),
@@ -35,7 +34,7 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
         super(StripePaymentTransitionsTestCase, self).setUp()
 
     def test_refund(self):
-        self.payment.transitions.succeed()
+        self.payment.states.succeed(save=True)
         payment_intent = stripe.PaymentIntent('some intent id')
 
         charge = stripe.Charge('charge-id')
@@ -46,6 +45,6 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
 
         with mock.patch('stripe.PaymentIntent.retrieve', return_value=payment_intent):
             with mock.patch('stripe.Charge.refund') as refund_mock:
-                self.payment.transitions.request_refund()
+                self.payment.states.request_refund(save=True)
 
         self.assertTrue(refund_mock.called_once)

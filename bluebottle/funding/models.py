@@ -618,7 +618,7 @@ class PaymentMethod(object):
         resource_name = 'payments/payment-methods'
 
 
-class PayoutAccount(ValidatedModelMixin, AnonymizationMixin, PolymorphicModel, TransitionsMixin):
+class PayoutAccount(TriggerMixin, AnonymizationMixin, PolymorphicModel, TransitionsMixin):
     status = FSMField(
         default=PayoutAccountTransitions.values.new
     )

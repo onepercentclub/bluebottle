@@ -314,5 +314,3 @@ class PayoutStateMachine(ModelStateMachine):
 
 class PayoutAccountStateMachine(ModelStateMachine):
     model = PayoutAccount
-
-

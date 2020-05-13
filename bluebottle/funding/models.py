@@ -31,7 +31,7 @@ from bluebottle.funding.transitions import (
     PayoutTransitions)
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
-from bluebottle.utils.models import Validator, ValidatedModelMixin, BasePlatformSettings, AnonymizationMixin
+from bluebottle.utils.models import Validator, BasePlatformSettings, AnonymizationMixin
 
 
 class PaymentCurrency(models.Model):

@@ -30,7 +30,7 @@ def check_payment_status(payment):
         data = post(verify_url, data)
     except PaymentException:
         if payment.status != PaymentTransitions.values.failed:
-            payment.transitions.fail()
+            payment.states.fail()
         payment.save()
         return payment
 
@@ -40,10 +40,10 @@ def check_payment_status(payment):
         payment.donation.save()
     if data['data']['status'] == 'successful':
         if payment.status != PaymentTransitions.values.succeeded:
-            payment.transitions.succeed()
+            payment.states.succeed()
     else:
         if payment.status != PaymentTransitions.values.failed:
-            payment.transitions.fail()
+            payment.states.fail()
     payment.save()
     return payment
 

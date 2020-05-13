@@ -30,6 +30,7 @@ class BaseActivitySerializer(ModelSerializer):
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
     }
 
@@ -43,6 +44,7 @@ class BaseActivitySerializer(ModelSerializer):
             'type',  # Needed for old style API endpoints like pages / page blocks
             'slug',
             'id',
+            'image',
             'initiative',
             'owner',
             'title',
@@ -66,6 +68,7 @@ class BaseActivitySerializer(ModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'owner',
+            'image',
             'initiative',
             'initiative.place',
             'initiative.image',
@@ -86,6 +89,7 @@ class BaseActivityListSerializer(ModelSerializer):
 
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
+        'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
@@ -99,6 +103,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'type',  # Needed for old style API endpoints like pages / page blocks
             'slug',
             'id',
+            'image',
             'initiative',
             'owner',
             'title',
@@ -118,6 +123,7 @@ class BaseActivityListSerializer(ModelSerializer):
         included_resources = [
             'owner',
             'initiative',
+            'image',
             'initiative.image',
             'initiative.location',
             'initiative.place',

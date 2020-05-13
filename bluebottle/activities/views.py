@@ -97,6 +97,11 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
     permission_classes = (IsAuthenticated, )
 
 
+class ActivityImage(ImageContentView):
+    queryset = Activity.objects
+    field = 'image'
+
+
 class RelatedActivityImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     def get_queryset(self):
         return RelatedImage.objects.filter(

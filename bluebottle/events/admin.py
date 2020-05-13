@@ -87,7 +87,7 @@ class EventAdmin(ActivityChildAdmin):
         'start',
         'local_start',
         'duration',
-        'registration_deadline',
+        # 'registration_deadline',  # Disabled until feature is ready - BB-16853
         'is_online',
         'location',
         'location_hint',

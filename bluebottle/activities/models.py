@@ -7,6 +7,8 @@ from django.contrib.contenttypes.fields import GenericRelation
 from bluebottle.fsm.triggers import TriggerMixin
 
 from polymorphic.models import PolymorphicModel
+
+from bluebottle.files.fields import ImageField
 from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.effects import Complete
 from bluebottle.follow.models import Follow
@@ -43,6 +45,8 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     description = models.TextField(
         _('description'), blank=True
     )
+
+    image = ImageField(blank=True, null=True)
 
     followers = GenericRelation('follow.Follow', object_id_field='instance_id')
     messages = GenericRelation('notifications.Message')

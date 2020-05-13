@@ -19,6 +19,17 @@ from bluebottle.funding.serializers import (
 )
 
 
+class ActivityImageSerializer(ImageSerializer):
+    sizes = {
+        'preview': '300x168',
+        'small': '320x180',
+        'large': '600x337',
+        'cover': '960x540'
+    }
+    content_view_name = 'activity-image'
+    relationship = 'activity_set'
+
+
 class ActivityListSerializer(PolymorphicModelSerializer):
 
     polymorphic_serializers = [
@@ -30,6 +41,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
@@ -49,6 +61,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
             'owner',
             'initiative',
             'location',
+            'image',
             'initiative.image',
             'initiative.place',
             'initiative.location',
@@ -67,6 +80,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
         'initiative.place': 'bluebottle.geo.serializers.GeolocationSerializer',
@@ -86,6 +100,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'owner',
+            'image',
             'initiative',
             'location',
             'initiative.image',

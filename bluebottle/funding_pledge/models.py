@@ -1,3 +1,4 @@
+from bluebottle.fsm.triggers import TriggerMixin
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -61,3 +62,6 @@ class PledgeBankAccount(BankAccount):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/pledge-external-accounts'
+
+
+from states import *  # noqa

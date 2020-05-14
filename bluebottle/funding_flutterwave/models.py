@@ -107,3 +107,6 @@ class FlutterwaveBankAccount(BankAccount):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/flutterwave-external-accounts'
+
+
+from states import *  # noqa

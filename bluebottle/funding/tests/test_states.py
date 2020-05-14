@@ -95,3 +95,19 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.save()
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
+
+    def test_change_amount_and_deadline(self):
+        self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
+        self.funding.states.approve(save=True)
+        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        # Changing the deadline and target should transition the campaign to succeeded
+        self.funding.deadline = now() - timedelta(days=1)
+        self.funding.target = Money(500, 'EUR')
+        self.funding.save()
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
+
+    def test_funding_amount_get_updated_after_donation(self):
+        self.assertEqual(1, 0)

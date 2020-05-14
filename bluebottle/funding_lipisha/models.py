@@ -93,3 +93,6 @@ class LipishaBankAccount(BankAccount):
             'business': provider.paybill,
             'account': self.mpesa_code
         }
+
+
+from states import *  # noqa

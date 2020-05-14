@@ -263,7 +263,6 @@ class SourceWebHookView(View):
             if event.type == 'charge.dispute.closed' and event.data.object.status == 'lost':
                 payment = self.get_payment_from_charge(event.data.object.charge)
                 payment.states.dispute(save=True)
-
                 return HttpResponse('Updated payment')
 
         except StripePayment.DoesNotExist:

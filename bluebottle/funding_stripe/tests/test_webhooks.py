@@ -91,11 +91,11 @@ class IntentWebhookTestCase(BluebottleTestCase):
         payment = self.intent.payment
         donation = Donation.objects.get(pk=self.donation.pk)
 
-        self.assertEqual(donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(donation.status, 'succeeded')
         self.assertEqual(donation.payout_amount, Money(25, 'EUR'))
-        self.assertEqual(payment.status, StripePaymentTransitions.values.succeeded)
+        self.assertEqual(payment.status, 'succeeded')
         self.donation.refresh_from_db()
-        self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(self.donation.status, 'succeeded')
 
     def test_failed(self):
         with mock.patch(
@@ -121,10 +121,10 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
         donation = Donation.objects.get(pk=self.donation.pk)
 
-        self.assertEqual(donation.status, DonationTransitions.values.failed)
-        self.assertEqual(payment.status, StripePaymentTransitions.values.failed)
+        self.assertEqual(donation.status, 'failed')
+        self.assertEqual(payment.status, 'failed')
         self.donation.refresh_from_db()
-        self.assertEqual(self.donation.status, DonationTransitions.values.failed)
+        self.assertEqual(self.donation.status, 'failed')
 
     def test_refund(self):
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
@@ -175,8 +175,8 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
         donation = Donation.objects.get(pk=self.donation.pk)
 
-        self.assertEqual(donation.status, DonationTransitions.values.refunded)
-        self.assertEqual(payment.status, StripePaymentTransitions.values.refunded)
+        self.assertEqual(donation.status, 'refunded')
+        self.assertEqual(payment.status, 'refunded')
 
 
 class SourcePaymentWebhookTestCase(BluebottleTestCase):
@@ -232,8 +232,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
-        self.assertEqual(self.donation.status, DonationTransitions.values.failed)
-        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.failed)
+        self.assertEqual(self.donation.status, 'failed')
+        self.assertEqual(self.payment.status, 'failed')
 
     def test_source_canceled(self):
         data = {
@@ -255,8 +255,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
-        self.assertEqual(self.donation.status, DonationTransitions.values.failed)
-        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.canceled)
+        self.assertEqual(self.donation.status, 'failed')
+        self.assertEqual(self.payment.status, 'canceled')
 
     def test_source_chargeable(self):
         data = {
@@ -284,8 +284,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
-        self.assertEqual(self.donation.status, DonationTransitions.values.new)
-        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.charged)
+        self.assertEqual(self.donation.status, 'new')
+        self.assertEqual(self.payment.status, 'charged')
 
     def test_charge_pending(self):
         self.payment.charge_token = 'some-charge-token'
@@ -311,8 +311,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
-        self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
-        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.pending)
+        self.assertEqual(self.donation.status, 'succeeded')
+        self.assertEqual(self.payment.status, 'pending')
 
         data['object']['transfer'] = 'tr_some_id'
 
@@ -339,9 +339,9 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
-        self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(self.donation.status, 'succeeded')
         self.assertEqual(self.donation.payout_amount, Money(25, 'EUR'))
-        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.succeeded)
+        self.assertEqual(self.payment.status, 'succeeded')
 
     def test_charge_succeeded(self):
         self.payment.charge_token = 'some-charge-token'
@@ -382,9 +382,9 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
-        self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(self.donation.status, 'succeeded')
         self.assertEqual(self.donation.payout_amount, Money(25, 'EUR'))
-        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.succeeded)
+        self.assertEqual(self.payment.status, 'succeeded')
 
     def test_charge_failed(self):
         self.payment.charge_token = 'some-charge-token'
@@ -409,8 +409,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
-        self.assertEqual(self.donation.status, DonationTransitions.values.failed)
-        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.failed)
+        self.assertEqual(self.donation.status, 'failed')
+        self.assertEqual(self.payment.status, 'failed')
 
     def test_charge_refunded(self):
         self.payment.charge_token = 'some-charge-token'
@@ -436,8 +436,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
-        self.assertEqual(self.donation.status, DonationTransitions.values.refunded)
-        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.refunded)
+        self.assertEqual(self.payment.status, 'refunded')
+        self.assertEqual(self.donation.status, 'refunded')
 
     def test_charge_dispute_closed(self):
         self.payment.charge_token = 'some-charge-token'
@@ -464,8 +464,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
-        self.assertEqual(self.donation.status, DonationTransitions.values.refunded)
-        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.disputed)
+        self.assertEqual(self.donation.status, 'refunded')
+        self.assertEqual(self.payment.status, 'disputed')
 
 
 class StripeConnectWebhookTestCase(BluebottleTestCase):
@@ -566,7 +566,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         message = mail.outbox[0]
 
-        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.verified)
+        self.assertEqual(payout_account.status, 'verified')
         self.assertEqual(
             message.subject, u'Your identity is verified'
         )
@@ -576,7 +576,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         self.funding.refresh_from_db()
 
-        self.assertEqual(self.funding.review_status, 'submitted')
+        self.assertEqual(self.funding.status, 'submitted')
 
     def test_incomplete(self):
         data = {
@@ -707,7 +707,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
-        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.incomplete)
+        self.assertEqual(payout_account.status, 'incomplete')
 
     def test_document_rejected(self):
         data = {
@@ -734,7 +734,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
-        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.rejected)
+        self.assertEqual(payout_account.status, 'rejected')
 
         message = mail.outbox[0]
         self.assertEqual(
@@ -769,7 +769,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
 
-        self.assertEqual(payout_account.status, PayoutAccountTransitions.values.incomplete)
+        self.assertEqual(payout_account.status, 'incomplete')
 
         self.assertEqual(
             len(mail.outbox), 0

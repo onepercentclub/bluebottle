@@ -576,3 +576,6 @@ class ExternalAccount(BankAccount):
 
     def __unicode__(self):
         return "Stripe external account {}".format(self.account_id)
+
+
+from states import *  # noqa

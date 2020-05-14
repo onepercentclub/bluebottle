@@ -139,6 +139,9 @@ class ContributionStateMachine(ModelStateMachine):
     failed = State(_('failed'), 'failed')
     closed = State(_('closed'), 'closed')
 
+    def is_user(self, user):
+        return self.instance.user == user
+
     initiate = Transition(EmptyState(), new)
     close = Transition(
         (new, succeeded, failed, ),

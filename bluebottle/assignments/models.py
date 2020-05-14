@@ -1,4 +1,3 @@
-
 from django.db import models
 from django.db.models import SET_NULL, Count, Sum
 from django.utils.timezone import now
@@ -17,7 +16,6 @@ from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionManager, TransitionsMixin
 from bluebottle.geo.models import Geolocation
-from bluebottle.utils.models import Validator
 
 
 tf = TimezoneFinder()
@@ -136,6 +134,13 @@ class Assignment(Activity, TransitionsMixin):
             ApplicantTransitions.values.accepted,
             ApplicantTransitions.values.active,
             ApplicantTransitions.values.succeeded
+        ]
+        return self.contributions.instance_of(Applicant).filter(status__in=accepted_states)
+
+    @property
+    def active_applicants(self):
+        accepted_states = [
+            ApplicantTransitions.values.active
         ]
         return self.contributions.instance_of(Applicant).filter(status__in=accepted_states)
 

@@ -1,4 +1,3 @@
-from bluebottle.fsm.triggers import TriggerMixin
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 

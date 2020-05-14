@@ -12,6 +12,7 @@ import pytz
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
+from bluebottle.assignments.validators import RegistrationDeadlineValidator
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionManager, TransitionsMixin
@@ -20,19 +21,6 @@ from bluebottle.utils.models import Validator
 
 
 tf = TimezoneFinder()
-
-
-class RegistrationDeadlineValidator(Validator):
-    field = 'registration_deadline'
-    code = 'registration_deadline'
-    message = _('The registration deadline must be before the end'),
-
-    def is_valid(self):
-        return (
-            not self.instance.registration_deadline or
-            not self.instance.date or
-            self.instance.registration_deadline < self.instance.date.date()
-        )
 
 
 class Assignment(Activity, TransitionsMixin):

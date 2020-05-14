@@ -40,10 +40,10 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     initiative = models.ForeignKey(Initiative, related_name='activities')
 
-    title = models.CharField(_('title'), max_length=255)
-    slug = models.SlugField(_('slug'), max_length=100, default='new')
+    title = models.CharField(_('Title'), max_length=255)
+    slug = models.SlugField(_('Slug'), max_length=100, default='new')
     description = models.TextField(
-        _('description'), blank=True
+        _('Description'), blank=True
     )
 
     image = ImageField(blank=True, null=True)

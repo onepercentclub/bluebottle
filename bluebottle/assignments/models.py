@@ -17,7 +17,6 @@ from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.follow.models import follow
 from bluebottle.fsm import TransitionManager, TransitionsMixin
 from bluebottle.geo.models import Geolocation
-from bluebottle.utils.models import Validator
 
 
 tf = TimezoneFinder()

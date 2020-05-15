@@ -8,7 +8,7 @@ class SetTimeSpent(Effect):
     conditions = []
 
     def execute(self, **kwargs):
-        self.instance.time_spent = self.instance.activity.time_needed
+        self.instance.time_spent = self.instance.activity.duration + (self.instance.activity.preparation or 0)
 
     def __unicode__(self):
         return _('Set time spent')

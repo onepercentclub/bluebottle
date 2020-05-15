@@ -5,10 +5,8 @@ from django.core import mail
 from django.utils.timezone import now
 
 from bluebottle.activities.models import Organizer
-from bluebottle.activities.transitions import OrganizerTransitions
 from bluebottle.assignments.models import Assignment
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
-from bluebottle.assignments.transitions import ApplicantTransitions
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -77,13 +75,11 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         )
 
     def test_new(self):
-        initiative = InitiativeFactory.create()
-        assignment = AssignmentFactory.create(title='', initiative=initiative)
-
+        assignment = AssignmentFactory.create(title='', initiative=self.initiative)
+        assignment.states.submit(save=True)
         self.assertEqual(assignment.status, 'submitted')
-
         organizer = assignment.contributions.get()
-        self.assertEqual(organizer.status, OrganizerTransitions.values.new)
+        self.assertEqual(organizer.status, 'new')
         self.assertEqual(organizer.user, assignment.owner)
 
     def test_default_status(self):
@@ -91,7 +87,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             self.assignment.status, 'open'
         )
         organizer = self.assignment.contributions.get()
-        self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
+        self.assertEqual(organizer.status, 'succeeded')
         self.assertEqual(organizer.user, self.assignment.owner)
 
     def test_close(self):
@@ -110,7 +106,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             self.assignment.status, 'closed'
         )
         self.assertEqual(
-            applicant.status, ApplicantTransitions.values.closed
+            applicant.status, 'closed'
         )
 
     def test_start_no_applicants(self):
@@ -122,7 +118,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
     def test_happy_life_cycle(self):
         applicant = ApplicantFactory.create(activity=self.assignment)
         self.assertEqual(
-            applicant.status, ApplicantTransitions.values.new
+            applicant.status, 'new'
         )
         applicant.states.accept()
         applicant.save()
@@ -134,7 +130,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             self.assignment.status, 'running'
         )
         self.assertEqual(
-            applicant.status, ApplicantTransitions.values.active
+            applicant.status, 'active'
         )
 
         self.assignment.states.succeed()
@@ -144,31 +140,29 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             self.assignment.status, 'succeeded'
         )
         self.assertEqual(
-            applicant.status, ApplicantTransitions.values.succeeded
+            applicant.status, 'succeeded'
         )
         organizer = self.assignment.contributions.instance_of(Organizer).get()
-        self.assertEqual(organizer.status, OrganizerTransitions.values.succeeded)
+        self.assertEqual(organizer.status, 'succeeded')
 
     def test_applied_should_succeed(self):
         applicant = ApplicantFactory.create(activity=self.assignment)
         self.assertEqual(
-            applicant.status, ApplicantTransitions.values.new
+            applicant.status, 'new'
         )
-        self.assignment.states.start()
-        self.assignment.states.succeed()
-        self.assignment.save()
+        applicant.states.accept(save=True)
+        self.assignment.states.start(save=True)
+        self.assignment.states.succeed(save=True)
         applicant.refresh_from_db()
         self.assertEqual(
-            applicant.status, ApplicantTransitions.values.succeeded
+            applicant.status, 'succeeded'
         )
 
     def test_time_spent_deadline(self):
-        self.assignment.review_transitions.approve()
-        self.assignment.save()
         applicant = ApplicantFactory.create(activity=self.assignment)
-        self.assignment.states.start()
-        self.assignment.states.succeed()
-        self.assignment.save()
+        applicant.states.accept()
+        self.assignment.states.start(save=True)
+        self.assignment.states.succeed(save=True)
         applicant.refresh_from_db()
         self.assertEqual(
             applicant.time_spent, self.assignment.duration
@@ -177,10 +171,8 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
     def test_time_spent_on_date(self):
         self.assignment.end_date_type = 'on_date'
         self.assignment.preparation = 5
-        self.assignment.review_transitions.approve()
-        self.assignment.save()
+        self.assignment.states.approve(save=True)
         applicant = ApplicantFactory.create(activity=self.assignment)
-        self.assignment.states.start()
         self.assignment.states.succeed()
         self.assignment.save()
         applicant.refresh_from_db()
@@ -214,14 +206,12 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 
         self.assertEqual(organizer.status, u'succeeded')
 
-        new_assignment.states.close()
-        new_assignment.save()
+        new_assignment.states.close(save=True)
         organizer.refresh_from_db()
 
         self.assertEqual(organizer.status, u'closed')
 
-        new_assignment.states.reopen()
-        new_assignment.save()
+        new_assignment.states.restore(save=True)
         organizer.refresh_from_db()
 
         self.assertEqual(organizer.status, u'succeeded')

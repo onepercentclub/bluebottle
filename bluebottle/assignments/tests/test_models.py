@@ -42,7 +42,7 @@ class AssignmentTestCase(BluebottleTestCase):
         ApplicantFactory.create_batch(3, activity=assignment, status='new')
         ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
-        withdrawn.transitions.withdraw()
+        withdrawn.states.withdraw(save=True)
 
         mail.outbox = []
 
@@ -88,7 +88,7 @@ class AssignmentTestCase(BluebottleTestCase):
         )
         ApplicantFactory.create_batch(3, activity=assignment, status='new')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
-        withdrawn.transitions.withdraw()
+        withdrawn.states.withdraw(save=True)
 
         mail.outbox = []
 
@@ -139,12 +139,12 @@ class ApplicantTestCase(BluebottleTestCase):
         )
 
         applicant = ApplicantFactory.create(activity=assignment)
-        applicant.transitions.accept()
-        applicant.save()
-        assignment.transitions.succeed()
-        assignment.save()
+        applicant.states.accept(save=True)
+        assignment.states.start(save=True)
+        assignment.states.succeed(save=True)
         applicant.refresh_from_db()
 
+        self.assertEqual(assignment.status, 'succeeded')
         self.assertEqual(applicant.status, 'succeeded')
         applicant.time_spent = 0
         applicant.save()

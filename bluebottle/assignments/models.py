@@ -9,14 +9,10 @@ from timezonefinder import TimezoneFinder
 import pytz
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.activities.transitions import ActivityReviewTransitions
-from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
 from bluebottle.assignments.validators import RegistrationDeadlineValidator
 from bluebottle.files.fields import PrivateDocumentField
-from bluebottle.follow.models import follow
-from bluebottle.fsm import TransitionManager, TransitionsMixin
+from bluebottle.fsm import TransitionsMixin
 from bluebottle.geo.models import Geolocation
-
 
 tf = TimezoneFinder()
 
@@ -59,9 +55,6 @@ class Assignment(Activity, TransitionsMixin):
         Geolocation, verbose_name=_('task location'),
         null=True, blank=True, on_delete=SET_NULL)
 
-    transitions = TransitionManager(AssignmentTransitions, 'status')
-    review_transitions = TransitionManager(ActivityReviewTransitions, 'review_status')
-
     validators = [RegistrationDeadlineValidator]
 
     @property
@@ -99,12 +92,10 @@ class Assignment(Activity, TransitionsMixin):
         contributions = self.contributions.instance_of(Applicant)
 
         stats = contributions.filter(
-            status=ApplicantTransitions.values.succeeded).\
+            status='succeeded').\
             aggregate(count=Count('user__id'), hours=Sum('applicant__time_spent'))
         committed = contributions.filter(
-            status__in=[
-                ApplicantTransitions.values.active,
-                ApplicantTransitions.values.accepted]).\
+            status__in=['active', 'accepted']).\
             aggregate(committed_count=Count('user__id'), committed_hours=Sum('applicant__time_spent'))
         stats.update(committed)
         return stats
@@ -130,69 +121,62 @@ class Assignment(Activity, TransitionsMixin):
 
     @property
     def accepted_applicants(self):
-        accepted_states = [
-            ApplicantTransitions.values.accepted,
-            ApplicantTransitions.values.active,
-            ApplicantTransitions.values.succeeded
-        ]
+        accepted_states = ['accepted', 'active', 'succeeded']
         return self.contributions.instance_of(Applicant).filter(status__in=accepted_states)
 
     @property
     def active_applicants(self):
-        accepted_states = [
-            ApplicantTransitions.values.active
-        ]
-        return self.contributions.instance_of(Applicant).filter(status__in=accepted_states)
+        return self.contributions.instance_of(Applicant).filter(status__in='active')
 
-    def registration_deadline_passed(self):
-        # If registration deadline passed
-        # got applicants -> start
-        # no applicants -> expire
-        if self.status in [AssignmentTransitions.values.full, AssignmentTransitions.values.open]:
-            if len(self.accepted_applicants) > 1:
-                self.transitions.lock()
-            else:
-                self.transitions.expire()
-            self.save()
-
-    def start_date_passed(self):
-        # If registration deadline passed
-        # got applicants -> start
-        # no applicants -> expire
-        if self.status in [AssignmentTransitions.values.full,
-                           AssignmentTransitions.values.open]:
-            if len(self.accepted_applicants):
-                self.transitions.start()
-            else:
-                self.transitions.expire()
-            self.save()
-
-    def end_date_passed(self):
-        # If end date passed
-        # got applicants -> succeed
-        # no applicants -> expire
-        if self.status in [AssignmentTransitions.values.running,
-                           AssignmentTransitions.values.full,
-                           AssignmentTransitions.values.open]:
-            if len(self.accepted_applicants):
-                self.transitions.succeed()
-                self.save()
-            else:
-                self.transitions.expire()
-
-            self.save()
+    # def registration_deadline_passed(self):
+    #     # If registration deadline passed
+    #     # got applicants -> start
+    #     # no applicants -> expire
+    #     if self.status in [AssignmentTransitions.values.full, AssignmentTransitions.values.open]:
+    #         if len(self.accepted_applicants) > 1:
+    #             self.transitions.lock()
+    #         else:
+    #             self.transitions.expire()
+    #         self.save()
+    #
+    # def start_date_passed(self):
+    #     # If registration deadline passed
+    #     # got applicants -> start
+    #     # no applicants -> expire
+    #     if self.status in [AssignmentTransitions.values.full,
+    #                        AssignmentTransitions.values.open]:
+    #         if len(self.accepted_applicants):
+    #             self.transitions.start()
+    #         else:
+    #             self.transitions.expire()
+    #         self.save()
+    #
+    # def end_date_passed(self):
+    #     # If end date passed
+    #     # got applicants -> succeed
+    #     # no applicants -> expire
+    #     if self.status in [AssignmentTransitions.values.running,
+    #                        AssignmentTransitions.values.full,
+    #                        AssignmentTransitions.values.open]:
+    #         if len(self.accepted_applicants):
+    #             self.transitions.succeed()
+    #             self.save()
+    #         else:
+    #             self.transitions.expire()
+    #
+    #         self.save()
 
     def check_capacity(self, save=True):
         if self.capacity \
                 and len(self.accepted_applicants) >= self.capacity \
-                and self.status == AssignmentTransitions.values.open:
-            self.transitions.lock()
+                and self.status == 'open':
+            self.states.lock()
             self.save()
         elif self.capacity \
                 and len(self.accepted_applicants) < self.capacity \
-                and self.status == AssignmentTransitions.values.full \
+                and self.status == 'full' \
                 and (self.registration_deadline or self.date) >= now().date():
-            self.transitions.reopen()
+            self.states.reopen()
             if save:
                 self.save()
 
@@ -206,7 +190,6 @@ class Assignment(Activity, TransitionsMixin):
 class Applicant(Contribution, TransitionsMixin):
     motivation = models.TextField()
     time_spent = models.FloatField(_('time spent'), null=True, blank=True)
-    transitions = TransitionManager(ApplicantTransitions, 'status')
 
     document = PrivateDocumentField(blank=True, null=True)
 
@@ -229,27 +212,21 @@ class Applicant(Contribution, TransitionsMixin):
         resource_name = 'contributions/applicants'
 
     def save(self, *args, **kwargs):
-        created = self.pk is None
-
         # Fail the self if hours are set to 0
-        if self.status == ApplicantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:
-            self.transitions.fail()
+        if self.status == 'succeeded' and self.time_spent in [None, '0', 0.0]:
+            self.states.fail()
         # Succeed self if the hours are set to an amount
-        elif self.status in [
-            ApplicantTransitions.values.failed,
-            ApplicantTransitions.values.closed
-        ] and self.time_spent not in [None, '0', 0.0]:
-            self.transitions.succeed()
+        elif self.status in ['failed', 'closed'] and self.time_spent not in [None, '0', 0.0]:
+            self.states.succeed()
         super(Applicant, self).save(*args, **kwargs)
 
-        if created and self.status == ApplicantTransitions.values.new:
-            follow(self.user, self.activity)
-            self.transitions.initiate()
         self.activity.check_capacity()
 
     def delete(self, *args, **kwargs):
         super(Applicant, self).delete(*args, **kwargs)
         self.activity.check_capacity()
 
+
 from bluebottle.assignments.signals import *  # noqa
 from bluebottle.assignments.states import *  # noqa
+from bluebottle.assignments.triggers import *  # noqa

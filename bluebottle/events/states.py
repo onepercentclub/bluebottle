@@ -138,10 +138,16 @@ class EventStateMachine(ActivityStateMachine):
         ActivityStateMachine.closed,
         effects=[NotificationEffect(EventClosedOwnerMessage)]
     )
+
     reopen = Transition(
         (ActivityStateMachine.succeeded, ActivityStateMachine.closed, ),
         ActivityStateMachine.open,
-        effects=[RelatedTransitionEffect('participants', 'reset')]
+        effects=[
+            RelatedTransitionEffect('participants', 'reset'),
+            # Need to add organizer,reset() But probably should differentiate between
+            # `restore` a closed event and `reschedule` a succeeded one
+            # RelatedTransitionEffect('organizer', 'reset')
+        ]
     )
 
 

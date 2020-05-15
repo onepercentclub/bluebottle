@@ -6,8 +6,8 @@ from bluebottle.activities.effects import Complete
 from bluebottle.assignments.messages import AssignmentDateChanged
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine
-from bluebottle.fsm.effects import TransitionEffect
-from bluebottle.fsm.triggers import ModelChangedTrigger
+from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
+from bluebottle.fsm.triggers import ModelChangedTrigger, ModelDeletedTrigger
 from bluebottle.notifications.effects import NotificationEffect
 
 
@@ -20,10 +20,10 @@ class DateChanged(ModelChangedTrigger):
             'succeed',
             conditions=[AssignmentStateMachine.should_finish, AssignmentStateMachine.has_accepted_applicants]),
         TransitionEffect(
-            'close',
+            'expire',
             conditions=[AssignmentStateMachine.should_finish, AssignmentStateMachine.has_no_accepted_applicants]),
         TransitionEffect('reopen', conditions=[AssignmentStateMachine.should_open]),
-        TransitionEffect('fill', conditions=[AssignmentStateMachine.is_full]),
+        TransitionEffect('lock', conditions=[AssignmentStateMachine.is_full]),
     ]
 
 
@@ -31,8 +31,8 @@ class CapacityChanged(ModelChangedTrigger):
     field = 'capacity'
 
     effects = [
-        TransitionEffect('unfill', conditions=[AssignmentStateMachine.is_not_full]),
-        TransitionEffect('fill', conditions=[AssignmentStateMachine.is_full]),
+        TransitionEffect('reopen', conditions=[AssignmentStateMachine.is_not_full]),
+        TransitionEffect('lock', conditions=[AssignmentStateMachine.is_full]),
     ]
 
 
@@ -92,9 +92,30 @@ class TimeSpentChanged(ModelChangedTrigger):
     field = 'time_spent'
 
     effects = [
-        TransitionEffect('succeed', conditions=[ApplicantStateMachine.has_time_spent]),
-        TransitionEffect('fail', conditions=[ApplicantStateMachine.has_no_time_spent]),
+        TransitionEffect('mark_present', conditions=[ApplicantStateMachine.has_time_spent]),
+        TransitionEffect('mark_absent', conditions=[ApplicantStateMachine.has_no_time_spent]),
     ]
 
 
-Applicant.triggers = [TimeSpentChanged]
+class ApplicantDeleted(ModelDeletedTrigger):
+    effects = [
+        RelatedTransitionEffect(
+            'activity',
+            'close',
+            conditions=[
+                ApplicantStateMachine.assignment_is_finished,
+                ApplicantStateMachine.assignment_will_be_empty
+            ]
+        ),
+        RelatedTransitionEffect(
+            'activity',
+            'reopen',
+            conditions=[
+                ApplicantStateMachine.assignment_will_become_open,
+                ApplicantStateMachine.assignment_is_not_finished
+            ],
+        ),
+    ]
+
+
+Applicant.triggers = [TimeSpentChanged, ApplicantDeleted]

@@ -12,7 +12,7 @@ from bluebottle.notifications.effects import NotificationEffect
 
 
 class DateChanged(ModelChangedTrigger):
-    field = 'start'
+    field = 'date'
 
     effects = [
         NotificationEffect(AssignmentDateChanged),

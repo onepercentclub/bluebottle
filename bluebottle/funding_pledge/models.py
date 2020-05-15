@@ -61,3 +61,6 @@ class PledgeBankAccount(BankAccount):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/pledge-external-accounts'
+
+
+from states import *  # noqa

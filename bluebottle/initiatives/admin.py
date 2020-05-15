@@ -151,13 +151,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     def valid(self, obj):
         errors = list(obj.errors)
-
-        if not errors and obj.states.initiative_is_approved():
-            return '-'
-
-        if not obj.states.initiative_is_approved():
-            errors.append(_('The initiative is not approved'))
-
         return format_html("<ul>{}</ul>", format_html("".join([
             format_html(u"<li>{}</li>", value) for value in errors
         ])))

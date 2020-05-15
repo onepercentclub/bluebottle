@@ -15,26 +15,12 @@ import pytz
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.events.transitions import ParticipantTransitions
+from bluebottle.events.validators import RegistrationDeadlineValidator
 from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
-from bluebottle.utils.models import Validator
 
 
 tf = TimezoneFinder()
-
-
-class RegistrationDeadlineValidator(Validator):
-    field = 'registration_deadline'
-    code = 'registration-deadline'
-    message = _('Registration deadline should be before the start time'),
-
-    def is_valid(self):
-        return (
-            not self.instance.registration_deadline or (
-                self.instance.start and
-                self.instance.registration_deadline < self.instance.start.date()
-            )
-        )
 
 
 class Event(Activity):

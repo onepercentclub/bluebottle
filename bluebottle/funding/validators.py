@@ -1,0 +1,48 @@
+from django.utils.timezone import now
+from django.utils.translation import ugettext_lazy as _
+
+from bluebottle.utils.models import Validator
+
+
+class KYCPassedValidator(Validator):
+    code = 'kyc'
+    message = _('Make sure your payout account is verified')
+    field = 'kyc'
+
+    def is_valid(self):
+        return self.instance.bank_account and self.instance.bank_account.verified
+
+
+class DeadlineValidator(Validator):
+    code = 'deadline'
+    message = _('Make sure deadline is in the future')
+    field = 'deadline'
+
+    def is_valid(self):
+        return (
+            self.instance.status in ('submitted', 'needs_work', 'draft') or
+            self.instance.duration or
+            (self.instance.deadline and self.instance.deadline > now())
+        )
+
+
+class BudgetLineValidator(Validator):
+    code = 'budgetlines'
+    message = _('Please specify a budget')
+    field = 'budgetlines'
+
+    def is_valid(self):
+        return len(self.instance.budget_lines.all()) > 0
+
+
+class TargetValidator(Validator):
+    code = 'target'
+    message = _('Please specify a target')
+    field = 'target'
+
+    def is_valid(self):
+        if self.instance.target is None:
+            return False
+        if self.instance.target.amount == 0:
+            return False
+        return True

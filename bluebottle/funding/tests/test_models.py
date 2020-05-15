@@ -36,7 +36,7 @@ class FundingTestCase(BluebottleTestCase):
         errors = list(funding.errors)
 
         self.assertEqual(len(errors), 2)
-        self.assertEqual(errors[1].message, ['Please specify a budget'])
+        self.assertEqual(errors[1].message, 'Please specify a budget')
 
         BudgetLineFactory.create_batch(5, activity=funding, amount=Money(20, 'EUR'))
 
@@ -62,7 +62,7 @@ class FundingTestCase(BluebottleTestCase):
         errors = list(funding.errors)
         self.assertEqual(len(errors), 3)
 
-        self.assertEqual(errors[1].message, ['Make sure deadline is in the future'])
+        self.assertEqual(errors[1].message, 'Make sure deadline is in the future')
 
     def test_deadline_in_past_with_duration(self):
         funding = FundingFactory.create(
@@ -80,8 +80,15 @@ class FundingTestCase(BluebottleTestCase):
             target=Money(100, 'EUR'), deadline=now() - timedelta(days=10), status='succeeded'
         )
 
-        errors = list(funding.errors)
-        self.assertEqual(len(errors), 2)
+        errors = [error.message for error in list(funding.errors)]
+        self.assertEqual(
+            errors,
+            [
+                u'Make sure your payout account is verified',
+                u'Make sure deadline is in the future',
+                u'Please specify a budget'
+            ]
+        )
 
 
 class PayoutTestCase(BluebottleTestCase):

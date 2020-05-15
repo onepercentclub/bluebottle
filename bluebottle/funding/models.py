@@ -12,7 +12,6 @@ from django.db import models
 from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
 from django.utils.functional import cached_property
-from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from moneyed import Money
@@ -29,9 +28,10 @@ from bluebottle.funding.transitions import (
     PayoutAccountTransitions,
     PlainPayoutAccountTransitions,
     PayoutTransitions)
+from bluebottle.funding.validators import KYCPassedValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
-from bluebottle.utils.models import Validator, BasePlatformSettings, AnonymizationMixin
+from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin
 
 
 class PaymentCurrency(models.Model):
@@ -114,37 +114,6 @@ class PaymentProvider(PolymorphicModel):
         return model
 
 
-class KYCPassedValidator(Validator):
-    code = 'kyc'
-    message = [_('Make sure your account is verified')]
-    field = 'kyc'
-
-    def is_valid(self):
-        return self.instance.bank_account and self.instance.bank_account.verified
-
-
-class DeadlineValidator(Validator):
-    code = 'deadline'
-    message = [_('Make sure deadline is in the future')]
-    field = 'deadline'
-
-    def is_valid(self):
-        return (
-            self.instance.status not in ('in_review', 'open') or
-            self.instance.duration or
-            (self.instance.deadline and self.instance.deadline > now())
-        )
-
-
-class BudgetLineValidator(Validator):
-    code = 'budgetlines'
-    message = [_('Please specify a budget')]
-    field = 'budgetlines'
-
-    def is_valid(self):
-        return len(self.instance.budget_lines.all()) > 0
-
-
 class Funding(Activity):
     deadline = models.DateTimeField(
         _('deadline'),
@@ -173,7 +142,7 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [KYCPassedValidator, DeadlineValidator, BudgetLineValidator]
+    validators = [KYCPassedValidator, DeadlineValidator, BudgetLineValidator, TargetValidator]
 
     @property
     def required_fields(self):

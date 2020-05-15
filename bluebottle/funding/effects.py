@@ -24,7 +24,7 @@ class DeletePayouts(Effect):
     post_save = True
     conditions = []
 
-    def execute(self):
+    def execute(self, **kwargs):
         self.instance.payouts.all().delete()
 
     def __unicode__(self):

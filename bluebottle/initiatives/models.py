@@ -16,23 +16,11 @@ from bluebottle.follow.models import Follow
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.effects import Complete
 from bluebottle.initiatives.messages import AssignedReviewerMessage
+from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.models import BasePlatformSettings, Validator, ValidatedModelMixin, AnonymizationMixin
+from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
-
-
-class UniqueTitleValidator(Validator):
-    field = 'title'
-    code = 'required'
-    message = _('The title must be unique')
-
-    def is_valid(self):
-        return not Initiative.objects.exclude(
-            pk=self.instance.pk
-        ).filter(
-            status='approved', title=self.instance.title
-        )
 
 
 class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.Model):

@@ -5,7 +5,7 @@ from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, R
 from django.db.models import Q as DQ
 
 from bluebottle.activities.transitions import ActivityTransitions
-from bluebottle.events.transitions import EventTransitions
+from bluebottle.events.states import EventStateMachine
 from bluebottle.funding.transitions import FundingTransitions
 from bluebottle.utils.filters import ElasticSearchFilter
 from bluebottle.activities.documents import activity
@@ -185,8 +185,8 @@ class ActivityFilter(DjangoFilterBackend):
         ActivityTransitions.values.succeeded,
         ActivityTransitions.values.open,
         FundingTransitions.values.partially_funded,
-        EventTransitions.values.full,
-        EventTransitions.values.running
+        EventStateMachine.full.value,
+        EventStateMachine.is_running.value
     ]
 
     def filter_queryset(self, request, queryset, view):

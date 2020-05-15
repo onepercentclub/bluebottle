@@ -14,9 +14,7 @@ from timezonefinder import TimezoneFinder
 import pytz
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.events.transitions import ParticipantTransitions
 from bluebottle.events.validators import RegistrationDeadlineValidator
-from bluebottle.fsm import TransitionManager
 from bluebottle.geo.models import Geolocation
 
 
@@ -55,11 +53,15 @@ class Event(Activity):
         contributions = self.contributions.instance_of(Participant)
 
         stats = contributions.filter(
-            status=ParticipantTransitions.values.succeeded).\
-            aggregate(count=Count('user__id'), hours=Sum('participant__time_spent'))
+            status=ParticipantStateMachine.succeeded.value
+        ).aggregate(
+            count=Count('user__id'), hours=Sum('participant__time_spent')
+        )
         committed = contributions.filter(
-            status=ParticipantTransitions.values.new).\
-            aggregate(committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent'))
+            status=ParticipantStateMachine.new.value
+        ).aggregate(
+            committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent')
+        )
         stats.update(committed)
         return stats
 
@@ -110,8 +112,10 @@ class Event(Activity):
     @property
     def participants(self):
         return self.contributions.filter(
-            status__in=[ParticipantTransitions.values.new,
-                        ParticipantTransitions.values.succeeded]
+            status__in=[
+                ParticipantStateMachine.new.value,
+                ParticipantStateMachine.succeeded.value
+            ]
         ).instance_of(Participant)
 
     @property
@@ -179,7 +183,6 @@ class Event(Activity):
 
 class Participant(Contribution):
     time_spent = models.FloatField(default=0)
-    transitions = TransitionManager(ParticipantTransitions, 'status')
 
     class Meta:
         verbose_name = _("Participant")
@@ -210,5 +213,5 @@ class Participant(Contribution):
         return _('Participant (%s)') % self.user
 
 
-from bluebottle.events.states import *  # noqa
+from bluebottle.events.states import ParticipantStateMachine
 from bluebottle.events.effects import *  # noqa

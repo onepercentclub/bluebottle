@@ -2,7 +2,7 @@ from django.db.models import Q
 from rest_framework_json_api.django_filters import DjangoFilterBackend
 
 from bluebottle.events.models import Participant
-from bluebottle.events.transitions import ParticipantTransitions
+from bluebottle.events.states import ParticipantStateMachine
 
 
 class ParticipantListFilter(DjangoFilterBackend):
@@ -16,14 +16,14 @@ class ParticipantListFilter(DjangoFilterBackend):
                 Q(user=request.user) |
                 Q(activity__owner=request.user) |
                 Q(status__in=[
-                    ParticipantTransitions.values.new,
-                    ParticipantTransitions.values.succeeded
+                    ParticipantStateMachine.new.value,
+                    ParticipantStateMachine.succeeded.value
                 ])
             )
         else:
             queryset = queryset.filter(status__in=[
-                ParticipantTransitions.values.new,
-                ParticipantTransitions.values.succeeded
+                ParticipantStateMachine.new.value,
+                ParticipantStateMachine.succeeded.value
             ])
 
         queryset = queryset.instance_of(Participant)

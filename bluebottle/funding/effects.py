@@ -72,7 +72,7 @@ class SetDeadline(Effect):
             )
 
     def __unicode__(self):
-        return _('Set start date')
+        return _('Set deadline')
 
 
 class RefundPaymentAtPSP(Effect):

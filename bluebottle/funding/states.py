@@ -39,6 +39,9 @@ class FundingStateMachine(ActivityStateMachine):
     def no_donations(self):
         return not self.instance.amount_raised.amount
 
+    def without_approved_payouts(self):
+        return not self.instance.payouts.exclude(status__in=['new', 'failed']).count()
+
     def can_approve(self, user):
         return user.is_staff
 

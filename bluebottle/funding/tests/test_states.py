@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.core import mail
 from django.utils.timezone import now
 from djmoney.money import Money
 
@@ -26,12 +27,70 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.bank_account = bank_account
         self.funding.save()
 
-    def test_approve(self):
+    def test_submit(self):
         self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
+
+    def test_approve(self):
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+
+    def test_approve_organizer_succeed(self):
+        self.funding.states.approve(save=True)
         organizer = self.funding.contributions.get()
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
+
+    def test_approve_set_start_dat(self):
+        self.funding.states.approve(save=True)
+        organizer = self.funding.contributions.get()
+        self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
+
+    def test_approve_set_deadline(self):
+        self.funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=Money(1000, 'EUR'),
+            deadline=None,
+            duration=7
+        )
+        BudgetLineFactory.create(activity=self.funding)
+        payout_account = PlainPayoutAccountFactory.create()
+        bank_account = BankAccountFactory.create(connect_account=payout_account)
+        self.funding.bank_account = bank_account
+        self.funding.save()
+        self.funding.states.approve(save=True)
+        next_week = now() + timedelta(days=7)
+        self.assertEqual(self.funding.deadline.date(), next_week.date())
+
+    def test_approve_should_close(self):
+        self.funding.deadline = now() - timedelta(days=5)
+        self.funding.states.approve(save=True)
+        self.assertEqual(self.funding.status, 'closed')
+
+    def _prepare_extend(self):
+        self.funding.states.approve(save=True)
+        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        # Changing the deadline to the past should trigger a transition
+        self.funding.deadline = now() - timedelta(days=1)
+        self.funding.save()
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, FundingStateMachine.partially_funded.value)
+
+    def test_extend(self):
+        self._prepare_extend()
+        # Changing the deadline to the future should open the campaign again
+        self.funding.deadline = now() + timedelta(days=7)
+        self.funding.save()
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, 'open')
+
+    def test_extend_delete_payouts(self):
+        self._prepare_extend()
+        self.assertEqual(self.funding.payouts.count(), 1)
+        # Changing the deadline to the future should open the campaign again
+        self.funding.deadline = now() + timedelta(days=7)
+        self.funding.save()
+        self.assertEqual(self.funding.payouts.count(), 0)
 
     def test_reject(self):
         self.funding.states.reject(save=True)
@@ -45,53 +104,56 @@ class FundingStateMachineTests(BluebottleTestCase):
         organizer = self.funding.contributions.get()
         self.assertEqual(organizer.status, OrganizerStateMachine.failed.value)
 
-    def test_extend(self):
-        self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
+    def _prepare_succeeded(self):
         self.funding.states.approve(save=True)
-        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        self.assertEqual(self.funding.status, 'open')
+        donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
-        # Changing the deadline to the past should trigger a transition
         self.funding.deadline = now() - timedelta(days=1)
-        self.funding.save()
-        self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, FundingStateMachine.partially_funded.value)
-        # Changing the deadline to the future should open the campaign again
-        self.funding.deadline = now() + timedelta(days=7)
-        self.funding.save()
-        self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
 
-    def test_matching(self):
-        self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
-        self.funding.states.approve(save=True)
-        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        PledgePaymentFactory.create(donation=donation)
-        # Changing the deadline to the past should trigger a transition
-        self.funding.deadline = now() - timedelta(days=1)
-        self.funding.save()
-        self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, FundingStateMachine.partially_funded.value)
-        # Add amount matched funding to complete the project should transition it to succeeded
-        self.funding.amount_matching = Money(500, 'EUR')
-        self.funding.save()
-        self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
+    def test_succeed(self):
+        self._prepare_succeeded()
+        self.funding.states.succeed(save=True)
+        self.assertEqual(self.funding.status, 'succeeded')
 
-    def test_lower_target(self):
-        self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
-        self.funding.states.approve(save=True)
-        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        PledgePaymentFactory.create(donation=donation)
-        # Changing the deadline to the past should trigger a transition
-        self.funding.deadline = now() - timedelta(days=1)
+    def test_succeed_owner_message(self):
+        self._prepare_succeeded()
+        mail.outbox = []
+        self.funding.states.succeed(save=True)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, u'You successfully completed your crowdfunding campaign! \U0001f389')
+
+    def test_succeed_generate_payouts(self):
+        self._prepare_succeeded()
+        self.funding.states.succeed(save=True)
+        self.assertEqual(self.funding.status, 'succeeded')
+        self.assertEqual(self.funding.payouts.count(), 1)
+        self.assertEqual(self.funding.payouts.first().total_amount, Money(1000, 'EUR'))
+
+
+class DonationStateMachineTests(BluebottleTestCase):
+
+    def setUp(self):
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.approve(save=True)
+        self.funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=Money(1000, 'EUR')
+        )
+        BudgetLineFactory.create(activity=self.funding)
+        payout_account = PlainPayoutAccountFactory.create()
+        bank_account = BankAccountFactory.create(connect_account=payout_account)
+        self.funding.bank_account = bank_account
         self.funding.save()
-        self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, FundingStateMachine.partially_funded.value)
-        # Lower target of the project should transition it to succeeded
-        self.funding.target = Money(500, 'EUR')
-        self.funding.save()
-        self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
+
+    def test_transitions_succeed(self):
+        pass
+
+    def test_transitions_fail(self):
+        pass
+
+    def test_transitions_refund(self):
+        pass
+
+    def test_transitions_refund_activity(self):
+        pass

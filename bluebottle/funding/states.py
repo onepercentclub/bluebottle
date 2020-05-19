@@ -37,7 +37,7 @@ class FundingStateMachine(ActivityStateMachine):
         return self.instance.amount_raised.amount and self.instance.amount_raised < self.instance.target
 
     def no_donations(self):
-        return not self.instance.amount_raised.amount
+        return not self.instance.donations.filter(status='succeeded').count()
 
     def without_approved_payouts(self):
         return not self.instance.payouts.exclude(status__in=['new', 'failed']).count()
@@ -82,12 +82,16 @@ class FundingStateMachine(ActivityStateMachine):
     )
 
     close = Transition(
-        [ActivityStateMachine.open],
+        ActivityStateMachine.open,
         ActivityStateMachine.closed,
         name=_('Close'),
         automatic=True,
+        conditions=[
+            no_donations,
+        ],
         effects=[
-            NotificationEffect(FundingClosedMessage)
+            NotificationEffect(FundingClosedMessage),
+            RelatedTransitionEffect('organizer', 'fail'),
         ]
     )
 

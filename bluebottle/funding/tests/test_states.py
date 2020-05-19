@@ -5,6 +5,7 @@ from django.utils.timezone import now
 from djmoney.money import Money
 
 from bluebottle.activities.states import OrganizerStateMachine
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
     PlainPayoutAccountFactory, DonationFactory
@@ -23,12 +24,33 @@ class FundingStateMachineTests(BluebottleTestCase):
         )
         BudgetLineFactory.create(activity=self.funding)
         payout_account = PlainPayoutAccountFactory.create()
-        bank_account = BankAccountFactory.create(connect_account=payout_account)
-        self.funding.bank_account = bank_account
+        self.bank_account = BankAccountFactory.create(connect_account=payout_account)
+        self.funding.bank_account = self.bank_account
         self.funding.save()
 
     def test_submit(self):
         self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
+
+    def test_submit_incomplete(self):
+        funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=Money(1000, 'EUR')
+        )
+        BudgetLineFactory.create(activity=self.funding)
+        funding.bank_account = self.bank_account
+        funding.save()
+        with self.assertRaisesMessage(TransitionNotPossible, 'Conditions not met for transition'):
+            funding.states.submit()
+
+    def test_submit_invalid(self):
+        funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=Money(1000, 'EUR')
+        )
+        funding.bank_account = self.bank_account
+        funding.save()
+        with self.assertRaisesMessage(TransitionNotPossible, 'Conditions not met for transition'):
+            funding.states.submit()
 
     def test_approve(self):
         self.funding.states.approve(save=True)
@@ -61,6 +83,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.funding.deadline.date(), next_week.date())
 
     def test_approve_should_close(self):
+
         self.funding.deadline = now() - timedelta(days=5)
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, 'closed')
@@ -121,7 +144,10 @@ class FundingStateMachineTests(BluebottleTestCase):
         mail.outbox = []
         self.funding.states.succeed(save=True)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, u'You successfully completed your crowdfunding campaign! \U0001f389')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            u'You successfully completed your crowdfunding campaign! \U0001f389'
+        )
 
     def test_succeed_generate_payouts(self):
         self._prepare_succeeded()
@@ -129,6 +155,26 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.funding.status, 'succeeded')
         self.assertEqual(self.funding.payouts.count(), 1)
         self.assertEqual(self.funding.payouts.first().total_amount, Money(1000, 'EUR'))
+
+    def test_close(self):
+        mail.outbox = []
+        self.funding.states.approve(save=True)
+        self.funding.states.close(save=True)
+        self.assertEqual(self.funding.status, 'closed')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            u'Your crowdfunding campaign has been closed'
+        )
+
+    def test_close_with_donations(self):
+        mail.outbox = []
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        with self.assertRaisesMessage(
+                TransitionNotPossible,
+                'Conditions not met for transition'):
+            self.funding.states.close(save=True)
 
 
 class DonationStateMachineTests(BluebottleTestCase):

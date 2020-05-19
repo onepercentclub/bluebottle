@@ -20,12 +20,12 @@ class CreateOrganizer(Effect):
 
 
 class ActivityStateMachine(ModelStateMachine):
-    draft = State(_('draft'), 'draft')
-    submitted = State(_('submitted'), 'submitted')
-    needs_work = State(_('needs work'), 'needs_work')
+    draft = State(_('draft'), 'draft', _('The activity is created by the user'))
+    submitted = State(_('submitted'), 'submitted', _('The activity is complete and needs to be review'))
+    needs_work = State(_('needs work'), 'needs_work', _('The activity needs to be edited'))
 
-    rejected = State(_('rejected'), 'rejected')
-    deleted = State(_('deleted'), 'deleted')
+    rejected = State(_('rejected'), 'rejected', _('The activity is rejected by the review'))
+    deleted = State(_('deleted'), 'deleted', _('The activity is deleted by the user'))
 
     open = State(_('open'), 'open', _('Activity is open, and accepting contributions'))
     succeeded = State(_('succeeded'), 'succeeded', _('The activity is succeeded'))
@@ -121,7 +121,7 @@ class ActivityStateMachine(ModelStateMachine):
         deleted,
         name=_('Delete'),
         automatic=False,
-        permissions=is_owner,
+        permission=is_owner,
         effects=[RelatedTransitionEffect('organizer', 'fail')]
     )
 
@@ -138,6 +138,9 @@ class ContributionStateMachine(ModelStateMachine):
     succeeded = State(_('succeeded'), 'succeeded')
     failed = State(_('failed'), 'failed')
     closed = State(_('closed'), 'closed')
+
+    def is_user(self, user):
+        return self.instance.user == user
 
     initiate = Transition(EmptyState(), new)
     close = Transition(

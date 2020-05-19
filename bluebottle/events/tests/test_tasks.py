@@ -9,7 +9,7 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.events.models import Event
 from bluebottle.events.tasks import check_event_end, check_event_start, check_event_reminder
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
-from bluebottle.events.transitions import EventTransitions
+from bluebottle.events.states import EventStateMachine
 from bluebottle.initiatives.tests.factories import (
     InitiativePlatformSettingsFactory, InitiativeFactory
 )
@@ -80,7 +80,7 @@ class EventTasksTestCase(BluebottleTestCase):
 
         with LocalTenant(tenant, clear_tenant=True):
             event = Event.objects.get(pk=event.pk)
-        self.assertEqual(event.status, EventTransitions.values.succeeded)
+        self.assertEqual(event.status, EventStateMachine.succeeded.value)
 
         self.assertEqual(len(mail.outbox), 10)
         self.assertEqual(mail.outbox[-1].subject, 'You completed your event "{}"!'.format(event.title))

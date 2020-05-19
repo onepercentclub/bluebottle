@@ -1,6 +1,7 @@
 from datetime import timedelta
 import mock
 
+from django.core import mail
 from django.utils import timezone
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -15,34 +16,40 @@ class ActivityStateMachineTests(BluebottleTestCase):
     def setUp(self):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.approve(save=True)
+        self.event = EventFactory.create(
+            initiative=self.initiative,
+            capacity=10,
+            duration=1
+        )
+        self.passed_event = EventFactory.create(
+            initiative=self.initiative,
+            start=timezone.now() - timedelta(days=1),
+            duration=1
+        )
 
     def test_create(self):
-        event = EventFactory.create(initiative=self.initiative)
+        self.assertEqual(self.event.status, EventStateMachine.open.value)
 
-        self.assertEqual(event.status, EventStateMachine.open.value)
-
-        organizer = event.contributions.get()
+        organizer = self.event.contributions.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
 
     def test_reject(self):
-        event = EventFactory.create(initiative=self.initiative)
-        event.states.reject(save=True)
+        self.event.states.reject(save=True)
 
-        self.assertEqual(event.status, EventStateMachine.rejected.value)
+        self.assertEqual(self.event.status, EventStateMachine.rejected.value)
 
-        organizer = event.contributions.get()
+        organizer = self.event.contributions.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.failed.value)
 
     def test_accept(self):
-        event = EventFactory.create(initiative=self.initiative)
-        event.states.reject(save=True)
-        event.states.accept(save=True)
+        self.event.states.reject(save=True)
+        self.event.states.accept(save=True)
 
-        self.assertEqual(event.status, EventStateMachine.open.value)
+        self.assertEqual(self.event.status, EventStateMachine.open.value)
 
-        organizer = event.contributions.get()
+        organizer = self.event.contributions.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
 
@@ -84,66 +91,58 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
 
     def test_not_full(self):
-        event = EventFactory.create(initiative=self.initiative, capacity=10)
-        ParticipantFactory.create_batch(event.capacity - 1, activity=event)
+        ParticipantFactory.create_batch(self.event.capacity - 1, activity=self.event)
 
-        event.refresh_from_db()
+        self.event.refresh_from_db()
 
-        self.assertEqual(event.status, EventStateMachine.open.value)
-        for participant in event.contributions.instance_of(Participant):
+        self.assertEqual(self.event.status, EventStateMachine.open.value)
+        for participant in self.event.contributions.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.new.value)
 
     def test_full(self):
-        event = EventFactory.create(initiative=self.initiative, capacity=10)
-        ParticipantFactory.create_batch(event.capacity, activity=event)
+        ParticipantFactory.create_batch(self.event.capacity, activity=self.event)
 
-        event.refresh_from_db()
+        self.event.refresh_from_db()
 
-        self.assertEqual(event.status, EventStateMachine.full.value)
-        for participant in event.contributions.instance_of(Participant):
+        self.assertEqual(self.event.status, EventStateMachine.full.value)
+        for participant in self.event.contributions.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.new.value)
 
     def test_change_capacity_full(self):
-        event = EventFactory.create(initiative=self.initiative, capacity=10)
-        ParticipantFactory.create_batch(event.capacity - 1, activity=event)
-        self.assertEqual(event.status, EventStateMachine.open.value)
+        ParticipantFactory.create_batch(self.event.capacity - 1, activity=self.event)
+        self.assertEqual(self.event.status, EventStateMachine.open.value)
 
-        event.capacity = event.capacity - 1
+        self.event.capacity = self.event.capacity - 1
 
-        effects = list(event.current_effects)
+        effects = list(self.event.current_effects)
         self.assertEqual(len(effects), 1)
         self.assertEqual(effects[0].name, 'fill')
 
-        event.save()
-        self.assertEqual(event.status, EventStateMachine.full.value)
+        self.event.save()
+        self.assertEqual(self.event.status, EventStateMachine.full.value)
 
     def test_change_capacity_open(self):
-        event = EventFactory.create(initiative=self.initiative, capacity=10)
-        ParticipantFactory.create_batch(event.capacity, activity=event)
+        ParticipantFactory.create_batch(self.event.capacity, activity=self.event)
 
-        event.capacity = event.capacity + 1
+        self.event.capacity = self.event.capacity + 1
 
-        effects = list(event.current_effects)
+        effects = list(self.event.current_effects)
         self.assertEqual(len(effects), 1)
         self.assertEqual(effects[0].name, 'unfill')
 
-        event.save()
-        self.assertEqual(event.status, EventStateMachine.open.value)
+        self.event.save()
+        self.assertEqual(self.event.status, EventStateMachine.open.value)
 
     def test_change_capacity_no_transition(self):
-        event = EventFactory.create(initiative=self.initiative, capacity=10)
-        ParticipantFactory.create_batch(event.capacity - 1, activity=event)
+        ParticipantFactory.create_batch(self.event.capacity - 1, activity=self.event)
 
-        event.capacity = event.capacity + 1
-        event.save()
-        self.assertEqual(event.status, EventStateMachine.open.value)
+        self.event.capacity = self.event.capacity + 1
+        self.event.save()
+        self.assertEqual(self.event.status, EventStateMachine.open.value)
 
     def test_withdraw(self):
-        event = EventFactory.create(initiative=self.initiative)
-        self.assertEqual(event.status, EventStateMachine.open.value)
-
-        participants = ParticipantFactory.create_batch(event.capacity, activity=event)
-        self.assertEqual(event.status, EventStateMachine.full.value)
+        participants = ParticipantFactory.create_batch(self.event.capacity, activity=self.event)
+        self.assertEqual(self.event.status, EventStateMachine.full.value)
 
         participant = participants[0]
         participant.states.withdraw(user=participant.user)
@@ -152,188 +151,266 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(participant.status, ParticipantStateMachine.withdrawn.value)
 
-        event.refresh_from_db()
-        self.assertEqual(event.status, EventStateMachine.open.value)
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.status, EventStateMachine.open.value)
 
     def test_reject_participants(self):
-        event = EventFactory.create(initiative=self.initiative)
-        self.assertEqual(event.status, EventStateMachine.open.value)
-
-        participants = ParticipantFactory.create_batch(event.capacity, activity=event)
-        self.assertEqual(event.status, EventStateMachine.full.value)
+        participants = ParticipantFactory.create_batch(self.event.capacity, activity=self.event)
+        self.assertEqual(self.event.status, EventStateMachine.full.value)
 
         participant = participants[0]
-        participant.states.reject(user=event.owner)
+        participant.states.reject(user=self.event.owner)
         participant.save()
 
         self.assertEqual(participant.status, ParticipantStateMachine.rejected.value)
 
-        event.refresh_from_db()
-        self.assertEqual(event.status, EventStateMachine.open.value)
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.status, EventStateMachine.open.value)
 
     def test_mark_absent(self):
-        event = EventFactory.create(
-            initiative=self.initiative,
-            start=timezone.now() - timedelta(days=1),
-            duration=1
-        )
-        participant = ParticipantFactory.create(activity=event)
-        self.assertEqual(event.status, EventStateMachine.succeeded.value)
+        participant = ParticipantFactory.create(activity=self.passed_event)
+        self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
         self.assertEqual(participant.status, EventStateMachine.succeeded.value)
 
-        participant.states.mark_absent(user=event.owner)
+        participant.states.mark_absent(user=self.passed_event.owner)
         participant.save()
 
         self.assertEqual(participant.status, ParticipantStateMachine.no_show.value)
 
-        event.refresh_from_db()
-        self.assertEqual(event.status, EventStateMachine.closed.value)
+        self.passed_event.refresh_from_db()
+        self.assertEqual(self.passed_event.status, EventStateMachine.closed.value)
 
     def test_mark_absent_no_change(self):
-        event = EventFactory.create(
-            initiative=self.initiative,
-            start=timezone.now() - timedelta(hours=1),
-            duration=1
-        )
-        ParticipantFactory.create(activity=event)
-        participant = ParticipantFactory.create(activity=event)
+        ParticipantFactory.create(activity=self.passed_event)
+        participant = ParticipantFactory.create(activity=self.passed_event)
 
-        self.assertEqual(event.status, EventStateMachine.succeeded.value)
+        self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
         self.assertEqual(participant.status, EventStateMachine.succeeded.value)
 
-        participant.states.mark_absent(user=event.owner)
+        participant.states.mark_absent(user=self.passed_event.owner)
         participant.save()
 
         self.assertEqual(participant.status, ParticipantStateMachine.no_show.value)
 
-        event.refresh_from_db()
-        self.assertEqual(event.status, EventStateMachine.succeeded.value)
+        self.passed_event.refresh_from_db()
+        self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
 
     def test_mark_present(self):
-        event = EventFactory.create(
-            initiative=self.initiative,
-            start=timezone.now() - timedelta(days=1),
-            duration=1
-        )
-        participant = ParticipantFactory.create(activity=event)
-        self.assertEqual(event.status, EventStateMachine.succeeded.value)
+        participant = ParticipantFactory.create(activity=self.passed_event)
+        self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
         self.assertEqual(participant.status, EventStateMachine.succeeded.value)
 
-        participant.states.mark_absent(user=event.owner)
+        participant.states.mark_absent(user=self.passed_event.owner)
         participant.save()
 
-        participant.states.mark_present(user=event.owner)
+        participant.states.mark_present(user=self.passed_event.owner)
         participant.save()
 
         self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
 
-        event.refresh_from_db()
-        self.assertEqual(event.status, EventStateMachine.succeeded.value)
+        self.passed_event.refresh_from_db()
+        self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
 
     def test_succeed_in_future(self):
-        event = EventFactory.create(
-            initiative=self.initiative,
-            start=timezone.now() + timedelta(days=1),
-            duration=1
-        )
-        ParticipantFactory.create(activity=event)
+        ParticipantFactory.create(activity=self.event)
 
-        future = timezone.now() + timedelta(days=2)
+        future = self.event.start + timedelta(days=2)
         with mock.patch.object(timezone, 'now', return_value=future):
-            event.save()
+            self.event.save()
 
-        self.assertEqual(event.status, EventStateMachine.succeeded.value)
+        self.assertEqual(self.event.status, EventStateMachine.succeeded.value)
 
-        event.refresh_from_db()
-        for participant in event.contributions.instance_of(Participant):
+        self.event.refresh_from_db()
+        for participant in self.event.contributions.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
 
     def test_succeed_when_passed(self):
-        event = EventFactory.create(
+        ParticipantFactory.create(activity=self.passed_event)
+
+        self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
+
+        for participant in self.passed_event.contributions.instance_of(Participant):
+            self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
+
+    def test_failed_when_passed(self):
+        self.assertEqual(self.passed_event.status, EventStateMachine.closed.value)
+
+    def test_not_succeed_change_start(self):
+        self.assertEqual(self.event.status, EventStateMachine.open.value)
+        ParticipantFactory.create(activity=self.event)
+
+        self.event.start = timezone.now() + timedelta(hours=2)
+        self.event.save()
+
+        self.assertEqual(self.event.status, EventStateMachine.open.value)
+
+        for participant in self.event.contributions.instance_of(Participant):
+            self.assertEqual(participant.status, ParticipantStateMachine.new.value)
+
+    def test_succeed_change_start(self):
+        ParticipantFactory.create(activity=self.event)
+
+        self.assertEqual(self.event.status, EventStateMachine.open.value)
+
+        self.event.start = timezone.now() - timedelta(hours=2)
+        self.event.save()
+
+        self.assertEqual(self.event.status, EventStateMachine.succeeded.value)
+
+        for participant in self.event.contributions.instance_of(Participant):
+            self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
+
+    def test_change_start_reopen_from_closed(self):
+        self.assertEqual(self.passed_event.status, EventStateMachine.closed.value)
+
+        self.passed_event.start = timezone.now() + timedelta(hours=2)
+        self.passed_event.save()
+
+        self.assertEqual(self.passed_event.status, EventStateMachine.open.value)
+
+    def test_change_start_reopen_from_succeeded(self):
+        ParticipantFactory.create(activity=self.passed_event)
+
+        self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
+
+        self.passed_event.start = timezone.now() + timedelta(hours=2)
+        self.passed_event.save()
+
+        self.assertEqual(self.passed_event.status, EventStateMachine.open.value)
+
+        for participant in self.passed_event.contributions.instance_of(Participant):
+            self.assertEqual(participant.status, ParticipantStateMachine.new.value)
+
+
+class ParticipantStateMachineTests(BluebottleTestCase):
+    def setUp(self):
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.approve(save=True)
+        self.event = EventFactory.create(
+            initiative=self.initiative,
+            capacity=10,
+            duration=1
+        )
+        self.participant = ParticipantFactory.create(activity=self.event)
+
+        self.passed_event = EventFactory.create(
             initiative=self.initiative,
             start=timezone.now() - timedelta(days=1),
             duration=1
         )
-        ParticipantFactory.create(activity=event)
 
-        self.assertEqual(event.status, EventStateMachine.succeeded.value)
+        self.passed_participant = ParticipantFactory.create(activity=self.passed_event)
 
-        for participant in event.contributions.instance_of(Participant):
-            self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
+    def messages(self, user):
+        return [
+            message
+            for message in mail.outbox
+            if message.recipients()[0] == user.email
+        ]
 
-    def test_failed_when_passed(self):
-        event = EventFactory.create(
-            initiative=self.initiative,
-            start=timezone.now() - timedelta(hours=1),
-            duration=1
+    def test_created(self):
+        self.assertEqual(self.participant.status, ParticipantStateMachine.new.value)
+        self.assertEqual(self.participant.time_spent, 0)
+        self.assertTrue(
+            self.event.followers.filter(user=self.participant.user).exists()
+        )
+        self.assertEqual(
+            len(self.messages(self.participant.user)), 1
         )
 
-        self.assertEqual(event.status, EventStateMachine.closed.value)
-
-    def test_not_succeed_change_start(self):
-        event = EventFactory.create(
-            initiative=self.initiative,
-            start=timezone.now() + timedelta(hours=1),
-            duration=1
-        )
-        self.assertEqual(event.status, EventStateMachine.open.value)
-        ParticipantFactory.create(activity=event)
-
-        event.start = timezone.now() + timedelta(hours=2)
-        event.save()
-
-        self.assertEqual(event.status, EventStateMachine.open.value)
-
-        for participant in event.contributions.instance_of(Participant):
-            self.assertEqual(participant.status, ParticipantStateMachine.new.value)
-
-    def test_succeed_change_start(self):
-        event = EventFactory.create(
-            initiative=self.initiative,
-            start=timezone.now() + timedelta(hours=1),
-            duration=1
-        )
-        ParticipantFactory.create(activity=event)
-
-        self.assertEqual(event.status, EventStateMachine.open.value)
-
-        event.start = timezone.now() - timedelta(hours=2)
-        event.save()
-
-        self.assertEqual(event.status, EventStateMachine.succeeded.value)
-
-        for participant in event.contributions.instance_of(Participant):
-            self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
-
-    def test_change_start_reopen_from_closed(self):
-        event = EventFactory.create(
-            initiative=self.initiative,
-            start=timezone.now() - timedelta(hours=1),
-            duration=1
+    def test_withdraw(self):
+        self.participant.states.withdraw(save=True)
+        self.assertEqual(self.participant.status, ParticipantStateMachine.withdrawn.value)
+        self.assertFalse(
+            self.event.followers.filter(user=self.participant.user).exists()
         )
 
-        self.assertEqual(event.status, EventStateMachine.closed.value)
-
-        event.start = timezone.now() + timedelta(hours=2)
-        event.save()
-
-        self.assertEqual(event.status, EventStateMachine.open.value)
-
-    def test_change_start_reopen_from_succeeded(self):
-        event = EventFactory.create(
-            initiative=self.initiative,
-            start=timezone.now() - timedelta(hours=1),
-            duration=1
+        self.assertEqual(
+            len(self.messages(self.participant.user)), 1
         )
 
-        ParticipantFactory.create(activity=event)
+    def test_reapply(self):
+        self.participant.states.withdraw(save=True)
+        self.participant.states.reapply(save=True)
+        self.assertEqual(self.participant.status, ParticipantStateMachine.new.value)
+        self.assertTrue(
+            self.event.followers.filter(user=self.participant.user).exists()
+        )
+        self.assertEqual(
+            len(self.messages(self.participant.user)), 1
+        )
 
-        self.assertEqual(event.status, EventStateMachine.succeeded.value)
+    def test_reject(self):
+        self.participant.states.reject(save=True)
+        self.assertEqual(self.participant.status, ParticipantStateMachine.rejected.value)
+        self.assertFalse(
+            self.event.followers.filter(user=self.participant.user).exists()
+        )
 
-        event.start = timezone.now() + timedelta(hours=2)
-        event.save()
+        self.assertEqual(
+            len(self.messages(self.participant.user)), 2
+        )
 
-        self.assertEqual(event.status, EventStateMachine.open.value)
+    def test_reaccept(self):
+        self.participant.states.reject(save=True)
+        self.participant.states.reaccept(save=True)
+        self.assertEqual(self.participant.status, ParticipantStateMachine.new.value)
+        self.assertTrue(
+            self.event.followers.filter(user=self.participant.user).exists()
+        )
 
-        for participant in event.contributions.instance_of(Participant):
-            self.assertEqual(participant.status, ParticipantStateMachine.new.value)
+        self.assertEqual(
+            len(self.messages(self.participant.user)), 2
+        )
+
+    def test_created_passed(self):
+        self.assertEqual(self.passed_participant.status, ParticipantStateMachine.succeeded.value)
+        self.assertEqual(self.passed_participant.time_spent, self.passed_event.duration)
+
+        self.assertTrue(
+            self.passed_event.followers.filter(user=self.passed_participant.user).exists()
+        )
+
+        self.event.refresh_from_db()
+        self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
+
+        self.assertEqual(
+            len(self.messages(self.passed_participant.user)), 1
+        )
+
+    def test_mark_absent(self):
+        self.passed_participant.states.mark_absent(save=True)
+
+        self.assertEqual(self.passed_participant.status, ParticipantStateMachine.no_show.value)
+        self.assertEqual(self.passed_participant.time_spent, 0)
+        self.assertFalse(
+            self.passed_event.followers.filter(user=self.passed_participant.user).exists()
+        )
+
+        self.assertEqual(
+            len(self.messages(self.passed_participant.user)), 1
+        )
+
+    def test_mark_present(self):
+        self.passed_participant.states.mark_absent(save=True)
+        self.passed_participant.states.mark_present(save=True)
+
+        self.assertEqual(self.passed_participant.status, ParticipantStateMachine.succeeded.value)
+        self.assertEqual(self.passed_participant.time_spent, self.passed_event.duration)
+
+        self.assertTrue(
+            self.passed_event.followers.filter(user=self.passed_participant.user).exists()
+        )
+        self.assertEqual(
+            len(self.messages(self.passed_participant.user)), 1
+        )
+
+    def test_reset(self):
+        self.passed_event.start = timezone.now() + timedelta(days=1)
+        self.passed_event.save()
+
+        self.assertEqual(self.participant.status, ParticipantStateMachine.new.value)
+        self.assertEqual(self.participant.time_spent, 0)
+        self.assertTrue(
+            self.event.followers.filter(user=self.participant.user).exists()
+        )

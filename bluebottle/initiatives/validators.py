@@ -15,4 +15,3 @@ class UniqueTitleValidator(Validator):
             status='approved',
             title=self.instance.title
         ).count()
-

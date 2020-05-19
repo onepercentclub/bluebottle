@@ -14,6 +14,7 @@ from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.fsm import TransitionsMixin
 from bluebottle.geo.models import Geolocation
 
+
 tf = TimezoneFinder()
 
 

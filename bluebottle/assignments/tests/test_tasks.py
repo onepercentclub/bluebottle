@@ -40,7 +40,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         ApplicantFactory.create_batch(2, activity=assignment, status='new')
         ApplicantFactory.create(activity=assignment, status='accepted')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
-        withdrawn.transitions.withdraw()
+        withdrawn.states.withdraw(save=True)
 
         mail.outbox = []
         tenant = connection.tenant
@@ -71,7 +71,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         ApplicantFactory.create_batch(3, activity=assignment, status='new')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
-        withdrawn.transitions.withdraw()
+        withdrawn.states.withdraw(save=True)
 
         check_assignment_reminder()
         mail.outbox = []
@@ -96,8 +96,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         applicants = ApplicantFactory.create_batch(3, activity=assignment, status='new')
         for applicant in applicants:
-            applicant.transitions.accept()
-            applicant.save()
+            applicant.states.accept(save=True)
 
         tenant = connection.tenant
         check_assignment_registration_deadline()
@@ -126,8 +125,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         applicants = ApplicantFactory.create_batch(3, activity=assignment, status='new')
         for applicant in applicants:
-            applicant.transitions.accept()
-            applicant.save()
+            applicant.states.accept(save=True)
 
         tenant = connection.tenant
         check_assignment_start_date()
@@ -154,8 +152,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         applicants = ApplicantFactory.create_batch(3, activity=assignment, status='new')
         for applicant in applicants:
-            applicant.transitions.accept()
-            applicant.save()
+            applicant.states.accept(save=True)
 
         tenant = connection.tenant
         check_assignment_end_date()

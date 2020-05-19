@@ -26,8 +26,8 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
         self.url = reverse('assignment-list')
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory(owner=self.user)
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve()
         self.initiative.save()
 
     def test_create_assignment(self):
@@ -55,7 +55,7 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
         response = self.client.post(self.url, json.dumps(data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], 'in_review')
+        self.assertEqual(response.data['status'], 'submitted')
         self.assertEqual(response.data['title'], 'Business plan Young Freddy')
 
     def test_create_assignment_missing_data(self):
@@ -146,7 +146,7 @@ class AssignmentDetailAPITestCase(BluebottleTestCase):
         response = self.client.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'in_review')
+        self.assertEqual(response.data['status'], 'submitted')
 
 
 class AssignmentDetailApplicantsAPITestCase(BluebottleTestCase):
@@ -214,9 +214,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.other_user = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create(activity_manager=self.manager)
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.initiative.save()
+        self.initiative.states.approve(save=True)
         self.assignment_incomplete = AssignmentFactory.create(
             owner=self.owner,
             initiative=self.initiative,
@@ -308,10 +306,8 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        review_transitions = [
-            {u'available': False, u'name': u'close', u'target': u'closed'},
-        ]
         transitions = [
+            {u'available': False, u'name': u'close', u'target': u'closed'},
             {u'available': True, u'name': u'reopen', u'target': u'open'},
             {u'available': True, u'name': u'lock', u'target': u'full'},
             {u'available': True, u'name': u'start', u'target': u'running'},
@@ -319,7 +315,6 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             {u'available': False, u'name': u'expire', u'target': u'closed'},
             {u'available': False, u'name': u'close', u'target': u'closed'},
         ]
-        self.assertEqual(data['data']['meta']['review-transitions'], review_transitions)
         self.assertEqual(data['data']['meta']['transitions'], transitions)
         self.assertEqual(data['data']['meta']['required'], [])
         self.assertEqual(data['data']['meta']['errors'], [])
@@ -401,8 +396,8 @@ class ApplicantAPITestCase(BluebottleTestCase):
             owner=self.owner,
             activity_manager=self.owner
         )
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve()
         self.initiative.save()
         self.assignment = AssignmentFactory.create(
             initiative=self.initiative,
@@ -467,14 +462,14 @@ class ApplicantAPITestCase(BluebottleTestCase):
     def test_confirm_hours(self):
         self.assertEqual(self.assignment.status, 'open')
         applicant = ApplicantFactory.create(user=self.user, activity=self.assignment)
-        applicant.transitions.accept()
+        applicant.states.accept()
         applicant.save()
         no_show = ApplicantFactory.create(activity=self.assignment)
-        no_show.transitions.accept()
+        no_show.states.accept()
         no_show.save()
 
         self.assignment.date = now()
-        self.assignment.transitions.succeed()
+        self.assignment.states.succeed()
         self.assignment.save()
 
         applicant.refresh_from_db()
@@ -532,11 +527,10 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.manager = BlueBottleUserFactory(first_name="Boss")
         self.owner = BlueBottleUserFactory(first_name="Owner")
         self.initiative = InitiativeFactory.create(activity_manager=self.manager)
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve()
         self.initiative.save()
         self.assignment = AssignmentFactory.create(owner=self.owner, initiative=self.initiative)
-        self.assignment.review_transitions.submit()
         self.assignment.save()
         document = PrivateDocumentFactory.create()
         self.applicant = ApplicantFactory.create(activity=self.assignment, document=document, user=self.user)

@@ -7,15 +7,15 @@ from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
+from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine
+from bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.tasks.models import Skill
 from bluebottle.utils.admin import export_as_csv_action
-from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.utils.forms import FSMModelForm
 from bluebottle.wallposts.admin import WallpostInline
 
 
-class AssignmentAdminForm(FSMModelForm):
+class AssignmentAdminForm(StateMachineModelForm):
     class Meta:
         model = Assignment
         fields = '__all__'
@@ -37,7 +37,7 @@ class ApplicantInline(admin.TabularInline):
         return format_html(u'<a href="{}">{}</a>', url, obj.user.full_name)
 
 
-class ApplicantAdminForm(FSMModelForm):
+class ApplicantAdminForm(StateMachineModelForm):
     class Meta:
         model = Applicant
         exclude = ('transition_date', )
@@ -141,8 +141,8 @@ class AssignmentAdmin(ActivityChildAdmin):
             # set it to succeeded when assignment is succeeded
             if (instance.__class__ == Applicant and
                     not instance.pk and
-                    form.instance.status == AssignmentTransitions.values.succeeded):
+                    form.instance.status == AssignmentStateMachine.succeeded.value):
                 instance.time_spent = form.instance.duration
-                instance.status = ApplicantTransitions.values.succeeded
+                instance.status = ApplicantStateMachine.succeeded.value
             instance.save()
         super(AssignmentAdmin, self).save_formset(request, form, formset, change)

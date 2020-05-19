@@ -68,3 +68,6 @@ class VitepayBankAccount(BankAccount):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/vitepay-external-accounts'
+
+
+from states import *  # noqa

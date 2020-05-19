@@ -7,17 +7,18 @@ from bluebottle.fsm.effects import (
     TransitionEffect,
     RelatedTransitionEffect
 )
-from bluebottle.fsm.state import Transition, ModelStateMachine, State
+from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates
 from bluebottle.funding.effects import GeneratePayouts, GenerateDonationWallpost, \
-    RemoveDonationWallpost, UpdateFundingAmounts, RefundPaymentAtPSP, SetStartDate, SetDeadline, DeletePayouts
+    RemoveDonationWallpost, UpdateFundingAmounts, RefundPaymentAtPSP, SetStartDate, SetDeadline, DeletePayouts, \
+    SubmitConnectedActivities
 from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
-    FundingPartiallyFundedMessage, FundingClosedMessage, FundingRealisedOwnerMessage, PayoutAccountVerified
-from bluebottle.funding.models import Funding, Donation, Payout, Payment, PayoutAccount
+    FundingPartiallyFundedMessage, FundingClosedMessage, FundingRealisedOwnerMessage, PayoutAccountVerified, \
+    PayoutAccountRejected
+from bluebottle.funding.models import Funding, Donation, Payout, PayoutAccount
 from bluebottle.notifications.effects import NotificationEffect
 
 
 class FundingStateMachine(ActivityStateMachine):
-
     model = Funding
 
     partially_funded = State(_('partially funded'), 'partially_funded')
@@ -240,9 +241,7 @@ class DonationStateMachine(ContributionStateMachine):
     )
 
 
-class PaymentStateMachine(ModelStateMachine):
-    model = Payment
-
+class BasePaymentStateMachine(ModelStateMachine):
     new = State(_('new'), 'new')
     pending = State(_('pending'), 'pending')
     succeeded = State(_('succeeded'), 'succeeded')
@@ -271,7 +270,7 @@ class PaymentStateMachine(ModelStateMachine):
     )
 
     fail = Transition(
-        [new, pending, succeeded],
+        AllStates(),
         failed,
         name=_('Fail'),
         automatic=True,
@@ -298,7 +297,10 @@ class PaymentStateMachine(ModelStateMachine):
         ],
         refunded,
         name=_('Refund'),
-        automatic=True
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('donation', 'refund')
+        ]
     )
 
 
@@ -375,20 +377,23 @@ class PayoutAccountStateMachine(ModelStateMachine):
         permission=can_approve,
         effects=[
             NotificationEffect(PayoutAccountVerified),
-            # Check if we can approve connected funding activities
+            SubmitConnectedActivities
         ]
     )
 
-    rejected = Transition(
+    reject = Transition(
         [new, incomplete, verified],
         rejected,
-        name=_('rejected'),
-        automatic=False
+        name=_('Reject'),
+        automatic=False,
+        effects=[
+            NotificationEffect(PayoutAccountRejected)
+        ]
     )
 
     set_incomplete = Transition(
         [new, rejected, verified],
         incomplete,
-        name=_('set_incomplete'),
+        name=_('Set incomplete'),
         automatic=False
     )

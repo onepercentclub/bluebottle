@@ -81,6 +81,19 @@ class FundingStateMachine(ActivityStateMachine):
         ]
     )
 
+    reject = Transition(
+        [
+            ActivityStateMachine.submitted,
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work
+        ],
+        ActivityStateMachine.rejected,
+        name=_('Reject'),
+        automatic=False,
+        permission=ActivityStateMachine.is_staff,
+        effects=[RelatedTransitionEffect('organizer', 'fail')]
+    )
+
     close = Transition(
         ActivityStateMachine.open,
         ActivityStateMachine.closed,

@@ -1,6 +1,7 @@
+from datetime import timedelta
+
 from django.db import models
 from django.db.models import SET_NULL, Count, Sum
-from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 
@@ -25,9 +26,6 @@ class Assignment(Activity, TransitionsMixin):
         on_date = ChoiceItem('on_date', label=_("On specific date"))
 
     registration_deadline = models.DateField(_('deadline to apply'), null=True, blank=True)
-    end_date = models.DateField(
-        _('end date'), null=True, blank=True,
-        help_text=_('Either the deadline or the date it will take place.'))
     start_time = models.TimeField(
         _('start time'), null=True, blank=True,
         help_text=_('On the specific task date, the start time.'))
@@ -81,6 +79,13 @@ class Assignment(Activity, TransitionsMixin):
             tz = pytz.timezone(tz_name)
 
             return self.date.astimezone(tz).replace(tzinfo=None)
+        else:
+            return self.date
+
+    @property
+    def end(self):
+        if self.duration and self.date:
+            return self.date + timedelta(hours=self.duration)
         else:
             return self.date
 
@@ -167,24 +172,10 @@ class Assignment(Activity, TransitionsMixin):
     #
     #         self.save()
 
-    def check_capacity(self, save=True):
-        if self.capacity \
-                and len(self.accepted_applicants) >= self.capacity \
-                and self.status == 'open':
-            self.states.lock()
-            self.save()
-        elif self.capacity \
-                and len(self.accepted_applicants) < self.capacity \
-                and self.status == 'full' \
-                and (self.registration_deadline or self.date) >= now().date():
-            self.states.reopen()
-            if save:
-                self.save()
-
     def save(self, *args, **kwargs):
         if self.preparation and self.end_date_type == "deadline":
             self.preparation = None
-        self.check_capacity(save=False)
+
         return super(Assignment, self).save(*args, **kwargs)
 
 
@@ -212,20 +203,8 @@ class Applicant(Contribution, TransitionsMixin):
     class JSONAPIMeta:
         resource_name = 'contributions/applicants'
 
-    def save(self, *args, **kwargs):
-        # Fail the self if hours are set to 0
-        if self.status == 'succeeded' and self.time_spent in [None, '0', 0.0]:
-            self.states.fail()
-        # Succeed self if the hours are set to an amount
-        elif self.status in ['failed', 'closed'] and self.time_spent not in [None, '0', 0.0]:
-            self.states.succeed()
-        super(Applicant, self).save(*args, **kwargs)
-
-        self.activity.check_capacity()
-
     def delete(self, *args, **kwargs):
         super(Applicant, self).delete(*args, **kwargs)
-        self.activity.check_capacity()
 
 
 from bluebottle.assignments.signals import *  # noqa

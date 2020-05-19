@@ -2,15 +2,15 @@ from django.utils import timezone
 
 from bluebottle.assignments.effects import SetTimeSpent, ClearTimeSpent
 from bluebottle.assignments.messages import AssignmentExpiredMessage, AssignmentApplicationMessage, \
-    ApplicantAcceptedMessage, ApplicantRejectedMessage, AssignmentClosedMessage, AssignmentCompletedMessage
+    ApplicantAcceptedMessage, ApplicantRejectedMessage, AssignmentCompletedMessage
 from bluebottle.follow.effects import UnFollowActivityEffect, FollowActivityEffect
 from bluebottle.notifications.effects import NotificationEffect
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.fsm.effects import RelatedTransitionEffect
-from bluebottle.fsm.state import State, Transition, EmptyState, AllStates
+from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
+from bluebottle.fsm.state import State, Transition, EmptyState
 
 
 class AssignmentStateMachine(ActivityStateMachine):
@@ -23,7 +23,7 @@ class AssignmentStateMachine(ActivityStateMachine):
 
     def should_finish(self):
         # FIXME
-        return self.instance.end_date and self.instance.end_date < timezone.now()
+        return self.instance.end and self.instance.end < timezone.now()
 
     def should_start(self):
         # FIXME
@@ -67,8 +67,8 @@ class AssignmentStateMachine(ActivityStateMachine):
     )
 
     reopen = Transition(
-        full,
-        open,
+        (ActivityStateMachine.succeeded, ActivityStateMachine.closed, full, ),
+        ActivityStateMachine.open,
         name=_('Reopen'),
         automatic=True,
     )
@@ -85,35 +85,12 @@ class AssignmentStateMachine(ActivityStateMachine):
     )
 
     expire = Transition(
-        [ActivityStateMachine.open, running, full, running],
+        [ActivityStateMachine.open, running, full],
         ActivityStateMachine.closed,
         name=_('Expire'),
         automatic=True,
         effects=[
-            NotificationEffect(AssignmentExpiredMessage)
-        ]
-    )
-
-    close = Transition(
-        AllStates(),
-        ActivityStateMachine.closed,
-        name=_('Close'),
-        automatic=False,
-        effects=[
-            NotificationEffect(AssignmentClosedMessage),
-            RelatedTransitionEffect('active_applicants', 'close'),
-            RelatedTransitionEffect('organizer', 'close')
-        ]
-    )
-
-    restore = Transition(
-        ActivityStateMachine.closed,
-        ActivityStateMachine.open,
-        name=_('Restore'),
-        automatic=False,
-        effects=[
-            RelatedTransitionEffect('active_applicants', 'reset'),
-            RelatedTransitionEffect('organizer', 'succeed')
+            NotificationEffect(AssignmentExpiredMessage),
         ]
     )
 
@@ -124,6 +101,7 @@ class ApplicantStateMachine(ContributionStateMachine):
     accepted = State(_('accepted'), 'accepted', _('accepted'))
     rejected = State(_('rejected'), 'rejected', _('rejected'))
     withdrawn = State(_('withdrawn'), 'withdrawn', _('withdrawn'))
+    no_show = State(_('no show'), 'no_show', _('no_show'))
     active = State(_('active'), 'active', _('active'))
 
     def has_time_spent(self):
@@ -131,6 +109,34 @@ class ApplicantStateMachine(ContributionStateMachine):
 
     def has_no_time_spent(self):
         return not self.instance.time_spent
+
+    def is_user(self, user):
+        return self.instance.user == user
+
+    def is_activity_owner(self, user):
+        return user.is_staff or self.instance.activity.owner == user
+
+    def assignment_will_become_full(self):
+        "assignment_will be full"
+        activity = self.instance.activity
+        return activity.capacity == len(activity.accepted_applicants) + 1
+
+    def assignment_will_become_open(self):
+        "assignment_will not be full"
+        activity = self.instance.activity
+        return activity.capacity == len(activity.accepted_applicants)
+
+    def assignment_is_finished(self):
+        "assignment_is finished"
+        return self.instance.activity.end < timezone.now()
+
+    def assignment_is_not_finished(self):
+        "assignment_is not finished"
+        return not self.instance.activity.date < timezone.now()
+
+    def assignment_will_be_empty(self):
+        "assignment_will be empty"
+        return len(self.instance.activity.accepted_applicants) == 1
 
     def can_accept_applicants(self, user):
         return user in [
@@ -161,8 +167,14 @@ class ApplicantStateMachine(ContributionStateMachine):
         name=_('Accept'),
         automatic=False,
         permission=can_accept_applicants,
-        conditions=[assignment_is_open],
         effects=[
+            TransitionEffect('succeed', conditions=[assignment_is_finished]),
+            RelatedTransitionEffect('activity', 'lock', conditions=[assignment_will_become_full]),
+            RelatedTransitionEffect(
+                'activity',
+                'succeed',
+                conditions=[assignment_is_finished]
+            ),
             NotificationEffect(ApplicantAcceptedMessage)
         ]
     )
@@ -177,6 +189,7 @@ class ApplicantStateMachine(ContributionStateMachine):
         automatic=False,
         permission=can_accept_applicants,
         effects=[
+            RelatedTransitionEffect('activity', 'reopen'),
             NotificationEffect(ApplicantRejectedMessage),
             UnFollowActivityEffect
         ]
@@ -190,6 +203,7 @@ class ApplicantStateMachine(ContributionStateMachine):
         withdrawn,
         name=_('Withdraw'),
         automatic=False,
+        permission=is_user,
         effects=[
             UnFollowActivityEffect
         ]
@@ -234,13 +248,33 @@ class ApplicantStateMachine(ContributionStateMachine):
         ]
     )
 
-    close = Transition(
-        AllStates(),
-        active,
-        name=_('Activate'),
-        automatic=True,
-        permission=can_accept_applicants,
+    mark_absent = Transition(
+        ContributionStateMachine.succeeded,
+        no_show,
+        name=_('Mark absent'),
+        automatic=False,
+        permission=is_activity_owner,
         effects=[
-            ClearTimeSpent
+            ClearTimeSpent,
+            RelatedTransitionEffect(
+                'activity', 'close',
+                conditions=[assignment_is_finished, assignment_will_be_empty]
+            ),
+            UnFollowActivityEffect
+        ]
+    )
+    mark_present = Transition(
+        no_show,
+        ContributionStateMachine.succeeded,
+        name=_('Mark present'),
+        automatic=False,
+        permission=is_activity_owner,
+        effects=[
+            SetTimeSpent,
+            RelatedTransitionEffect(
+                'activity', 'succeed',
+                conditions=[assignment_is_finished]
+            ),
+            FollowActivityEffect
         ]
     )

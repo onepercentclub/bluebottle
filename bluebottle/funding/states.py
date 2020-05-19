@@ -13,7 +13,7 @@ from bluebottle.funding.effects import GeneratePayouts, GenerateDonationWallpost
     SubmitConnectedActivities
 from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
     FundingPartiallyFundedMessage, FundingClosedMessage, FundingRealisedOwnerMessage, PayoutAccountVerified, \
-    PayoutAccountRejected
+    PayoutAccountRejected, DonationRefundedDonorMessage
 from bluebottle.funding.models import Funding, Donation, Payout, PayoutAccount
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -211,10 +211,7 @@ class DonationStateMachine(ContributionStateMachine):
     )
 
     refund = Transition(
-        [
-            ContributionStateMachine.new,
-            ContributionStateMachine.succeeded
-        ],
+        ContributionStateMachine.succeeded,
         refunded,
         name=_('Refund'),
         automatic=True,
@@ -227,16 +224,13 @@ class DonationStateMachine(ContributionStateMachine):
     )
 
     activity_refund = Transition(
-        [
-            ContributionStateMachine.new,
-            ContributionStateMachine.succeeded,
-        ],
+        ContributionStateMachine.succeeded,
         activity_refunded,
         name=_('Activity refund'),
         automatic=True,
         effects=[
             RelatedTransitionEffect('payment', 'request_refund'),
-            RemoveDonationWallpost
+            NotificationEffect(DonationRefundedDonorMessage)
         ]
     )
 
@@ -249,6 +243,12 @@ class BasePaymentStateMachine(ModelStateMachine):
     refunded = State(_('refunded'), 'refunded')
     refund_requested = State(_('refund requested'), 'refund_requested')
 
+    def donation_not_refunded(self):
+        return self.instance.donation.status not in [
+            DonationStateMachine.refunded.value,
+            DonationStateMachine.activity_refunded.value,
+        ]
+
     authorize = Transition(
         [new],
         pending,
@@ -260,7 +260,7 @@ class BasePaymentStateMachine(ModelStateMachine):
     )
 
     succeed = Transition(
-        [new, pending, failed],
+        [new, pending, failed, refund_requested],
         succeeded,
         name=_('Succeed'),
         automatic=True,
@@ -299,7 +299,12 @@ class BasePaymentStateMachine(ModelStateMachine):
         name=_('Refund'),
         automatic=True,
         effects=[
-            RelatedTransitionEffect('donation', 'refund')
+            RelatedTransitionEffect(
+                'donation', 'refund',
+                conditions=[
+                    donation_not_refunded
+                ]
+            ),
         ]
     )
 

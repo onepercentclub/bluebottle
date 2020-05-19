@@ -8,7 +8,7 @@ from bluebottle.funding_stripe.effects import RefundStripePaymentAtPSP
 from bluebottle.funding_stripe.models import StripePayment, StripeSourcePayment
 
 
-class StripeBasePaymentStateMachine(BasePaymentStateMachine):
+class StripePaymentStateMachine(BasePaymentStateMachine):
     model = StripePayment
 
     request_refund = Transition(
@@ -22,7 +22,7 @@ class StripeBasePaymentStateMachine(BasePaymentStateMachine):
     )
 
 
-class StripeSourceBasePaymentStateMachine(BasePaymentStateMachine):
+class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
 
     model = StripeSourcePayment
 

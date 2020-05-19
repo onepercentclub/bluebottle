@@ -3,15 +3,18 @@ from datetime import timedelta
 from django.core import mail
 from django.utils.timezone import now
 from djmoney.money import Money
+from mock import patch
 
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
     PlainPayoutAccountFactory, DonationFactory
+from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.wallposts.models import Wallpost
 
 
 class FundingStateMachineTests(BluebottleTestCase):
@@ -83,7 +86,6 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.funding.deadline.date(), next_week.date())
 
     def test_approve_should_close(self):
-
         self.funding.deadline = now() - timedelta(days=5)
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, 'closed')
@@ -191,31 +193,125 @@ class DonationStateMachineTests(BluebottleTestCase):
         bank_account = BankAccountFactory.create(connect_account=payout_account)
         self.funding.bank_account = bank_account
         self.funding.save()
-
-    def test_transitions_succeed(self):
-        pass
-
-    def test_transitions_fail(self):
-        pass
-
-    def test_transitions_refund(self):
-        pass
-
-    def test_transitions_refund_activity(self):
-        pass
-
-    def test_change_amount_and_deadline(self):
-        self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
         self.funding.states.approve(save=True)
-        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+
+    def test_initiate(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        self.assertEqual(donation.status, 'new')
+
+    def test_succeed(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation.states.succeed(save=True)
+        self.assertEqual(donation.status, 'succeeded')
+
+    def test_succeed_update_amounts(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation.states.succeed(save=True)
+        self.assertEqual(self.funding.amount_raised, Money(500, 'EUR'))
+
+    def test_succeed_generate_wallpost(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation.states.succeed(save=True)
+        wallpost = Wallpost.objects.last()
+        self.assertEqual(wallpost.donation, donation)
+
+    def test_succeed_mail_supporter(self):
+        mail.outbox = []
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation.states.succeed(save=True)
+        self.assertEqual(mail.outbox[0].subject, u'You have a new donation!\U0001f4b0')
+
+    def test_succeed_mail_activity_manager(self):
+        mail.outbox = []
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation.states.succeed(save=True)
+        self.assertEqual(mail.outbox[1].subject, u'Thanks for your donation!')
+
+    def test_succeed_follow(self):
+        mail.outbox = []
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation.states.succeed(save=True)
+        self.assertTrue(self.funding.followers.filter(user=donation.user).exists())
+
+    def test_fail(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation.states.fail(save=True)
+        self.assertEqual(donation.status, 'failed')
+
+    def test_fail_update_amounts(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation.states.succeed(save=True)
+        donation = DonationFactory.create(activity=self.funding, amount=Money(250, 'EUR'))
+        donation.states.succeed(save=True)
+        self.assertEqual(self.funding.amount_raised, Money(750, 'EUR'))
+        donation.states.fail(save=True)
+        self.assertEqual(self.funding.amount_raised, Money(500, 'EUR'))
+
+    def test_fail_remove_wallpost(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation.states.succeed(save=True)
+        self.assertEqual(Wallpost.objects.count(), 1)
+        donation.states.fail(save=True)
+        self.assertEqual(Wallpost.objects.count(), 0)
+
+    def test_refund(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
-        # Changing the deadline and target should transition the campaign to succeeded
-        self.funding.deadline = now() - timedelta(days=1)
-        self.funding.target = Money(500, 'EUR')
-        self.funding.save()
-        self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
+        self.assertEqual(donation.status, 'succeeded')
+        donation.states.refund(save=True)
+        self.assertEqual(donation.status, 'refunded')
 
-    def test_funding_amount_get_updated_after_donation(self):
-        self.assertEqual(1, 0)
+    def test_refund_payment_request_refund(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        payment = FlutterwavePaymentFactory.create(donation=donation)
+        payment.states.succeed(save=True)
+        with patch('bluebottle.funding_flutterwave.models.FlutterwavePayment.refund') as refund:
+            donation.states.activity_refund(save=True)
+            refund.assert_called_once()
+        self.assertEqual(payment.status, 'refund_requested')
+
+    def test_refund_remove_wallpost(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        self.assertEqual(Wallpost.objects.count(), 1)
+        donation.states.refund(save=True)
+        self.assertEqual(Wallpost.objects.count(), 0)
+
+    def test_refund_update_amounts(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        donation = DonationFactory.create(activity=self.funding, amount=Money(250, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        self.assertEqual(self.funding.amount_raised, Money(750, 'EUR'))
+        donation.states.refund(save=True)
+        self.assertEqual(self.funding.amount_raised, Money(500, 'EUR'))
+
+    def test_refund_unfollow(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        self.assertTrue(self.funding.followers.filter(user=donation.user).exists())
+        donation.states.refund(save=True)
+        self.assertFalse(self.funding.followers.filter(user=donation.user).exists())
+
+    def test_refund_activity(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        self.assertEqual(donation.status, 'succeeded')
+        donation.states.activity_refund(save=True)
+        self.assertEqual(donation.status, 'activity_refunded')
+
+    def test_refund_activity_payment_request_refund(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        payment = FlutterwavePaymentFactory.create(donation=donation)
+        payment.states.succeed(save=True)
+        with patch('bluebottle.funding_flutterwave.models.FlutterwavePayment.refund') as refund:
+            donation.states.activity_refund(save=True)
+            refund.assert_called_once()
+        self.assertEqual(payment.status, 'refund_requested')
+
+    def test_refund_activity_mail_supporter(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        mail.outbox = []
+        donation.states.activity_refund(save=True)
+        self.assertEqual(mail.outbox[0].subject, u'Your donation has been refunded')

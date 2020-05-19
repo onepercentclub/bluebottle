@@ -5,7 +5,7 @@ from bluebottle.funding.states import BasePaymentStateMachine
 from bluebottle.funding_pledge.models import PledgePayment
 
 
-class PledgeBasePaymentStateMachine(BasePaymentStateMachine):
+class PledgePaymentStateMachine(BasePaymentStateMachine):
     model = PledgePayment
 
     request_refund = Transition(

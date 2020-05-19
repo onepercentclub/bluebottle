@@ -17,6 +17,9 @@ class FlutterwavePayment(Payment):
     def update(self):
         check_payment_status(self)
 
+    def refund(self):
+        raise NotImplementedError
+
 
 class FlutterwavePaymentProvider(PaymentProvider):
 

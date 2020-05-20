@@ -205,10 +205,9 @@ class AssignmentStatisticsTest(StatisticsTest):
             date=(timezone.now() + datetime.timedelta(hours=48)),
             duration=0.1
         )
+        self.assignment.refresh_from_db()
 
     def test_open(self):
-        self.initiative.states.approve(save=True)
-
         self.assertEqual(
             self.stats.activities_online, 1
         )
@@ -223,13 +222,8 @@ class AssignmentStatisticsTest(StatisticsTest):
         )
 
     def test_succeeded(self):
-        self.initiative.states.approve(save=True)
-        self.assignment.refresh_from_db()
-        self.assignment.states.start()
-        self.assignment.states.succeed()
-
-        self.initiative.save()
-        self.assignment.save()
+        self.assignment.states.start(save=True)
+        self.assignment.states.succeed(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -245,14 +239,9 @@ class AssignmentStatisticsTest(StatisticsTest):
         )
 
     def test_closed(self):
-        self.initiative.states.approve(save=True)
-        self.assignment.refresh_from_db()
-        self.assignment.states.start()
-        self.assignment.states.succeed()
-        self.assignment.states.close()
-
-        self.initiative.save()
-        self.assignment.save()
+        self.assignment.states.start(save=True)
+        self.assignment.states.succeed(save=True)
+        self.assignment.states.reject(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -267,21 +256,13 @@ class AssignmentStatisticsTest(StatisticsTest):
             self.stats.people_involved, 1
         )
 
-    def test_participant(self):
-        self.initiative.states.approve(save=True)
-        self.assignment.refresh_from_db()
+    def test_applicant(self):
         contribution = ApplicantFactory.create(activity=self.assignment, user=self.other_user)
-        contribution.states.accept()
+        contribution.states.accept(save=True)
+        self.assignment.states.start(save=True)
+        self.assignment.states.succeed(save=True)
+        contribution.time_spent = 32
         contribution.save()
-        self.assignment.states.start()
-        self.assignment.states.succeed()
-        contribution.refresh_from_db()
-        contribution.time_spent = 0.1
-        contribution.save()
-
-        self.initiative.save()
-        self.assignment.save()
-
         self.assertEqual(
             self.stats.activities_online, 0
         )
@@ -292,7 +273,7 @@ class AssignmentStatisticsTest(StatisticsTest):
             self.stats.assignments_succeeded, 1
         )
         self.assertEqual(
-            self.stats.time_spent, 0.1
+            self.stats.time_spent, 32
         )
         self.assertEqual(
             self.stats.assignment_members, 1
@@ -301,17 +282,11 @@ class AssignmentStatisticsTest(StatisticsTest):
             self.stats.people_involved, 2
         )
 
-    def test_participant_withdrawn(self):
-        self.initiative.states.approve(save=True)
-        self.assignment.refresh_from_db()
+    def test_applicant_withdrawn(self):
         contribution = ApplicantFactory.create(activity=self.assignment, user=self.other_user)
-        contribution.states.withdraw()
-        contribution.save()
-        self.assignment.states.start()
-        self.assignment.states.succeed()
-
-        self.initiative.save()
-        self.assignment.save()
+        contribution.states.withdraw(save=True)
+        self.assignment.states.start(save=True)
+        self.assignment.states.succeed(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -333,16 +308,10 @@ class AssignmentStatisticsTest(StatisticsTest):
         )
 
     def test_participant_rejected(self):
-        self.initiative.states.approve(save=True)
-        self.assignment.refresh_from_db()
         contribution = ApplicantFactory.create(activity=self.assignment, user=self.other_user)
-        contribution.states.reject()
-        self.assignment.states.start()
-        self.assignment.states.succeed()
-        contribution.save()
-
-        self.initiative.save()
-        self.assignment.save()
+        contribution.states.reject(save=True)
+        self.assignment.states.start(save=True)
+        self.assignment.states.succeed(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -376,10 +345,9 @@ class FundingStatisticsTest(StatisticsTest):
             target=Money(100, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
+        self.funding.states.approve(save=True)
 
     def test_open(self):
-        self.initiative.states.approve(save=True)
-
         self.assertEqual(
             self.stats.activities_online, 1
         )
@@ -394,10 +362,7 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_succeeded(self):
-        self.initiative.states.approve(save=True)
         self.funding.states.succeed(save=True)
-
-        self.initiative.save()
         self.funding.amount_matching = Money(100, 'EUR')
         self.funding.save()
 
@@ -418,10 +383,7 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_closed(self):
-        self.initiative.states.approve(save=True)
         self.funding.states.close(save=True)
-
-        self.initiative.save()
         self.funding.amount_matching = Money(100, 'EUR')
         self.funding.save()
 
@@ -442,7 +404,6 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_donation(self):
-        self.initiative.states.approve(save=True)
         self.funding.states.succeed(save=True)
 
         contribution = DonationFactory.create(
@@ -450,11 +411,7 @@ class FundingStatisticsTest(StatisticsTest):
             user=self.other_user,
             amount=Money(50, 'EUR')
         )
-        contribution.states.succeed()
-        contribution.save()
-
-        self.initiative.save()
-        self.funding.save()
+        contribution.states.succeed(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -476,7 +433,6 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_donation_many(self):
-        self.initiative.states.approve(save=True)
         self.funding.states.succeed(save=True)
 
         for i in range(4):
@@ -485,11 +441,7 @@ class FundingStatisticsTest(StatisticsTest):
                 user=self.other_user,
                 amount=Money(50, 'EUR')
             )
-            contribution.states.succeed()
-            contribution.save()
-
-        self.initiative.save()
-        self.funding.save()
+            contribution.states.succeed(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -511,7 +463,6 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_pledge(self):
-        self.initiative.states.approve(save=True)
         self.funding.states.succeed(save=True)
 
         contribution = DonationFactory.create(
@@ -522,10 +473,6 @@ class FundingStatisticsTest(StatisticsTest):
         PledgePaymentFactory.create(
             donation=contribution
         )
-        contribution.save()
-
-        self.initiative.save()
-        self.funding.save()
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -550,7 +497,6 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_donation_other_currency(self):
-        self.initiative.states.approve(save=True)
         self.funding.states.succeed(save=True)
 
         contribution = DonationFactory.create(
@@ -558,11 +504,7 @@ class FundingStatisticsTest(StatisticsTest):
             user=self.other_user,
             amount=Money(50, 'USD')
         )
-        contribution.states.succeed()
-        contribution.save()
-
-        self.initiative.save()
-        self.funding.save()
+        contribution.states.succeed(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -584,7 +526,6 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_donation_multiple_currencies(self):
-        self.initiative.states.approve(save=True)
         self.funding.states.succeed(save=True)
 
         for currency in ('EUR', 'USD'):
@@ -593,11 +534,7 @@ class FundingStatisticsTest(StatisticsTest):
                 user=self.other_user,
                 amount=Money(50, currency)
             )
-            contribution.states.succeed()
-            contribution.save()
-
-        self.initiative.save()
-        self.funding.save()
+            contribution.states.succeed(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -619,22 +556,13 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_donation_failed(self):
-        self.initiative.states.approve(save=True)
-        self.funding.states.approve(save=True)
-
         contribution = DonationFactory.create(
             activity=self.funding,
             user=self.other_user,
             amount=Money(50, 'EUR')
         )
-
-        contribution.states.fail()
-        contribution.save()
-
-        self.funding.states.succeed()
-
-        self.initiative.save()
-        self.funding.save()
+        contribution.states.fail(save=True)
+        self.funding.states.succeed(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0

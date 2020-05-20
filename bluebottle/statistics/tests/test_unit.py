@@ -5,16 +5,16 @@ from django.test.utils import override_settings
 from django.utils import timezone
 from moneyed.classes import Money
 
+from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
+from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
+from bluebottle.funding.tests.factories import (
+    FundingFactory, DonationFactory, BankAccountFactory, BudgetLineFactory, PlainPayoutAccountFactory
+)
+from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import Member
 from bluebottle.statistics.views import Statistics
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.funding.tests.factories import (
-    FundingFactory, DonationFactory, BankAccountFactory, BudgetLineFactory
-)
-from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
-from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
-from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -59,26 +59,20 @@ class StatisticsTest(BluebottleTestCase):
         self.initiative = InitiativeFactory.create(
             owner=self.some_user
         )
+        self.initiative.states.approve(save=True)
 
 
 class EventStatisticsTest(StatisticsTest):
     def setUp(self):
         super(EventStatisticsTest, self).setUp()
         self.event = EventFactory.create(
-            owner=self.some_user,
             initiative=self.initiative,
-            start=timezone.now() - datetime.timedelta(hours=1),
+            owner=self.some_user,
+            capacity=10,
             duration=0.1
         )
 
     def test_open(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.event.refresh_from_db()
-
-        self.initiative.save()
-        self.event.save()
-
         self.assertEqual(
             self.stats.activities_online, 1
         )
@@ -93,15 +87,7 @@ class EventStatisticsTest(StatisticsTest):
         )
 
     def test_succeeded(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.event.refresh_from_db()
-        self.event.transitions.start()
-        self.event.transitions.succeed()
-
-        self.initiative.save()
-        self.event.save()
-
+        self.event.states.succeed(save=True)
         self.assertEqual(
             self.stats.activities_online, 0
         )
@@ -116,12 +102,7 @@ class EventStatisticsTest(StatisticsTest):
         )
 
     def test_closed(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.event.refresh_from_db()
-        self.event.transitions.start()
-        self.event.transitions.succeed()
-        self.event.transitions.close()
+        self.event.states.close(save=True)
 
         self.initiative.save()
         self.event.save()
@@ -140,15 +121,8 @@ class EventStatisticsTest(StatisticsTest):
         )
 
     def test_participant(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.event.refresh_from_db()
         ParticipantFactory.create(activity=self.event, user=self.other_user)
-        self.event.transitions.start()
-        self.event.transitions.succeed()
-
-        self.initiative.save()
-        self.event.save()
+        self.event.states.succeed(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -170,17 +144,10 @@ class EventStatisticsTest(StatisticsTest):
         )
 
     def test_participant_withdrawn(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.event.refresh_from_db()
         contribution = ParticipantFactory.create(activity=self.event, user=self.other_user)
-        contribution.transitions.withdraw()
-        contribution.save()
-        self.event.transitions.start()
-        self.event.transitions.succeed()
-
-        self.initiative.save()
-        self.event.save()
+        contribution.states.withdraw(save=True)
+        self.event.states.start(save=True)
+        self.event.states.succeed(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -202,18 +169,11 @@ class EventStatisticsTest(StatisticsTest):
         )
 
     def test_participant_noshow(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.event.refresh_from_db()
         contribution = ParticipantFactory.create(activity=self.event, user=self.other_user)
-        self.event.transitions.start()
-        self.event.transitions.succeed()
-        contribution.transitions.succeed()
-        contribution.transitions.no_show()
-        contribution.save()
-
-        self.initiative.save()
-        self.event.save()
+        self.event.states.start(save=True)
+        self.event.states.succeed(save=True)
+        contribution.states.succeed(save=True)
+        contribution.states.mark_absent(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -247,12 +207,7 @@ class AssignmentStatisticsTest(StatisticsTest):
         )
 
     def test_open(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.assignment.refresh_from_db()
-
-        self.initiative.save()
-        self.assignment.save()
+        self.initiative.states.approve(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 1
@@ -268,11 +223,10 @@ class AssignmentStatisticsTest(StatisticsTest):
         )
 
     def test_succeeded(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.approve(save=True)
         self.assignment.refresh_from_db()
-        self.assignment.transitions.start()
-        self.assignment.transitions.succeed()
+        self.assignment.states.start()
+        self.assignment.states.succeed()
 
         self.initiative.save()
         self.assignment.save()
@@ -291,12 +245,11 @@ class AssignmentStatisticsTest(StatisticsTest):
         )
 
     def test_closed(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.approve(save=True)
         self.assignment.refresh_from_db()
-        self.assignment.transitions.start()
-        self.assignment.transitions.succeed()
-        self.assignment.transitions.close()
+        self.assignment.states.start()
+        self.assignment.states.succeed()
+        self.assignment.states.close()
 
         self.initiative.save()
         self.assignment.save()
@@ -315,14 +268,13 @@ class AssignmentStatisticsTest(StatisticsTest):
         )
 
     def test_participant(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.approve(save=True)
         self.assignment.refresh_from_db()
         contribution = ApplicantFactory.create(activity=self.assignment, user=self.other_user)
-        contribution.transitions.accept()
+        contribution.states.accept()
         contribution.save()
-        self.assignment.transitions.start()
-        self.assignment.transitions.succeed()
+        self.assignment.states.start()
+        self.assignment.states.succeed()
         contribution.refresh_from_db()
         contribution.time_spent = 0.1
         contribution.save()
@@ -350,14 +302,13 @@ class AssignmentStatisticsTest(StatisticsTest):
         )
 
     def test_participant_withdrawn(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.approve(save=True)
         self.assignment.refresh_from_db()
         contribution = ApplicantFactory.create(activity=self.assignment, user=self.other_user)
-        contribution.transitions.withdraw()
+        contribution.states.withdraw()
         contribution.save()
-        self.assignment.transitions.start()
-        self.assignment.transitions.succeed()
+        self.assignment.states.start()
+        self.assignment.states.succeed()
 
         self.initiative.save()
         self.assignment.save()
@@ -382,13 +333,12 @@ class AssignmentStatisticsTest(StatisticsTest):
         )
 
     def test_participant_rejected(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.approve(save=True)
         self.assignment.refresh_from_db()
         contribution = ApplicantFactory.create(activity=self.assignment, user=self.other_user)
-        contribution.transitions.reject()
-        self.assignment.transitions.start()
-        self.assignment.transitions.succeed()
+        contribution.states.reject()
+        self.assignment.states.start()
+        self.assignment.states.succeed()
         contribution.save()
 
         self.initiative.save()
@@ -417,22 +367,18 @@ class AssignmentStatisticsTest(StatisticsTest):
 class FundingStatisticsTest(StatisticsTest):
     def setUp(self):
         super(FundingStatisticsTest, self).setUp()
+        payout_account = PlainPayoutAccountFactory.create()
+        bank_account = BankAccountFactory.create(connect_account=payout_account)
         self.funding = FundingFactory.create(
             owner=self.some_user,
-            bank_account=BankAccountFactory.create(),
+            bank_account=bank_account,
             initiative=self.initiative,
             target=Money(100, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
 
     def test_open(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.funding.review_transitions.submit()
-        self.funding.review_transitions.approve()
-
-        self.initiative.save()
-        self.funding.save()
+        self.initiative.states.approve(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 1
@@ -448,11 +394,8 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_succeeded(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.funding.review_transitions.submit()
-        self.funding.review_transitions.approve()
-        self.funding.transitions.succeed()
+        self.initiative.states.approve(save=True)
+        self.funding.states.succeed(save=True)
 
         self.initiative.save()
         self.funding.amount_matching = Money(100, 'EUR')
@@ -475,12 +418,8 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_closed(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.funding.review_transitions.submit()
-        self.funding.review_transitions.approve()
-        self.funding.transitions.succeed()
-        self.funding.transitions.close()
+        self.initiative.states.approve(save=True)
+        self.funding.states.close(save=True)
 
         self.initiative.save()
         self.funding.amount_matching = Money(100, 'EUR')
@@ -503,18 +442,15 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_donation(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.funding.review_transitions.submit()
-        self.funding.review_transitions.approve()
-        self.funding.transitions.succeed()
+        self.initiative.states.approve(save=True)
+        self.funding.states.succeed(save=True)
 
         contribution = DonationFactory.create(
             activity=self.funding,
             user=self.other_user,
             amount=Money(50, 'EUR')
         )
-        contribution.transitions.succeed()
+        contribution.states.succeed()
         contribution.save()
 
         self.initiative.save()
@@ -540,11 +476,8 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_donation_many(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.funding.review_transitions.submit()
-        self.funding.review_transitions.approve()
-        self.funding.transitions.succeed()
+        self.initiative.states.approve(save=True)
+        self.funding.states.succeed(save=True)
 
         for i in range(4):
             contribution = DonationFactory.create(
@@ -552,7 +485,7 @@ class FundingStatisticsTest(StatisticsTest):
                 user=self.other_user,
                 amount=Money(50, 'EUR')
             )
-            contribution.transitions.succeed()
+            contribution.states.succeed()
             contribution.save()
 
         self.initiative.save()
@@ -578,11 +511,8 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_pledge(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.funding.review_transitions.submit()
-        self.funding.review_transitions.approve()
-        self.funding.transitions.succeed()
+        self.initiative.states.approve(save=True)
+        self.funding.states.succeed(save=True)
 
         contribution = DonationFactory.create(
             activity=self.funding,
@@ -620,18 +550,15 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_donation_other_currency(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.funding.review_transitions.submit()
-        self.funding.review_transitions.approve()
-        self.funding.transitions.succeed()
+        self.initiative.states.approve(save=True)
+        self.funding.states.succeed(save=True)
 
         contribution = DonationFactory.create(
             activity=self.funding,
             user=self.other_user,
             amount=Money(50, 'USD')
         )
-        contribution.transitions.succeed()
+        contribution.states.succeed()
         contribution.save()
 
         self.initiative.save()
@@ -657,11 +584,8 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_donation_multiple_currencies(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.funding.review_transitions.submit()
-        self.funding.review_transitions.approve()
-        self.funding.transitions.succeed()
+        self.initiative.states.approve(save=True)
+        self.funding.states.succeed(save=True)
 
         for currency in ('EUR', 'USD'):
             contribution = DonationFactory.create(
@@ -669,7 +593,7 @@ class FundingStatisticsTest(StatisticsTest):
                 user=self.other_user,
                 amount=Money(50, currency)
             )
-            contribution.transitions.succeed()
+            contribution.states.succeed()
             contribution.save()
 
         self.initiative.save()
@@ -695,10 +619,8 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_donation_failed(self):
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.funding.review_transitions.submit()
-        self.funding.review_transitions.approve()
+        self.initiative.states.approve(save=True)
+        self.funding.states.approve(save=True)
 
         contribution = DonationFactory.create(
             activity=self.funding,
@@ -706,10 +628,10 @@ class FundingStatisticsTest(StatisticsTest):
             amount=Money(50, 'EUR')
         )
 
-        contribution.transitions.fail()
+        contribution.states.fail()
         contribution.save()
 
-        self.funding.transitions.succeed()
+        self.funding.states.succeed()
 
         self.initiative.save()
         self.funding.save()

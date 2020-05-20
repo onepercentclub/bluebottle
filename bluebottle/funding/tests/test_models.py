@@ -155,10 +155,10 @@ class PayoutTestCase(BluebottleTestCase):
     def test_generate_payouts(self):
         Payout.generate(self.funding)
         self.assertEqual(self.funding.payouts.count(), 3)
-
-        self.assertEqual(self.funding.payouts.all()[2].total_amount, Money(1000, 'USD'))
-        self.assertEqual(self.funding.payouts.all()[1].total_amount, Money(1500, 'EUR'))
-        self.assertEqual(self.funding.payouts.all()[0].total_amount, Money(750, 'EUR'))
+        payout_amounts = [p.total_amount for p in self.funding.payouts.all()]
+        self.assertTrue(Money(1000, 'USD') in payout_amounts)
+        self.assertTrue(Money(1500, 'EUR') in payout_amounts)
+        self.assertTrue(Money(750, 'EUR') in payout_amounts)
 
         # More donations
         for donation in DonationFactory.create_batch(5,
@@ -170,9 +170,10 @@ class PayoutTestCase(BluebottleTestCase):
         # Recalculate should generate new payouts. One should be higher now.
         Payout.generate(self.funding)
         self.assertEqual(self.funding.payouts.count(), 3)
-        self.assertEqual(self.funding.payouts.all()[2].total_amount, Money(1000, 'USD'))
-        self.assertEqual(self.funding.payouts.all()[1].total_amount, Money(2250, 'EUR'))
-        self.assertEqual(self.funding.payouts.all()[0].total_amount, Money(750, 'EUR'))
+        payout_amounts = [p.total_amount for p in self.funding.payouts.all()]
+        self.assertTrue(Money(1000, 'USD') in payout_amounts)
+        self.assertTrue(Money(2250, 'EUR') in payout_amounts)
+        self.assertTrue(Money(750, 'EUR') in payout_amounts)
 
         with mock.patch('bluebottle.payouts_dorado.adapters.DoradoPayoutAdapter.trigger_payout'):
             for payout in self.funding.payouts.all():
@@ -189,11 +190,12 @@ class PayoutTestCase(BluebottleTestCase):
         # Recalculate should generate an additional payout
         Payout.generate(self.funding)
         self.assertEqual(self.funding.payouts.count(), 4)
-
-        self.assertEqual(self.funding.payouts.all()[3].total_amount, Money(2000, 'EUR'))
-        self.assertEqual(self.funding.payouts.all()[2].total_amount, Money(1000, 'USD'))
-        self.assertEqual(self.funding.payouts.all()[1].total_amount, Money(2250, 'EUR'))
-        self.assertEqual(self.funding.payouts.all()[0].total_amount, Money(750, 'EUR'))
+        payout_amounts = [p.total_amount for p in self.funding.payouts.all()]
+        print payout_amounts
+        self.assertTrue(Money(1000, 'USD') in payout_amounts)
+        self.assertTrue(Money(2000, 'EUR') in payout_amounts)
+        self.assertTrue(Money(2250, 'EUR') in payout_amounts)
+        self.assertTrue(Money(750, 'EUR') in payout_amounts)
 
     def test_donation_contribution_date(self):
         self.assertEqual(self.donation.contribution_date, self.donation.created)

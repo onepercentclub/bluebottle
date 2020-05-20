@@ -12,6 +12,7 @@ from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
     PlainPayoutAccountFactory, DonationFactory
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
+from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.wallposts.models import Wallpost
@@ -315,3 +316,85 @@ class DonationStateMachineTests(BluebottleTestCase):
         mail.outbox = []
         donation.states.activity_refund(save=True)
         self.assertEqual(mail.outbox[0].subject, u'Your donation has been refunded')
+
+
+class BasePaymentStateMachineTests(BluebottleTestCase):
+
+    def setUp(self):
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.approve(save=True)
+        self.funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=Money(1000, 'EUR')
+        )
+        BudgetLineFactory.create(activity=self.funding)
+        payout_account = StripePayoutAccountFactory.create()
+        bank_account = BankAccountFactory.create(connect_account=payout_account)
+        self.funding.bank_account = bank_account
+        self.funding.save()
+        self.funding.states.approve(save=True)
+
+    def test_initiate(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        payment = StripePaymentFactory.create(donation=donation)
+        self.assertEqual(payment.status, 'new')
+
+    def test_succeed(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        payment = StripePaymentFactory.create(donation=donation)
+        payment.states.succeed(save=True)
+        self.assertEqual(payment.status, 'succeeded')
+
+    def test_succeed_donation_succeed(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        payment = StripePaymentFactory.create(donation=donation)
+        payment.states.succeed(save=True)
+        self.assertEqual(donation.status, 'succeeded')
+
+    def test_fail(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        payment = StripePaymentFactory.create(donation=donation)
+        payment.states.fail(save=True)
+        self.assertEqual(payment.status, 'failed')
+
+    def test_authorize(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        payment = StripePaymentFactory.create(donation=donation)
+        payment.states.authorize(save=True)
+        self.assertEqual(payment.status, 'pending')
+
+    def test_authorize_donation_success(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        payment = StripePaymentFactory.create(donation=donation)
+        payment.states.authorize(save=True)
+        self.assertEqual(donation.status, 'succeeded')
+
+    def test_request_refund(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        payment = FlutterwavePaymentFactory.create(donation=donation)
+        payment.states.succeed(save=True)
+        with patch('bluebottle.funding_flutterwave.models.FlutterwavePayment.refund'):
+            payment.states.request_refund(save=True)
+        self.assertEqual(payment.status, 'refund_requested')
+
+    def test_request_refund_call_psp(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        payment = FlutterwavePaymentFactory.create(donation=donation)
+        payment.states.succeed(save=True)
+        with patch('bluebottle.funding_flutterwave.models.FlutterwavePayment.refund') as refund:
+            payment.states.request_refund(save=True)
+            refund.assert_called_once()
+
+    def test_refund(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        payment = StripePaymentFactory.create(donation=donation)
+        payment.states.succeed(save=True)
+        payment.states.refund(save=True)
+        self.assertEqual(payment.status, 'refunded')
+
+    def test_refund_donation_refunded(self):
+        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        payment = StripePaymentFactory.create(donation=donation)
+        payment.states.succeed(save=True)
+        payment.states.refund(save=True)
+        self.assertEqual(donation.status, 'refunded')

@@ -127,6 +127,73 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.donation.refresh_from_db()
         self.assertEqual(self.donation.status, DonationTransitions.values.failed)
 
+    def test_failed_second_intent_succeeds(self):
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'payment_intent.payment_failed', {'object': {'id': self.intent.intent_id}}
+            )
+        ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            # Stripe might send double failed webhooks
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.intent.refresh_from_db()
+        payment = self.intent.payment
+
+        donation = Donation.objects.get(pk=self.donation.pk)
+
+        self.assertEqual(donation.status, DonationTransitions.values.failed)
+        self.assertEqual(payment.status, StripePaymentTransitions.values.failed)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.status, DonationTransitions.values.failed)
+
+        second_intent = StripePaymentIntentFactory.create(donation=self.donation, intent_id='some-other-id')
+        with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
+            data = json.load(hook_file)
+            data['object']['id'] = second_intent.intent_id
+
+        transfer = stripe.Transfer(data['object']['charges']['data'][0]['transfer'])
+        transfer.update({
+            'id': data['object']['charges']['data'][0]['transfer'],
+            'amount': 2500,
+            'currency': 'eur'
+        })
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'payment_intent.succeeded', data
+            )
+        ):
+            with mock.patch(
+                'stripe.Transfer.retrieve',
+                return_value=transfer
+            ):
+                response = self.client.post(
+                    self.webhook,
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        second_intent.refresh_from_db()
+        self.assertEqual(second_intent.payment.pk, payment.pk)
+
+        payment.refresh_from_db()
+        donation.refresh_from_db()
+
+        self.assertEqual(donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(donation.payout_amount, Money(25, 'EUR'))
+        self.assertEqual(payment.status, StripePaymentTransitions.values.succeeded)
+
     def test_refund(self):
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
             data = json.load(hook_file)

@@ -94,6 +94,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         'title',
         'slug',
         'image',
+        'video_url',
         'initiative',
         'owner',
         'created',

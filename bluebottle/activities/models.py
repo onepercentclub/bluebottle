@@ -55,6 +55,19 @@ class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, Polymo
 
     image = ImageField(blank=True, null=True)
 
+    video_url = models.URLField(
+        _('video'),
+        max_length=100,
+        blank=True,
+        null=True,
+        default='',
+        help_text=_(
+            "Do you have a video pitch or a short movie that "
+            "explains your activity? Cool! We can't wait to see it! "
+            "You can paste the link to YouTube or Vimeo video here"
+        )
+    )
+
     followers = GenericRelation('follow.Follow', object_id_field='instance_id')
     messages = GenericRelation('notifications.Message')
 

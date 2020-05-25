@@ -43,7 +43,7 @@ class UpdateFundingAmounts(Effect):
 
 
 class SetStartDate(Effect):
-    post_save = True
+    post_save = False
     conditions = []
 
     def execute(self, **kwargs):
@@ -54,7 +54,7 @@ class SetStartDate(Effect):
 
 
 class SetDeadline(Effect):
-    post_save = True
+    post_save = False
     conditions = []
 
     def execute(self, **kwargs):

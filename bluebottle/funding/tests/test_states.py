@@ -5,9 +5,7 @@ from django.utils.timezone import now
 from djmoney.money import Money
 from mock import patch
 
-from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.fsm.state import TransitionNotPossible
-from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
     PlainPayoutAccountFactory, DonationFactory
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentFactory
@@ -33,7 +31,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.save()
 
     def test_submit(self):
-        self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
+        self.assertEqual(self.funding.status, 'submitted')
 
     def test_submit_incomplete(self):
         funding = FundingFactory.create(
@@ -56,19 +54,23 @@ class FundingStateMachineTests(BluebottleTestCase):
         with self.assertRaisesMessage(TransitionNotPossible, 'Conditions not met for transition'):
             funding.states.submit()
 
+    def test_needs_work(self):
+        self.funding.states.request_changes(save=True)
+        self.assertEqual(self.funding.status, 'needs_work')
+
     def test_approve(self):
         self.funding.states.approve(save=True)
-        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+        self.assertEqual(self.funding.status, 'open')
 
     def test_approve_organizer_succeed(self):
         self.funding.states.approve(save=True)
         organizer = self.funding.contributions.get()
-        self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
+        self.assertEqual(organizer.status, 'succeeded')
 
     def test_approve_set_start_dat(self):
         self.funding.states.approve(save=True)
         organizer = self.funding.contributions.get()
-        self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
+        self.assertEqual(organizer.status, 'succeeded')
 
     def test_approve_set_deadline(self):
         self.funding = FundingFactory.create(
@@ -93,14 +95,14 @@ class FundingStateMachineTests(BluebottleTestCase):
 
     def _prepare_extend(self):
         self.funding.states.approve(save=True)
-        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+        self.assertEqual(self.funding.status, 'open')
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         # Changing the deadline to the past should trigger a transition
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
         self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, FundingStateMachine.partially_funded.value)
+        self.assertEqual(self.funding.status, 'partially_funded')
 
     def test_extend(self):
         self._prepare_extend()
@@ -120,15 +122,15 @@ class FundingStateMachineTests(BluebottleTestCase):
 
     def test_reject(self):
         self.funding.states.reject(save=True)
-        self.assertEqual(self.funding.status, FundingStateMachine.rejected.value)
+        self.assertEqual(self.funding.status, 'rejected')
         organizer = self.funding.contributions.get()
-        self.assertEqual(organizer.status, OrganizerStateMachine.failed.value)
+        self.assertEqual(organizer.status, 'failed')
 
     def test_delete(self):
         self.funding.states.delete(save=True)
-        self.assertEqual(self.funding.status, FundingStateMachine.deleted.value)
+        self.assertEqual(self.funding.status, 'deleted')
         organizer = self.funding.contributions.get()
-        self.assertEqual(organizer.status, OrganizerStateMachine.failed.value)
+        self.assertEqual(organizer.status, 'failed')
 
     def _prepare_succeeded(self):
         self.funding.states.approve(save=True)

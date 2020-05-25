@@ -29,7 +29,9 @@ class FundingStateMachine(ActivityStateMachine):
         return self.instance.deadline and self.instance.deadline < timezone.now()
 
     def deadline_in_future(self):
-        return self.instance.deadline > timezone.now()
+        if self.instance.deadline:
+            return self.instance.deadline > timezone.now()
+        return bool(self.instance.duration)
 
     def target_reached(self):
         return self.instance.amount_raised >= self.instance.target
@@ -64,13 +66,17 @@ class FundingStateMachine(ActivityStateMachine):
         [
             ActivityStateMachine.draft,
             ActivityStateMachine.needs_work,
-            ActivityStateMachine.submitted,
-            ActivityStateMachine.rejected
+            ActivityStateMachine.submitted
         ],
         ActivityStateMachine.open,
         name=_('Approve'),
         automatic=False,
         permission=can_approve,
+        conditions=[
+            ActivityStateMachine.initiative_is_approved,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.is_complete
+        ],
         effects=[
             RelatedTransitionEffect('organizer', 'succeed'),
             SetStartDate,
@@ -82,17 +88,34 @@ class FundingStateMachine(ActivityStateMachine):
         ]
     )
 
+    request_changes = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.submitted
+        ],
+        ActivityStateMachine.needs_work,
+        name=_('Request changes'),
+        automatic=False,
+        permission=can_approve
+    )
+
     reject = Transition(
         [
             ActivityStateMachine.submitted,
             ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.open,
         ],
         ActivityStateMachine.rejected,
         name=_('Reject'),
         automatic=False,
+        conditions=[
+            no_donations
+        ],
         permission=ActivityStateMachine.is_staff,
-        effects=[RelatedTransitionEffect('organizer', 'fail')]
+        effects=[
+            RelatedTransitionEffect('organizer', 'fail')
+        ]
     )
 
     close = Transition(

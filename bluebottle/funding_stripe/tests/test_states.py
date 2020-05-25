@@ -42,11 +42,23 @@ class StripeSourcePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
         payment.states.authorize(save=True)
         self.assertEqual(payment.status, 'pending')
 
+    def test_authorize_donation_succeed(self):
+        donation = DonationFactory.create(activity=self.funding)
+        payment = StripeSourcePaymentFactory.create(donation=donation)
+        payment.states.authorize(save=True)
+        self.assertEqual(donation.status, 'succeeded')
+
     def test_succeed(self):
         donation = DonationFactory.create(activity=self.funding)
         payment = StripeSourcePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
         self.assertEqual(payment.status, 'succeeded')
+
+    def test_succeed_donation_succeed(self):
+        donation = DonationFactory.create(activity=self.funding)
+        payment = StripeSourcePaymentFactory.create(donation=donation)
+        payment.states.succeed(save=True)
+        self.assertEqual(donation.status, 'succeeded')
 
     def test_charge(self):
         donation = DonationFactory.create(activity=self.funding)

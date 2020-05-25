@@ -1,13 +1,24 @@
 from collections import defaultdict
 
+from bluebottle.activities.states import OrganizerStateMachine
+from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine
 from bluebottle.events.states import EventStateMachine, ParticipantStateMachine
+from bluebottle.funding.states import FundingStateMachine, DonationStateMachine, PayoutAccountStateMachine, \
+    PayoutStateMachine
+from bluebottle.funding_stripe.states import StripeSourcePaymentStateMachine, StripePaymentStateMachine
+from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.notifications.effects import BaseNotificationEffect
 from bluebottle.fsm.effects import BaseTransitionEffect, BaseRelatedTransitionEffect
 from bluebottle.fsm.state import Transition
 from bluebottle.fsm.triggers import ModelTrigger
 
 machines = [
-    EventStateMachine, ParticipantStateMachine
+    ReviewStateMachine, OrganizerStateMachine,
+    EventStateMachine, ParticipantStateMachine,
+    AssignmentStateMachine, ApplicantStateMachine,
+    FundingStateMachine, DonationStateMachine,
+    PayoutAccountStateMachine, PayoutStateMachine,
+    StripeSourcePaymentStateMachine, StripePaymentStateMachine
 ]
 
 

@@ -237,7 +237,6 @@ class ApplicantTransitions(ContributionTransitions):
     )
     def fail(self):
         unfollow(self.instance.user, self.instance.activity)
-        self.instance.time_spent = None
 
     @transition(
         field='status',
@@ -247,4 +246,3 @@ class ApplicantTransitions(ContributionTransitions):
     )
     def close(self):
         unfollow(self.instance.user, self.instance.activity)
-        self.instance.time_spent = None

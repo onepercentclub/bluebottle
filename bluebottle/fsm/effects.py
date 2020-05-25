@@ -8,8 +8,10 @@ class Effect(object):
     conditions = []
     display = True
 
-    def __init__(self, instance):
+    def __init__(self, instance, **kwargs):
         self.instance = instance
+
+        self.options = kwargs
 
     def __eq__(self, other):
         return self.instance == other.instance and type(self) == type(other)

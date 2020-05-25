@@ -6,9 +6,13 @@ from bluebottle.fsm.effects import Effect
 class BaseNotificationEffect(Effect):
     post_save = True
 
-    def execute(self, send_messages=True, **kwargs):
+    def execute(self, send_messages=True):
         if send_messages:
-            self.message(self.instance).compose_and_send()
+            self.message(
+                self.instance,
+                custom_message=self.options.get('message')
+            ).compose_and_send(
+            )
 
     def __repr__(self):
         return '<Effect: Send {}>'.format(self.message)

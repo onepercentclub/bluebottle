@@ -12,14 +12,13 @@ import pytz
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.assignments.validators import RegistrationDeadlineValidator
 from bluebottle.files.fields import PrivateDocumentField
-from bluebottle.fsm import TransitionsMixin
 from bluebottle.geo.models import Geolocation
 
 
 tf = TimezoneFinder()
 
 
-class Assignment(Activity, TransitionsMixin):
+class Assignment(Activity):
 
     class EndDateTypes(DjangoChoices):
         deadline = ChoiceItem('deadline', label=_("Deadline"))
@@ -132,7 +131,7 @@ class Assignment(Activity, TransitionsMixin):
 
     @property
     def active_applicants(self):
-        return self.contributions.instance_of(Applicant).filter(status__in='active')
+        return self.contributions.instance_of(Applicant).filter(status__in=['active'])
 
     # def registration_deadline_passed(self):
     #     # If registration deadline passed
@@ -179,7 +178,7 @@ class Assignment(Activity, TransitionsMixin):
         return super(Assignment, self).save(*args, **kwargs)
 
 
-class Applicant(Contribution, TransitionsMixin):
+class Applicant(Contribution):
     motivation = models.TextField()
     time_spent = models.FloatField(_('time spent'), null=True, blank=True)
 

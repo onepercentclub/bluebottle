@@ -1,8 +1,8 @@
-from datetime import timedelta, date
+from datetime import timedelta
 
 from django.core import mail
 from django.db import connection
-from django.utils.timezones import now
+from django.utils.timezone import now
 
 from bluebottle.assignments.tasks import check_assignment_reminder, check_assignment_registration_deadline, \
     check_assignment_end_date, check_assignment_start_date
@@ -29,7 +29,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
     def test_assignment_reminder_task(self):
         user = BlueBottleUserFactory.create(first_name='Nono')
-        end = date.today() + timedelta(days=4)
+        end = now() + timedelta(days=4)
         assignment = AssignmentFactory.create(
             owner=user,
             status='open',
@@ -61,7 +61,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
     def test_assignment_reminder_task_twice(self):
         user = BlueBottleUserFactory.create(first_name='Nono')
-        end = date.today() + timedelta(days=4)
+        end = now() + timedelta(days=4)
         assignment = AssignmentFactory.create(
             owner=user,
             status='open',
@@ -88,8 +88,8 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         assignment = AssignmentFactory.create(
             owner=user,
             status='open',
-            capacity=5,
-            registration_deadline=deadline,
+            capacity=3,
+            registration_deadline=deadline.date(),
             initiative=self.initiative,
             date=end,
         )
@@ -110,17 +110,16 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory.create(first_name='Nono')
 
         deadline = now() - timedelta(days=1)
-        date = now() - timedelta(days=2)
-        end = now() + timedelta(days=4)
+        date = now() - timedelta(hours=2)
 
         assignment = AssignmentFactory.create(
             owner=user,
             status='open',
             capacity=3,
-            registration_deadline=deadline,
+            registration_deadline=deadline.date(),
             initiative=self.initiative,
-            date=date,
-            end_date=end.date()
+            duration=10,
+            date=date
         )
 
         applicants = ApplicantFactory.create_batch(3, activity=assignment, status='new')
@@ -145,7 +144,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
             owner=user,
             status='open',
             capacity=3,
-            registration_deadline=deadline,
+            registration_deadline=deadline.date(),
             initiative=self.initiative,
             date=date,
         )

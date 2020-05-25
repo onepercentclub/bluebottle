@@ -104,8 +104,10 @@ class AssignmentTestCase(BluebottleTestCase):
             date=now() + timedelta(days=4),
             capacity=3,
         )
-        ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
+        for applicant in ApplicantFactory.create_batch(3, activity=assignment):
+            applicant.states.accept(save=True)
 
+        assignment.refresh_from_db()
         self.assertEqual(assignment.status, 'full')
 
         assignment.capacity = 10
@@ -120,7 +122,9 @@ class AssignmentTestCase(BluebottleTestCase):
             date=now() + timedelta(days=4),
             capacity=3,
         )
-        applicants = ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
+        applicants = ApplicantFactory.create_batch(3, activity=assignment)
+        for applicant in applicants:
+            applicant.states.accept(save=True)
 
         self.assertEqual(assignment.status, 'full')
 
@@ -148,7 +152,7 @@ class ApplicantTestCase(BluebottleTestCase):
         self.assertEqual(applicant.status, 'succeeded')
         applicant.time_spent = 0
         applicant.save()
-        self.assertEqual(applicant.status, 'failed')
+        self.assertEqual(applicant.status, 'no_show')
         applicant.time_spent = 10
         applicant.save()
         self.assertEqual(applicant.status, 'succeeded')

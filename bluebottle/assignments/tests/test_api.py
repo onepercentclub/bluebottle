@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 import json
 from datetime import timedelta
+import mock
 
 from django.core import mail
 from django.urls import reverse
-from django.utils.timezone import now
+from django.utils import timezone
 from rest_framework import status
 
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.tasks import SkillFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
 
 
@@ -26,22 +28,23 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
         self.url = reverse('assignment-list')
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory(owner=self.user)
-        self.initiative.states.submit()
         self.initiative.states.approve()
         self.initiative.save()
 
     def test_create_assignment(self):
+        skill = SkillFactory.create()
         data = {
             'data': {
                 'type': 'activities/assignments',
                 'attributes': {
                     'title': 'Business plan Young Freddy',
-                    'date': str((now() + timedelta(days=21))),
+                    'date': str((timezone.now() + timedelta(days=21))),
                     'end_date_type': 'deadline',
                     'duration': 8,
-                    'registration_deadline': str((now() + timedelta(days=14)).date()),
+                    'registration_deadline': str((timezone.now() + timedelta(days=14)).date()),
                     'capacity': 2,
-                    'description': 'Help Young Freddy write a business plan'
+                    'description': 'Help Young Freddy write a business plan',
+                    'is-online': True,
                 },
                 'relationships': {
                     'initiative': {
@@ -49,13 +52,19 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
                             'type': 'initiatives', 'id': self.initiative.id
                         },
                     },
+                    'expertise': {
+                        'data': {
+                            'type': 'skills', 'id': skill.pk
+                        },
+                    },
+
                 }
             }
         }
         response = self.client.post(self.url, json.dumps(data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], 'submitted')
+        self.assertEqual(response.data['status'], 'open')
         self.assertEqual(response.data['title'], 'Business plan Young Freddy')
 
     def test_create_assignment_missing_data(self):
@@ -64,8 +73,8 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
                 'type': 'activities/assignments',
                 'attributes': {
                     'title': '',
-                    'date': str((now() + timedelta(days=21))),
-                    'registration_deadline': str((now() + timedelta(days=14)).date()),
+                    'date': str((timezone.now() + timedelta(days=21))),
+                    'registration_deadline': str((timezone.now() + timedelta(days=14)).date()),
                     'description': 'Help Young Freddy write a business plan'
                 },
                 'relationships': {
@@ -104,8 +113,8 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
                 'type': 'activities/assignments',
                 'attributes': {
                     'title': '',
-                    'date': str((now() + timedelta(days=21))),
-                    'registration_deadline': str((now() + timedelta(days=22)).date()),
+                    'date': str((timezone.now() + timedelta(days=21))),
+                    'registration_deadline': str((timezone.now() + timedelta(days=22)).date()),
                     'description': 'Help Young Freddy write a business plan'
                 },
                 'relationships': {
@@ -231,11 +240,10 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assignment_incomplete_url = reverse('assignment-detail', args=(self.assignment_incomplete.id,))
         self.assignment_url = reverse('assignment-detail', args=(self.assignment.id,))
         self.transition_url = reverse('assignment-transition-list')
-        self.review_transition_url = reverse('activity-review-transition-list')
 
         self.review_data = {
             'data': {
-                'type': 'activities/review-transitions',
+                'type': 'assignment-transitions',
                 'attributes': {
                     'transition': 'submit',
                 },
@@ -274,17 +282,9 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        review_transitions = [
-            {u'available': True, u'name': u'delete', u'target': u'closed'},
-            {u'available': False, u'name': u'submit', u'target': u'submitted'},
-            {u'available': False, u'name': u'close', u'target': u'closed'},
-            {u'available': False, u'name': u'approve', u'target': u'approved'}
-        ]
         transitions = [
-            {u'available': False, u'name': u'delete', u'target': u'deleted'},
-            {u'available': False, u'name': u'reviewed', u'target': u'open'}
+            {u'available': True, u'name': u'delete', u'target': u'deleted'},
         ]
-        self.assertEqual(data['data']['meta']['review-transitions'], review_transitions)
         self.assertEqual(data['data']['meta']['transitions'], transitions)
 
         self.assertTrue(
@@ -306,16 +306,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        transitions = [
-            {u'available': False, u'name': u'close', u'target': u'closed'},
-            {u'available': True, u'name': u'reopen', u'target': u'open'},
-            {u'available': True, u'name': u'lock', u'target': u'full'},
-            {u'available': True, u'name': u'start', u'target': u'running'},
-            {u'available': False, u'name': u'succeed', u'target': u'succeeded'},
-            {u'available': False, u'name': u'expire', u'target': u'closed'},
-            {u'available': False, u'name': u'close', u'target': u'closed'},
-        ]
-        self.assertEqual(data['data']['meta']['transitions'], transitions)
+        self.assertEqual(data['data']['meta']['transitions'], [])
         self.assertEqual(data['data']['meta']['required'], [])
         self.assertEqual(data['data']['meta']['errors'], [])
 
@@ -342,7 +333,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.review_data['data']['attributes']['transition'] = 'delete'
 
         response = self.client.post(
-            self.review_transition_url,
+            self.transition_url,
             json.dumps(self.review_data),
             user=self.owner
         )
@@ -350,14 +341,13 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
         self.assertEqual(data['included'][0]['type'], 'activities/assignments')
-        self.assertEqual(data['included'][0]['attributes']['review-status'], 'closed')
         self.assertEqual(data['included'][0]['attributes']['status'], 'deleted')
 
     def test_approve_owner(self):
         # Owner should not be allowed to approve own assignment
         self.review_data['data']['attributes']['transition'] = 'approve'
         response = self.client.post(
-            self.review_transition_url,
+            self.transition_url,
             json.dumps(self.review_data),
             user=self.owner
         )
@@ -396,7 +386,6 @@ class ApplicantAPITestCase(BluebottleTestCase):
             owner=self.owner,
             activity_manager=self.owner
         )
-        self.initiative.states.submit()
         self.initiative.states.approve()
         self.initiative.save()
         self.assignment = AssignmentFactory.create(
@@ -468,12 +457,14 @@ class ApplicantAPITestCase(BluebottleTestCase):
         no_show.states.accept()
         no_show.save()
 
-        self.assignment.date = now()
-        self.assignment.states.succeed()
-        self.assignment.save()
+        with mock.patch.object(
+            timezone, 'now', return_value=self.assignment.date + timedelta(days=5)
+        ):
+            self.assignment.save()
 
         applicant.refresh_from_db()
         self.assertEqual(applicant.status, 'succeeded')
+        self.assertEqual(applicant.time_spent, 4)
 
         url = reverse('applicant-detail', args=(applicant.id,))
         self.apply_data['data']['id'] = applicant.id
@@ -498,8 +489,8 @@ class ApplicantAPITestCase(BluebottleTestCase):
         response = self.client.patch(url, json.dumps(self.apply_data), user=self.owner)
         self.assertEqual(response.status_code, 200)
         no_show.refresh_from_db()
-        self.assertEqual(no_show.time_spent, None)
-        self.assertEqual(no_show.status, 'failed')
+        self.assertEqual(no_show.time_spent, 0.0)
+        self.assertEqual(no_show.status, 'no_show')
 
         # And put the no show back to success
         url = reverse('applicant-detail', args=(no_show.id,))
@@ -527,7 +518,6 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.manager = BlueBottleUserFactory(first_name="Boss")
         self.owner = BlueBottleUserFactory(first_name="Owner")
         self.initiative = InitiativeFactory.create(activity_manager=self.manager)
-        self.initiative.states.submit()
         self.initiative.states.approve()
         self.initiative.save()
         self.assignment = AssignmentFactory.create(owner=self.owner, initiative=self.initiative)
@@ -605,6 +595,7 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
     def test_accept_by_owner_assignment_custom_message(self):
         # Accept by assignment owner
         self.transition_data['data']['attributes']['message'] = "See you there!"
+
         response = self.client.post(self.transition_url, json.dumps(self.transition_data), user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.applicant.refresh_from_db()

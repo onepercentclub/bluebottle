@@ -74,12 +74,12 @@ class AssignmentStateMachine(ActivityStateMachine):
     )
 
     succeed = Transition(
-        [ActivityStateMachine.open, full, running],
+        [ActivityStateMachine.open, full, running, ActivityStateMachine.closed],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
         effects=[
-            RelatedTransitionEffect('active_applicants', 'succeed'),
+            RelatedTransitionEffect('accepted_applicants', 'succeed'),
             NotificationEffect(AssignmentCompletedMessage)
         ]
     )

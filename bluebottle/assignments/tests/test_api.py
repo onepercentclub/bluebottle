@@ -518,6 +518,7 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.manager = BlueBottleUserFactory(first_name="Boss")
         self.owner = BlueBottleUserFactory(first_name="Owner")
         self.initiative = InitiativeFactory.create(activity_manager=self.manager)
+
         self.initiative.states.approve()
         self.initiative.save()
         self.assignment = AssignmentFactory.create(owner=self.owner, initiative=self.initiative)

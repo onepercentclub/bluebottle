@@ -22,6 +22,12 @@ machines = [
 ]
 
 
+def get_doc(element):
+    if element.__doc__:
+        return element.__doc__
+    return "{} (documentation missing)".format(element)
+
+
 def describe_effect(effect, machine):
     description = ''
     if issubclass(effect, BaseNotificationEffect):
@@ -39,11 +45,11 @@ def describe_effect(effect, machine):
             unicode(transition.target.name)
         )
     else:
-        description = effect.__doc__.capitalize()
+        description = get_doc(effect).capitalize()
 
     if effect.conditions:
         description += ', when {}'.format(
-            ' and '.join(condition.__doc__ for condition in effect.conditions)
+            ' and '.join(get_doc(condition) for condition in effect.conditions)
         )
 
     return description
@@ -73,11 +79,11 @@ def describe_trigger(effect, trigger):
         if trigger.field:
             description = "When the {} has changed".format(trigger.field)
         else:
-            description = 'When {}'.format(trigger.is_valid.__doc__.lower())
+            description = 'When {}'.format(get_doc(trigger.is_valid).lower())
 
     if effect.conditions:
         description += ', and {}'.format(
-            ' and '.join(condition.__doc__ for condition in effect.conditions)
+            ' and '.join(get_doc(__doc__) for condition in effect.conditions)
         )
     print '* {}'.format(description)
 
@@ -104,7 +110,10 @@ def run(*args, **kwargs):
 
         print '## State: Initial\n'
         initial = machine.initial_transition
-        describe_transition('initial', initial, machine)
+        try:
+            describe_transition('initial', initial, machine)
+        except AttributeError:
+            raise NotImplementedError("{} is missing an `initiate` transition.".format(machine))
 
         for value, state in machine.states.items():
 

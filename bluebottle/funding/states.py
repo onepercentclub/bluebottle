@@ -7,7 +7,7 @@ from bluebottle.fsm.effects import (
     TransitionEffect,
     RelatedTransitionEffect
 )
-from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates
+from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState
 from bluebottle.funding.effects import GeneratePayouts, GenerateDonationWallpost, \
     RemoveDonationWallpost, UpdateFundingAmounts, RefundPaymentAtPSP, SetStartDate, SetDeadline, DeletePayouts, \
     SubmitConnectedActivities
@@ -249,6 +249,8 @@ class BasePaymentStateMachine(ModelStateMachine):
             DonationStateMachine.activity_refunded.value,
         ]
 
+    initiate = Transition(EmptyState(), new)
+
     authorize = Transition(
         [new],
         pending,
@@ -319,6 +321,8 @@ class PayoutStateMachine(ModelStateMachine):
     succeeded = State(_('succeeded'), 'succeeded')
     failed = State(_('failed'), 'failed')
 
+    initiate = Transition(EmptyState(), new)
+
     approve = Transition(
         new,
         approved,
@@ -366,6 +370,8 @@ class PayoutAccountStateMachine(ModelStateMachine):
 
     def can_approve(self, user):
         return user.is_staff
+
+    initiate = Transition(EmptyState(), new)
 
     submit = Transition(
         [new, incomplete],

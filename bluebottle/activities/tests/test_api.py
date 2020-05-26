@@ -812,7 +812,7 @@ class ContributionListAPITestCase(BluebottleTestCase):
                 self.assertTrue('title' in i['attributes'])
 
             if i['type'] == 'activities/assignments':
-                self.assertTrue('end-date' in i['attributes'])
+                self.assertTrue('date' in i['attributes'])
                 self.assertTrue('end-date-type' in i['attributes'])
                 self.assertTrue('slug' in i['attributes'])
                 self.assertTrue('title' in i['attributes'])

@@ -248,12 +248,9 @@ class FundingTestCase(BluebottleAdminTestCase):
         )
         BudgetLineFactory.create(activity=new_funding)
         new_funding.bank_account.reviewed = True
-        new_funding.states.approve(save=True)
-        organizer = new_funding.contributions.first()
-        self.assertEqual(organizer.status, u'succeeded')
 
         new_funding.states.reject(save=True)
-        organizer.refresh_from_db()
+        organizer = new_funding.contributions.first()
         self.assertEqual(organizer.status, u'failed')
 
         new_funding.states.restore(save=True)

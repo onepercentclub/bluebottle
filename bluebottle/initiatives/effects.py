@@ -1,7 +1,6 @@
 from django.utils.translation import ugettext as _
 
-from bluebottle.fsm.effects import Effect, TransitionEffect
-from bluebottle.fsm.triggers import ModelChangedTrigger
+from bluebottle.fsm.effects import Effect
 
 
 class ApproveActivities(Effect):
@@ -26,15 +25,3 @@ class RejectActivities(Effect):
 
     def __unicode__(self):
         return _('Reject related activities')
-
-
-class Complete(ModelChangedTrigger):
-    effects = [TransitionEffect('submit')]
-
-    @property
-    def is_valid(self):
-        "There are no errors or missing fields"
-        return (
-            not list(self.instance.errors) and
-            not list(self.instance.required)
-        )

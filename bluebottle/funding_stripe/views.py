@@ -12,7 +12,6 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
-from bluebottle.funding.transitions import PaymentTransitions
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount, ExternalAccount
@@ -159,9 +158,10 @@ class IntentWebHookView(View):
         try:
             if event.type == 'payment_intent.succeeded':
                 payment = self.get_payment(event.data.object.id)
-                if payment.status != PaymentTransitions.values.succeeded:
+                if payment.status != payment.states.succeeded.value:
                     payment.states.succeed()
                     transfer = stripe.Transfer.retrieve(event.data.object.charges.data[0].transfer)
+                    # Fix this if we're going to support currencies that don't hae smaller units, like yen.
                     payment.donation.payout_amount = Money(
                         transfer.amount / 100.0, transfer.currency
                     )
@@ -172,7 +172,7 @@ class IntentWebHookView(View):
 
             elif event.type == 'payment_intent.payment_failed':
                 payment = self.get_payment(event.data.object.id)
-                if payment.status != PaymentTransitions.values.failed:
+                if payment.status != payment.states.failed.value:
                     payment.states.fail(save=True)
 
                 return HttpResponse('Updated payment')
@@ -218,7 +218,7 @@ class SourceWebHookView(View):
 
             if event.type == 'source.failed':
                 payment = self.get_payment_from_source(event.data.object.id)
-                if payment.status != PaymentTransitions.values.failed:
+                if payment.status != payment.states.failed.value:
                     payment.states.fail(save=True)
 
                 return HttpResponse('Updated payment')
@@ -232,14 +232,14 @@ class SourceWebHookView(View):
 
             if event.type == 'charge.failed':
                 payment = self.get_payment_from_charge(event.data.object.id)
-                if payment.status != PaymentTransitions.values.failed:
+                if payment.status != payment.states.failed.value:
                     payment.states.fail(save=True)
 
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.succeeded':
                 payment = self.get_payment_from_charge(event.data.object.id)
-                if payment.status != PaymentTransitions.values.succeeded:
+                if payment.status != payment.states.succeeded.value:
                     transfer = stripe.Transfer.retrieve(event.data.object.transfer)
                     payment.donation.payout_amount = Money(
                         transfer.amount / 100.0, transfer.currency
@@ -263,7 +263,6 @@ class SourceWebHookView(View):
             if event.type == 'charge.dispute.closed' and event.data.object.status == 'lost':
                 payment = self.get_payment_from_charge(event.data.object.charge)
                 payment.states.dispute(save=True)
-
                 return HttpResponse('Updated payment')
 
         except StripePayment.DoesNotExist:

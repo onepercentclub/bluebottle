@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from bluebottle.activities.effects import Complete
+from bluebottle.activities.triggers import Complete
 from bluebottle.assignments.messages import AssignmentDateChanged
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine
@@ -41,8 +41,12 @@ class Started(ModelChangedTrigger):
     def is_valid(self):
         "The event has started"
         return (
-            self.instance.duration and
-            (self.instance.date and self.instance.date < timezone.now()) and
+            self.instance.duration and (
+                self.instance.date and (
+                    self.instance.date < timezone.now() and
+                    self.instance.date + timedelta(hours=self.instance.duration) > timezone.now()
+                )
+            ) and
             self.instance.status not in ('succeeded', 'closed', )
         )
 

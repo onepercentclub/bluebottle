@@ -152,15 +152,16 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
 
     def test_needs_work(self):
-        self.initiative.states.request_changes()
+        self.initiative.states.request_changes(save=True)
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.needs_work.value
         )
 
     def test_resubmit(self):
-        self.initiative.states.request_changes()
+        self.initiative.states.request_changes(save=True)
         self.initiative.title = 'Something else'
         self.initiative.save()
+        self.initiative.states.submit(save=True)
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.submitted.value
         )
@@ -214,17 +215,17 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             event.status, EventStateMachine.rejected.value
         )
 
-    def test_accept(self):
-        self.initiative.states.reject()
-        self.initiative.states.accept(save=True)
+    def test_restore(self):
+        self.initiative.states.reject(save=True)
+        self.initiative.states.restore(save=True)
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.submitted.value
         )
 
-    def test_accept_with_activities(self):
+    def test_restore_with_activities(self):
         event = EventFactory.create(initiative=self.initiative)
-        self.initiative.states.reject()
-        self.initiative.states.accept(save=True)
+        self.initiative.states.reject(save=True)
+        self.initiative.states.restore(save=True)
 
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.submitted.value

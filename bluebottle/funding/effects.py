@@ -43,7 +43,7 @@ class UpdateFundingAmounts(Effect):
 
 
 class SetStartDate(Effect):
-    post_save = True
+    post_save = False
     conditions = []
 
     def execute(self, **kwargs):
@@ -54,7 +54,7 @@ class SetStartDate(Effect):
 
 
 class SetDeadline(Effect):
-    post_save = True
+    post_save = False
     conditions = []
 
     def execute(self, **kwargs):
@@ -72,7 +72,7 @@ class SetDeadline(Effect):
             )
 
     def __unicode__(self):
-        return _('Set start date')
+        return _('Set deadline')
 
 
 class RefundPaymentAtPSP(Effect):
@@ -116,3 +116,18 @@ class RemoveDonationWallpost(Effect):
 
     def __unicode__(self):
         return _('Delete donation wallpost')
+
+
+class SubmitConnectedActivities(Effect):
+    post_save = True
+    conditions = []
+
+    def execute(self, **kwargs):
+        for external_account in self.instance.external_accounts.all():
+            for funding in external_account.funding_set.filter(
+                review_status__in=('draft', 'needs_work')
+            ):
+                funding.states.submit(save=True)
+
+    def __unicode__(self):
+        return _('Submit connected activities')

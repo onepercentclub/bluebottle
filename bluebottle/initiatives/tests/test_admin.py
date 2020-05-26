@@ -77,8 +77,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
     def test_review_initiative_illegal_transition(self):
         self.client.force_login(self.superuser)
         # reject the
-        self.initiative.states.reject()
-        self.initiative.save()
+        self.initiative.states.reject(save=True)
 
         response = self.client.get(self.approve_url)
         self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')

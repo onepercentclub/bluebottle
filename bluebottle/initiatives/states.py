@@ -49,6 +49,7 @@ class ReviewStateMachine(ModelStateMachine):
         conditions=[is_complete, is_valid],
         automatic=False
     )
+
     approve = Transition(
         submitted,
         approved,
@@ -69,18 +70,23 @@ class ReviewStateMachine(ModelStateMachine):
         conditions=[],
         automatic=False,
     )
+
     reject = Transition(
         AllStates(),
         rejected,
         name=_('Reject'),
         automatic=False,
         permission=is_staff,
-        effects=[RejectActivities, NotificationEffect(InitiativeRejectedOwnerMessage)]
+        effects=[
+            RejectActivities,
+            NotificationEffect(InitiativeRejectedOwnerMessage)
+        ]
     )
-    accept = Transition(
+
+    restore = Transition(
         rejected,
         draft,
-        name=_('Accept'),
+        name=_('Restore'),
         automatic=False,
         permission=is_staff,
     )

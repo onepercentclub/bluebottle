@@ -46,7 +46,8 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
             'initiative': self.assignment.initiative_id,
             'description': self.assignment.description,
             'capacity': self.assignment.capacity,
-            'date': str(self.assignment.date),
+            'date_0': str(self.assignment.date.date()),
+            'date_1': str(self.assignment.date.time()),
             'end_date_type': self.assignment.end_date_type,
             'registration_deadline': str(self.assignment.registration_deadline),
             'duration': self.assignment.duration,
@@ -56,6 +57,7 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
             'location': self.assignment.location_id,
 
             '_continue': 'Save and continue editing',
+            'confirm': True,
 
             'notifications-message-content_type-object_id-TOTAL_FORMS': '0',
             'notifications-message-content_type-object_id-INITIAL_FORMS': '0',
@@ -90,3 +92,55 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
         self.assignment.refresh_from_db()
         self.assertEqual(self.assignment.title, 'New title')
         self.assertEqual(Applicant.objects.count(), 1)
+
+    def test_empty_title_assignment_admin(self):
+        self.client.force_login(self.superuser)
+        self.applicants = ApplicantFactory.create_batch(3, activity=self.assignment, time_spent=6,)
+        self.assertEqual(Applicant.objects.count(), 3)
+        url = reverse('admin:assignments_assignment_change', args=(self.assignment.id,))
+
+        data = {
+            'title': '',
+            'slug': self.assignment.slug,
+            'owner': self.assignment.owner_id,
+            'initiative': self.assignment.initiative_id,
+            'description': self.assignment.description,
+            'capacity': self.assignment.capacity,
+            'date_0': str(self.assignment.date.date()),
+            'date_1': str(self.assignment.date.time()),
+            'end_date_type': self.assignment.end_date_type,
+            'registration_deadline': str(self.assignment.registration_deadline),
+            'duration': self.assignment.duration,
+            'preparation': self.assignment.preparation,
+            'expertise': self.assignment.expertise_id,
+            'is_online': self.assignment.is_online,
+            'location': self.assignment.location_id,
+
+            '_continue': 'Save and continue editing',
+            'confirm': 'Yes',
+
+            'notifications-message-content_type-object_id-TOTAL_FORMS': '0',
+            'notifications-message-content_type-object_id-INITIAL_FORMS': '0',
+            'wallposts-wallpost-content_type-object_id-TOTAL_FORMS': '0',
+            'wallposts-wallpost-content_type-object_id-INITIAL_FORMS': '0',
+
+            'contributions-TOTAL_FORMS': '3',
+            'contributions-INITIAL_FORMS': '3',
+            'contributions-0-contribution_ptr': self.applicants[0].contribution_ptr_id,
+            'contributions-0-activity': self.assignment.id,
+            'contributions-0-user': self.applicants[0].user_id,
+            'contributions-0-time_spent': self.applicants[0].time_spent,
+            'contributions-0-DELETE': 'on',
+            'contributions-1-contribution_ptr': self.applicants[1].contribution_ptr_id,
+            'contributions-1-activity': self.assignment.id,
+            'contributions-1-user': self.applicants[1].user_id,
+            'contributions-1-time_spent': self.applicants[1].time_spent,
+            'contributions-2-contribution_ptr': self.applicants[2].contribution_ptr_id,
+            'contributions-2-activity': self.assignment.id,
+            'contributions-2-user': self.applicants[2].user_id,
+            'contributions-2-time_spent': self.applicants[2].time_spent,
+            'contributions-2-DELETE': 'on',
+        }
+
+        response = self.client.post(url, data)
+        self.assertContains(response, '<ul class="errorlist"><li>This field is required.</li></ul>')

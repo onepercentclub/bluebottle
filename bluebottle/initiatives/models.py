@@ -225,7 +225,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         if self.has_organization is False:
             self.organization = None
             self.organization_contact = None
-
         super(Initiative, self).save(**kwargs)
 
 

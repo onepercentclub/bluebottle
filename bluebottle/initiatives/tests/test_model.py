@@ -17,14 +17,14 @@ class InitiativeTestCase(TestCase):
         initiative.states.submit(save=True)
         self.assertEqual(initiative.status, 'submitted')
 
-        initiative.states.approve()
+        initiative.states.approve(save=True)
         self.assertEqual(initiative.status, 'approved')
 
-        initiative.states.reject()
+        initiative.states.reject(save=True)
         self.assertEqual(initiative.status, 'rejected')
 
-        initiative.states.accept()
-        self.assertEqual(initiative.status, 'draft')
+        initiative.states.restore(save=True)
+        self.assertEqual(initiative.status, 'submitted')
 
     def test_activity_manager(self):
         initiative = InitiativeFactory(activity_manager=None)

@@ -1,4 +1,4 @@
-from bluebottle.activities.effects import Complete
+from bluebottle.activities.triggers import Complete
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger
 from bluebottle.funding.models import Funding

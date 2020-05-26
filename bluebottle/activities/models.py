@@ -10,7 +10,6 @@ from polymorphic.models import PolymorphicModel
 
 from bluebottle.files.fields import ImageField
 from bluebottle.initiatives.models import Initiative
-from bluebottle.activities.effects import Complete
 from bluebottle.follow.models import Follow
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -52,8 +51,6 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     messages = GenericRelation('notifications.Message')
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
-
-    triggers = [Complete, ]
 
     @property
     def stats(self):
@@ -153,3 +150,4 @@ class Organizer(Contribution):
 from bluebottle.activities.signals import *  # noqa
 from bluebottle.activities.wallposts import *  # noqa
 from bluebottle.activities.states import *  # noqa
+from bluebottle.activities.triggers import *  # noqa

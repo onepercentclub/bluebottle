@@ -599,13 +599,17 @@ class StatisticsDateTest(BluebottleTestCase):
         other_user = BlueBottleUserFactory.create()
 
         for diff in (10, 5, 1):
-            initiative = InitiativeFactory.create(status='approved', owner=user)
+            initiative = InitiativeFactory.create(owner=user)
+            initiative.states.approve(save=True)
 
             past_date = timezone.now() - datetime.timedelta(days=diff)
             initiative.created = past_date
             initiative.save()
 
-            event = EventFactory(status='succeeded', transition_date=past_date)
+            event = EventFactory(
+                transition_date=past_date,
+                owner=BlueBottleUserFactory.create(),
+                status='succeeded')
 
             ParticipantFactory.create(
                 status='succeeded',
@@ -617,7 +621,6 @@ class StatisticsDateTest(BluebottleTestCase):
 
     def test_all(self):
         stats = Statistics()
-
         self.assertEqual(
             stats.activities_succeeded, 3
         )

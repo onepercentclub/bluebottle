@@ -261,6 +261,7 @@ class AssignmentStatisticsTest(StatisticsTest):
         contribution.states.accept(save=True)
         self.assignment.states.start(save=True)
         self.assignment.states.succeed(save=True)
+        contribution.refresh_from_db()
         contribution.time_spent = 32
         contribution.save()
         self.assertEqual(

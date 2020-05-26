@@ -158,14 +158,10 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
 
     def test_resubmit(self):
-        # FIXME
-        # We have to figure out how we know the difference
-        # between setting a initiative to 'needs work'
-        # and resubmitting it. You don't want the initiative
-        # to auto-resubmit if you save it in admin e.g.
         self.initiative.states.request_changes(save=True)
         self.initiative.title = 'Something else'
         self.initiative.save()
+        self.initiative.states.submit(save=True)
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.submitted.value
         )

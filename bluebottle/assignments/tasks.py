@@ -30,7 +30,7 @@ def check_assignment_registration_deadline():
             ).all()
 
             for assignment in assignments:
-                assignment.registration_deadline_passed()
+                assignment.save()
 
 
 @periodic_task(
@@ -48,7 +48,7 @@ def check_assignment_start_date():
             ).all()
 
             for assignment in assignments:
-                assignment.start_date_passed()
+                assignment.save()
 
 
 @periodic_task(
@@ -66,7 +66,7 @@ def check_assignment_end_date():
             ).all()
 
             for assignment in assignments:
-                assignment.end_date_passed()
+                assignment.save()
 
 
 @periodic_task(

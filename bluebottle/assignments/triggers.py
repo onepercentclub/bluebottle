@@ -41,8 +41,12 @@ class Started(ModelChangedTrigger):
     def is_valid(self):
         "The event has started"
         return (
-            self.instance.duration and
-            (self.instance.date and self.instance.date < timezone.now()) and
+            self.instance.duration and (
+                self.instance.date and (
+                    self.instance.date < timezone.now() and
+                    self.instance.date + timedelta(hours=self.instance.duration) > timezone.now()
+                )
+            ) and
             self.instance.status not in ('succeeded', 'closed', )
         )
 

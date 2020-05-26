@@ -100,7 +100,7 @@ class TriggerMixin(object):
         super(TriggerMixin, self).save(*args, **kwargs)
 
         for effect in effects:
-            effect.do(post_save=True, send_messages=send_messages)
+            effect.do(post_save=True)
 
         self._effects = []
 

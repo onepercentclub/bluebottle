@@ -46,7 +46,8 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
             'initiative': self.assignment.initiative_id,
             'description': self.assignment.description,
             'capacity': self.assignment.capacity,
-            'date': str(self.assignment.date),
+            'date_0': str(self.assignment.date.date()),
+            'date_1': str(self.assignment.date.time()),
             'end_date_type': self.assignment.end_date_type,
             'registration_deadline': str(self.assignment.registration_deadline),
             'duration': self.assignment.duration,
@@ -56,6 +57,7 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
             'location': self.assignment.location_id,
 
             '_continue': 'Save and continue editing',
+            'confirm': True,
 
             'notifications-message-content_type-object_id-TOTAL_FORMS': '0',
             'notifications-message-content_type-object_id-INITIAL_FORMS': '0',

@@ -152,13 +152,13 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
 
     def test_needs_work(self):
-        self.initiative.states.request_changes()
+        self.initiative.states.request_changes(save=True)
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.needs_work.value
         )
 
     def test_resubmit(self):
-        self.initiative.states.request_changes()
+        self.initiative.states.request_changes(save=True)
         self.initiative.title = 'Something else'
         self.initiative.save()
         self.assertEqual(

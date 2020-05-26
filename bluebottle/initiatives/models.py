@@ -14,7 +14,6 @@ from bluebottle.files.fields import ImageField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.follow.models import Follow
 from bluebottle.geo.models import Geolocation, Location
-from bluebottle.initiatives.effects import Complete
 from bluebottle.initiatives.messages import AssignedReviewerMessage
 from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -113,8 +112,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
-
-    triggers = [Complete, ]
 
     class Meta:
         verbose_name = _("Initiative")
@@ -272,3 +269,4 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
 from bluebottle.initiatives.wallposts import *  # noqa
 from bluebottle.initiatives.states import *  # noqa
+from bluebottle.initiatives.triggers import *  # noqa

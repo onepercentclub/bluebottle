@@ -11,11 +11,10 @@ class InitiativeTestCase(TestCase):
         initiative = InitiativeFactory.create(title='Dharma initiative')
         self.assertEqual(initiative.status, 'submitted')
 
-        initiative.states.request_changes()
+        initiative.states.request_changes(save=True)
         self.assertEqual(initiative.status, 'needs_work')
 
-        initiative.save()
-
+        initiative.states.submit(save=True)
         self.assertEqual(initiative.status, 'submitted')
 
         initiative.states.approve()

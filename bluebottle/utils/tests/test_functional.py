@@ -36,8 +36,8 @@ class AdminPermissionsTest(BluebottleTestCase):
 
         self.assertIsInstance(response, HttpResponseForbidden)
 
-    def test_staff_create_project(self):
-        response = self.client.get(reverse('admin:projects_project_add'))
+    def test_staff_create_initiative(self):
+        response = self.client.get(reverse('admin:initiatives_initiative_add'))
 
         self.assertIsInstance(response, TemplateResponse)
 

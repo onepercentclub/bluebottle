@@ -9,6 +9,7 @@ from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
     ExternalAccountFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -94,13 +95,18 @@ class FundingTestCase(BluebottleTestCase):
 class PayoutTestCase(BluebottleTestCase):
 
     def setUp(self):
-        account = StripePayoutAccountFactory.create()
-        bank_account = ExternalAccountFactory.create(connect_account=account)
-        self.funding = FundingFactory(
-            deadline=now() + timedelta(days=10),
-            target=Money(4000, 'EUR'),
-            bank_account=bank_account
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.approve(save=True)
+        self.funding = FundingFactory.create(
+            initiative=self.initiative,
+            duration=30,
+            target=Money(1000, 'EUR')
         )
+        BudgetLineFactory.create(activity=self.funding)
+        payout_account = StripePayoutAccountFactory.create(reviewed=True, status='verified')
+        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
+        self.funding.bank_account = self.bank_account
+        self.funding.save()
         self.funding.states.approve(save=True)
 
         for donation in DonationFactory.create_batch(
@@ -191,7 +197,6 @@ class PayoutTestCase(BluebottleTestCase):
         Payout.generate(self.funding)
         self.assertEqual(self.funding.payouts.count(), 4)
         payout_amounts = [p.total_amount for p in self.funding.payouts.all()]
-        print payout_amounts
         self.assertTrue(Money(1000, 'USD') in payout_amounts)
         self.assertTrue(Money(2000, 'EUR') in payout_amounts)
         self.assertTrue(Money(2250, 'EUR') in payout_amounts)

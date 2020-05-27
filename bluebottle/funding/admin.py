@@ -6,7 +6,6 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin import TabularInline, SimpleListFilter
 from django.db import models
-from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
@@ -17,7 +16,6 @@ from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
-from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.exception import PaymentException
@@ -27,7 +25,7 @@ from bluebottle.funding.models import (
     Funding, Donation, Payment, PaymentProvider,
     BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward,
     FundingPlatformSettings)
-from bluebottle.funding.transitions import DonationTransitions, FundingTransitions
+from bluebottle.funding.states import DonationStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount, LipishaPayment
@@ -92,23 +90,6 @@ class CurrencyFilter(SimpleListFilter):
         ]
 
 
-class FundingStatusFilter(SimpleListFilter):
-
-    title = _('Status')
-    parameter_name = 'status'
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(
-                Q(status=self.value()) |
-                Q(review_status=self.value()))
-        return queryset
-
-    def lookups(self, request, model_admin):
-        return [(k, v) for k, v in ActivityReviewTransitions.values.choices if k != 'closed'] + \
-               [(k, v) for k, v in FundingTransitions.values.choices if k != 'in_review']
-
-
 class PayoutInline(FSMAdminMixin, admin.TabularInline):
 
     model = Payout
@@ -155,7 +136,7 @@ class FundingAdmin(ActivityChildAdmin):
     base_model = Funding
     form = FundingAdminForm
     date_hierarchy = 'transition_date'
-    list_filter = [FundingStatusFilter, CurrencyFilter]
+    list_filter = ['status', CurrencyFilter]
 
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
@@ -169,7 +150,7 @@ class FundingAdmin(ActivityChildAdmin):
     ]
 
     list_display = [
-        '__unicode__', 'initiative', 'created', 'combined_status',
+        '__unicode__', 'initiative', 'created', 'status',
         'highlight', 'deadline', 'percentage_donated', 'percentage_matching'
 
     ]
@@ -231,7 +212,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     def donations_link(self, obj):
         url = reverse('admin:funding_donation_changelist')
-        total = obj.donations.filter(status=DonationTransitions.values.succeeded).count()
+        total = obj.donations.filter(status=DonationStateMachine.succeeded.value).count()
         return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
     donations_link.short_description = _("Donations")
 
@@ -245,12 +226,6 @@ class FundingAdmin(ActivityChildAdmin):
         ]))
 
     payout_links.short_description = _('Payouts')
-
-    def combined_status(self, obj):
-        if obj.review_status != ActivityReviewTransitions.values.approved:
-            return obj.review_status
-        return obj.status
-    combined_status.short_description = _('status')
 
 
 class DonationAdminForm(forms.ModelForm):

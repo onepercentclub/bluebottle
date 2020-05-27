@@ -6,7 +6,7 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 import logging
 
-from bluebottle.funding.transitions import FundingTransitions
+from bluebottle.funding.states import FundingStateMachine
 
 logger = logging.getLogger('bluebottle')
 
@@ -24,7 +24,7 @@ def check_funding_end():
             # Transition funding activities that are over deadline
             activities = Funding.objects.filter(
                 deadline__lte=now(),
-                status__in=[FundingTransitions.values.open]
+                status__in=[FundingStateMachine.open.value]
             ).all()
             for funding in activities:
                 if funding.amount_raised.amount == 0:

@@ -1,6 +1,7 @@
 import datetime
 import json
 from datetime import timedelta
+import dateutil
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
@@ -134,13 +135,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], unicode(activity.pk))
 
-    def test_activity_date(self):
-        before = now() + datetime.timedelta(days=10)
-        after = now() + datetime.timedelta(days=20)
+    def test_activity_date_filter(self):
+        next_month = now() + dateutil.relativedelta.relativedelta(months=1)
+        after = now() + dateutil.relativedelta.relativedelta(months=2)
 
         event = EventFactory.create(
             status='open',
-            start=before
+            start=next_month
         )
         EventFactory.create(
             status='open',
@@ -149,7 +150,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         on_date_assignment = AssignmentFactory.create(
             status='open',
-            date=before,
+            date=next_month,
             end_date_type='on_date'
         )
         AssignmentFactory.create(
@@ -159,14 +160,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         deadline_assignment = AssignmentFactory.create(
             status='open',
-            date=before,
+            date=next_month,
             end_date_type='deadline'
         )
 
         # Feature is not dealing with time. Disabling timezone check for test
         funding = FundingFactory.create(
             status='open',
-            deadline=before
+            deadline=next_month
         )
         FundingFactory.create(
             status='open',
@@ -182,7 +183,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 3)
 
         response = self.client.get(
-            self.url + '?filter[date]={}-{}-{}'.format(now().year, now().month, now().day),
+            self.url + '?filter[date]={}-{}-{}'.format(
+                next_month.year, next_month.month, next_month.day
+            ),
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 

@@ -21,6 +21,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
             activity_types=['assignment']
         )
         self.initiative = InitiativeFactory()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.assignment = AssignmentFactory.create(
@@ -30,13 +31,13 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         mail.outbox = []
 
     def test_initial(self):
-        self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
+        self.assertEqual(self.assignment.status, AssignmentStateMachine.draft.value)
 
         organizer = self.assignment.contributions.get()
         self.assertTrue(
             isinstance(organizer, Organizer)
         )
-        self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
+        self.assertEqual(organizer.status, OrganizerStateMachine.new.value)
 
     def test_incomplete(self):
         self.assignment = AssignmentFactory.create(
@@ -52,15 +53,17 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
             isinstance(organizer, Organizer)
         )
         self.assertEqual(organizer.status, OrganizerStateMachine.new.value)
+        self.assertRaises(
+            TransitionNotPossible,
+            self.assignment.states.submit
+        )
 
     def test_approve(self):
         self.assignment = AssignmentFactory.create(
             owner=self.initiative.owner,
-            title='',
             initiative=self.initiative
         )
-        self.assignment.title = 'Some title'
-        self.assignment.save()
+        self.assignment.states.submit(save=True)
 
         self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
 
@@ -71,6 +74,8 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
 
     def test_close_end_date(self):
+        self.assignment.states.submit(save=True)
+
         self.assignment.date = now() - timedelta(days=1)
         self.assignment.save()
 
@@ -83,6 +88,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertTrue('nobody applied to your task' in mail.outbox[0].body)
 
     def test_reopen_end_date(self):
+        self.assignment.states.submit(save=True)
         self.assignment.date = now() - timedelta(days=1)
         self.assignment.save()
 
@@ -100,9 +106,10 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assignment.states.reject(save=True)
         self.assignment.states.restore(save=True)
 
-        self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
+        self.assertEqual(self.assignment.status, AssignmentStateMachine.draft.value)
 
     def test_fill(self):
+        self.assignment.states.submit(save=True)
         applicants = ApplicantFactory.create_batch(
             self.assignment.capacity, activity=self.assignment
         )
@@ -114,6 +121,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(self.assignment.status, AssignmentStateMachine.full.value)
 
     def test_succeed(self):
+        self.assignment.states.submit(save=True)
         applicants = ApplicantFactory.create_batch(
             self.assignment.capacity, activity=self.assignment
         )
@@ -138,6 +146,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertTrue('Great news!' in mail.outbox[-1].body)
 
     def test_succeed_then_reopen(self):
+        self.assignment.states.submit(save=True)
         applicants = ApplicantFactory.create_batch(
             self.assignment.capacity, activity=self.assignment
         )
@@ -153,6 +162,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
 
     def test_fill_capacity(self):
+        self.assignment.states.submit(save=True)
         applicants = ApplicantFactory.create_batch(
             self.assignment.capacity - 1, activity=self.assignment
         )
@@ -167,6 +177,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(self.assignment.status, AssignmentStateMachine.full.value)
 
     def test_unfill_reject(self):
+        self.assignment.states.submit(save=True)
         applicants = ApplicantFactory.create_batch(
             self.assignment.capacity, activity=self.assignment
         )
@@ -180,6 +191,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
 
     def test_unfill_delete(self):
+        self.assignment.states.submit(save=True)
         applicants = ApplicantFactory.create_batch(
             self.assignment.capacity, activity=self.assignment
         )
@@ -193,6 +205,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
 
     def test_unfill_change_capacity(self):
+        self.assignment.states.submit(save=True)
         applicants = ApplicantFactory.create_batch(
             self.assignment.capacity, activity=self.assignment
         )
@@ -212,6 +225,7 @@ class ApplicantStateMachineTestCase(BluebottleTestCase):
             activity_types=['assignment']
         )
         self.initiative = InitiativeFactory()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.assignment = AssignmentFactory.create(

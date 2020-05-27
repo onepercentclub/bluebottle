@@ -40,6 +40,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.bank_account = ExternalAccountFactory.create()
@@ -249,6 +250,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         StripePaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.bank_account = ExternalAccountFactory.create()

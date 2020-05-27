@@ -84,6 +84,7 @@ class LipishaPaymentInitiateTestCase(BluebottleTestCase):
         self.provider = LipishaPaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.account = LipishaBankAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.account)
@@ -172,6 +173,7 @@ class LipishaPaymentAcknowledgeTestCase(BluebottleTestCase):
         self.provider = LipishaPaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.account = LipishaBankAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.account)

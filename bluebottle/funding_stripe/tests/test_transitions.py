@@ -13,6 +13,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class StripePaymentTransitionsTestCase(BluebottleTestCase):
     def setUp(self):
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(
             initiative=self.initiative,
@@ -23,7 +24,7 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
         payout_account = StripePayoutAccountFactory.create(reviewed=True, status='verified')
         self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
         self.funding.bank_account = self.bank_account
-        self.funding.save()
+        self.funding.states.submit()
         self.funding.states.approve(save=True)
 
         donation = DonationFactory.create(

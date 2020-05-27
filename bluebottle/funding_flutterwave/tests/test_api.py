@@ -40,6 +40,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'NGN'), user=self.user)
@@ -111,6 +112,7 @@ class FlutterwavePayoutAccountTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
         FlutterwavePaymentProviderFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.payout_account = PlainPayoutAccountFactory.create(

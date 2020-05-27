@@ -11,6 +11,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class BaseStripePaymentStateMachineTests(BluebottleTestCase):
     def setUp(self):
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(
             initiative=self.initiative,

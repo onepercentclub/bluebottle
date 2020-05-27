@@ -5,7 +5,6 @@ from mock import patch
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
-from bluebottle.funding.transitions import PaymentTransitions
 from bluebottle.funding_lipisha.models import LipishaPayment, LipishaPaymentProvider
 from bluebottle.funding_lipisha.tests.factories import LipishaPaymentFactory, LipishaPaymentProviderFactory, \
     LipishaBankAccountFactory
@@ -113,7 +112,7 @@ class LipishaPaymentInitiateTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(json.loads(response.content)['transaction_status'], 'SUCCESS')
         payment = LipishaPayment.objects.get()
-        self.assertEqual(payment.status, PaymentTransitions.values.succeeded)
+        self.assertEqual(payment.status, 'succeeded')
 
     @patch('lipisha.Lipisha._make_api_call', return_value=lipisha_failed_response)
     def test_initiate_failed(self, mock_client):
@@ -138,7 +137,7 @@ class LipishaPaymentInitiateTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(json.loads(response.content)['transaction_status'], 'SUCCESS')
         payment = LipishaPayment.objects.get()
-        self.assertEqual(payment.status, PaymentTransitions.values.failed)
+        self.assertEqual(payment.status, 'failed')
 
     @patch('lipisha.Lipisha._make_api_call', return_value=lipisha_success_response)
     def test_acknowledge_wrong_key(self, mock):
@@ -206,7 +205,7 @@ class LipishaPaymentAcknowledgeTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(json.loads(response.content)['transaction_status'], 'SUCCESS')
         self.payment.refresh_from_db()
-        self.assertEqual(self.payment.status, PaymentTransitions.values.succeeded)
+        self.assertEqual(self.payment.status, 'succeeded')
 
     @patch('lipisha.Lipisha._make_api_call', return_value=lipisha_failed_response)
     def test_acknowledge_failed(self, mock_client):
@@ -229,7 +228,7 @@ class LipishaPaymentAcknowledgeTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(json.loads(response.content)['transaction_status'], 'SUCCESS')
         self.payment.refresh_from_db()
-        self.assertEqual(self.payment.status, PaymentTransitions.values.failed)
+        self.assertEqual(self.payment.status, 'failed')
 
     @patch('lipisha.Lipisha._make_api_call', return_value=lipisha_success_response)
     def test_acknowledge_wrong_key(self, mock_client):
@@ -252,7 +251,7 @@ class LipishaPaymentAcknowledgeTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(json.loads(response.content)['transaction_status'], 'FAIL')
         self.payment.refresh_from_db()
-        self.assertEqual(self.payment.status, PaymentTransitions.values.new)
+        self.assertEqual(self.payment.status, 'new')
 
     @patch('lipisha.Lipisha._make_api_call', return_value=lipisha_not_found_response)
     def test_acknowledge_not_found(self, mock_client):
@@ -275,4 +274,4 @@ class LipishaPaymentAcknowledgeTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(json.loads(response.content)['transaction_status'], 'SUCCESS')
         self.payment.refresh_from_db()
-        self.assertEqual(self.payment.status, PaymentTransitions.values.failed)
+        self.assertEqual(self.payment.status, 'failed')

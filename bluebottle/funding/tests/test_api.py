@@ -17,7 +17,6 @@ from bluebottle.funding.tests.factories import (
     BudgetLineFactory
 )
 from bluebottle.funding.models import Donation
-from bluebottle.funding.transitions import DonationTransitions
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_pledge.tests.factories import (
     PledgeBankAccountFactory, PledgePaymentProviderFactory
@@ -789,7 +788,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['status'], DonationTransitions.values.new)
+        self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
         self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
         self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
@@ -819,7 +818,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['status'], DonationTransitions.values.new)
+        self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['anonymous'], True)
         donation = Donation.objects.get(pk=data['data']['id'])
         self.assertTrue(donation.user, self.user)
@@ -972,7 +971,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['status'], DonationTransitions.values.new)
+        self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
         self.assertEqual(len(data['data']['attributes']['client-secret']), 32)
         self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
@@ -1009,7 +1008,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(data['data']['attributes']['status'], DonationTransitions.values.new)
+        self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
         self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
         self.assertTrue('client-secret' not in data['data']['attributes'])

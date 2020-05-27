@@ -24,7 +24,7 @@ def check_funding_end():
             # Transition funding activities that are over deadline
             activities = Funding.objects.filter(
                 deadline__lte=now(),
-                status__in=[FundingTransitions.values.open]
+                status__in=[FundingTransitions.open.value]
             ).all()
             for funding in activities:
                 if funding.amount_raised.amount == 0:

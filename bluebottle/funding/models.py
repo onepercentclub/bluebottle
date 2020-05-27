@@ -20,14 +20,7 @@ from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.files.fields import ImageField, DocumentField
-from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
-from bluebottle.funding.transitions import (
-    FundingTransitions,
-    DonationTransitions,
-    PaymentTransitions,
-    PayoutAccountTransitions,
-    PlainPayoutAccountTransitions,
-    PayoutTransitions)
+from bluebottle.fsm import FSMField, TransitionsMixin
 from bluebottle.funding.validators import KYCPassedValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
@@ -128,7 +121,6 @@ class Funding(Activity):
         blank=True,
         help_text=_('If you enter a duration, leave the deadline field empty for it to be automatically calculated.')
     )
-    transitions = TransitionManager(FundingTransitions, 'status')
 
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     amount_matching = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
@@ -190,13 +182,14 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) converted to the targets currency
         """
+        from states import DonationStateMachine
         cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
             totals = self.donations.filter(
                 status__in=(
-                    DonationTransitions.values.succeeded,
-                    DonationTransitions.values.activity_refunded,
+                    DonationStateMachine.succeeded.value,
+                    DonationStateMachine.activity_refunded.value,
                 )
             ).values(
                 'donation__amount_currency'
@@ -217,13 +210,14 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) without pledges converted to the targets currency
         """
+        from states import DonationStateMachine
         cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
             totals = self.donations.filter(
                 status__in=(
-                    DonationTransitions.values.succeeded,
-                    DonationTransitions.values.activity_refunded,
+                    DonationStateMachine.succeeded.value,
+                    DonationStateMachine.activity_refunded.value,
                 ),
                 donation__payment__pledgepayment__isnull=True
             ).values(
@@ -243,10 +237,11 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) converted to the targets currency
         """
+        from states import DonationStateMachine
         totals = self.donations.filter(
             status__in=(
-                DonationTransitions.values.succeeded,
-                DonationTransitions.values.activity_refunded,
+                DonationStateMachine.succeeded.value,
+                DonationStateMachine.activity_refunded.value,
             ),
             donation__payment__pledgepayment__isnull=False
         ).values(
@@ -278,8 +273,9 @@ class Funding(Activity):
 
     @property
     def stats(self):
+        from states import DonationStateMachine
         stats = self.donations.filter(
-            status=FundingTransitions.values.succeeded
+            status=DonationStateMachine.succeeded.value
         ).aggregate(
             count=Count('user__id')
         )
@@ -323,8 +319,9 @@ class Reward(models.Model):
 
     @property
     def count(self):
+        from states import DonationStateMachine
         return self.donations.filter(
-            status=DonationTransitions.values.succeeded
+            status=DonationStateMachine.succeeded.value
         ).count()
 
     def __unicode__(self):
@@ -392,8 +389,12 @@ class Fundraiser(AnonymizationMixin, models.Model):
 
     @cached_property
     def amount_donated(self):
+        from states import DonationStateMachine
         donations = self.donations.filter(
-            status=[DonationTransitions.values.succeeded]
+            status__in=[
+                DonationStateMachine.succeeded.value,
+                DonationStateMachine.activity_refunded.value,
+            ]
         )
 
         totals = [
@@ -420,9 +421,8 @@ class Payout(TriggerMixin, models.Model):
     currency = models.CharField(max_length=5)
 
     status = FSMField(
-        default=PayoutTransitions.values.new,
+        default='new',
     )
-    transitions = TransitionManager(PayoutTransitions, 'status')
 
     date_approved = models.DateTimeField(_('approved'), null=True, blank=True)
     date_started = models.DateTimeField(_('started'), null=True, blank=True)
@@ -433,8 +433,9 @@ class Payout(TriggerMixin, models.Model):
 
     @classmethod
     def generate(cls, activity):
+        from states import PayoutStateMachine
         for payout in cls.objects.filter(activity=activity):
-            if payout.status == PayoutTransitions.values.new:
+            if payout.status == PayoutStateMachine.new.value:
                 payout.delete()
             elif payout.donations.count() == 0:
                 raise AssertionError('Payout without donations already started!')
@@ -484,8 +485,6 @@ class Donation(Contribution):
     anonymous = models.BooleanField(_('anonymous'), default=False)
     payout = models.ForeignKey('funding.Payout', null=True, blank=True, on_delete=SET_NULL, related_name='donations')
 
-    transitions = TransitionManager(DonationTransitions, 'status')
-
     def save(self, *args, **kwargs):
         if not self.user and not self.client_secret:
             self.client_secret = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
@@ -517,9 +516,7 @@ class Donation(Contribution):
 
 
 class Payment(TriggerMixin, PolymorphicModel):
-    status = FSMField(
-        default=PaymentTransitions.values.new,
-    )
+    status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField()
@@ -552,7 +549,6 @@ class LegacyPayment(Payment):
     method = models.CharField(max_length=100)
     data = models.TextField()
 
-    transitions = TransitionManager(PaymentTransitions, 'status')
     provider = 'legacy'
 
 
@@ -588,9 +584,7 @@ class PaymentMethod(object):
 
 
 class PayoutAccount(TriggerMixin, AnonymizationMixin, PolymorphicModel, TransitionsMixin):
-    status = FSMField(
-        default=PayoutAccountTransitions.values.new
-    )
+    status = models.CharField(max_length=40)
 
     owner = models.ForeignKey(
         'members.Member',
@@ -612,8 +606,6 @@ class PlainPayoutAccount(PayoutAccount):
     document = DocumentField(blank=True, null=True)
 
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
-
-    transitions = TransitionManager(PlainPayoutAccountTransitions, 'status')
 
     class Meta:
         verbose_name = _('Without payment account')

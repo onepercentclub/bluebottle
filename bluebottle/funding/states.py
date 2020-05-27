@@ -14,7 +14,7 @@ from bluebottle.funding.effects import GeneratePayouts, GenerateDonationWallpost
 from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
     FundingPartiallyFundedMessage, FundingClosedMessage, FundingRealisedOwnerMessage, PayoutAccountVerified, \
     PayoutAccountRejected, DonationRefundedDonorMessage
-from bluebottle.funding.models import Funding, Donation, Payout, PayoutAccount
+from bluebottle.funding.models import Funding, Donation, Payout, PlainPayoutAccount
 from bluebottle.notifications.effects import NotificationEffect
 
 
@@ -383,7 +383,6 @@ class PayoutStateMachine(ModelStateMachine):
 
 
 class PayoutAccountStateMachine(ModelStateMachine):
-    model = PayoutAccount
 
     new = State(_('new'), 'new')
     pending = State(_('pending'), 'pending')
@@ -431,3 +430,14 @@ class PayoutAccountStateMachine(ModelStateMachine):
         name=_('Set incomplete'),
         automatic=False
     )
+
+
+class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
+
+    model = PlainPayoutAccount
+
+    def is_reviewed(self):
+        return self.instance.reviewed
+
+    def is_unreviewed(self):
+        return not self.instance.reviewed

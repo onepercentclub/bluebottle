@@ -304,13 +304,6 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     raw_id_fields = ['donation']
     change_form_template = 'admin/funding/payment/change_form.html'
 
-    def get_fields(self, request, obj=None):
-        fields = super(PaymentChildAdmin, self).get_fields(request, obj)
-        # Don't show
-        if not request.user.is_superuser:
-            fields.remove('transitions')
-        return fields
-
     def get_urls(self):
         urls = super(PaymentChildAdmin, self).get_urls()
         process_urls = [
@@ -346,7 +339,7 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         else:
             payment = Payment.objects.get(pk=val)
         try:
-            payment.transitions.request_refund()
+            payment.states.request_refund(save=True)
         except PaymentException as e:
             self.message_user(
                 request,
@@ -437,7 +430,7 @@ class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner',)
     readonly_fields = ['status', 'created']
-    fields = ['owner', 'status', 'created', 'transitions', 'reviewed']
+    fields = ['owner', 'status', 'created', 'reviewed']
     show_in_index = True
 
 
@@ -525,12 +518,6 @@ class PayoutAdmin(FSMAdmin):
                        'date_approved', 'date_started', 'date_completed']
     list_display = ['created', 'activity_link', 'status']
     list_filter = ['status']
-
-    def get_fields(self, request, obj=None):
-        fields = super(PayoutAdmin, self).get_fields(request, obj)
-        # Don't show
-        fields.remove('transitions')
-        return fields
 
     def approve(self, obj):
         if obj.status == 'new':

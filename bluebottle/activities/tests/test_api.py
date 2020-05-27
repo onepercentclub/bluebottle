@@ -1,6 +1,6 @@
-import datetime
 import json
 from datetime import timedelta
+import dateutil
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
@@ -134,13 +134,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['id'], unicode(activity.pk))
 
-    def test_activity_date(self):
-        before = now() + datetime.timedelta(days=10)
-        after = now() + datetime.timedelta(days=20)
+    def test_activity_date_filter(self):
+        next_month = now() + dateutil.relativedelta.relativedelta(months=1)
+        after = now() + dateutil.relativedelta.relativedelta(months=2)
 
         event = EventFactory.create(
             status='open',
-            start=before
+            start=next_month
         )
         EventFactory.create(
             status='open',
@@ -149,7 +149,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         on_date_assignment = AssignmentFactory.create(
             status='open',
-            date=before,
+            date=next_month,
             end_date_type='on_date'
         )
         AssignmentFactory.create(
@@ -159,14 +159,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         deadline_assignment = AssignmentFactory.create(
             status='open',
-            date=before,
+            date=next_month,
             end_date_type='deadline'
         )
 
         # Feature is not dealing with time. Disabling timezone check for test
         funding = FundingFactory.create(
             status='open',
-            deadline=before
+            deadline=next_month
         )
         FundingFactory.create(
             status='open',
@@ -182,7 +182,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 3)
 
         response = self.client.get(
-            self.url + '?filter[date]={}-{}-{}'.format(now().year, now().month, now().day),
+            self.url + '?filter[date]={}-{}-{}'.format(
+                next_month.year, next_month.month, next_month.day
+            ),
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
 
@@ -328,15 +330,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_activity_date(self):
         first = EventFactory.create(
             status='open',
-            start=now() + datetime.timedelta(days=10)
+            start=now() + timedelta(days=10)
         )
         second = EventFactory.create(
             status='open',
-            start=now() + datetime.timedelta(days=9)
+            start=now() + timedelta(days=9)
         )
         third = EventFactory.create(
             status='open',
-            start=now() + datetime.timedelta(days=11)
+            start=now() + timedelta(days=11)
         )
 
         response = self.client.get(
@@ -355,20 +357,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first = EventFactory.create(status='open')
         second = EventFactory.create(status='open')
         ParticipantFactory.create(
-            activity=second, created=now() - datetime.timedelta(days=7)
+            activity=second, created=now() - timedelta(days=7)
         )
 
         third = EventFactory.create(status='open')
         ParticipantFactory.create(
-            activity=third, created=now() - datetime.timedelta(days=5)
+            activity=third, created=now() - timedelta(days=5)
         )
 
         fourth = EventFactory.create(status='open')
         ParticipantFactory.create(
-            activity=fourth, created=now() - datetime.timedelta(days=7)
+            activity=fourth, created=now() - timedelta(days=7)
         )
         ParticipantFactory.create(
-            activity=fourth, created=now() - datetime.timedelta(days=5)
+            activity=fourth, created=now() - timedelta(days=5)
         )
 
         response = self.client.get(
@@ -591,12 +593,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_sort_matching_created(self):
         first = EventFactory.create(
-            status='open', created=now() - datetime.timedelta(days=7)
+            status='open', created=now() - timedelta(days=7)
         )
         second = EventFactory.create(
-            status='open', created=now() - datetime.timedelta(days=5)
+            status='open', created=now() - timedelta(days=5)
         )
-        third = EventFactory.create(status='open', created=now() - datetime.timedelta(days=1))
+        third = EventFactory.create(status='open', created=now() - timedelta(days=1))
 
         response = self.client.get(
             self.url + '?sort=popularity',

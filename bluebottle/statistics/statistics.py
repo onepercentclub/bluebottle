@@ -45,7 +45,7 @@ class Statistics(object):
         task owner or  member.
         """
         contributor_ids = Contribution.objects.filter(
-            self.date_filter('transition_date'),
+            self.date_filter('contribution_date'),
             user_id__isnull=False,
             status__in=('new', 'accepted', 'active', 'succeeded')
         ).order_by(
@@ -70,14 +70,14 @@ class Statistics(object):
 
         # Add anonymous donations
         people_count += len(Contribution.objects.filter(
-            self.date_filter('transition_date'),
+            self.date_filter('contribution_date'),
             user_id=None,
             status='succeeded'
         ))
 
         # Add donations on behalve of another person
         people_count += len(Donation.objects.filter(
-            self.date_filter('transition_date'),
+            self.date_filter('contribution_date'),
             user_id__isnull=False,
             status='succeeded',
             name__isnull=False,
@@ -169,7 +169,7 @@ class Statistics(object):
     def donated_total(self):
         """ Total amount donated to all projects"""
         donations = Donation.objects.filter(
-            self.date_filter('transition_date'),
+            self.date_filter('contribution_date'),
             status='succeeded'
         )
         totals = donations.order_by('amount_currency').values('amount_currency').annotate(total=Sum('amount'))
@@ -186,12 +186,12 @@ class Statistics(object):
     def time_spent(self):
         """ Total amount of time spent on realized tasks """
         participants = Participant.objects.filter(
-            self.date_filter('transition_date'),
+            self.date_filter('contribution_date'),
             status='succeeded'
         ).aggregate(total_time_spent=Sum('time_spent'))['total_time_spent'] or 0
 
         applicants = Applicant.objects.filter(
-            self.date_filter('transition_date'),
+            self.date_filter('contribution_date'),
             status='succeeded'
         ).aggregate(total_time_spent=Sum('time_spent'))['total_time_spent'] or 0
 
@@ -207,7 +207,7 @@ class Statistics(object):
     def event_members(self):
         """ Total number of realized task members """
         participants = Participant.objects.filter(
-            self.date_filter('transition_date'),
+            self.date_filter('contribution_date'),
             status='succeeded'
         )
 
@@ -218,7 +218,7 @@ class Statistics(object):
     def assignment_members(self):
         """ Total number of realized task members """
         applicants = Applicant.objects.filter(
-            self.date_filter('transition_date'),
+            self.date_filter('contribution_date'),
             status='succeeded'
         )
 
@@ -229,7 +229,7 @@ class Statistics(object):
     def donations(self):
         """ Total number of realized task members """
         donations = Donation.objects.filter(
-            self.date_filter('transition_date'),
+            self.date_filter('contribution_date'),
             status='succeeded'
         )
 
@@ -272,7 +272,7 @@ class Statistics(object):
     def pledged_total(self):
         """ Total amount of pledged donations """
         donations = PledgePayment.objects.filter(
-            self.date_filter('donation__transition_date'),
+            self.date_filter('donation__contribution_date'),
             donation__status='succeeded'
         )
         totals = donations.values(

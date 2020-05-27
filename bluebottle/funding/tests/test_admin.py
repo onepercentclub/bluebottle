@@ -20,6 +20,7 @@ class FundingTestCase(BluebottleAdminTestCase):
     def setUp(self):
         super(FundingTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         bank_account = BankAccountFactory.create()
         self.funding = FundingFactory.create(
@@ -54,6 +55,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_funding_admin_refund(self):
+        self.funding.states.submit()
         self.funding.states.approve()
         self.funding.target = Money(100, 'EUR')
         donation = DonationFactory.create(
@@ -81,6 +83,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(payment.status, 'refunded')
 
     def test_funding_admin_add_matching(self):
+        self.funding.states.submit()
         self.funding.states.approve()
         self.funding.target = Money(100, 'EUR')
         donation = DonationFactory.create(
@@ -121,6 +124,7 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
     def setUp(self):
         super(DonationAdminTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         account = StripePayoutAccountFactory.create()
         bank_account = ExternalAccountFactory.create(connect_account=account)

@@ -23,6 +23,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         super(FundingTestCase, self).setUp()
         user = BlueBottleUserFactory.create(first_name='Jean Baptiste')
         self.initiative = InitiativeFactory.create(activity_manager=user)
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(
             owner=user,
@@ -34,24 +35,27 @@ class FundingTestCase(BluebottleAdminTestCase):
         BudgetLineFactory.create(activity=self.funding)
         self.funding.bank_account.reviewed = True
 
-        self.funding.states.approve()
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
         BudgetLineFactory.create_batch(4, activity=self.funding, amount=Money(125, 'EUR'))
         mail.outbox = []
 
     def test_default_status(self):
         self.assertEqual(self.funding.status, self.funding.states.open.value)
         organizer = self.funding.contributions.instance_of(Organizer).get()
-        self.assertEqual(organizer.status, organizer.states.new.value)
+        self.assertEqual(organizer.status, organizer.states.succeeded.value)
         self.assertEqual(organizer.user, self.funding.owner)
 
     def test_review(self):
         funding = FundingFactory.create(initiative=self.initiative)
         self.assertEqual(funding.status, funding.states.draft.value)
+
         BudgetLineFactory.create(activity=funding)
         payout_account = PlainPayoutAccountFactory.create()
         bank_account = BankAccountFactory.create(connect_account=payout_account)
         funding.bank_account = bank_account
-        funding.save()
+
+        funding.states.submit(save=True)
         self.assertEqual(funding.status, funding.states.submitted.value)
         organizer = funding.contributions.instance_of(Organizer).get()
         self.assertEqual(organizer.status, organizer.states.new.value)
@@ -72,6 +76,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         BudgetLineFactory.create(activity=funding)
         funding.bank_account.reviewed = True
 
+        funding.states.submit()
         funding.states.approve(save=True)
 
         self.assertIsInstance(funding.started, datetime)
@@ -257,6 +262,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         organizer.refresh_from_db()
         self.assertEqual(organizer.status, u'new')
 
+        new_funding.states.submit()
         new_funding.states.approve(save=True)
         organizer.refresh_from_db()
         self.assertEqual(organizer.status, u'succeeded')

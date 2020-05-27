@@ -2,6 +2,7 @@ from django.core import mail
 
 from bluebottle.events.tests.factories import EventFactory
 from bluebottle.events.states import EventStateMachine
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -23,7 +24,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
 
     def test_default_status(self):
         self.assertEqual(
-            self.initiative.status, ReviewStateMachine.submitted.value
+            self.initiative.status, ReviewStateMachine.draft.value
         )
 
     def test_create_incomplete(self):
@@ -38,6 +39,11 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.status, ReviewStateMachine.draft.value
         )
 
+        self.assertRaises(
+            TransitionNotPossible,
+            self.initiative.states.submit
+        )
+
     def test_make_complete(self):
         self.initiative = InitiativeFactory.create(
             title='',
@@ -48,6 +54,11 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         self.initiative.title = 'Some title'
         self.initiative.save()
 
+        self.assertEqual(
+            self.initiative.status, ReviewStateMachine.draft.value
+        )
+
+        self.initiative.states.submit()
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.submitted.value
         )
@@ -63,6 +74,11 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.status, ReviewStateMachine.draft.value
         )
 
+        self.assertRaises(
+            TransitionNotPossible,
+            self.initiative.states.submit
+        )
+
     def test_missing_organization_contact(self):
         self.initiative = InitiativeFactory.create(
             has_organization=True,
@@ -73,6 +89,10 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.draft.value
+        )
+        self.assertRaises(
+            TransitionNotPossible,
+            self.initiative.states.submit
         )
 
     def test_missing_organization_contact_name(self):
@@ -87,6 +107,11 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.status, ReviewStateMachine.draft.value
         )
 
+        self.assertRaises(
+            TransitionNotPossible,
+            self.initiative.states.submit
+        )
+
     def test_has_organization(self):
         self.initiative = InitiativeFactory.create(
             has_organization=True,
@@ -95,6 +120,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             organization_contact=OrganizationContactFactory.create()
         )
 
+        self.initiative.states.submit()
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.submitted.value
         )
@@ -107,6 +133,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             organization_contact=OrganizationContactFactory.create(phone=None)
         )
 
+        self.initiative.states.submit()
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.submitted.value
         )
@@ -122,6 +149,10 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.draft.value
         )
+        self.assertRaises(
+            TransitionNotPossible,
+            self.initiative.states.submit
+        )
 
     def test_submit_contact_without_location_has_locations(self):
         LocationFactory.create_batch(5)
@@ -136,6 +167,10 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.draft.value
         )
+        self.assertRaises(
+            TransitionNotPossible,
+            self.initiative.states.submit
+        )
 
     def test_submit_contact_location_has_locations(self):
         locations = LocationFactory.create_batch(5)
@@ -147,26 +182,34 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             organization=None
         )
 
+        self.initiative.states.submit()
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.submitted.value
         )
 
     def test_needs_work(self):
+        self.initiative.states.submit()
         self.initiative.states.request_changes(save=True)
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.needs_work.value
         )
 
     def test_resubmit(self):
+        self.initiative.states.submit()
         self.initiative.states.request_changes(save=True)
         self.initiative.title = 'Something else'
         self.initiative.save()
+        self.assertEqual(
+            self.initiative.status, ReviewStateMachine.needs_work.value
+        )
+
         self.initiative.states.submit(save=True)
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.submitted.value
         )
 
     def test_approve(self):
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.approved.value
@@ -179,6 +222,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
     def test_approve_with_activities(self):
         event = EventFactory.create(initiative=self.initiative)
 
+        self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.approved.value
@@ -219,16 +263,17 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         self.initiative.states.reject(save=True)
         self.initiative.states.restore(save=True)
         self.assertEqual(
-            self.initiative.status, ReviewStateMachine.submitted.value
+            self.initiative.status, ReviewStateMachine.draft.value
         )
 
     def test_restore_with_activities(self):
         event = EventFactory.create(initiative=self.initiative)
+
         self.initiative.states.reject(save=True)
         self.initiative.states.restore(save=True)
 
         self.assertEqual(
-            self.initiative.status, ReviewStateMachine.submitted.value
+            self.initiative.status, ReviewStateMachine.draft.value
         )
 
         event.refresh_from_db()

@@ -9,6 +9,9 @@ class InitiativeTestCase(TestCase):
 
     def test_status_changes(self):
         initiative = InitiativeFactory.create(title='Dharma initiative')
+        self.assertEqual(initiative.status, 'draft')
+
+        initiative.states.submit(save=True)
         self.assertEqual(initiative.status, 'submitted')
 
         initiative.states.request_changes(save=True)
@@ -24,7 +27,7 @@ class InitiativeTestCase(TestCase):
         self.assertEqual(initiative.status, 'rejected')
 
         initiative.states.restore(save=True)
-        self.assertEqual(initiative.status, 'submitted')
+        self.assertEqual(initiative.status, 'draft')
 
     def test_activity_manager(self):
         initiative = InitiativeFactory(activity_manager=None)

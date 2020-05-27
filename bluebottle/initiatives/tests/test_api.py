@@ -249,6 +249,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             owner=self.owner,
             place=GeolocationFactory(position=Point(23.6851594, 43.0579025))
         )
+        self.initiative.states.submit(save=True)
         self.url = reverse('initiative-detail', args=(self.initiative.pk,))
 
     def test_patch(self):
@@ -854,6 +855,8 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
         )
 
     def test_transition_disallowed(self):
+        self.initiative.states.submit(save=True)
+
         data = {
             'data': {
                 'type': 'initiative-transitions',

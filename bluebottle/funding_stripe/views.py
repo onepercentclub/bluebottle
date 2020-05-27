@@ -13,6 +13,7 @@ from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
+from bluebottle.funding.models import Donation
 from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount, ExternalAccount
 )
@@ -194,7 +195,12 @@ class IntentWebHookView(View):
         try:
             return intent.payment
         except StripePayment.DoesNotExist:
-            return StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
+            try:
+                intent.donation.payment.payment_intent = intent
+                intent.donation.payment.save()
+                return intent.payment
+            except Donation.payment.RelatedObjectDoesNotExist:
+                return StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
 
 
 class SourceWebHookView(View):

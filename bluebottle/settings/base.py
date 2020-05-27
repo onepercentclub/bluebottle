@@ -917,6 +917,7 @@ LOCKDOWN_URL_EXCEPTIONS = [
     r'^/api/funding/vitepay/webhook/'
     r'^/api/scim/v2/'
 ]
+
 THUMBNAIL_ENGINE = 'sorl_watermarker.engines.pil_engine.Engine'
 THUMBNAIL_WATERMARK_ALWAYS = False
 

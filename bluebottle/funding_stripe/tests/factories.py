@@ -27,7 +27,7 @@ class StripePaymentIntentFactory(factory.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
-        payment_intent = stripe.PaymentIntent('some intent id')
+        payment_intent = stripe.PaymentIntent(kwargs.get('intent_id', 'some intent id'))
         payment_intent.update({
             'client_secret': 'some client secret',
         })

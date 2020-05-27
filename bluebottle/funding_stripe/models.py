@@ -30,6 +30,9 @@ class PaymentIntent(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             # FIXME: First verify that the funding activity has a valid Stripe account connected.
+
+            statement_descriptor = connection.tenant.name[:22]
+
             account_id = self.donation.activity.bank_account.connect_account.account_id
             intent = stripe.PaymentIntent.create(
                 amount=int(self.donation.amount.amount * 100),
@@ -37,6 +40,8 @@ class PaymentIntent(models.Model):
                 transfer_data={
                     'destination': account_id,
                 },
+                statement_descriptor=statement_descriptor,
+                statement_descriptor_suffix=statement_descriptor[:18],
                 metadata=self.metadata
             )
             self.intent_id = intent.id
@@ -121,6 +126,8 @@ class StripeSourcePayment(Payment):
 
     def do_charge(self):
         account_id = self.donation.activity.bank_account.connect_account.account_id
+
+        statement_descriptor = connection.tenant.name[:22]
         charge = stripe.Charge.create(
             amount=int(self.donation.amount.amount * 100),
             currency=self.donation.amount.currency,
@@ -128,6 +135,7 @@ class StripeSourcePayment(Payment):
             transfer_data={
                 'destination': account_id,
             },
+            statement_descriptor_suffix=statement_descriptor[:18],
             metadata=self.metadata
         )
 

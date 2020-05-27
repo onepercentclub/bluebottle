@@ -45,6 +45,7 @@ class BaseActivitySerializer(ModelSerializer):
             'slug',
             'id',
             'image',
+            'video_url',
             'initiative',
             'owner',
             'title',

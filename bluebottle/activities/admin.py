@@ -94,6 +94,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'title',
         'slug',
         'image',
+        'video_url',
         'initiative',
         'owner',
         'created',

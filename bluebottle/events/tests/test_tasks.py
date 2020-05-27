@@ -35,6 +35,7 @@ class EventTasksTestCase(BluebottleTestCase):
             start=start,
             duration=3
         )
+        event.states.submit(save=True)
 
         ParticipantFactory.create(activity=event)
 
@@ -51,6 +52,7 @@ class EventTasksTestCase(BluebottleTestCase):
             start=start,
             duration=3
         )
+        event.states.submit(save=True)
 
         self.assertEqual(event.status, 'open')
         check_event_start()
@@ -68,6 +70,7 @@ class EventTasksTestCase(BluebottleTestCase):
             start=start,
             duration=1
         )
+        event.states.submit(save=True)
         ParticipantFactory.create_batch(3, activity=event)
 
         tenant = connection.tenant

@@ -59,7 +59,9 @@ class ActivityStateMachine(ModelStateMachine):
     submit = Transition(
         [draft, needs_work],
         submitted,
+        automatic=False,
         name=_('Submit'),
+        conditions=[is_complete, is_valid],
         effects=[
             TransitionEffect('approve', conditions=[initiative_is_approved])
         ]

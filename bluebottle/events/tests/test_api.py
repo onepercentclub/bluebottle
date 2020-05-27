@@ -29,8 +29,9 @@ class EventListAPITestCase(BluebottleTestCase):
         self.url = reverse('event-list')
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory(owner=self.user)
+        self.initiative.states.submit(save=True)
 
-    def test_create_event(self):
+    def test_create_event_complete(self):
         start = now() + timedelta(days=21)
         data = {
             'data': {
@@ -39,6 +40,7 @@ class EventListAPITestCase(BluebottleTestCase):
                     'title': 'Beach clean-up Katwijk',
                     'start': str(start),
                     'duration': 4,
+                    'is_online': True,
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
                     'description': 'We will clean up the beach south of Katwijk'
@@ -57,6 +59,13 @@ class EventListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], 'draft')
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
+        self.assertEqual(
+            [
+                transition['name'] for transition in
+                response.json()['data']['meta']['transitions']
+            ],
+            ['submit', 'delete']
+        )
 
         # Add an event with the same title should NOT return an error
         response = self.client.post(self.url, json.dumps(data), user=self.user)
@@ -479,8 +488,9 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.other_user = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create(activity_manager=self.manager)
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        self.event = EventFactory.create(owner=self.owner, initiative=self.initiative, title='')
+        self.event = EventFactory.create(owner=self.owner, initiative=self.initiative)
 
         self.event_url = reverse('event-detail', args=(self.event.id,))
         self.transition_url = reverse('activity-transition-list')
@@ -513,7 +523,10 @@ class EventTransitionTestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(
             data['data']['meta']['transitions'],
-            [{u'available': True, u'name': u'delete', u'target': u'deleted'}],
+            [
+                {u'available': True, u'name': u'submit', u'target': u'submitted'},
+                {u'available': True, u'name': u'delete', u'target': u'deleted'}
+            ],
         )
 
     def test_delete_by_owner(self):
@@ -580,7 +593,8 @@ class ParticipantListTestCase(BluebottleTestCase):
         self.participant = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create()
-        self.initiative.states.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)
 
         self.participant_url = reverse('participant-list')
@@ -667,7 +681,8 @@ class ParticipantListFilterCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
 
         self.initiative = InitiativeFactory.create()
-        self.initiative.states.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         self.event = EventFactory(
             title='Test Title',
             status='open',
@@ -760,7 +775,8 @@ class ParticipantDetailTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
 
         self.initiative = InitiativeFactory.create()
-        self.initiative.states.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         self.event = EventFactory(
             title='Test Title',
             initiative=self.initiative,
@@ -805,8 +821,8 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.participant_user = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create()
-        self.initiative.states.approve()
-        self.initiative.save()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
 
         self.event = EventFactory.create(owner=self.initiative.owner, initiative=self.initiative)
         self.participant = ParticipantFactory.create(user=self.participant_user, activity=self.event)

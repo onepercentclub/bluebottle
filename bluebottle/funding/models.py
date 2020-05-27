@@ -20,7 +20,7 @@ from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.files.fields import ImageField, DocumentField
-from bluebottle.fsm import FSMField, TransitionsMixin
+from bluebottle.fsm import FSMField
 from bluebottle.funding.validators import KYCPassedValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
@@ -583,7 +583,7 @@ class PaymentMethod(object):
         resource_name = 'payments/payment-methods'
 
 
-class PayoutAccount(TriggerMixin, AnonymizationMixin, PolymorphicModel, TransitionsMixin):
+class PayoutAccount(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     owner = models.ForeignKey(

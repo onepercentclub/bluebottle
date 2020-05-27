@@ -17,6 +17,7 @@ from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
+from bluebottle.fsm.admin import StateMachineAdmin
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter, DonationAdminPledgeFilter
@@ -297,7 +298,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
         return TotalAmountAdminChangeList
 
 
-class PaymentChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
+class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     model = Funding
 
     raw_id_fields = ['donation']
@@ -432,7 +433,7 @@ class PayoutAccountFundingLinkMixin(object):
     funding_links.short_description = _('Funding activities')
 
 
-class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
+class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner',)
     readonly_fields = ['status', 'created']

@@ -608,14 +608,15 @@ class StatisticsDateTest(BluebottleTestCase):
             initiative.save()
 
             event = EventFactory(
+                start=past_date,
+                initiative=initiative,
+                duration=1,
                 transition_date=past_date,
                 owner=BlueBottleUserFactory.create(),
-                status='succeeded')
+            )
 
             ParticipantFactory.create(
-                status='succeeded',
                 activity=event,
-                transition_date=past_date,
                 time_spent=1,
                 user=other_user
             )
@@ -652,8 +653,9 @@ class StatisticsDateTest(BluebottleTestCase):
         self.assertEqual(
             stats.events_succeeded, 2
         )
+
         self.assertEqual(
-            stats.people_involved, 2
+            stats.people_involved, 5
         )
 
     def test_both(self):

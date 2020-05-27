@@ -50,6 +50,7 @@ class Event(Activity):
 
     @property
     def stats(self):
+        from states import ParticipantStateMachine
         contributions = self.contributions.instance_of(Participant)
 
         stats = contributions.filter(
@@ -111,6 +112,7 @@ class Event(Activity):
 
     @property
     def participants(self):
+        from states import ParticipantStateMachine
         return self.contributions.filter(
             status__in=[
                 ParticipantStateMachine.new.value,
@@ -213,5 +215,5 @@ class Participant(Contribution):
         return _('Participant (%s)') % self.user
 
 
-from bluebottle.events.states import ParticipantStateMachine
-from bluebottle.events.effects import *  # noqa
+from bluebottle.events.states import *  # noqa
+from bluebottle.events.triggers import *  # noqa

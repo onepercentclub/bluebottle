@@ -1,7 +1,7 @@
 from datetime import timedelta
 from django.utils import timezone
 
-from bluebottle.activities.effects import Complete
+from bluebottle.activities.triggers import Complete
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, ModelDeletedTrigger

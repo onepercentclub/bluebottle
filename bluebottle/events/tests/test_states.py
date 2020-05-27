@@ -43,9 +43,9 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(organizer.status, OrganizerStateMachine.failed.value)
 
-    def test_accept(self):
+    def test_restore(self):
         self.event.states.reject(save=True)
-        self.event.states.accept(save=True)
+        self.event.states.restore(save=True)
 
         self.assertEqual(self.event.status, EventStateMachine.open.value)
 

@@ -96,9 +96,9 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
 
         self.assertEqual(self.assignment.status, AssignmentStateMachine.rejected.value)
 
-    def test_accept(self):
+    def test_restore(self):
         self.assignment.states.reject(save=True)
-        self.assignment.states.accept(save=True)
+        self.assignment.states.restore(save=True)
 
         self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
 

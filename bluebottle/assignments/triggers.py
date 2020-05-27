@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from bluebottle.activities.effects import Complete
+from bluebottle.activities.triggers import Complete
 from bluebottle.assignments.messages import AssignmentDateChanged
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine

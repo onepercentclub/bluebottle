@@ -47,7 +47,7 @@ class Statistics(object):
         contributor_ids = Contribution.objects.filter(
             self.date_filter('transition_date'),
             user_id__isnull=False,
-            status__in=('new', 'accepted', 'succeeded')
+            status__in=('new', 'accepted', 'active', 'succeeded')
         ).order_by(
             'user__id'
         ).distinct('user').values_list('user_id', flat=True)
@@ -61,7 +61,7 @@ class Statistics(object):
 
         activity_owner_ids = Activity.objects.filter(
             self.date_filter('created'),
-            review_status='approved'
+            status__in=['open', 'full', 'running', 'succeeded', 'partially_funded']
         ).order_by(
             'owner__id'
         ).distinct('owner').values_list('owner_id', flat=True)

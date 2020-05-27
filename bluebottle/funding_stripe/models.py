@@ -15,17 +15,10 @@ from django.utils.translation import ugettext_lazy as _
 from memoize import memoize
 from stripe.error import AuthenticationError, StripeError
 
-from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount, BankAccount)
-from bluebottle.funding.transitions import PayoutAccountTransitions
-from bluebottle.funding_stripe.transitions import (
-    StripePaymentTransitions,
-    StripeSourcePaymentTransitions,
-    StripePayoutAccountTransitions
-)
 from bluebottle.funding_stripe.utils import stripe
 
 
@@ -73,7 +66,6 @@ class PaymentIntent(models.Model):
 
 class StripePayment(Payment):
     payment_intent = models.OneToOneField(PaymentIntent, related_name='payment')
-    transitions = TransitionManager(StripePaymentTransitions, 'status')
 
     provider = 'stripe'
 
@@ -91,9 +83,9 @@ class StripePayment(Payment):
         if len(intent.charges) == 0:
             # No charge. Do we still need to charge?
             self.states.fail()
-        elif intent.charges.data[0].refunded and self.status != StripePaymentTransitions.values.refunded:
+        elif intent.charges.data[0].refunded and self.status != self.states.refunded.value:
             self.states.refund()
-        elif intent.status == 'failed' and self.status != StripePaymentTransitions.values.failed:
+        elif intent.status == 'failed' and self.status != self.states.failed.value:
             self.states.fail()
         elif intent.status == 'succeeded':
             transfer = stripe.Transfer.retrieve(intent.charges.data[0].transfer)
@@ -101,15 +93,13 @@ class StripePayment(Payment):
                 transfer.amount / 100.0, transfer.currency
             )
             self.donation.save()
-            if self.status != StripePaymentTransitions.values.succeeded:
+            if self.status != self.states.succeeded.value:
                 self.states.succeed(save=True)
 
 
 class StripeSourcePayment(Payment):
     source_token = models.CharField(max_length=30)
     charge_token = models.CharField(max_length=30, blank=True, null=True)
-
-    transitions = TransitionManager(StripeSourcePaymentTransitions, 'status')
 
     provider = 'stripe'
 
@@ -278,8 +268,6 @@ class StripePayoutAccount(PayoutAccount):
     document_type = models.CharField(max_length=20, blank=True)
     eventually_due = JSONField(null=True, default=[])
 
-    transitions = TransitionManager(StripePayoutAccountTransitions, 'status')
-
     @property
     def country_spec(self):
         return get_specs(self.country).verification_fields.individual
@@ -390,26 +378,26 @@ class StripePayoutAccount(PayoutAccount):
         if account_details:
             if getattr(account_details.verification, 'document', None) and \
                     account_details.verification.document.details:
-                if self.status != PayoutAccountTransitions.values.rejected:
+                if self.status != self.states.rejected.value:
                     self.states.reject()
             elif getattr(self.account.requirements, 'disabled_reason', None):
-                if self.status != PayoutAccountTransitions.values.incomplete:
+                if self.status != self.states.incomplete.value:
                     self.states.set_incomplete()
             elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
-                if self.status != PayoutAccountTransitions.values.verified:
+                if self.status != self.states.verified.value:
                     self.states.verify()
             elif len(self.missing_fields):
-                if self.status != PayoutAccountTransitions.values.incomplete:
+                if self.status != self.states.incomplete.value:
                     self.states.set_incomplete()
             elif len(self.pending_fields):
-                if self.status != PayoutAccountTransitions.values.pending:
+                if self.status != self.states.pending.value:
                     # Submit to transition to pending
                     self.states.submit()
             else:
-                if self.status != PayoutAccountTransitions.values.incomplete:
+                if self.status != self.states.incomplete.value:
                     self.states.set_incomplete()
         else:
-            if self.status != PayoutAccountTransitions.values.incomplete:
+            if self.status != self.states.incomplete.value:
                 self.states.set_incomplete()
 
         externals = self.account['external_accounts']['data']
@@ -576,3 +564,6 @@ class ExternalAccount(BankAccount):
 
     def __unicode__(self):
         return "Stripe external account {}".format(self.account_id)
+
+
+from states import *  # noqa

@@ -90,10 +90,10 @@ class ActivityStateMachine(ModelStateMachine):
         effects=[RelatedTransitionEffect('organizer', 'fail')]
     )
 
-    accept = Transition(
+    restore = Transition(
         rejected,
         draft,
-        name=_('Accept'),
+        name=_('Restore'),
         automatic=False,
         permission=is_staff,
         effects=[RelatedTransitionEffect('organizer', 'succeed')]

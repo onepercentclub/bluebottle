@@ -200,7 +200,7 @@ class DonationStateMachine(ContributionStateMachine):
     model = Donation
     failed = State(_('failed'), 'failed')
     refunded = State(_('refunded'), 'refunded')
-    activity_refunded = State(_('activity_refunded'), 'activity_refunded')
+    activity_refunded = State(_('activity refunded'), 'activity_refunded')
 
     succeed = Transition(
         [

@@ -1,4 +1,3 @@
-import datetime
 import json
 from datetime import timedelta
 import dateutil
@@ -331,15 +330,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_activity_date(self):
         first = EventFactory.create(
             status='open',
-            start=now() + datetime.timedelta(days=10)
+            start=now() + timedelta(days=10)
         )
         second = EventFactory.create(
             status='open',
-            start=now() + datetime.timedelta(days=9)
+            start=now() + timedelta(days=9)
         )
         third = EventFactory.create(
             status='open',
-            start=now() + datetime.timedelta(days=11)
+            start=now() + timedelta(days=11)
         )
 
         response = self.client.get(
@@ -358,20 +357,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first = EventFactory.create(status='open')
         second = EventFactory.create(status='open')
         ParticipantFactory.create(
-            activity=second, created=now() - datetime.timedelta(days=7)
+            activity=second, created=now() - timedelta(days=7)
         )
 
         third = EventFactory.create(status='open')
         ParticipantFactory.create(
-            activity=third, created=now() - datetime.timedelta(days=5)
+            activity=third, created=now() - timedelta(days=5)
         )
 
         fourth = EventFactory.create(status='open')
         ParticipantFactory.create(
-            activity=fourth, created=now() - datetime.timedelta(days=7)
+            activity=fourth, created=now() - timedelta(days=7)
         )
         ParticipantFactory.create(
-            activity=fourth, created=now() - datetime.timedelta(days=5)
+            activity=fourth, created=now() - timedelta(days=5)
         )
 
         response = self.client.get(
@@ -594,12 +593,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_sort_matching_created(self):
         first = EventFactory.create(
-            status='open', created=now() - datetime.timedelta(days=7)
+            status='open', created=now() - timedelta(days=7)
         )
         second = EventFactory.create(
-            status='open', created=now() - datetime.timedelta(days=5)
+            status='open', created=now() - timedelta(days=5)
         )
-        third = EventFactory.create(status='open', created=now() - datetime.timedelta(days=1))
+        third = EventFactory.create(status='open', created=now() - timedelta(days=1))
 
         response = self.client.get(
             self.url + '?sort=popularity',

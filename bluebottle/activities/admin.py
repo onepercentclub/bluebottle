@@ -82,8 +82,10 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'valid',
         'complete',
         'status',
+        'review_status',
         'transition_date',
-        'stats_data']
+        'stats_data'
+    ]
 
     basic_fields = (
         'title',

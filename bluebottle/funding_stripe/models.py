@@ -152,25 +152,23 @@ class StripeSourcePayment(Payment):
             if not self.charge_token and self.source.status == 'chargeable':
                 self.do_charge()
             if (not self.status == 'failed') and self.source.status == 'failed':
-                self.states.fail()
+                self.states.fail(save=True)
 
             if (not self.status == 'canceled') and self.source.status == 'canceled':
-                self.states.cancel()
+                self.states.cancel(save=True)
 
             if self.charge_token:
                 if (not self.status == 'failed') and self.charge.status == 'failed':
-                    self.states.fail()
+                    self.states.fail(save=True)
 
                 if (not self.status == 'succeeded') and self.charge.status == 'succeeded':
-                    self.states.succeed()
+                    self.states.succeed(save=True)
 
                 if (not self.status == 'refunded') and self.charge.refunded:
-                    self.states.refund()
+                    self.states.refund(save=True)
 
                 if (not self.status == 'disputed') and self.charge.dispute:
-                    self.states.dispute()
-
-            self.save()
+                    self.states.dispute(save=True)
         except StripeError as error:
             raise PaymentException(error.message)
 

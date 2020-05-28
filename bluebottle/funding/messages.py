@@ -66,7 +66,7 @@ class PayoutAccountRejected(TransitionMessage):
 
 
 class PayoutAccountVerified(TransitionMessage):
-    subject = _(u'Your identity is verified')
+    subject = _(u'Your identity has been verified')
     template = 'messages/payout_account_verified'
 
     def get_recipients(self):

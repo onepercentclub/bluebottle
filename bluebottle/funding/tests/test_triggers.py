@@ -59,3 +59,15 @@ class FundingTriggerTests(BluebottleTestCase):
         self.funding.save()
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
+
+
+class PlainPayoutAccountTriggerTests(BluebottleTestCase):
+
+    def setUp(self):
+        self.account = PlainPayoutAccountFactory.create()
+
+    def test_reviewed(self):
+        self.assertEqual(self.account.status, 'new')
+        self.account.reviewed = True
+        self.account.save()
+        self.assertEqual(self.account.status, 'verified')

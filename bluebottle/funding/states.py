@@ -8,9 +8,11 @@ from bluebottle.fsm.effects import (
     RelatedTransitionEffect
 )
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState
-from bluebottle.funding.effects import GeneratePayouts, GenerateDonationWallpost, \
-    RemoveDonationWallpost, UpdateFundingAmounts, RefundPaymentAtPSP, SetStartDate, SetDeadline, DeletePayouts, \
-    SubmitConnectedActivities
+from bluebottle.funding.effects import GeneratePayoutsEffect, GenerateDonationWallpostEffect, \
+    RemoveDonationWallpostEffect, UpdateFundingAmountsEffect, ExecuteRefundEffect, SetDeadlineEffect, \
+    DeletePayoutsEffect, \
+    SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect, \
+    ClearPayoutDatesEffect
 from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
     FundingPartiallyFundedMessage, FundingClosedMessage, FundingRealisedOwnerMessage, PayoutAccountVerified, \
     PayoutAccountRejected, DonationRefundedDonorMessage
@@ -77,8 +79,8 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         effects=[
             RelatedTransitionEffect('organizer', 'succeed'),
-            SetStartDate,
-            SetDeadline,
+            SetDateEffect('started'),
+            SetDeadlineEffect,
             TransitionEffect(
                 'close',
                 conditions=[should_finish]
@@ -140,7 +142,7 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Extend'),
         automatic=True,
         effects=[
-            DeletePayouts
+            DeletePayoutsEffect
         ]
     )
 
@@ -150,7 +152,7 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Succeed'),
         automatic=True,
         effects=[
-            GeneratePayouts,
+            GeneratePayoutsEffect,
             NotificationEffect(FundingRealisedOwnerMessage)
         ]
     )
@@ -167,7 +169,7 @@ class FundingStateMachine(ActivityStateMachine):
             target_reached
         ],
         effects=[
-            GeneratePayouts
+            GeneratePayoutsEffect
         ]
     )
 
@@ -177,7 +179,7 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Partial'),
         automatic=True,
         effects=[
-            GeneratePayouts,
+            GeneratePayoutsEffect,
             NotificationEffect(FundingPartiallyFundedMessage)
         ]
     )
@@ -189,7 +191,7 @@ class FundingStateMachine(ActivityStateMachine):
         automatic=False,
         effects=[
             RelatedTransitionEffect('donations', 'activity_refund'),
-            DeletePayouts
+            DeletePayoutsEffect
         ]
     )
 
@@ -211,9 +213,9 @@ class DonationStateMachine(ContributionStateMachine):
         effects=[
             NotificationEffect(DonationSuccessActivityManagerMessage),
             NotificationEffect(DonationSuccessDonorMessage),
-            GenerateDonationWallpost,
+            GenerateDonationWallpostEffect,
             FollowActivityEffect,
-            UpdateFundingAmounts
+            UpdateFundingAmountsEffect
         ]
     )
 
@@ -226,8 +228,8 @@ class DonationStateMachine(ContributionStateMachine):
         name=_('Fail'),
         automatic=True,
         effects=[
-            RemoveDonationWallpost,
-            UpdateFundingAmounts
+            RemoveDonationWallpostEffect,
+            UpdateFundingAmountsEffect
         ]
     )
 
@@ -238,9 +240,9 @@ class DonationStateMachine(ContributionStateMachine):
         automatic=True,
         effects=[
             RelatedTransitionEffect('payment', 'request_refund'),
-            RemoveDonationWallpost,
+            RemoveDonationWallpostEffect,
             UnFollowActivityEffect,
-            UpdateFundingAmounts
+            UpdateFundingAmountsEffect
         ]
     )
 
@@ -310,7 +312,7 @@ class BasePaymentStateMachine(ModelStateMachine):
         name=_('Request refund'),
         automatic=True,
         effects=[
-            RefundPaymentAtPSP
+            ExecuteRefundEffect
         ]
     )
 
@@ -336,8 +338,7 @@ class PayoutStateMachine(ModelStateMachine):
     model = Payout
 
     new = State(_('new'), 'new')
-    approved = State(_('approve'), 'approve')
-    scheduled = State(_('scheduled'), 'scheduled')
+    approved = State(_('approved'), 'approved')
     started = State(_('started'), 'started')
     succeeded = State(_('succeeded'), 'succeeded')
     failed = State(_('failed'), 'failed')
@@ -348,36 +349,52 @@ class PayoutStateMachine(ModelStateMachine):
         new,
         approved,
         name=_('Approve'),
-        automatic=False
+        automatic=False,
+        effects=[
+            SubmitPayoutEffect,
+            SetDateEffect('date_approved')
+        ]
     )
 
     start = Transition(
-        new,
+        AllStates(),
         started,
         name=_('Start'),
-        automatic=True
+        automatic=True,
+        effects=[
+            SetDateEffect('date_started')
+        ]
     )
 
     reset = Transition(
-        [approved, scheduled, started, succeeded, failed],
+        AllStates(),
         new,
         name=_('Reset'),
-        automatic=True
+        automatic=True,
+        effects=[
+            ClearPayoutDatesEffect
+        ]
     )
 
     succeed = Transition(
-        [approved, scheduled, started, failed],
+        AllStates(),
         succeeded,
         name=_('Succeed'),
-        automatic=True
+        automatic=True,
+        effects=[
+            SetDateEffect('date_completed')
+        ]
     )
 
-    cancel = Transition(
-        [new, approved],
-        failed,
-        name=_('Cancel'),
-        automatic=True
-    )
+    # cancel = Transition(
+    #     AllStates(),
+    #     failed,
+    #     name=_('Cancel'),
+    #     automatic=True,
+    #     effects=[
+    #         SetDateEffect('date_completed')
+    #     ]
+    # )
 
 
 class PayoutAccountStateMachine(ModelStateMachine):
@@ -391,12 +408,18 @@ class PayoutAccountStateMachine(ModelStateMachine):
     def can_approve(self, user):
         return user.is_staff
 
+    def is_reviewed(self):
+        return self.instance.reviewed
+
+    def is_unreviewed(self):
+        return not self.instance.reviewed
+
     initiate = Transition(EmptyState(), new)
 
     submit = Transition(
         [new, incomplete],
         pending,
-        name=_('submit'),
+        name=_('Submit'),
         automatic=False
     )
 
@@ -408,7 +431,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
         permission=can_approve,
         effects=[
             NotificationEffect(PayoutAccountVerified),
-            SubmitConnectedActivities
+            SubmitConnectedActivitiesEffect
         ]
     )
 
@@ -423,7 +446,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
     set_incomplete = Transition(
-        [new, rejected, verified],
+        [new, pending, rejected, verified],
         incomplete,
         name=_('Set incomplete'),
         automatic=False
@@ -434,8 +457,34 @@ class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
 
     model = PlainPayoutAccount
 
-    def is_reviewed(self):
-        return self.instance.reviewed
+    verify = Transition(
+        [
+            PayoutAccountStateMachine.new,
+            PayoutAccountStateMachine.incomplete,
+            PayoutAccountStateMachine.rejected
+        ],
+        PayoutAccountStateMachine.verified,
+        name=_('Verify'),
+        automatic=False,
+        permission=PayoutAccountStateMachine.can_approve,
+        effects=[
+            NotificationEffect(PayoutAccountVerified),
+            SubmitConnectedActivitiesEffect,
+            DeleteDocumentEffect
+        ]
+    )
 
-    def is_unreviewed(self):
-        return not self.instance.reviewed
+    reject = Transition(
+        [
+            PayoutAccountStateMachine.new,
+            PayoutAccountStateMachine.incomplete,
+            PayoutAccountStateMachine.verified
+        ],
+        PayoutAccountStateMachine.rejected,
+        name=_('Reject'),
+        automatic=False,
+        effects=[
+            NotificationEffect(PayoutAccountRejected),
+            DeleteDocumentEffect
+        ]
+    )

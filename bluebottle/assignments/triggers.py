@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from bluebottle.activities.triggers import Complete
 from bluebottle.assignments.messages import AssignmentDateChanged
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine
@@ -89,7 +88,7 @@ class Finished(ModelChangedTrigger):
     ]
 
 
-Assignment.triggers = [Complete, CapacityChanged, DateChanged, Started, Finished]
+Assignment.triggers = [CapacityChanged, DateChanged, Started, Finished]
 
 
 class TimeSpentChanged(ModelChangedTrigger):

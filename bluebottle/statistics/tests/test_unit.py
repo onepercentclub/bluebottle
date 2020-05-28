@@ -59,6 +59,7 @@ class StatisticsTest(BluebottleTestCase):
         self.initiative = InitiativeFactory.create(
             owner=self.some_user
         )
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
 
@@ -71,6 +72,7 @@ class EventStatisticsTest(StatisticsTest):
             capacity=10,
             duration=0.1
         )
+        self.event.states.submit(save=True)
 
     def test_open(self):
         self.assertEqual(
@@ -205,7 +207,7 @@ class AssignmentStatisticsTest(StatisticsTest):
             date=(timezone.now() + datetime.timedelta(hours=48)),
             duration=0.1
         )
-        self.assignment.refresh_from_db()
+        self.assignment.states.submit(save=True)
 
     def test_open(self):
         self.assertEqual(
@@ -346,6 +348,7 @@ class FundingStatisticsTest(StatisticsTest):
             target=Money(100, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
+        self.funding.states.submit()
         self.funding.states.approve(save=True)
 
     def test_open(self):
@@ -601,6 +604,7 @@ class StatisticsDateTest(BluebottleTestCase):
 
         for diff in (10, 5, 1):
             initiative = InitiativeFactory.create(owner=user)
+            initiative.states.submit()
             initiative.states.approve(save=True)
 
             past_date = timezone.now() - datetime.timedelta(days=diff)

@@ -51,17 +51,15 @@ class FundingStateMachine(ActivityStateMachine):
         return user.is_staff
 
     submit = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work
-        ],
+        [ActivityStateMachine.draft, ActivityStateMachine.needs_work],
         ActivityStateMachine.submitted,
+        automatic=False,
         name=_('Submit'),
         conditions=[
             ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_submitted
         ],
-        automatic=False
     )
 
     approve = Transition(

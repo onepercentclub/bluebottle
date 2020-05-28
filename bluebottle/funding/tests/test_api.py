@@ -47,6 +47,7 @@ class BudgetLineListTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
@@ -130,6 +131,7 @@ class BudgetLineDetailTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
@@ -199,6 +201,7 @@ class RewardListTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
@@ -287,6 +290,7 @@ class RewardDetailTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
@@ -362,6 +366,7 @@ class FundingDetailTestCase(BluebottleTestCase):
             owner=self.user,
             place=self.geolocation
         )
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
@@ -612,6 +617,7 @@ class FundraiserListTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
@@ -757,6 +763,7 @@ class DonationTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
@@ -1396,6 +1403,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.initiative = InitiativeFactory.create(
             place=self.geolocation
         )
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(
@@ -1418,7 +1426,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             'bluebottle.funding_stripe.models.ExternalAccount.verified', new_callable=mock.PropertyMock
         ) as verified:
             verified.return_value = True
-
+            self.funding.states.submit()
             self.funding.states.approve()
 
         for i in range(5):
@@ -1503,9 +1511,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
             mobile_number='12345',
             reviewed=True
         )
-        self.funding.save()
-
-        self.funding.states.approve()
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
 
         for i in range(5):
             donation = DonationFactory.create(
@@ -1546,9 +1553,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.bank_account = LipishaBankAccountFactory.create(
             reviewed=True
         )
-        self.funding.save()
-
-        self.funding.states.approve()
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
 
         for i in range(5):
             donation = DonationFactory.create(
@@ -1588,9 +1594,9 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.bank_account = FlutterwaveBankAccountFactory.create(
             reviewed=True
         )
-        self.funding.save()
 
-        self.funding.states.approve()
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
 
         for i in range(5):
             donation = DonationFactory.create(
@@ -1630,9 +1636,9 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.bank_account = PledgeBankAccountFactory.create(
             reviewed=True
         )
-        self.funding.save()
 
-        self.funding.states.approve()
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
 
         for i in range(5):
             donation = DonationFactory.create(
@@ -1673,9 +1679,9 @@ class PayoutDetailTestCase(BluebottleTestCase):
             reviewed=True
         )
         BudgetLineFactory.create(activity=self.funding)
-        self.funding.save()
 
-        self.funding.states.approve()
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
 
         for i in range(5):
             donation = DonationFactory.create(

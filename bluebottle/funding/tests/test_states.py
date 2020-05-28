@@ -19,6 +19,7 @@ from bluebottle.wallposts.models import Wallpost
 class FundingStateMachineTests(BluebottleTestCase):
     def setUp(self):
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(
             initiative=self.initiative,
@@ -31,6 +32,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.save()
 
     def test_submit(self):
+        self.funding.states.submit()
         self.assertEqual(self.funding.status, 'submitted')
 
     def test_submit_incomplete(self):
@@ -43,6 +45,23 @@ class FundingStateMachineTests(BluebottleTestCase):
         funding.save()
         with self.assertRaisesMessage(TransitionNotPossible, 'Conditions not met for transition'):
             funding.states.submit()
+
+    def test_submit_initiative_not_submitted(self):
+        funding = FundingFactory.create(
+            target=Money(1000, 'EUR'),
+            initiative=InitiativeFactory.create()
+        )
+        BudgetLineFactory.create(activity=funding)
+        funding.bank_account = self.bank_account
+        funding.save()
+
+        with self.assertRaisesMessage(TransitionNotPossible, 'Conditions not met for transition'):
+            funding.states.submit()
+
+        funding.initiative.states.submit(save=True)
+        funding.refresh_from_db()
+
+        self.assertEqual(funding.status, 'submitted')
 
     def test_submit_invalid(self):
         funding = FundingFactory.create(
@@ -59,15 +78,18 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.funding.status, 'needs_work')
 
     def test_approve(self):
+        self.funding.states.submit()
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, 'open')
 
     def test_approve_organizer_succeed(self):
+        self.funding.states.submit()
         self.funding.states.approve(save=True)
         organizer = self.funding.contributions.get()
         self.assertEqual(organizer.status, 'succeeded')
 
     def test_approve_set_start_dat(self):
+        self.funding.states.submit()
         self.funding.states.approve(save=True)
         organizer = self.funding.contributions.get()
         self.assertEqual(organizer.status, 'succeeded')
@@ -84,16 +106,20 @@ class FundingStateMachineTests(BluebottleTestCase):
         bank_account = BankAccountFactory.create(connect_account=payout_account)
         self.funding.bank_account = bank_account
         self.funding.save()
+
+        self.funding.states.submit()
         self.funding.states.approve(save=True)
         next_week = now() + timedelta(days=7)
         self.assertEqual(self.funding.deadline.date(), next_week.date())
 
     def test_approve_should_close(self):
         self.funding.deadline = now() - timedelta(days=5)
+        self.funding.states.submit()
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, 'closed')
 
     def _prepare_extend(self):
+        self.funding.states.submit()
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, 'open')
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
@@ -133,6 +159,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.assertEqual(organizer.status, 'failed')
 
     def _prepare_succeeded(self):
+        self.funding.states.submit()
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, 'open')
         donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
@@ -163,6 +190,7 @@ class FundingStateMachineTests(BluebottleTestCase):
 
     def test_close(self):
         mail.outbox = []
+        self.funding.states.submit()
         self.funding.states.approve(save=True)
         self.funding.states.close(save=True)
         self.assertEqual(self.funding.status, 'closed')
@@ -186,6 +214,7 @@ class DonationStateMachineTests(BluebottleTestCase):
 
     def setUp(self):
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(
             initiative=self.initiative,
@@ -196,6 +225,7 @@ class DonationStateMachineTests(BluebottleTestCase):
         bank_account = BankAccountFactory.create(connect_account=payout_account)
         self.funding.bank_account = bank_account
         self.funding.save()
+        self.funding.states.submit()
         self.funding.states.approve(save=True)
 
     def test_initiate(self):
@@ -324,6 +354,7 @@ class BasePaymentStateMachineTests(BluebottleTestCase):
 
     def setUp(self):
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(
             initiative=self.initiative,
@@ -333,7 +364,8 @@ class BasePaymentStateMachineTests(BluebottleTestCase):
         payout_account = StripePayoutAccountFactory.create()
         bank_account = BankAccountFactory.create(connect_account=payout_account)
         self.funding.bank_account = bank_account
-        self.funding.save()
+
+        self.funding.states.submit()
         self.funding.states.approve(save=True)
 
     def test_initiate(self):

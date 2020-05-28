@@ -1,7 +1,10 @@
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition, AllStates
-from bluebottle.initiatives.effects import ApproveActivities, RejectActivities
+from bluebottle.fsm.effects import RelatedTransitionEffect
+from bluebottle.initiatives.effects import (
+    ApproveActivities, RejectActivities
+)
 from bluebottle.initiatives.messages import InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage
 
 from bluebottle.initiatives.models import Initiative
@@ -47,7 +50,10 @@ class ReviewStateMachine(ModelStateMachine):
         submitted,
         name=_('Submit'),
         conditions=[is_complete, is_valid],
-        automatic=False
+        automatic=False,
+        effects=[
+            RelatedTransitionEffect('activities', 'submit')
+        ]
     )
 
     approve = Transition(

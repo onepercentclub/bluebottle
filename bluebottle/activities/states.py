@@ -40,6 +40,9 @@ class ActivityStateMachine(ModelStateMachine):
     def initiative_is_approved(self):
         return self.instance.initiative.status == 'approved'
 
+    def initiative_is_submitted(self):
+        return self.instance.initiative.status in ('submitted', 'approved')
+
     def initiative_is_not_approved(self):
         return not self.initiative_is_approved()
 
@@ -59,7 +62,9 @@ class ActivityStateMachine(ModelStateMachine):
     submit = Transition(
         [draft, needs_work],
         submitted,
+        automatic=False,
         name=_('Submit'),
+        conditions=[is_complete, is_valid, initiative_is_submitted],
         effects=[
             TransitionEffect('approve', conditions=[initiative_is_approved])
         ]

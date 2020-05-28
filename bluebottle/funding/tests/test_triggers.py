@@ -14,6 +14,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class FundingTriggerTests(BluebottleTestCase):
     def setUp(self):
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(
             initiative=self.initiative,
@@ -23,7 +24,7 @@ class FundingTriggerTests(BluebottleTestCase):
         payout_account = PlainPayoutAccountFactory.create()
         bank_account = BankAccountFactory.create(connect_account=payout_account)
         self.funding.bank_account = bank_account
-        self.funding.save()
+        self.funding.states.submit(save=True)
 
     def test_trigger_matching(self):
         self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)

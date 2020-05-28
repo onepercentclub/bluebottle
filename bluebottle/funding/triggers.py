@@ -1,4 +1,3 @@
-from bluebottle.activities.triggers import Complete
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger
 from bluebottle.funding.models import Funding, PlainPayoutAccount
@@ -65,7 +64,7 @@ class MatchingAmountChanged(AmountChanged):
     field = 'amount_matching'
 
 
-Funding.triggers = [Complete, DeadlineChanged, MatchingAmountChanged, AmountChanged]
+Funding.triggers = [DeadlineChanged, MatchingAmountChanged, AmountChanged]
 
 
 class AccountReviewed(ModelChangedTrigger):

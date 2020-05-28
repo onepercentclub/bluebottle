@@ -17,7 +17,7 @@ from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.fsm.admin import StateMachineAdmin
+from bluebottle.fsm.admin import StateMachineAdmin, StateMachineAdminMixin
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter, DonationAdminPledgeFilter
@@ -34,8 +34,8 @@ from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvide
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
-from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action, FSMAdminMixin, \
-    BasePlatformSettingsAdmin
+from bluebottle.notifications.admin import MessageAdminInline
+from bluebottle.utils.admin import TotalAmountAdminChangeList, export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.wallposts.admin import DonationWallpostInline
 
 logger = logging.getLogger(__name__)
@@ -91,13 +91,12 @@ class CurrencyFilter(SimpleListFilter):
         ]
 
 
-class PayoutInline(FSMAdminMixin, admin.TabularInline):
+class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
     model = Payout
     readonly_fields = [
         'payout_link', 'total_amount', 'provider', 'currency',
-        'date_approved', 'date_started', 'date_completed',
-        'approve'
+        'date_approved', 'date_started', 'date_completed'
     ]
 
     fields = readonly_fields
@@ -110,13 +109,6 @@ class PayoutInline(FSMAdminMixin, admin.TabularInline):
     def payout_link(self, obj):
         url = reverse('admin:funding_payout_change', args=(obj.id, ))
         return format_html('<a href="{}">{}</a>', url, obj)
-
-    def approve(self, obj):
-        if obj.status == 'new':
-            url = reverse('admin:funding_payout_transition', args=(obj.id, 'transitions', 'approve'))
-            return format_html('<a href="{}" class="button_select_option button">{}</a>', url, _('Approve'))
-        return obj.status
-    approve.short_description = _('Status')
 
 
 class FundingAdminForm(StateMachineModelForm):
@@ -131,8 +123,7 @@ class FundingAdminForm(StateMachineModelForm):
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    # inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline, )
-    inlines = (BudgetLineInline, )
+    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline)
 
     base_model = Funding
     form = FundingAdminForm
@@ -510,7 +501,7 @@ class DonationInline(PaymentLinkMixin, admin.TabularInline):
 
 
 @admin.register(Payout)
-class PayoutAdmin(FSMAdmin):
+class PayoutAdmin(StateMachineAdmin):
     model = Payout
     inlines = [DonationInline]
     raw_id_fields = ('activity', )

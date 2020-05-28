@@ -6,10 +6,11 @@ from django.utils.translation import ugettext as _
 
 from bluebottle.fsm.effects import Effect
 from bluebottle.funding.models import Payout
+from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.wallposts.models import SystemWallpost
 
 
-class GeneratePayouts(Effect):
+class GeneratePayoutsEffect(Effect):
     post_save = True
     conditions = []
 
@@ -20,7 +21,7 @@ class GeneratePayouts(Effect):
         return _('Generate payouts')
 
 
-class DeletePayouts(Effect):
+class DeletePayoutsEffect(Effect):
     post_save = True
     conditions = []
 
@@ -31,7 +32,7 @@ class DeletePayouts(Effect):
         return _('Delete related payouts')
 
 
-class UpdateFundingAmounts(Effect):
+class UpdateFundingAmountsEffect(Effect):
     post_save = True
     conditions = []
 
@@ -42,18 +43,7 @@ class UpdateFundingAmounts(Effect):
         return _('Update funding amounts')
 
 
-class SetStartDate(Effect):
-    post_save = False
-    conditions = []
-
-    def execute(self, **kwargs):
-        self.instance.started = timezone.now()
-
-    def __unicode__(self):
-        return _('Set start date')
-
-
-class SetDeadline(Effect):
+class SetDeadlineEffect(Effect):
     post_save = False
     conditions = []
 
@@ -72,10 +62,10 @@ class SetDeadline(Effect):
             )
 
     def __unicode__(self):
-        return _('Set deadline')
+        return _('Set deadline (if duration is set)')
 
 
-class RefundPaymentAtPSP(Effect):
+class ExecuteRefundEffect(Effect):
     post_save = True
     conditions = []
 
@@ -86,7 +76,7 @@ class RefundPaymentAtPSP(Effect):
         return _('Refund payment at PSP')
 
 
-class GenerateDonationWallpost(Effect):
+class GenerateDonationWallpostEffect(Effect):
     post_save = True
     conditions = []
 
@@ -104,7 +94,7 @@ class GenerateDonationWallpost(Effect):
         return _('Generate donation wallpost')
 
 
-class RemoveDonationWallpost(Effect):
+class RemoveDonationWallpostEffect(Effect):
     post_save = True
     conditions = []
 
@@ -118,16 +108,76 @@ class RemoveDonationWallpost(Effect):
         return _('Delete donation wallpost')
 
 
-class SubmitConnectedActivities(Effect):
+class SubmitConnectedActivitiesEffect(Effect):
     post_save = True
     conditions = []
 
     def execute(self, **kwargs):
         for external_account in self.instance.external_accounts.all():
             for funding in external_account.funding_set.filter(
-                review_status__in=('draft', 'needs_work')
+                    review_status__in=('draft', 'needs_work')
             ):
                 funding.states.submit(save=True)
 
     def __unicode__(self):
         return _('Submit connected activities')
+
+
+class DeleteDocumentEffect(Effect):
+    post_save = False
+    conditions = []
+
+    def execute(self, **kwargs):
+        if self.instance.document:
+            self.instance.document.delete()
+            self.instance.document = None
+
+    def __unicode__(self):
+        return _('Delete uploaded document')
+
+
+class SubmitPayoutEffect(Effect):
+    post_save = False
+    conditions = []
+
+    def execute(self, **kwargs):
+        adapter = DoradoPayoutAdapter(self.instance)
+        adapter.trigger_payout()
+
+    def __unicode__(self):
+        return _('Trigger payout')
+
+
+class BaseSetDateEffect(Effect):
+    post_save = False
+    conditions = []
+    field = 'date'
+
+    def execute(self, **kwargs):
+        setattr(self.instance, self.field, timezone.now())
+
+    def __unicode__(self):
+        field = self.instance._meta.get_field(self.field)
+        return _('Set {} to current date').format(field.verbose_name)
+
+
+def SetDateEffect(_field):
+
+    class _SetDateEffect(BaseSetDateEffect):
+        field = _field
+
+    return _SetDateEffect
+
+
+class ClearPayoutDatesEffect(Effect):
+    post_save = False
+    conditions = []
+    field = 'date'
+
+    def execute(self, **kwargs):
+        self.instance.date_approved = None
+        self.instance.date_started = None
+        self.instance.date_completed = None
+
+    def __unicode__(self):
+        return _('Set date')

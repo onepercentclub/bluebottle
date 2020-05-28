@@ -7,7 +7,7 @@ from mock import patch
 
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
-    PlainPayoutAccountFactory, DonationFactory
+    PlainPayoutAccountFactory, DonationFactory, PayoutFactory
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory
@@ -427,3 +427,57 @@ class PlainPayoutAccountStateMachineTests(BluebottleTestCase):
         self.account.states.reject(save=True)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Your identity verification needs some work')
+
+
+class PayoutStateMachineTests(BluebottleTestCase):
+
+    def setUp(self):
+        self.payout = PayoutFactory.create()
+
+    def test_initial(self):
+        self.assertEqual(self.payout.status, 'new')
+
+    @patch('bluebottle.payouts_dorado.adapters.DoradoPayoutAdapter.trigger_payout')
+    def test_accept(self, mock_trigger_payout):
+        self.payout.states.approve(save=True)
+        self.assertEqual(self.payout.status, 'approved')
+
+    @patch('bluebottle.payouts_dorado.adapters.DoradoPayoutAdapter.trigger_payout')
+    def test_accept_date_set(self, mock_trigger_payout):
+        self.payout.states.approve(save=True)
+        self.assertAlmostEqual(self.payout.date_approved, now(), delta=timedelta(seconds=60))
+
+    def test_schedule(self):
+        self.payout.states.schedule(save=True)
+        self.assertEqual(self.payout.status, 'scheduled')
+
+    def test_start(self):
+        self.payout.states.start(save=True)
+        self.assertEqual(self.payout.status, 'started')
+
+    def test_start_date_set(self):
+        self.payout.states.start(save=True)
+        self.assertAlmostEqual(self.payout.date_started, now(), delta=timedelta(seconds=60))
+
+    def test_succeed(self):
+        self.payout.states.succeed(save=True)
+        self.assertEqual(self.payout.status, 'succeeded')
+
+    def test_succeed_date_set(self):
+        self.payout.states.succeed(save=True)
+        self.assertAlmostEqual(self.payout.date_completed, now(), delta=timedelta(seconds=60))
+
+    def test_reset(self):
+        self.payout.states.succeed(save=True)
+        self.payout.states.reset(save=True)
+        self.assertEqual(self.payout.status, 'new')
+
+    @patch('bluebottle.payouts_dorado.adapters.DoradoPayoutAdapter.trigger_payout')
+    def test_reset_dates_cleared(self, mock_trigger_payout):
+        self.payout.states.approve(save=True)
+        self.payout.states.start(save=True)
+        self.payout.states.succeed(save=True)
+        self.payout.states.reset(save=True)
+        self.assertIsNone(self.payout.date_approved)
+        self.assertIsNone(self.payout.date_started)
+        self.assertIsNone(self.payout.date_completed)

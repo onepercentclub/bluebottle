@@ -447,9 +447,10 @@ class PayoutStateMachineTests(BluebottleTestCase):
         self.payout.states.approve(save=True)
         self.assertAlmostEqual(self.payout.date_approved, now(), delta=timedelta(seconds=60))
 
-    def test_schedule(self):
-        self.payout.states.schedule(save=True)
-        self.assertEqual(self.payout.status, 'scheduled')
+    @patch('bluebottle.payouts_dorado.adapters.DoradoPayoutAdapter.trigger_payout')
+    def test_accept_adapter_called(self, mock_trigger_payout):
+        self.payout.states.approve(save=True)
+        mock_trigger_payout.assert_called_once()
 
     def test_start(self):
         self.payout.states.start(save=True)

@@ -116,6 +116,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(self.funding.status, 'closed')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Your crowdfunding campaign has been closed')
+        self.assertTrue(self.funding.title in mail.outbox[0].body)
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
 
     def test_some_donations(self):
@@ -149,6 +150,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 3)
         self.assertEqual(mail.outbox[2].subject, 'Your crowdfunding campaign deadline passed')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
+        self.assertTrue(self.funding.title in mail.outbox[0].body)
         url = 'http://testserver/en/initiatives/activities/details/funding/{}/{}'.format(
             self.funding.id, self.funding.slug
         )
@@ -173,6 +175,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 5)
         self.assertEqual(mail.outbox[4].subject, u'You successfully completed your crowdfunding campaign! 🎉')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[4].body)
+        self.assertTrue(self.funding.title in mail.outbox[4].body)
         url = 'http://testserver/en/initiatives/activities/details/funding/{}/{}'.format(
             self.funding.id, self.funding.slug
         )

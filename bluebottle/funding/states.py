@@ -48,6 +48,18 @@ class FundingStateMachine(ActivityStateMachine):
     def can_approve(self, user):
         return user.is_staff
 
+    submit = Transition(
+        [ActivityStateMachine.draft, ActivityStateMachine.needs_work],
+        ActivityStateMachine.submitted,
+        automatic=False,
+        name=_('Submit'),
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_submitted
+        ],
+    )
+
     approve = Transition(
         [
             ActivityStateMachine.draft,

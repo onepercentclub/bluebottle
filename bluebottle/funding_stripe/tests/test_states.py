@@ -1,10 +1,15 @@
+import bunch
+from django.core import mail
 from djmoney.money import Money
 from mock import patch
+import stripe
 
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, DonationFactory
+from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, StripeSourcePaymentFactory, \
     StripePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -87,3 +92,69 @@ class StripePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
         self.assertEqual(payment.status, 'succeeded')
         payment.states.request_refund(save=True)
         self.assertEqual(payment.status, 'refund_requested')
+
+
+class StripePayoutAccountStateMachineTests(BluebottleTestCase):
+
+    def setUp(self):
+        account_id = 'some-connect-id'
+        self.user = BlueBottleUserFactory.create()
+        self.account = StripePayoutAccount(
+            owner=self.user,
+            country='NL',
+            account_id=account_id
+        )
+        self.stripe_account = stripe.Account(account_id)
+        self.stripe_account.update({
+            'country': 'NL',
+            'individual': bunch.bunchify({
+                'first_name': 'Jhon',
+                'last_name': 'Example',
+                'email': 'jhon@example.com',
+                'verification': {
+                    'status': 'verified',
+                },
+                'requirements': bunch.bunchify({
+                    'eventually_due': [
+                        'external_accounts',
+                        'individual.verification.document',
+                        'document_type',
+                    ]
+                }),
+            }),
+            'requirements': bunch.bunchify({
+                'eventually_due': [
+                    'external_accounts',
+                    'individual.verification.document.front',
+                    'document_type',
+                ],
+                'disabled': False
+            }),
+            'external_accounts': bunch.bunchify({
+                'total_count': 0,
+                'data': []
+            })
+        })
+        with patch('stripe.Account.retrieve', return_value=self.stripe_account):
+            self.account.save()
+
+    def test_initial(self):
+        self.assertEqual(self.account.status, 'new')
+
+    def test_accept(self):
+        self.account.states.verify(save=True)
+        self.assertEqual(self.account.status, 'verified')
+
+    def test_accept_mail(self):
+        self.account.states.verify(save=True)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified')
+
+    def test_reject(self):
+        self.account.states.reject(save=True)
+        self.assertEqual(self.account.status, 'rejected')
+
+    def test_reject_mail(self):
+        self.account.states.reject(save=True)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Your identity verification needs some work')

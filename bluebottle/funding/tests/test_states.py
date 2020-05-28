@@ -400,3 +400,30 @@ class BasePaymentStateMachineTests(BluebottleTestCase):
         payment.states.succeed(save=True)
         payment.states.refund(save=True)
         self.assertEqual(donation.status, 'refunded')
+
+
+class PlainPayoutAccountStateMachineTests(BluebottleTestCase):
+
+    def setUp(self):
+        self.account = PlainPayoutAccountFactory.create()
+
+    def test_initial(self):
+        self.assertEqual(self.account.status, 'new')
+
+    def test_accept(self):
+        self.account.states.verify(save=True)
+        self.assertEqual(self.account.status, 'verified')
+
+    def test_accept_mail(self):
+        self.account.states.verify(save=True)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified')
+
+    def test_reject(self):
+        self.account.states.reject(save=True)
+        self.assertEqual(self.account.status, 'rejected')
+
+    def test_reject_mail(self):
+        self.account.states.reject(save=True)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Your identity verification needs some work')

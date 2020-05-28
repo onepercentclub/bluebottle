@@ -203,6 +203,45 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.event.refresh_from_db()
         self.assertEqual(self.event.status, EventStateMachine.open.value)
 
+    def test_reject_participants_succeeded(self):
+        self.event.states.submit(save=True)
+        participant = ParticipantFactory.create(activity=self.event)
+
+        participant.states.reject(user=self.event.owner, save=True)
+        self.assertEqual(participant.status, ParticipantStateMachine.rejected.value)
+
+        self.event.refresh_from_db()
+        self.event.start = timezone.now() - timedelta(hours=2)
+        self.event.save()
+
+        self.assertEqual(self.event.status, EventStateMachine.closed.value)
+
+        participant.states.reaccept(save=True)
+
+        self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.status, EventStateMachine.succeeded.value)
+
+    def test_withdraw_participants_succeeded(self):
+        self.event.states.submit(save=True)
+        participants = ParticipantFactory.create_batch(self.event.capacity, activity=self.event)
+        self.assertEqual(self.event.status, EventStateMachine.full.value)
+
+        participant = participants[0]
+        participant.states.withdraw(user=participant.user, save=True)
+
+        self.assertEqual(participant.status, ParticipantStateMachine.withdrawn.value)
+
+        self.event.refresh_from_db()
+        self.event.start = timezone.now() - timedelta(hours=2)
+        self.event.save()
+
+        self.assertEqual(self.event.status, EventStateMachine.succeeded.value)
+
+        participant.states.reapply(save=True)
+
+        self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
+
     def test_mark_absent(self):
         self.event.states.submit(save=True)
         participant = ParticipantFactory.create(activity=self.passed_event)

@@ -96,6 +96,7 @@ class EventStateMachine(ActivityStateMachine):
             RelatedTransitionEffect('participants', 'succeed')
         ]
     )
+
     close = Transition(
         (
             ActivityStateMachine.draft,
@@ -189,6 +190,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         automatic=False,
         permission=is_user,
         effects=[
+            TransitionEffect('succeed', conditions=[event_is_finished]),
             RelatedTransitionEffect('activity', 'fill', conditions=[event_will_become_full]),
             FollowActivityEffect
         ]
@@ -211,6 +213,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         name=_('Re-accept'),
         automatic=False,
         effects=[
+            TransitionEffect('succeed', conditions=[event_is_finished]),
             RelatedTransitionEffect('activity', 'fill', conditions=[event_will_become_full]),
             FollowActivityEffect
         ],

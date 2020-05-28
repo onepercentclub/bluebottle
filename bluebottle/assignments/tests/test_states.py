@@ -58,6 +58,23 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
             self.assignment.states.submit
         )
 
+    def test_submit_initiative_not_submitted(self):
+        self.assignment = AssignmentFactory.create(
+            owner=self.initiative.owner,
+            initiative=InitiativeFactory.create()
+        )
+
+        self.assertEqual(self.assignment.status, AssignmentStateMachine.draft.value)
+
+        self.assertRaises(
+            TransitionNotPossible,
+            self.assignment.states.submit
+        )
+        self.assignment.initiative.states.submit(save=True)
+        self.assignment.refresh_from_db()
+
+        self.assertEqual(self.assignment.status, AssignmentStateMachine.submitted.value)
+
     def test_approve(self):
         self.assignment = AssignmentFactory.create(
             owner=self.initiative.owner,

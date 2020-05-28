@@ -187,6 +187,22 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.status, ReviewStateMachine.submitted.value
         )
 
+    def test_submit_with_activities(self):
+        event = EventFactory.create(initiative=self.initiative)
+        incomplete_event = EventFactory.create(initiative=self.initiative, title='')
+
+        self.initiative.states.submit(save=True)
+
+        event.refresh_from_db()
+        self.assertEqual(
+            event.status, ReviewStateMachine.submitted.value
+        )
+
+        incomplete_event.refresh_from_db()
+        self.assertEqual(
+            incomplete_event.status, ReviewStateMachine.draft.value
+        )
+
     def test_needs_work(self):
         self.initiative.states.submit()
         self.initiative.states.request_changes(save=True)
@@ -194,7 +210,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.status, ReviewStateMachine.needs_work.value
         )
 
-    def test_resubmit(self):
+    def test_needs_work_resubmit(self):
         self.initiative.states.submit()
         self.initiative.states.request_changes(save=True)
         self.initiative.title = 'Something else'
@@ -221,6 +237,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
 
     def test_approve_with_activities(self):
         event = EventFactory.create(initiative=self.initiative)
+        incomplete_event = EventFactory.create(initiative=self.initiative, title='')
 
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
@@ -231,6 +248,10 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         event.refresh_from_db()
         self.assertEqual(
             event.status, EventStateMachine.open.value
+        )
+        incomplete_event.refresh_from_db()
+        self.assertEqual(
+            incomplete_event.status, EventStateMachine.draft.value
         )
 
     def test_reject(self):

@@ -18,7 +18,8 @@ class EventTestCase(BluebottleTestCase):
             title='The greatest event',
             start=start,
             duration=3,
-            capacity=10
+            capacity=10,
+            initiative=InitiativeFactory.create(status='approved')
         )
         event.states.submit(save=True)
 

@@ -44,6 +44,15 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
 
+    def test_submit_unsubmitted_initiative(self):
+        initiative = InitiativeFactory.create()
+        event = EventFactory.create(initiative=initiative)
+
+        self.assertRaises(
+            TransitionNotPossible,
+            event.states.submit
+        )
+
     def test_reject(self):
         self.event.states.submit(save=True)
         self.event.states.reject(save=True)

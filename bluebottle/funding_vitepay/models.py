@@ -1,9 +1,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, BankAccount
-from bluebottle.funding.transitions import PaymentTransitions
 
 
 class VitepayPaymentProvider(PaymentProvider):
@@ -39,7 +37,6 @@ class VitepayPaymentProvider(PaymentProvider):
 class VitepayPayment(Payment):
     mobile_number = models.CharField(max_length=30, blank=True, null=True)
     unique_id = models.CharField(max_length=30)
-    transitions = TransitionManager(PaymentTransitions, 'status')
     payment_url = models.CharField(max_length=200, blank=True, null=True)
 
     provider = 'vitepay'

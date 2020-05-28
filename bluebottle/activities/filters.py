@@ -4,9 +4,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, Range
 from django.db.models import Q as DQ
 
-from bluebottle.activities.transitions import ActivityTransitions
+from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.events.states import EventStateMachine
-from bluebottle.funding.transitions import FundingTransitions
+from bluebottle.funding.states import FundingStateMachine
 from bluebottle.utils.filters import ElasticSearchFilter
 from bluebottle.activities.documents import activity
 
@@ -182,9 +182,9 @@ class ActivityFilter(DjangoFilterBackend):
     Filter that shows only successful contributions
     """
     public_statuses = [
-        ActivityTransitions.values.succeeded,
-        ActivityTransitions.values.open,
-        FundingTransitions.values.partially_funded,
+        ActivityStateMachine.succeeded.value,
+        ActivityStateMachine.open.value,
+        FundingStateMachine.partially_funded.value,
         EventStateMachine.full.value,
         EventStateMachine.is_running.value
     ]
@@ -196,7 +196,7 @@ class ActivityFilter(DjangoFilterBackend):
                 DQ(initiative__activity_manager=request.user) |
                 DQ(initiative__owner=request.user) |
                 DQ(status__in=self.public_statuses)
-            ).exclude(status=ActivityTransitions.values.deleted)
+            ).exclude(status=ActivityStateMachine.deleted.value)
         else:
             queryset = queryset.filter(status__in=self.public_statuses)
 

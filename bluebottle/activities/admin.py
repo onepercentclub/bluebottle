@@ -1,6 +1,4 @@
 from django.contrib import admin
-from django.contrib.admin import SimpleListFilter
-from django.db.models import Q
 from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
@@ -10,13 +8,11 @@ from polymorphic.admin import (
     StackedPolymorphicInline)
 
 from bluebottle.activities.models import Activity, Contribution, Organizer
-from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
-from bluebottle.funding.models import Funding, Donation
-from bluebottle.funding.transitions import FundingTransitions
 from bluebottle.fsm.admin import StateMachineAdmin
+from bluebottle.funding.models import Funding, Donation
 from bluebottle.wallposts.admin import WallpostInline
 
 
@@ -85,10 +81,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'updated',
         'valid',
         'complete',
-        'review_status',
         'status',
+        'review_status',
         'transition_date',
-        'stats_data']
+        'stats_data'
+    ]
 
     basic_fields = (
         'title',
@@ -159,31 +156,13 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     complete.short_description = _('Missing data')
 
 
-class ActivityStatusFilter(SimpleListFilter):
-
-    title = _('Status')
-    parameter_name = 'status'
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(
-                Q(status=self.value())
-            )
-
-        return queryset
-
-    def lookups(self, request, model_admin):
-        return [(k, v) for k, v in ActivityReviewTransitions.values.choices if k != 'closed'] + \
-               [(k, v) for k, v in FundingTransitions.values.choices if k != 'in_review']
-
-
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
     date_hierarchy = 'transition_date'
     readonly_fields = ['link']
-    list_filter = (PolymorphicChildModelFilter, ActivityStatusFilter, 'highlight')
+    list_filter = (PolymorphicChildModelFilter, 'status', 'highlight')
     list_editable = ('highlight',)
 
     list_display = ['__unicode__', 'created', 'type', 'status',

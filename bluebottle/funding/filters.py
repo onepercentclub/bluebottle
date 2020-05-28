@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework_json_api.django_filters import DjangoFilterBackend
 
 from bluebottle.funding.models import PaymentProvider, Donation
-from bluebottle.funding.transitions import DonationTransitions
+from bluebottle.funding.states import DonationStateMachine
 from bluebottle.funding_pledge.models import PledgePayment
 
 
@@ -16,8 +16,8 @@ class DonationListFilter(DjangoFilterBackend):
         queryset = queryset.prefetch_related(
             'activity', 'user'
         ).instance_of(Donation).filter(status__in=[
-            DonationTransitions.values.succeeded,
-            DonationTransitions.values.activity_refunded
+            DonationStateMachine.succeeded.value,
+            DonationStateMachine.activity_refunded.value
         ])
 
         return super(DonationListFilter, self).filter_queryset(request, queryset, view)
@@ -27,10 +27,12 @@ class DonationAdminStatusFilter(SimpleListFilter):
     title = _('Status')
 
     parameter_name = 'status__exact'
-    default_status = DonationTransitions.values.succeeded
+    default_status = DonationStateMachine.succeeded.value
 
     def lookups(self, request, model_admin):
-        return (('all', _('All')), ) + DonationTransitions.values.choices
+        return [('all', _('All'))] + [
+            (s.value, s.name.title()) for s in DonationStateMachine.states.values()
+        ]
 
     def choices(self, cl):
         for lookup, title in self.lookup_choices:
@@ -76,7 +78,7 @@ class DonationAdminPledgeFilter(SimpleListFilter):
     title = _('Pledged')
 
     parameter_name = 'pledge'
-    default_status = DonationTransitions.values.succeeded
+    default_status = DonationStateMachine.succeeded.value
 
     def lookups(self, request, model_admin):
         return (

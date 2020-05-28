@@ -1,5 +1,4 @@
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
-from bluebottle.funding.transitions import PaymentTransitions
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import VitepayPaymentFactory, VitepayPaymentProviderFactory
 
@@ -23,4 +22,4 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         payment = VitepayPaymentFactory(donation=self.donation)
         payment.save()
 
-        self.assertEqual(payment.status, PaymentTransitions.values.new)
+        self.assertEqual(payment.status, 'new')

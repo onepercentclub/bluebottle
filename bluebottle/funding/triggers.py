@@ -1,7 +1,7 @@
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger
-from bluebottle.funding.models import Funding
-from bluebottle.funding.states import FundingStateMachine
+from bluebottle.funding.models import Funding, PlainPayoutAccount
+from bluebottle.funding.states import FundingStateMachine, PlainPayoutAccountStateMachine
 
 
 class DeadlineChanged(ModelChangedTrigger):
@@ -65,3 +65,21 @@ class MatchingAmountChanged(AmountChanged):
 
 
 Funding.triggers = [DeadlineChanged, MatchingAmountChanged, AmountChanged]
+
+
+class AccountReviewed(ModelChangedTrigger):
+    field = 'reviewed'
+
+    effects = [
+        TransitionEffect(
+            'verify',
+            conditions=[PlainPayoutAccountStateMachine.is_reviewed]
+        ),
+        TransitionEffect(
+            'reject',
+            conditions=[PlainPayoutAccountStateMachine.is_unreviewed]
+        ),
+    ]
+
+
+PlainPayoutAccount.triggers = [AccountReviewed]

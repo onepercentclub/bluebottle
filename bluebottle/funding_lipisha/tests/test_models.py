@@ -13,6 +13,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         LipishaPaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)

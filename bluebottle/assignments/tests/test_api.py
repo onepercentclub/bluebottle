@@ -28,7 +28,8 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
         self.url = reverse('assignment-list')
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory(owner=self.user)
-        self.initiative.states.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         self.initiative.save()
 
     def test_create_assignment(self):
@@ -64,7 +65,7 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
         response = self.client.post(self.url, json.dumps(data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], 'open')
+        self.assertEqual(response.data['status'], 'draft')
         self.assertEqual(response.data['title'], 'Business plan Young Freddy')
 
     def test_create_assignment_missing_data(self):
@@ -155,7 +156,7 @@ class AssignmentDetailAPITestCase(BluebottleTestCase):
         response = self.client.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'submitted')
+        self.assertEqual(response.data['status'], 'draft')
 
 
 class AssignmentDetailApplicantsAPITestCase(BluebottleTestCase):
@@ -223,6 +224,8 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.other_user = BlueBottleUserFactory()
 
         self.initiative = InitiativeFactory.create(activity_manager=self.manager)
+
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.assignment_incomplete = AssignmentFactory.create(
             owner=self.owner,
@@ -306,7 +309,13 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(data['data']['meta']['transitions'], [])
+        self.assertEqual(
+            data['data']['meta']['transitions'],
+            [
+                {u'available': True, u'name': u'submit', u'target': u'submitted'},
+                {u'available': True, u'name': u'delete', u'target': u'deleted'}
+            ]
+        )
         self.assertEqual(data['data']['meta']['required'], [])
         self.assertEqual(data['data']['meta']['errors'], [])
 
@@ -386,13 +395,16 @@ class ApplicantAPITestCase(BluebottleTestCase):
             owner=self.owner,
             activity_manager=self.owner
         )
-        self.initiative.states.approve()
-        self.initiative.save()
+
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         self.assignment = AssignmentFactory.create(
             initiative=self.initiative,
             duration=4,
             owner=self.owner,
-            title="Make coffee")
+            title="Make coffee"
+        )
+        self.assignment.states.submit(save=True)
         self.apply_data = {
             'data': {
                 'type': 'contributions/applicants',
@@ -519,10 +531,11 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.owner = BlueBottleUserFactory(first_name="Owner")
         self.initiative = InitiativeFactory.create(activity_manager=self.manager)
 
-        self.initiative.states.approve()
-        self.initiative.save()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         self.assignment = AssignmentFactory.create(owner=self.owner, initiative=self.initiative)
-        self.assignment.save()
+        self.assignment.states.submit(save=True)
+
         document = PrivateDocumentFactory.create()
         self.applicant = ApplicantFactory.create(activity=self.assignment, document=document, user=self.user)
         self.participant_url = reverse('applicant-detail', args=(self.applicant.id,))

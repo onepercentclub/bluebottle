@@ -163,4 +163,3 @@ class Organizer(Contribution):
 from bluebottle.activities.signals import *  # noqa
 from bluebottle.activities.wallposts import *  # noqa
 from bluebottle.activities.states import *  # noqa
-from bluebottle.activities.triggers import *  # noqa

@@ -18,8 +18,10 @@ class EventTestCase(BluebottleTestCase):
             title='The greatest event',
             start=start,
             duration=3,
-            capacity=10
+            capacity=10,
+            initiative=InitiativeFactory.create(status='approved')
         )
+        event.states.submit(save=True)
 
         ParticipantFactory.create_batch(3, activity=event, status='new')
         self.assertEqual(event.participants.count(), 3)
@@ -39,6 +41,7 @@ class EventTestCase(BluebottleTestCase):
             capacity=10,
             initiative=InitiativeFactory.create(status='approved')
         )
+        event.states.submit(save=True)
 
         ParticipantFactory.create_batch(event.capacity, activity=event)
         event.refresh_from_db()
@@ -54,6 +57,7 @@ class EventTestCase(BluebottleTestCase):
             capacity=10,
             initiative=InitiativeFactory.create(status='approved')
         )
+        event.states.submit(save=True)
 
         ParticipantFactory.create_batch(event.capacity, activity=event)
 
@@ -74,6 +78,7 @@ class EventTestCase(BluebottleTestCase):
             capacity=10,
             initiative=InitiativeFactory.create(status='approved')
         )
+        event.states.submit(save=True)
 
         ParticipantFactory.create_batch(10, activity=event)
 
@@ -94,6 +99,8 @@ class EventTestCase(BluebottleTestCase):
             initiative=InitiativeFactory.create(status='approved'),
             capacity=None
         )
+
+        event.states.submit(save=True)
 
         ParticipantFactory.create(activity=event, status='new')
         self.assertEqual(event.status, 'open')
@@ -122,6 +129,7 @@ class EventTestCase(BluebottleTestCase):
             status='open',
             start=now() + timedelta(days=4),
         )
+
         ParticipantFactory.create_batch(3, activity=event, status='new')
         ParticipantFactory.create(activity=event, status='withdrawn')
 

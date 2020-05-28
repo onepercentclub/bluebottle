@@ -21,6 +21,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.site = AdminSite()
         self.initiative_admin = InitiativeAdmin(Initiative, self.site)
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit(save=True)
 
         self.approve_url = reverse(
             'admin:initiatives_initiative_state_transition',

@@ -8,6 +8,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.events.models import Participant
 from bluebottle.events.states import EventStateMachine, ParticipantStateMachine
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -15,6 +16,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class ActivityStateMachineTests(BluebottleTestCase):
     def setUp(self):
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.event = EventFactory.create(
             initiative=self.initiative,
@@ -28,13 +30,31 @@ class ActivityStateMachineTests(BluebottleTestCase):
         )
 
     def test_create(self):
+        self.assertEqual(self.event.status, EventStateMachine.draft.value)
+
+        organizer = self.event.contributions.get()
+
+        self.assertEqual(organizer.status, OrganizerStateMachine.new.value)
+
+    def test_submit(self):
+        self.event.states.submit(save=True)
         self.assertEqual(self.event.status, EventStateMachine.open.value)
 
         organizer = self.event.contributions.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
 
+    def test_submit_unsubmitted_initiative(self):
+        initiative = InitiativeFactory.create()
+        event = EventFactory.create(initiative=initiative)
+
+        self.assertRaises(
+            TransitionNotPossible,
+            event.states.submit
+        )
+
     def test_reject(self):
+        self.event.states.submit(save=True)
         self.event.states.reject(save=True)
 
         self.assertEqual(self.event.status, EventStateMachine.rejected.value)
@@ -44,8 +64,10 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(organizer.status, OrganizerStateMachine.failed.value)
 
     def test_restore(self):
+        self.event.states.submit(save=True)
         self.event.states.reject(save=True)
         self.event.states.restore(save=True)
+        self.event.states.submit(save=True)
 
         self.assertEqual(self.event.status, EventStateMachine.open.value)
 
@@ -55,8 +77,10 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
     def test_create_unapproved_initiative(self):
         initiative = InitiativeFactory.create()
+        initiative.states.submit(save=True)
         event = EventFactory.create(initiative=initiative)
 
+        event.states.submit(save=True)
         self.assertEqual(event.status, EventStateMachine.submitted.value)
 
         organizer = event.contributions.get()
@@ -77,12 +101,16 @@ class ActivityStateMachineTests(BluebottleTestCase):
         event = EventFactory.create(initiative=self.initiative, title='')
 
         self.assertEqual(event.status, EventStateMachine.draft.value)
+        self.assertRaises(
+            TransitionNotPossible,
+            event.states.submit
+        )
 
         organizer = event.contributions.get()
         self.assertEqual(organizer.status, OrganizerStateMachine.new.value)
 
         event.title = 'Test title'
-        event.save()
+        event.states.submit(save=True)
 
         self.assertEqual(event.status, EventStateMachine.open.value)
 
@@ -91,6 +119,8 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
 
     def test_not_full(self):
+        self.event.states.submit(save=True)
+
         ParticipantFactory.create_batch(self.event.capacity - 1, activity=self.event)
 
         self.event.refresh_from_db()
@@ -100,6 +130,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
             self.assertEqual(participant.status, ParticipantStateMachine.new.value)
 
     def test_full(self):
+        self.event.states.submit(save=True)
         ParticipantFactory.create_batch(self.event.capacity, activity=self.event)
 
         self.event.refresh_from_db()
@@ -109,6 +140,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
             self.assertEqual(participant.status, ParticipantStateMachine.new.value)
 
     def test_change_capacity_full(self):
+        self.event.states.submit(save=True)
         ParticipantFactory.create_batch(self.event.capacity - 1, activity=self.event)
         self.assertEqual(self.event.status, EventStateMachine.open.value)
 
@@ -122,6 +154,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.event.status, EventStateMachine.full.value)
 
     def test_change_capacity_open(self):
+        self.event.states.submit(save=True)
         ParticipantFactory.create_batch(self.event.capacity, activity=self.event)
 
         self.event.capacity = self.event.capacity + 1
@@ -134,6 +167,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.event.status, EventStateMachine.open.value)
 
     def test_change_capacity_no_transition(self):
+        self.event.states.submit(save=True)
         ParticipantFactory.create_batch(self.event.capacity - 1, activity=self.event)
 
         self.event.capacity = self.event.capacity + 1
@@ -141,6 +175,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.event.status, EventStateMachine.open.value)
 
     def test_withdraw(self):
+        self.event.states.submit(save=True)
         participants = ParticipantFactory.create_batch(self.event.capacity, activity=self.event)
         self.assertEqual(self.event.status, EventStateMachine.full.value)
 
@@ -155,6 +190,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.event.status, EventStateMachine.open.value)
 
     def test_reject_participants(self):
+        self.event.states.submit(save=True)
         participants = ParticipantFactory.create_batch(self.event.capacity, activity=self.event)
         self.assertEqual(self.event.status, EventStateMachine.full.value)
 
@@ -168,6 +204,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.event.status, EventStateMachine.open.value)
 
     def test_mark_absent(self):
+        self.event.states.submit(save=True)
         participant = ParticipantFactory.create(activity=self.passed_event)
         self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
         self.assertEqual(participant.status, EventStateMachine.succeeded.value)
@@ -181,6 +218,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.passed_event.status, EventStateMachine.closed.value)
 
     def test_mark_absent_no_change(self):
+        self.event.states.submit(save=True)
         ParticipantFactory.create(activity=self.passed_event)
         participant = ParticipantFactory.create(activity=self.passed_event)
 
@@ -196,6 +234,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
 
     def test_mark_present(self):
+        self.event.states.submit(save=True)
         participant = ParticipantFactory.create(activity=self.passed_event)
         self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
         self.assertEqual(participant.status, EventStateMachine.succeeded.value)
@@ -212,6 +251,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
 
     def test_succeed_in_future(self):
+        self.event.states.submit(save=True)
         ParticipantFactory.create(activity=self.event)
 
         future = self.event.start + timedelta(days=2)
@@ -226,6 +266,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
             self.assertEqual(participant.time_spent, self.event.duration)
 
     def test_succeed_when_passed(self):
+        self.event.states.submit(save=True)
         ParticipantFactory.create(activity=self.passed_event)
 
         self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
@@ -234,9 +275,11 @@ class ActivityStateMachineTests(BluebottleTestCase):
             self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
 
     def test_failed_when_passed(self):
+        self.event.states.submit(save=True)
         self.assertEqual(self.passed_event.status, EventStateMachine.closed.value)
 
     def test_not_succeed_change_start(self):
+        self.event.states.submit(save=True)
         self.assertEqual(self.event.status, EventStateMachine.open.value)
         ParticipantFactory.create(activity=self.event)
 
@@ -249,6 +292,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
             self.assertEqual(participant.status, ParticipantStateMachine.new.value)
 
     def test_succeed_change_start(self):
+        self.event.states.submit(save=True)
         ParticipantFactory.create(activity=self.event)
 
         self.assertEqual(self.event.status, EventStateMachine.open.value)
@@ -264,6 +308,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
             self.assertEqual(participant.time_spent, self.event.duration)
 
     def test_change_start_reopen_from_closed(self):
+        self.event.states.submit(save=True)
         self.assertEqual(self.passed_event.status, EventStateMachine.closed.value)
 
         self.passed_event.start = timezone.now() + timedelta(hours=2)
@@ -272,6 +317,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.passed_event.status, EventStateMachine.open.value)
 
     def test_change_start_reopen_from_succeeded(self):
+        self.event.states.submit(save=True)
         ParticipantFactory.create(activity=self.passed_event)
 
         self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
@@ -288,6 +334,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
 class ParticipantStateMachineTests(BluebottleTestCase):
     def setUp(self):
         self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.event = EventFactory.create(
             initiative=self.initiative,

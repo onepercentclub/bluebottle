@@ -428,6 +428,46 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
             unicode(self.user.pk)
         )
 
+    def test_get_verification_error(self):
+        error = {
+            "reason": (
+                "The date of birth (DOB) on the document does not match "
+                "the DOB on the account. Please upload a document with a "
+                "DOB that matches the DOB on the account. You can also "
+                "update the DOB on the account."
+            ),
+            "code": "verification_document_dob_mismatch",
+            "requirement": "individual.verification.document"
+        }
+        self.connect_account.update({
+            'requirements': bunch.bunchify({
+                'eventually_due': ['external_accounts', 'individual.dob.month'],
+                'errors': [error],
+                'disabled': False
+            }),
+        })
+
+        with mock.patch('stripe.CountrySpec.retrieve', return_value=self.country_spec):
+            with mock.patch('stripe.Account.retrieve', return_value=self.connect_account) as retrieve:
+                response = self.client.get(
+                    self.account_url, user=self.user
+                )
+                retrieve.assert_called_with(self.check.account_id)
+
+        data = json.loads(response.content)
+        self.assertEqual(
+            data['data']['meta']['errors'][0]['source']['pointer'],
+            '/data/attributes/individual/verification/document/front'
+        )
+        self.assertEqual(
+            data['data']['meta']['errors'][0]['title'],
+            error['reason']
+        )
+        self.assertEqual(
+            data['data']['meta']['errors'][0]['code'],
+            error['code']
+        )
+
     def test_get_no_user(self):
         response = self.client.get(
             self.account_url,

@@ -27,6 +27,7 @@ from bluebottle.funding_stripe.transitions import (
     StripePayoutAccountTransitions
 )
 from bluebottle.funding_stripe.utils import stripe
+from bluebottle.utils.models import ValidatorError
 
 
 class PaymentIntent(models.Model):
@@ -302,6 +303,22 @@ class StripePayoutAccount(PayoutAccount):
         for spec in DOCUMENT_SPEC:
             if spec['id'] == self.country:
                 return spec
+
+    @property
+    def errors(self):
+        for error in super(StripePayoutAccount, self).errors:
+            yield error
+
+        if self.account_id and hasattr(self.account.requirements, 'errors'):
+            for error in self.account.requirements.errors:
+                if error['requirement'] == 'individual.verification.document':
+                    requirement = 'individual.verification.document.front'
+                else:
+                    error['requirement']
+
+                yield ValidatorError(
+                    requirement, error['code'], error['reason']
+                )
 
     @property
     def required_fields(self):

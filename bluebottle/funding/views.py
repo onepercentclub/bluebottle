@@ -184,9 +184,7 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
             serializer.instance.states.schedule()
         if status == 'started':
             serializer.instance.states.start()
-        if status == 'succeeded':
-            serializer.instance.states.succeed()
-        if status == 'confirmed':
+        if status in ['succeeded', 'confirmed']:
             serializer.instance.states.succeed()
         serializer.instance.save()
         return HttpResponse(200)

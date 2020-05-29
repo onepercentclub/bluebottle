@@ -242,18 +242,18 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
 
     raw_id_fields = ['activity', 'user']
     readonly_fields = ['payment_link', 'status', 'payment_link', 'payout_amount', 'contribution_date']
-    list_display = ['transition_date', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', ]
+    list_display = ['contribution_date', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', ]
     list_filter = [
         DonationAdminStatusFilter,
         DonationAdminCurrencyFilter,
         DonationAdminPledgeFilter,
     ]
-    date_hierarchy = 'transition_date'
+    date_hierarchy = 'contribution_date'
 
     inlines = [DonationWallpostInline]
 
     fields = [
-        'transition_date', 'contribution_date', 'created',
+        'contribution_date', 'created',
         'activity', 'user', 'amount', 'payout_amount',
         'reward', 'anonymous', 'name', 'status', 'payment_link'
     ]
@@ -505,17 +505,10 @@ class PayoutAdmin(StateMachineAdmin):
     model = Payout
     inlines = [DonationInline]
     raw_id_fields = ('activity', )
-    readonly_fields = ['approve', 'status', 'total_amount', 'account_link',
+    readonly_fields = ['status', 'total_amount', 'account_link',
                        'date_approved', 'date_started', 'date_completed']
     list_display = ['created', 'activity_link', 'status']
     list_filter = ['status']
-
-    def approve(self, obj):
-        if obj.status == 'new':
-            url = reverse('admin:funding_payout_transition', args=(obj.id, 'transitions', 'approve'))
-            return format_html('<a href="{}">{}</a>', url, _('Approve'))
-        else:
-            return obj.status
 
     def account_link(self, obj):
         url = reverse('admin:funding_bankaccount_change', args=(obj.activity.bank_account.id,))

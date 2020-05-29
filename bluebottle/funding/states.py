@@ -340,13 +340,14 @@ class PayoutStateMachine(ModelStateMachine):
     new = State(_('new'), 'new')
     approved = State(_('approved'), 'approved')
     started = State(_('started'), 'started')
+    scheduled = State(_('scheduled'), 'scheduled')
     succeeded = State(_('succeeded'), 'succeeded')
     failed = State(_('failed'), 'failed')
 
     initiate = Transition(EmptyState(), new)
 
     approve = Transition(
-        new,
+        [new, approved],
         approved,
         name=_('Approve'),
         automatic=False,
@@ -354,6 +355,13 @@ class PayoutStateMachine(ModelStateMachine):
             SubmitPayoutEffect,
             SetDateEffect('date_approved')
         ]
+    )
+
+    schedule = Transition(
+        AllStates(),
+        scheduled,
+        name=_('Schedule'),
+        automatic=True
     )
 
     start = Transition(

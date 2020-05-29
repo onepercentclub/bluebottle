@@ -180,4 +180,4 @@ class ClearPayoutDatesEffect(Effect):
         self.instance.date_completed = None
 
     def __unicode__(self):
-        return _('Set date')
+        return _('Clear payout event dates')

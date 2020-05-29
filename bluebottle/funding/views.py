@@ -180,7 +180,7 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
         status = serializer.validated_data.pop('status')
         if status == 'reset':
             serializer.instance.states.reset()
-        if status == ['new', 'scheduled', 're_scheduled']:
+        if status in ['new', 'scheduled', 're_scheduled']:
             serializer.instance.states.schedule()
         if status == 'started':
             serializer.instance.states.start()

@@ -1712,7 +1712,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         payout.refresh_from_db()
-        self.assertEqual(payout.status, 'started')
+        self.assertEqual(payout.status, 'scheduled')
 
 
 class FundingAPIPermissionsTestCase(BluebottleTestCase):

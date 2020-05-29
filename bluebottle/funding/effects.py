@@ -137,7 +137,7 @@ class DeleteDocumentEffect(Effect):
 
 
 class SubmitPayoutEffect(Effect):
-    post_save = False
+    post_save = True
     conditions = []
 
     def execute(self, **kwargs):

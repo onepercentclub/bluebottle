@@ -177,19 +177,23 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     permission_classes = (IsFinancialMember,)
 
     def perform_update(self, serializer):
-        status = serializer.validated_data['status']
-        # related to this Funding.
-        payout = serializer.instance
-        if status == 'started':
-            payout.states.start(save=True)
-        if status == 'scheduled':
-            payout.states.start(save=True)
+        status = serializer.validated_data.pop('status')
+        if status == 'reset':
+            serializer.instance.states.reset()
         if status == 'new':
-            payout.states.reset(save=True)
+            serializer.instance.states.schedule()
+        if status == 'scheduled':
+            serializer.instance.states.schedule()
+        if status == 're_scheduled':
+            serializer.instance.states.schedule()
+        if status == 'started':
+            serializer.instance.states.start()
         if status == 'succeeded':
-            payout.states.succeed(save=True)
-        if status == 'confirm':
-            payout.states.succeed(save=True)
+            serializer.instance.states.succeed()
+        if status == 'confirmed':
+            serializer.instance.states.succeed()
+        print status
+        serializer.instance.save()
         return HttpResponse(200)
 
 
@@ -248,15 +252,15 @@ class PlainPayoutAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpda
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
-        serializer.instance.transitions.submit()
+        serializer.instance.states.submit()
         serializer.instance.save()
 
     def get_queryset(self):
         return self.queryset.filter(owner=self.request.user)
 
     def perform_update(self, serializer):
-        if serializer.instance.status != serializer.instance.transitions.values.pending:
-            serializer.instance.transitions.submit()
+        if serializer.instance.status == serializer.instance.states.new.value:
+            serializer.instance.states.submit()
         serializer.instance.save()
 
 

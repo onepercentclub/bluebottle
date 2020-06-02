@@ -335,7 +335,7 @@ class StripePayoutAccount(PayoutAccount):
                 if error['requirement'] == 'individual.verification.document':
                     requirement = 'individual.verification.document.front'
                 else:
-                    error['requirement']
+                    requirement = error['requirement']
 
                 yield ValidatorError(
                     requirement, error['code'], error['reason']

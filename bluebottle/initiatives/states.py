@@ -16,13 +16,16 @@ class ReviewStateMachine(ModelStateMachine):
     field = 'status'
     model = Initiative
 
-    draft = State(_('draft'), 'draft')
-    submitted = State(_('submitted'), 'submitted')
-    needs_work = State(_('needs work'), 'needs_work')
-    approved = State(_('approved'), 'approved')
-    rejected = State(_('rejected'), 'rejected')
+    draft = State(_('draft'), 'draft', _('The initiative is created by the user'))
+    submitted = State(_('submitted'), 'submitted', _('The initiative is complete and needs to be review'))
+    needs_work = State(_('needs work'), 'needs_work', _('The initiative needs to be edited'))
+
+    rejected = State(_('rejected'), 'rejected', _('The initiative is rejected by the reviewer'))
+
+    approved = State(_('approved'), 'approved', _('The initiative is approveed by the reviewer'))
 
     def is_complete(self):
+        """The initiative is complete"""
         if self.instance.organization and list(self.instance.organization.required):
             return False
 
@@ -32,6 +35,7 @@ class ReviewStateMachine(ModelStateMachine):
         return not list(self.instance.required)
 
     def is_valid(self):
+        """The initiative is valid"""
         if self.instance.organization and list(self.instance.organization.errors):
             return False
 

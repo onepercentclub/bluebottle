@@ -151,6 +151,12 @@ class BaseRelatedTransitionEffect(Effect):
 
         return result
 
+    def __unicode__(self):
+        return '{} related {}'.format(
+            self.transition_effect_class.name,
+            self.relation
+        )
+
 
 def RelatedTransitionEffect(_relation, transition_name, field='states', conditions=None):
     _transition_effect_class = TransitionEffect(transition_name, field, save=True, post_save=True)

@@ -32,24 +32,31 @@ class ActivityStateMachine(ModelStateMachine):
     closed = State(_('closed'), 'closed')
 
     def is_complete(self):
+        """all required information has been submitted"""
         return not list(self.instance.required)
 
     def is_valid(self):
+        """all fields passed validation and are correct"""
         return not list(self.instance.errors)
 
     def initiative_is_approved(self):
+        """the initiative has been approved"""
         return self.instance.initiative.status == 'approved'
 
     def initiative_is_submitted(self):
+        """the initiative has been submitted"""
         return self.instance.initiative.status in ('submitted', 'approved')
 
     def initiative_is_not_approved(self):
+        """the initiative has not yet been approved"""
         return not self.initiative_is_approved()
 
     def is_staff(self, user):
+        """user is a staff member"""
         return user.is_staff
 
     def is_owner(self, user):
+        """user is the owner"""
         return user == self.instance.owner
 
     initiate = Transition(

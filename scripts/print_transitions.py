@@ -25,7 +25,7 @@ machines = [
 def get_doc(element):
     if element.__doc__:
         return element.__doc__
-    return "{} (documentation missing)".format(element)
+    return "{} (documentation missing)".format(unicode(element))
 
 
 def describe_effect(effect, machine):
@@ -57,7 +57,8 @@ def describe_effect(effect, machine):
 
 def describe_transition(name, transition, machine):
     print '#### {}\n'.format(name.capitalize())
-    print '{} transition from {} to "{}"\n'.format(
+    print '{}\n\n{} transition from {} to "{}"\n'.format(
+        transition.description,
         'Automatic' if transition.automatic else 'Manual',
         ', '.join(unicode(source.name) for source in transition.sources),
         unicode(transition.target.name)
@@ -83,7 +84,7 @@ def describe_trigger(effect, trigger):
 
     if effect.conditions:
         description += ', and {}'.format(
-            ' and '.join(get_doc(__doc__) for condition in effect.conditions)
+            ' and '.join(get_doc(condition) for condition in effect.conditions)
         )
     print '* {}'.format(description)
 

@@ -16,7 +16,7 @@ from bluebottle.funding.effects import GeneratePayoutsEffect, GenerateDonationWa
 from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
     FundingPartiallyFundedMessage, FundingClosedMessage, FundingRealisedOwnerMessage, PayoutAccountVerified, \
     PayoutAccountRejected, DonationRefundedDonorMessage
-from bluebottle.funding.models import Funding, Donation, Payout, PlainPayoutAccount
+from bluebottle.funding.models import Funding, Donation, Payout, PlainPayoutAccount, PayoutAccount
 from bluebottle.notifications.effects import NotificationEffect
 
 
@@ -31,23 +31,29 @@ class FundingStateMachine(ActivityStateMachine):
         return self.instance.deadline and self.instance.deadline < timezone.now()
 
     def deadline_in_future(self):
+        """the deadline is in the future"""
         if self.instance.deadline:
             return self.instance.deadline > timezone.now()
         return bool(self.instance.duration)
 
     def target_reached(self):
+        """target amount has been reached (100% or more)"""
         return self.instance.amount_raised >= self.instance.target
 
     def target_not_reached(self):
+        """target amount has not been reached (less then 100%, but more then 0)"""
         return self.instance.amount_raised.amount and self.instance.amount_raised < self.instance.target
 
     def no_donations(self):
+        """no (successful) donations have been made"""
         return not self.instance.donations.filter(status='succeeded').count()
 
     def without_approved_payouts(self):
+        """hasn't got approved payouts"""
         return not self.instance.payouts.exclude(status__in=['new', 'failed']).count()
 
     def can_approve(self, user):
+        """user has the permission to approve (staff member)"""
         return user.is_staff
 
     submit = Transition(
@@ -55,6 +61,7 @@ class FundingStateMachine(ActivityStateMachine):
         ActivityStateMachine.submitted,
         automatic=False,
         name=_('Submit'),
+        description=_('Submit the activity for approval'),
         conditions=[
             ActivityStateMachine.is_complete,
             ActivityStateMachine.is_valid,
@@ -394,18 +401,10 @@ class PayoutStateMachine(ModelStateMachine):
         ]
     )
 
-    # cancel = Transition(
-    #     AllStates(),
-    #     failed,
-    #     name=_('Cancel'),
-    #     automatic=True,
-    #     effects=[
-    #         SetDateEffect('date_completed')
-    #     ]
-    # )
-
 
 class PayoutAccountStateMachine(ModelStateMachine):
+
+    model = PayoutAccount
 
     new = State(_('new'), 'new')
     pending = State(_('pending'), 'pending')

@@ -43,6 +43,9 @@ class Effect(object):
     def is_valid(self):
         return True
 
+    def __unicode__(self):
+        return self.__class__.__name__
+
 
 class BaseTransitionEffect(Effect):
     field = 'states'

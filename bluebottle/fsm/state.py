@@ -7,7 +7,8 @@ class TransitionNotPossible(Exception):
 
 
 class BaseTransition(object):
-    def __init__(self, sources, target, name=None, automatic=True, conditions=None, effects=None, **options):
+    def __init__(self, sources, target, name='', description='',
+                 automatic=True, conditions=None, effects=None, **options):
         self.name = name
 
         if not isinstance(sources, (list, tuple)):
@@ -18,6 +19,7 @@ class BaseTransition(object):
         self.automatic = automatic
         self.conditions = conditions or []
         self.effects = effects or []
+        self.description = description
 
         assert not (not self.automatic and not self.name), 'Automatic transitions should have a name'
 

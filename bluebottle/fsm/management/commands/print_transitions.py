@@ -73,24 +73,26 @@ class Command(BaseCommand):
 
         machine = instance.states
 
-        print u'# {}\n'.format(model._meta.model_name.capitalize())
+        text = ''
 
-        print u'## States\n'
+        text += u'# {}\n'.format(model._meta.model_name.capitalize())
 
-        print u'|State Name|Description|'
-        print u'|---|---|'
+        text += u'## States\n'
+
+        text += u'|State Name|Description|'
+        text += u'|---|---|'
 
         for state in machine.states.values():
-            print u'|{}|{}|'.format(state.name.capitalize(), state.description)
+            text += u'|{}|{}|'.format(state.name.capitalize(), state.description)
 
-        print u'\n'
+        text += u'\n'
 
-        print u'## Transitions\n'
-        print u'|Name|Description|From|To|Manual|Conditions|Side Effects|'
-        print u'|---|---|---|---|---|--------|--------|'
+        text += u'## Transitions\n'
+        text += u'|Name|Description|From|To|Manual|Conditions|Side Effects|'
+        text += u'|---|---|---|---|---|--------|--------|'
 
         for transition in machine.transitions.values():
-            print u'| {} | {} | {} | {} | {} | {} | {} |'.format(
+            text += u'| {} | {} | {} | {} | {} | {} | {} |'.format(
                 transition.name,
                 transition.description,
                 ', '.join(state.name.capitalize() for state in transition.sources),
@@ -107,17 +109,19 @@ class Command(BaseCommand):
                     in transition.effects
                 ),
             )
-        print u'\n'
+        text += u'\n'
 
         if model.triggers:
-            print u'# Triggers\n'
-            print u'|When|Conditions|Effects|'
-            print u'|---|---|---|'
+            text += u'# Triggers\n'
+            text += u'|When|Conditions|Effects|'
+            text += u'|---|---|---|'
 
             for trigger in model.triggers:
                 for effect in trigger.effects:
-                    print u'|{}|{}|{}|'.format(
+                    text += u'|{}|{}|{}|'.format(
                         unicode(trigger(instance)),
                         ' or '.join(get_doc(condition) for condition in effect.conditions),
                         unicode(effect(instance)),
                     )
+
+        print(text)

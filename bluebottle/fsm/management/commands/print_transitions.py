@@ -65,8 +65,11 @@ class Command(BaseCommand):
             **model_args
         )
 
+        if isinstance(instance, Funding):
+            instance.title = 'campaign'
+
         if isinstance(instance, Donation):
-            instance.activity = Funding(title='Dummy Fundraising Campaign')
+            instance.activity = Funding(title='campaign')
 
         machine = instance.states
 
@@ -108,11 +111,13 @@ class Command(BaseCommand):
 
         if model.triggers:
             print u'# Triggers\n'
-            print u'|When|Effects|'
-            print u'|---|---|'
+            print u'|When|Conditions|Effects|'
+            print u'|---|---|---|'
 
             for trigger in model.triggers:
-                print u'|{}|{}|'.format(
-                    unicode(trigger),
-                    ', '.join(unicode(effect(instance)) for effect in trigger.effects)
-                )
+                for effect in trigger.effects:
+                    print u'|{}|{}|{}|'.format(
+                        unicode(trigger(instance)),
+                        ' or '.join(get_doc(condition) for condition in effect.conditions),
+                        unicode(effect(instance)),
+                    )

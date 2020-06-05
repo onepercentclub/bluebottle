@@ -23,8 +23,20 @@ from bluebottle.notifications.effects import NotificationEffect
 class FundingStateMachine(ActivityStateMachine):
     model = Funding
 
-    partially_funded = State(_('partially funded'), 'partially_funded')
-    refunded = State(_('refunded'), 'refunded')
+    def __init__(self, instance):
+        super(FundingStateMachine, self).__init__(instance)
+        self.closed.description = _("The activity has ended without any donations.")
+
+    partially_funded = State(
+        _('partially funded'),
+        'partially_funded',
+        _("The activity has ended and received donations but didn't reached the target.")
+    )
+    refunded = State(
+        _('refunded'),
+        'refunded',
+        _("The activity has ended and all donations have been refunded.")
+    )
 
     def should_finish(self):
         """the deadline has passed"""
@@ -77,6 +89,7 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.open,
         name=_('Approve'),
+        description=_('Approve the campaign so it will go live.'),
         automatic=False,
         permission=can_approve,
         conditions=[
@@ -102,6 +115,7 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.needs_work,
         name=_('Request changes'),
+        description=_("The campaign can't be approved yet. The initiator can edit and submit it again."),
         automatic=False,
         permission=can_approve
     )
@@ -115,6 +129,7 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.rejected,
         name=_('Reject'),
+        description=_("The campaign will be rejected. The initiator can't edit it anymore."),
         automatic=False,
         conditions=[
             no_donations
@@ -129,6 +144,7 @@ class FundingStateMachine(ActivityStateMachine):
         ActivityStateMachine.open,
         ActivityStateMachine.closed,
         name=_('Close'),
+        description=_("The campaign has ended without any successful donations and will be closed."),
         automatic=True,
         conditions=[
             no_donations,
@@ -147,6 +163,7 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.open,
         name=_('Extend'),
+        description=_("The campaign will be extended and can receive more donations."),
         automatic=True,
         effects=[
             DeletePayoutsEffect
@@ -157,6 +174,7 @@ class FundingStateMachine(ActivityStateMachine):
         [ActivityStateMachine.open, partially_funded],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
+        description=_("The campaign is successfully completed."),
         automatic=True,
         effects=[
             GeneratePayoutsEffect,
@@ -171,6 +189,7 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.succeeded,
         name=_('Recalculate'),
+        description=_("The campaign amounts have changed and payouts will be recalculated."),
         automatic=False,
         conditions=[
             target_reached
@@ -184,6 +203,7 @@ class FundingStateMachine(ActivityStateMachine):
         [ActivityStateMachine.open, ActivityStateMachine.succeeded, ActivityStateMachine.closed],
         partially_funded,
         name=_('Partial'),
+        description=_("The campaign has ended but the target isn't reached."),
         automatic=True,
         effects=[
             GeneratePayoutsEffect,
@@ -195,6 +215,7 @@ class FundingStateMachine(ActivityStateMachine):
         [ActivityStateMachine.succeeded, partially_funded],
         refunded,
         name=_('Refund'),
+        description=_("The campaign will be refunded and all donations will be returned to the donors."),
         automatic=False,
         effects=[
             RelatedTransitionEffect('donations', 'activity_refund'),

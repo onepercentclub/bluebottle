@@ -20,16 +20,46 @@ class CreateOrganizer(Effect):
 
 
 class ActivityStateMachine(ModelStateMachine):
-    draft = State(_('draft'), 'draft', _('The activity is created by the user'))
-    submitted = State(_('submitted'), 'submitted', _('The activity is complete and needs to be review'))
-    needs_work = State(_('needs work'), 'needs_work', _('The activity needs to be edited'))
-
-    rejected = State(_('rejected'), 'rejected', _('The activity is rejected by the review'))
-    deleted = State(_('deleted'), 'deleted', _('The activity is deleted by the user'))
-
-    open = State(_('open'), 'open', _('Activity is open, and accepting contributions'))
-    succeeded = State(_('succeeded'), 'succeeded', _('The activity is succeeded'))
-    closed = State(_('closed'), 'closed')
+    draft = State(
+        _('draft'),
+        'draft',
+        _('The activity is created by the user.')
+    )
+    submitted = State(
+        _('submitted'),
+        'submitted',
+        _('The activity is complete and needs to be review.')
+    )
+    needs_work = State(
+        _('needs work'),
+        'needs_work',
+        _('The activity has not been approved by the reviewer and needs to be edited.')
+    )
+    rejected = State(
+        _('rejected'),
+        'rejected',
+        _('The activity has been rejected by the reviewer.')
+    )
+    deleted = State(
+        _('deleted'),
+        'deleted',
+        _('The activity is deleted by the initiator.')
+    )
+    open = State(
+        _('open'),
+        'open',
+        _('The activity is open, and accepting contributions.')
+    )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _('The activity has ended successfully.')
+    )
+    closed = State(
+        _('closed'),
+        'closed',
+        _('The activity was unsuccessfull and has been closed.')
+    )
 
     def is_complete(self):
         """all required information has been submitted"""

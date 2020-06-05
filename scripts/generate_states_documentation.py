@@ -13,9 +13,9 @@ models = [
 ]
 
 api = {
-    'base_url': 'https://onepercentclub.atlassian.net/wiki/rest/api/content/',
-    'user': 'loek@goodup.com',
-    'api_key': 'VG0N8YTa02CNojOuJUTH66EC'
+    'base_url': '',
+    'user': '',
+    'api_key': ''
 }
 
 

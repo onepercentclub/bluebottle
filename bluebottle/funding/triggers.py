@@ -1,10 +1,11 @@
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger
-from bluebottle.funding.models import Funding, PlainPayoutAccount
+from bluebottle.funding.effects import UpdateFundingAmountsEffect
+from bluebottle.funding.models import Funding, PlainPayoutAccount, Donation
 from bluebottle.funding.states import FundingStateMachine, PlainPayoutAccountStateMachine
 
 
-class DeadlineChanged(ModelChangedTrigger):
+class DeadlineChangedTrigger(ModelChangedTrigger):
     field = 'deadline'
 
     effects = [
@@ -41,7 +42,7 @@ class DeadlineChanged(ModelChangedTrigger):
     ]
 
 
-class AmountChanged(ModelChangedTrigger):
+class AmountChangedTrigger(ModelChangedTrigger):
     field = 'target'
 
     effects = [
@@ -60,14 +61,14 @@ class AmountChanged(ModelChangedTrigger):
     ]
 
 
-class MatchingAmountChanged(AmountChanged):
+class MatchingAmountChangedTrigger(AmountChangedTrigger):
     field = 'amount_matching'
 
 
-Funding.triggers = [DeadlineChanged, MatchingAmountChanged, AmountChanged]
+Funding.triggers = [DeadlineChangedTrigger, MatchingAmountChangedTrigger, AmountChangedTrigger]
 
 
-class AccountReviewed(ModelChangedTrigger):
+class AccountReviewedTrigger(ModelChangedTrigger):
     field = 'reviewed'
 
     effects = [
@@ -82,4 +83,15 @@ class AccountReviewed(ModelChangedTrigger):
     ]
 
 
-PlainPayoutAccount.triggers = [AccountReviewed]
+PlainPayoutAccount.triggers = [AccountReviewedTrigger]
+
+
+class DonationAmountChangedTrigger(ModelChangedTrigger):
+    field = 'payout_amount'
+
+    effects = [
+        UpdateFundingAmountsEffect
+    ]
+
+
+Donation.triggers = [DonationAmountChangedTrigger]

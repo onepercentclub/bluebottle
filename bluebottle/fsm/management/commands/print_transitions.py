@@ -96,12 +96,12 @@ class Command(BaseCommand):
                 ', '.join(state.name.capitalize() for state in transition.sources),
                 transition.target.name.capitalize(),
                 'Automatic' if transition.automatic else 'Manual',
-                '<br>'.join(
+                ', '.join(
                     get_doc(condition)
                     for condition
                     in transition.conditions
                 ),
-                '<br>'.join(
+                ', '.join(
                     unicode(effect(instance))
                     for effect
                     in transition.effects

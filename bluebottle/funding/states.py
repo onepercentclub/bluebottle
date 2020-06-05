@@ -230,6 +230,10 @@ class DonationStateMachine(ContributionStateMachine):
     refunded = State(_('refunded'), 'refunded')
     activity_refunded = State(_('activity refunded'), 'activity_refunded')
 
+    def is_successful(self):
+        """donation is successful"""
+        return self.instance.status == ContributionStateMachine.succeeded
+
     succeed = Transition(
         [
             ContributionStateMachine.new,

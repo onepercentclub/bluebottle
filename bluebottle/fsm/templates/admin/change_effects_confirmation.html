@@ -49,11 +49,13 @@
         {% for obj in queryset.items %}
             <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}" />
         {% endfor %}
-        <div>
-            <input type="checkbox" name="send_messages" checked id="id_send_messages">
-            <label for="id_send_messages">{% trans "Send messages" %}</label><br>
-            <small>{% trans "Should messages be send or should we transition without notifying users?" %}</small>
-        </div>
+        {% if has_notifications %}
+          <div>
+              <input type="checkbox" name="send_messages" checked id="id_send_messages">
+              <label for="id_send_messages">{% trans "Send messages" %}</label><br>
+              <small>{% trans "Should messages be send or should we transition without notifying users?" %}</small>
+          </div>
+        {% endif %}
         <br>
         <br>
         <input type="hidden" name="action" value="transition_selected" />

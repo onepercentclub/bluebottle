@@ -8,6 +8,7 @@ from django.template.response import TemplateResponse
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.notifications.effects import BaseNotificationEffect
 from bluebottle.utils.forms import TransitionConfirmationForm
 
 
@@ -56,6 +57,10 @@ class StateMachineAdminMixin(object):
                     post=request.POST,
                     opts=self.model._meta,
                     media=self.media,
+                    has_notifications=any(
+                        isinstance(effect, BaseNotificationEffect)
+                        for effect in effects
+                    ),
                     effects=effects
                 )
 
@@ -131,6 +136,7 @@ class StateMachineAdminMixin(object):
             ),
             args=(pk, )
         )
+
         context = dict(
             self.admin_site.each_context(request),
             title=TransitionConfirmationForm.title,
@@ -140,6 +146,10 @@ class StateMachineAdminMixin(object):
             obj=instance,
             pk=instance.pk,
             form=form,
+            has_notifications=any(
+                isinstance(effect, BaseNotificationEffect)
+                for effect in effects
+            ),
             source=instance.status,
             effects=effects,
             target=transition.target.name,

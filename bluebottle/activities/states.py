@@ -176,10 +176,26 @@ class ActivityStateMachine(ModelStateMachine):
 
 
 class ContributionStateMachine(ModelStateMachine):
-    new = State(_('new'), 'new')
-    succeeded = State(_('succeeded'), 'succeeded')
-    failed = State(_('failed'), 'failed')
-    closed = State(_('closed'), 'closed')
+    new = State(
+        _('new'),
+        'new',
+        _("The user started a contribution")
+    )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _("The contribution was successful.")
+    )
+    failed = State(
+        _('failed'),
+        'failed',
+        _("The contribution failed.")
+    )
+    closed = State(
+        _('closed'),
+        'closed',
+        _("The contribution is closed unsuccessfully.")
+    )
 
     def is_user(self, user):
         return self.instance.user == user

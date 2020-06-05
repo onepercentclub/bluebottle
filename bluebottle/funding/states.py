@@ -226,9 +226,16 @@ class FundingStateMachine(ActivityStateMachine):
 
 class DonationStateMachine(ContributionStateMachine):
     model = Donation
-    failed = State(_('failed'), 'failed')
-    refunded = State(_('refunded'), 'refunded')
-    activity_refunded = State(_('activity refunded'), 'activity_refunded')
+    refunded = State(
+        _('refunded'),
+        'refunded',
+        _("The contribution was refunded.")
+    )
+    activity_refunded = State(
+        _('activity refunded'),
+        'activity_refunded',
+        _("The contribution was refunded because the activity refunded.")
+    )
 
     def is_successful(self):
         """donation is successful"""
@@ -241,6 +248,7 @@ class DonationStateMachine(ContributionStateMachine):
         ],
         ContributionStateMachine.succeeded,
         name=_('Succeed'),
+        description=_("The donation has been completed"),
         automatic=True,
         effects=[
             NotificationEffect(DonationSuccessActivityManagerMessage),
@@ -256,8 +264,9 @@ class DonationStateMachine(ContributionStateMachine):
             ContributionStateMachine.new,
             ContributionStateMachine.succeeded
         ],
-        failed,
+        ContributionStateMachine.failed,
         name=_('Fail'),
+        description=_("The donation failed."),
         automatic=True,
         effects=[
             RemoveDonationWallpostEffect,

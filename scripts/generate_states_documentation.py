@@ -3,6 +3,7 @@ from StringIO import StringIO
 
 import requests
 from django.core.management import call_command
+from django.conf import settings
 
 models = [
     {
@@ -12,18 +13,14 @@ models = [
     }
 ]
 
-api = {
-    'base_url': '',
-    'user': '',
-    'api_key': ''
-}
+api = settings.CONFLUENCE['api']
 
 
 def run(*args):
 
     for model in models:
-        url = "{}{}".format(api['base_url'], model['page_id'])
-        response = requests.get(url, auth=(api['user'], api['api_key']))
+        url = "{}/wiki/rest/api/content/{}".format(api['domain'], model['page_id'])
+        response = requests.get(url, auth=(api['user'], api['key']))
         data = response.json()
         version = data['version']['number'] + 1
         old_stdout = sys.stdout
@@ -53,7 +50,7 @@ def run(*args):
             }
         }
         url += '?expand=body.storage'
-        response = requests.put(url, json=data, auth=(api['user'], api['api_key']))
+        response = requests.put(url, json=data, auth=(api['user'], api['key']))
         if response.status_code == 200:
             print "[OK] {}".format(model['title'])
         else:

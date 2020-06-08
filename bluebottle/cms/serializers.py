@@ -253,6 +253,11 @@ class ActivitiesContentSerializer(serializers.ModelSerializer):
         if obj.highlighted:
             activities = Activity.objects.filter(
                 highlight=True
+            ).exclude(
+                status__in=[
+                    'draft', 'needs_work', 'submitted',
+                    'deleted', 'closed'
+                ]
             ).order_by('?')[0:4]
         else:
             activities = obj.activities

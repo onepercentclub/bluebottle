@@ -12,33 +12,33 @@ from bluebottle.members.models import Member
 def get_doc(element):
     if element.__doc__:
         return element.__doc__
-    return "{} (documentation missing)".format(unicode(element))
+    return "{} (documentation missing)".format(unicode(element)).replace('<', '').replace('>', '')
 
 
 class Command(BaseCommand):
-    help = 'Prints transitions for a model'
+    help = "Prints transitions for a model"
 
     def add_arguments(self, parser):
         parser.add_argument(
-            'model',
+            "model",
             type=str,
-            help='Dotted path to the model'
+            help="Dotted path to the model"
         )
         parser.add_argument(
-            '--attributes',
+            "--attributes",
             type=str,
-            default='',
-            help='List of comma separated attributes, e.g. "title=bla,description=test'
+            default="",
+            help="List of comma separated attributes, e.g. 'title=bla,description=test'"
         )
         parser.add_argument(
-            '--owner',
+            "--owner",
             type=str,
-            help='Email of the models owner'
+            help="Email of the models owner"
         )
         parser.add_argument(
-            '--user',
+            "--user",
             type=str,
-            help='Email of the models user'
+            help="Email of the models user"
         )
 
     def _has_field(self, model, field):
@@ -49,97 +49,98 @@ class Command(BaseCommand):
             return False
 
     def handle(self, *args, **options):
-        model = import_string(options['model'])
+        model = import_string(options["model"])
 
-        if options['attributes']:
+        if options["attributes"]:
             model_args = dict(
-                arg.split('=') for arg in options.get('attributes', ).split(",")
+                arg.split("=") for arg in options.get("attributes", ).split(",")
             )
         else:
             model_args = {}
 
-        if options.get('owner') and self._has_field(model, 'owner'):
-            model_args['owner'] = Member(email=options['owner'])
+        if options.get("owner") and self._has_field(model, "owner"):
+            model_args["owner"] = Member(email=options["owner"])
 
-        if options.get('user') and self._has_field(model, 'user'):
-            model_args['user'] = Member(email=options['user'])
+        if options.get("user") and self._has_field(model, "user"):
+            model_args["user"] = Member(email=options["user"])
 
         instance = model(
             **model_args
         )
 
         if isinstance(instance, Initiative):
-            instance.title = 'Demo Initiative'
+            instance.title = "Demo Initiative"
 
         if isinstance(instance, Funding):
-            instance.title = 'Demo Campaign'
+            instance.title = "Demo Campaign"
 
         if isinstance(instance, Donation):
-            instance.activity = Funding(title='Demo Campaign')
+            instance.activity = Funding(title="Demo Campaign")
 
         if isinstance(instance, Event):
-            instance.title = 'Demo Event'
+            instance.title = "Demo Event"
 
         if isinstance(instance, Participant):
-            instance.activity = Event(title='Demo Event')
+            instance.activity = Event(title="Demo Event")
 
         if isinstance(instance, Assignment):
-            instance.title = 'Demo Assignment'
+            instance.title = "Demo Assignment"
 
         if isinstance(instance, Applicant):
-            instance.activity = Assignment(title='Demo Assignment')
+            instance.activity = Assignment(title="Demo Assignment")
 
         machine = instance.states
 
-        text = ''
+        text = ""
 
-        # text += u'# {}\n'.format(model._meta.model_name.capitalize())
+        text += u"<h2>States</h2>"
 
-        text += u'## States\n'
-
-        text += u'|State Name|Description|\n'
-        text += u'|---|---|\n'
+        text += u"<table data-layout=\"default\"><tr><th>State Name</th><th>Description</th></tr>"
 
         for state in machine.states.values():
-            text += u'|{}|{}|\n'.format(state.name.capitalize(), state.description)
+            text += u"<tr><td>{}</td><td>{}</td></tr>".format(state.name.capitalize(), state.description)
 
-        text += u'\n'
+        text += u"</table>"
 
-        text += u'## Transitions\n'
-        text += u'|Name|Description|From|To|Manual|Conditions|Side Effects|\n'
-        text += u'|---|---|---|---|---|--------|--------|\n'
+        text += u"<h2>Transitions</h2>"
+        text += u"<table data-layout=\"full-width\"><tr><th>Name</th><th>Description</th><th>From</th><th>To</th>" \
+                u"<th>Manual</th><th>Conditions</th><th>Side Effects</th></tr>"
 
         for transition in machine.transitions.values():
-            text += u'|{}|{}|{}|{}|{}|{}|{}|\n'.format(
+            str = u"<tr><td>{}</td><td>{}</td><td><ul>{}</ul></td>" \
+                  u"<td>{}</td><td>{}</td><td><ul>{}</ul></td><td><ul>{}</ul></td></tr>"
+            text += str.format(
                 transition.name,
                 transition.description,
-                ', '.join(state.name.capitalize() for state in transition.sources),
+                u"".join(u"<li>{}</li>".format(state.name.capitalize()) for state in transition.sources),
                 transition.target.name.capitalize(),
-                'Automatic' if transition.automatic else 'Manual',
-                ', '.join(
-                    get_doc(condition)
+                "Automatic" if transition.automatic else "Manual",
+                u"".join(
+                    u"<li>{}</li>".format(get_doc(condition))
                     for condition
                     in transition.conditions
                 ),
-                ', '.join(
-                    effect(instance).markdown()
+                u"".join(
+                    u"<li>{}</li>".format(effect(instance).to_html())
                     for effect
                     in transition.effects
                 ),
             )
-        text += u'\n'
+        text += u"</table>"
 
         if model.triggers:
-            text += u'# Triggers\n'
-            text += u'|When|Conditions|Effects|\n'
-            text += u'|---|---|---|\n'
+            text += u"<h2>Triggers</h2>"
+            text += u"<table data-layout=\"full-width\">" \
+                    u"<tr><th>When</th>" \
+                    u"<th>Conditions</th>" \
+                    u"<th>Effects</th></tr>"
 
             for trigger in model.triggers:
-                for effect in trigger.effects:
-                    text += u'|{}|{}|{}|\n'.format(
+                for effect in trigger(instance).effects:
+                    text += u"<tr><td>{}</td><td>{}</td><td>{}</td></tr>".format(
                         unicode(trigger(instance)),
-                        ' or '.join(get_doc(condition) for condition in effect.conditions),
+                        u" <b>and</b> ".join(get_doc(condition) for condition in effect(instance).conditions),
                         unicode(effect(instance)),
                     )
-
+            text += u"</table>"
         print(text)

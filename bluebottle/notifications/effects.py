@@ -27,13 +27,13 @@ class BaseNotificationEffect(Effect):
                 recipients_text += u' (and {} more)'.format(len(recipients) - 2)
         except Exception:
             recipients_text = 'related users'
-        return (message.generic_subject, recipients_text)
+        return {'subject': message.generic_subject, 'recipients': recipients_text}
 
     def __unicode__(self):
-        return _('Message %s to %s') % self._content()
+        return _('Message {subject} to {recipients}').format(**self._content())
 
-    def markdown(self):
-        return _('Message _%s_ to %s') % self._content()
+    def to_html(self):
+        return _('Message <em>{subject}</em> to {recipients}').format(**self._content())
 
     @property
     def html(self):

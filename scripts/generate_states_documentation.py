@@ -98,11 +98,8 @@ def run(*args):
         sys.stdout = result
         call_command('print_transitions', model['model'])
         sys.stdout = old_stdout
-        md = result.getvalue()
-
-        md = u"<ac:structured-macro ac:name=\"markdown\" ac:schema-version=\"1\" " \
-             u"data-layout=\"full-width\" ac:macro-id=\"68e06823-d52b-444a-b606-59d728ce0124\">" \
-             u"<ac:plain-text-body><![CDATA[{}]]></ac:plain-text-body></ac:structured-macro>".format(md)
+        html = result.getvalue()
+        html = html.encode('ascii', 'ignore')
 
         data = {
             "id": model['page_id'],
@@ -114,7 +111,7 @@ def run(*args):
             },
             "body": {
                 "storage": {
-                    "value": md,
+                    "value": html,
                     "representation": "storage"
                 }
             }

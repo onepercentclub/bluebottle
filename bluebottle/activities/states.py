@@ -203,7 +203,9 @@ class ContributionStateMachine(ModelStateMachine):
     initiate = Transition(EmptyState(), new)
     close = Transition(
         (new, succeeded, failed, ),
-        closed
+        closed,
+        name=_('close'),
+        description=_("Close the contribution. It will not be visible in reports."),
     )
 
 

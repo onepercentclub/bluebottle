@@ -46,7 +46,7 @@ class Effect(object):
     def __unicode__(self):
         return self.__class__.__name__
 
-    def markdown(self):
+    def to_html(self):
         return unicode(self)
 
 

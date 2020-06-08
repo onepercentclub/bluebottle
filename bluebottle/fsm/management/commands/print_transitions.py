@@ -79,20 +79,20 @@ class Command(BaseCommand):
 
         text += u'## States\n'
 
-        text += u'|State Name|Description|'
-        text += u'|---|---|'
+        text += u'|State Name|Description|\n'
+        text += u'|---|---|\n'
 
         for state in machine.states.values():
-            text += u'|{}|{}|'.format(state.name.capitalize(), state.description)
+            text += u'|{}|{}|\n'.format(state.name.capitalize(), state.description)
 
         text += u'\n'
 
         text += u'## Transitions\n'
-        text += u'|Name|Description|From|To|Manual|Conditions|Side Effects|'
-        text += u'|---|---|---|---|---|--------|--------|'
+        text += u'|Name|Description|From|To|Manual|Conditions|Side Effects|\n'
+        text += u'|---|---|---|---|---|--------|--------|\n'
 
         for transition in machine.transitions.values():
-            text += u'| {} | {} | {} | {} | {} | {} | {} |'.format(
+            text += u'|{}|{}|{}|{}|{}|{}|{}|\n'.format(
                 transition.name,
                 transition.description,
                 ', '.join(state.name.capitalize() for state in transition.sources),
@@ -113,12 +113,12 @@ class Command(BaseCommand):
 
         if model.triggers:
             text += u'# Triggers\n'
-            text += u'|When|Conditions|Effects|'
-            text += u'|---|---|---|'
+            text += u'|When|Conditions|Effects|\n'
+            text += u'|---|---|---|\n'
 
             for trigger in model.triggers:
                 for effect in trigger.effects:
-                    text += u'|{}|{}|{}|'.format(
+                    text += u'|{}|{}|{}|\n'.format(
                         unicode(trigger(instance)),
                         ' or '.join(get_doc(condition) for condition in effect.conditions),
                         unicode(effect(instance)),

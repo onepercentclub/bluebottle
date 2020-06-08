@@ -10,7 +10,24 @@ models = [
         'title': 'Funding - Donation',
         'model': 'bluebottle.funding.models.Donation',
         'page_id': '739999825'
-    }
+    },
+    {
+        'title': 'Funding - Fundraising Campaign',
+        'model': 'bluebottle.funding.models.Funding',
+        'page_id': '742359054'
+    },
+
+    {
+        'title': 'Funding - Plain Payout Account',
+        'model': 'bluebottle.funding.models.PlainPayoutAccount',
+        'page_id': '742654079'
+    },
+    {
+        'title': 'Funding - Stripe Payout Account',
+        'model': 'bluebottle.funding_stripe.models.StripePayoutAccount',
+        'page_id': '742654093'
+    },
+
 ]
 
 api = settings.CONFLUENCE['api']

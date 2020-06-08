@@ -75,7 +75,7 @@ class Command(BaseCommand):
 
         text = ''
 
-        text += u'# {}\n'.format(model._meta.model_name.capitalize())
+        # text += u'# {}\n'.format(model._meta.model_name.capitalize())
 
         text += u'## States\n'
 

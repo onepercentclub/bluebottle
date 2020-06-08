@@ -8,6 +8,7 @@ from django.template.response import TemplateResponse
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.notifications.effects import BaseNotificationEffect
 from bluebottle.utils.forms import TransitionConfirmationForm
 
 
@@ -41,14 +42,25 @@ class StateMachineAdminMixin(object):
             new_obj = self.save_form(request, form, change=True)
 
             effects = list(new_obj.all_effects)
+            cancel_link = reverse(
+                'admin:{}_{}_change'.format(
+                    self.model._meta.app_label, self.model._meta.model_name
+                ),
+                args=(object_id, )
+            )
 
             if effects:
                 context = dict(
                     obj=obj,
                     title=_('Are you sure'),
+                    cancel_url=cancel_link,
                     post=request.POST,
                     opts=self.model._meta,
                     media=self.media,
+                    has_notifications=any(
+                        isinstance(effect, BaseNotificationEffect)
+                        for effect in effects
+                    ),
                     effects=effects
                 )
 
@@ -118,14 +130,26 @@ class StateMachineAdminMixin(object):
         for effect in transition.effects:
             effects += effect(instance).all_effects()
 
+        cancel_link = reverse(
+            'admin:{}_{}_change'.format(
+                self.model._meta.app_label, self.model._meta.model_name
+            ),
+            args=(pk, )
+        )
+
         context = dict(
             self.admin_site.each_context(request),
             title=TransitionConfirmationForm.title,
             action=transition.field,
             opts=self.model._meta,
+            cancel_url=cancel_link,
             obj=instance,
             pk=instance.pk,
             form=form,
+            has_notifications=any(
+                isinstance(effect, BaseNotificationEffect)
+                for effect in effects
+            ),
             source=instance.status,
             effects=effects,
             target=transition.target.name,

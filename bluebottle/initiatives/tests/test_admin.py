@@ -50,6 +50,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'Are you sure you want to make these changes to')
+        self.assertContains(response, 'Send messages')
 
         # Confirm should change status
         response = self.client.post(self.approve_url, {'confirm': True, 'send_messages': True})
@@ -66,6 +67,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'Are you sure you want to make these changes to')
+        self.assertContains(response, 'Send messages')
 
         # Confirm should change status
         response = self.client.post(self.approve_url, {'confirm': True, 'send_messages': False})
@@ -74,6 +76,28 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(self.initiative.status, 'approved')
         # No mail should be sent
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_review_initiative_request_changes(self):
+        request_changes_url = reverse(
+            'admin:initiatives_initiative_state_transition',
+            args=(self.initiative.id, 'states', 'request_changes')
+        )
+
+        self.client.force_login(self.superuser)
+        response = self.client.get(request_changes_url)
+
+        # Should show confirmation page
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, 'Are you sure you want to make these changes to')
+        self.assertNotContains(response, 'Send messages')
+
+        # Confirm should change status
+        response = self.client.post(self.approve_url, {'confirm': True, 'send_messages': True})
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
+        self.initiative = Initiative.objects.get(pk=self.initiative.id)
+        self.assertEqual(self.initiative.status, 'approved')
+        # Should send out one mail
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_review_initiative_illegal_transition(self):
         self.client.force_login(self.superuser)

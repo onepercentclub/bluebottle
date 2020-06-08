@@ -2,7 +2,10 @@ from django.core.exceptions import FieldDoesNotExist
 from django.core.management.base import BaseCommand
 from django.utils.module_loading import import_string
 
+from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.events.models import Event, Participant
 from bluebottle.funding.models import Donation, Funding
+from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 
 
@@ -65,11 +68,26 @@ class Command(BaseCommand):
             **model_args
         )
 
+        if isinstance(instance, Initiative):
+            instance.title = 'Demo Initiative'
+
         if isinstance(instance, Funding):
-            instance.title = 'campaign'
+            instance.title = 'Demo Campaign'
 
         if isinstance(instance, Donation):
-            instance.activity = Funding(title='campaign')
+            instance.activity = Funding(title='Demo Campaign')
+
+        if isinstance(instance, Event):
+            instance.title = 'Demo Event'
+
+        if isinstance(instance, Participant):
+            instance.activity = Event(title='Demo Event')
+
+        if isinstance(instance, Assignment):
+            instance.title = 'Demo Assignment'
+
+        if isinstance(instance, Applicant):
+            instance.activity = Assignment(title='Demo Assignment')
 
         machine = instance.states
 
@@ -104,7 +122,7 @@ class Command(BaseCommand):
                     in transition.conditions
                 ),
                 ', '.join(
-                    unicode(effect(instance))
+                    effect(instance).markdown()
                     for effect
                     in transition.effects
                 ),

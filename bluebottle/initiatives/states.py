@@ -53,6 +53,7 @@ class ReviewStateMachine(ModelStateMachine):
         [draft, needs_work],
         submitted,
         name=_('Submit'),
+        description=_("The initiative will be submitted for review."),
         conditions=[is_complete, is_valid],
         automatic=False,
         effects=[
@@ -64,6 +65,7 @@ class ReviewStateMachine(ModelStateMachine):
         submitted,
         approved,
         name=_('Approve'),
+        description=_("The initiative will be approved and go online."),
         conditions=[is_complete, is_valid],
         automatic=False,
         permission=is_staff,
@@ -77,6 +79,7 @@ class ReviewStateMachine(ModelStateMachine):
         submitted,
         needs_work,
         name=_('Request Changes'),
+        description=_("The initiative needs work. The initiator will be able to edit it again."),
         conditions=[],
         automatic=False,
     )
@@ -85,6 +88,7 @@ class ReviewStateMachine(ModelStateMachine):
         AllStates(),
         rejected,
         name=_('Reject'),
+        description=_("The initiative will be rejected. The initiator will not be able to edit it."),
         automatic=False,
         permission=is_staff,
         effects=[
@@ -97,6 +101,7 @@ class ReviewStateMachine(ModelStateMachine):
         rejected,
         draft,
         name=_('Restore'),
+        description=_("The initiative will be restored. The initiator will ben able to edit it again."),
         automatic=False,
         permission=is_staff,
     )

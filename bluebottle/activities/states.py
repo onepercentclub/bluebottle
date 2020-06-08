@@ -215,11 +215,15 @@ class OrganizerStateMachine(ContributionStateMachine):
             ContributionStateMachine.new,
             ContributionStateMachine.failed
         ],
-        ContributionStateMachine.succeeded
+        ContributionStateMachine.succeeded,
+        name=_('succeed'),
+        description=_('The organizer was successful in setting up the activity.')
     )
     fail = Transition(
         AllStates(),
-        ContributionStateMachine.failed
+        ContributionStateMachine.failed,
+        name=_('fail'),
+        description=_('The organizer failed to set up the activity.')
     )
     reset = Transition(
         [
@@ -227,4 +231,6 @@ class OrganizerStateMachine(ContributionStateMachine):
             ContributionStateMachine.failed
         ],
         ContributionStateMachine.new,
+        name=_('reset'),
+        description=_('The organizer is still busy setting up the activity.')
     )

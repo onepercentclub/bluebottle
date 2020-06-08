@@ -16,7 +16,7 @@ class BaseNotificationEffect(Effect):
     def __repr__(self):
         return '<Effect: Send {}>'.format(self.message)
 
-    def __unicode__(self):
+    def _content(self):
         message = self.message(self.instance)
 
         try:
@@ -26,9 +26,14 @@ class BaseNotificationEffect(Effect):
             if len(recipients) > 2:
                 recipients_text += u' (and {} more)'.format(len(recipients) - 2)
         except Exception:
-            recipients_text = 'to related users'
+            recipients_text = 'related users'
+        return (message.generic_subject, recipients_text)
 
-        return _('Message %s to %s') % (message.generic_subject, recipients_text)
+    def __unicode__(self):
+        return _('Message %s to %s') % self._content()
+
+    def markdown(self):
+        return _('Message _%s_ to %s') % self._content()
 
     @property
     def html(self):

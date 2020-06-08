@@ -46,6 +46,9 @@ class Effect(object):
     def __unicode__(self):
         return self.__class__.__name__
 
+    def markdown(self):
+        return unicode(self)
+
 
 class BaseTransitionEffect(Effect):
     field = 'states'

@@ -6,6 +6,20 @@ from django.core.management import call_command
 from django.conf import settings
 
 models = [
+
+    # Initiative
+    {
+        'title': 'States - Initiative',
+        'model': 'bluebottle.initiatives.models.Initiative',
+        'page_id': '742588583'
+    },
+    {
+        'title': 'States - Activity Organizer',
+        'model': 'bluebottle.activities.models.Organizer',
+        'page_id': '742588590'
+    },
+
+    # Funding
     {
         'title': 'States - Funding - Donation',
         'model': 'bluebottle.funding.models.Donation',
@@ -41,6 +55,30 @@ models = [
         'title': 'States - Funding - Stripe Intent Payment',
         'model': 'bluebottle.funding_stripe.models.StripePayment',
         'page_id': '742326447'
+    },
+
+    # Events
+    {
+        'title': 'States - Event',
+        'model': 'bluebottle.events.models.Event',
+        'page_id': '742654166'
+    },
+    {
+        'title': 'States - Event - Participant',
+        'model': 'bluebottle.events.models.Participant',
+        'page_id': '742654190'
+    },
+
+    # Assignments
+    {
+        'title': 'States - Assignment',
+        'model': 'bluebottle.assignments.models.Assignment',
+        'page_id': '742326537'
+    },
+    {
+        'title': 'States - Assignment - Applicant',
+        'model': 'bluebottle.assignments.models.Applicant',
+        'page_id': '742359221'
     },
 
 ]

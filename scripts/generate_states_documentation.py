@@ -7,25 +7,40 @@ from django.conf import settings
 
 models = [
     {
-        'title': 'Funding - Donation',
+        'title': 'States - Funding - Donation',
         'model': 'bluebottle.funding.models.Donation',
         'page_id': '739999825'
     },
     {
-        'title': 'Funding - Fundraising Campaign',
+        'title': 'States - Funding - Fundraising Campaign',
         'model': 'bluebottle.funding.models.Funding',
         'page_id': '742359054'
     },
 
     {
-        'title': 'Funding - Plain Payout Account',
+        'title': 'States - Funding - Plain Payout Account',
         'model': 'bluebottle.funding.models.PlainPayoutAccount',
         'page_id': '742654079'
     },
     {
-        'title': 'Funding - Stripe Payout Account',
+        'title': 'States - Funding - Stripe Payout Account',
         'model': 'bluebottle.funding_stripe.models.StripePayoutAccount',
         'page_id': '742654093'
+    },
+    {
+        'title': 'States - Funding - Payout',
+        'model': 'bluebottle.funding.models.Payout',
+        'page_id': '742326440'
+    },
+    {
+        'title': 'States - Funding - Stripe Source Payment',
+        'model': 'bluebottle.funding_stripe.models.StripeSourcePayment',
+        'page_id': '742326474'
+    },
+    {
+        'title': 'States - Funding - Stripe Intent Payment',
+        'model': 'bluebottle.funding_stripe.models.StripePayment',
+        'page_id': '742326447'
     },
 
 ]

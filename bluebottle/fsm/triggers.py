@@ -17,6 +17,9 @@ class ModelTrigger(object):
 
 class ModelChangedTrigger(ModelTrigger):
     field = None
+    @property
+    def title(self):
+        return 'change the {}'.format(self.field)
 
     @property
     def is_valid(self):

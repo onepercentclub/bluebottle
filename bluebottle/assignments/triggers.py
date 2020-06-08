@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.assignments.messages import AssignmentDateChanged
 from bluebottle.assignments.models import Assignment, Applicant
@@ -101,6 +102,7 @@ class TimeSpentChanged(ModelChangedTrigger):
 
 
 class ApplicantDeleted(ModelDeletedTrigger):
+    title = _('delete this participant')
     effects = [
         RelatedTransitionEffect(
             'activity',

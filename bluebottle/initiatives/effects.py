@@ -7,6 +7,8 @@ class ApproveActivities(Effect):
     post_save = True
     conditions = []
 
+    title = _('Change status of related objects')
+
     def execute(self, **kwargs):
         for activity in self.instance.activities.filter(status='submitted'):
             activity.states.approve(save=True)
@@ -18,6 +20,12 @@ class ApproveActivities(Effect):
 class RejectActivities(Effect):
     post_save = True
     conditions = []
+
+    title = _('Change status of related objects')
+
+    @property
+    def description(self):
+        return unicode(self)
 
     def execute(self, **kwargs):
         for activity in self.instance.activities.all():

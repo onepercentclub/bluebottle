@@ -13,39 +13,43 @@ from bluebottle.wallposts.models import SystemWallpost
 class GeneratePayoutsEffect(Effect):
     post_save = True
     conditions = []
+    title = _('Generate payouts')
 
     def execute(self, **kwargs):
         Payout.generate(self.instance)
 
     def __unicode__(self):
-        return _('Generate payouts')
+        return _('Generate payouts, so that payouts can be approved')
 
 
 class DeletePayoutsEffect(Effect):
     post_save = True
     conditions = []
+    title = _('Delete payouts')
 
     def execute(self, **kwargs):
         self.instance.payouts.all().delete()
 
     def __unicode__(self):
-        return _('Delete related payouts')
+        return _('Delete all related payouts')
 
 
 class UpdateFundingAmountsEffect(Effect):
     post_save = True
     conditions = []
+    title = _('Update amounts')
 
     def execute(self, **kwargs):
         self.instance.activity.update_amounts()
 
     def __unicode__(self):
-        return _('Update funding amounts')
+        return _('Update total amounts')
 
 
 class SetDeadlineEffect(Effect):
     post_save = False
     conditions = []
+    title = _('Update amounts')
 
     def execute(self, **kwargs):
         if not self.instance.deadline:
@@ -62,23 +66,25 @@ class SetDeadlineEffect(Effect):
             )
 
     def __unicode__(self):
-        return _('Set deadline (if duration is set)')
+        return _('Set deadline according to the deadline')
 
 
 class ExecuteRefundEffect(Effect):
     post_save = True
     conditions = []
+    title = _('Refund payment')
 
     def execute(self, **kwargs):
         self.instance.refund()
 
     def __unicode__(self):
-        return _('Refund payment at PSP')
+        return _('Request refund payment at PSP')
 
 
 class GenerateDonationWallpostEffect(Effect):
     post_save = True
     conditions = []
+    title = _('Create wallpost')
 
     def execute(self, **kwargs):
         SystemWallpost.objects.get_or_create(
@@ -91,12 +97,13 @@ class GenerateDonationWallpostEffect(Effect):
         )
 
     def __unicode__(self):
-        return _('Generate donation wallpost')
+        return _('Generate wallpost for donation')
 
 
 class RemoveDonationWallpostEffect(Effect):
     post_save = True
     conditions = []
+    title = _('Delete wallpost')
 
     def execute(self, **kwargs):
         SystemWallpost.objects.filter(
@@ -105,12 +112,13 @@ class RemoveDonationWallpostEffect(Effect):
         ).all().delete()
 
     def __unicode__(self):
-        return _('Delete donation wallpost')
+        return _('Delete wallpost for donation')
 
 
 class SubmitConnectedActivitiesEffect(Effect):
     post_save = True
     conditions = []
+    title = _('Submit activities')
 
     def execute(self, **kwargs):
         for external_account in self.instance.external_accounts.all():
@@ -126,6 +134,7 @@ class SubmitConnectedActivitiesEffect(Effect):
 class DeleteDocumentEffect(Effect):
     post_save = False
     conditions = []
+    title = _('Delete uploaded document')
 
     def execute(self, **kwargs):
         if self.instance.document:
@@ -133,25 +142,27 @@ class DeleteDocumentEffect(Effect):
             self.instance.document = None
 
     def __unicode__(self):
-        return _('Delete uploaded document')
+        return _('Delete verification documents, since they are no longer needed')
 
 
 class SubmitPayoutEffect(Effect):
     post_save = True
     conditions = []
+    title = _('Trigger payout')
 
     def execute(self, **kwargs):
         adapter = DoradoPayoutAdapter(self.instance)
         adapter.trigger_payout()
 
     def __unicode__(self):
-        return _('Trigger payout')
+        return _('Trigger payout at the PSP')
 
 
 class BaseSetDateEffect(Effect):
     post_save = False
     conditions = []
     field = 'date'
+    title = _('Set date')
 
     def execute(self, **kwargs):
         setattr(self.instance, self.field, timezone.now())
@@ -162,7 +173,6 @@ class BaseSetDateEffect(Effect):
 
 
 def SetDateEffect(_field):
-
     class _SetDateEffect(BaseSetDateEffect):
         field = _field
 

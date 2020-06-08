@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
@@ -69,6 +70,7 @@ Event.triggers = [CapacityChanged, DateChanged, Started, Finished]
 
 
 class ParticipantDeleted(ModelDeletedTrigger):
+    title = _('delete this participant')
     field = 'start'
 
     effects = [

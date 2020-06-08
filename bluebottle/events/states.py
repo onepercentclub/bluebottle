@@ -112,6 +112,7 @@ class EventStateMachine(ActivityStateMachine):
     reopen = Transition(
         (ActivityStateMachine.succeeded, ActivityStateMachine.closed, ),
         ActivityStateMachine.open,
+        name=_('Reopen'),
         effects=[
             RelatedTransitionEffect('participants', 'reset'),
             # Need to add organizer,reset() But probably should differentiate between

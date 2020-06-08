@@ -48,6 +48,9 @@ class StateMachineAdminMixin(object):
                 ),
                 args=(object_id, )
             )
+            action_text = ' and '.join(
+                unicode(trigger.title) for trigger in obj.current_triggers
+            )
 
             if effects:
                 context = dict(
@@ -56,6 +59,7 @@ class StateMachineAdminMixin(object):
                     cancel_url=cancel_link,
                     post=request.POST,
                     opts=self.model._meta,
+                    action_text=action_text,
                     media=self.media,
                     has_notifications=any(
                         isinstance(effect, BaseNotificationEffect)
@@ -74,7 +78,7 @@ class StateMachineAdminMixin(object):
         """
         Given a model instance save it to the database.
         """
-        send_messages = request.POST.get('send_messages') == 'on'
+        send_messages = request.POST.get('disable_messages') != 'on'
         obj.save(send_messages=send_messages)
 
     def get_transition(self, instance, name, field_name):
@@ -136,6 +140,7 @@ class StateMachineAdminMixin(object):
             ),
             args=(pk, )
         )
+        action_text = "change the status to {}".format(transition.target.name)
 
         context = dict(
             self.admin_site.each_context(request),
@@ -145,6 +150,7 @@ class StateMachineAdminMixin(object):
             cancel_url=cancel_link,
             obj=instance,
             pk=instance.pk,
+            action_text=action_text,
             form=form,
             has_notifications=any(
                 isinstance(effect, BaseNotificationEffect)

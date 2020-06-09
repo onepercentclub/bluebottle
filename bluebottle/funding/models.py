@@ -108,6 +108,7 @@ class PaymentProvider(PolymorphicModel):
 
 
 class Funding(Activity):
+
     deadline = models.DateTimeField(
         _('deadline'),
         null=True,

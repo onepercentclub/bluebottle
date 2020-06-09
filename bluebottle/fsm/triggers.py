@@ -1,3 +1,6 @@
+from django.utils.translation import ugettext_lazy as _
+
+
 class ModelTrigger(object):
     def __init__(self, instance):
         self.instance = instance
@@ -14,13 +17,24 @@ class ModelTrigger(object):
             if effect.is_valid:
                 yield effect
 
+    def __unicode__(self):
+        return unicode(_("Model has been changed"))
+
 
 class ModelChangedTrigger(ModelTrigger):
     field = None
 
     @property
     def is_valid(self):
+        if not self.field:
+            return True
         return self.instance.field_is_changed(self.field)
+
+    def __unicode__(self):
+        if self.field:
+            field_name = self.instance._meta.get_field(self.field).verbose_name
+            return unicode(_("{} has been changed").format(field_name.capitalize()))
+        return unicode(_("Model has been changed"))
 
 
 class ModelDeletedTrigger(ModelTrigger):
@@ -30,6 +44,9 @@ class ModelDeletedTrigger(ModelTrigger):
     @property
     def is_valid(self):
         pass
+
+    def __unicode__(self):
+        return unicode(_("Model has been deleted"))
 
 
 class TriggerMixin(object):

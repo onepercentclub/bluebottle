@@ -46,6 +46,9 @@ class Effect(object):
     def __unicode__(self):
         return self.__class__.__name__
 
+    def to_html(self):
+        return unicode(self)
+
 
 class BaseTransitionEffect(Effect):
     field = 'states'
@@ -84,7 +87,10 @@ class BaseTransitionEffect(Effect):
         return '<Effect: {}>'.format(self.transition)
 
     def __unicode__(self):
-        return _('Transition %s to %s') % (unicode(self.instance), unicode(self.transition.target))
+        return unicode(self.transition.target)
+
+    def to_html(self):
+        return _('%s <i>%s</i>') % (self.transition.name, unicode(self.instance))
 
 
 def TransitionEffect(transition_name, field='states', conditions=None, save=False, post_save=False):
@@ -150,6 +156,12 @@ class BaseRelatedTransitionEffect(Effect):
                     result.append(effect)
 
         return result
+
+    def __unicode__(self):
+        return '{} related {}'.format(
+            self.transition_effect_class.name,
+            self.relation
+        )
 
 
 def RelatedTransitionEffect(_relation, transition_name, field='states', conditions=None):

@@ -20,16 +20,46 @@ class CreateOrganizer(Effect):
 
 
 class ActivityStateMachine(ModelStateMachine):
-    draft = State(_('draft'), 'draft', _('The activity is created by the user'))
-    submitted = State(_('submitted'), 'submitted', _('The activity is complete and needs to be review'))
-    needs_work = State(_('needs work'), 'needs_work', _('The activity needs to be edited'))
-
-    rejected = State(_('rejected'), 'rejected', _('The activity is rejected by the review'))
-    deleted = State(_('deleted'), 'deleted', _('The activity is deleted by the user'))
-
-    open = State(_('open'), 'open', _('Activity is open, and accepting contributions'))
-    succeeded = State(_('succeeded'), 'succeeded', _('The activity is succeeded'))
-    closed = State(_('closed'), 'closed')
+    draft = State(
+        _('draft'),
+        'draft',
+        _('The activity is created by the user.')
+    )
+    submitted = State(
+        _('submitted'),
+        'submitted',
+        _('The activity is complete and needs to be review.')
+    )
+    needs_work = State(
+        _('needs work'),
+        'needs_work',
+        _('The activity has not been approved by the reviewer and needs to be edited.')
+    )
+    rejected = State(
+        _('rejected'),
+        'rejected',
+        _('The activity has been rejected by the reviewer.')
+    )
+    deleted = State(
+        _('deleted'),
+        'deleted',
+        _('The activity is deleted by the initiator.')
+    )
+    open = State(
+        _('open'),
+        'open',
+        _('The activity is open, and accepting contributions.')
+    )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _('The activity has ended successfully.')
+    )
+    closed = State(
+        _('closed'),
+        'closed',
+        _('The activity was unsuccessfull and has been closed.')
+    )
 
     def is_complete(self):
         """all required information has been submitted"""
@@ -102,15 +132,6 @@ class ActivityStateMachine(ModelStateMachine):
         effects=[RelatedTransitionEffect('organizer', 'fail')]
     )
 
-    restore = Transition(
-        rejected,
-        draft,
-        name=_('Restore'),
-        automatic=False,
-        permission=is_staff,
-        effects=[RelatedTransitionEffect('organizer', 'succeed')]
-    )
-
     close = Transition(
         open,
         closed,
@@ -146,18 +167,41 @@ class ActivityStateMachine(ModelStateMachine):
 
 
 class ContributionStateMachine(ModelStateMachine):
-    new = State(_('new'), 'new')
-    succeeded = State(_('succeeded'), 'succeeded')
-    failed = State(_('failed'), 'failed')
-    closed = State(_('closed'), 'closed')
+    new = State(
+        _('new'),
+        'new',
+        _("The user started a contribution")
+    )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _("The contribution was successful.")
+    )
+    failed = State(
+        _('failed'),
+        'failed',
+        _("The contribution failed.")
+    )
+    closed = State(
+        _('closed'),
+        'closed',
+        _("The contribution is closed unsuccessfully.")
+    )
 
     def is_user(self, user):
         return self.instance.user == user
 
-    initiate = Transition(EmptyState(), new)
+    initiate = Transition(
+        EmptyState(),
+        new,
+        name=_('initiate'),
+        description=_('The contribution was created.')
+    )
     close = Transition(
         (new, succeeded, failed, ),
-        closed
+        closed,
+        name=_('close'),
+        description=_("Close the contribution. It will not be visible in reports."),
     )
 
 
@@ -169,11 +213,15 @@ class OrganizerStateMachine(ContributionStateMachine):
             ContributionStateMachine.new,
             ContributionStateMachine.failed
         ],
-        ContributionStateMachine.succeeded
+        ContributionStateMachine.succeeded,
+        name=_('succeed'),
+        description=_('The organizer was successful in setting up the activity.')
     )
     fail = Transition(
         AllStates(),
-        ContributionStateMachine.failed
+        ContributionStateMachine.failed,
+        name=_('fail'),
+        description=_('The organizer failed to set up the activity.')
     )
     reset = Transition(
         [
@@ -181,4 +229,6 @@ class OrganizerStateMachine(ContributionStateMachine):
             ContributionStateMachine.failed
         ],
         ContributionStateMachine.new,
+        name=_('reset'),
+        description=_('The organizer is still busy setting up the activity.')
     )

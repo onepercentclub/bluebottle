@@ -110,7 +110,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory.create(first_name='Nono')
 
         deadline = now() - timedelta(days=1)
-        date = now() - timedelta(hours=2)
+        date = now() + timedelta(hours=2)
 
         assignment = AssignmentFactory.create(
             owner=user,
@@ -126,6 +126,10 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         for applicant in applicants:
             applicant.states.accept(save=True)
 
+        date = now() - timedelta(hours=2)
+        assignment.date = date
+        assignment.save()
+
         tenant = connection.tenant
         check_assignment_start_date()
 
@@ -133,6 +137,29 @@ class AssignmentTasksTestCase(BluebottleTestCase):
             assignment.refresh_from_db()
 
         self.assertEqual(assignment.status, 'running')
+
+    def test_assignment_check_start_date_no_applicants(self):
+        user = BlueBottleUserFactory.create(first_name='Nono')
+
+        deadline = now() - timedelta(days=1)
+        date = now() - timedelta(hours=2)
+
+        assignment = AssignmentFactory.create(
+            owner=user,
+            status='open',
+            capacity=3,
+            registration_deadline=deadline.date(),
+            initiative=self.initiative,
+            duration=10,
+            date=date
+        )
+        tenant = connection.tenant
+        check_assignment_start_date()
+
+        with LocalTenant(tenant, clear_tenant=True):
+            assignment.refresh_from_db()
+
+        self.assertEqual(assignment.status, 'closed')
 
     def test_assignment_check_end_date(self):
         user = BlueBottleUserFactory.create(first_name='Nono')

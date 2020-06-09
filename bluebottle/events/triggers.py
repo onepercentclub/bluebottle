@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
@@ -45,6 +46,9 @@ class Started(ModelChangedTrigger):
         TransitionEffect('start', conditions=[EventStateMachine.should_start, EventStateMachine.has_participants]),
     ]
 
+    def __unicode__(self):
+        return unicode(_("Start date has passed"))
+
 
 class Finished(ModelChangedTrigger):
     @property
@@ -89,6 +93,9 @@ class ParticipantDeleted(ModelDeletedTrigger):
             ],
         ),
     ]
+
+    def __unicode__(self):
+        return unicode(_("Participant has been deleted"))
 
 
 Participant.triggers = [ParticipantDeleted]

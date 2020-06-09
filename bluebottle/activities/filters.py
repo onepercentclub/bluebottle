@@ -186,7 +186,7 @@ class ActivityFilter(DjangoFilterBackend):
         ActivityStateMachine.open.value,
         FundingStateMachine.partially_funded.value,
         EventStateMachine.full.value,
-        EventStateMachine.is_running.value
+        EventStateMachine.running.value
     ]
 
     def filter_queryset(self, request, queryset, view):

@@ -69,6 +69,7 @@ class ActivityStateMachine(ModelStateMachine):
     submit = Transition(
         [draft, needs_work],
         submitted,
+        description=_('Submit the activity for approval'),
         automatic=False,
         name=_('Submit'),
         conditions=[is_complete, is_valid, initiative_is_submitted],
@@ -97,18 +98,10 @@ class ActivityStateMachine(ModelStateMachine):
         AllStates(),
         rejected,
         name=_('Reject'),
+        description=_('Reject the activity. This will make sure the initiative is no longer visible'),
         automatic=False,
         permission=is_staff,
         effects=[RelatedTransitionEffect('organizer', 'fail')]
-    )
-
-    restore = Transition(
-        rejected,
-        draft,
-        name=_('Restore'),
-        automatic=False,
-        permission=is_staff,
-        effects=[RelatedTransitionEffect('organizer', 'succeed')]
     )
 
     close = Transition(
@@ -123,6 +116,7 @@ class ActivityStateMachine(ModelStateMachine):
         [rejected, closed, deleted],
         draft,
         name=_('Restore'),
+        description=_('Restore the activity. The will mark the activity as draft again'),
         automatic=False,
         permission=is_staff,
         effects=[RelatedTransitionEffect('organizer', 'reset')]
@@ -134,6 +128,7 @@ class ActivityStateMachine(ModelStateMachine):
         name=_('Delete'),
         automatic=False,
         permission=is_owner,
+        description=_('Delete the activity and remove it from the platform'),
         effects=[RelatedTransitionEffect('organizer', 'fail')]
     )
 

@@ -173,6 +173,7 @@ form .aligned {
     padding-bottom: 0;
   }
 
+  span.state + p.help,
   input + p.help,
   textarea + p.help,
   select + p.help {
@@ -192,6 +193,20 @@ form .aligned {
   table p {
     margin-left: 0;
     padding-left: 0;
+  }
+
+  div.transition-option {
+    margin-left: 160px;
+    padding-left: 10px;
+    margin-bottom: 16px;
+
+    span {
+        display: inline-block;
+        height: 32px;
+        line-height: 32px;
+        overflow: hidden;
+        margin-left: 24px;
+    }
   }
 }
 

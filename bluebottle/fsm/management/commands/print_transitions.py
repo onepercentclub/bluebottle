@@ -137,9 +137,13 @@ class Command(BaseCommand):
 
             for trigger in model.triggers:
                 for effect in trigger(instance).effects:
-                    text += u"<tr><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                    text += u"<tr><td>{}</td><td><ul>{}</ul></td><td>{}</td></tr>".format(
                         unicode(trigger(instance)),
-                        u" <b>and</b> ".join(get_doc(condition) for condition in effect(instance).conditions),
+                        u"".join(
+                            "<li>{}</li>".format(get_doc(condition))
+                            for condition
+                            in effect(instance).conditions
+                        ),
                         effect(instance).to_html(),
                     )
             text += u"</table>"

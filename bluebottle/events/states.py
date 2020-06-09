@@ -92,7 +92,7 @@ class EventStateMachine(ActivityStateMachine):
     start = Transition(
         [ActivityStateMachine.open, full],
         running,
-        name=_("Running"),
+        name=_("Start"),
         description=_("Start the event.")
     )
 
@@ -138,9 +138,21 @@ class EventStateMachine(ActivityStateMachine):
 class ParticipantStateMachine(ContributionStateMachine):
     model = Participant
 
-    withdrawn = State(_('withdrawn'), 'withdrawn')
-    rejected = State(_('rejected'), 'rejected')
-    no_show = State(_('no show'), 'no_show')
+    withdrawn = State(
+        _('withdrawn'),
+        'withdrawn',
+        _("The participant withdrew and will no longer attend the activity")
+    )
+    rejected = State(
+        _('rejected'),
+        'rejected',
+        _("The participant was rejected and will not attend.")
+    )
+    no_show = State(
+        _('no show'),
+        'no_show',
+        _("The participant didn't attend the event and was marked absent.")
+    )
 
     def is_user(self, user):
         """is the participant"""
@@ -176,7 +188,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         EmptyState(),
         ContributionStateMachine.new,
         name=_("Initiate"),
-        description=_("Participant is created. User signs up for the event."),
+        description=_("Participant is created. User signs up for the activity."),
         effects=[
             TransitionEffect('succeed', conditions=[event_is_finished]),
             RelatedTransitionEffect('activity', 'fill', conditions=[event_will_become_full]),
@@ -194,7 +206,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         ContributionStateMachine.new,
         withdrawn,
         name=_('Withdraw'),
-        description=_("Participant withdraws from the event."),
+        description=_("Participant withdraws from the activity."),
         automatic=False,
         permission=is_user,
         effects=[
@@ -206,7 +218,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         withdrawn,
         ContributionStateMachine.new,
         name=_('Join again'),
-        description=_("Participant signs up for the event again, after previously withdrawing."),
+        description=_("Participant signs up for the activity again, after previously withdrawing."),
         automatic=False,
         permission=is_user,
         effects=[
@@ -246,7 +258,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         ContributionStateMachine.succeeded,
         no_show,
         name=_('Mark absent'),
-        description=_("The participant didn't show up at the event and is marked absent."),
+        description=_("The participant didn't show up at the activity and is marked absent."),
         automatic=False,
         permission=is_activity_owner,
         effects=[
@@ -279,7 +291,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         ContributionStateMachine.new,
         ContributionStateMachine.succeeded,
         name=_('Succeed'),
-        description=_("The participant successfully took part in the event."),
+        description=_("The participant successfully took part in the activity."),
         effects=[
             SetTimeSpent,
             RelatedTransitionEffect(

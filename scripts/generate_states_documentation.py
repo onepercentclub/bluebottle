@@ -56,6 +56,26 @@ models = [
         'model': 'bluebottle.funding_stripe.models.StripePayment',
         'page_id': '742326447'
     },
+    {
+        'title': 'States - Funding - Pledge Payment',
+        'model': 'bluebottle.funding_pledge.models.PledgePayment',
+        'page_id': '750977260'
+    },
+    {
+        'title': 'States - Funding - Flutterwave Payment',
+        'model': 'bluebottle.funding_flutterwave.models.FlutterwavePayment',
+        'page_id': '750977317'
+    },
+    {
+        'title': 'States - Funding - Lipisha Payment',
+        'model': 'bluebottle.funding_lipisha.models.LipishaPayment',
+        'page_id': '750944494'
+    },
+    {
+        'title': 'States - Funding - Vitepay Payment',
+        'model': 'bluebottle.funding_vitepay.models.VitepayPayment',
+        'page_id': '750911678'
+    },
 
     # Events
     {

@@ -278,6 +278,7 @@ class DonationStateMachine(ContributionStateMachine):
         ContributionStateMachine.succeeded,
         refunded,
         name=_('Refund'),
+        description=_("Refund this donation."),
         automatic=True,
         effects=[
             RelatedTransitionEffect('payment', 'request_refund'),
@@ -291,6 +292,7 @@ class DonationStateMachine(ContributionStateMachine):
         ContributionStateMachine.succeeded,
         activity_refunded,
         name=_('Activity refund'),
+        description=_("Refund the donation, because the entire activity will be refunded."),
         automatic=True,
         effects=[
             RelatedTransitionEffect('payment', 'request_refund'),
@@ -300,25 +302,56 @@ class DonationStateMachine(ContributionStateMachine):
 
 
 class BasePaymentStateMachine(ModelStateMachine):
-    new = State(_('new'), 'new')
-    pending = State(_('pending'), 'pending')
-    succeeded = State(_('succeeded'), 'succeeded')
-    failed = State(_('failed'), 'failed')
-    refunded = State(_('refunded'), 'refunded')
-    refund_requested = State(_('refund requested'), 'refund_requested')
+    new = State(
+        _('new'),
+        'new',
+        _("Payment was started.")
+    )
+    pending = State(
+        _('pending'),
+        'pending',
+        _("Payment is authorised and will probably succeed shortly.")
+    )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _("Payment is successful.")
+    )
+    failed = State(
+        _('failed'),
+        'failed',
+        _("Payment failed.")
+    )
+    refunded = State(
+        _('refunded'),
+        'refunded',
+        _("Payment was refunded.")
+    )
+    refund_requested = State(
+        _('refund requested'),
+        'refund_requested',
+        _("Platform requested the payment to be refunded. Waiting for payment provider the confirm the refund")
+    )
 
     def donation_not_refunded(self):
+        """donation doesn't have status refunded or activity refunded"""
         return self.instance.donation.status not in [
             DonationStateMachine.refunded.value,
             DonationStateMachine.activity_refunded.value,
         ]
 
-    initiate = Transition(EmptyState(), new)
+    initiate = Transition(
+        EmptyState(),
+        new,
+        name=_("Initiate"),
+        description=_("Payment started.")
+    )
 
     authorize = Transition(
         [new],
         pending,
-        name=_('Authorize'),
+        name=_('Authorise'),
+        description=_("Payment has been authorized."),
         automatic=True,
         effects=[
             RelatedTransitionEffect('donation', 'succeed')
@@ -329,6 +362,7 @@ class BasePaymentStateMachine(ModelStateMachine):
         [new, pending, failed, refund_requested],
         succeeded,
         name=_('Succeed'),
+        description=_("Payment has been completed."),
         automatic=True,
         effects=[
             RelatedTransitionEffect('donation', 'succeed')
@@ -339,6 +373,7 @@ class BasePaymentStateMachine(ModelStateMachine):
         AllStates(),
         failed,
         name=_('Fail'),
+        description=_("Payment failed."),
         automatic=True,
         effects=[
             RelatedTransitionEffect('donation', 'fail')
@@ -351,6 +386,7 @@ class BasePaymentStateMachine(ModelStateMachine):
         ],
         refund_requested,
         name=_('Request refund'),
+        description=_("Request to refund the payment."),
         automatic=True,
         effects=[
             ExecuteRefundEffect
@@ -363,6 +399,7 @@ class BasePaymentStateMachine(ModelStateMachine):
         ],
         refunded,
         name=_('Refund'),
+        description=_("Payment was refunded."),
         automatic=True,
         effects=[
             RelatedTransitionEffect(
@@ -378,19 +415,49 @@ class BasePaymentStateMachine(ModelStateMachine):
 class PayoutStateMachine(ModelStateMachine):
     model = Payout
 
-    new = State(_('new'), 'new')
-    approved = State(_('approved'), 'approved')
-    started = State(_('started'), 'started')
-    scheduled = State(_('scheduled'), 'scheduled')
-    succeeded = State(_('succeeded'), 'succeeded')
-    failed = State(_('failed'), 'failed')
+    new = State(
+        _('new'),
+        'new',
+        _("Payout has been created")
+    )
+    approved = State(
+        _('approved'),
+        'approved',
+        _("Payout has been approved and send to the payout app.")
+    )
+    scheduled = State(
+        _('scheduled'),
+        'scheduled',
+        _("Payout has been received by the payout app.")
+    )
+    started = State(
+        _('started'),
+        'started',
+        _("Payout was started.")
+    )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _("Payout was completed successfully.")
+    )
+    failed = State(
+        _('failed'),
+        'failed',
+        _("Payout failed.")
+    )
 
-    initiate = Transition(EmptyState(), new)
+    initiate = Transition(
+        EmptyState(),
+        new,
+        name=_("Initiate"),
+        description=_("Create the payout")
+    )
 
     approve = Transition(
         [new, approved],
         approved,
         name=_('Approve'),
+        description=_("Approve the payout so it will be scheduled for execution."),
         automatic=False,
         effects=[
             SubmitPayoutEffect,
@@ -402,6 +469,7 @@ class PayoutStateMachine(ModelStateMachine):
         AllStates(),
         scheduled,
         name=_('Schedule'),
+        description=_("Schedule payout. Triggered by payout app."),
         automatic=True
     )
 
@@ -409,6 +477,7 @@ class PayoutStateMachine(ModelStateMachine):
         AllStates(),
         started,
         name=_('Start'),
+        description=_("Start payout. Triggered by payout app."),
         automatic=True,
         effects=[
             SetDateEffect('date_started')
@@ -419,6 +488,8 @@ class PayoutStateMachine(ModelStateMachine):
         AllStates(),
         new,
         name=_('Reset'),
+        description=_("Payout was rejected by the payout app. "
+                      "Adjust information as needed an approve the payout again."),
         automatic=True,
         effects=[
             ClearPayoutDatesEffect
@@ -429,6 +500,7 @@ class PayoutStateMachine(ModelStateMachine):
         AllStates(),
         succeeded,
         name=_('Succeed'),
+        description=_("Payout was successful. Triggered by payout app."),
         automatic=True,
         effects=[
             SetDateEffect('date_completed')
@@ -438,27 +510,56 @@ class PayoutStateMachine(ModelStateMachine):
 
 class PayoutAccountStateMachine(ModelStateMachine):
 
-    new = State(_('new'), 'new')
-    pending = State(_('pending'), 'pending')
-    verified = State(_('verified'), 'verified')
-    rejected = State(_('rejected'), 'rejected')
-    incomplete = State(_('incomplete'), 'incomplete')
+    new = State(
+        _('new'),
+        'new',
+        _("Payout account was created.")
+    )
+    pending = State(
+        _('pending'),
+        'pending',
+        _("Payout account is pending verification.")
+    )
+    verified = State(
+        _('verified'),
+        'verified',
+        _("Payout account has been verified.")
+    )
+    rejected = State(
+        _('rejected'),
+        'rejected',
+        _("Payout account was rejected.")
+    )
+    incomplete = State(
+        _('incomplete'),
+        'incomplete',
+        _("Payout account is missing information or documents.")
+    )
 
     def can_approve(self, user):
+        """is staff user"""
         return user.is_staff
 
     def is_reviewed(self):
+        """has been verified"""
         return self.instance.reviewed
 
     def is_unreviewed(self):
+        """has not been verified"""
         return not self.instance.reviewed
 
-    initiate = Transition(EmptyState(), new)
+    initiate = Transition(
+        EmptyState(),
+        new,
+        name=_("Initiate"),
+        description=_("Payout account has been created")
+    )
 
     submit = Transition(
         [new, incomplete],
         pending,
         name=_('Submit'),
+        description=_("Submit payout account for review."),
         automatic=False
     )
 
@@ -466,6 +567,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
         [new, incomplete, rejected],
         verified,
         name=_('Verify'),
+        description=_("Verify the payout account."),
         automatic=False,
         permission=can_approve,
         effects=[
@@ -478,6 +580,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
         [new, incomplete, verified],
         rejected,
         name=_('Reject'),
+        description=_("Reject the payout account."),
         automatic=False,
         effects=[
             NotificationEffect(PayoutAccountRejected)
@@ -488,6 +591,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
         [new, pending, rejected, verified],
         incomplete,
         name=_('Set incomplete'),
+        description=_("Mark the payout account as incomplete. The initiator will have to add more information."),
         automatic=False
     )
 
@@ -504,6 +608,7 @@ class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
         ],
         PayoutAccountStateMachine.verified,
         name=_('Verify'),
+        description=_("Verify the payout account."),
         automatic=False,
         permission=PayoutAccountStateMachine.can_approve,
         effects=[
@@ -521,6 +626,7 @@ class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
         ],
         PayoutAccountStateMachine.rejected,
         name=_('Reject'),
+        description=_("Reject the payout account."),
         automatic=False,
         effects=[
             NotificationEffect(PayoutAccountRejected),

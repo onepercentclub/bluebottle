@@ -140,7 +140,7 @@ class Command(BaseCommand):
                     text += u"<tr><td>{}</td><td>{}</td><td>{}</td></tr>".format(
                         unicode(trigger(instance)),
                         u" <b>and</b> ".join(get_doc(condition) for condition in effect(instance).conditions),
-                        unicode(effect(instance)),
+                        effect(instance).to_html(),
                     )
             text += u"</table>"
         print(text)

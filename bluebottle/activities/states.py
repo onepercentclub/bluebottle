@@ -132,15 +132,6 @@ class ActivityStateMachine(ModelStateMachine):
         effects=[RelatedTransitionEffect('organizer', 'fail')]
     )
 
-    restore = Transition(
-        rejected,
-        draft,
-        name=_('Restore'),
-        automatic=False,
-        permission=is_staff,
-        effects=[RelatedTransitionEffect('organizer', 'succeed')]
-    )
-
     close = Transition(
         open,
         closed,
@@ -200,7 +191,12 @@ class ContributionStateMachine(ModelStateMachine):
     def is_user(self, user):
         return self.instance.user == user
 
-    initiate = Transition(EmptyState(), new)
+    initiate = Transition(
+        EmptyState(),
+        new,
+        name=_('initiate'),
+        description=_('The contribution was created.')
+    )
     close = Transition(
         (new, succeeded, failed, ),
         closed,

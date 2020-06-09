@@ -54,7 +54,7 @@ class EventStateMachine(ActivityStateMachine):
         return len(self.instance.participants) == 0
 
     full = State(_('full'), 'full', _('The activity is full, users can no longer sign up'))
-    is_running = State(_('running'), 'running', _('The activity is currently running'))
+    running = State(_('running'), 'running', _('The activity is currently running'))
 
     approve = Transition(
         [
@@ -65,6 +65,7 @@ class EventStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.open,
         name=_('Approve'),
+        description=_("Approve the event. Users can start signing up to it."),
         effects=[
             RelatedTransitionEffect('organizer', 'succeed'),
             TransitionEffect(
@@ -76,21 +77,30 @@ class EventStateMachine(ActivityStateMachine):
 
     fill = Transition(
         (ActivityStateMachine.open, ActivityStateMachine.succeeded, ),
-        full
+        full,
+        name=_("Fill"),
+        description=_("Set the event to full because capacity is reached.")
     )
+
     unfill = Transition(
         full,
-        ActivityStateMachine.open
+        ActivityStateMachine.open,
+        name=_("Un-fill"),
+        description=_("Set the event to open, because there are spots available again.")
     )
 
     start = Transition(
         [ActivityStateMachine.open, full],
-        is_running
+        running,
+        name=_("Running"),
+        description=_("Start the event.")
     )
 
     succeed = Transition(
-        (full, is_running, ActivityStateMachine.open, ActivityStateMachine.closed, ),
+        (full, running, ActivityStateMachine.open, ActivityStateMachine.closed,),
         ActivityStateMachine.succeeded,
+        name=_("Succeed"),
+        description=_("The event was successfully completed."),
         effects=[
             NotificationEffect(EventSucceededOwnerMessage),
             RelatedTransitionEffect('participants', 'succeed')
@@ -101,17 +111,21 @@ class EventStateMachine(ActivityStateMachine):
         (
             ActivityStateMachine.draft,
             full,
-            is_running,
+            running,
             ActivityStateMachine.open,
             ActivityStateMachine.succeeded,
         ),
         ActivityStateMachine.closed,
+        name=_("Close"),
+        description=_("Close the event. It will no longer be editable by the organiser."),
         effects=[NotificationEffect(EventClosedOwnerMessage)]
     )
 
     reopen = Transition(
         (ActivityStateMachine.succeeded, ActivityStateMachine.closed, ),
         ActivityStateMachine.open,
+        name=_("Reopen"),
+        description=_("Reopen the event. Users are able to sign up for it again."),
         effects=[
             RelatedTransitionEffect('participants', 'reset'),
             # Need to add organizer,reset() But probably should differentiate between
@@ -129,9 +143,11 @@ class ParticipantStateMachine(ContributionStateMachine):
     no_show = State(_('no show'), 'no_show')
 
     def is_user(self, user):
+        """is the participant"""
         return self.instance.user == user
 
     def is_activity_owner(self, user):
+        """is the activity manager or a staff member"""
         return user.is_staff or self.instance.activity.owner == user
 
     def event_will_become_full(self):
@@ -159,6 +175,8 @@ class ParticipantStateMachine(ContributionStateMachine):
     initiate = Transition(
         EmptyState(),
         ContributionStateMachine.new,
+        name=_("Initiate"),
+        description=_("Participant is created. User signs up for the event."),
         effects=[
             TransitionEffect('succeed', conditions=[event_is_finished]),
             RelatedTransitionEffect('activity', 'fill', conditions=[event_will_become_full]),
@@ -176,6 +194,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         ContributionStateMachine.new,
         withdrawn,
         name=_('Withdraw'),
+        description=_("Participant withdraws from the event."),
         automatic=False,
         permission=is_user,
         effects=[
@@ -186,7 +205,8 @@ class ParticipantStateMachine(ContributionStateMachine):
     reapply = Transition(
         withdrawn,
         ContributionStateMachine.new,
-        name=_('Join'),
+        name=_('Join again'),
+        description=_("Participant signs up for the event again, after previously withdrawing."),
         automatic=False,
         permission=is_user,
         effects=[
@@ -200,6 +220,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         rejected,
         automatic=False,
         name=_('Reject'),
+        description=_("Participant is rejected."),
         effects=[
             RelatedTransitionEffect('activity', 'unfill'),
             NotificationEffect(ParticipantRejectedMessage),
@@ -211,6 +232,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         rejected,
         ContributionStateMachine.new,
         name=_('Re-accept'),
+        description=_("Accept a participant after previously being rejected."),
         automatic=False,
         effects=[
             TransitionEffect('succeed', conditions=[event_is_finished]),
@@ -224,6 +246,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         ContributionStateMachine.succeeded,
         no_show,
         name=_('Mark absent'),
+        description=_("The participant didn't show up at the event and is marked absent."),
         automatic=False,
         permission=is_activity_owner,
         effects=[
@@ -239,6 +262,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         no_show,
         ContributionStateMachine.succeeded,
         name=_('Mark present'),
+        description=_("The participant showed up, after previously marked absent."),
         automatic=False,
         permission=is_activity_owner,
         effects=[
@@ -254,6 +278,8 @@ class ParticipantStateMachine(ContributionStateMachine):
     succeed = Transition(
         ContributionStateMachine.new,
         ContributionStateMachine.succeeded,
+        name=_('Succeed'),
+        description=_("The participant successfully took part in the event."),
         effects=[
             SetTimeSpent,
             RelatedTransitionEffect(
@@ -265,5 +291,7 @@ class ParticipantStateMachine(ContributionStateMachine):
     reset = Transition(
         ContributionStateMachine.succeeded,
         ContributionStateMachine.new,
+        name=_('Reset'),
+        description=_("The participant is reset to new after being successful."),
         effects=[ResetTimeSpent]
     )

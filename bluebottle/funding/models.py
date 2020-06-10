@@ -19,7 +19,7 @@ from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.files.fields import ImageField, DocumentField
+from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from bluebottle.funding.transitions import (
     FundingTransitions,
@@ -639,7 +639,7 @@ class PayoutAccount(ValidatedModelMixin, AnonymizationMixin, PolymorphicModel, T
 
 
 class PlainPayoutAccount(PayoutAccount):
-    document = DocumentField(blank=True, null=True)
+    document = PrivateDocumentField(blank=True, null=True)
 
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
 

@@ -129,6 +129,7 @@ class TransitionMessage(object):
                 )
 
     def get_recipients(self):
+        """the owner"""
         return [self.obj.owner]
 
     def compose_and_send(self, once=False):

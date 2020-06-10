@@ -36,7 +36,7 @@ class AssignmentExpiredMessage(TransitionMessage):
 
     def get_recipients(self):
         """the organizer"""
-        return [self.obj.user]
+        return [self.obj.owner]
 
 
 class AssignmentClosedMessage(TransitionMessage):
@@ -48,7 +48,7 @@ class AssignmentClosedMessage(TransitionMessage):
 
     def get_recipients(self):
         """the organizer"""
-        return [self.obj.user]
+        return [self.obj.owner]
 
 
 class AssignmentCompletedMessage(TransitionMessage):
@@ -60,7 +60,7 @@ class AssignmentCompletedMessage(TransitionMessage):
 
     def get_recipients(self):
         """the organizer"""
-        return [self.obj.user]
+        return [self.obj.owner]
 
 
 class AssignmentApplicationMessage(TransitionMessage):

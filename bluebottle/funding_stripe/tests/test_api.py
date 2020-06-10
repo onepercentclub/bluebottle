@@ -64,8 +64,62 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
             'client_secret': 'some client secret',
         })
 
-        with mock.patch('stripe.PaymentIntent.create', return_value=payment_intent):
+        with mock.patch('stripe.PaymentIntent.create', return_value=payment_intent) as create_intent:
             response = self.client.post(self.intent_url, data=json.dumps(self.data), user=self.user)
+            create_intent.assert_called_with(
+                amount=int(self.donation.amount.amount * 100),
+                currency=self.donation.amount.currency,
+                metadata={
+                    'tenant_name': u'test',
+                    'activity_id': self.donation.activity.pk,
+                    'activity_title': self.donation.activity.title,
+                    'tenant_domain': u'testserver'
+                },
+                statement_descriptor=u'Test',
+                statement_descriptor_suffix=u'Test',
+                transfer_data={
+                    'destination': self.bank_account.connect_account.account_id
+                }
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['attributes']['intent-id'], payment_intent.id)
+        self.assertEqual(data['data']['attributes']['client-secret'], payment_intent.client_secret)
+        self.assertEqual(data['included'][0]['attributes']['status'], 'new')
+
+    def test_create_intent_us(self):
+        self.bank_account.connect_account.account.country = 'US'
+        self.bank_account.connect_account.country = 'US'
+        self.bank_account.connect_account.save()
+
+        self.donation.user = self.user
+        self.donation.save()
+
+        payment_intent = stripe.PaymentIntent('some intent id')
+        payment_intent.update({
+            'client_secret': 'some client secret',
+        })
+
+        with mock.patch('stripe.PaymentIntent.create', return_value=payment_intent) as create_intent:
+            response = self.client.post(self.intent_url, data=json.dumps(self.data), user=self.user)
+            create_intent.assert_called_with(
+                amount=int(self.donation.amount.amount * 100),
+                currency=self.donation.amount.currency,
+                metadata={
+                    'tenant_name': u'test',
+                    'activity_id': self.donation.activity.pk,
+                    'activity_title': self.donation.activity.title,
+                    'tenant_domain': u'testserver'
+                },
+                on_behalf_of=self.bank_account.connect_account.account_id,
+                statement_descriptor=u'Test',
+                statement_descriptor_suffix=u'Test',
+                transfer_data={
+                    'destination': self.bank_account.connect_account.account_id
+                }
+            )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
@@ -376,6 +430,73 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
             unicode(self.user.pk)
         )
 
+    def test_create_us(self):
+        self.check.delete()
+        tenant = connection.tenant
+        tenant.name = 'tst'
+        tenant.save()
+
+        connect_account = stripe.Account('some-connect-id')
+        connect_account.update({
+            'country': self.data['data']['attributes']['country'],
+            'individual': bunch.bunchify({
+                'first_name': 'Jhon',
+                'last_name': 'Example',
+                'email': 'jhon@example.com',
+                'verification': bunch.bunchify({
+                    'status': 'pending',
+                }),
+                'requirements': bunch.bunchify({
+                    'eventually_due': ['external_accounts', 'individual.dob.month'],
+                    'currently_due': [],
+                    'past_due': [],
+                })
+            }),
+            'requirements': bunch.bunchify({
+                'eventually_due': ['external_accounts', 'individual.dob.month'],
+                'disabled': False
+            }),
+            'external_accounts': bunch.bunchify({
+                'total_count': 0,
+                'data': []
+            })
+        })
+
+        self.data['data']['attributes']['country'] = 'US'
+
+        with mock.patch('stripe.CountrySpec.retrieve', return_value=self.country_spec):
+            with mock.patch('stripe.Account.create', return_value=connect_account) as create_account:
+                with mock.patch('stripe.Account.modify', return_value=connect_account) as modify_account:
+                    with mock.patch('stripe.Account.retrieve', return_value=connect_account):
+                        self.client.post(
+                            self.account_list_url, data=json.dumps(self.data), user=self.user
+                        )
+                        create_account.assert_called_with(
+                            business_profile={'url': 'https://testserver', 'mcc': '8398'},
+                            business_type='individual',
+                            country=self.data['data']['attributes']['country'],
+                            metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.user.pk},
+                            requested_capabilities=['transfers', 'card_payments'],
+                            settings={
+                                'card_payments': {
+                                    'statement_descriptor_prefix': u'tst--'
+                                },
+                                'payments': {
+                                    'statement_descriptor': u'tst--'
+                                },
+                                'payouts': {
+                                    'statement_descriptor': u'tst--',
+                                    'schedule': {'interval': 'manual'}
+                                }
+                            },
+                            # business_type='individual',
+                            type='custom'
+                        )
+                        modify_account.assert_called_with(
+                            'some-connect-id',
+                            account_token='some-account-token'
+                        )
+
     def test_create_no_user(self):
         self.check.delete()
         response = self.client.post(
@@ -424,6 +545,46 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.assertEqual(
             data['data']['relationships']['owner']['data']['id'],
             unicode(self.user.pk)
+        )
+
+    def test_get_verification_error(self):
+        error = {
+            "reason": (
+                "The date of birth (DOB) on the document does not match "
+                "the DOB on the account. Please upload a document with a "
+                "DOB that matches the DOB on the account. You can also "
+                "update the DOB on the account."
+            ),
+            "code": "verification_document_dob_mismatch",
+            "requirement": "individual.verification.document"
+        }
+        self.connect_account.update({
+            'requirements': bunch.bunchify({
+                'eventually_due': ['external_accounts', 'individual.dob.month'],
+                'errors': [error],
+                'disabled': False
+            }),
+        })
+
+        with mock.patch('stripe.CountrySpec.retrieve', return_value=self.country_spec):
+            with mock.patch('stripe.Account.retrieve', return_value=self.connect_account) as retrieve:
+                response = self.client.get(
+                    self.account_url, user=self.user
+                )
+                retrieve.assert_called_with(self.check.account_id)
+
+        data = json.loads(response.content)
+        self.assertEqual(
+            data['data']['meta']['errors'][0]['source']['pointer'],
+            '/data/attributes/individual/verification/document/front'
+        )
+        self.assertEqual(
+            data['data']['meta']['errors'][0]['title'],
+            error['reason']
+        )
+        self.assertEqual(
+            data['data']['meta']['errors'][0]['code'],
+            error['code']
         )
 
     def test_get_no_user(self):

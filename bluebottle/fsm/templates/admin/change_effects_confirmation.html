@@ -19,23 +19,23 @@
 {% endblock %}
 
 {% block content %}
-    <p>{% blocktrans %}Are you sure you want to make these changes to {{ obj }}?{% endblocktrans %}</p>
-    {% if effects %}
+    <h2>{% trans "Confirm action" %}</h2>
+    <p>{% blocktrans %}You are about to  {{ action_text }}. {% endblocktrans %} of this object.</p>
+    {% if effects|length %}
         {% blocktrans  %}
-            This will have these effects
+            This will have these effects:
         {% endblocktrans %}
+        <ul></ul>
         <ul>
             {% for effect in effects %}
                 {% if effect.display %}
-                    {% if effect.html %}
-                        <li>
-                            {{effect.html}}
-                        </li>
-                    {% else %}
-                        <li>
-                            {{effect}}
-                        </li>
-                    {% endif %}
+                    <li>
+                      <h3>{{effect.title}}</h3>
+                      <p>{{ effect.description }}</p>
+                      {% if effect.help %}
+                        <i>{{ effect.help }}</i>
+                      {% endif %}
+                    </li>
                 {% endif %}
             {% endfor %}
         </ul>
@@ -51,9 +51,8 @@
         {% endfor %}
         {% if has_notifications %}
           <div>
-              <input type="checkbox" name="send_messages" checked id="id_send_messages">
-              <label for="id_send_messages">{% trans "Send messages" %}</label><br>
-              <small>{% trans "Should messages be send or should we transition without notifying users?" %}</small>
+              <input type="checkbox" name="disable_messages" checked id="id_send_messages">
+              <label for="id_send_messages">{% trans "Don't send any messages" %}</label><br>
           </div>
         {% endif %}
         <br>

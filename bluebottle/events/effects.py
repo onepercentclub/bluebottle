@@ -6,6 +6,7 @@ from bluebottle.fsm.effects import Effect
 class SetTimeSpent(Effect):
     "Set time spent on participants"
     post_save = False
+    title = _('Reset time spent')
 
     def execute(self, **kwargs):
         if not self.instance.time_spent:
@@ -21,12 +22,13 @@ class SetTimeSpent(Effect):
 class ResetTimeSpent(Effect):
     "Set time spent to 0 if it was not overriden"
     post_save = False
+    title = _('Reset time spent')
 
     def execute(self, **kwargs):
         if self.instance.time_spent == self.instance.activity.duration:
             self.instance.time_spent = 0
 
     def __unicode__(self):
-        return unicode(_('Reset time spent to 0 on {}').format(
+        return _('Set time spent to 0 on {}').format(
             self.instance
-        ))
+        )

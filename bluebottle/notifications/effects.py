@@ -1,10 +1,10 @@
-from django.template import loader
 from django.utils.translation import ugettext_lazy as _
 from bluebottle.fsm.effects import Effect
 
 
 class BaseNotificationEffect(Effect):
     post_save = True
+    title = _('Send email')
 
     def execute(self, send_messages=True):
         if send_messages:
@@ -39,11 +39,19 @@ class BaseNotificationEffect(Effect):
         return _('Message <em>{subject}</em> to {recipients}').format(**self._content())
 
     @property
-    def html(self):
-        template = loader.get_template(
-            'admin/notifications/preview.html'
-        )
-        return template.render({'message': self.message(self.instance)})
+    def description(self):
+        return '"{}"'.format(self.message(self.instance).generic_subject)
+
+    @property
+    def help(self):
+        message = self.message(self.instance)
+        recipients = message.get_recipients()
+        recipients_text = (u', ').join(recipient.email for recipient in recipients[:2])
+
+        if len(recipients) > 2:
+            recipients_text += u' (and {} more)'.format(len(recipients) - 2)
+
+        return _('to {}').format(recipients_text)
 
     @property
     def content(self):

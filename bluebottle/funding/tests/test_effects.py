@@ -40,20 +40,20 @@ class FundingEffectsTests(BluebottleTestCase):
 
     def test_generate_payouts_effect(self):
         effect = GeneratePayoutsEffect(self.funding)
-        self.assertEqual(unicode(effect), 'Generate payouts')
+        self.assertEqual(unicode(effect), 'Generate payouts, so that payouts can be approved')
         effect.execute()
         self.assertEqual(self.funding.payouts.count(), 1)
 
     def test_delete_payouts_effect(self):
         PayoutFactory.create(activity=self.funding)
         effect = DeletePayoutsEffect(self.funding)
-        self.assertEqual(unicode(effect), 'Delete related payouts')
+        self.assertEqual(unicode(effect), 'Delete all related payouts')
         effect.execute()
         self.assertEqual(self.funding.payouts.count(), 0)
 
     def test_update_funding_amounts_effect(self):
         effect = UpdateFundingAmountsEffect(self.donation)
-        self.assertEqual(unicode(effect), 'Update funding amounts')
+        self.assertEqual(unicode(effect), 'Update total amounts')
         effect.execute()
         self.assertEqual(self.funding.amount_donated, Money(100, 'EUR'))
 
@@ -62,14 +62,14 @@ class FundingEffectsTests(BluebottleTestCase):
         self.funding.save()
         self.assertIsNone(self.funding.deadline)
         effect = SetDeadlineEffect(self.funding)
-        self.assertEqual(unicode(effect), 'Set deadline (if duration is set)')
+        self.assertEqual(unicode(effect), 'Set deadline according to the duration')
         effect.execute()
         self.assertIsNotNone(self.funding.deadline)
 
     def test_generate_donation_wallpost_effect(self):
         PayoutFactory.create(activity=self.funding)
         effect = GenerateDonationWallpostEffect(self.donation)
-        self.assertEqual(unicode(effect), 'Generate donation wallpost')
+        self.assertEqual(unicode(effect), 'Generate wallpost for donation')
         effect.execute()
         self.assertEqual(Wallpost.objects.count(), 1)
 
@@ -79,7 +79,7 @@ class FundingEffectsTests(BluebottleTestCase):
         effect.execute()
         self.assertEqual(Wallpost.objects.count(), 1)
         effect = RemoveDonationWallpostEffect(self.donation)
-        self.assertEqual(unicode(effect), 'Delete donation wallpost')
+        self.assertEqual(unicode(effect), 'Delete wallpost for donation')
         effect.execute()
         self.assertEqual(Wallpost.objects.count(), 0)
 

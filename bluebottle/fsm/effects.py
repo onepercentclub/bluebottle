@@ -8,6 +8,10 @@ class Effect(object):
     conditions = []
     display = True
 
+    @property
+    def description(self):
+        return unicode(self)
+
     def __init__(self, instance, **kwargs):
         self.instance = instance
 
@@ -52,6 +56,13 @@ class Effect(object):
 
 class BaseTransitionEffect(Effect):
     field = 'states'
+    title = _('Change the status')
+
+    @property
+    def description(self):
+        return 'Change status of {} to {}'.format(
+            unicode(self.instance), self.transition.target.name
+        )
 
     @property
     def machine(self):

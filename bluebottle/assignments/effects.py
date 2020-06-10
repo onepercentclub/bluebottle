@@ -12,7 +12,10 @@ class SetTimeSpent(Effect):
             self.instance.time_spent = self.instance.activity.duration + (self.instance.activity.preparation or 0)
 
     def __unicode__(self):
-        return _('Set time spent')
+        return _('Set time spent to {} on {}').format(
+            self.instance.activity.duration,
+            self.instance
+        )
 
 
 class ClearTimeSpent(Effect):
@@ -22,4 +25,6 @@ class ClearTimeSpent(Effect):
         self.instance.time_spent = 0
 
     def __unicode__(self):
-        return _('Clear time spent')
+        return _('Set time spent to 0 on {}').format(
+            self.instance
+        )

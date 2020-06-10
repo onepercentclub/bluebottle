@@ -140,7 +140,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             (_('Review'), {'fields': (
                 'valid', 'complete',
                 'reviewer', 'activity_manager',
-                'promoter', 'states')}),
+                'promoter', 'status', 'states')}),
         )
 
     inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]

@@ -52,6 +52,7 @@ class TestEventAdmin(BluebottleAdminTestCase):
             'start_0': str(self.event.start.date()),
             'start_1': str(self.event.start.time()),
             'duration': self.event.duration,
+            'status': self.event.status,
             'registration_deadline': str(self.event.registration_deadline),
             'is_online': self.event.is_online,
             'location': self.event.location_id,

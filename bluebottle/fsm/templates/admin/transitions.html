@@ -1,7 +1,9 @@
 {% for group_name, group_choices, group_index in widget.optgroups %}
     {% for option in group_choices %}
         {% if option.value %}
-            {% include option.template_name with widget=option obj=widget.attrs.obj %}
+            <div class="transition-option">
+                {% include option.template_name with widget=option obj=widget.attrs.obj %}
+            </div>
         {% endif %}
     {% endfor %}
 {% endfor %}

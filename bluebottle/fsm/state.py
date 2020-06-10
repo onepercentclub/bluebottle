@@ -42,7 +42,10 @@ class BaseTransition(object):
                 _('Cannot transition from {} to {}').format(machine.state, self.target)
             )
 
-        if machine.state not in self.source_values and AllStates() not in self.sources:
+        if not (
+            machine.state in self.source_values or
+            (AllStates() in self.sources)
+        ):
             raise TransitionNotPossible(
                 _('Cannot transition from {} to {}').format(machine.state, self.target)
             )

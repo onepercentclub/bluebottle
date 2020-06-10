@@ -73,6 +73,7 @@ Event.triggers = [CapacityChanged, DateChanged, Started, Finished]
 
 
 class ParticipantDeleted(ModelDeletedTrigger):
+    title = _('delete this participant')
     field = 'start'
 
     effects = [

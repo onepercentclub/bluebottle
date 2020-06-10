@@ -14,9 +14,15 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        migrations.RemoveField(
             model_name='plainpayoutaccount',
             name='document',
-            field=bluebottle.files.fields.PrivateDocumentField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='files.PrivateDocument'),
+        ),
+        migrations.AddField(
+            model_name='plainpayoutaccount',
+            name='document',
+            field=bluebottle.files.fields.PrivateDocumentField(blank=True, null=True,
+                                                               on_delete=django.db.models.deletion.CASCADE,
+                                                               to='files.PrivateDocument'),
         ),
     ]

@@ -51,7 +51,7 @@ class EventReminder(TransitionMessage):
             contribution.user for contribution
             in self.obj.contributions.instance_of(
                 Participant
-            ).filter(status_in='new')
+            ).filter(status='new')
         ]
 
 

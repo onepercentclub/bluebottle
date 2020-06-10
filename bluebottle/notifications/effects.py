@@ -16,15 +16,24 @@ class BaseNotificationEffect(Effect):
     def __repr__(self):
         return '<Effect: Send {}>'.format(self.message)
 
-    def __unicode__(self):
+    def _content(self):
         message = self.message(self.instance)
-        recipients = message.get_recipients()
-        recipients_text = (u', ').join(recipient.email for recipient in recipients[:2])
 
-        if len(recipients) > 2:
-            recipients_text += u' (and {} more)'.format(len(recipients) - 2)
+        try:
+            recipients = message.get_recipients()
+            recipients_text = (u', ').join(recipient.email for recipient in recipients[:2])
 
-        return _('Message %s to %s') % (message.generic_subject, recipients_text)
+            if len(recipients) > 2:
+                recipients_text += u' (and {} more)'.format(len(recipients) - 2)
+        except Exception:
+            recipients_text = 'related users'
+        return {'subject': message.generic_subject, 'recipients': recipients_text}
+
+    def __unicode__(self):
+        return _('Message {subject} to {recipients}').format(**self._content())
+
+    def to_html(self):
+        return _('Message <em>{subject}</em> to {recipients}').format(**self._content())
 
     @property
     def description(self):

@@ -51,8 +51,14 @@
         {% endfor %}
         {% if has_notifications %}
           <div>
+<<<<<<< HEAD
               <input type="checkbox" name="disable_messages" checked id="id_send_messages">
               <label for="id_send_messages">{% trans "Don't send any messages" %}</label><br>
+=======
+              <input type="checkbox" name="send_messages" checked id="id_send_messages">
+              <label for="id_send_messages">{% trans "Send messages" %}</label><br>
+              <small>{% trans "Should messages be send or should we transition without notifying users?" %}</small>
+>>>>>>> integrations/new-transitions
           </div>
         {% endif %}
         <br>

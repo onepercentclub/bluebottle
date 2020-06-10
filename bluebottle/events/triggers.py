@@ -46,6 +46,9 @@ class Started(ModelChangedTrigger):
         TransitionEffect('start', conditions=[EventStateMachine.should_start, EventStateMachine.has_participants]),
     ]
 
+    def __unicode__(self):
+        return unicode(_("Start date has passed"))
+
 
 class Finished(ModelChangedTrigger):
     @property
@@ -91,6 +94,9 @@ class ParticipantDeleted(ModelDeletedTrigger):
             ],
         ),
     ]
+
+    def __unicode__(self):
+        return unicode(_("Participant has been deleted"))
 
 
 Participant.triggers = [ParticipantDeleted]

@@ -13,10 +13,10 @@ class SetTimeSpent(Effect):
             self.instance.time_spent = self.instance.activity.duration
 
     def __unicode__(self):
-        return _('Set time spent to {} on {}').format(
+        return unicode(_('Set time spent to {} on {}').format(
             self.instance.activity.duration,
             self.instance
-        )
+        ))
 
 
 class ResetTimeSpent(Effect):

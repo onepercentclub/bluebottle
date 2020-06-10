@@ -2,7 +2,6 @@
 from operator import attrgetter
 
 from django.contrib.admin.options import get_content_type_for_model
-from django.db import connection
 from django.template import loader
 from django.utils.html import format_html
 
@@ -27,12 +26,11 @@ class TransitionMessage(object):
     context = {}
 
     def get_generic_context(self):
-        from bluebottle.clients.utils import tenant_url
+        from bluebottle.clients.utils import tenant_url, tenant_name
         language = get_current_language()
-        tenant = connection.tenant
         context = {
             'site': tenant_url(),
-            'site_name': tenant.name,
+            'site_name': tenant_name(),
             'language': language,
             'contact_email': properties.CONTACT_EMAIL,
             'first_name': _('Name')
@@ -56,11 +54,10 @@ class TransitionMessage(object):
         return template.render(context)
 
     def get_context(self, recipient):
-        from bluebottle.clients.utils import tenant_url
-        tenant = connection.tenant
+        from bluebottle.clients.utils import tenant_url, tenant_name
         context = {
             'site': tenant_url(),
-            'site_name': tenant.name,
+            'site_name': tenant_name(),
             'language': recipient.primary_language,
             'contact_email': properties.CONTACT_EMAIL,
             'first_name': recipient.first_name

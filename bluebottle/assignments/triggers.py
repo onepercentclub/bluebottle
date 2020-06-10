@@ -57,6 +57,12 @@ class Started(ModelChangedTrigger):
                 AssignmentStateMachine.should_start,
                 AssignmentStateMachine.has_accepted_applicants
             ]),
+        TransitionEffect(
+            'expire',
+            conditions=[
+                AssignmentStateMachine.should_start,
+                AssignmentStateMachine.has_no_accepted_applicants
+            ]),
     ]
 
 

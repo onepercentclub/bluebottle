@@ -26,14 +26,13 @@ class EventDateChanged(TransitionMessage):
     }
 
     def get_recipients(self):
+        """participants that signed up"""
         from bluebottle.events.models import Participant
         return [
             contribution.user for contribution
             in self.obj.contributions.instance_of(
                 Participant
-            ).filter(
-                status__in=('new', 'succeeded', )
-            )
+            ).filter(status='new')
         ]
 
 
@@ -45,11 +44,14 @@ class EventReminder(TransitionMessage):
     }
 
     def get_recipients(self):
+        """participants that signed up"""
         from bluebottle.events.models import Participant
 
         return [
             contribution.user for contribution
-            in self.obj.contributions.instance_of(Participant).filter(status='new')
+            in self.obj.contributions.instance_of(
+                Participant
+            ).filter(status='new')
         ]
 
 
@@ -61,6 +63,7 @@ class ParticipantApplicationMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """the participant"""
         return [self.obj.user]
 
 
@@ -72,6 +75,7 @@ class ParticipantApplicationManagerMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """the organizer and the activity manager"""
         return [
             self.obj.activity.owner,
             self.obj.activity.initiative.activity_manager
@@ -86,4 +90,5 @@ class ParticipantRejectedMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """the participant"""
         return [self.obj.user]

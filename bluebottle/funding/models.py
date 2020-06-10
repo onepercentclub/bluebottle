@@ -24,7 +24,7 @@ from bluebottle.fsm import FSMField
 from bluebottle.funding.validators import KYCPassedValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
-from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin
+from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
 
 
 class PaymentCurrency(models.Model):
@@ -584,7 +584,7 @@ class PaymentMethod(object):
         resource_name = 'payments/payment-methods'
 
 
-class PayoutAccount(TriggerMixin, AnonymizationMixin, PolymorphicModel):
+class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     owner = models.ForeignKey(

@@ -361,8 +361,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
-        self.assertEqual(self.donation.status, DonationTransitions.values.new)
-        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.charged)
+        self.assertEqual(self.donation.status, 'new')
+        self.assertEqual(self.payment.status, 'charged')
 
     def test_source_chargeable_us(self):
         self.funding.bank_account.connect_account.country = 'US'

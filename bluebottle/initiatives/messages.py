@@ -107,7 +107,14 @@ class InitiativeWallpostFollowerMessage(TransitionMessage):
         initiative = self.obj.content_object
         follows = []
         for activity in initiative.activities.filter(
-            review_status='approved'
+            status__in=(
+                'succeeded',
+                'open',
+                'partially_funded',
+                'full',
+                'running'
+            )
+
         ):
             follows += activity.follows.filter(
                 user__campaign_notifications=True

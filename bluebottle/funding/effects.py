@@ -66,7 +66,7 @@ class SetDeadlineEffect(Effect):
             )
 
     def __unicode__(self):
-        return _('Set deadline according to the deadline')
+        return _('Set deadline according to the duration')
 
 
 class ExecuteRefundEffect(Effect):
@@ -123,7 +123,7 @@ class SubmitConnectedActivitiesEffect(Effect):
     def execute(self, **kwargs):
         for external_account in self.instance.external_accounts.all():
             for funding in external_account.funding_set.filter(
-                    review_status__in=('draft', 'needs_work')
+                    status__in=('draft', 'needs_work')
             ):
                 funding.states.submit(save=True)
 

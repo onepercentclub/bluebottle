@@ -46,6 +46,7 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
             'initiative': self.assignment.initiative_id,
             'description': self.assignment.description,
             'capacity': self.assignment.capacity,
+            'status': self.assignment.status,
             'date_0': str(self.assignment.date.date()),
             'date_1': str(self.assignment.date.time()),
             'end_date_type': self.assignment.end_date_type,

@@ -81,6 +81,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'updated',
         'valid',
         'complete',
+        'review_status',
         'transition_date',
         'stats_data'
     ]

@@ -6,7 +6,7 @@ from django.contrib.gis.geos import Point
 from django.core.urlresolvers import reverse
 from django.test import TestCase, tag
 from django.test.utils import override_settings
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 
 from moneyed import Money
 from django_elasticsearch_dsl.test import ESTestCase
@@ -803,31 +803,31 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         first = InitiativeFactory.create(status='approved')
         FundingFactory.create(
             initiative=first,
-            review_status='approved',
-            deadline=datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
+            status='open',
+            deadline=now() + datetime.timedelta(days=8)
         )
         FundingFactory.create(
             initiative=first,
-            review_status='submitted',
-            deadline=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+            status='submitted',
+            deadline=now() + datetime.timedelta(days=7)
         )
 
         second = InitiativeFactory.create(status='approved')
         EventFactory.create(
             initiative=second,
-            review_status='approved',
-            start=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+            status='open',
+            start=now() + datetime.timedelta(days=7)
         )
         third = InitiativeFactory.create(status='approved')
         EventFactory.create(
             initiative=third,
-            review_status='approved',
-            start=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+            status='open',
+            start=now() + datetime.timedelta(days=7)
         )
         AssignmentFactory.create(
             initiative=third,
-            review_status='approved',
-            date=datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
+            status='open',
+            date=now() + datetime.timedelta(days=9)
         )
 
         response = self.client.get(

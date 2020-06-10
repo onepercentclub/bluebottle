@@ -24,9 +24,12 @@ class BaseNotificationEffect(Effect):
             recipients_text = (u', ').join(recipient.email for recipient in recipients[:2])
 
             if len(recipients) > 2:
-                recipients_text += u' (and {} more)'.format(len(recipients) - 2)
+                recipients_text += u' ' + _('(and {number} more)').format(number=(len(recipients) - 2))
         except Exception:
-            recipients_text = 'related users'
+            if message.get_recipients.__doc__:
+                recipients_text = message.get_recipients.__doc__
+            else:
+                recipients_text = _('related users')
         return {'subject': message.generic_subject, 'recipients': recipients_text}
 
     def __unicode__(self):

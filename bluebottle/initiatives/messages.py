@@ -9,6 +9,10 @@ class InitiativeApprovedOwnerMessage(TransitionMessage):
         'title': 'title'
     }
 
+    def get_recipients(self):
+        """the initiator"""
+        return [self.obj.owner]
+
 
 class InitiativeNeedsWorkOwnerMessage(TransitionMessage):
     subject = _('Your initiative "{title}" needs work')
@@ -17,6 +21,10 @@ class InitiativeNeedsWorkOwnerMessage(TransitionMessage):
         'title': 'title'
     }
 
+    def get_recipients(self):
+        """the initiator"""
+        return [self.obj.owner]
+
 
 class InitiativeRejectedOwnerMessage(TransitionMessage):
     subject = _('Your initiative "{title}" has been closed')
@@ -24,6 +32,10 @@ class InitiativeRejectedOwnerMessage(TransitionMessage):
     context = {
         'title': 'title'
     }
+
+    def get_recipients(self):
+        """the initiator"""
+        return [self.obj.owner]
 
 
 class AssignedReviewerMessage(TransitionMessage):
@@ -34,6 +46,7 @@ class AssignedReviewerMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """the reviewer"""
         return [self.obj.reviewer]
 
 
@@ -46,6 +59,7 @@ class InitiativeWallpostOwnerMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """"the initiator"""
         if self.obj.author != self.obj.content_object.owner:
             return [self.obj.content_object.owner]
         else:
@@ -61,6 +75,7 @@ class InitiativeWallpostReactionMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """the wallpost author"""
         return [self.obj.wallpost.author]
 
 
@@ -73,6 +88,7 @@ class InitiativeWallpostOwnerReactionMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """the initiator"""
         if self.obj.author != self.obj.wallpost.content_object.owner:
             return [self.obj.wallpost.content_object.owner]
         else:
@@ -87,6 +103,7 @@ class InitiativeWallpostFollowerMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """followers of the initiative"""
         initiative = self.obj.content_object
         follows = []
         for activity in initiative.activities.filter(

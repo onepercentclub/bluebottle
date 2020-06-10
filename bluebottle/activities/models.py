@@ -160,7 +160,7 @@ class Organizer(Contribution):
         if self.user:
             return unicode(_("Organizer: {name}".format(name=self.user.full_name)))
         else:
-            return 'Organizer'
+            return _('Organizer')
 
 
 from bluebottle.activities.signals import *  # noqa

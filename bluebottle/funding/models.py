@@ -645,6 +645,10 @@ class PlainPayoutAccount(PayoutAccount):
 
     transitions = TransitionManager(PlainPayoutAccountTransitions, 'status')
 
+    @property
+    def verified(self):
+        return True
+
     class Meta:
         verbose_name = _('Without payment account')
         verbose_name_plural = _('Without payment accounts')
@@ -676,7 +680,7 @@ class BankAccount(PolymorphicModel):
 
     @property
     def verified(self):
-        return self.reviewed
+        return (self.connect_account and self.connect_account.verified) or self.reviewed
 
     @property
     def owner(self):

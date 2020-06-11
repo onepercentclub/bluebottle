@@ -345,72 +345,10 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                 'source.chargeable', data
             )
         ):
-            with mock.patch('stripe.Charge.create', return_value=charge) as create_charge:
+            with mock.patch('stripe.Charge.create', return_value=charge):
                 response = self.client.post(
                     self.webhook,
                     HTTP_STRIPE_SIGNATURE='some signature'
-                )
-                create_charge.assert_called_with(
-                    amount=int(self.donation.amount.amount * 100),
-                    currency=self.donation.amount.currency,
-                    metadata={
-                        'tenant_name': u'test',
-                        'activity_id': self.funding.pk,
-                        'activity_title': self.funding.title,
-                        'tenant_domain': u'testserver'
-                    },
-                    statement_descriptor=u'Test',
-                    transfer_data={
-                        'destination': self.funding.bank_account.connect_account.account_id
-                    }
-                )
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self._refresh()
-        self.assertEqual(self.donation.status, DonationTransitions.values.new)
-        self.assertEqual(self.payment.status, StripeSourcePaymentTransitions.values.charged)
-
-    def test_source_chargeable_us(self):
-        self.funding.bank_account.connect_account.country = 'US'
-        self.funding.bank_account.connect_account.account.country = 'US'
-        self.funding.bank_account.connect_account.save()
-
-        data = {
-            'object': {
-                'id': self.payment.source_token
-            }
-        }
-        charge = stripe.Charge('some charge token')
-        charge.update({
-            'status': 'succeeded',
-            'refunded': False
-        })
-
-        with mock.patch(
-            'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'source.chargeable', data
-            )
-        ):
-            with mock.patch('stripe.Charge.create', return_value=charge) as create_charge:
-                response = self.client.post(
-                    self.webhook,
-                    HTTP_STRIPE_SIGNATURE='some signature'
-                )
-                create_charge.assert_called_with(
-                    amount=int(self.donation.amount.amount * 100),
-                    currency=self.donation.amount.currency,
-                    metadata={
-                        'tenant_name': u'test',
-                        'activity_id': self.funding.pk,
-                        'activity_title': self.funding.title,
-                        'tenant_domain': u'testserver'
-                    },
-                    on_behalf_of=self.funding.bank_account.connect_account.account_id,
-                    statement_descriptor=u'Test',
-                    transfer_data={
-                        'destination': self.funding.bank_account.connect_account.account_id
-                    }
                 )
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 

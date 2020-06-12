@@ -8,7 +8,6 @@ from django.test.utils import override_settings
 
 from bluebottle.clients.management.commands.new_tenant import Command as NewTenantCommand
 from bluebottle.clients.models import Client
-from bluebottle.members.models import Member
 
 
 @override_settings(TENANT_APPS=('django_nose',),
@@ -78,8 +77,6 @@ class ManagementCommandNewTenantTests(TestCase):
         self.assertEqual(super_args, ())
         self.assertEqual(language_args, ('en',))
         self.assertEqual(command_args, ('loaddata', 'geo_data'))
-        user = Member.objects.get(email='admin@example.com')
-        self.assertEqual(user.last_name, 'example')
 
 
 @override_settings(MERCHANT_ACCOUNTS=[{

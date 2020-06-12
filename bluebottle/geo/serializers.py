@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from django.contrib.gis.geos import Point
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
@@ -5,6 +7,33 @@ from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from bluebottle.geo.models import Country, Location, Place, InitiativePlace, Geolocation
+
+from staticmaps_signature import StaticMapURLSigner
+
+staticmap_url_signer = StaticMapURLSigner(
+    public_key=settings.STATIC_MAPS_API_KEY, private_key=settings.STATIC_MAPS_API_SECRET
+)
+
+
+class StaticMapsField(serializers.ReadOnlyField):
+    url = (
+        "http://maps.googleapis.com/maps/api/staticmap"
+        "?center={latitude},{longitude}&zoom=10&size=220x220"
+        "&maptype=roadmap&markers=${latitude},{longitude}&sensor=false"
+        "&style=feature:poi|visibility:off&style=feature:poi.park|visibility:on"
+    )
+
+    def to_representation(self, value):
+        try:
+            latitude = value.latitude
+            longitude = value.longitude
+        except AttributeError:
+            latitude = value.coords[1]
+            longitude = value.coords[0]
+
+        url = self.url.format(latitude=latitude, longitude=longitude)
+
+        return staticmap_url_signer.sign_url(url)
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -21,9 +50,11 @@ class LocationSerializer(serializers.ModelSerializer):
     longitude = serializers.DecimalField(source='position.longitude', max_digits=10, decimal_places=3)
     image = ImageSerializer(required=False)
 
+    static_map_url = StaticMapsField(source='position')
+
     class Meta:
         model = Location
-        fields = ('id', 'name', 'description', 'image', 'latitude', 'longitude')
+        fields = ('id', 'name', 'description', 'image', 'latitude', 'longitude', 'static_map_url')
 
     class JSONAPIMeta:
         resource_name = 'locations'
@@ -98,6 +129,7 @@ class TinyPointSerializer(serializers.CharField):
 
 class GeolocationSerializer(ModelSerializer):
     position = PointSerializer()
+    static_map_url = StaticMapsField(source='position')
 
     included_serializers = {
         'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer'
@@ -110,6 +142,7 @@ class GeolocationSerializer(ModelSerializer):
             'locality', 'province',
             'country',
             'position',
+            'static_map_url',
             'formatted_address',
         )
 

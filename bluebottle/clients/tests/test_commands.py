@@ -8,7 +8,6 @@ from django.test.utils import override_settings
 
 from bluebottle.clients.management.commands.new_tenant import Command as NewTenantCommand
 from bluebottle.clients.models import Client
-from bluebottle.members.models import Member
 
 
 @override_settings(TENANT_APPS=('django_nose',),
@@ -19,12 +18,13 @@ class ManagementCommandArgsTests(TestCase):
         from ..management.commands.new_tenant import Command as NewTenantCommand
         cmd = NewTenantCommand()
 
-        self.assertEqual(len(cmd.option_list), 5)
+        self.assertEqual(len(cmd.option_list), 6)
         self.assertEqual(cmd.option_list[0].dest, 'full_name')
         self.assertEqual(cmd.option_list[1].dest, 'schema_name')
         self.assertEqual(cmd.option_list[2].dest, 'domain_url')
         self.assertEqual(cmd.option_list[3].dest, 'client_name')
-        self.assertEqual(cmd.option_list[4].dest, 'post_command')
+        self.assertEqual(cmd.option_list[4].dest, 'languages')
+        self.assertEqual(cmd.option_list[5].dest, 'post_command')
 
 
 @override_settings(TENANT_APPS=('django_nose',),
@@ -53,7 +53,13 @@ class ManagementCommandNewTenantTests(TestCase):
         cmd = NewTenantCommand()
         store_func = 'bluebottle.clients.management.commands.new_tenant.Command.store_client'
         super_func = 'bluebottle.clients.management.commands.new_tenant.Command.create_client_superuser'
-        with mock.patch(store_func) as store_mock, mock.patch(super_func) as super_mock:
+        language_func = 'bluebottle.clients.management.commands.new_tenant.Command.create_languages'
+        command_func = 'bluebottle.clients.management.commands.new_tenant.call_command'
+        tenant = Client(name='New Tenant', schema_name='new', client_name='new')
+        with mock.patch(store_func, return_value=tenant) as store_mock, \
+                mock.patch(super_func) as super_mock, \
+                mock.patch(command_func) as command_mock, \
+                mock.patch(language_func) as language_mock:
             call_command(
                 cmd,
                 full_name='New Tenant',
@@ -62,31 +68,15 @@ class ManagementCommandNewTenantTests(TestCase):
                 client_name='new'
             )
             store_args, store_kwargs = store_mock.call_args_list[0]
-
             super_args, super_kwargs = super_mock.call_args_list[0]
+            command_args, command_kwargs = command_mock.call_args_list[0]
+            language_args, language_kwargs = language_mock.call_args_list[0]
 
         self.assertEqual(store_kwargs['name'], 'New Tenant')
         self.assertEqual(store_kwargs['client_name'], 'new')
-        self.assertEqual(super_args, ('new',))
-
-    def test_create_superuser(self):
-        cmd = NewTenantCommand()
-        tenant = 'test'
-        cmd.create_client_superuser(tenant)
-        connection.set_tenant(Client.objects.get(schema_name='test'))
-        user = Member.objects.get(email='admin@example.com')
-        self.assertEqual(user.last_name, 'example')
-
-    def test_load_fixtures(self):
-        cmd = NewTenantCommand()
-        tenant = 'test'
-        with mock.patch('bluebottle.clients.management.commands.new_tenant.call_command') as command_mock:
-            cmd.load_fixtures(tenant)
-            calls = [mock.call('loaddata', 'skills'),
-                     mock.call('loaddata', 'redirects'),
-                     mock.call('loaddata', 'project_data'),
-                     mock.call('loaddata', 'geo_data')]
-            command_mock.assert_has_calls(calls)
+        self.assertEqual(super_args, ())
+        self.assertEqual(language_args, ('en',))
+        self.assertEqual(command_args, ('loaddata', 'geo_data'))
 
 
 @override_settings(MERCHANT_ACCOUNTS=[{

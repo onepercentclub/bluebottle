@@ -1,3 +1,4 @@
+# coding=utf-8
 from optparse import make_option
 
 from django.core import exceptions
@@ -11,6 +12,7 @@ from tenant_schemas.utils import get_tenant_model
 
 from bluebottle.members.models import Member
 from bluebottle.common.management.commands.base import Command as BaseCommand
+from bluebottle.utils.models import Language
 
 
 class Command(BaseCommand):
@@ -25,6 +27,9 @@ class Command(BaseCommand):
                     help='Specifies the domain_url for the tenant (e.g. "new-tenant.localhost").'),
         make_option('--client-name',
                     help='Specifies the client name for the tenant (e.g. "new-tenant").'),
+        make_option('--languages',
+                    default='en',
+                    help='Specifies the client languages (e.g. "en,nl").'),
         make_option('--post-command',
                     help='Calls another management command after the tenant is created.')
     )
@@ -34,6 +39,7 @@ class Command(BaseCommand):
         client_name = options.get('client_name', None)
         schema_name = options.get('schema_name', None)
         domain_url = options.get('domain_url', None)
+        languages = options.get('languages', 'en')
         post_command = options.get('post_command', None)
 
         # If full-name is specified then don't prompt for any values.
@@ -105,21 +111,52 @@ class Command(BaseCommand):
                 continue
 
         if client and client_name:
-            self.create_client_superuser(client_name)
-
-        if client and client_name:
-            self.load_fixtures(client_name=client_name)
+            from django.db import connection
+            connection.set_tenant(client)
+            self.create_languages(languages)
+            self.create_client_superuser()
+            call_command('loaddata', 'geo_data')
+            call_command('loaddata', 'geo_data')
+            call_command('loaddata', 'skills')
+            call_command('search_index', '--rebuild', '-f')
+            call_command('loadlinks', '-f', 'links.json')
+            call_command('loadpages', '-f', 'pages.json')
 
         if client and post_command:
             call_command(post_command, *args, **options)
 
         return
 
-    def create_client_superuser(self, client_name):
-        from django.db import connection
-        tenant = get_tenant_model().objects.get(client_name=client_name)
-        connection.set_tenant(tenant)
+    def create_languages(self, languages):
+        for lang in languages.split(","):
+            if lang == 'nl':
+                Language.objects.get_or_create(
+                    code='nl',
+                    defaults={
+                        'language_name': 'Dutch',
+                        'native_name': 'Nederlands'
 
+                    }
+                )
+            if lang == 'en':
+                Language.objects.get_or_create(
+                    code='en',
+                    defaults={
+                        'language_name': 'English',
+                        'native_name': 'English'
+
+                    }
+                )
+            if lang == 'fr':
+                Language.objects.get_or_create(
+                    code='fr',
+                    defaults={
+                        'language_name': 'French',
+                        'native_name': 'Français'
+                    }
+                )
+
+    def create_client_superuser(self):
         password = 'pbkdf2_sha256$12000$MKnW1lFPvfhP$IFidWIsLSjfaWErZa4NFK2N40kbdYhn4PiebBGIgMLg='
         su = Member.objects.create(first_name='admin',
                                    last_name='example',
@@ -129,19 +166,6 @@ class Command(BaseCommand):
                                    is_staff=True,
                                    is_superuser=True)
         su.save()
-
-    def load_fixtures(self, client_name):
-        from django.db import connection
-
-        try:
-            tenant = get_tenant_model().objects.get(client_name=client_name)
-            connection.set_tenant(tenant)
-            call_command('loaddata', 'skills')
-            call_command('loaddata', 'redirects')
-            call_command('loaddata', 'project_data')
-            call_command('loaddata', 'geo_data')
-        except get_tenant_model().DoesNotExist:
-            self.stdout.write("Client not found. Skipping loading fixtures")
 
     def store_client(self, name, client_name, domain_url, schema_name):
         try:

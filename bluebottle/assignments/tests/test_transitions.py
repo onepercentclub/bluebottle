@@ -219,6 +219,21 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             applicant.time_spent, self.assignment.duration
         )
 
+    def test_time_spent_deadline_no_duration(self):
+        self.assignment.review_transitions.approve()
+        self.assignment.preparation = 4
+        self.assignment.duration = None
+        self.assignment.save()
+
+        applicant = ApplicantFactory.create(activity=self.assignment)
+        self.assignment.transitions.start()
+        self.assignment.transitions.succeed()
+        self.assignment.save()
+        applicant.refresh_from_db()
+        self.assertEqual(
+            applicant.time_spent, self.assignment.preparation
+        )
+
     def test_time_spent_on_date(self):
         self.assignment.end_date_type = 'on_date'
         self.assignment.preparation = 5

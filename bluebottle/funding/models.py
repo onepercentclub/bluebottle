@@ -19,9 +19,9 @@ from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.files.fields import ImageField, DocumentField
-from bluebottle.fsm import FSMField
 from bluebottle.funding.validators import KYCPassedValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
+from bluebottle.files.fields import ImageField, PrivateDocumentField
+from bluebottle.fsm import FSMField
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
@@ -604,9 +604,13 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, Polym
 
 
 class PlainPayoutAccount(PayoutAccount):
-    document = DocumentField(blank=True, null=True)
+    document = PrivateDocumentField(blank=True, null=True)
 
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
+
+    @property
+    def verified(self):
+        return True
 
     class Meta:
         verbose_name = _('Without payment account')
@@ -639,7 +643,7 @@ class BankAccount(PolymorphicModel):
 
     @property
     def verified(self):
-        return self.reviewed
+        return (self.connect_account and self.connect_account.verified) or self.reviewed
 
     @property
     def owner(self):

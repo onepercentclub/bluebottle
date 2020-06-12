@@ -353,11 +353,13 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                         'activity_title': self.funding.title,
                         'tenant_domain': u'testserver'
                     },
-                    statement_descriptor=u'Test',
+                    source=u'some-source-id',
+                    statement_descriptor_suffix=u'Test',
                     transfer_data={
                         'destination': self.funding.bank_account.connect_account.account_id
                     }
                 )
+
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()
@@ -400,12 +402,13 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                         'activity_title': self.funding.title,
                         'tenant_domain': u'testserver'
                     },
-                    on_behalf_of=self.funding.bank_account.connect_account.account_id,
-                    statement_descriptor=u'Test',
+                    source=u'some-source-id',
+                    statement_descriptor_suffix=u'Test',
                     transfer_data={
                         'destination': self.funding.bank_account.connect_account.account_id
                     }
                 )
+
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self._refresh()

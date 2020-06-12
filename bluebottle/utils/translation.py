@@ -7,10 +7,10 @@ from tenant_extras.middleware import tenant_translation
 
 class override(ContextDecorator):
     def __init__(self, language):
-        self.language = language
+        self.language = language or 'en'
 
     def __enter__(self):
-        self.old_language = translation.get_language()
+        self.old_language = translation.get_language() or 'en'
         translation.activate(self.language)
         translation._trans._active.value = tenant_translation(
             self.language, connection.tenant.client_name

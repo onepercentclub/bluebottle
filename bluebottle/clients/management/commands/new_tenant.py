@@ -112,10 +112,10 @@ class Command(BaseCommand):
 
         if client and client_name:
             from django.db import connection
-            tenant = get_tenant_model().objects.get(client_name=client_name)
-            connection.set_tenant(tenant)
+            connection.set_tenant(client)
             self.create_languages(languages)
             self.create_client_superuser()
+            call_command('loaddata', 'geo_data')
             call_command('loaddata', 'geo_data')
             call_command('loaddata', 'skills')
             call_command('search_index', '--rebuild', '-f')

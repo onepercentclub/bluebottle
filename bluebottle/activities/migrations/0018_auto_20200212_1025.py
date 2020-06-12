@@ -26,13 +26,15 @@ def remove_anonymous_permissions(apps, schema_editor):
             anonymous = Group.objects.get(name='Anonymous')
 
             for (app, codename) in permissions:
-                permission = Permission.objects.get(
-                    content_type__app_label=app,
-                    codename=codename
-                )
+                try:
+                    permission = Permission.objects.get(
+                        content_type__app_label=app,
+                        codename=codename
+                    )
 
-                anonymous.permissions.remove(permission)
-
+                    anonymous.permissions.remove(permission)
+                except Permission.DoesNotExist:
+                    pass
             anonymous.save()
 
 

@@ -15,6 +15,18 @@ logger = logging.getLogger('bluebottle')
 
 @periodic_task(
     run_every=(crontab(minute='*/15')),
+    name="event_tasks",
+    ignore_result=True
+)
+def event_tasks():
+    for tenant in Client.objects.all():
+        with LocalTenant(tenant, clear_tenant=True):
+            for task in Event.get_scheduled_tasks():
+                task.execute()
+
+
+@periodic_task(
+    run_every=(crontab(minute='*/15')),
     name="check_event_start",
     ignore_result=True
 )

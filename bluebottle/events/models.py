@@ -217,3 +217,4 @@ class Participant(Contribution):
 
 from bluebottle.events.states import *  # noqa
 from bluebottle.events.triggers import *  # noqa
+from bluebottle.events.scheduled_tasks import *  # noqa

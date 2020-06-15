@@ -16,13 +16,31 @@ class ReviewStateMachine(ModelStateMachine):
     field = 'status'
     model = Initiative
 
-    draft = State(_('draft'), 'draft', _('The initiative is created by the user'))
-    submitted = State(_('submitted'), 'submitted', _('The initiative is complete and needs to be review'))
-    needs_work = State(_('needs work'), 'needs_work', _('The initiative needs to be edited'))
-
-    rejected = State(_('rejected'), 'rejected', _('The initiative is rejected by the reviewer'))
-
-    approved = State(_('approved'), 'approved', _('The initiative is approveed by the reviewer'))
+    draft = State(
+        _('draft'),
+        'draft',
+        _('The initiative is created by the user.')
+    )
+    submitted = State(
+        _('submitted'),
+        'submitted',
+        _('The initiative is complete and ready to be reviewed.')
+    )
+    needs_work = State(
+        _('needs work'),
+        'needs_work',
+        _('The initiative needs to be edited.')
+    )
+    rejected = State(
+        _('rejected'),
+        'rejected',
+        _('The initiative is rejected by the reviewer and not visible on the platform.')
+    )
+    approved = State(
+        _('approved'),
+        'approved',
+        _('The initiative is approved by the reviewer and is visible on the platform.')
+    )
 
     def is_complete(self):
         """The initiative is complete"""
@@ -88,7 +106,8 @@ class ReviewStateMachine(ModelStateMachine):
         AllStates(),
         rejected,
         name=_('Reject'),
-        description=_("The initiative will be rejected. The initiator will not be able to edit it."),
+        description=_("The initiative will be rejected. "
+                      "The initiator will not be able to edit it and it won't be visible on the platform"),
         automatic=False,
         permission=is_staff,
         effects=[
@@ -101,7 +120,7 @@ class ReviewStateMachine(ModelStateMachine):
         rejected,
         draft,
         name=_('Restore'),
-        description=_("The initiative will be restored. The initiator will ben able to edit it again."),
+        description=_("The initiative will be restored. The initiator will be able to edit it again."),
         automatic=False,
         permission=is_staff,
     )

@@ -32,9 +32,9 @@ class Event(Activity):
 
     start_date = models.DateField(_('start date'), null=True, blank=True)
     start_time = models.TimeField(_('start time'), null=True, blank=True)
-    start = models.DateTimeField(_('Start'), null=True, blank=True)
+    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.FloatField(_('duration'), null=True, blank=True)
-    end = models.DateTimeField(_('end'), null=True, blank=True)
+    end = models.DateTimeField(_('end date and time'), null=True, blank=True)
     registration_deadline = models.DateField(_('deadline to apply'), null=True, blank=True)
 
     validators = [RegistrationDeadlineValidator]

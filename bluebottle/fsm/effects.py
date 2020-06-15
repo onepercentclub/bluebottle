@@ -101,7 +101,16 @@ class BaseTransitionEffect(Effect):
         return unicode(self.transition.target)
 
     def to_html(self):
-        return _('%s <i>%s</i>') % (self.transition.name, unicode(self.instance))
+        if self.conditions:
+            return _('{transition} <i>{object}</i> if {conditions}').format(
+                transition=self.transition.name,
+                object=unicode(self.instance),
+                conditions=" and ".join([c.__doc__ for c in self.conditions])
+            )
+        return _('{transition} <i>{object}</i>').format(
+            transition=self.transition.name,
+            object=unicode(self.instance)
+        )
 
 
 def TransitionEffect(transition_name, field='states', conditions=None, save=False, post_save=False):

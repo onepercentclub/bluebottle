@@ -24,6 +24,11 @@ from bluebottle.notifications.effects import NotificationEffect
 
 class EventStateMachine(ActivityStateMachine):
     model = Event
+    submitted = State(
+        _('submitted'),
+        'submitted',
+        _('The activity is ready to go online once the initiative has been approved.')
+    )
 
     def is_full(self):
         "the event is full"

@@ -109,6 +109,7 @@ class Command(BaseCommand):
         for transition in machine.transitions.values():
             str = u"<tr><td>{}</td><td>{}</td><td><ul>{}</ul></td>" \
                   u"<td>{}</td><td>{}</td><td><ul>{}</ul></td><td><ul>{}</ul></td></tr>"
+
             text += str.format(
                 transition.name,
                 transition.description,
@@ -124,7 +125,7 @@ class Command(BaseCommand):
                     u"<li>{}</li>".format(effect(instance).to_html())
                     for effect
                     in transition.effects
-                ),
+                )
             )
         text += u"</table>"
 

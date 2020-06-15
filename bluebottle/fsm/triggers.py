@@ -38,7 +38,7 @@ class ModelChangedTrigger(ModelTrigger):
         if self.field:
             field_name = self.instance._meta.get_field(self.field).verbose_name
             return unicode(_("{} has been changed").format(field_name.capitalize()))
-        return unicode(_("Model has been changed"))
+        return unicode(_("Object has been changed"))
 
 
 class ModelDeletedTrigger(ModelTrigger):

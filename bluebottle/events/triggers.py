@@ -68,6 +68,9 @@ class Finished(ModelChangedTrigger):
         TransitionEffect('close', conditions=[EventStateMachine.should_finish, EventStateMachine.has_no_participants]),
     ]
 
+    def __unicode__(self):
+        return unicode(_("Event has changed"))
+
 
 Event.triggers = [CapacityChanged, DateChanged, Started, Finished]
 

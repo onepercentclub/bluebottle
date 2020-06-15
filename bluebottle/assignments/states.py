@@ -92,7 +92,7 @@ class AssignmentStateMachine(ActivityStateMachine):
         [ActivityStateMachine.open, running, full],
         ActivityStateMachine.closed,
         name=_('Expire'),
-        description=_("The activity was successfully completed."),
+        description=_("The activity expired without any sign-ups."),
         automatic=True,
         effects=[
             NotificationEffect(AssignmentExpiredMessage),

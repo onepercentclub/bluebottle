@@ -97,6 +97,7 @@ class AssignmentReminderOnDate(TransitionMessage):
     context = {
         'assignment_title': 'title'
     }
+    send_once = True
 
     def get_recipients(self):
         """users that applied to the task"""
@@ -113,6 +114,7 @@ class AssignmentReminderDeadline(TransitionMessage):
     context = {
         'assignment_title': 'title'
     }
+    send_once = True
 
     def get_recipients(self):
         """users that applied to the task"""

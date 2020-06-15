@@ -85,6 +85,6 @@ def check_assignment_reminder():
 
             for assignment in assignments:
                 if assignment.end_date_type == 'deadline':
-                    AssignmentReminderDeadline(assignment).compose_and_send(once=True)
+                    AssignmentReminderDeadline(assignment).compose_and_send()
                 else:
-                    AssignmentReminderOnDate(assignment).compose_and_send(once=True)
+                    AssignmentReminderOnDate(assignment).compose_and_send()

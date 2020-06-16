@@ -19,7 +19,7 @@ class StaticMapsField(serializers.ReadOnlyField):
     url = (
         "http://maps.googleapis.com/maps/api/staticmap"
         "?center={latitude},{longitude}&zoom=10&size=220x220"
-        "&maptype=roadmap&markers=${latitude},{longitude}&sensor=false"
+        "&maptype=roadmap&markers={latitude},{longitude}&sensor=false"
         "&style=feature:poi|visibility:off&style=feature:poi.park|visibility:on"
     )
 

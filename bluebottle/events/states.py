@@ -130,7 +130,10 @@ class EventStateMachine(ActivityStateMachine):
         ActivityStateMachine.closed,
         name=_("Close"),
         description=_("Close the event. It will no longer be editable by the organiser."),
-        effects=[NotificationEffect(EventClosedOwnerMessage)]
+        effects=[
+            NotificationEffect(EventClosedOwnerMessage),
+            RelatedTransitionEffect('participants', 'fail')
+        ]
     )
 
     reopen = Transition(
@@ -164,6 +167,11 @@ class ParticipantStateMachine(ContributionStateMachine):
         _('no show'),
         'no_show',
         _("The participant didn't attend the event and was marked absent.")
+    )
+    new = State(
+        _('Joined'),
+        'new',
+        _("The participant signed up for the event.")
     )
 
     def is_user(self, user):
@@ -199,7 +207,7 @@ class ParticipantStateMachine(ContributionStateMachine):
     initiate = Transition(
         EmptyState(),
         ContributionStateMachine.new,
-        name=_("Initiate"),
+        name=_("Join"),
         description=_("Participant is created. User signs up for the activity."),
         effects=[
             TransitionEffect('succeed', conditions=[event_is_finished]),

@@ -62,9 +62,10 @@ class BaseNotificationEffect(Effect):
         return self.message.generic_subject
 
 
-def NotificationEffect(_message):
+def NotificationEffect(_message, conditions=None):
 
     class _NotificationEffect(BaseNotificationEffect):
         message = _message
+        message.conditions = conditions or []
 
     return _NotificationEffect

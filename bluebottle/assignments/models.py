@@ -174,7 +174,6 @@ class Assignment(Activity):
     def save(self, *args, **kwargs):
         if self.preparation and self.end_date_type == "deadline":
             self.preparation = None
-
         return super(Assignment, self).save(*args, **kwargs)
 
 

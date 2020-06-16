@@ -76,24 +76,28 @@ class Command(BaseCommand):
 
         if isinstance(instance, Donation):
             instance.activity = Funding(title="Demo Campaign")
+            instance.user = Member(first_name='Demo', last_name='User')
 
         if isinstance(instance, Event):
             instance.title = "Demo Event"
 
         if isinstance(instance, Participant):
             instance.activity = Event(title="Demo Event")
+            instance.user = Member(first_name='Demo', last_name='User')
 
         if isinstance(instance, Assignment):
             instance.title = "Demo Assignment"
 
         if isinstance(instance, Applicant):
             instance.activity = Assignment(title="Demo Assignment")
+            instance.user = Member(first_name='Demo', last_name='User')
 
         machine = instance.states
 
         text = ""
 
         text += u"<h2>States</h2>"
+        text += u"<em>All states this instance can be in.</em>"
 
         text += u"<table data-layout=\"default\"><tr><th>State Name</th><th>Description</th></tr>"
 
@@ -103,6 +107,9 @@ class Command(BaseCommand):
         text += u"</table>"
 
         text += u"<h2>Transitions</h2>"
+        text += u"<em>An instance will always move from one state to the other through a transition. " \
+                u"A manual transition is initiated by a user. An automatic transition is initiated by the system, " \
+                u"either through a trigger or through a side effect of a related object.</em>"
         text += u"<table data-layout=\"full-width\"><tr><th>Name</th><th>Description</th><th>From</th><th>To</th>" \
                 u"<th>Manual</th><th>Conditions</th><th>Side Effects</th></tr>"
 
@@ -131,6 +138,9 @@ class Command(BaseCommand):
 
         if model.triggers:
             text += u"<h2>Triggers</h2>"
+            text += u"<em>These are events that get triggered when the instance changes, " \
+                    u"other then through a transition. " \
+                    u"Mostly it would be triggered because a property changed (e.g. a deadline).</em>"
             text += u"<table data-layout=\"full-width\">" \
                     u"<tr><th>When</th>" \
                     u"<th>Conditions</th>" \

@@ -29,6 +29,14 @@ class AssignmentStateMachine(ActivityStateMachine):
         """start date has passed"""
         return self.instance.date and self.instance.date < timezone.now()
 
+    def has_deadline(self):
+        """has a deadline"""
+        return self.instance.end_date_type == 'deadline'
+
+    def is_on_date(self):
+        """takes place on a set date"""
+        return self.instance.end_date_type == 'on_date'
+
     def should_open(self):
         """start date is in the future"""
         return self.instance.date and self.instance.date > timezone.now()
@@ -56,7 +64,7 @@ class AssignmentStateMachine(ActivityStateMachine):
         description=_("Start the activity."),
         automatic=True,
         effects=[
-            RelatedTransitionEffect('accepted_applicants', 'activate')
+            RelatedTransitionEffect('accepted_applicants', 'activate'),
         ]
     )
 
@@ -69,11 +77,15 @@ class AssignmentStateMachine(ActivityStateMachine):
     )
 
     reopen = Transition(
-        (ActivityStateMachine.succeeded, ActivityStateMachine.closed, full, ),
+        full,
         ActivityStateMachine.open,
         name=_('Reopen'),
-        description=_("Reopen the activity for new sign-ups."),
+        description=_("Reopen the activity for new sign-ups. "
+                      "Triggered by a change in capacity or the number of applicants."),
         automatic=True,
+        effects=[
+            RelatedTransitionEffect('accepted_applicants', 'succeed'),
+        ]
     )
 
     succeed = Transition(
@@ -89,10 +101,10 @@ class AssignmentStateMachine(ActivityStateMachine):
     )
 
     expire = Transition(
-        [ActivityStateMachine.open, running, full],
+        ActivityStateMachine.open,
         ActivityStateMachine.closed,
         name=_('Expire'),
-        description=_("The activity expired without any sign-ups."),
+        description=_("The activity expired. There were no sign-ups before the deadline to apply."),
         automatic=True,
         effects=[
             NotificationEffect(AssignmentExpiredMessage),

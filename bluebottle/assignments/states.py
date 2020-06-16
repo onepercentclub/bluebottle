@@ -259,7 +259,7 @@ class ApplicantStateMachine(ContributionStateMachine):
     reapply = Transition(
         [
             withdrawn,
-            ContributionStateMachine.closed
+            ContributionStateMachine.failed
         ],
         ContributionStateMachine.new,
         name=_('Reapply'),

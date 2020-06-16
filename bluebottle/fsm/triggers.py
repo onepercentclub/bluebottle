@@ -55,6 +55,7 @@ class ModelDeletedTrigger(ModelTrigger):
 
 class TriggerMixin(object):
     triggers = []
+    scheduled_tasks = []
 
     def __init__(self, *args, **kwargs):
         super(TriggerMixin, self).__init__(*args, **kwargs)
@@ -71,6 +72,13 @@ class TriggerMixin(object):
             for field in self._meta.fields
             if not field.is_relation
         )
+
+    @classmethod
+    def get_scheduled_tasks(cls):
+        result = []
+        for task in cls.scheduled_tasks:
+            result.append(task(cls))
+        return result
 
     @property
     def current_triggers(self):

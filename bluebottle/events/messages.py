@@ -36,12 +36,13 @@ class EventDateChanged(TransitionMessage):
         ]
 
 
-class EventReminder(TransitionMessage):
+class EventReminderMessage(TransitionMessage):
     subject = _('Your event "{title}" will take place in 5 days!')
     template = 'messages/event_reminder'
     context = {
         'title': 'title'
     }
+    send_once = True
 
     def get_recipients(self):
         """participants that signed up"""

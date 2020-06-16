@@ -101,6 +101,13 @@ class EventStateMachine(ActivityStateMachine):
         description=_("Start the event.")
     )
 
+    expire = Transition(
+        [ActivityStateMachine.open],
+        ActivityStateMachine.closed,
+        name=_("Expire"),
+        description=_("Event expired. No one signed-up before the start of the event.")
+    )
+
     succeed = Transition(
         (full, running, ActivityStateMachine.open, ActivityStateMachine.closed,),
         ActivityStateMachine.succeeded,

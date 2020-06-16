@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.events.models import Event
-from bluebottle.events.tasks import check_event_end, check_event_start, check_event_reminder
+from bluebottle.events.tasks import event_tasks
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.events.states import EventStateMachine
 from bluebottle.initiatives.tests.factories import (
@@ -40,8 +40,7 @@ class EventTasksTestCase(BluebottleTestCase):
         ParticipantFactory.create(activity=event)
 
         self.assertEqual(event.status, 'open')
-        check_event_start()
-        check_event_end()
+        event_tasks()
         event = Event.objects.get(pk=event.pk)
         self.assertEqual(event.status, 'running')
 
@@ -55,10 +54,9 @@ class EventTasksTestCase(BluebottleTestCase):
         event.states.submit(save=True)
 
         self.assertEqual(event.status, 'open')
-        check_event_start()
-        check_event_end()
+        event_tasks()
         event = Event.objects.get(pk=event.pk)
-        self.assertEqual(event.status, 'open')
+        self.assertEqual(event.status, 'closed')
 
     def test_event_end_task(self):
         user = BlueBottleUserFactory.create(first_name='Nono')
@@ -76,16 +74,14 @@ class EventTasksTestCase(BluebottleTestCase):
         tenant = connection.tenant
 
         future = timezone.now() + timedelta(hours=6)
-
         with mock.patch.object(timezone, 'now', return_value=future):
-            check_event_start()
-            check_event_end()
+            event_tasks()
 
         with LocalTenant(tenant, clear_tenant=True):
             event = Event.objects.get(pk=event.pk)
         self.assertEqual(event.status, EventStateMachine.succeeded.value)
 
-        self.assertEqual(len(mail.outbox), 10)
+        self.assertEqual(len(mail.outbox), 11)
         self.assertEqual(mail.outbox[-1].subject, 'You completed your event "{}"!'.format(event.title))
         self.assertTrue("Hi Nono,", mail.outbox[-1].body)
 
@@ -104,7 +100,7 @@ class EventTasksTestCase(BluebottleTestCase):
         ParticipantFactory.create(activity=event, status='withdrawn')
 
         tenant = connection.tenant
-        check_event_reminder()
+        event_tasks()
 
         recipients = [message.to[0] for message in mail.outbox]
 
@@ -141,8 +137,9 @@ class EventTasksTestCase(BluebottleTestCase):
         ParticipantFactory.create_batch(3, activity=event, status='new')
         ParticipantFactory.create(activity=event, status='withdrawn')
 
-        check_event_reminder()
+        event_tasks()
         mail.outbox = []
-        check_event_reminder()
+        event_tasks()
+        event_tasks()
 
         self.assertEqual(len(mail.outbox), 0)

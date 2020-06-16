@@ -24,6 +24,7 @@ class TransitionMessage(object):
     subject = 'Status changed'
     template = 'messages/base'
     context = {}
+    send_once = False
 
     def get_generic_context(self):
         from bluebottle.clients.utils import tenant_url, tenant_name
@@ -84,13 +85,13 @@ class TransitionMessage(object):
         path = "{}.{}".format(self.__module__, self.__class__.__name__)
         return MessageTemplate.objects.filter(message=path).first()
 
-    def get_messages(self, once=False):
+    def get_messages(self):
         custom_message = self.options.get('custom_message', '')
         custom_template = self.get_message_template()
         recipients = list(set(self.get_recipients()))
         for recipient in recipients:
             with translation.override(recipient.primary_language):
-                if once:
+                if self.send_once:
                     try:
                         Message.objects.get(
                             template=self.get_template(),
@@ -132,8 +133,8 @@ class TransitionMessage(object):
         """the owner"""
         return [self.obj.owner]
 
-    def compose_and_send(self, once=False):
-        for message in self.get_messages(once=once):
+    def compose_and_send(self):
+        for message in self.get_messages():
             context = self.get_context(message.recipient)
             message.save()
             message.send(**context)

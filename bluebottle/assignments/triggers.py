@@ -18,12 +18,30 @@ class DateChanged(ModelChangedTrigger):
         NotificationEffect(AssignmentDateChanged),
         TransitionEffect(
             'succeed',
-            conditions=[AssignmentStateMachine.should_finish, AssignmentStateMachine.has_accepted_applicants]),
+            conditions=[
+                AssignmentStateMachine.should_finish,
+                AssignmentStateMachine.has_accepted_applicants
+            ]
+        ),
         TransitionEffect(
             'expire',
-            conditions=[AssignmentStateMachine.should_finish, AssignmentStateMachine.has_no_accepted_applicants]),
-        TransitionEffect('reopen', conditions=[AssignmentStateMachine.should_open]),
-        TransitionEffect('lock', conditions=[AssignmentStateMachine.is_full]),
+            conditions=[
+                AssignmentStateMachine.should_finish,
+                AssignmentStateMachine.has_no_accepted_applicants
+            ]
+        ),
+        TransitionEffect(
+            'reopen',
+            conditions=[
+                AssignmentStateMachine.should_open
+            ]
+        ),
+        TransitionEffect(
+            'lock',
+            conditions=[
+                AssignmentStateMachine.is_full
+            ]
+        ),
     ]
 
 

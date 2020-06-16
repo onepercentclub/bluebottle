@@ -1,12 +1,11 @@
 from datetime import timedelta
-
 from django.core import mail
 from django.db import connection
 from django.utils.timezone import now
 
-from bluebottle.assignments.tasks import check_assignment_reminder, check_assignment_registration_deadline, \
-    check_assignment_end_date, check_assignment_start_date
 from bluebottle.assignments.models import Applicant
+from bluebottle.assignments.tasks import check_assignment_reminder, check_assignment_registration_deadline, \
+    check_assignment_end_date, check_assignment_start_date, assignment_tasks
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.tests.factories import (
@@ -44,7 +43,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         mail.outbox = []
         tenant = connection.tenant
-        check_assignment_reminder()
+        assignment_tasks()
 
         with LocalTenant(tenant, clear_tenant=True):
             assignment.refresh_from_db()

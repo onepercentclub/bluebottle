@@ -208,3 +208,4 @@ class Applicant(Contribution):
 from bluebottle.assignments.signals import *  # noqa
 from bluebottle.assignments.states import *  # noqa
 from bluebottle.assignments.triggers import *  # noqa
+from bluebottle.assignments.scheduled_tasks import *  # noqa

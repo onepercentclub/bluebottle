@@ -77,7 +77,11 @@ class AssignmentStateMachine(ActivityStateMachine):
     )
 
     reopen = Transition(
-        full,
+        [
+            full,
+            ActivityStateMachine.closed,
+            ActivityStateMachine.succeeded
+        ],
         ActivityStateMachine.open,
         name=_('Reopen'),
         description=_("Reopen the activity for new sign-ups. "

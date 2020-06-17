@@ -185,14 +185,14 @@ class BaseRelatedTransitionEffect(Effect):
 
     def to_html(self):
         if self.conditions:
-            return _('{transition} {object} if {conditions}').format(
+            return _('{transition} related {object} if {conditions}').format(
                 transition=self.transition_effect_class.name,
-                object=unicode(self.instance),
+                object=unicode(self.relation),
                 conditions=" and ".join([c.__doc__ for c in self.conditions])
             )
-        return _('{transition} {object}').format(
+        return _('{transition} related {object}').format(
             transition=self.transition_effect_class.name,
-            object=unicode(self.instance)
+            object=unicode(self.relation)
         )
 
 

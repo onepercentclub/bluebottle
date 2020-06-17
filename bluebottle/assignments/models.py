@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 from django.db import models
 from django.db.models import SET_NULL, Count, Sum
@@ -91,7 +91,8 @@ class Assignment(Activity):
     @property
     def start(self):
         if self.end_date_type == 'deadline' and self.registration_deadline:
-            return datetime.combine(self.registration_deadline, self.start_time)
+            time = self.start_time or datetime.min.time()
+            return datetime.combine(self.registration_deadline, time).replace(tzinfo=timezone.utc)
         return self.date
 
     @property

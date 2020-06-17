@@ -150,6 +150,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
             applicant.states.accept(save=True)
 
         self.assignment.date = now() - timedelta(days=1)
+        self.assignment.registration_date = now() - timedelta(days=1)
         self.assignment.save()
 
         for applicant in applicants:

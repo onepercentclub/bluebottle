@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 
+from bluebottle.assignments.tasks import assignment_tasks
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -466,13 +467,12 @@ class ApplicantAPITestCase(BluebottleTestCase):
         applicant.states.accept()
         applicant.save()
         no_show = ApplicantFactory.create(activity=self.assignment)
-        no_show.states.accept()
-        no_show.save()
+        no_show.states.accept(save=True)
 
         with mock.patch.object(
             timezone, 'now', return_value=self.assignment.date + timedelta(days=5)
         ):
-            self.assignment.save()
+            assignment_tasks()
 
         applicant.refresh_from_db()
         self.assertEqual(applicant.status, 'succeeded')

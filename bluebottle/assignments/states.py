@@ -27,7 +27,7 @@ class AssignmentStateMachine(ActivityStateMachine):
 
     def should_start(self):
         """start date has passed"""
-        return self.instance.start and self.instance.start < timezone.now()
+        return self.instance.start and self.instance.start < timezone.now() and not self.should_finish()
 
     def has_deadline(self):
         """has a deadline"""
@@ -39,7 +39,7 @@ class AssignmentStateMachine(ActivityStateMachine):
 
     def should_open(self):
         """registration deadline is in the future"""
-        return self.instance.registration_deadline and self.instance.registration_deadline >= timezone.now()
+        return self.instance.start and self.instance.start >= timezone.now() and not self.should_finish()
 
     def has_accepted_applicants(self):
         """there are accepted applicants"""

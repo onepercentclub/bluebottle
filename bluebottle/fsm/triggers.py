@@ -99,7 +99,6 @@ class TriggerMixin(object):
             for effect in current_effect.all_effects():
                 if effect not in result:
                     result.append(effect)
-
         return result
 
     @classmethod

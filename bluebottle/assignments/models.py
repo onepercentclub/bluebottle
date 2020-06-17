@@ -1,4 +1,4 @@
-import datetime
+from django.utils.timezone import datetime, timedelta, utc
 from django.db import models
 from django.db.models import SET_NULL, Count, Sum
 from django.utils.translation import ugettext_lazy as _
@@ -83,15 +83,15 @@ class Assignment(Activity):
     @property
     def end(self):
         if self.duration and self.date:
-            return self.date + datetime.timedelta(hours=self.duration)
+            return self.date + timedelta(hours=self.duration)
         else:
             return self.date
 
     @property
     def start(self):
         if self.end_date_type == 'deadline' and self.registration_deadline:
-            time = self.start_time or datetime.datetime.min.time()
-            return datetime.datetime.combine(self.registration_deadline, time).replace(tzinfo=datetime.timezone.utc)
+            time = self.start_time or datetime.min.time()
+            return datetime.combine(self.registration_deadline, time).replace(tzinfo=utc)
         return self.date
 
     @property

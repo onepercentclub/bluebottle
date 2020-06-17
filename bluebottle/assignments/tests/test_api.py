@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 import json
+
 from datetime import timedelta
 import mock
 
 from django.core import mail
+from django.db import connection
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 
+from bluebottle.assignments.tasks import assignment_tasks
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -463,18 +467,19 @@ class ApplicantAPITestCase(BluebottleTestCase):
     def test_confirm_hours(self):
         self.assertEqual(self.assignment.status, 'open')
         applicant = ApplicantFactory.create(user=self.user, activity=self.assignment)
-        applicant.states.accept()
-        applicant.save()
+        applicant.states.accept(save=True)
         no_show = ApplicantFactory.create(activity=self.assignment)
-        no_show.states.accept()
-        no_show.save()
+        no_show.states.accept(save=True)
+        tenant = connection.tenant
+        assignment_tasks()
 
         with mock.patch.object(
             timezone, 'now', return_value=self.assignment.date + timedelta(days=5)
         ):
-            self.assignment.save()
+            assignment_tasks()
 
-        applicant.refresh_from_db()
+        with LocalTenant(tenant, clear_tenant=True):
+            applicant.refresh_from_db()
         self.assertEqual(applicant.status, 'succeeded')
         self.assertEqual(applicant.time_spent, 4)
 

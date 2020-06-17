@@ -17,9 +17,9 @@ class AssignmentStateMachine(ActivityStateMachine):
     model = Assignment
 
     running = State(_('running'), 'running',
-                    _('Activity is currently being execute, not accepting new contributions'))
+                    _('Activity is currently being execute, not accepting new contributions.'))
     full = State(_('full'), 'full',
-                 _('Activity is full, not accepting new contributions'))
+                 _('Activity is full, not accepting new contributions.'))
 
     def should_finish(self):
         """end date has passed"""
@@ -27,11 +27,19 @@ class AssignmentStateMachine(ActivityStateMachine):
 
     def should_start(self):
         """start date has passed"""
-        return self.instance.date and self.instance.date < timezone.now()
+        return self.instance.start and self.instance.start < timezone.now() and not self.should_finish()
+
+    def has_deadline(self):
+        """has a deadline"""
+        return self.instance.end_date_type == 'deadline'
+
+    def is_on_date(self):
+        """takes place on a set date"""
+        return self.instance.end_date_type == 'on_date'
 
     def should_open(self):
-        """start date is in the future"""
-        return self.instance.date and self.instance.date > timezone.now()
+        """registration deadline is in the future"""
+        return self.instance.start and self.instance.start >= timezone.now() and not self.should_finish()
 
     def has_accepted_applicants(self):
         """there are accepted applicants"""
@@ -56,7 +64,7 @@ class AssignmentStateMachine(ActivityStateMachine):
         description=_("Start the activity."),
         automatic=True,
         effects=[
-            RelatedTransitionEffect('accepted_applicants', 'activate')
+            RelatedTransitionEffect('accepted_applicants', 'activate'),
         ]
     )
 
@@ -64,16 +72,24 @@ class AssignmentStateMachine(ActivityStateMachine):
         [ActivityStateMachine.open],
         full,
         automatic=True,
-        name=_('Lock'),
-        description=_("The activity has reached its capacity and is locked for new applications."),
+        name=_('Fill'),
+        description=_("The activity has reached its capacity isn't open for new applications."),
     )
 
     reopen = Transition(
-        (ActivityStateMachine.succeeded, ActivityStateMachine.closed, full, ),
+        [
+            full,
+            ActivityStateMachine.closed,
+            ActivityStateMachine.succeeded
+        ],
         ActivityStateMachine.open,
         name=_('Reopen'),
-        description=_("Reopen the activity for new sign-ups."),
+        description=_("Reopen the activity for new sign-ups. "
+                      "Triggered by a change in capacity or the number of applicants."),
         automatic=True,
+        effects=[
+            RelatedTransitionEffect('accepted_applicants', 'succeed'),
+        ]
     )
 
     succeed = Transition(
@@ -89,10 +105,10 @@ class AssignmentStateMachine(ActivityStateMachine):
     )
 
     expire = Transition(
-        [ActivityStateMachine.open, running, full],
+        ActivityStateMachine.open,
         ActivityStateMachine.closed,
         name=_('Expire'),
-        description=_("The activity expired without any sign-ups."),
+        description=_("The activity expired. There were no sign-ups before the deadline to apply."),
         automatic=True,
         effects=[
             NotificationEffect(AssignmentExpiredMessage),
@@ -247,7 +263,7 @@ class ApplicantStateMachine(ContributionStateMachine):
     reapply = Transition(
         [
             withdrawn,
-            ContributionStateMachine.closed
+            ContributionStateMachine.failed
         ],
         ContributionStateMachine.new,
         name=_('Reapply'),

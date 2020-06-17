@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 
-class ModelScheduledTask(object):
+class ModelPeriodicTask(object):
 
     def __init__(self, model, field='states'):
         self.model = model
@@ -21,4 +21,4 @@ class ModelScheduledTask(object):
                     instance.save()
 
     def __unicode__(self):
-        return unicode(_("Scheduled task"))
+        return unicode(_("Periodic task") + ": " + self.__class__.__name__)

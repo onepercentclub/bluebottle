@@ -109,7 +109,8 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assignment.date = now() - timedelta(days=1)
         self.assignment.save()
 
-        self.assignment.date = now() + timedelta(days=1)
+        self.assignment.registration_deadline = (now() + timedelta(days=1)).date()
+        self.assignment.date = now() + timedelta(days=2)
         self.assignment.save()
 
         self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
@@ -149,6 +150,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
             applicant.states.accept(save=True)
 
         self.assignment.date = now() - timedelta(days=1)
+        self.assignment.registration_date = now() - timedelta(days=1)
         self.assignment.save()
 
         for applicant in applicants:
@@ -175,6 +177,8 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
 
         self.assignment.date = now() + timedelta(days=1)
         self.assignment.save()
+
+        self.assignment.refresh_from_db()
 
         self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
 

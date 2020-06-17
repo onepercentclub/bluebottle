@@ -11,28 +11,28 @@ from bluebottle.events.messages import EventDateChanged
 from bluebottle.events.states import EventStateMachine, ParticipantStateMachine
 
 
-class CapacityChanged(ModelChangedTrigger):
+class CapacityChangedTrigger(ModelChangedTrigger):
     field = 'capacity'
 
     effects = [
-        TransitionEffect('unfill', conditions=[EventStateMachine.is_not_full]),
-        TransitionEffect('fill', conditions=[EventStateMachine.is_full]),
+        TransitionEffect('reopen', conditions=[EventStateMachine.is_not_full]),
+        TransitionEffect('lock', conditions=[EventStateMachine.is_full]),
     ]
 
 
-class DateChanged(ModelChangedTrigger):
+class DateChangedTrigger(ModelChangedTrigger):
     field = 'start'
 
     effects = [
         NotificationEffect(EventDateChanged),
         TransitionEffect('succeed', conditions=[EventStateMachine.should_finish, EventStateMachine.has_participants]),
         TransitionEffect('close', conditions=[EventStateMachine.should_finish, EventStateMachine.has_no_participants]),
-        TransitionEffect('reopen', conditions=[EventStateMachine.should_open]),
-        TransitionEffect('fill', conditions=[EventStateMachine.is_full]),
+        TransitionEffect('reschedule', conditions=[EventStateMachine.should_open]),
+        TransitionEffect('lock', conditions=[EventStateMachine.is_full]),
     ]
 
 
-class Started(ModelChangedTrigger):
+class StartedTrigger(ModelChangedTrigger):
     @property
     def is_valid(self):
         "The event has started"
@@ -50,7 +50,7 @@ class Started(ModelChangedTrigger):
         return unicode(_("Start date has passed"))
 
 
-class Finished(ModelChangedTrigger):
+class FinishedTrigger(ModelChangedTrigger):
     @property
     def is_valid(self):
         "The event has ended"
@@ -72,10 +72,10 @@ class Finished(ModelChangedTrigger):
         return unicode(_("Event has changed"))
 
 
-Event.triggers = [CapacityChanged, DateChanged, Started, Finished]
+Event.triggers = [CapacityChangedTrigger, DateChangedTrigger, StartedTrigger, FinishedTrigger]
 
 
-class ParticipantDeleted(ModelDeletedTrigger):
+class ParticipantDeletedTrigger(ModelDeletedTrigger):
     title = _('delete this participant')
     field = 'start'
 
@@ -90,7 +90,7 @@ class ParticipantDeleted(ModelDeletedTrigger):
         ),
         RelatedTransitionEffect(
             'activity',
-            'unfill',
+            'reopen',
             conditions=[
                 ParticipantStateMachine.event_will_become_open,
                 ParticipantStateMachine.event_is_not_finished
@@ -102,4 +102,4 @@ class ParticipantDeleted(ModelDeletedTrigger):
         return unicode(_("Participant has been deleted"))
 
 
-Participant.triggers = [ParticipantDeleted]
+Participant.triggers = [ParticipantDeletedTrigger]

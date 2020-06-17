@@ -9,7 +9,7 @@ from moneyed import Money
 from bluebottle.activities.models import Organizer
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.fsm import TransitionNotPossible
-from bluebottle.funding.tasks import check_funding_end
+from bluebottle.funding.tasks import funding_tasks
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, \
     BudgetLineFactory, BankAccountFactory, PlainPayoutAccountFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
@@ -105,7 +105,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         # Run scheduled task
         tenant = connection.tenant
-        check_funding_end()
+        funding_tasks()
         with LocalTenant(tenant, clear_tenant=True):
             self.funding.refresh_from_db()
 
@@ -139,7 +139,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         # Run scheduled task
         tenant = connection.tenant
-        check_funding_end()
+        funding_tasks()
         with LocalTenant(tenant, clear_tenant=True):
             self.funding.refresh_from_db()
 
@@ -165,7 +165,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         # Run scheduled task
         tenant = connection.tenant
-        check_funding_end()
+        funding_tasks()
         with LocalTenant(tenant, clear_tenant=True):
             self.funding.refresh_from_db()
 
@@ -190,7 +190,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         # Run scheduled task
         tenant = connection.tenant
-        check_funding_end()
+        funding_tasks()
         with LocalTenant(tenant, clear_tenant=True):
             self.funding.refresh_from_db()
 
@@ -211,7 +211,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         # Run scheduled task
         tenant = connection.tenant
-        check_funding_end()
+        funding_tasks()
         with LocalTenant(tenant, clear_tenant=True):
             self.funding.refresh_from_db()
 
@@ -230,7 +230,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.funding.save()
 
         tenant = connection.tenant
-        check_funding_end()
+        funding_tasks()
 
         with LocalTenant(tenant, clear_tenant=True):
             self.funding.refresh_from_db()

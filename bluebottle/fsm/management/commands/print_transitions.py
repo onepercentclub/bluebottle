@@ -69,31 +69,35 @@ class Command(BaseCommand):
         )
 
         if isinstance(instance, Initiative):
-            instance.title = "Demo Initiative"
+            instance.title = "the initiative"
 
         if isinstance(instance, Funding):
-            instance.title = "Demo Campaign"
+            instance.title = "the campaign"
 
         if isinstance(instance, Donation):
-            instance.activity = Funding(title="Demo Campaign")
+            instance.activity = Funding(title="the campaign")
+            instance.user = Member(first_name='the', last_name='donor')
 
         if isinstance(instance, Event):
-            instance.title = "Demo Event"
+            instance.title = "the event"
 
         if isinstance(instance, Participant):
-            instance.activity = Event(title="Demo Event")
+            instance.activity = Event(title="the event")
+            instance.user = Member(first_name='the', last_name='participant')
 
         if isinstance(instance, Assignment):
-            instance.title = "Demo Assignment"
+            instance.title = "the assignment"
 
         if isinstance(instance, Applicant):
-            instance.activity = Assignment(title="Demo Assignment")
+            instance.activity = Assignment(title="the assignment")
+            instance.user = Member(first_name='the', last_name='applicant')
 
         machine = instance.states
 
         text = ""
 
         text += u"<h2>States</h2>"
+        text += u"<em>All states this instance can be in.</em>"
 
         text += u"<table data-layout=\"default\"><tr><th>State Name</th><th>Description</th></tr>"
 
@@ -103,6 +107,9 @@ class Command(BaseCommand):
         text += u"</table>"
 
         text += u"<h2>Transitions</h2>"
+        text += u"<em>An instance will always move from one state to the other through a transition. " \
+                u"A manual transition is initiated by a user. An automatic transition is initiated by the system, " \
+                u"either through a trigger or through a side effect of a related object.</em>"
         text += u"<table data-layout=\"full-width\"><tr><th>Name</th><th>Description</th><th>From</th><th>To</th>" \
                 u"<th>Manual</th><th>Conditions</th><th>Side Effects</th></tr>"
 
@@ -131,21 +138,33 @@ class Command(BaseCommand):
 
         if model.triggers:
             text += u"<h2>Triggers</h2>"
+            text += u"<em>These are events that get triggered when the instance changes, " \
+                    u"other then through a transition. " \
+                    u"Mostly it would be triggered because a property changed (e.g. a deadline).</em>"
             text += u"<table data-layout=\"full-width\">" \
                     u"<tr><th>When</th>" \
-                    u"<th>Conditions</th>" \
                     u"<th>Effects</th></tr>"
 
             for trigger in model.triggers:
-                for effect in trigger(instance).effects:
-                    text += u"<tr><td>{}</td><td><ul>{}</ul></td><td>{}</td></tr>".format(
-                        unicode(trigger(instance)),
-                        u"".join(
-                            "<li>{}</li>".format(get_doc(condition))
-                            for condition
-                            in effect(instance).conditions
-                        ),
-                        effect(instance).to_html(),
-                    )
+                text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
+                    unicode(trigger(instance)),
+                    "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in trigger(instance).effects])
+                )
+            text += u"</table>"
+
+        if model.triggers:
+            text += u"<h2>Periodic tasks</h2>"
+            text += u"<em>These are events that get triggered when certain dates are passed. " \
+                    u"Every 15 minutes the system checks for passing deadlines, registration dates and such.</em>"
+
+            text += u"<table data-layout=\"full-width\">" \
+                    u"<tr><th>When</th>" \
+                    u"<th>Effects</th></tr>"
+
+            for task in model.periodic_tasks:
+                text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
+                    unicode(task(instance)),
+                    "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in task(instance).effects])
+                )
             text += u"</table>"
         print(text)

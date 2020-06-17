@@ -131,7 +131,9 @@ class ActivityStateMachine(ModelStateMachine):
         description=_('Reject the activity. This will make sure the initiative is no longer visible'),
         automatic=False,
         permission=is_staff,
-        effects=[RelatedTransitionEffect('organizer', 'fail')]
+        effects=[
+            RelatedTransitionEffect('organizer', 'fail')
+        ]
     )
 
     close = Transition(
@@ -139,7 +141,9 @@ class ActivityStateMachine(ModelStateMachine):
         closed,
         name=_('Close'),
         automatic=True,
-        effects=[RelatedTransitionEffect('organizer', 'fail')]
+        effects=[
+            RelatedTransitionEffect('organizer', 'fail')
+        ]
     )
 
     restore = Transition(
@@ -149,7 +153,9 @@ class ActivityStateMachine(ModelStateMachine):
         description=_('Restore the activity. The will mark the activity as draft again'),
         automatic=False,
         permission=is_staff,
-        effects=[RelatedTransitionEffect('organizer', 'reset')]
+        effects=[
+            RelatedTransitionEffect('organizer', 'reset')
+        ]
     )
 
     delete = Transition(
@@ -159,7 +165,9 @@ class ActivityStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_owner,
         description=_('Delete the activity and remove it from the platform'),
-        effects=[RelatedTransitionEffect('organizer', 'fail')]
+        effects=[
+            RelatedTransitionEffect('organizer', 'fail')
+        ]
     )
 
     succeed = Transition(
@@ -186,11 +194,6 @@ class ContributionStateMachine(ModelStateMachine):
         'failed',
         _("The contribution failed.")
     )
-    closed = State(
-        _('closed'),
-        'closed',
-        _("The contribution is closed unsuccessfully.")
-    )
 
     def is_user(self, user):
         return self.instance.user == user
@@ -201,11 +204,11 @@ class ContributionStateMachine(ModelStateMachine):
         name=_('initiate'),
         description=_('The contribution was created.')
     )
-    close = Transition(
+    fail = Transition(
         (new, succeeded, failed, ),
-        closed,
-        name=_('close'),
-        description=_("Close the contribution. It will not be visible in reports."),
+        failed,
+        name=_('fail'),
+        description=_("The contribution failed. It will not be visible in reports."),
     )
 
 

@@ -1,6 +1,3 @@
-from datetime import timedelta
-
-from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.assignments.messages import AssignmentDateChanged
@@ -11,23 +8,63 @@ from bluebottle.fsm.triggers import ModelChangedTrigger, ModelDeletedTrigger
 from bluebottle.notifications.effects import NotificationEffect
 
 
-class DateChanged(ModelChangedTrigger):
+class DateChangedTrigger(ModelChangedTrigger):
     field = 'date'
 
     effects = [
         NotificationEffect(AssignmentDateChanged),
         TransitionEffect(
             'succeed',
-            conditions=[AssignmentStateMachine.should_finish, AssignmentStateMachine.has_accepted_applicants]),
+            conditions=[
+                AssignmentStateMachine.should_finish,
+                AssignmentStateMachine.has_accepted_applicants
+            ]
+        ),
         TransitionEffect(
             'expire',
-            conditions=[AssignmentStateMachine.should_finish, AssignmentStateMachine.has_no_accepted_applicants]),
-        TransitionEffect('reopen', conditions=[AssignmentStateMachine.should_open]),
-        TransitionEffect('lock', conditions=[AssignmentStateMachine.is_full]),
+            conditions=[
+                AssignmentStateMachine.should_finish,
+                AssignmentStateMachine.has_no_accepted_applicants
+            ]
+        ),
+        TransitionEffect(
+            'reopen',
+            conditions=[
+                AssignmentStateMachine.should_open
+            ]
+        ),
+        TransitionEffect(
+            'lock',
+            conditions=[
+                AssignmentStateMachine.is_full
+            ]
+        ),
     ]
 
 
-class CapacityChanged(ModelChangedTrigger):
+class RegistrationDeadlineChangedTrigger(ModelChangedTrigger):
+    field = 'registration_deadline'
+
+    effects = [
+        NotificationEffect(AssignmentDateChanged),
+        TransitionEffect(
+            'start',
+            conditions=[
+                AssignmentStateMachine.should_start,
+                AssignmentStateMachine.has_accepted_applicants
+            ]
+        ),
+        TransitionEffect(
+            'expire',
+            conditions=[
+                AssignmentStateMachine.should_start,
+                AssignmentStateMachine.has_no_accepted_applicants
+            ]
+        ),
+    ]
+
+
+class CapacityChangedTrigger(ModelChangedTrigger):
     field = 'capacity'
 
     effects = [
@@ -36,69 +73,10 @@ class CapacityChanged(ModelChangedTrigger):
     ]
 
 
-class Started(ModelChangedTrigger):
-    @property
-    def is_valid(self):
-        "The event has started"
-        return (
-            self.instance.duration and (
-                self.instance.date and (
-                    self.instance.date < timezone.now() and
-                    self.instance.date + timedelta(hours=self.instance.duration) > timezone.now()
-                )
-            ) and
-            self.instance.status not in ('succeeded', 'closed', )
-        )
-
-    effects = [
-        TransitionEffect(
-            'start',
-            conditions=[
-                AssignmentStateMachine.should_start,
-                AssignmentStateMachine.has_accepted_applicants
-            ]),
-        TransitionEffect(
-            'expire',
-            conditions=[
-                AssignmentStateMachine.should_start,
-                AssignmentStateMachine.has_no_accepted_applicants
-            ]),
-    ]
+Assignment.triggers = [CapacityChangedTrigger, DateChangedTrigger, RegistrationDeadlineChangedTrigger]
 
 
-class Finished(ModelChangedTrigger):
-    @property
-    def is_valid(self):
-        "The event has ended"
-        return (
-            self.instance.duration and
-            (
-                self.instance.date and
-                self.instance.date + timedelta(hours=self.instance.duration) < timezone.now()
-            ) and
-            self.instance.status not in ('succeeded', 'closed', )
-        )
-
-    effects = [
-        TransitionEffect(
-            'succeed',
-            conditions=[
-                AssignmentStateMachine.should_finish,
-                AssignmentStateMachine.has_accepted_applicants
-            ]),
-        TransitionEffect(
-            'close',
-            conditions=[
-                AssignmentStateMachine.should_finish,
-                AssignmentStateMachine.has_no_accepted_applicants
-            ]),
-    ]
-
-
-Assignment.triggers = [CapacityChanged, DateChanged, Started, Finished]
-
-
-class TimeSpentChanged(ModelChangedTrigger):
+class TimeSpentChangedTrigger(ModelChangedTrigger):
     field = 'time_spent'
 
     effects = [
@@ -107,7 +85,7 @@ class TimeSpentChanged(ModelChangedTrigger):
     ]
 
 
-class ApplicantDeleted(ModelDeletedTrigger):
+class ApplicantDeletedTrigger(ModelDeletedTrigger):
     title = _('delete this participant')
     effects = [
         RelatedTransitionEffect(
@@ -129,4 +107,4 @@ class ApplicantDeleted(ModelDeletedTrigger):
     ]
 
 
-Applicant.triggers = [TimeSpentChanged, ApplicantDeleted]
+Applicant.triggers = [TimeSpentChangedTrigger, ApplicantDeletedTrigger]

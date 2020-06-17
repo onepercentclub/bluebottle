@@ -1,15 +1,16 @@
 from datetime import timedelta
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.events.messages import EventReminderMessage
 from bluebottle.events.models import Event
 from bluebottle.events.states import EventStateMachine
 from bluebottle.fsm.effects import TransitionEffect
-from bluebottle.fsm.scheduled_tasks import ModelScheduledTask
+from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect
 
 
-class EventFinishedTask(ModelScheduledTask):
+class EventFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -28,8 +29,11 @@ class EventFinishedTask(ModelScheduledTask):
         ]),
     ]
 
+    def __unicode__(self):
+        return unicode(_("Finish an event when end time has passed."))
 
-class EventStartTask(ModelScheduledTask):
+
+class EventStartTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -48,8 +52,11 @@ class EventStartTask(ModelScheduledTask):
         ]),
     ]
 
+    def __unicode__(self):
+        return unicode(_("Start an event when start time ha passed."))
 
-class EventReminderTask(ModelScheduledTask):
+
+class EventReminderTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -64,5 +71,8 @@ class EventReminderTask(ModelScheduledTask):
 
     ]
 
+    def __unicode__(self):
+        return unicode(_("Send a reminder five days before the event starts."))
 
-Event.scheduled_tasks = [EventFinishedTask, EventStartTask, EventReminderTask]
+
+Event.periodic_tasks = [EventFinishedTask, EventStartTask, EventReminderTask]

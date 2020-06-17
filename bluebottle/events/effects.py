@@ -13,9 +13,9 @@ class SetTimeSpent(Effect):
             self.instance.time_spent = self.instance.activity.duration
 
     def __unicode__(self):
-        return unicode(_('Set time spent to {} on {}').format(
-            self.instance.activity.duration,
-            self.instance
+        return unicode(_('Set time spent to {duration} on {participant}').format(
+            duration=self.instance.activity.duration or _('event duration'),
+            participant=self.instance
         ))
 
 

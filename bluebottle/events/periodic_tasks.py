@@ -53,7 +53,7 @@ class EventStartTask(ModelPeriodicTask):
     ]
 
     def __unicode__(self):
-        return unicode(_("Start an event when end start has passed."))
+        return unicode(_("Start an event when start time ha passed."))
 
 
 class EventReminderTask(ModelPeriodicTask):

@@ -80,36 +80,47 @@ class EventStateMachine(ActivityStateMachine):
         ]
     )
 
-    fill = Transition(
-        (ActivityStateMachine.open, ActivityStateMachine.succeeded, ),
+    lock = Transition(
+        [
+            ActivityStateMachine.open,
+            ActivityStateMachine.succeeded
+        ],
         full,
-        name=_("Fill"),
+        name=_("Lock"),
         description=_("Set the event to full because capacity is reached.")
     )
 
-    unfill = Transition(
+    reopen = Transition(
         full,
         ActivityStateMachine.open,
-        name=_("Un-fill"),
+        name=_("Reopen"),
         description=_("Set the event to open, because there are spots available again.")
     )
 
     start = Transition(
-        [ActivityStateMachine.open, full],
+        [
+            ActivityStateMachine.open,
+            full
+        ],
         running,
         name=_("Start"),
         description=_("Start the event.")
     )
 
     expire = Transition(
-        [ActivityStateMachine.open],
+        ActivityStateMachine.open,
         ActivityStateMachine.closed,
         name=_("Expire"),
         description=_("Event expired. No one signed-up before the start of the event.")
     )
 
     succeed = Transition(
-        (full, running, ActivityStateMachine.open, ActivityStateMachine.closed,),
+        [
+            full,
+            running,
+            ActivityStateMachine.open,
+            ActivityStateMachine.closed
+        ],
         ActivityStateMachine.succeeded,
         name=_("Succeed"),
         description=_("The event was successfully completed."),
@@ -136,10 +147,13 @@ class EventStateMachine(ActivityStateMachine):
         ]
     )
 
-    reopen = Transition(
-        (ActivityStateMachine.succeeded, ActivityStateMachine.closed, ),
+    restore = Transition(
+        [
+            ActivityStateMachine.rejected,
+            ActivityStateMachine.closed
+        ],
         ActivityStateMachine.open,
-        name=_("Reopen"),
+        name=_("Restore"),
         description=_("Reopen the event. Users are able to sign up for it again."),
         effects=[
             RelatedTransitionEffect('participants', 'reset'),
@@ -210,8 +224,15 @@ class ParticipantStateMachine(ContributionStateMachine):
         name=_("Join"),
         description=_("Participant is created. User signs up for the activity."),
         effects=[
-            TransitionEffect('succeed', conditions=[event_is_finished]),
-            RelatedTransitionEffect('activity', 'fill', conditions=[event_will_become_full]),
+            TransitionEffect(
+                'succeed',
+                conditions=[event_is_finished]
+            ),
+            RelatedTransitionEffect(
+                'activity',
+                'fill',
+                conditions=[event_will_become_full]
+            ),
             RelatedTransitionEffect(
                 'activity',
                 'succeed',
@@ -230,7 +251,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         automatic=False,
         permission=is_user,
         effects=[
-            RelatedTransitionEffect('activity', 'unfill', conditions=[event_will_become_open]),
+            RelatedTransitionEffect('activity', 'reopen', conditions=[event_will_become_open]),
             UnFollowActivityEffect
         ]
     )
@@ -243,7 +264,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         permission=is_user,
         effects=[
             TransitionEffect('succeed', conditions=[event_is_finished]),
-            RelatedTransitionEffect('activity', 'fill', conditions=[event_will_become_full]),
+            RelatedTransitionEffect('activity', 'lock', conditions=[event_will_become_full]),
             FollowActivityEffect
         ]
     )
@@ -254,21 +275,21 @@ class ParticipantStateMachine(ContributionStateMachine):
         name=_('Reject'),
         description=_("Participant is rejected."),
         effects=[
-            RelatedTransitionEffect('activity', 'unfill'),
+            RelatedTransitionEffect('activity', 'reopen'),
             NotificationEffect(ParticipantRejectedMessage),
             UnFollowActivityEffect
         ],
         permission=is_activity_owner
     )
-    reaccept = Transition(
+    accept = Transition(
         rejected,
         ContributionStateMachine.new,
-        name=_('Re-accept'),
+        name=_('Accept'),
         description=_("Accept a participant after previously being rejected."),
         automatic=False,
         effects=[
             TransitionEffect('succeed', conditions=[event_is_finished]),
-            RelatedTransitionEffect('activity', 'fill', conditions=[event_will_become_full]),
+            RelatedTransitionEffect('activity', 'lock', conditions=[event_will_become_full]),
             FollowActivityEffect
         ],
         permission=is_activity_owner

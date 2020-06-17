@@ -7,11 +7,11 @@ from bluebottle.assignments.messages import AssignmentReminderDeadline, Assignme
 from bluebottle.assignments.models import Assignment
 from bluebottle.assignments.states import AssignmentStateMachine
 from bluebottle.fsm.effects import TransitionEffect
-from bluebottle.fsm.scheduled_tasks import ModelScheduledTask
+from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect
 
 
-class AssignmentStartOnDateTask(ModelScheduledTask):
+class AssignmentStartOnDateTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -36,11 +36,11 @@ class AssignmentStartOnDateTask(ModelScheduledTask):
         return unicode(_("Start a task on a set date."))
 
 
-class AssignmentStartDeadlineTask(ModelScheduledTask):
+class AssignmentStartDeadlineTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
-            registration_date__lte=timezone.now(),
+            registration_deadline__lte=timezone.now(),
             end_date_type='deadline',
             status__in=[
                 AssignmentStateMachine.full,
@@ -58,10 +58,10 @@ class AssignmentStartDeadlineTask(ModelScheduledTask):
     ]
 
     def __unicode__(self):
-        return unicode(_("Start a task with deadline after registration date has passed."))
+        return unicode(_("Start a task with deadline after registration deadline has passed."))
 
 
-class AssignmentFinishedDeadlineTask(ModelScheduledTask):
+class AssignmentFinishedDeadlineTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -84,11 +84,11 @@ class AssignmentFinishedDeadlineTask(ModelScheduledTask):
     ]
 
 
-class AssignmentFinishedOnDateTask(ModelScheduledTask):
+class AssignmentFinishedOnDateTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
-            date__lte=timezone.now() + timedelta(hours=1) * F('duration'),
+            date__lte=timezone.now() - timedelta(hours=1) * F('duration'),
             end_date_type='on_date',
             status__in=[
                 AssignmentStateMachine.running,
@@ -107,7 +107,7 @@ class AssignmentFinishedOnDateTask(ModelScheduledTask):
     ]
 
 
-class AssignmentRegistrationOnDateTask(ModelScheduledTask):
+class AssignmentRegistrationOnDateTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -120,38 +120,43 @@ class AssignmentRegistrationOnDateTask(ModelScheduledTask):
         )
 
     effects = [
-        TransitionEffect('succeed', conditions=[
+        TransitionEffect('lock', conditions=[
             AssignmentStateMachine.has_accepted_applicants
         ]),
-        TransitionEffect('close', conditions=[
+        TransitionEffect('expire', conditions=[
             AssignmentStateMachine.has_no_accepted_applicants
         ]),
     ]
 
 
-class AssignmentRegistrationReminderTask(ModelScheduledTask):
+class AssignmentRegistrationReminderTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
-            registration_deadline__lte=timezone.now(),
-            end_date_type='on_date',
+            date__lte=timezone.now() + timedelta(days=5),
             status__in=[
                 AssignmentStateMachine.full,
                 AssignmentStateMachine.open
             ]
         )
 
+    def is_on_date(assignment):
+        return getattr(assignment, 'end_date_type') == 'on_date'
+
+    def has_deadline(assignment):
+        return getattr(assignment, 'end_date_type') == 'deadline'
+
     effects = [
         NotificationEffect(
             AssignmentReminderDeadline,
             conditions=[
-                AssignmentStateMachine.has_deadline
+                has_deadline
             ]
         ),
         NotificationEffect(
             AssignmentReminderOnDate,
             conditions=[
-                AssignmentStateMachine.is_on_date
+                is_on_date
             ]
         )]
 
@@ -161,5 +166,6 @@ Assignment.scheduled_tasks = [
     AssignmentStartDeadlineTask,
     AssignmentFinishedOnDateTask,
     AssignmentFinishedDeadlineTask,
-    AssignmentRegistrationOnDateTask
+    AssignmentRegistrationOnDateTask,
+    AssignmentRegistrationReminderTask
 ]

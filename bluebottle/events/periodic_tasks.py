@@ -5,11 +5,11 @@ from bluebottle.events.messages import EventReminderMessage
 from bluebottle.events.models import Event
 from bluebottle.events.states import EventStateMachine
 from bluebottle.fsm.effects import TransitionEffect
-from bluebottle.fsm.scheduled_tasks import ModelScheduledTask
+from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect
 
 
-class EventFinishedTask(ModelScheduledTask):
+class EventFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -29,7 +29,7 @@ class EventFinishedTask(ModelScheduledTask):
     ]
 
 
-class EventStartTask(ModelScheduledTask):
+class EventStartTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -49,7 +49,7 @@ class EventStartTask(ModelScheduledTask):
     ]
 
 
-class EventReminderTask(ModelScheduledTask):
+class EventReminderTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(

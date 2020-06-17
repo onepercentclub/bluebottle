@@ -11,7 +11,7 @@ from bluebottle.events.messages import EventDateChanged
 from bluebottle.events.states import EventStateMachine, ParticipantStateMachine
 
 
-class CapacityChanged(ModelChangedTrigger):
+class CapacityChangedTrigger(ModelChangedTrigger):
     field = 'capacity'
 
     effects = [
@@ -20,7 +20,7 @@ class CapacityChanged(ModelChangedTrigger):
     ]
 
 
-class DateChanged(ModelChangedTrigger):
+class DateChangedTrigger(ModelChangedTrigger):
     field = 'start'
 
     effects = [
@@ -32,7 +32,7 @@ class DateChanged(ModelChangedTrigger):
     ]
 
 
-class Started(ModelChangedTrigger):
+class StartedTrigger(ModelChangedTrigger):
     @property
     def is_valid(self):
         "The event has started"
@@ -50,7 +50,7 @@ class Started(ModelChangedTrigger):
         return unicode(_("Start date has passed"))
 
 
-class Finished(ModelChangedTrigger):
+class FinishedTrigger(ModelChangedTrigger):
     @property
     def is_valid(self):
         "The event has ended"
@@ -72,10 +72,10 @@ class Finished(ModelChangedTrigger):
         return unicode(_("Event has changed"))
 
 
-Event.triggers = [CapacityChanged, DateChanged, Started, Finished]
+Event.triggers = [CapacityChangedTrigger, DateChangedTrigger, StartedTrigger, FinishedTrigger]
 
 
-class ParticipantDeleted(ModelDeletedTrigger):
+class ParticipantDeletedTrigger(ModelDeletedTrigger):
     title = _('delete this participant')
     field = 'start'
 
@@ -102,4 +102,4 @@ class ParticipantDeleted(ModelDeletedTrigger):
         return unicode(_("Participant has been deleted"))
 
 
-Participant.triggers = [ParticipantDeleted]
+Participant.triggers = [ParticipantDeletedTrigger]

@@ -183,6 +183,18 @@ class BaseRelatedTransitionEffect(Effect):
             self.relation
         )
 
+    def to_html(self):
+        if self.conditions:
+            return _('{transition} <i>{object}</i> if {conditions}').format(
+                transition=self.transition.name,
+                object=unicode(self.instance),
+                conditions=" and ".join([c.__doc__ for c in self.conditions])
+            )
+        return _('{transition} <i>{object}</i>').format(
+            transition=self.transition.name,
+            object=unicode(self.instance)
+        )
+
 
 def RelatedTransitionEffect(_relation, transition_name, field='states', conditions=None):
     _transition_effect_class = TransitionEffect(transition_name, field, save=True, post_save=True)

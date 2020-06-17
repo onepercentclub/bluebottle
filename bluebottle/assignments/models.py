@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.db import models
 from django.db.models import SET_NULL, Count, Sum
@@ -89,6 +89,12 @@ class Assignment(Activity):
             return self.date
 
     @property
+    def start(self):
+        if self.end_date_type == 'deadline' and self.registration_deadline:
+            return datetime.combine(self.registration_deadline, self.start_time)
+        return self.date
+
+    @property
     def contribution_date(self):
         return self.date
 
@@ -133,44 +139,6 @@ class Assignment(Activity):
     def active_applicants(self):
         return self.contributions.instance_of(Applicant).filter(status__in=['active'])
 
-    # def registration_deadline_passed(self):
-    #     # If registration deadline passed
-    #     # got applicants -> start
-    #     # no applicants -> expire
-    #     if self.status in [AssignmentTransitions.values.full, AssignmentTransitions.values.open]:
-    #         if len(self.accepted_applicants) > 1:
-    #             self.transitions.lock()
-    #         else:
-    #             self.transitions.expire()
-    #         self.save()
-    #
-    # def start_date_passed(self):
-    #     # If registration deadline passed
-    #     # got applicants -> start
-    #     # no applicants -> expire
-    #     if self.status in [AssignmentTransitions.values.full,
-    #                        AssignmentTransitions.values.open]:
-    #         if len(self.accepted_applicants):
-    #             self.transitions.start()
-    #         else:
-    #             self.transitions.expire()
-    #         self.save()
-    #
-    # def end_date_passed(self):
-    #     # If end date passed
-    #     # got applicants -> succeed
-    #     # no applicants -> expire
-    #     if self.status in [AssignmentTransitions.values.running,
-    #                        AssignmentTransitions.values.full,
-    #                        AssignmentTransitions.values.open]:
-    #         if len(self.accepted_applicants):
-    #             self.transitions.succeed()
-    #             self.save()
-    #         else:
-    #             self.transitions.expire()
-    #
-    #         self.save()
-
     def save(self, *args, **kwargs):
         if self.preparation and self.end_date_type == "deadline":
             self.preparation = None
@@ -208,4 +176,4 @@ class Applicant(Contribution):
 from bluebottle.assignments.signals import *  # noqa
 from bluebottle.assignments.states import *  # noqa
 from bluebottle.assignments.triggers import *  # noqa
-from bluebottle.assignments.scheduled_tasks import *  # noqa
+from bluebottle.assignments.periodic_tasks import *  # noqa

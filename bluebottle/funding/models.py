@@ -687,3 +687,4 @@ class FundingPlatformSettings(BasePlatformSettings):
 from bluebottle.funding.states import *  # noqa
 from bluebottle.funding.effects import *  # noqa
 from bluebottle.funding.triggers import *  # noqa
+from bluebottle.funding.periodic_tasks import *  # noqa

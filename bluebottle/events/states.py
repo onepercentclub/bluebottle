@@ -97,6 +97,20 @@ class EventStateMachine(ActivityStateMachine):
         description=_("Set the event to open, because there are spots available again.")
     )
 
+    reschedule = Transition(
+        [
+            running,
+            ActivityStateMachine.closed,
+            ActivityStateMachine.succeeded
+        ],
+        ActivityStateMachine.open,
+        name=_("Reschedule"),
+        description=_("Set the event to open again, because the date has changed."),
+        effects=[
+            RelatedTransitionEffect('participants', 'reset')
+        ]
+    )
+
     start = Transition(
         [
             ActivityStateMachine.open,
@@ -152,14 +166,12 @@ class EventStateMachine(ActivityStateMachine):
             ActivityStateMachine.rejected,
             ActivityStateMachine.closed
         ],
-        ActivityStateMachine.open,
+        ActivityStateMachine.draft,
         name=_("Restore"),
-        description=_("Reopen the event. Users are able to sign up for it again."),
+        description=_("Restore a closed or rejected event."),
         effects=[
             RelatedTransitionEffect('participants', 'reset'),
-            # Need to add organizer,reset() But probably should differentiate between
-            # `restore` a closed event and `reschedule` a succeeded one
-            # RelatedTransitionEffect('organizer', 'reset')
+            RelatedTransitionEffect('organizer', 'reset')
         ]
     )
 

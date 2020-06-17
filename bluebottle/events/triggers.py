@@ -27,7 +27,7 @@ class DateChangedTrigger(ModelChangedTrigger):
         NotificationEffect(EventDateChanged),
         TransitionEffect('succeed', conditions=[EventStateMachine.should_finish, EventStateMachine.has_participants]),
         TransitionEffect('close', conditions=[EventStateMachine.should_finish, EventStateMachine.has_no_participants]),
-        TransitionEffect('reopen', conditions=[EventStateMachine.should_open]),
+        TransitionEffect('reschedule', conditions=[EventStateMachine.should_open]),
         TransitionEffect('lock', conditions=[EventStateMachine.is_full]),
     ]
 

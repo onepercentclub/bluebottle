@@ -216,7 +216,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(self.event.status, EventStateMachine.closed.value)
 
-        participant.states.reaccept(save=True)
+        participant.states.accept(save=True)
 
         self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
         self.event.refresh_from_db()
@@ -440,9 +440,9 @@ class ParticipantStateMachineTests(BluebottleTestCase):
             len(self.messages(self.participant.user)), 2
         )
 
-    def test_reaccept(self):
+    def test_accept(self):
         self.participant.states.reject(save=True)
-        self.participant.states.reaccept(save=True)
+        self.participant.states.accept(save=True)
         self.assertEqual(self.participant.status, ParticipantStateMachine.new.value)
         self.assertTrue(
             self.event.followers.filter(user=self.participant.user).exists()

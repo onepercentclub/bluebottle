@@ -83,6 +83,9 @@ class AssignmentFinishedDeadlineTask(ModelPeriodicTask):
         ]),
     ]
 
+    def __unicode__(self):
+        return unicode(_("Finish a task when deadline has passed."))
+
 
 class AssignmentFinishedOnDateTask(ModelPeriodicTask):
 
@@ -106,6 +109,9 @@ class AssignmentFinishedOnDateTask(ModelPeriodicTask):
         ]),
     ]
 
+    def __unicode__(self):
+        return unicode(_("Finish a task after it has ended (date + duration)."))
+
 
 class AssignmentRegistrationOnDateTask(ModelPeriodicTask):
 
@@ -128,6 +134,9 @@ class AssignmentRegistrationOnDateTask(ModelPeriodicTask):
         ]),
     ]
 
+    def __unicode__(self):
+        return unicode(_("Make sure users can't sign up after registration date has passed on a task with a set date."))
+
 
 class AssignmentRegistrationReminderTask(ModelPeriodicTask):
 
@@ -141,9 +150,11 @@ class AssignmentRegistrationReminderTask(ModelPeriodicTask):
         )
 
     def is_on_date(assignment):
+        """task is on a specific date"""
         return getattr(assignment, 'end_date_type') == 'on_date'
 
     def has_deadline(assignment):
+        """task has a deadline"""
         return getattr(assignment, 'end_date_type') == 'deadline'
 
     effects = [
@@ -160,8 +171,11 @@ class AssignmentRegistrationReminderTask(ModelPeriodicTask):
             ]
         )]
 
+    def __unicode__(self):
+        return unicode(_("Send a reminder if the task deadline/date is in 5 days."))
 
-Assignment.scheduled_tasks = [
+
+Assignment.periodic_tasks = [
     AssignmentStartOnDateTask,
     AssignmentStartDeadlineTask,
     AssignmentFinishedOnDateTask,

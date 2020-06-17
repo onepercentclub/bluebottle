@@ -18,5 +18,5 @@ logger = logging.getLogger('bluebottle')
 def assignment_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            for task in Assignment.get_scheduled_tasks():
+            for task in Assignment.get_periodic_tasks():
                 task.execute()

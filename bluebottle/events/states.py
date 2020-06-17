@@ -230,7 +230,7 @@ class ParticipantStateMachine(ContributionStateMachine):
             ),
             RelatedTransitionEffect(
                 'activity',
-                'fill',
+                'lock',
                 conditions=[event_will_become_full]
             ),
             RelatedTransitionEffect(

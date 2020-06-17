@@ -69,28 +69,28 @@ class Command(BaseCommand):
         )
 
         if isinstance(instance, Initiative):
-            instance.title = "Demo Initiative"
+            instance.title = "the initiative"
 
         if isinstance(instance, Funding):
-            instance.title = "Demo Campaign"
+            instance.title = "the campaign"
 
         if isinstance(instance, Donation):
-            instance.activity = Funding(title="Demo Campaign")
-            instance.user = Member(first_name='Demo', last_name='User')
+            instance.activity = Funding(title="the campaign")
+            instance.user = Member(first_name='the', last_name='donor')
 
         if isinstance(instance, Event):
-            instance.title = "Demo Event"
+            instance.title = "the event"
 
         if isinstance(instance, Participant):
-            instance.activity = Event(title="Demo Event")
-            instance.user = Member(first_name='Demo', last_name='User')
+            instance.activity = Event(title="the event")
+            instance.user = Member(first_name='the', last_name='participant')
 
         if isinstance(instance, Assignment):
-            instance.title = "Demo Assignment"
+            instance.title = "the assignment"
 
         if isinstance(instance, Applicant):
-            instance.activity = Assignment(title="Demo Assignment")
-            instance.user = Member(first_name='Demo', last_name='User')
+            instance.activity = Assignment(title="the assignment")
+            instance.user = Member(first_name='the', last_name='applicant')
 
         machine = instance.states
 
@@ -143,19 +143,28 @@ class Command(BaseCommand):
                     u"Mostly it would be triggered because a property changed (e.g. a deadline).</em>"
             text += u"<table data-layout=\"full-width\">" \
                     u"<tr><th>When</th>" \
-                    u"<th>Conditions</th>" \
                     u"<th>Effects</th></tr>"
 
             for trigger in model.triggers:
-                for effect in trigger(instance).effects:
-                    text += u"<tr><td>{}</td><td><ul>{}</ul></td><td>{}</td></tr>".format(
-                        unicode(trigger(instance)),
-                        u"".join(
-                            "<li>{}</li>".format(get_doc(condition))
-                            for condition
-                            in effect(instance).conditions
-                        ),
-                        effect(instance).to_html(),
-                    )
+                text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
+                    unicode(trigger(instance)),
+                    "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in trigger(instance).effects])
+                )
+            text += u"</table>"
+
+        if model.triggers:
+            text += u"<h2>Periodic tasks</h2>"
+            text += u"<em>These are events that get triggered when certain dates are passed. " \
+                    u"Every 15 minutes the system checks for passing deadlines, registration dates and such.</em>"
+
+            text += u"<table data-layout=\"full-width\">" \
+                    u"<tr><th>When</th>" \
+                    u"<th>Effects</th></tr>"
+
+            for task in model.periodic_tasks:
+                text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
+                    unicode(task(instance)),
+                    "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in task(instance).effects])
+                )
             text += u"</table>"
         print(text)

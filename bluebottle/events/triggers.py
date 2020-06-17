@@ -15,8 +15,8 @@ class CapacityChangedTrigger(ModelChangedTrigger):
     field = 'capacity'
 
     effects = [
-        TransitionEffect('unfill', conditions=[EventStateMachine.is_not_full]),
-        TransitionEffect('fill', conditions=[EventStateMachine.is_full]),
+        TransitionEffect('reopen', conditions=[EventStateMachine.is_not_full]),
+        TransitionEffect('lock', conditions=[EventStateMachine.is_full]),
     ]
 
 
@@ -28,7 +28,7 @@ class DateChangedTrigger(ModelChangedTrigger):
         TransitionEffect('succeed', conditions=[EventStateMachine.should_finish, EventStateMachine.has_participants]),
         TransitionEffect('close', conditions=[EventStateMachine.should_finish, EventStateMachine.has_no_participants]),
         TransitionEffect('reopen', conditions=[EventStateMachine.should_open]),
-        TransitionEffect('fill', conditions=[EventStateMachine.is_full]),
+        TransitionEffect('lock', conditions=[EventStateMachine.is_full]),
     ]
 
 
@@ -90,7 +90,7 @@ class ParticipantDeletedTrigger(ModelDeletedTrigger):
         ),
         RelatedTransitionEffect(
             'activity',
-            'unfill',
+            'reopen',
             conditions=[
                 ParticipantStateMachine.event_will_become_open,
                 ParticipantStateMachine.event_is_not_finished

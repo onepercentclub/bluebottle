@@ -148,7 +148,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         effects = list(self.event.current_effects)
         self.assertEqual(len(effects), 1)
-        self.assertEqual(effects[0].name, 'fill')
+        self.assertEqual(effects[0].name, 'lock')
 
         self.event.save()
         self.assertEqual(self.event.status, EventStateMachine.full.value)
@@ -161,7 +161,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         effects = list(self.event.current_effects)
         self.assertEqual(len(effects), 1)
-        self.assertEqual(effects[0].name, 'unfill')
+        self.assertEqual(effects[0].name, 'reopen')
 
         self.event.save()
         self.assertEqual(self.event.status, EventStateMachine.open.value)

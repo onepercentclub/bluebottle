@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.events.messages import EventReminderMessage
 from bluebottle.events.models import Event
@@ -28,6 +29,9 @@ class EventFinishedTask(ModelPeriodicTask):
         ]),
     ]
 
+    def __unicode__(self):
+        return unicode(_("Finish an event when end time has passed."))
+
 
 class EventStartTask(ModelPeriodicTask):
 
@@ -48,6 +52,9 @@ class EventStartTask(ModelPeriodicTask):
         ]),
     ]
 
+    def __unicode__(self):
+        return unicode(_("Start an event when end start has passed."))
+
 
 class EventReminderTask(ModelPeriodicTask):
 
@@ -64,5 +71,8 @@ class EventReminderTask(ModelPeriodicTask):
 
     ]
 
+    def __unicode__(self):
+        return unicode(_("Send a reminder five days before the event starts."))
 
-Event.scheduled_tasks = [EventFinishedTask, EventStartTask, EventReminderTask]
+
+Event.periodic_tasks = [EventFinishedTask, EventStartTask, EventReminderTask]

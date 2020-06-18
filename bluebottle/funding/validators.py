@@ -4,13 +4,20 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.utils.models import Validator
 
 
-class KYCPassedValidator(Validator):
+class KYCReadyValidator(Validator):
+    """
+    Is the connected bank account verified by the external KYC check (e.g. Stripe)?
+    For other PSPs we just assume all is ok for submitting, but required after
+    """
+
     code = 'kyc'
-    message = _('Make sure your payout account is verified')
+    message = _('Make sure your payout account is verified.')
     field = 'kyc'
 
     def is_valid(self):
-        return self.instance.bank_account and self.instance.bank_account.verified
+        if self.instance.status in ['submitted', 'draft', 'needs_work']:
+            return self.instance.bank_account and self.instance.bank_account.verified
+        return self.instance.bank_account and self.instance.bank_account.ready
 
 
 class DeadlineValidator(Validator):

@@ -19,7 +19,7 @@ from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.funding.validators import KYCPassedValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
+from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
 from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.fsm import FSMField
 from bluebottle.utils.exchange_rates import convert
@@ -135,7 +135,7 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [KYCPassedValidator, DeadlineValidator, BudgetLineValidator, TargetValidator]
+    validators = [KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator]
 
     @property
     def required_fields(self):
@@ -610,7 +610,7 @@ class PlainPayoutAccount(PayoutAccount):
 
     @property
     def verified(self):
-        return True
+        return self.reviewed
 
     class Meta:
         verbose_name = _('Without payment account')
@@ -643,7 +643,11 @@ class BankAccount(PolymorphicModel):
 
     @property
     def verified(self):
-        return (self.connect_account and self.connect_account.verified) or self.reviewed
+        return (self.connect_account and self.connect_account.verified) and self.reviewed
+
+    @property
+    def ready(self):
+        return True
 
     @property
     def owner(self):

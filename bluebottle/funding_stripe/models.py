@@ -572,6 +572,10 @@ class ExternalAccount(BankAccount):
         return self.connect_account.verified
 
     @property
+    def ready(self):
+        return self.connect_account.verified
+
+    @property
     def metadata(self):
         return {
             "tenant_name": connection.tenant.client_name,

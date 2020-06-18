@@ -447,6 +447,13 @@ class BankAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModel
     fields = ('connect_account', 'reviewed', ) + readonly_fields
     show_in_index = True
 
+    def get_form(self, request, obj=None, **kwargs):
+        help_texts = {
+            'verified': _('To verify this bank account review details here and also review the connected account.')
+        }
+        kwargs.update({'help_texts': help_texts})
+        return super(BankAccountChildAdmin, self).get_form(request, obj, **kwargs)
+
 
 @admin.register(BankAccount)
 class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):

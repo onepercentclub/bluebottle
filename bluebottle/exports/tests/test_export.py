@@ -104,9 +104,9 @@ class TestExportAdmin(BluebottleTestCase):
                 field=colour,
                 value='Parblue Yellow'
             )
-        initiative = InitiativeFactory.create()
-        assignment = AssignmentFactory.create(initiative=initiative)
-        ApplicantFactory.create(activity=assignment, user=users[0])
+        initiative = InitiativeFactory.create(owner=users[0])
+        assignment = AssignmentFactory.create(owner=users[1], initiative=initiative)
+        ApplicantFactory.create(activity=assignment, user=users[2])
 
         data = {
             'from_date': from_date,

@@ -6,7 +6,7 @@ from django.db import connection
 from django.test import override_settings
 from django.utils.timezone import now
 
-from bluebottle.assignments.tests.factories import AssignmentFactory
+from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.events.tests.factories import EventFactory
 from bluebottle.exports.exporter import Exporter
 from bluebottle.exports.tasks import plain_export
@@ -104,6 +104,9 @@ class TestExportAdmin(BluebottleTestCase):
                 field=colour,
                 value='Parblue Yellow'
             )
+        initiative = InitiativeFactory.create()
+        assignment = AssignmentFactory.create(initiative=initiative)
+        ApplicantFactory.create(activity=assignment, user=users[0])
 
         data = {
             'from_date': from_date,
@@ -124,5 +127,13 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertEqual(
             book.sheet_by_name('Users').cell(1, 11).value,
+            'Parblue Yellow'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Task contributions').cell(0, 10).value,
+            'Favourite colour'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Task contributions').cell(1, 10).value,
             'Parblue Yellow'
         )

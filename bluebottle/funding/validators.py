@@ -11,7 +11,7 @@ class KYCReadyValidator(Validator):
     """
 
     code = 'kyc'
-    message = _('Make sure your payout account is verified.')
+    message = _('Make sure your payout account is verified')
     field = 'kyc'
 
     def is_valid(self):

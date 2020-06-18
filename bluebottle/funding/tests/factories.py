@@ -65,18 +65,20 @@ class BudgetLineFactory(factory.DjangoModelFactory):
     activity = factory.SubFactory(FundingFactory)
 
 
-class BankAccountFactory(factory.DjangoModelFactory):
+class PlainPayoutAccountFactory(factory.DjangoModelFactory):
+    owner = factory.SubFactory(BlueBottleUserFactory)
     reviewed = True
 
     class Meta(object):
-        model = BankAccount
+        model = PlainPayoutAccount
 
 
-class PlainPayoutAccountFactory(factory.DjangoModelFactory):
-    owner = factory.SubFactory(BlueBottleUserFactory)
+class BankAccountFactory(factory.DjangoModelFactory):
+    reviewed = True
+    connect_account = factory.SubFactory(PlainPayoutAccountFactory)
 
     class Meta(object):
-        model = PlainPayoutAccount
+        model = BankAccount
 
 
 class PayoutFactory(factory.DjangoModelFactory):

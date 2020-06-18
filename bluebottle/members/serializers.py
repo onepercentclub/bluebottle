@@ -107,7 +107,7 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'initials',
+        fields = ('id', 'first_name', 'last_name', 'initials', 'about_me',
                   'avatar', 'full_name', 'short_name', 'is_active', 'is_anonymous')
 
 
@@ -153,8 +153,17 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'initials',
-                  'avatar', 'full_name', 'short_name', 'is_active')
+        fields = (
+            'id',
+            'first_name',
+            'last_name',
+            'initials',
+            'about_me',
+            'avatar',
+            'full_name',
+            'short_name',
+            'is_active'
+        )
 
 
 class UserPermissionsSerializer(serializers.Serializer):

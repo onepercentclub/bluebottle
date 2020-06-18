@@ -10,7 +10,8 @@ from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
     PlainPayoutAccountFactory, DonationFactory, PayoutFactory
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
-from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory
+from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
+    ExternalAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.wallposts.models import Wallpost
@@ -361,10 +362,9 @@ class BasePaymentStateMachineTests(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = StripePayoutAccountFactory.create()
-        bank_account = BankAccountFactory.create(connect_account=payout_account)
+        payout_account = StripePayoutAccountFactory.create(status='verified')
+        bank_account = ExternalAccountFactory.create(connect_account=payout_account)
         self.funding.bank_account = bank_account
-
         self.funding.states.submit()
         self.funding.states.approve(save=True)
 

@@ -536,9 +536,9 @@ class PayoutAccountStateMachine(ModelStateMachine):
         _("Payout account is missing information or documents.")
     )
 
-    def can_approve(self, user):
+    def can_approve(self, user=None):
         """is staff user"""
-        return user.is_staff
+        return not user or user.is_staff
 
     def is_reviewed(self):
         """has been verified"""

@@ -32,6 +32,7 @@ class BaseActivitySerializer(ModelSerializer):
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
     }
@@ -49,6 +50,7 @@ class BaseActivitySerializer(ModelSerializer):
             'image',
             'video_url',
             'initiative',
+            'goal',
             'owner',
             'title',
             'description',

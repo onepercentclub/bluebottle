@@ -80,6 +80,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
@@ -103,6 +104,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
             'owner',
             'image',
             'initiative',
+            'goals',
             'location',
             'initiative.image',
             'initiative.place',

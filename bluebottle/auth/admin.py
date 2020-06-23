@@ -33,13 +33,10 @@ class NewGroupAdmin(PermissionGroupAdmin):
     def clear_cms_permissions(self, request, pk=None):
         group = Group.objects.get(pk=pk)
         for perm in cms_permissions:
-            print "++++"
             app_label, codename = perm.split('.')
             permission = Permission.objects.filter(content_type__app_label=app_label, codename=codename).first()
             if permission:
                 group.permissions.remove(permission)
-                print permission
-
         group.save()
         group_url = reverse('admin:auth_group_change', args=(group.id,))
         response = HttpResponseRedirect(group_url)

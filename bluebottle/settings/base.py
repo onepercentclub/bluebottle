@@ -862,7 +862,20 @@ PERMISSIONS_WIDGET_EXCLUDE_MODELS = [
     'bb_projects.projectphase', 'tasks.task', 'tasks.taskmember',
     'tasks.taskmemberstatuslog',
     'tasks.taskstatuslog',
-    'tasks.taskfile', 'members.custommemberfield'
+    'tasks.taskfile', 'members.custommemberfield',
+    'funding.fundingplatformsettings',
+    'funding.fundraiser',
+    'funding.paymentcurrency',
+    'members.membersettings',
+    'members.custommemberfieldsettings',
+    'members.memberplatformsettings',
+    # Old/Removed models
+    'funding.bankpayoutaccount',
+    'funding.bankpaymentprovider',
+    'members.checkedtoken',
+    'organizations.organizationmember',
+
+
 ] + cms_models
 
 PERMISSIONS_WIDGET_EXCLUDE_APPS = [

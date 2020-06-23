@@ -9,6 +9,8 @@ from django.utils.translation import ugettext_lazy as _
 import rules
 from PIL import ImageFile
 
+from bluebottle.auth.settngs import cms_models
+
 BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
 PROJECT_ROOT = BASE_DIR
@@ -320,8 +322,6 @@ TENANT_APPS = (
     # Thumbnails
     'sorl.thumbnail',
 
-    # FB Auth
-    'bluebottle.auth',
 
     'django.contrib.admin',
     'django.contrib.sites',
@@ -410,6 +410,8 @@ TENANT_APPS = (
     'bluebottle.fundraisers',
     'bluebottle.donations',
     'bluebottle.orders',
+
+    'bluebottle.auth',
 
     # CMS page contents
     'fluent_contents',
@@ -854,6 +856,36 @@ EXPORTDB_EXPORT_ROOT = os.path.join(MEDIA_ROOT, '%s', 'exports')
 EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser
 EXPORTDB_USE_CELERY = True
 EXPORTDB_EXPORT_MEDIA_URL = os.path.join(MEDIA_URL, 'exports')
+
+# Exclude models and apps from group/user admin permission
+PERMISSIONS_WIDGET_EXCLUDE_MODELS = [
+    'bb_projects.projectphase', 'tasks.task', 'tasks.taskmember',
+    'tasks.taskmemberstatuslog',
+    'tasks.taskstatuslog',
+    'tasks.taskfile', 'members.custommemberfield'
+] + cms_models
+
+PERMISSIONS_WIDGET_EXCLUDE_APPS = [
+    'donations', 'bb_payouts', 'bb_salesforce', 'bluebottle_salesforce',
+    'accounting', 'fundraisers', 'journals', 'south',
+    'orders', 'rewards', 'payments',
+    'payments_beyonic', 'payments_docdata', 'payments_external',
+    'payments_flutterwave', 'payments_interswitch', 'payments_lipisha',
+    'payments_logger', 'payments_logger', 'payments_stripe',
+    'payments_telesom', 'payments_vitepay', 'payments_voucher',
+    'payments_manual', 'payments_pledge',
+    'payouts', 'projects', 'recurring_donations', 'suggestions',
+    'surveys', 'taggit', 'tests', 'votes', 'axes', 'djcelery', 'djmoney_rates',
+    'social_django', 'bb_accounts', 'clients', 'contact', 'contenttypes',
+    'corsheaders', 'default',
+    'funding_flutterwave', 'funding_lipisha', 'funding_pledge', 'funding_stripe',
+    'funding_vitepay', 'looker', 'jet', 'mails', 'menu',
+    'notifications', 'scim', 'sites', 'sessions', 'social_auth', 'thumbnail',
+    'utils', 'bb_follow', 'authtoken', 'token_auth', 'follow',
+    'analytics', 'admin', 'auth', 'dashboard', 'contentplugins', 'files',
+
+
+]
 
 # maximum delta between from/to date for exports
 EXPORT_MAX_DAYS = 366 * 3

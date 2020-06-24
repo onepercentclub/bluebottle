@@ -268,7 +268,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             'data': {
                 'type': 'assignment-transitions',
                 'attributes': {
-                    'transition': 'close',
+                    'transition': 'cancel',
                 },
                 'relationships': {
                     'resource': {

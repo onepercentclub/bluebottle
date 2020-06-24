@@ -97,7 +97,11 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     submit = Transition(
-        [draft, needs_work],
+        [
+            draft,
+            needs_work,
+            cancelled
+        ],
         submitted,
         description=_('Submit the activity for approval.'),
         automatic=False,

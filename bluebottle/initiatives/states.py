@@ -3,9 +3,10 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition, AllStates
 from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.initiatives.effects import (
-    ApproveActivities, RejectActivities
+    ApproveActivities, RejectActivities, CancelActivities, DeleteActivities
 )
-from bluebottle.initiatives.messages import InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage
+from bluebottle.initiatives.messages import InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage, \
+    InitiativeCancelledOwnerMessage
 
 from bluebottle.initiatives.models import Initiative
 
@@ -35,6 +36,16 @@ class ReviewStateMachine(ModelStateMachine):
         _('rejected'),
         'rejected',
         _('The initiative is rejected by the reviewer and not visible on the platform.')
+    )
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
+        _('The initiative has been cancelled.')
+    )
+    deleted = State(
+        _('deleted'),
+        'deleted',
+        _('The initiative was deleted.')
     )
     approved = State(
         _('approved'),
@@ -107,7 +118,7 @@ class ReviewStateMachine(ModelStateMachine):
         rejected,
         name=_('Reject'),
         description=_("The initiative will be rejected. "
-                      "The initiator will not be able to edit it and it won't be visible on the platform"),
+                      "The initiator will not be able to edit it and it won't be visible on the platform."),
         automatic=False,
         permission=is_staff,
         effects=[
@@ -116,8 +127,39 @@ class ReviewStateMachine(ModelStateMachine):
         ]
     )
 
+    cancel = Transition(
+        approved,
+        cancelled,
+        name=_('Cancel'),
+        description=_("The initiative will be cancelled and it won't be visible on the platform."),
+        automatic=False,
+        effects=[
+            CancelActivities,
+            NotificationEffect(InitiativeCancelledOwnerMessage)
+        ]
+    )
+
+    delete = Transition(
+        [
+            draft,
+            rejected,
+            cancelled
+        ],
+        deleted,
+        name=_('Delete'),
+        description=_("The initiative will be deleted and will be removed from the platform."),
+        automatic=False,
+        effects=[
+            DeleteActivities,
+        ]
+    )
+
     restore = Transition(
-        rejected,
+        [
+            rejected,
+            cancelled,
+            deleted
+        ],
         draft,
         name=_('Restore'),
         description=_("The initiative will be restored. The initiator will be able to edit it again."),

@@ -30,7 +30,7 @@ class EventScheduledTasksTestCase(BluebottleTestCase):
             duration=8
         )
 
-    def test_event_scheduled_task_closed(self):
+    def test_event_scheduled_task_expired(self):
         self.assertEqual(self.event.status, 'open')
         tenant = connection.tenant
         with mock.patch.object(timezone, 'now', return_value=(timezone.now() + timedelta(days=13))):
@@ -38,7 +38,7 @@ class EventScheduledTasksTestCase(BluebottleTestCase):
         with LocalTenant(tenant, clear_tenant=True):
             self.event.refresh_from_db()
         event = Event.objects.get(pk=self.event.pk)
-        self.assertEqual(event.status, 'closed')
+        self.assertEqual(event.status, 'cancelled')
 
     def test_event_scheduled_task_succeed(self):
         ParticipantFactory.create_batch(2, activity=self.event)
@@ -69,7 +69,7 @@ class EventScheduledTasksTestCase(BluebottleTestCase):
         with LocalTenant(tenant, clear_tenant=True):
             self.event.refresh_from_db()
         event = Event.objects.get(pk=self.event.pk)
-        self.assertEqual(event.status, 'closed')
+        self.assertEqual(event.status, 'cancelled')
 
     def test_event_scheduled_task_reminder(self):
         ParticipantFactory.create_batch(2, activity=self.event)

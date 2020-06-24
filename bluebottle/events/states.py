@@ -5,7 +5,7 @@ from bluebottle.activities.states import ActivityStateMachine, ContributionState
 from bluebottle.events.effects import SetTimeSpent, ResetTimeSpent
 from bluebottle.events.messages import (
     EventSucceededOwnerMessage,
-    EventClosedOwnerMessage,
+    EventRejectedOwnerMessage,
     ParticipantRejectedMessage,
     ParticipantApplicationMessage,
     ParticipantApplicationManagerMessage,
@@ -18,7 +18,7 @@ from bluebottle.fsm.effects import (
     TransitionEffect,
     RelatedTransitionEffect
 )
-from bluebottle.fsm.state import State, EmptyState, Transition
+from bluebottle.fsm.state import State, EmptyState, Transition, AllStates
 from bluebottle.notifications.effects import NotificationEffect
 
 
@@ -51,11 +51,11 @@ class EventStateMachine(ActivityStateMachine):
         return self.instance.start and self.instance.start > timezone.now()
 
     def has_participants(self):
-        "there are participants"
+        """there are participants"""
         return len(self.instance.participants) > 0
 
     def has_no_participants(self):
-        "there are no participants"
+        """there are no participants"""
         return len(self.instance.participants) == 0
 
     full = State(_('full'), 'full', _('The activity is full, users can no longer sign up'))
@@ -63,18 +63,17 @@ class EventStateMachine(ActivityStateMachine):
 
     approve = Transition(
         [
-            ActivityStateMachine.draft,
             ActivityStateMachine.submitted,
-            ActivityStateMachine.rejected,
-            ActivityStateMachine.needs_work,
+            ActivityStateMachine.rejected
         ],
         ActivityStateMachine.open,
         name=_('Approve'),
+        automatic=True,
         description=_("Approve the event. Users can start signing up to it."),
         effects=[
             RelatedTransitionEffect('organizer', 'succeed'),
             TransitionEffect(
-                'close',
+                'expire',
                 conditions=[should_finish, has_no_participants]
             ),
         ]
@@ -100,7 +99,7 @@ class EventStateMachine(ActivityStateMachine):
     reschedule = Transition(
         [
             running,
-            ActivityStateMachine.closed,
+            ActivityStateMachine.cancelled,
             ActivityStateMachine.succeeded
         ],
         ActivityStateMachine.open,
@@ -123,7 +122,7 @@ class EventStateMachine(ActivityStateMachine):
 
     expire = Transition(
         ActivityStateMachine.open,
-        ActivityStateMachine.closed,
+        ActivityStateMachine.cancelled,
         name=_("Expire"),
         description=_("Event expired. No one signed-up before the start of the event.")
     )
@@ -133,7 +132,8 @@ class EventStateMachine(ActivityStateMachine):
             full,
             running,
             ActivityStateMachine.open,
-            ActivityStateMachine.closed
+            ActivityStateMachine.rejected,
+            ActivityStateMachine.cancelled
         ],
         ActivityStateMachine.succeeded,
         name=_("Succeed"),
@@ -144,31 +144,28 @@ class EventStateMachine(ActivityStateMachine):
         ]
     )
 
-    close = Transition(
-        (
-            ActivityStateMachine.draft,
-            full,
-            running,
-            ActivityStateMachine.open,
-            ActivityStateMachine.succeeded,
-        ),
-        ActivityStateMachine.closed,
-        name=_("Close"),
-        description=_("Close the event. It will no longer be editable by the organiser."),
+    reject = Transition(
+        AllStates(),
+        ActivityStateMachine.rejected,
+        name=_('Reject'),
+        description=_('Reject the activity. This will make sure the initiative is no longer visible'),
+        automatic=False,
+        permission=ActivityStateMachine.is_staff,
         effects=[
-            NotificationEffect(EventClosedOwnerMessage),
-            RelatedTransitionEffect('participants', 'fail')
+            RelatedTransitionEffect('organizer', 'fail'),
+            NotificationEffect(EventRejectedOwnerMessage),
         ]
     )
 
     restore = Transition(
         [
             ActivityStateMachine.rejected,
-            ActivityStateMachine.closed
+            ActivityStateMachine.cancelled,
+            ActivityStateMachine.deleted,
         ],
         ActivityStateMachine.draft,
         name=_("Restore"),
-        description=_("Restore a closed or rejected event."),
+        description=_("Restore a cancelled, rejected or deleted event."),
         effects=[
             RelatedTransitionEffect('participants', 'reset'),
             RelatedTransitionEffect('organizer', 'reset')
@@ -277,6 +274,8 @@ class ParticipantStateMachine(ContributionStateMachine):
         effects=[
             TransitionEffect('succeed', conditions=[event_is_finished]),
             RelatedTransitionEffect('activity', 'lock', conditions=[event_will_become_full]),
+            NotificationEffect(ParticipantApplicationManagerMessage),
+            NotificationEffect(ParticipantApplicationMessage),
             FollowActivityEffect
         ]
     )
@@ -293,6 +292,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         ],
         permission=is_activity_owner
     )
+
     accept = Transition(
         rejected,
         ContributionStateMachine.new,
@@ -302,6 +302,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         effects=[
             TransitionEffect('succeed', conditions=[event_is_finished]),
             RelatedTransitionEffect('activity', 'lock', conditions=[event_will_become_full]),
+            NotificationEffect(ParticipantApplicationMessage),
             FollowActivityEffect
         ],
         permission=is_activity_owner
@@ -317,7 +318,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         effects=[
             ResetTimeSpent,
             RelatedTransitionEffect(
-                'activity', 'close',
+                'activity', 'cancel',
                 conditions=[event_is_finished, event_will_be_empty]
             ),
             UnFollowActivityEffect

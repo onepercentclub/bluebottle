@@ -1,4 +1,5 @@
 from django.utils.translation import ugettext_lazy as _
+
 from bluebottle.fsm.effects import Effect
 
 
@@ -8,7 +9,7 @@ class BaseNotificationEffect(Effect):
     conditions = []
 
     def execute(self, send_messages=True):
-        if send_messages:
+        if send_messages and self.is_valid:
             self.message(
                 self.instance,
                 custom_message=self.options.get('message')
@@ -38,7 +39,7 @@ class BaseNotificationEffect(Effect):
 
     @property
     def is_valid(self):
-        return all(condition(self.instance) for condition in self.conditions)
+        return all([condition(self.instance) for condition in self.conditions])
 
     def to_html(self):
         return _('Message <em>{subject}</em> to {recipients}').format(**self._content())

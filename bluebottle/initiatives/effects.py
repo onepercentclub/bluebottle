@@ -33,3 +33,39 @@ class RejectActivities(Effect):
 
     def __unicode__(self):
         return _('Reject related activities')
+
+
+class CancelActivities(Effect):
+    post_save = True
+    conditions = []
+
+    title = _('Change status of related objects')
+
+    @property
+    def description(self):
+        return unicode(self)
+
+    def execute(self, **kwargs):
+        for activity in self.instance.activities.all():
+            activity.states.cancel(save=True)
+
+    def __unicode__(self):
+        return _('Cancel related activities')
+
+
+class DeleteActivities(Effect):
+    post_save = True
+    conditions = []
+
+    title = _('Change status of related objects')
+
+    @property
+    def description(self):
+        return unicode(self)
+
+    def execute(self, **kwargs):
+        for activity in self.instance.activities.all():
+            activity.states.delete(save=True)
+
+    def __unicode__(self):
+        return _('Delete related activities')

@@ -56,7 +56,7 @@ class EventTasksTestCase(BluebottleTestCase):
         self.assertEqual(event.status, 'open')
         event_tasks()
         event = Event.objects.get(pk=event.pk)
-        self.assertEqual(event.status, 'closed')
+        self.assertEqual(event.status, 'cancelled')
 
     def test_event_end_task(self):
         user = BlueBottleUserFactory.create(first_name='Nono')

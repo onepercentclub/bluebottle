@@ -77,8 +77,10 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
 
     def test_approve(self):
         self.assignment = AssignmentFactory.create(
+            end_date_type='on_date',
             owner=self.initiative.owner,
-            initiative=self.initiative
+            initiative=self.initiative,
+            capacity=3
         )
         self.assignment.states.submit(save=True)
 
@@ -96,7 +98,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assignment.date = now() - timedelta(days=1)
         self.assignment.save()
 
-        self.assertEqual(self.assignment.status, AssignmentStateMachine.closed.value)
+        self.assertEqual(self.assignment.status, AssignmentStateMachine.cancelled.value)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
@@ -181,6 +183,46 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assignment.refresh_from_db()
 
         self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
+
+    def test_change_date(self):
+        tomorrow = now() + timedelta(days=1)
+        next_week = now() + timedelta(days=7)
+        assignment = AssignmentFactory.create(
+            capacity=5,
+            end_date_type='on_date',
+            date=tomorrow
+        )
+        applicants = ApplicantFactory.create_batch(
+            3, activity=assignment
+        )
+        for applicant in applicants:
+            applicant.states.accept(save=True)
+
+        mail.outbox = []
+        assignment.date = next_week
+        assignment.save()
+        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(mail.outbox[0].subject, 'ha {}'.format(assignment.title))
+
+    def test_change_deadline(self):
+        tomorrow = now() + timedelta(days=1)
+        next_week = now() + timedelta(days=7)
+        assignment = AssignmentFactory.create(
+            capacity=5,
+            end_date_type='deadline',
+            date=tomorrow
+        )
+        self.assignment.save()
+        applicants = ApplicantFactory.create_batch(
+            3, activity=assignment
+        )
+        for applicant in applicants:
+            applicant.states.accept(save=True)
+        mail.outbox = []
+        assignment.date = next_week
+        assignment.save()
+        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(mail.outbox[0].subject, 'ha {}'.format(assignment.title))
 
     def test_fill_capacity(self):
         self.assignment.states.submit(save=True)

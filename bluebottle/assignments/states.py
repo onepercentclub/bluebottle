@@ -16,10 +16,21 @@ from bluebottle.fsm.state import State, Transition, EmptyState
 class AssignmentStateMachine(ActivityStateMachine):
     model = Assignment
 
-    running = State(_('running'), 'running',
-                    _('Activity is currently being execute, not accepting new contributions.'))
-    full = State(_('full'), 'full',
-                 _('Activity is full, not accepting new contributions.'))
+    running = State(
+        _('running'),
+        'running',
+        _('Activity is currently being execute, not accepting new contributions.')
+    )
+    full = State(
+        _('full'),
+        'full',
+        _('Activity is full, not accepting new contributions.')
+    )
+    submitted = State(
+        _('submitted'),
+        'submitted',
+        _('The activity is ready to go online once the initiative has been approved.')
+    )
 
     def should_finish(self):
         """end date has passed"""
@@ -50,11 +61,11 @@ class AssignmentStateMachine(ActivityStateMachine):
         return len(self.instance.accepted_applicants) == 0
 
     def is_not_full(self):
-        """the assignment is not full"""
+        """the task is not full"""
         return self.instance.capacity > len(self.instance.accepted_applicants)
 
     def is_full(self):
-        """the assignment is full"""
+        """the task is full"""
         return self.instance.capacity <= len(self.instance.accepted_applicants)
 
     start = Transition(
@@ -76,10 +87,28 @@ class AssignmentStateMachine(ActivityStateMachine):
         description=_("The activity has reached its capacity isn't open for new applications."),
     )
 
+    approve = Transition(
+        [
+            ActivityStateMachine.submitted,
+            ActivityStateMachine.rejected
+        ],
+        ActivityStateMachine.open,
+        name=_('Approve'),
+        automatic=True,
+        description=_("Approve the task. Users can start signing up to it."),
+        effects=[
+            RelatedTransitionEffect('organizer', 'succeed'),
+            TransitionEffect(
+                'expire',
+                conditions=[should_finish, has_no_accepted_applicants]
+            ),
+        ]
+    )
+
     reopen = Transition(
         [
             full,
-            ActivityStateMachine.closed,
+            ActivityStateMachine.cancelled,
             ActivityStateMachine.succeeded
         ],
         ActivityStateMachine.open,
@@ -93,7 +122,12 @@ class AssignmentStateMachine(ActivityStateMachine):
     )
 
     succeed = Transition(
-        [ActivityStateMachine.open, full, running, ActivityStateMachine.closed],
+        [
+            ActivityStateMachine.open,
+            full,
+            running,
+            ActivityStateMachine.cancelled
+        ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         description=_("The activity was successfully completed."),
@@ -106,7 +140,7 @@ class AssignmentStateMachine(ActivityStateMachine):
 
     expire = Transition(
         ActivityStateMachine.open,
-        ActivityStateMachine.closed,
+        ActivityStateMachine.cancelled,
         name=_('Expire'),
         description=_("The activity expired. There were no sign-ups before the deadline to apply."),
         automatic=True,
@@ -162,25 +196,25 @@ class ApplicantStateMachine(ContributionStateMachine):
         return user.is_staff or self.instance.activity.owner == user
 
     def assignment_will_become_full(self):
-        """assignment_will be full"""
+        """task will be full"""
         activity = self.instance.activity
         return activity.capacity == len(activity.accepted_applicants) + 1
 
     def assignment_will_become_open(self):
-        """assignment_will not be full"""
+        """task will not be full"""
         activity = self.instance.activity
         return activity.capacity == len(activity.accepted_applicants)
 
     def assignment_is_finished(self):
-        """assignment_is finished"""
+        """task is finished"""
         return self.instance.activity.end < timezone.now()
 
     def assignment_is_not_finished(self):
-        "assignment_is not finished"
+        "task is not finished"
         return not self.instance.activity.date < timezone.now()
 
     def assignment_will_be_empty(self):
-        """assignment_will be empty"""
+        """task be empty"""
         return len(self.instance.activity.accepted_applicants) == 1
 
     def can_accept_applicants(self, user):
@@ -192,14 +226,14 @@ class ApplicantStateMachine(ContributionStateMachine):
         ]
 
     def assignment_is_open(self):
-        """assignment is open"""
+        """task is open"""
         return self.instance.activity.status == ActivityStateMachine.open.value
 
     initiate = Transition(
         EmptyState(),
         ContributionStateMachine.new,
         name=_('Initiate'),
-        description=_("User applied to join the assignment."),
+        description=_("User applied to join the task."),
         effects=[
             NotificationEffect(AssignmentApplicationMessage),
             FollowActivityEffect
@@ -267,7 +301,7 @@ class ApplicantStateMachine(ContributionStateMachine):
         ],
         ContributionStateMachine.new,
         name=_('Reapply'),
-        description=_("Applicant re-applies for the assignment after previously withdrawing."),
+        description=_("Applicant re-applies for the task after previously withdrawing."),
         automatic=False,
         conditions=[assignment_is_open],
         permission=ContributionStateMachine.is_user,
@@ -283,7 +317,7 @@ class ApplicantStateMachine(ContributionStateMachine):
         ],
         active,
         name=_('Activate'),
-        description=_("Applicant starts to execute the assignment."),
+        description=_("Applicant starts to execute the task."),
         automatic=True
     )
 
@@ -295,7 +329,7 @@ class ApplicantStateMachine(ContributionStateMachine):
         ],
         ContributionStateMachine.succeeded,
         name=_('Succeed'),
-        description=_("Applicant successfully completed the assignment."),
+        description=_("Applicant successfully completed the task."),
         automatic=True,
         effects=[
             SetTimeSpent
@@ -306,13 +340,13 @@ class ApplicantStateMachine(ContributionStateMachine):
         ContributionStateMachine.succeeded,
         no_show,
         name=_('Mark absent'),
-        description=_("Applicant did not contribute to the assignment and is marked absent."),
+        description=_("Applicant did not contribute to the task and is marked absent."),
         automatic=False,
         permission=is_activity_owner,
         effects=[
             ClearTimeSpent,
             RelatedTransitionEffect(
-                'activity', 'close',
+                'activity', 'cancel',
                 conditions=[assignment_is_finished, assignment_will_be_empty]
             ),
             UnFollowActivityEffect
@@ -322,7 +356,7 @@ class ApplicantStateMachine(ContributionStateMachine):
         no_show,
         ContributionStateMachine.succeeded,
         name=_('Mark present'),
-        description=_("Applicant did contribute to the assignment, after first been marked absent."),
+        description=_("Applicant did contribute to the task, after first been marked absent."),
         automatic=False,
         permission=is_activity_owner,
         effects=[

@@ -45,6 +45,11 @@ class ActivityStateMachine(ModelStateMachine):
         'deleted',
         _('The activity is deleted by the initiator.')
     )
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
+        _('The activity has been cancelled.')
+    )
     open = State(
         _('open'),
         'open',
@@ -54,11 +59,6 @@ class ActivityStateMachine(ModelStateMachine):
         _('succeeded'),
         'succeeded',
         _('The activity has ended successfully.')
-    )
-    closed = State(
-        _('closed'),
-        'closed',
-        _('The activity was unsuccessfull and has been closed.')
     )
 
     def is_complete(self):
@@ -99,7 +99,7 @@ class ActivityStateMachine(ModelStateMachine):
     submit = Transition(
         [draft, needs_work],
         submitted,
-        description=_('Submit the activity for approval'),
+        description=_('Submit the activity for approval.'),
         automatic=False,
         name=_('Submit'),
         conditions=[is_complete, is_valid, initiative_is_submitted],
@@ -110,7 +110,6 @@ class ActivityStateMachine(ModelStateMachine):
 
     approve = Transition(
         [
-            draft,
             submitted,
             rejected,
             needs_work
@@ -128,7 +127,7 @@ class ActivityStateMachine(ModelStateMachine):
         AllStates(),
         rejected,
         name=_('Reject'),
-        description=_('Reject the activity. This will make sure the initiative is no longer visible'),
+        description=_('Reject the activity. This will make sure the activity is no longer visible.'),
         automatic=False,
         permission=is_staff,
         effects=[
@@ -136,21 +135,23 @@ class ActivityStateMachine(ModelStateMachine):
         ]
     )
 
-    close = Transition(
-        open,
-        closed,
-        name=_('Close'),
-        automatic=True,
+    cancel = Transition(
+        AllStates(),
+        cancelled,
+        name=_('Cancel'),
+        description=_('Cancel the activity.'),
+        automatic=False,
+        permission=is_staff,
         effects=[
             RelatedTransitionEffect('organizer', 'fail')
         ]
     )
 
     restore = Transition(
-        [rejected, closed, deleted],
+        [rejected, cancelled, deleted],
         draft,
         name=_('Restore'),
-        description=_('Restore the activity. The will mark the activity as draft again'),
+        description=_('Restore the activity. The will mark the activity as draft again.'),
         automatic=False,
         permission=is_staff,
         effects=[
@@ -159,7 +160,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     delete = Transition(
-        [draft, needs_work, submitted],
+        [draft, needs_work, submitted, cancelled, rejected],
         deleted,
         name=_('Delete'),
         automatic=False,
@@ -171,7 +172,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     succeed = Transition(
-        [open],
+        open,
         succeeded,
         name=_('Succeed'),
         automatic=True,

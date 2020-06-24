@@ -23,7 +23,7 @@ class EventFinishedTask(ModelPeriodicTask):
             EventStateMachine.should_finish,
             EventStateMachine.has_participants
         ]),
-        TransitionEffect('close', conditions=[
+        TransitionEffect('cancel', conditions=[
             EventStateMachine.should_finish,
             EventStateMachine.has_no_participants
         ]),

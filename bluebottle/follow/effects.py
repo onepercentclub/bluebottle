@@ -17,7 +17,10 @@ class FollowActivityEffect(Effect):
         return '<Effect: Follow {} by {}>'.format(self.instance.activity, self.instance.user)
 
     def __unicode__(self):
-        return _('Follow %s by %s') % (self.instance.activity, self.instance.user)
+        user = self.instance.user
+        if not self.instance.user.id:
+            user = self.instance.user.full_name
+        return _('Follow {activity} by {user}').format(activity=self.instance.activity, user=user)
 
 
 class UnFollowActivityEffect(Effect):
@@ -33,4 +36,7 @@ class UnFollowActivityEffect(Effect):
         return '<Effect: Unfollow {} by {}>'.format(self.instance.activity, self.instance.user)
 
     def __unicode__(self):
-        return _('Unfollow %s by %s') % (self.instance.activity, self.instance.user)
+        user = self.instance.user
+        if not self.instance.user.id:
+            user = self.instance.user.full_name
+        return _('Unfollow {activity} by {user}').format(activity=self.instance.activity, user=user)

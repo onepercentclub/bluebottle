@@ -91,6 +91,22 @@ class AssignmentDateChanged(TransitionMessage):
         ]
 
 
+class AssignmentDeadlineChanged(TransitionMessage):
+    subject = _('The deadline of your task "{assignment_title}" has been changed')
+    template = 'messages/assignment_deadline_changed'
+    context = {
+        'assignment_title': 'title'
+    }
+
+    def get_recipients(self):
+        """users that applied to the task"""
+        from bluebottle.assignments.models import Applicant
+        return [
+            contribution.user for contribution
+            in self.obj.contributions.instance_of(Applicant).filter(status__in=('new', 'accepted', ))
+        ]
+
+
 class AssignmentReminderOnDate(TransitionMessage):
     subject = _('"{assignment_title}" will take place in 5 days!')
     template = 'messages/assignment_reminder_on_date'

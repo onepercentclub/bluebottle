@@ -27,8 +27,20 @@ class InitiativeNeedsWorkOwnerMessage(TransitionMessage):
 
 
 class InitiativeRejectedOwnerMessage(TransitionMessage):
-    subject = _('Your initiative "{title}" has been closed')
-    template = 'messages/initiative_closed_owner'
+    subject = _('Your initiative "{title}" has been rejected.')
+    template = 'messages/initiative_rejected_owner'
+    context = {
+        'title': 'title'
+    }
+
+    def get_recipients(self):
+        """the initiator"""
+        return [self.obj.owner]
+
+
+class InitiativeCancelledOwnerMessage(TransitionMessage):
+    subject = _('The initiative "{title}" has been cancelled.')
+    template = 'messages/initiative_cancelled_owner'
     context = {
         'title': 'title'
     }

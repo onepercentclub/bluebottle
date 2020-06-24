@@ -120,7 +120,7 @@ class ParticipantTransitionList(TransitionList):
 
 
 class EventIcalView(PrivateFileView):
-    queryset = Event.objects.exclude(status='closed')
+    queryset = Event.objects.exclude(status__in=['cancelled', 'deleted', 'rejected'])
 
     max_age = 30 * 60  # half an hour
 

@@ -560,8 +560,8 @@ class EventTransitionTestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['errors'][0], "Transition is not available")
 
-    def test_close(self):
-        self.review_data['data']['attributes']['transition'] = 'close'
+    def test_cancel(self):
+        self.review_data['data']['attributes']['transition'] = 'cancel'
         response = self.client.post(
             self.transition_url,
             json.dumps(self.review_data),
@@ -693,7 +693,7 @@ class ParticipantListFilterCase(BluebottleTestCase):
         )
 
         ParticipantFactory.create_batch(3, activity=self.event, status='new')
-        ParticipantFactory.create_batch(2, activity=self.event, status='closed')
+        ParticipantFactory.create_batch(2, activity=self.event, status='cancelled')
         ParticipantFactory.create_batch(3, status='new')
 
         self.participant_url = reverse('participant-list')

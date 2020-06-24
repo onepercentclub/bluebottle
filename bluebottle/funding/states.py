@@ -23,10 +23,6 @@ from bluebottle.notifications.effects import NotificationEffect
 class FundingStateMachine(ActivityStateMachine):
     model = Funding
 
-    def __init__(self, instance):
-        super(FundingStateMachine, self).__init__(instance)
-        self.closed.description = _("The activity has ended without any donations.")
-
     partially_funded = State(
         _('partially funded'),
         'partially_funded',
@@ -36,6 +32,11 @@ class FundingStateMachine(ActivityStateMachine):
         _('refunded'),
         'refunded',
         _("The activity has ended and all donations have been refunded.")
+    )
+    closed = State(
+        _('closed'),
+        'closed',
+        _("The activity has ended without any donations.")
     )
 
     def should_finish(self):
@@ -140,11 +141,11 @@ class FundingStateMachine(ActivityStateMachine):
         ]
     )
 
-    close = Transition(
+    expire = Transition(
         ActivityStateMachine.open,
-        ActivityStateMachine.closed,
-        name=_('Close'),
-        description=_("The campaign has ended without any successful donations and will be closed."),
+        ActivityStateMachine.cancelled,
+        name=_('Expire'),
+        description=_("The campaign has ended without any successful donations and will be cancelled."),
         automatic=True,
         conditions=[
             no_donations,
@@ -159,7 +160,7 @@ class FundingStateMachine(ActivityStateMachine):
         [
             ActivityStateMachine.succeeded,
             partially_funded,
-            ActivityStateMachine.closed,
+            ActivityStateMachine.cancelled,
         ],
         ActivityStateMachine.open,
         name=_('Extend'),
@@ -200,7 +201,11 @@ class FundingStateMachine(ActivityStateMachine):
     )
 
     partial = Transition(
-        [ActivityStateMachine.open, ActivityStateMachine.succeeded, ActivityStateMachine.closed],
+        [
+            ActivityStateMachine.open,
+            ActivityStateMachine.succeeded,
+            ActivityStateMachine.cancelled
+        ],
         partially_funded,
         name=_('Partial'),
         description=_("The campaign has ended but the target isn't reached."),

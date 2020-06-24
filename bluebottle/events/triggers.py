@@ -26,7 +26,7 @@ class DateChangedTrigger(ModelChangedTrigger):
     effects = [
         NotificationEffect(EventDateChanged),
         TransitionEffect('succeed', conditions=[EventStateMachine.should_finish, EventStateMachine.has_participants]),
-        TransitionEffect('close', conditions=[EventStateMachine.should_finish, EventStateMachine.has_no_participants]),
+        TransitionEffect('cancel', conditions=[EventStateMachine.should_finish, EventStateMachine.has_no_participants]),
         TransitionEffect('reschedule', conditions=[EventStateMachine.should_open]),
         TransitionEffect('lock', conditions=[EventStateMachine.is_full]),
     ]
@@ -39,11 +39,12 @@ class StartedTrigger(ModelChangedTrigger):
         return (
             self.instance.duration and
             (self.instance.start and self.instance.start < timezone.now()) and
-            self.instance.status not in ('succeeded', 'closed', )
+            self.instance.status not in ('succeeded', 'deleted', 'rejected')
         )
 
     effects = [
         TransitionEffect('start', conditions=[EventStateMachine.should_start, EventStateMachine.has_participants]),
+        TransitionEffect('cancel', conditions=[EventStateMachine.should_start, EventStateMachine.has_no_participants]),
     ]
 
     def __unicode__(self):
@@ -60,12 +61,12 @@ class FinishedTrigger(ModelChangedTrigger):
                 self.instance.start and
                 self.instance.start + timedelta(hours=self.instance.duration) < timezone.now()
             ) and
-            self.instance.status not in ('succeeded', 'closed', )
+            self.instance.status not in ('succeeded', 'deleted', 'rejected', 'cancelled')
         )
 
     effects = [
         TransitionEffect('succeed', conditions=[EventStateMachine.should_finish, EventStateMachine.has_participants]),
-        TransitionEffect('close', conditions=[EventStateMachine.should_finish, EventStateMachine.has_no_participants]),
+        TransitionEffect('cancel', conditions=[EventStateMachine.should_finish, EventStateMachine.has_no_participants]),
     ]
 
     def __unicode__(self):
@@ -82,7 +83,7 @@ class ParticipantDeletedTrigger(ModelDeletedTrigger):
     effects = [
         RelatedTransitionEffect(
             'activity',
-            'close',
+            'cancel',
             conditions=[
                 ParticipantStateMachine.event_is_finished,
                 ParticipantStateMachine.event_will_be_empty

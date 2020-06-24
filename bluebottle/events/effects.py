@@ -4,7 +4,7 @@ from bluebottle.fsm.effects import Effect
 
 
 class SetTimeSpent(Effect):
-    "Set time spent on participants"
+    """Set time spent on participants"""
     post_save = False
     title = _('Reset time spent')
 
@@ -13,14 +13,17 @@ class SetTimeSpent(Effect):
             self.instance.time_spent = self.instance.activity.duration
 
     def __unicode__(self):
+        participant = self.instance
+        if not self.instance.id:
+            participant = _('participant')
         return unicode(_('Set time spent to {duration} on {participant}').format(
             duration=self.instance.activity.duration or _('event duration'),
-            participant=self.instance
+            participant=participant
         ))
 
 
 class ResetTimeSpent(Effect):
-    "Set time spent to 0 if it was not overriden"
+    """Set time spent to 0 if it was not overridden"""
     post_save = False
     title = _('Reset time spent')
 
@@ -29,6 +32,9 @@ class ResetTimeSpent(Effect):
             self.instance.time_spent = 0
 
     def __unicode__(self):
-        return _('Set time spent to 0 on {}').format(
-            self.instance
+        participant = self.instance
+        if not self.instance.id:
+            participant = _('participant')
+        return _('Set time spent to 0 on {participant}').format(
+            participant=participant
         )

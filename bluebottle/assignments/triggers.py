@@ -1,6 +1,7 @@
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.assignments.messages import AssignmentDateChanged
+from bluebottle.assignments.messages import AssignmentDateChanged, AssignmentDeadlineChanged
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
@@ -11,8 +12,33 @@ from bluebottle.notifications.effects import NotificationEffect
 class DateChangedTrigger(ModelChangedTrigger):
     field = 'date'
 
+    def is_on_date(assignment):
+        """task is on a specific date"""
+        return assignment.end_date_type == 'on_date'
+
+    def has_deadline(assignment):
+        """task has a deadline"""
+        return assignment.end_date_type == 'deadline'
+
+    def in_the_future(assignment):
+        """is in the future"""
+        return assignment.date > timezone.now()
+
     effects = [
-        NotificationEffect(AssignmentDateChanged),
+        NotificationEffect(
+            AssignmentDeadlineChanged,
+            conditions=[
+                in_the_future,
+                has_deadline
+            ]
+        ),
+        NotificationEffect(
+            AssignmentDateChanged,
+            conditions=[
+                in_the_future,
+                is_on_date
+            ]
+        ),
         TransitionEffect(
             'succeed',
             conditions=[
@@ -46,7 +72,6 @@ class RegistrationDeadlineChangedTrigger(ModelChangedTrigger):
     field = 'registration_deadline'
 
     effects = [
-        NotificationEffect(AssignmentDateChanged),
         TransitionEffect(
             'start',
             conditions=[

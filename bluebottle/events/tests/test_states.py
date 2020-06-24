@@ -10,6 +10,7 @@ from bluebottle.events.models import Participant
 from bluebottle.events.states import EventStateMachine, ParticipantStateMachine
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.activities.states import OrganizerStateMachine
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -214,7 +215,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.event.start = timezone.now() - timedelta(hours=2)
         self.event.save()
 
-        self.assertEqual(self.event.status, EventStateMachine.closed.value)
+        self.assertEqual(self.event.status, EventStateMachine.cancelled.value)
 
         participant.states.accept(save=True)
 
@@ -254,7 +255,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(participant.status, ParticipantStateMachine.no_show.value)
 
         self.passed_event.refresh_from_db()
-        self.assertEqual(self.passed_event.status, EventStateMachine.closed.value)
+        self.assertEqual(self.passed_event.status, EventStateMachine.cancelled.value)
 
     def test_mark_absent_no_change(self):
         self.event.states.submit(save=True)
@@ -315,7 +316,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
     def test_failed_when_passed(self):
         self.event.states.submit(save=True)
-        self.assertEqual(self.passed_event.status, EventStateMachine.closed.value)
+        self.assertEqual(self.passed_event.status, EventStateMachine.cancelled.value)
 
     def test_not_succeed_change_start(self):
         self.event.states.submit(save=True)
@@ -346,9 +347,9 @@ class ActivityStateMachineTests(BluebottleTestCase):
             self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
             self.assertEqual(participant.time_spent, self.event.duration)
 
-    def test_change_start_reopen_from_closed(self):
+    def test_change_start_reopen_from_cancelled(self):
         self.event.states.submit(save=True)
-        self.assertEqual(self.passed_event.status, EventStateMachine.closed.value)
+        self.assertEqual(self.passed_event.status, EventStateMachine.cancelled.value)
 
         self.passed_event.start = timezone.now() + timedelta(hours=2)
         self.passed_event.save()
@@ -372,11 +373,13 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
 class ParticipantStateMachineTests(BluebottleTestCase):
     def setUp(self):
-        self.initiative = InitiativeFactory.create()
+        self.initiator = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.initiator)
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.event = EventFactory.create(
             initiative=self.initiative,
+            owner=self.initiator,
             capacity=10,
             duration=1
         )
@@ -387,7 +390,7 @@ class ParticipantStateMachineTests(BluebottleTestCase):
             start=timezone.now() - timedelta(days=1),
             duration=1
         )
-
+        mail.outbox = []
         self.passed_participant = ParticipantFactory.create(activity=self.passed_event)
 
     def messages(self, user):
@@ -397,14 +400,17 @@ class ParticipantStateMachineTests(BluebottleTestCase):
             if message.recipients()[0] == user.email
         ]
 
-    def test_created(self):
-        self.assertEqual(self.participant.status, ParticipantStateMachine.new.value)
+    def test_join(self):
+        self.assertEqual(self.passed_participant.status, ParticipantStateMachine.succeeded.value)
         self.assertEqual(self.participant.time_spent, 0)
         self.assertTrue(
             self.event.followers.filter(user=self.participant.user).exists()
         )
         self.assertEqual(
             len(self.messages(self.participant.user)), 1
+        )
+        self.assertEqual(
+            len(self.messages(self.initiator.user)), 1
         )
 
     def test_withdraw(self):

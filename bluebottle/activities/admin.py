@@ -22,7 +22,7 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     list_filter = ['status', ]
     ordering = ('-created', )
     show_in_index = True
-    readonly_fields = ['contribution_date', 'created', 'activity', 'status']
+    readonly_fields = ['contribution_date', 'created', 'activity_link', 'status']
 
     def activity_link(self, obj):
         url = reverse("admin:{}_{}_change".format(

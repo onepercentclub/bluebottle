@@ -10,9 +10,9 @@ class EventSucceededOwnerMessage(TransitionMessage):
     }
 
 
-class EventClosedOwnerMessage(TransitionMessage):
-    subject = _('Your event "{title}" has been closed')
-    template = 'messages/event_closed_owner'
+class EventRejectedOwnerMessage(TransitionMessage):
+    subject = _('Your event "{title}" has been rejected')
+    template = 'messages/event_rejected_owner'
     context = {
         'title': 'title'
     }

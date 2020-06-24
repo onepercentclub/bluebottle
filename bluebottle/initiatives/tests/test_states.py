@@ -261,7 +261,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
         self.assertEqual(len(mail.outbox), 1)
 
-        subject = 'Your initiative "{}" has been closed'.format(self.initiative.title)
+        subject = 'Your initiative "{}" has been rejected'.format(self.initiative.title)
 
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
@@ -278,6 +278,52 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(
             event.status, EventStateMachine.rejected.value
+        )
+
+    def test_cancel(self):
+        self.initiative.states.cancel(save=True)
+        self.assertEqual(
+            self.initiative.status, ReviewStateMachine.cancelled.value
+        )
+        self.assertEqual(len(mail.outbox), 1)
+
+        subject = 'The initiative "{}" has been cancelled'.format(self.initiative.title)
+
+        self.assertEqual(mail.outbox[0].subject, subject)
+        self.assertTrue('Hi Bart' in mail.outbox[0].body)
+
+    def test_cancel_with_activities(self):
+        event = EventFactory.create(initiative=self.initiative)
+        self.initiative.states.cancel(save=True)
+
+        self.assertEqual(
+            self.initiative.status, ReviewStateMachine.cancelled.value
+        )
+
+        event.refresh_from_db()
+
+        self.assertEqual(
+            event.status, EventStateMachine.cancelled.value
+        )
+
+    def test_delete(self):
+        self.initiative.states.delete(save=True)
+        self.assertEqual(
+            self.initiative.status, ReviewStateMachine.deleted.value
+        )
+
+    def test_delete_with_activities(self):
+        event = EventFactory.create(initiative=self.initiative)
+        self.initiative.states.delete(save=True)
+
+        self.assertEqual(
+            self.initiative.status, ReviewStateMachine.deleted.value
+        )
+
+        event.refresh_from_db()
+
+        self.assertEqual(
+            event.status, EventStateMachine.deleted.value
         )
 
     def test_restore(self):

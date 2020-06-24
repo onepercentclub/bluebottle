@@ -10,7 +10,6 @@ from polymorphic.models import PolymorphicModel
 
 from bluebottle.files.fields import ImageField
 from bluebottle.initiatives.models import Initiative
-from bluebottle.impact.models import ImpactGoal
 from bluebottle.activities.transitions import ActivityReviewTransitions
 from bluebottle.activities.transitions import (
     ActivityTransitions, ContributionTransitions, OrganizerTransitions
@@ -55,7 +54,6 @@ class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, Polymo
     )
 
     image = ImageField(blank=True, null=True)
-    goal = models.ForeignKey(ImpactGoal, related_name='activities', null=True)
 
     video_url = models.URLField(
         _('video'),

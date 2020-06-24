@@ -10,6 +10,7 @@ from rest_framework import status
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
+from bluebottle.impact.tests.factories import ImpactGoalFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
 
@@ -147,6 +148,24 @@ class AssignmentDetailAPITestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'in_review')
+
+    def test_retrieve_impact(self):
+        goals = ImpactGoalFactory.create_batch(2, activity=self.assignment)
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'in_review')
+
+        self.assertEqual(
+            len(response.json()['data']['relationships']['goals']['data']),
+            2
+        )
+        included_goals = [
+            resource['id'] for resource in response.json()['included']
+            if resource['type'] == 'activities/impact-goals'
+        ]
+        for goal in goals:
+            self.assertTrue(unicode(goal.pk) in included_goals)
 
 
 class AssignmentDetailApplicantsAPITestCase(BluebottleTestCase):

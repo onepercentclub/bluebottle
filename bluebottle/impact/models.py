@@ -17,7 +17,7 @@ class ImpactType(SortableTranslatableModel):
 
     translations = TranslatedFields(
         name=models.CharField(_('name'), max_length=100),
-        unit=models.TextField(_('unit'), blank=True)
+        unit=models.CharField(_('unit'), blank=True, max_length=100)
     )
 
     def __unicode__(self):

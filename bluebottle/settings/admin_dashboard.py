@@ -26,6 +26,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['activities.change_contribution']
             },
             {
+                'name': 'impact.impacttype',
+                'permissions': ['activities.change_activity']
+            },
+
+            {
                 'name': 'categories.category',
                 'permissions': ['categories.change_category']
             },

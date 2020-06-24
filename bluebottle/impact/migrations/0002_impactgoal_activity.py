@@ -9,7 +9,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('activities', '0023_activity_goal'),
+        ('activities', '0022_activity_video_url'),
         ('impact', '0001_initial'),
     ]
 

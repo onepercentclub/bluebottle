@@ -50,7 +50,7 @@ class BaseActivitySerializer(ModelSerializer):
             'image',
             'video_url',
             'initiative',
-            'goal',
+            'goals',
             'owner',
             'title',
             'description',
@@ -77,6 +77,7 @@ class BaseActivitySerializer(ModelSerializer):
             'owner',
             'image',
             'initiative',
+            'goals',
             'initiative.place',
             'initiative.image',
         ]

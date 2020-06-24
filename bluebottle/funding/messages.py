@@ -54,9 +54,18 @@ class FundingRealisedOwnerMessage(TransitionMessage):
         return [self.obj.owner]
 
 
-class FundingClosedMessage(TransitionMessage):
+class FundingRejectedMessage(TransitionMessage):
+    subject = _(u"Your crowdfunding campaign has been rejected.")
+    template = 'messages/funding_rejected'
+
+    def get_recipients(self):
+        """the activity organizer"""
+        return [self.obj.owner]
+
+
+class FundingExpiredMessage(TransitionMessage):
     subject = _(u"Your crowdfunding campaign has been closed")
-    template = 'messages/funding_closed'
+    template = 'messages/funding_expired'
 
     def get_recipients(self):
         """the activity organizer"""

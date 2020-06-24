@@ -85,7 +85,7 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
         ).filter(
             user=self.request.user
         ).exclude(
-            status__in=['closed', 'failed']
+            status__in=['rejected', 'failed']
         ).exclude(
             donation__status__in=['new']
         ).order_by('-created')

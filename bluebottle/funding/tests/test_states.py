@@ -117,7 +117,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.deadline = now() - timedelta(days=5)
         self.funding.states.submit()
         self.funding.states.approve(save=True)
-        self.assertEqual(self.funding.status, 'closed')
+        self.assertEqual(self.funding.status, 'cancelled')
 
     def _prepare_extend(self):
         self.funding.states.submit()
@@ -146,12 +146,6 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.deadline = now() + timedelta(days=7)
         self.funding.save()
         self.assertEqual(self.funding.payouts.count(), 0)
-
-    def test_reject(self):
-        self.funding.states.reject(save=True)
-        self.assertEqual(self.funding.status, 'rejected')
-        organizer = self.funding.contributions.get()
-        self.assertEqual(organizer.status, 'failed')
 
     def test_delete(self):
         self.funding.states.delete(save=True)
@@ -189,16 +183,18 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.funding.payouts.count(), 1)
         self.assertEqual(self.funding.payouts.first().total_amount, Money(1000, 'EUR'))
 
-    def test_close(self):
+    def test_reject(self):
         mail.outbox = []
         self.funding.states.submit()
         self.funding.states.approve(save=True)
-        self.funding.states.close(save=True)
-        self.assertEqual(self.funding.status, 'closed')
+        self.funding.states.reject(save=True)
+        self.assertEqual(self.funding.status, 'rejected')
+        organizer = self.funding.contributions.get()
+        self.assertEqual(organizer.status, 'failed')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your crowdfunding campaign has been closed'
+            u'Your crowdfunding campaign has been rejected.'
         )
 
     def test_close_with_donations(self):
@@ -208,7 +204,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         with self.assertRaisesMessage(
                 TransitionNotPossible,
                 'Conditions not met for transition'):
-            self.funding.states.close(save=True)
+            self.funding.states.reject(save=True)
 
 
 class DonationStateMachineTests(BluebottleTestCase):

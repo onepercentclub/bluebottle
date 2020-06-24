@@ -14,8 +14,8 @@ from bluebottle.funding.effects import GeneratePayoutsEffect, GenerateDonationWa
     SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect, \
     ClearPayoutDatesEffect
 from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
-    FundingPartiallyFundedMessage, FundingClosedMessage, FundingRealisedOwnerMessage, PayoutAccountVerified, \
-    PayoutAccountRejected, DonationRefundedDonorMessage
+    FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage, PayoutAccountVerified, \
+    PayoutAccountRejected, DonationRefundedDonorMessage, FundingRejectedMessage
 from bluebottle.funding.models import Funding, Donation, Payout, PlainPayoutAccount
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -33,9 +33,9 @@ class FundingStateMachine(ActivityStateMachine):
         'refunded',
         _("The activity has ended and all donations have been refunded.")
     )
-    closed = State(
-        _('closed'),
-        'closed',
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
         _("The activity has ended without any donations.")
     )
 
@@ -103,7 +103,7 @@ class FundingStateMachine(ActivityStateMachine):
             SetDateEffect('started'),
             SetDeadlineEffect,
             TransitionEffect(
-                'close',
+                'cancel',
                 conditions=[should_finish]
             ),
         ]
@@ -137,7 +137,8 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         permission=ActivityStateMachine.is_staff,
         effects=[
-            RelatedTransitionEffect('organizer', 'fail')
+            RelatedTransitionEffect('organizer', 'fail'),
+            NotificationEffect(FundingRejectedMessage)
         ]
     )
 
@@ -151,7 +152,7 @@ class FundingStateMachine(ActivityStateMachine):
             no_donations,
         ],
         effects=[
-            NotificationEffect(FundingClosedMessage),
+            NotificationEffect(FundingExpiredMessage),
             RelatedTransitionEffect('organizer', 'fail'),
         ]
     )

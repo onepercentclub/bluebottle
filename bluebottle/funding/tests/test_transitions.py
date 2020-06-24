@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import mock
 from datetime import timedelta, datetime
 
 from django.core import mail
 from django.db import connection
+from django.utils import timezone
 from django.utils.timezone import now, get_current_timezone
 from moneyed import Money
 
@@ -100,16 +102,18 @@ class FundingTestCase(BluebottleAdminTestCase):
     def test_no_donations(self):
         self.assertEqual(self.funding.initiative.status, 'approved')
         self.assertEqual(self.funding.status, 'open')
-        self.funding.deadline = now() - timedelta(days=1)
+        self.funding.deadline = now() + timedelta(days=1)
         self.funding.save()
 
         # Run scheduled task
         tenant = connection.tenant
-        funding_tasks()
+        future = now() + timedelta(days=2)
+        with mock.patch.object(timezone, 'now', return_value=future):
+            funding_tasks()
         with LocalTenant(tenant, clear_tenant=True):
             self.funding.refresh_from_db()
 
-        self.assertEqual(self.funding.status, 'closed')
+        self.assertEqual(self.funding.status, 'cancelled')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Your crowdfunding campaign has been closed')
         self.assertTrue(self.funding.title in mail.outbox[0].body)
@@ -185,12 +189,14 @@ class FundingTestCase(BluebottleAdminTestCase):
         donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
 
-        self.funding.deadline = now() - timedelta(days=1)
+        self.funding.deadline = now() + timedelta(days=1)
         self.funding.save()
 
         # Run scheduled task
         tenant = connection.tenant
-        funding_tasks()
+        future = now() + timedelta(days=2)
+        with mock.patch.object(timezone, 'now', return_value=future):
+            funding_tasks()
         with LocalTenant(tenant, clear_tenant=True):
             self.funding.refresh_from_db()
 

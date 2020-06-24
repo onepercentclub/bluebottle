@@ -22,7 +22,7 @@ class FundingFinishedTask(ModelPeriodicTask):
         TransitionEffect('partial', conditions=[
             FundingStateMachine.target_not_reached
         ]),
-        TransitionEffect('close', conditions=[
+        TransitionEffect('expire', conditions=[
             FundingStateMachine.no_donations
         ]),
     ]

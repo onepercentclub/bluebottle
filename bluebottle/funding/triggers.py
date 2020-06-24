@@ -33,7 +33,7 @@ class DeadlineChangedTrigger(ModelChangedTrigger):
             ]
         ),
         TransitionEffect(
-            'close',
+            'cancel',
             conditions=[
                 FundingStateMachine.should_finish,
                 FundingStateMachine.no_donations
@@ -55,7 +55,7 @@ class AmountChangedTrigger(ModelChangedTrigger):
             conditions=[FundingStateMachine.should_finish, FundingStateMachine.target_not_reached]
         ),
         TransitionEffect(
-            'close',
+            'cancel',
             conditions=[FundingStateMachine.should_finish, FundingStateMachine.no_donations]
         ),
     ]

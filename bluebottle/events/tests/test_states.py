@@ -3,6 +3,7 @@ import mock
 
 from django.core import mail
 from django.utils import timezone
+from django.utils.timezone import now
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
@@ -381,9 +382,11 @@ class ParticipantStateMachineTests(BluebottleTestCase):
             initiative=self.initiative,
             owner=self.initiator,
             capacity=10,
-            duration=1
+            duration=1,
+            start=now() + timedelta(hours=4)
         )
-        self.participant = ParticipantFactory.create(activity=self.event)
+        self.user = BlueBottleUserFactory.create()
+        self.old_user = BlueBottleUserFactory.create()
 
         self.passed_event = EventFactory.create(
             initiative=self.initiative,
@@ -391,7 +394,8 @@ class ParticipantStateMachineTests(BluebottleTestCase):
             duration=1
         )
         mail.outbox = []
-        self.passed_participant = ParticipantFactory.create(activity=self.passed_event)
+        self.participant = ParticipantFactory.create(user=self.user, activity=self.event)
+        self.passed_participant = ParticipantFactory.create(user=self.old_user, activity=self.passed_event)
 
     def messages(self, user):
         return [
@@ -402,15 +406,16 @@ class ParticipantStateMachineTests(BluebottleTestCase):
 
     def test_join(self):
         self.assertEqual(self.passed_participant.status, ParticipantStateMachine.succeeded.value)
+        self.assertEqual(self.participant.status, ParticipantStateMachine.new.value)
         self.assertEqual(self.participant.time_spent, 0)
         self.assertTrue(
             self.event.followers.filter(user=self.participant.user).exists()
         )
         self.assertEqual(
-            len(self.messages(self.participant.user)), 1
+            len(self.messages(self.user)), 1
         )
         self.assertEqual(
-            len(self.messages(self.initiator.user)), 1
+            len(self.messages(self.initiator)), 1
         )
 
     def test_withdraw(self):
@@ -421,7 +426,7 @@ class ParticipantStateMachineTests(BluebottleTestCase):
         )
 
         self.assertEqual(
-            len(self.messages(self.participant.user)), 1
+            len(self.messages(self.user)), 1
         )
 
     def test_reapply(self):
@@ -431,8 +436,18 @@ class ParticipantStateMachineTests(BluebottleTestCase):
         self.assertTrue(
             self.event.followers.filter(user=self.participant.user).exists()
         )
+        print [m.subject for m in self.messages(self.participant.user)]
         self.assertEqual(
-            len(self.messages(self.participant.user)), 1
+            len(self.messages(self.participant.user)), 2
+        )
+        self.assertEqual(
+            [
+                'You were added to the event "{}"'.format(self.event.title),
+                'You were added to the event "{}"'.format(self.event.title)
+            ],
+            [
+                m.subject for m in self.messages(self.participant.user)
+            ]
         )
 
     def test_reject(self):
@@ -453,9 +468,19 @@ class ParticipantStateMachineTests(BluebottleTestCase):
         self.assertTrue(
             self.event.followers.filter(user=self.participant.user).exists()
         )
+        self.assertEqual(
+            len(self.messages(self.participant.user)), 3
+        )
 
         self.assertEqual(
-            len(self.messages(self.participant.user)), 2
+            [
+                'You were added to the event "{}"'.format(self.event.title),
+                'Your status for "{}" was changed to "not going"'.format(self.event.title),
+                'You were added to the event "{}"'.format(self.event.title)
+            ],
+            [
+                m.subject for m in self.messages(self.participant.user)
+            ]
         )
 
     def test_created_passed(self):

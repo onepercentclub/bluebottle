@@ -29,7 +29,7 @@ class EventTasksTestCase(BluebottleTestCase):
         self.initiative.save()
 
     def test_event_start_task(self):
-        start = timezone.now() - timedelta(hours=1)
+        start = timezone.now() + timedelta(hours=1)
         event = EventFactory.create(
             initiative=self.initiative,
             start=start,
@@ -40,12 +40,16 @@ class EventTasksTestCase(BluebottleTestCase):
         ParticipantFactory.create(activity=event)
 
         self.assertEqual(event.status, 'open')
-        event_tasks()
-        event = Event.objects.get(pk=event.pk)
+        tenant = connection.tenant
+        future = timezone.now() + timedelta(hours=2)
+        with mock.patch.object(timezone, 'now', return_value=future):
+            event_tasks()
+        with LocalTenant(tenant, clear_tenant=True):
+            event = Event.objects.get(pk=event.pk)
         self.assertEqual(event.status, 'running')
 
     def test_event_start_task_no_participants(self):
-        start = timezone.now() - timedelta(hours=1)
+        start = timezone.now() + timedelta(hours=1)
         event = EventFactory.create(
             initiative=self.initiative,
             start=start,
@@ -54,8 +58,12 @@ class EventTasksTestCase(BluebottleTestCase):
         event.states.submit(save=True)
 
         self.assertEqual(event.status, 'open')
-        event_tasks()
-        event = Event.objects.get(pk=event.pk)
+        tenant = connection.tenant
+        future = timezone.now() + timedelta(hours=2)
+        with mock.patch.object(timezone, 'now', return_value=future):
+            event_tasks()
+        with LocalTenant(tenant, clear_tenant=True):
+            event = Event.objects.get(pk=event.pk)
         self.assertEqual(event.status, 'cancelled')
 
     def test_event_end_task(self):

@@ -261,7 +261,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
         self.assertEqual(len(mail.outbox), 1)
 
-        subject = 'Your initiative "{}" has been rejected'.format(self.initiative.title)
+        subject = 'Your initiative "{}" has been rejected.'.format(self.initiative.title)
 
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
@@ -287,7 +287,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
         self.assertEqual(len(mail.outbox), 1)
 
-        subject = 'The initiative "{}" has been cancelled'.format(self.initiative.title)
+        subject = 'The initiative "{}" has been cancelled.'.format(self.initiative.title)
 
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)

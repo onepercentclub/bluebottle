@@ -128,7 +128,9 @@ class ReviewStateMachine(ModelStateMachine):
     )
 
     cancel = Transition(
-        approved,
+        [
+            approved, draft, needs_work, submitted
+        ],
         cancelled,
         name=_('Cancel'),
         description=_("The initiative will be cancelled and it won't be visible on the platform."),

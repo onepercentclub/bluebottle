@@ -27,7 +27,7 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             },
             {
                 'name': 'impact.impacttype',
-                'permissions': ['activities.change_activity']
+                'permissions': ['impact.change_impacttype']
             },
 
             {

@@ -76,7 +76,7 @@ class AssignmentApplicationMessage(TransitionMessage):
 
 
 class AssignmentDateChanged(TransitionMessage):
-    subject = _('The date of your task "{assignment_title}" has been changed')
+    subject = _('The date of your task "{assignment_title}" has been changed.')
     template = 'messages/assignment_date_changed'
     context = {
         'assignment_title': 'title'
@@ -92,7 +92,7 @@ class AssignmentDateChanged(TransitionMessage):
 
 
 class AssignmentDeadlineChanged(TransitionMessage):
-    subject = _('The deadline of your task "{assignment_title}" has been changed')
+    subject = _('The deadline for your task "{assignment_title}" has been changed.')
     template = 'messages/assignment_deadline_changed'
     context = {
         'assignment_title': 'title'

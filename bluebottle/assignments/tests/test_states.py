@@ -202,7 +202,10 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         assignment.date = next_week
         assignment.save()
         self.assertEqual(len(mail.outbox), 3)
-        self.assertEqual(mail.outbox[0].subject, 'ha {}'.format(assignment.title))
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The date of your task "{}" has been changed.'.format(assignment.title)
+        )
 
     def test_change_deadline(self):
         tomorrow = now() + timedelta(days=1)
@@ -222,7 +225,10 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         assignment.date = next_week
         assignment.save()
         self.assertEqual(len(mail.outbox), 3)
-        self.assertEqual(mail.outbox[0].subject, 'ha {}'.format(assignment.title))
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The deadline for your task "{}" has been changed.'.format(assignment.title)
+        )
 
     def test_fill_capacity(self):
         self.assignment.states.submit(save=True)

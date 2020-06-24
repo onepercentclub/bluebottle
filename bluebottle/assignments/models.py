@@ -173,7 +173,6 @@ class Applicant(Contribution):
         super(Applicant, self).delete(*args, **kwargs)
 
 
-from bluebottle.assignments.signals import *  # noqa
 from bluebottle.assignments.states import *  # noqa
 from bluebottle.assignments.triggers import *  # noqa
 from bluebottle.assignments.periodic_tasks import *  # noqa

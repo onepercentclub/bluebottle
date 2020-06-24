@@ -195,7 +195,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         with LocalTenant(tenant, clear_tenant=True):
             assignment.refresh_from_db()
 
-        self.assertEqual(assignment.status, 'closed')
+        self.assertEqual(assignment.status, 'cancelled')
 
     def test_assignment_check_end_date(self):
         user = BlueBottleUserFactory.create(first_name='Nono')

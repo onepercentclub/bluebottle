@@ -6,7 +6,6 @@ from bluebottle.fsm.effects import Effect
 class BaseNotificationEffect(Effect):
     post_save = True
     title = _('Send email')
-    conditions = []
 
     def execute(self, send_messages=True):
         if send_messages and self.is_valid:
@@ -68,7 +67,8 @@ class BaseNotificationEffect(Effect):
         return self.message.generic_subject
 
 
-def NotificationEffect(_message, conditions=None):
+def NotificationEffect(message, conditions=None):
+    _message = message
     _conditions = conditions
 
     class _NotificationEffect(BaseNotificationEffect):

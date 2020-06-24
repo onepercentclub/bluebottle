@@ -1,4 +1,5 @@
 from rest_framework import filters
+from rest_framework.pagination import PageNumberPagination
 
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.impact.models import ImpactType, ImpactGoal
@@ -12,17 +13,23 @@ from bluebottle.utils.views import (
     CreateAPIView,
     RetrieveUpdateAPIView
 )
+from bluebottle.utils.permissions import TenantConditionalOpenClose
 
 
 class ImpactTypeSearchFilter(filters.SearchFilter):
     search_param = "filter[search]"
 
 
+class ImpactTypePagination(PageNumberPagination):
+    page_size = 100
+
+
 class ImpactTypeList(JsonApiViewMixin, ListAPIView):
     queryset = ImpactType.objects.filter(active=True)
 
-    permission_classes = []
+    permission_classes = [TenantConditionalOpenClose, ]
     serializer_class = ImpactTypeSerializer
+    pagination_class = ImpactTypePagination
     filter_backends = (ImpactTypeSearchFilter, )
 
 
@@ -30,7 +37,7 @@ class ImpactGoalList(JsonApiViewMixin, CreateAPIView):
     queryset = ImpactGoal.objects.filter()
 
     related_permission_classes = {
-        'content_object': [
+        'activity': [
             OneOf(ResourcePermission, ActivityOwnerPermission),
         ]
     }
@@ -43,7 +50,7 @@ class ImpactGoalDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = ImpactGoal.objects.filter()
 
     related_permission_classes = {
-        'content_object': [
+        'activity': [
             OneOf(ResourcePermission, ActivityOwnerPermission),
         ]
     }

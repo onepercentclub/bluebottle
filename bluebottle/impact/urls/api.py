@@ -8,10 +8,10 @@ from bluebottle.impact.views import (
 
 urlpatterns = [
     url(r'^types/$', ImpactTypeList.as_view(), name='impact-type-list'),
-    url(r'^targets/$', ImpactGoalList.as_view(), name='impact-target-list'),
+    url(r'^targets/$', ImpactGoalList.as_view(), name='impact-goal-list'),
     url(
         r'^/targets/(?P<pk>\d+)$',
         ImpactGoalDetail.as_view(),
-        name='organization_contact_detail'
+        name='impact-goal-details'
     )
 ]

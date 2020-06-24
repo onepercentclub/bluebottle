@@ -104,7 +104,7 @@ class EventStatisticsTest(StatisticsTest):
         )
 
     def test_closed(self):
-        self.event.states.close(save=True)
+        self.event.states.reject(save=True)
 
         self.initiative.save()
         self.event.save()
@@ -387,7 +387,7 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_closed(self):
-        self.funding.states.close(save=True)
+        self.funding.states.reject(save=True)
         self.funding.amount_matching = Money(100, 'EUR')
         self.funding.save()
 

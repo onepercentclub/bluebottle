@@ -341,7 +341,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         )
 
     def test_delete_by_owner(self):
-        # Owner can delete the event
+        # Owner can delete the assignment
 
         self.review_data['data']['attributes']['transition'] = 'delete'
 
@@ -369,9 +369,22 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['errors'][0], "Transition is not available")
 
-    def test_close(self):
-        # Owner should not be allowed to close own assignment
-        self.transition_data['data']['attributes']['transition'] = 'close'
+    def test_cancel(self):
+        # Owner should not be allowed to cancel own assignment
+        self.transition_data['data']['attributes']['transition'] = 'cancel'
+        response = self.client.post(
+            self.transition_url,
+            json.dumps(self.transition_data),
+            user=self.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = json.loads(response.content)
+        self.assertEqual(data['errors'][0], "Transition is not available")
+
+    def test_reject(self):
+        # Owner should not be allowed to reject own assignment
+        self.transition_data['data']['attributes']['transition'] = 'reject'
         response = self.client.post(
             self.transition_url,
             json.dumps(self.transition_data),

@@ -117,7 +117,7 @@ class BaseActivityListSerializer(ModelSerializer):
         meta_fields = (
             'permissions',
             'created',
-            'updated',
+            'updated'
         )
 
     class JSONAPIMeta:

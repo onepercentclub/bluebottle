@@ -13,11 +13,11 @@ class override(ContextDecorator):
         self.old_language = translation.get_language()
         translation.activate(self.language)
         translation._trans._active.value = tenant_translation(
-            self.language, connection.tenant.client_name
+            self.language or 'en', connection.tenant.client_name
         )
 
     def __exit__(self, exc_type, exc_value, traceback):
         translation.activate(self.old_language)
         translation._trans._active.value = tenant_translation(
-            self.old_language, connection.tenant.client_name
+            self.old_language or 'en', connection.tenant.client_name
         )

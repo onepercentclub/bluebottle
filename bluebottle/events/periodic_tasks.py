@@ -60,7 +60,7 @@ class EventReminderTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
-            start__lte=timezone.now() + timedelta(days=5),
+            start__date=(timezone.now() + timedelta(days=5)).date(),
             status__in=['open', 'full']
         )
 

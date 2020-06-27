@@ -208,7 +208,7 @@ class FundingStateMachine(ActivityStateMachine):
             ActivityStateMachine.cancelled
         ],
         partially_funded,
-        name=_('Partial'),
+        name=_('Partially succeed'),
         description=_("The campaign has ended but the target isn't reached."),
         automatic=True,
         effects=[

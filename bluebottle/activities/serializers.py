@@ -53,7 +53,8 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         meta_fields = (
             'permissions',
             'transitions',
-            'created', 'updated',
+            'created',
+            'updated',
         )
 
     class JSONAPIMeta:

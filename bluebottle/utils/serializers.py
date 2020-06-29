@@ -4,6 +4,7 @@ from HTMLParser import HTMLParser
 
 from urllib2 import HTTPError
 from django.conf import settings
+from django.db import models
 from django.core.urlresolvers import resolve, reverse
 from django.core.validators import BaseValidator
 from django.http.request import validate_host
@@ -18,7 +19,7 @@ from captcha import client
 
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.utils import get_client_ip
-from .models import Address, Language
+from .models import Address, Language, TranslationPlatformSettings
 from .validators import validate_postal_code
 
 
@@ -416,3 +417,24 @@ class TruncatedCharField(serializers.CharField):
 
     def to_internal_value(self, data):
         return data[:self.length]
+
+
+class TranslationPlatformSettingsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TranslationPlatformSettings
+        fields = '__all__'
+
+    def get_fields(self):
+        translation = self.instance.get_translation(self.instance.language_code)
+
+        result = dict(
+            (field.verbose_name, serializers.CharField(max_length=100, source=field.name))
+            for field in translation._meta.fields
+            if isinstance(field, models.CharField) and field.name != 'language_code'
+        )
+
+        return result
+
+    def to_representation(self, obj):
+        return super(TranslationPlatformSettingsSerializer, self).to_representation(obj)

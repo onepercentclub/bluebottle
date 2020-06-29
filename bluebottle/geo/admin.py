@@ -91,6 +91,7 @@ class LocationAdmin(admin.ModelAdmin):
     list_display = ('name', 'position', 'group', 'projects')
     model = Location
     search_fields = ('name', 'description', 'city')
+    verbose_name_plural = 'test'
 
     def projects(self, obj):
         return format_html(

@@ -426,7 +426,10 @@ class TranslationPlatformSettingsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_fields(self):
-        translation = self.instance.get_translation(self.instance.language_code)
+        try:
+            translation = self.instance.get_translation(self.instance.language_code)
+        except self.instance.DoesNotExist:
+            return {}
 
         result = dict(
             (field.verbose_name, serializers.CharField(max_length=100, source=field.name))

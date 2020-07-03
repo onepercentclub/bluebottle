@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 
 from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.token_auth.auth.base import BaseTokenAuthentication
 
 
@@ -99,6 +100,28 @@ class TestBaseTokenAuthentication(TestCase):
                 user.extra.get(field=field).value,
                 'legal'
             )
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com',
+            'location.slug': 'AMS'
+        }
+    )
+    def test_user_created_location(self, authenticate_request):
+        """ When the user is succesfully authenticated, a new user should
+        be created
+        """
+        location = LocationFactory.create(name='Amsterdam', slug='AMS')
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertEqual(user.location, location)
 
     @patch.object(
         BaseTokenAuthentication, 'authenticate_request', return_value={'remote_id': 'test@example.com',

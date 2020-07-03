@@ -11,7 +11,7 @@ from bluebottle.exports.exporter import Exporter
 from bluebottle.exports.tasks import plain_export
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.members.models import CustomMemberField, Member, CustomMemberFieldSettings
+from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -24,7 +24,6 @@ TEST_EXPORT_SETTINGS = {
 class TestExportAdmin(BluebottleTestCase):
     def setUp(self):
         super(TestExportAdmin, self).setUp()
-        Member.objects.all().delete()
 
     def test_export(self):
         from_date = now() - timedelta(weeks=2)

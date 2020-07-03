@@ -88,7 +88,7 @@ admin.site.register(LocationGroup, LocationGroupAdmin)
 
 
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'position', 'group', 'projects')
+    list_display = ('name', 'slug', 'position', 'group', 'projects')
     model = Location
     search_fields = ('name', 'description', 'city')
 

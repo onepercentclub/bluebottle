@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth import get_user_model
 
+from bluebottle.geo.models import Location
 from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.utils import get_settings
@@ -43,6 +44,13 @@ class BaseTokenAuthentication(object):
         """
         user_model = get_user_model()()
         return dict([(key, value) for key, value in data.items() if hasattr(user_model, key)])
+
+    def set_location(self, user, data):
+        if 'location.slug' in data:
+            try:
+                user.location = Location.objects.get(slug=data['location.slug'])
+            except Location.DoesNotExist:
+                pass
 
     def set_custom_data(self, user, data):
         """
@@ -92,6 +100,7 @@ class BaseTokenAuthentication(object):
             user.refresh_from_db()
 
         self.set_custom_data(user, data)
+        self.set_location(user, data)
 
         return user, created
 

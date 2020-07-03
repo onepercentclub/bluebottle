@@ -35,6 +35,7 @@ class BaseActivitySerializer(ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
+        'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
     }
@@ -80,6 +81,7 @@ class BaseActivitySerializer(ModelSerializer):
             'image',
             'initiative',
             'goals',
+            'goals.type',
             'initiative.place',
             'initiative.image',
         ]

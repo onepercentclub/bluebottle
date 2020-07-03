@@ -137,7 +137,7 @@ class Location(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title)
+            self.slug = slugify(self.name)
 
         super(Location, self).save()
 

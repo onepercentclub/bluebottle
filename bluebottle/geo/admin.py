@@ -8,7 +8,7 @@ from parler.admin import TranslatableAdmin
 from bluebottle.geo.models import (
     Location, LocationGroup, Region, SubRegion, Country, Place,
     InitiativePlace, Geolocation)
-from bluebottle.projects.models import Project
+from bluebottle.initiatives.models import Initiative
 
 
 class LocationFilter(admin.SimpleListFilter):
@@ -88,16 +88,16 @@ admin.site.register(LocationGroup, LocationGroupAdmin)
 
 
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'position', 'group', 'projects')
+    list_display = ('name', 'slug', 'position', 'group', 'initiatives')
     model = Location
     search_fields = ('name', 'description', 'city')
 
-    def projects(self, obj):
+    def initiatives(self, obj):
         return format_html(
             u'<a href="{}?location={}">{}</a>',
-            reverse('admin:projects_project_changelist'),
+            reverse('admin:initiatives_initiative_changelist'),
             obj.id,
-            len(Project.objects.filter(location=obj))
+            len(Initiative.objects.filter(location=obj))
         )
 
     def make_action(self, group):

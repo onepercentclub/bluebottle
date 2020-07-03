@@ -91,6 +91,7 @@ class LocationAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'position', 'group', 'initiatives')
     model = Location
     search_fields = ('name', 'description', 'city')
+    verbose_name_plural = 'test'
 
     def initiatives(self, obj):
         return format_html(

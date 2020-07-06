@@ -45,13 +45,13 @@ class BaseNotificationEffect(Effect):
 
     @property
     def description(self):
-        return '"{}"'.format(self.message(self.instance).generic_subject)
+        return u'"{}"'.format(self.message(self.instance).generic_subject)
 
     @property
     def help(self):
         message = self.message(self.instance)
         recipients = message.get_recipients()
-        recipients_text = (u', ').join(recipient.email for recipient in recipients[:2])
+        recipients_text = u', '.join(recipient.email for recipient in recipients[:2])
 
         if len(recipients) > 2:
             recipients_text += u' (and {} more)'.format(len(recipients) - 2)

@@ -86,6 +86,9 @@ urlpatterns = [
     url(r'^api/files/',
         include('bluebottle.files.urls.api')),
 
+    url(r'^api/segments/',
+        include('bluebottle.segments.urls.api')),
+
     url(r'^payments_mock/',
         include('bluebottle.payments_mock.urls.core')),
     url(r'^payments_docdata/',

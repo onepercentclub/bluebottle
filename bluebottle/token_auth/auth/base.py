@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 
 from bluebottle.geo.models import Location
 from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
+from bluebottle.segments.models import Segment
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.utils import get_settings
 
@@ -50,6 +51,34 @@ class BaseTokenAuthentication(object):
             try:
                 user.location = Location.objects.get(slug=data['location.slug'])
             except Location.DoesNotExist:
+                pass
+
+    def set_segments(self, user, data):
+        segments = [
+            (field, value)
+            for field, value in data.items()
+            if field.startswith('segment.')
+        ]
+
+        for (path, value) in segments:
+            type_slug = path.split('.')[-1]
+
+            try:
+                try:
+                    current_segment = user.segments.get(
+                        type__slug=type_slug
+                    )
+                    user.segments.remove(current_segment)
+                except Segment.DoesNotExist:
+                    pass
+
+                segment = Segment.objects.get(
+                    type__slug=type_slug,
+                    alternate_names__contains=[value]
+                )
+
+                user.segments.add(segment)
+            except Segment.DoesNotExist:
                 pass
 
     def set_custom_data(self, user, data):
@@ -101,6 +130,7 @@ class BaseTokenAuthentication(object):
 
         self.set_custom_data(user, data)
         self.set_location(user, data)
+        self.set_segments(user, data)
 
         return user, created
 

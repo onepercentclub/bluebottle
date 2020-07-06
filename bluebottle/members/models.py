@@ -107,6 +107,12 @@ class Member(BlueBottleBaseUser):
         null=True, blank=True, help_text=_('When the user updated their matching preferences.')
     )
 
+    segments = models.ManyToManyField(
+        'segments.segment',
+        verbose_name=_('Segment'),
+        related_name='users'
+    )
+
     def __init__(self, *args, **kwargs):
         super(Member, self).__init__(*args, **kwargs)
 

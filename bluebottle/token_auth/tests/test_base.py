@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
+from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.token_auth.auth.base import BaseTokenAuthentication
 
 
@@ -122,6 +123,115 @@ class TestBaseTokenAuthentication(TestCase):
             self.assertTrue(created)
             self.assertEqual(user.email, 'test@example.com')
             self.assertEqual(user.location, location)
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com',
+            'segment.team': 'Online Marketing',
+            'segment.unit': 'Marketing',
+        }
+    )
+    def test_user_created_segments(self, authenticate_request):
+        """ When the user is succesfully authenticated, a new user should
+        be created
+        """
+        team = SegmentTypeFactory.create(name='Team')
+        team_segment = SegmentFactory.create(name='Online Marketing', type=team)
+        SegmentFactory.create(name='Direct Marketing', type=team)
+
+        unit = SegmentTypeFactory.create(name='Unit')
+        unit_segment = SegmentFactory.create(name='Marketing', type=unit)
+        SegmentFactory.create(name='Communications', type=unit)
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertTrue(
+                team_segment in user.segments.all()
+            )
+            self.assertTrue(
+                unit_segment in user.segments.all()
+            )
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com',
+            'segment.team': 'Online Marketing',
+            'segment.unit': 'Marketing',
+        }
+    )
+    def test_user_updated_segments(self, authenticate_request):
+        """ When the user is succesfully authenticated, a new user should
+        be created
+        """
+        user = BlueBottleUserFactory.create(remote_id='test@example.com')
+
+        team = SegmentTypeFactory.create(name='Team')
+        team_segment = SegmentFactory.create(name='Online Marketing', type=team)
+        user.segments.add(
+            SegmentFactory.create(name='Direct Marketing', type=team)
+        )
+
+        unit = SegmentTypeFactory.create(name='Unit')
+        unit_segment = SegmentFactory.create(name='Marketing', type=unit)
+        user.segments.add(
+            SegmentFactory.create(name='Communications', type=unit)
+        )
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertFalse(created)
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertEqual(len(user.segments.all()), 2)
+            self.assertTrue(
+                team_segment in user.segments.all()
+            )
+            self.assertTrue(
+                unit_segment in user.segments.all()
+            )
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com',
+            'segment.team': 'Other Marketing',
+            'segment.unit': 'Engineering',
+        }
+    )
+    def test_user_created_segments_missing(self, authenticate_request):
+        """ When the user is succesfully authenticated, a new user should
+        be created
+        """
+        user = BlueBottleUserFactory.create(remote_id='test@example.com')
+
+        team = SegmentTypeFactory.create(name='Team')
+        SegmentFactory.create(name='Online Marketing', type=team)
+        SegmentFactory.create(name='Direct Marketing', type=team)
+
+        unit = SegmentTypeFactory.create(name='Unit')
+        SegmentFactory.create(name='Marketing', type=unit)
+        SegmentFactory.create(name='Communications', type=unit)
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertFalse(created)
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertEqual(len(user.segments.all()), 0)
 
     @patch.object(
         BaseTokenAuthentication, 'authenticate_request', return_value={'remote_id': 'test@example.com',

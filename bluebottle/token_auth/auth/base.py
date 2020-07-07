@@ -49,6 +49,7 @@ class BaseTokenAuthentication(object):
         if 'location.slug' in data:
             try:
                 user.location = Location.objects.get(slug=data['location.slug'])
+                user.save()
             except Location.DoesNotExist:
                 pass
 

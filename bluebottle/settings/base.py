@@ -666,6 +666,12 @@ DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', 'image/svg+xml')
+PRIVATE_FILE_ALLOWED_MIME_TYPES = (
+    'image/png', 'image/jpeg', 'image/gif', 'image/tiff',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/pdf', 'application/vnd.oasis.opendocument.text',
+    'text/rtf'
+)
 
 EXPORTDB_EXPORT_CONF = {
     'models': OrderedDict([

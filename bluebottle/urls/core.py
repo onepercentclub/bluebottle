@@ -82,6 +82,8 @@ urlpatterns = [
         include('bluebottle.funding_flutterwave.urls.api')),
     url(r'^api/funding/lipisha',
         include('bluebottle.funding_lipisha.urls.api')),
+    url(r'^api/funding/telesom',
+        include('bluebottle.funding_telesom.urls.api')),
 
     url(r'^api/files/',
         include('bluebottle.files.urls.api')),

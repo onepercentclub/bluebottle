@@ -2,22 +2,22 @@ from django.contrib import admin
 
 from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, BankAccountChildAdmin
 from bluebottle.funding.models import PaymentProvider, Payment
-from bluebottle.funding_vitepay.models import VitepayPayment, VitepayPaymentProvider, VitepayBankAccount
+from bluebottle.funding_telesom.models import TelesomPayment, TelesomPaymentProvider, TelesomBankAccount
 
 
-@admin.register(VitepayPayment)
-class VitepayPaymentAdmin(PaymentChildAdmin):
+@admin.register(TelesomPayment)
+class TelesomPaymentAdmin(PaymentChildAdmin):
     base_model = Payment
 
 
-@admin.register(VitepayPaymentProvider)
-class VitepayPaymentProviderAdmin(PaymentProviderChildAdmin):
+@admin.register(TelesomPaymentProvider)
+class TelesomPaymentProviderAdmin(PaymentProviderChildAdmin):
     base_model = PaymentProvider
 
 
-@admin.register(VitepayBankAccount)
-class VitepayBankAccountAdmin(BankAccountChildAdmin):
-    model = VitepayBankAccount
+@admin.register(TelesomBankAccount)
+class TelesomBankAccountAdmin(BankAccountChildAdmin):
+    model = TelesomBankAccount
     fields = BankAccountChildAdmin.fields + ('account_name', 'mobile_number')
     list_filter = ['reviewed']
     search_fields = ['account_name', 'mobile_number']

@@ -1,6 +1,6 @@
 import logging
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest
 from django.views.generic.base import View
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -8,7 +8,7 @@ from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_telesom.models import TelesomPayment, TelesomBankAccount
 from bluebottle.funding_telesom.serializers import TelesomPaymentSerializer, TelesomBankAccountSerializer
-from bluebottle.funding_telesom.utils import update_payment_status
+from bluebottle.funding_telesom.utils import initiate_payment
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import JsonApiViewMixin, ListCreateAPIView, RetrieveUpdateAPIView
 
@@ -19,24 +19,25 @@ class TelesomPaymentList(PaymentList):
     queryset = TelesomPayment.objects.all()
     serializer_class = TelesomPaymentSerializer
 
+    def perform_create(self, serializer):
+        super(TelesomPaymentList, self).perform_create(serializer)
+        initiate_payment(serializer.save())
+
 
 class TelesomWebhookView(View):
 
     def post(self, request, *args, **kwargs):
-        success = 'success' in request.POST
-        failure = 'failure' in request.POST
-        authenticity = request.POST.get('authenticity')
         unique_id = request.POST.get('order_id')
         try:
             payment = TelesomPayment.objects.get(unique_id=unique_id)
         except TelesomPayment.DoesNotExist:
-            return HttpResponse('{"status": "0", "message": "Order not found."}')
+            return HttpResponseNotFound('Telesom payment not found')
 
         try:
-            update_payment_status(payment, authenticity, success, failure)
-            return HttpResponse('{"status": "1"}')
+            initiate_payment(payment)
+            return HttpResponse('SUCCESS')
         except PaymentException as e:
-            return HttpResponse('{"status": "0", "message": "%s"}' % e)
+            return HttpResponseBadRequest('Error updating Telesom payment: {}'.format(e))
 
 
 class TelesomBankAccountAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):

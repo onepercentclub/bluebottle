@@ -354,6 +354,7 @@ TENANT_APPS = (
     'bluebottle.funding_vitepay',
     'bluebottle.funding_flutterwave',
     'bluebottle.funding_lipisha',
+    'bluebottle.funding_telesom',
 
     'bluebottle.tasks',
     'bluebottle.homepage',

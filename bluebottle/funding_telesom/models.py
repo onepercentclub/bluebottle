@@ -46,8 +46,11 @@ class TelesomPayment(Payment):
     transaction_id = models.CharField(max_length=100)
     transaction_amount = models.CharField(max_length=100)
     issuer_transaction_id = models.CharField(max_length=100)
+    amount = models.DecimalField(default=10.0, max_digits=12, decimal_places=2)
+    currency = models.CharField(max_length=3, default='USD')
+    response = models.TextField(default='')
 
-    provider = 'vitepay'
+    provider = 'telesom'
 
     """
     "issuerApprovalCode": "",

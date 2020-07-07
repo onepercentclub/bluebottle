@@ -37,6 +37,7 @@ from bluebottle.funding_pledge.serializers import (
 from bluebottle.funding_stripe.serializers import (
     ExternalAccountSerializer, ConnectAccountSerializer, PayoutStripeBankSerializer
 )
+from bluebottle.funding_telesom.serializers import PayoutTelesomBankAccountSerializer, TelesomBankAccountSerializer
 from bluebottle.funding_vitepay.serializers import (
     VitepayBankAccountSerializer, PayoutVitepayBankAccountSerializer
 )
@@ -198,6 +199,7 @@ class BankAccountSerializer(PolymorphicModelSerializer):
         FlutterwaveBankAccountSerializer,
         LipishaBankAccountSerializer,
         VitepayBankAccountSerializer,
+        TelesomBankAccountSerializer,
         PledgeBankAccountSerializer
     ]
 
@@ -586,6 +588,7 @@ class PayoutBankAccountSerializer(PolymorphicModelSerializer):
         PayoutFlutterwaveBankAccountSerializer,
         PayoutLipishaBankAccountSerializer,
         PayoutVitepayBankAccountSerializer,
+        PayoutTelesomBankAccountSerializer,
         PayoutPledgeBankAccountSerializer
     ]
 

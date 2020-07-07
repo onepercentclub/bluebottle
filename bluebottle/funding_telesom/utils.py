@@ -47,15 +47,17 @@ def initiate_payment(payment):
     data = response.json()
     payment.response = response
     if data['params'] and data['params']['state'] == 'approved':
-        payment.states.succeed(save=True)
+        payment.transitions.succeed()
     else:
-        payment.states.fail(save=True)
+        payment.transitions.fail()
+    payment.save()
     return payment
 
 
 def update_payment(payment, data):
     if data['state'] == 'approved':
-        payment.states.succeed(save=True)
+        payment.transitions.succeed()
     else:
-        payment.states.fail(save=True)
+        payment.transitions.fail()
+    payment.save()
     return payment

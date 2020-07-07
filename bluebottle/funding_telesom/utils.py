@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import requests
 from django.utils.timezone import now
 
@@ -11,18 +13,20 @@ def get_credentials():
 
 def initiate_payment(payment):
     credentials = get_credentials()
+    payment.amount = Decimal(payment.donation.amount.amount) / 100
+    payment.currency = 'USD'
+    payment.save()
     data = {
         "schemaVersion": "1.0",
         "requestId": payment.unique_id,
         "timestamp": now().strftime("%Y-%m-%d, %H:%M:%S"),
         "channelName": "WEB",
         "serviceName": "API_PURCHASE",
-        "sessionId": "sdfsdfs",
-
+        "sessionId": payment.unique_id,
         "serviceParams": {
-            "merchantUid": "M0910002",
-            "apiUserId": "1000010",
-            "apiKey": "APIXTOIWEHSDLKOSEKYR",
+            "merchantUid": credentials['merchant_uid'],
+            "apiUserId": credentials['api_user_id'],
+            "apiKey": credentials['api_key'],
             "paymentMethod": "MWALLET_ACCOUNT",
 
             "payerInfo": {
@@ -31,13 +35,27 @@ def initiate_payment(payment):
             },
 
             "transactionInfo": {
-                "referenceId": "56werw278",
-                "invoiceId": "123werwer4",
-                "amount": "50",
-                "currency": "USD",
-                "description": "donation 1234"
+                "referenceId": payment.unique_id,
+                "invoiceId": payment.unique_id,
+                "amount": payment.amount,
+                "currency": payment.currency,
+                "description": "donation {}".format(payment.donation_id)
             }
         }
     }
-    response = requests.post(credentials.api_url, json=data)
-    return response
+    response = requests.post(credentials['api_url'], json=data)
+    data = response.json()
+    payment.response = response
+    if data['params'] and data['params']['state'] == 'approved':
+        payment.states.succeed(save=True)
+    else:
+        payment.states.fail(save=True)
+    return payment
+
+
+def update_payment(payment, data):
+    if data['state'] == 'approved':
+        payment.states.succeed(save=True)
+    else:
+        payment.states.fail(save=True)
+    return payment

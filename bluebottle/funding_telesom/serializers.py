@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from bluebottle.funding.base_serializers import PaymentSerializer, BaseBankAccountSerializer
 from bluebottle.funding_telesom.models import TelesomPayment, TelesomBankAccount
-from bluebottle.funding_vitepay.utils import get_payment_url
 
 
 class TelesomPaymentSerializer(PaymentSerializer):
@@ -9,14 +8,13 @@ class TelesomPaymentSerializer(PaymentSerializer):
 
     class Meta(PaymentSerializer.Meta):
         model = TelesomPayment
-        fields = PaymentSerializer.Meta.fields + ('payment_url', 'mobile_number')
+        fields = PaymentSerializer.Meta.fields + ('payment_url', 'account_number', 'account_name')
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
         resource_name = 'payments/telesom-payments'
 
     def create(self, validated_data):
         payment = super(TelesomPaymentSerializer, self).create(validated_data)
-        payment.payment_url = get_payment_url(payment)
         return payment
 
 
@@ -34,7 +32,7 @@ class TelesomBankAccountSerializer(BaseBankAccountSerializer):
     }
 
     class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
-        resource_name = 'payout-accounts/vitepay-external-accounts'
+        resource_name = 'payout-accounts/telesom-external-accounts'
 
 
 class PayoutTelesomBankAccountSerializer(serializers.ModelSerializer):

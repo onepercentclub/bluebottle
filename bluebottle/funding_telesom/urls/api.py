@@ -1,21 +1,21 @@
 from django.conf.urls import url
 
-from bluebottle.funding_vitepay.views import (
-    VitepayPaymentList, VitepayWebhookView,
-    VitepayBankAccountAccountList,
-    VitepayBankAccountAccountDetail)
+from bluebottle.funding_telesom.views import (
+    TelesomPaymentList, TelesomWebhookView,
+    TelesomBankAccountAccountList,
+    TelesomBankAccountAccountDetail)
 
 urlpatterns = [
     url(r'^/payments/$',
-        VitepayPaymentList.as_view(),
-        name='vitepay-payment-list'),
+        TelesomPaymentList.as_view(),
+        name='telesom-payment-list'),
     url(r'^/webhook/$',
-        VitepayWebhookView.as_view(),
-        name='vitepay-payment-webhook'),
+        TelesomWebhookView.as_view(),
+        name='telesom-payment-webhook'),
     url(r'^/bank-accounts/$',
-        VitepayBankAccountAccountList.as_view(),
-        name='vitepay-external-account-list'),
+        TelesomBankAccountAccountList.as_view(),
+        name='telesom-external-account-list'),
     url(r'^/bank-accounts/(?P<pk>[\d]+)$',
-        VitepayBankAccountAccountDetail.as_view(),
-        name='vitepay-external-account-detail'),
+        TelesomBankAccountAccountDetail.as_view(),
+        name='telesom-external-account-detail'),
 ]

@@ -33,6 +33,7 @@ from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBan
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider, PledgeBankAccount
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount
+from bluebottle.funding_telesom.models import TelesomPaymentProvider
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import FSMAdmin, TotalAmountAdminChangeList, export_as_csv_action, FSMAdminMixin, \
@@ -439,6 +440,7 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
         StripePaymentProvider,
         VitepayPaymentProvider,
         FlutterwavePaymentProvider,
+        TelesomPaymentProvider,
         LipishaPaymentProvider
     )
 

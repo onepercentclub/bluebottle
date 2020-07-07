@@ -17,6 +17,7 @@ from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
@@ -194,6 +195,53 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertTrue(unicode(deadline_assignment.pk) in found)
         self.assertTrue(unicode(funding.pk) in found)
 
+    def test_filter_segment(self):
+        segment = SegmentFactory.create()
+        first = EventFactory.create(
+            review_status='approved',
+        )
+        first.segments.add(segment)
+
+        EventFactory.create(
+            review_status='approved'
+        )
+
+        response = self.client.get(
+            self.url + '?filter[segment.{}]={}'.format(
+                segment.type.slug, segment.pk
+            ),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
+
+    def test_filter_segment_mismatch(self):
+        first = EventFactory.create(
+            review_status='approved',
+        )
+        first_segment = SegmentFactory.create()
+        first.segments.add(first_segment)
+        second_segment = SegmentFactory.create()
+        first.segments.add(second_segment)
+
+        EventFactory.create(
+            review_status='approved'
+        )
+
+        response = self.client.get(
+            self.url + '?filter[segment.{}]={}'.format(
+                first_segment.type.slug, second_segment.pk
+            ),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 0)
+
     def test_search(self):
         first = EventFactory.create(
             title='Lorem ipsum dolor sit amet',
@@ -305,6 +353,26 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 2)
         self.assertEqual(data['data'][0]['id'], unicode(second.pk))
         self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+
+    def test_search_segment_name(self):
+        first = EventFactory.create(
+            review_status='approved',
+        )
+        first.segments.add(SegmentFactory(name='Online Marketing'))
+
+        EventFactory.create(
+            review_status='approved'
+        )
+
+        response = self.client.get(
+            self.url + '?filter[search]=marketing',
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
 
     def test_sort_title(self):
         second = EventFactory.create(title='B: something else', review_status='approved')

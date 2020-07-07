@@ -260,7 +260,7 @@ class MemberAdmin(UserAdmin):
                     _("Profile"),
                     {
                         'fields':
-                        ['picture', 'about_me', 'favourite_themes', 'skills']
+                        ['picture', 'about_me', 'favourite_themes', 'skills', 'segments']
                     }
                 ],
                 [

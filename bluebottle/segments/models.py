@@ -38,3 +38,6 @@ class Segment(models.Model):
             self.alternate_names.append(self.name)
 
         super(Segment, self).save(*args, **kwargs)
+
+    def __unicode__(self):
+        return u'{}: {}'.format(self.type.name, self.name)

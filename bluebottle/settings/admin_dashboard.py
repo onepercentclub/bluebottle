@@ -257,6 +257,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'wallposts.reaction',
                 'permissions': ['wallposts.change_wallpost']
             },
+            {
+                'name': 'segments.segmenttype',
+                'permissions': ['segments.change_segment']
+            },
+
         ]
     },
     {

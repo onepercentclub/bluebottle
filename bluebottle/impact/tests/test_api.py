@@ -236,3 +236,24 @@ class ImpactGoalDetailsAPITestCase(BluebottleTestCase):
             data=json.dumps(self.data)
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete(self):
+        response = self.client.delete(
+            self.url,
+            user=self.activity.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        with self.assertRaises(ImpactGoal.DoesNotExist):
+            ImpactGoal.objects.get(pk=self.goal.pk)
+
+    def test_delete_other_user(self):
+        response = self.client.delete(
+            self.url,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_anonymous(self):
+        response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

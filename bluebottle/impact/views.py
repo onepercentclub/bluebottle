@@ -11,7 +11,7 @@ from bluebottle.utils.views import (
     JsonApiViewMixin,
     ListAPIView,
     CreateAPIView,
-    RetrieveUpdateAPIView
+    RetrieveUpdateDestroyAPIView
 )
 from bluebottle.utils.permissions import TenantConditionalOpenClose
 
@@ -46,7 +46,7 @@ class ImpactGoalList(JsonApiViewMixin, CreateAPIView):
     serializer_class = ImpactGoalSerializer
 
 
-class ImpactGoalDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+class ImpactGoalDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     queryset = ImpactGoal.objects.filter()
 
     related_permission_classes = {

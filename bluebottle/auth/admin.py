@@ -3,7 +3,7 @@ from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from django.contrib.auth.models import Group, Permission
 from django.conf.urls import url
 from django.contrib import admin
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.urls import reverse
 from permissions_widget.admin import NewGroupAdmin as PermissionGroupAdmin
 
@@ -30,6 +30,8 @@ class NewGroupAdmin(PermissionGroupAdmin):
         'admin/auth/set_cms_permissions.html'
     )
     def set_cms_permissions(self, request, group):
+        if not request.user.has_perm('auth.change_group'):
+            return HttpResponseForbidden('Not allowed to change group')
         for perm in cms_permissions:
             app_label, codename = perm.split('.')
             permission = Permission.objects.filter(content_type__app_label=app_label, codename=codename).first()
@@ -46,6 +48,9 @@ class NewGroupAdmin(PermissionGroupAdmin):
         'admin/auth/clear_cms_permissions.html'
     )
     def clear_cms_permissions(self, request, group=None):
+        if not request.user.has_perm('auth.change_group'):
+            return HttpResponseForbidden('Not allowed to change group')
+
         for perm in cms_permissions:
             app_label, codename = perm.split('.')
             permission = Permission.objects.filter(content_type__app_label=app_label, codename=codename).first()

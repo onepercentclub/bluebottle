@@ -120,6 +120,9 @@ class TestBaseTokenAuthentication(TestCase):
 
             self.assertEqual(authenticate_request.call_count, 1)
             self.assertTrue(created)
+
+            user.refresh_from_db()
+
             self.assertEqual(user.email, 'test@example.com')
             self.assertEqual(user.location, location)
 

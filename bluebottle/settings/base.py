@@ -9,8 +9,6 @@ from django.utils.translation import ugettext_lazy as _
 import rules
 from PIL import ImageFile
 
-from bluebottle.auth.settngs import cms_models
-
 BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
 PROJECT_ROOT = BASE_DIR
@@ -876,7 +874,7 @@ PERMISSIONS_WIDGET_EXCLUDE_MODELS = [
     'organizations.organizationmember',
 
 
-] + cms_models
+]
 
 PERMISSIONS_WIDGET_EXCLUDE_APPS = [
     'donations', 'bb_payouts', 'bb_salesforce', 'bluebottle_salesforce',

@@ -91,6 +91,3 @@ class TelesomBankAccount(BankAccount):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/telesom-external-accounts'
-
-
-from states import *  # noqa

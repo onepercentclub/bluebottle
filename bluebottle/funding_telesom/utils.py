@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 import requests
 from django.utils.timezone import now
 
@@ -13,7 +11,7 @@ def get_credentials():
 
 def initiate_payment(payment):
     credentials = get_credentials()
-    payment.amount = Decimal(payment.donation.amount.amount) / 100
+    payment.amount = payment.donation.amount.amount
     payment.currency = 'USD'
     payment.save()
     data = {
@@ -45,8 +43,8 @@ def initiate_payment(payment):
     }
     response = requests.post(credentials['api_url'], json=data)
     data = response.json()
-    payment.response = response
-    if data['params'] and data['params']['state'] == 'approved':
+    payment.response = data
+    if data['params'] and data['params']['state'] == 'APPROVED':
         payment.transitions.succeed()
     else:
         payment.transitions.fail()

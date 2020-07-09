@@ -175,12 +175,13 @@ class BudgetLineSerializer(ModelSerializer):
 class PaymentMethodSerializer(serializers.Serializer):
     code = serializers.CharField()
     name = serializers.CharField()
+    provider = serializers.CharField()
     currencies = serializers.SerializerMethodField()
     countries = serializers.ListField()
 
     class Meta():
         model = PaymentMethod
-        fields = ('code', 'name', 'currencies', 'countries', 'activity')
+        fields = ('code', 'name', 'provider', 'currencies', 'countries', 'activity')
 
     class JSONAPIMeta:
         resource_name = 'payments/payment-methods'

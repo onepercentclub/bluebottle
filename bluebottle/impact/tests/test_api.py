@@ -31,9 +31,14 @@ class ImpactTypeListAPITestCase(BluebottleTestCase):
         self.assertEqual(len(response.json()['data']), len(self.types))
 
         resource = response.json()['data'][0]['attributes']
+
         self.assertTrue('slug' in resource)
         self.assertTrue('name' in resource)
         self.assertTrue('unit' in resource)
+        self.assertTrue('text' in resource)
+        self.assertTrue('text-with-target' in resource)
+        self.assertTrue('text-passed' in resource)
+        self.assertTrue('text-passed-with-value' in resource)
 
         resource_type = response.json()['data'][0]['type']
 
@@ -116,6 +121,26 @@ class ImpactGoalListAPITestCase(BluebottleTestCase):
         goal = ImpactGoal.objects.get(pk=response.json()['data']['id'])
         self.assertEqual(
             goal.target, self.data['data']['attributes']['target']
+        )
+        self.assertEqual(goal.type, self.type)
+        self.assertEqual(goal.activity, self.activity)
+
+    def test_create_no_target(self):
+        del self.data['data']['attributes']['target']
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        resource_type = response.json()['data']['type']
+        self.assertEqual(resource_type, 'activities/impact-goals')
+
+        goal = ImpactGoal.objects.get(pk=response.json()['data']['id'])
+        self.assertEqual(
+            goal.target, None
         )
         self.assertEqual(goal.type, self.type)
         self.assertEqual(goal.activity, self.activity)

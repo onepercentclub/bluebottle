@@ -16,8 +16,36 @@ class ImpactType(SortableTranslatableModel):
     active = models.BooleanField(_('active'), default=True)
 
     translations = TranslatedFields(
-        name=models.CharField(_('name'), max_length=100),
-        unit=models.CharField(_('unit'), blank=True, max_length=100)
+        name=models.CharField(
+            _('name'),
+            max_length=100
+        ),
+        unit=models.CharField(
+            _('unit'),
+            max_length=100,
+            help_text=_('E.g. "liters of water" or "people"')
+
+        ),
+        text=models.CharField(
+            _('Text'),
+            max_length=100,
+            help_text=_('E.g. "save animals" or "reach people"')
+        ),
+        text_with_target=models.CharField(
+            _('Text including target'),
+            max_length=100,
+            help_text=_('E.g. "save {} animals" or "reach {} people"')
+        ),
+        text_passed=models.CharField(
+            _('Text in passed tense'),
+            max_length=100,
+            help_text=_('E.g. "animals saved" or "people reached"')
+        ),
+        text_passed_with_value=models.CharField(
+            _('Text in passed tense with realized  value'),
+            max_length=100,
+            help_text=_('E.g. "{} animals saved" or "{} people reached"')
+        ),
     )
 
     def __unicode__(self):

@@ -1,4 +1,3 @@
-from rest_framework import serializers
 from rest_framework_json_api.serializers import ModelSerializer
 
 from rest_framework_json_api.relations import PolymorphicResourceRelatedField
@@ -9,14 +8,12 @@ from bluebottle.activities.serializers import ActivitySerializer
 
 
 class ImpactTypeSerializer(ModelSerializer):
-    slug = serializers.SlugField(allow_null=True, required=False)
-    name = serializers.CharField(required=True)
-    unit = serializers.CharField(allow_blank=True, required=False)
-
     class Meta:
         model = ImpactType
         fields = (
             'id', 'slug', 'name', 'unit',
+            'text', 'text_with_target',
+            'text_passed', 'text_passed_with_value',
         )
 
     class JSONAPIMeta:
@@ -24,9 +21,6 @@ class ImpactTypeSerializer(ModelSerializer):
 
 
 class ImpactGoalSerializer(ModelSerializer):
-    target = serializers.FloatField()
-    realized = serializers.FloatField(allow_null=True, required=False)
-
     activity = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
 
     included_serializers = {

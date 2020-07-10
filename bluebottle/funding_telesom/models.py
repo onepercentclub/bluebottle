@@ -70,9 +70,6 @@ class TelesomPayment(Payment):
     "txAmount": "50.0"
     """
 
-    def update(self):
-        pass
-
     def save(self, *args, **kwargs):
         if not self.unique_id:
             provider = TelesomPaymentProvider.objects.get()

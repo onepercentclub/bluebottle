@@ -22,8 +22,10 @@ class ImpactType(SortableTranslatableModel):
         ),
         unit=models.CharField(
             _('unit'),
+            blank=True,
+            null=True,
             max_length=100,
-            help_text=_('E.g. "liters of water" or "people"')
+            help_text=_('E.g. "liters" or "kg"')
 
         ),
         text=models.CharField(

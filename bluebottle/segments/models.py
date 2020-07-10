@@ -10,7 +10,12 @@ class SegmentType(models.Model):
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
 
     is_active = models.BooleanField(
+        _('Is active'),
         default=True
+    )
+    enable_search = models.BooleanField(
+        _('Enable search filters.'),
+        default=False
     )
 
     def save(self, **kwargs):

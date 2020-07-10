@@ -303,6 +303,9 @@ class StripePayoutAccount(PayoutAccount):
         for spec in DOCUMENT_SPEC:
             if spec['id'] == self.country:
                 return spec
+        for spec in DOCUMENT_SPEC:
+            if spec['id'] == 'DEFAULT':
+                return spec
 
     @property
     def errors(self):

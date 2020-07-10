@@ -1,5 +1,6 @@
 [
     {
+        "_comment": "This information is taken from https://stripe.com/docs/connect/required-verification-information",
         "document_types_requiring_back": [
             "id-card",
             "drivers-license"

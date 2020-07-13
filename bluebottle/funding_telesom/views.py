@@ -1,10 +1,7 @@
 import logging
 
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest
-from django.views.generic.base import View
 from rest_framework_json_api.views import AutoPrefetchMixin
 
-from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_telesom.models import TelesomPayment, TelesomBankAccount
 from bluebottle.funding_telesom.serializers import TelesomPaymentSerializer, TelesomBankAccountSerializer
@@ -22,22 +19,6 @@ class TelesomPaymentList(PaymentList):
     def perform_create(self, serializer):
         super(TelesomPaymentList, self).perform_create(serializer)
         initiate_payment(serializer.save())
-
-
-class TelesomWebhookView(View):
-
-    def post(self, request, *args, **kwargs):
-        unique_id = request.POST.get('order_id')
-        try:
-            payment = TelesomPayment.objects.get(unique_id=unique_id)
-        except TelesomPayment.DoesNotExist:
-            return HttpResponseNotFound('Telesom payment not found')
-
-        try:
-            initiate_payment(payment)
-            return HttpResponse('SUCCESS')
-        except PaymentException as e:
-            return HttpResponseBadRequest('Error updating Telesom payment: {}'.format(e))
 
 
 class TelesomBankAccountAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):

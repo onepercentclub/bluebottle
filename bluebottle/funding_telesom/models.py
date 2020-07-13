@@ -55,21 +55,6 @@ class TelesomPayment(Payment):
 
     provider = 'telesom'
 
-    """
-    "issuerApprovalCode": "",
-    "accountNo": "2526****0002",
-    "accountType": "MWALLET_ACCOUNT",
-    "accountholder": "henk",
-    "state": "APPROVED",
-    "merchantCharges": "2.5",
-    "customerCharges": "0.0",
-    "referenceId": "56werw278",
-    "transactionId": "1236292",
-    "accountExpDate": "",
-    "issuerTransactionId": "ISR0011236292",
-    "txAmount": "50.0"
-    """
-
     def save(self, *args, **kwargs):
         if not self.unique_id:
             provider = TelesomPaymentProvider.objects.get()

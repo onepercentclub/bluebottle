@@ -1,5 +1,4 @@
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
-from bluebottle.funding.transitions import PaymentTransitions
 from bluebottle.funding_telesom.models import TelesomPaymentProvider
 from bluebottle.funding_telesom.tests.factories import TelesomPaymentFactory, TelesomPaymentProviderFactory
 
@@ -14,8 +13,8 @@ class TelesomPaymentTestCase(BluebottleTestCase):
         TelesomPaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding)
@@ -24,4 +23,4 @@ class TelesomPaymentTestCase(BluebottleTestCase):
         payment = TelesomPaymentFactory(donation=self.donation)
         payment.save()
 
-        self.assertEqual(payment.status, PaymentTransitions.values.new)
+        self.assertEqual(payment.status, 'new')

@@ -21,6 +21,7 @@ class TestSAMLTokenAuthentication(TestCase):
     """
     Tests the Token Authentication backend.
     """
+
     def setUp(self):
         self.session_middleware = SessionMiddleware()
 
@@ -438,3 +439,86 @@ class TestSAMLTokenAuthentication(TestCase):
             self.assertEqual(rac[0].attrib['Comparison'], "minimal")
             # RequestedAuthnContext should have 6 options / children
             self.assertEqual(len(rac[0]), 6)
+
+    def test_parse_user(self):
+        settings = dict(**TOKEN_AUTH_SETTINGS)
+        settings.update(
+            assertion_mapping={
+                'email': 'mail',
+                'remote_id': 'nameId',
+                'segment.team': ['team', 'team_name']
+            }
+        )
+
+        with self.settings(TOKEN_AUTH=settings):
+
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+            auth_backend = SAMLAuthentication(request)
+
+            result = auth_backend.parse_user({
+                'team': ['Marketing'],
+                'team_name': ['Online Marketing'],
+                'mail': ['test@example.com'],
+                'nameId': ['1234325']
+            })
+            self.assertEqual(
+                result['remote_id'], '1234325'
+            )
+            self.assertEqual(
+                result['email'], 'test@example.com'
+            )
+            self.assertEqual(
+                result['segment.team'], ['Marketing', 'Online Marketing']
+            )
+
+    def test_parse_user_missing(self):
+        settings = dict(**TOKEN_AUTH_SETTINGS)
+        settings.update(
+            assertion_mapping={
+                'email': 'mail',
+                'remote_id': 'nameId',
+                'segment.team': ['team', 'team_name']
+            }
+        )
+
+        with self.settings(TOKEN_AUTH=settings):
+
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+            auth_backend = SAMLAuthentication(request)
+
+            result = auth_backend.parse_user({
+                'nameId': ['1234325']
+            })
+            self.assertEqual(
+                result['remote_id'], '1234325'
+            )
+            self.assertTrue('email' not in result)
+            self.assertTrue('segment.team' not in result)
+
+    def test_parse_user_partial(self):
+        settings = dict(**TOKEN_AUTH_SETTINGS)
+        settings.update(
+            assertion_mapping={
+                'email': 'mail',
+                'remote_id': 'nameId',
+                'segment.team': ['team', 'team_name']
+            }
+        )
+
+        with self.settings(TOKEN_AUTH=settings):
+
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+            auth_backend = SAMLAuthentication(request)
+
+            result = auth_backend.parse_user({
+                'nameId': ['1234325'],
+                'team': ['Marketing']
+            })
+            self.assertEqual(
+                result['remote_id'], '1234325'
+            )
+            self.assertEqual(
+                result['segment.team'], ['Marketing']
+            )
+
+            self.assertTrue('email' not in result)

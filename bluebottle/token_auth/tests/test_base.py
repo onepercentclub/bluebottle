@@ -13,6 +13,7 @@ class TestBaseTokenAuthentication(TestCase):
     """
     Tests the Base Token Authentication backend.
     """
+
     def setUp(self):
         with self.settings(TOKEN_AUTH={}):
             self.auth = BaseTokenAuthentication(None)
@@ -158,6 +159,103 @@ class TestBaseTokenAuthentication(TestCase):
             self.assertTrue(
                 unit_segment in user.segments.all()
             )
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com',
+            'segment.team': 'Marketing, online',
+            'segment.unit': 'Marketing',
+        }
+    )
+    def test_user_created_segments_alternative_name(self, authenticate_request):
+        """ When the user is succesfully authenticated, a new user should
+        be created
+        """
+        team = SegmentTypeFactory.create(name='Team')
+        team_segment = SegmentFactory.create(
+            name='Online Marketing',
+            type=team,
+            alternate_names=['Marketing, online']
+        )
+        SegmentFactory.create(name='Direct Marketing', type=team)
+
+        unit = SegmentTypeFactory.create(name='Unit')
+        unit_segment = SegmentFactory.create(name='Marketing', type=unit)
+        SegmentFactory.create(name='Communications', type=unit)
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertTrue(
+                team_segment in user.segments.all()
+            )
+            self.assertTrue(
+                unit_segment in user.segments.all()
+            )
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com',
+            'segment.team': ['Marketing', 'Online Marketing'],
+        }
+    )
+    def test_user_created_segments_list(self, authenticate_request):
+        """ When the user is succesfully authenticated, a new user should
+        be created
+        """
+        team = SegmentTypeFactory.create(name='Team')
+        team_segment = SegmentFactory.create(
+            name='Online Marketing',
+            type=team,
+        )
+        SegmentFactory.create(name='Direct Marketing', type=team)
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertTrue(
+                team_segment in user.segments.all()
+            )
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com',
+            'segment.team': ['Engineering', 'Software Engineering'],
+        }
+    )
+    def test_user_created_segments_list_no_match(self, authenticate_request):
+        """ When the user is succesfully authenticated, a new user should
+        be created
+        """
+        team = SegmentTypeFactory.create(name='Team')
+        SegmentFactory.create(
+            name='Online Marketing',
+            type=team,
+        )
+        SegmentFactory.create(name='Direct Marketing', type=team)
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertEqual(len(user.segments.all()), 0)
 
     @patch.object(
         BaseTokenAuthentication,

@@ -15,6 +15,7 @@ class BaseTokenAuthentication(object):
     """
     Base class for TokenAuthentication.
     """
+
     def __init__(self, request, **kwargs):
         self.args = kwargs
         self.request = request
@@ -64,22 +65,27 @@ class BaseTokenAuthentication(object):
             type_slug = path.split('.')[-1]
 
             try:
-                try:
-                    current_segment = user.segments.get(
-                        type__slug=type_slug
-                    )
-                    user.segments.remove(current_segment)
-                except Segment.DoesNotExist:
-                    pass
-
-                segment = Segment.objects.get(
-                    type__slug=type_slug,
-                    alternate_names__contains=[value]
+                current_segment = user.segments.get(
+                    type__slug=type_slug
                 )
-
-                user.segments.add(segment)
+                user.segments.remove(current_segment)
             except Segment.DoesNotExist:
                 pass
+
+            if not isinstance(value, (list, tuple)):
+                value = [value]
+
+            for val in value:
+                try:
+
+                    segment = Segment.objects.get(
+                        type__slug=type_slug,
+                        alternate_names__contains=[val]
+                    )
+
+                    user.segments.add(segment)
+                except Segment.DoesNotExist:
+                    pass
 
     def set_custom_data(self, user, data):
         """

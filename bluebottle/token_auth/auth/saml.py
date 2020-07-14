@@ -84,11 +84,17 @@ class SAMLAuthentication(BaseTokenAuthentication):
     def parse_user(self, user_data):
         data = {}
         for target, source in self.settings['assertion_mapping'].items():
-            try:
-                data[target] = user_data[source][0]
-            except KeyError:
-                logger.error('Missing claim {}({})'.format(source, target))
-
+            if isinstance(source, (list, tuple)):
+                target_data = [user_data[field][0] for field in source if field in user_data]
+                if target_data:
+                    data[target] = target_data
+                else:
+                    logger.error('Missing claim {}({})'.format(source, target))
+            else:
+                try:
+                    data[target] = user_data[source][0]
+                except KeyError:
+                    logger.error('Missing claim {}({})'.format(source, target))
         return data
 
     def authenticate_request(self):

@@ -1344,24 +1344,28 @@ class PayoutAccountTestCase(BluebottleTestCase):
                 {
                     u'code': u'bancontact',
                     u'name': u'Bancontact',
+                    u'provider': u'stripe',
                     u'currencies': [u'EUR'],
                     u'countries': [u'BE']
                 },
                 {
                     u'code': u'credit-card',
                     u'name': u'Credit card',
+                    u'provider': u'stripe',
                     u'currencies': [u'EUR', u'USD'],
                     u'countries': []
                 },
                 {
                     u'code': u'direct-debit',
                     u'name': u'Direct debit',
+                    u'provider': u'stripe',
                     u'currencies': [u'EUR'],
                     u'countries': []
                 },
                 {
                     u'code': u'ideal',
                     u'name': u'iDEAL',
+                    u'provider': u'stripe',
                     u'currencies': [u'EUR'],
                     u'countries': [u'NL']
                 }
@@ -1393,6 +1397,7 @@ class PayoutAccountTestCase(BluebottleTestCase):
                     u'code': u'credit-card',
                     u'name': u'Credit card',
                     u'currencies': [u'EUR', u'USD', u'GBP', u'AUD'],
+                    u'provider': u'stripe',
                     u'countries': []
                 }
             ]

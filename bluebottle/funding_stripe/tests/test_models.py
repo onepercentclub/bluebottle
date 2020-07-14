@@ -1,6 +1,7 @@
 import bunch
 import mock
 import stripe
+from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory
 from django.db import ProgrammingError, connection
 
 from bluebottle.funding_stripe.models import (
@@ -170,6 +171,47 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.assertFalse(self.check.disabled)
+
+    def test_country_spec(self):
+        account = StripePayoutAccountFactory.create(country='BE')
+        self.assertEqual(
+            account.document_spec['id'],
+            'BE'
+        )
+        self.assertEqual(
+            account.document_spec['supported_document_types'],
+            [u'passport', u'id-card', u'drivers-license']
+        )
+        self.assertEqual(
+            account.document_spec['document_types_requiring_back'],
+            [u'id-card']
+        )
+        account = StripePayoutAccountFactory.create(country='NL')
+        self.assertEqual(
+            account.document_spec['id'],
+            'NL'
+        )
+        self.assertEqual(
+            account.document_spec['supported_document_types'],
+            [u'passport', u'id-card', u'drivers-license']
+        )
+        self.assertEqual(
+            account.document_spec['document_types_requiring_back'],
+            [u'id-card', u'drivers-license']
+        )
+        account = StripePayoutAccountFactory.create(country='XX')
+        self.assertEqual(
+            account.document_spec['id'],
+            'DEFAULT'
+        )
+        self.assertEqual(
+            account.document_spec['supported_document_types'],
+            [u'passport', u'id-card', u'drivers-license']
+        )
+        self.assertEqual(
+            account.document_spec['document_types_requiring_back'],
+            [u'id-card', u'drivers-license']
+        )
 
 
 class StripeExternalAccountTestCase(BluebottleTestCase):

@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
-from datetime import timedelta
-
 import xlrd
+from datetime import timedelta
 from django.db import connection
 from django.test import override_settings
 from django.utils.timezone import now
 
-from bluebottle.assignments.tests.factories import AssignmentFactory
+from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.events.tests.factories import EventFactory
 from bluebottle.exports.exporter import Exporter
 from bluebottle.exports.tasks import plain_export
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.members.models import CustomMemberField
-from bluebottle.members.models import CustomMemberFieldSettings
+from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -104,6 +102,9 @@ class TestExportAdmin(BluebottleTestCase):
                 field=colour,
                 value='Parblue Yellow'
             )
+        initiative = InitiativeFactory.create(owner=users[0])
+        assignment = AssignmentFactory.create(owner=users[1], initiative=initiative)
+        ApplicantFactory.create(activity=assignment, user=users[2])
 
         data = {
             'from_date': from_date,
@@ -124,5 +125,13 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertEqual(
             book.sheet_by_name('Users').cell(1, 11).value,
+            'Parblue Yellow'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Task contributions').cell(0, 10).value,
+            'Favourite colour'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Task contributions').cell(1, 10).value,
             'Parblue Yellow'
         )

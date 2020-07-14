@@ -354,6 +354,7 @@ TENANT_APPS = (
     'bluebottle.funding_vitepay',
     'bluebottle.funding_flutterwave',
     'bluebottle.funding_lipisha',
+    'bluebottle.funding_telesom',
 
     'bluebottle.tasks',
     'bluebottle.homepage',
@@ -667,6 +668,12 @@ DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', 'image/svg+xml')
+PRIVATE_FILE_ALLOWED_MIME_TYPES = (
+    'image/png', 'image/jpeg', 'image/gif', 'image/tiff',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/pdf', 'application/vnd.oasis.opendocument.text',
+    'text/rtf'
+)
 
 EXPORTDB_EXPORT_CONF = {
     'models': OrderedDict([
@@ -904,6 +911,8 @@ SURVEYGIZMO_API_TOKEN = ''
 SURVEYGIZMO_API_SECRET = ''
 
 GEOPOSITION_GOOGLE_MAPS_API_KEY = ''
+STATIC_MAPS_API_KEY = ''
+STATIC_MAPS_API_SECRET = ''
 
 DJANGO_MONEY_RATES = {
     'DEFAULT_BACKEND': 'djmoney_rates.backends.OpenExchangeBackend',

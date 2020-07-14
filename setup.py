@@ -107,6 +107,7 @@ install_requires = [
     'sorl-watermark==1.0.0',
     'South==1.0.2',
     'Sphinx==1.6.3',
+    'staticmaps-signature==0.2.0',
     'stripe==2.33.0',
     'suds-jurko==0.6',
     'SurveyGizmo==1.2.2',

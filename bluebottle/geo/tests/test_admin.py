@@ -9,7 +9,7 @@ from bluebottle.geo.admin import LocationAdmin
 from bluebottle.geo.models import Location, Geolocation
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -18,23 +18,24 @@ class LocationAdminTest(BluebottleTestCase):
 
     def setUp(self):
         super(LocationAdminTest, self).setUp()
-        self.init_projects()
         self.location = Location.objects.create(
             name='Amsterdam',
             position='52.3702157,52.3702157'
         )
         self.site = AdminSite()
         self.admin = LocationAdmin(Location, self.site)
-        ProjectFactory(location=self.location)
+        InitiativeFactory(location=self.location)
 
-    def test_projects_link(self):
+    def test_initiatives_link(self):
         """
         Test the numeric code validation.
         """
-        projects_link = self.admin.projects(self.location)
-        self.assertTrue('>1<' in projects_link)
+        initiatives_link = self.admin.initiatives(self.location)
+        self.assertTrue('>1<' in initiatives_link)
         self.assertTrue(
-            '/en/admin/projects/project/?location={}'.format(self.location.id) in projects_link
+            '/en/admin/initiatives/initiative/?location={}'.format(
+                self.location.id
+            ) in initiatives_link
         )
 
 

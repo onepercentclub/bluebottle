@@ -449,7 +449,7 @@ class TestDonationWallpost(BluebottleTestCase):
         super(TestDonationWallpost, self).setUp()
 
         self.init_projects()
-        self.user = BlueBottleUserFactory.create()
+        self.user = BlueBottleUserFactory.create(about_me="I like to give away all my moneys!")
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
         self.funding = FundingFactory.create(status='open')
@@ -499,6 +499,7 @@ class TestDonationWallpost(BluebottleTestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['type'], 'text')
         self.assertEqual(response.data['results'][0]['text'], '<p>What a nice project!</p>')
+        self.assertEqual(response.data['results'][0]['author']['about_me'], 'I like to give away all my moneys!')
 
     def test_donation_wallposts_other_user(self):
         other_user = BlueBottleUserFactory.create()

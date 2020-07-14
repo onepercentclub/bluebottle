@@ -1,5 +1,19 @@
 [
     {
+        "_comment": "This information is taken from https://stripe.com/docs/connect/required-verification-information",
+        "document_types_requiring_back": [
+            "id-card",
+            "drivers-license"
+        ],
+        "id": "DEFAULT",
+        "object": "country_document_spec",
+        "supported_document_types": [
+            "passport",
+            "id-card",
+            "drivers-license"
+        ]
+    },
+    {
         "document_types_requiring_back": [
             "id-card",
             "drivers-license"

@@ -1,6 +1,8 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.template.defaultfilters import slugify
+
 from django.utils.translation import ugettext_lazy as _
 from geoposition.fields import GeopositionField
 from parler.models import TranslatedFields
@@ -117,6 +119,8 @@ class LocationGroup(models.Model):
 
 class Location(models.Model):
     name = models.CharField(_('name'), max_length=255)
+    slug = models.SlugField(_('slug'), blank=False, null=True, max_length=255)
+
     position = GeopositionField(null=True)
     group = models.ForeignKey('geo.LocationGroup', verbose_name=_('location group'),
                               null=True, blank=True)
@@ -130,6 +134,12 @@ class Location(models.Model):
         ordering = ['name']
         verbose_name = _('office location')
         verbose_name_plural = _('office locations')
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+
+        super(Location, self).save()
 
     def __unicode__(self):
         return self.name

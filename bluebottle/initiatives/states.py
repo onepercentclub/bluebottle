@@ -99,7 +99,8 @@ class ReviewStateMachine(ModelStateMachine):
         submitted,
         approved,
         name=_('Approve'),
-        description=_("The initiative will be visible in the frontend and complete activities will be open for contributions."),
+        description=_("The initiative will be visible in the frontend and "
+                      "complete activities will be open for contributions."),
         conditions=[is_complete, is_valid],
         automatic=False,
         permission=is_staff,
@@ -176,7 +177,8 @@ class ReviewStateMachine(ModelStateMachine):
         ],
         draft,
         name=_('Restore'),
-        description=_("The status of the initiative is set to 'Draft'. The initiator can edit and submit the initiative again."),
+        description=_("The status of the initiative is set to 'Draft'. "
+                      "The initiator can edit and submit the initiative again."),
         automatic=False,
         permission=is_staff,
     )

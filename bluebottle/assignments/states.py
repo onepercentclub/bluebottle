@@ -107,7 +107,9 @@ class AssignmentStateMachine(ActivityStateMachine):
 
     reopen = Transition(
         [
-            full
+            full,
+            ActivityStateMachine.cancelled,
+            ActivityStateMachine.succeeded
         ],
         ActivityStateMachine.open,
         name=_('Reopen'),

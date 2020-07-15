@@ -20,37 +20,37 @@ class ReviewStateMachine(ModelStateMachine):
     draft = State(
         _('draft'),
         'draft',
-        _('The initiative is created by the user.')
+        _('The initiative has been created and is being worked on.')
     )
     submitted = State(
         _('submitted'),
         'submitted',
-        _('The initiative is complete and ready to be reviewed.')
+        _('The initiative has been submitted and is ready to be reviewed.')
     )
     needs_work = State(
         _('needs work'),
         'needs_work',
-        _('The initiative needs to be edited.')
+        _('The initiative has been submitted but needs adjustments in order to be approved.')
     )
     rejected = State(
         _('rejected'),
         'rejected',
-        _('The initiative is rejected by the reviewer and not visible on the platform.')
+        _('The initiative doesn’t fit the program or the rules of the game. The initiative is not visible in the frontend, but does count in the reporting. The initiative cannot be edited by the initiator.')
     )
     cancelled = State(
         _('cancelled'),
         'cancelled',
-        _('The initiative has been cancelled.')
+        _('The initiative is not executed. The initiative is not visible in the frontend, but does count in the reporting. The initiative cannot be edited by the initiator.')
     )
     deleted = State(
         _('deleted'),
         'deleted',
-        _('The initiative was deleted.')
+        _('The initiative is not visible in the frontend and does not count in the reporting. The initiative cannot be edited by the initiator.')
     )
     approved = State(
         _('approved'),
         'approved',
-        _('The initiative is approved by the reviewer and is visible on the platform.')
+        _('The initiative is visible in the frontend and complete activities are open for contributions.')
     )
 
     def is_complete(self):

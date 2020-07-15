@@ -1,4 +1,3 @@
-# coding=utf-8
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition, AllStates
@@ -36,9 +35,9 @@ class ReviewStateMachine(ModelStateMachine):
     rejected = State(
         _('rejected'),
         'rejected',
-        _('The initiative doesn’t fit the program or the rules of the game. '
-          'The initiative is not visible in the frontend, but does count in the reporting. '
-          'The initiative cannot be edited by the initiator.')
+        _("The initiative doesn't fit the program or the rules of the game. "
+          "The initiative is not visible in the frontend, but does count in the reporting. "
+          "The initiative cannot be edited by the initiator.")
     )
     cancelled = State(
         _('cancelled'),
@@ -126,7 +125,7 @@ class ReviewStateMachine(ModelStateMachine):
         AllStates(),
         rejected,
         name=_('Reject'),
-        description=_("Reject in case this initiative doesn’t fit your program or the rules of the game. "
+        description=_("Reject in case this initiative doesn't fit your program or the rules of the game. "
                       "The initiator will not be able to edit the initiative and it won't be visible on the front end. "
                       "The initiative will still be available in the back office and appear in your reporting. "
                       "The initiator will not be able to edit it and it won't be visible on the platform."),
@@ -162,7 +161,7 @@ class ReviewStateMachine(ModelStateMachine):
         ],
         deleted,
         name=_('Delete'),
-        description=_("Delete the initiative if you don’t want it to appear in your reporting. "
+        description=_("Delete the initiative if you don't want it to appear in your reporting. "
                       "The initiative will still be available in the back office."),
         automatic=False,
         effects=[

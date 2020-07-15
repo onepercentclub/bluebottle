@@ -36,21 +36,21 @@ class ReviewStateMachine(ModelStateMachine):
         _('rejected'),
         'rejected',
         _('The initiative doesn’t fit the program or the rules of the game. '
-        'The initiative is not visible in the frontend, but does count in the reporting. '
-        'The initiative cannot be edited by the initiator.')
+          'The initiative is not visible in the frontend, but does count in the reporting. '
+          'The initiative cannot be edited by the initiator.')
     )
     cancelled = State(
         _('cancelled'),
         'cancelled',
         _('The initiative is not executed. '
-        'The initiative is not visible in the frontend, but does count in the reporting. '
-        'The initiative cannot be edited by the initiator.')
+          'The initiative is not visible in the frontend, but does count in the reporting. '
+          'The initiative cannot be edited by the initiator.')
     )
     deleted = State(
         _('deleted'),
         'deleted',
         _('The initiative is not visible in the frontend and does not count in the reporting. '
-        'The initiative cannot be edited by the initiator.')
+          'The initiative cannot be edited by the initiator.')
     )
     approved = State(
         _('approved'),
@@ -114,8 +114,8 @@ class ReviewStateMachine(ModelStateMachine):
         needs_work,
         name=_('Request Changes'),
         description=_("The status of the initiative is set to 'Needs work'. "
-                        "The initiator can edit and resubmit the initiative. "
-                        "Don't forget to inform the initiator of the necessary adjustments."),
+                      "The initiator can edit and resubmit the initiative. "
+                      "Don't forget to inform the initiator of the necessary adjustments."),
         conditions=[],
         automatic=False,
     )
@@ -125,8 +125,8 @@ class ReviewStateMachine(ModelStateMachine):
         rejected,
         name=_('Reject'),
         description=_("Reject in case this initiative doesn’t fit your program or the rules of the game. "
-                        "The initiator will not be able to edit the initiative and it won't be visible on the front end. "
-                        "The initiative will still be available in the back office and appear in your reporting. "
+                      "The initiator will not be able to edit the initiative and it won't be visible on the front end. "
+                      "The initiative will still be available in the back office and appear in your reporting. "
                       "The initiator will not be able to edit it and it won't be visible on the platform."),
         automatic=False,
         permission=is_staff,
@@ -143,8 +143,8 @@ class ReviewStateMachine(ModelStateMachine):
         cancelled,
         name=_('Cancel'),
         description=_("Cancel if the initiative will not be executed. "
-                        "The initiator will not be able to edit the initiative and it won't be visible on the front end. "
-                        "The initiative will still be available in the back office and appear in your reporting."),
+                      "The initiator will not be able to edit the initiative and it won't be visible on the front end. "
+                      "The initiative will still be available in the back office and appear in your reporting."),
         automatic=False,
         effects=[
             CancelActivities,
@@ -161,7 +161,7 @@ class ReviewStateMachine(ModelStateMachine):
         deleted,
         name=_('Delete'),
         description=_("Delete the initiative if you don’t want it to appear in your reporting. "
-                        "The initiative will still be available in the back office."),
+                      "The initiative will still be available in the back office."),
         automatic=False,
         effects=[
             DeleteActivities,

@@ -78,7 +78,7 @@ class AssignmentFinishedDeadlineTask(ModelPeriodicTask):
         TransitionEffect('succeed', conditions=[
             AssignmentStateMachine.has_accepted_applicants
         ]),
-        TransitionEffect('close', conditions=[
+        TransitionEffect('expire', conditions=[
             AssignmentStateMachine.has_no_accepted_applicants
         ]),
     ]
@@ -104,7 +104,7 @@ class AssignmentFinishedOnDateTask(ModelPeriodicTask):
         TransitionEffect('succeed', conditions=[
             AssignmentStateMachine.has_accepted_applicants
         ]),
-        TransitionEffect('close', conditions=[
+        TransitionEffect('expire', conditions=[
             AssignmentStateMachine.has_no_accepted_applicants
         ]),
     ]

@@ -89,14 +89,14 @@ models = [
         'page_id': '742654190'
     },
 
-    # Assignments
+    # Assignments/Tasks
     {
-        'title': 'States - Assignment',
+        'title': 'States - Task',
         'model': 'bluebottle.assignments.models.Assignment',
         'page_id': '742326537'
     },
     {
-        'title': 'States - Assignment - Applicant',
+        'title': 'States - Task - Applicant',
         'model': 'bluebottle.assignments.models.Applicant',
         'page_id': '742359221'
     },

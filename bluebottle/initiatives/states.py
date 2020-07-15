@@ -1,3 +1,4 @@
+# coding=utf-8
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition, AllStates

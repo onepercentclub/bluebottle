@@ -107,18 +107,13 @@ class AssignmentStateMachine(ActivityStateMachine):
 
     reopen = Transition(
         [
-            full,
-            ActivityStateMachine.cancelled,
-            ActivityStateMachine.succeeded
+            full
         ],
         ActivityStateMachine.open,
         name=_('Reopen'),
         description=_("Reopen the activity for new sign-ups. "
                       "Triggered by a change in capacity or the number of applicants."),
-        automatic=True,
-        effects=[
-            RelatedTransitionEffect('accepted_applicants', 'succeed'),
-        ]
+        automatic=True
     )
 
     succeed = Transition(
@@ -145,6 +140,7 @@ class AssignmentStateMachine(ActivityStateMachine):
         description=_("The activity expired. There were no sign-ups before the deadline to apply."),
         automatic=True,
         effects=[
+            RelatedTransitionEffect('organizer', 'fail'),
             NotificationEffect(AssignmentExpiredMessage),
         ]
     )

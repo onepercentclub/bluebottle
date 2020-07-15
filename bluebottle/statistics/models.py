@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import lazy
 
@@ -6,12 +7,96 @@ from djchoices import DjangoChoices, ChoiceItem
 from django_extensions.db.fields import CreationDateTimeField, \
     ModificationDateTimeField
 
+from parler.models import TranslatedFields
+
+from bluebottle.utils.models import TranslatablePolymorphicModel
+
 from bluebottle.clients import properties
 from bluebottle.statistics.statistics import Statistics
 
 
 def get_languages():
     return properties.LANGUAGES
+
+
+class BaseStatistic(TranslatablePolymorphicModel):
+    active = models.BooleanField(help_text=_(
+        'Should this be shown or hidden.'), default=True)
+
+
+class ManualStatistic(BaseStatistic):
+    value = models.IntegerField()
+
+    translations = TranslatedFields(
+        name=models.CharField(_('Name'), max_length=100)
+    )
+
+    def get_value(self, start=None, end=None):
+        return self.value
+
+    class JSONAPIMeta:
+        resource_name = 'statistics/manual-statistics'
+
+
+class DatabaseStatistic(BaseStatistic):
+    QUERIES = [
+        ('manual', _('Manual input')),
+        ('people_involved', _('People involved')),
+        ('participants', _('Participants')),
+
+        ('activities_succeeded', _('Activities succeeded')),
+        ('assignments_succeeded', _('Tasks succeeded')),
+        ('events_succeeded', _('Events succeeded')),
+        ('fundings_succeeded', _('Funding activities succeeded')),
+
+        ('assignment_members', _('Task applicants')),
+        ('event_members', _('Event participants')),
+
+        ('assignments_online', _('Tasks online')),
+        ('events_online', _('Events online')),
+        ('fundings_online', _('Funding activities online')),
+
+        ('donations', _('Donations')),
+        ('donated_total', _('Donated total')),
+        ('pledged_total', _('Pledged total')),
+        ('amount_matched', _('Amount matched')),
+        ('activities_online', _('Activities Online')),
+        ('votes_cast', _('Votes casts')),
+        ('time_spent', _('Time spent')),
+        ('members', _("Number of members"))
+    ]
+
+    query = models.CharField(
+        _('query'),
+        max_length=20,
+        choices=QUERIES,
+        db_index=True
+    )
+    translations = TranslatedFields(
+        name=models.CharField(_('Name'), max_length=100)
+    )
+
+    def get_value(self, start=None, end=None):
+        return getattr(Statistics(), self.query)
+
+    class JSONAPIMeta:
+        resource_name = 'statistics/database-statistics'
+
+
+class ImpactStatistic(BaseStatistic):
+    impact_type = models.ForeignKey('impact.ImpactType')
+
+    def get_value(self, start=None, end=None):
+        return self.impact_type.goals.filter(
+            activity__status='succeeded',
+        ).aggregate(
+            sum=Sum('realized')
+        )['sum'] or 0
+
+    translations = TranslatedFields()
+
+    class JSONAPIMeta:
+        resource_name = 'statistics/impact-statistics'
 
 
 class Statistic(models.Model):
@@ -22,14 +107,20 @@ class Statistic(models.Model):
         manual = ChoiceItem('manual', label=_("Manual"))
         donated_total = ChoiceItem('donated_total', label=_("Donated total"))
         pledged_total = ChoiceItem('pledged_total', label=_("Pledged total"))
-        projects_online = ChoiceItem('projects_online', label=_("Projects online"))
-        projects_realized = ChoiceItem('projects_realized', label=_("Projects realized"))
-        projects_complete = ChoiceItem('projects_complete', label=_("Projects complete"))
-        tasks_realized = ChoiceItem('tasks_realized', label=_("Tasks realized"))
+        projects_online = ChoiceItem(
+            'projects_online', label=_("Projects online"))
+        projects_realized = ChoiceItem(
+            'projects_realized', label=_("Projects realized"))
+        projects_complete = ChoiceItem(
+            'projects_complete', label=_("Projects complete"))
+        tasks_realized = ChoiceItem(
+            'tasks_realized', label=_("Tasks realized"))
         task_members = ChoiceItem('task_members', label=_("Taskmembers"))
-        people_involved = ChoiceItem('people_involved', label=_("People involved"))
+        people_involved = ChoiceItem(
+            'people_involved', label=_("People involved"))
         participants = ChoiceItem('participants', label=_("Participants"))
-        amount_matched = ChoiceItem('amount_matched', label=_("Amount Matched"))
+        amount_matched = ChoiceItem(
+            'amount_matched', label=_("Amount Matched"))
         votes_cast = ChoiceItem('votes_cast', label=_("Number of votes cast"))
         members = ChoiceItem('members', label=_("Number of members"))
 
@@ -43,7 +134,8 @@ class Statistic(models.Model):
         null=True, blank=True, max_length=12,
         help_text=_('This overwrites the calculated value, if available')
     )
-    active = models.BooleanField(help_text=_('Should this be shown or hidden.'))
+    active = models.BooleanField(
+        help_text=_('Should this be shown or hidden.'))
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
     language = models.CharField(

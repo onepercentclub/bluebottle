@@ -9,8 +9,13 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel
+from polymorphic.models import PolymorphicModel
 
-from bluebottle.utils.managers import SortableTranslatableManager, PublishedManager
+from bluebottle.utils.managers import (
+    SortableTranslatableManager,
+    PublishedManager,
+    TranslatablePolymorphicManager
+)
 
 import bluebottle.utils.monkey_patch_migration  # noqa
 import bluebottle.utils.monkey_patch_corsheaders  # noqa
@@ -91,6 +96,13 @@ class SortableTranslatableModel(TranslatableModel):
         abstract = True
 
     objects = SortableTranslatableManager()
+
+
+class TranslatablePolymorphicModel(PolymorphicModel, TranslatableModel):
+    class Meta:
+        abstract = True
+
+    objects = TranslatablePolymorphicManager()
 
 
 class PublishedStatus(DjangoChoices):

@@ -227,6 +227,12 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['cms.change_homepage']
             },
             {
+                'name': 'statistics.basestatistic',
+                'label': _('Statistics'),
+                'permissions': ['statistics.change_statistic']
+            },
+
+            {
                 'name': 'slides.slide',
                 'permissions': ['slides.change_slide']
             },

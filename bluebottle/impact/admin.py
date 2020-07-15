@@ -14,7 +14,7 @@ class ImpactTypeAdmin(TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('name', 'active')
     fields = (
         'slug', 'name', 'unit', 'active',
-        'text', 'text_with_target',
+        'icon', 'text', 'text_with_target',
         'text_passed', 'text_passed_with_value',
     )
 

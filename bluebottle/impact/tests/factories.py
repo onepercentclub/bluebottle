@@ -36,4 +36,4 @@ class ImpactGoalFactory(factory.DjangoModelFactory):
     realized = factory.fuzzy.FuzzyInteger(0, 15)
 
     type = factory.SubFactory(ImpactTypeFactory)
-    activity = factory.SubFactory(EventFactory)
+    activity = factory.SubFactory(EventFactory, status='succeeded')

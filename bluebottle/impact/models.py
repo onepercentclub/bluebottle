@@ -7,13 +7,23 @@ from bluebottle.utils.models import SortableTranslatableModel
 
 
 class ImpactType(SortableTranslatableModel):
+    ICONS = [
+        ('people', _('People')),
+        ('time', _('Time')),
+        ('money', _('Money')),
+        ('trees', _('Trees')),
+        ('animals', _('Animals')),
+        ('jobs', _('Jobs')),
+        ('co2', _('C02')),
+        ('water', _('Water')),
+        ('plastic', _('plastic')),
+    ]
 
-    """ Themes for Projects. """
-
-    # The name is marked as unique so that users can't create duplicate
-    # theme names.
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     active = models.BooleanField(_('active'), default=True)
+
+    icon = models.CharField(_('icon'), choices=ICONS,
+                            null=True, blank=True, max_length=20)
 
     translations = TranslatedFields(
         name=models.CharField(
@@ -69,6 +79,7 @@ class ImpactGoal(models.Model):
     type = models.ForeignKey(
         ImpactType,
         verbose_name=_('type'),
+        related_name='goals'
     )
     activity = models.ForeignKey(
         'activities.activity',

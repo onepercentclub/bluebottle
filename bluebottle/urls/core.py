@@ -52,7 +52,7 @@ urlpatterns = [
     # Homepage API urls
     url(r'^api/homepage/',
         include('bluebottle.homepage.urls.api')),
-    url(r'^api/stats',
+    url(r'^api/statistics/',
         include('bluebottle.statistics.urls.api')),
     url(r'^api/cms/',
         include('bluebottle.cms.urls.api')),

@@ -1,11 +1,13 @@
-from rest_framework import generics
-from .serializers import StatisticSerializer
-from .statistics import Statistics
+from bluebottle.statistics.serializers import StatisticSerializer
+from bluebottle.statistics.models import BaseStatistic
+
+from bluebottle.utils.views import ListAPIView, JsonApiViewMixin
+from bluebottle.utils.permissions import TenantConditionalOpenClose
 
 
-# API views
-class StatisticDetail(generics.RetrieveAPIView):
+class StatisticList(JsonApiViewMixin, ListAPIView):
     serializer_class = StatisticSerializer
 
-    def get_object(self, queryset=None):
-        return Statistics()
+    permission_classes = [TenantConditionalOpenClose, ]
+
+    queryset = BaseStatistic.objects.filter(active=True)

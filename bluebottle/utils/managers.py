@@ -9,6 +9,9 @@ from django.utils.timezone import now
 
 from django_subquery.expressions import Subquery, OuterRef
 
+from polymorphic.managers import PolymorphicManager
+from polymorphic.query import PolymorphicQuerySet
+
 from parler.managers import TranslatableQuerySet, TranslatableManager
 
 
@@ -93,6 +96,14 @@ class SortableTranslatableQuerySet(TranslatableQuerySet):
 
 class SortableTranslatableManager(TranslatableManager):
     queryset_class = SortableTranslatableQuerySet
+
+
+class TranslatablePolymorphicQuerySet(TranslatableQuerySet, PolymorphicQuerySet):
+    pass
+
+
+class TranslatablePolymorphicManager(PolymorphicManager, TranslatableManager):
+    queryset_class = TranslatablePolymorphicQuerySet
 
 
 class PublishedQuerySet(QuerySet):

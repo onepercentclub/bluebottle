@@ -14,6 +14,7 @@ class ImpactTypeSerializer(ModelSerializer):
             'id', 'slug', 'name', 'unit',
             'text', 'text_with_target',
             'text_passed', 'text_passed_with_value',
+            'icon',
         )
 
     class JSONAPIMeta:
@@ -21,7 +22,8 @@ class ImpactTypeSerializer(ModelSerializer):
 
 
 class ImpactGoalSerializer(ModelSerializer):
-    activity = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
+    activity = PolymorphicResourceRelatedField(
+        ActivitySerializer, queryset=Activity.objects.all())
 
     included_serializers = {
         'type': 'bluebottle.impact.serializers.ImpactTypeSerializer',

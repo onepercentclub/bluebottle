@@ -52,7 +52,6 @@ class PaymentIntent(models.Model):
                 statement_descriptor_suffix=statement_descriptor[:18],
                 metadata=self.metadata
             )
-
             if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
                 intent_args['on_behalf_of'] = connect_account.account_id
 
@@ -153,11 +152,12 @@ class StripeSourcePayment(Payment):
         statement_descriptor = connection.tenant.name[:22]
         charge_args = dict(
             amount=int(self.donation.amount.amount * 100),
+            source=self.source_token,
             currency=self.donation.amount.currency,
             transfer_data={
                 'destination': connect_account.account_id,
             },
-            statement_descriptor=statement_descriptor,
+            statement_descriptor_suffix=statement_descriptor[:18],
             metadata=self.metadata
         )
 

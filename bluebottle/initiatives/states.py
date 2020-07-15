@@ -113,7 +113,7 @@ class ReviewStateMachine(ModelStateMachine):
     request_changes = Transition(
         submitted,
         needs_work,
-        name=_('Request Changes'),
+        name=_('Needs work'),
         description=_("The status of the initiative is set to 'Needs work'. "
                       "The initiator can edit and resubmit the initiative. "
                       "Don't forget to inform the initiator of the necessary adjustments."),

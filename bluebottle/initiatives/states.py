@@ -94,7 +94,7 @@ class ReviewStateMachine(ModelStateMachine):
         submitted,
         approved,
         name=_('Approve'),
-        description=_("The initiative will be approved and go online."),
+        description=_("The initiative will be visible in the frontend and complete activities will be open for contributions."),
         conditions=[is_complete, is_valid],
         automatic=False,
         permission=is_staff,
@@ -108,7 +108,7 @@ class ReviewStateMachine(ModelStateMachine):
         submitted,
         needs_work,
         name=_('Request Changes'),
-        description=_("The initiative needs work. The initiator will be able to edit it again."),
+        description=_("The status of the initiative is set to 'Needs work'. The initiator can edit and resubmit the initiative. Don't forget to inform the initiator of the necessary adjustments."),
         conditions=[],
         automatic=False,
     )
@@ -117,7 +117,9 @@ class ReviewStateMachine(ModelStateMachine):
         AllStates(),
         rejected,
         name=_('Reject'),
-        description=_("The initiative will be rejected. "
+        description=_("Reject in case this initiative doesn’t fit your program or the rules of the game. "
+                    "The initiator will not be able to edit the initiative and it won't be visible on the front end. "
+                    "The initiative will still be available in the back office and appear in your reporting. "
                       "The initiator will not be able to edit it and it won't be visible on the platform."),
         automatic=False,
         permission=is_staff,
@@ -133,7 +135,7 @@ class ReviewStateMachine(ModelStateMachine):
         ],
         cancelled,
         name=_('Cancel'),
-        description=_("The initiative will be cancelled and it won't be visible on the platform."),
+        description=_("Cancel if the initiative will not be executed. The initiator will not be able to edit the initiative and it won't be visible on the front end. The initiative will still be available in the back office and appear in your reporting."),
         automatic=False,
         effects=[
             CancelActivities,
@@ -149,7 +151,7 @@ class ReviewStateMachine(ModelStateMachine):
         ],
         deleted,
         name=_('Delete'),
-        description=_("The initiative will be deleted and will be removed from the platform."),
+        description=_("Delete the initiative if you don’t want it to appear in your reporting. The initiative will still be available in the back office."),
         automatic=False,
         effects=[
             DeleteActivities,
@@ -164,7 +166,7 @@ class ReviewStateMachine(ModelStateMachine):
         ],
         draft,
         name=_('Restore'),
-        description=_("The initiative will be restored. The initiator will be able to edit it again."),
+        description=_("The status of the initiative is set to 'Draft'. The initiator can edit and submit the initiative again."),
         automatic=False,
         permission=is_staff,
     )

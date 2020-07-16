@@ -36,14 +36,16 @@ class ReviewStateMachine(ModelStateMachine):
         _('rejected'),
         'rejected',
         _('The initiative doesn’t fit the program or the rules of the game. '
-          'The initiative is not visible in the frontend, but does count in the reporting. '
+          'The initiative won’t show up on the search page in the front end, '
+          'but does count in the reporting. '
           'The initiative cannot be edited by the initiator.')
     )
     cancelled = State(
         _('cancelled'),
         'cancelled',
         _('The initiative is not executed. '
-          'The initiative is not visible in the frontend, but does count in the reporting. '
+          'The initiative won’t show up on the search page in the front end, '
+          'but does count in the reporting. '
           'The initiative cannot be edited by the initiator.')
     )
     deleted = State(
@@ -55,7 +57,11 @@ class ReviewStateMachine(ModelStateMachine):
     approved = State(
         _('approved'),
         'approved',
-        _('The initiative is visible in the frontend and complete activities are open for contributions.')
+        _('The initiative is visible in the frontend and completed activities are open for contributions. '
+          'All activities, except the crowdfunding campaigns, '
+          'that will be completed at a later stage, '
+          'will also be automatically opened up for contributions. '
+          'The crowdfunding campaigns must be approved separately.')
     )
 
     def is_complete(self):
@@ -100,7 +106,7 @@ class ReviewStateMachine(ModelStateMachine):
         approved,
         name=_('Approve'),
         description=_("The initiative will be visible in the frontend and "
-                      "complete activities will be open for contributions."),
+                      "all completed activities will be open for contributions."),
         conditions=[is_complete, is_valid],
         automatic=False,
         permission=is_staff,
@@ -126,9 +132,9 @@ class ReviewStateMachine(ModelStateMachine):
         rejected,
         name=_('Reject'),
         description=_("Reject in case this initiative doesn’t fit your program or the rules of the game. "
-                      "The initiator will not be able to edit the initiative and it won't be visible on the front end. "
-                      "The initiative will still be available in the back office and appear in your reporting. "
-                      "The initiator will not be able to edit it and it won't be visible on the platform."),
+                      "The initiator will not be able to edit the initiative and "
+                      "it won't show up on the search page in the front end. "
+                      "The initiative will still be available in the back office and appear in your reporting. "),
         automatic=False,
         permission=is_staff,
         effects=[
@@ -144,7 +150,8 @@ class ReviewStateMachine(ModelStateMachine):
         cancelled,
         name=_('Cancel'),
         description=_("Cancel if the initiative will not be executed. "
-                      "The initiator will not be able to edit the initiative and it won't be visible on the front end. "
+                      "The initiator will not be able to edit the initiative and"
+                      "it won't show up on the search page in the front end. "
                       "The initiative will still be available in the back office and appear in your reporting."),
         automatic=False,
         effects=[
@@ -161,7 +168,7 @@ class ReviewStateMachine(ModelStateMachine):
         ],
         deleted,
         name=_('Delete'),
-        description=_("Delete the initiative if you don’t want it to appear in your reporting. "
+        description=_("Delete the initiative if you don't want it to appear in your reporting. "
                       "The initiative will still be available in the back office."),
         automatic=False,
         effects=[

@@ -37,6 +37,7 @@ from bluebottle.funding_pledge.serializers import (
 from bluebottle.funding_stripe.serializers import (
     ExternalAccountSerializer, ConnectAccountSerializer, PayoutStripeBankSerializer
 )
+from bluebottle.funding_telesom.serializers import PayoutTelesomBankAccountSerializer, TelesomBankAccountSerializer
 from bluebottle.funding_vitepay.serializers import (
     VitepayBankAccountSerializer, PayoutVitepayBankAccountSerializer
 )
@@ -174,12 +175,13 @@ class BudgetLineSerializer(ModelSerializer):
 class PaymentMethodSerializer(serializers.Serializer):
     code = serializers.CharField()
     name = serializers.CharField()
+    provider = serializers.CharField()
     currencies = serializers.SerializerMethodField()
     countries = serializers.ListField()
 
     class Meta():
         model = PaymentMethod
-        fields = ('code', 'name', 'currencies', 'countries', 'activity')
+        fields = ('code', 'name', 'provider', 'currencies', 'countries', 'activity')
 
     class JSONAPIMeta:
         resource_name = 'payments/payment-methods'
@@ -199,6 +201,7 @@ class BankAccountSerializer(PolymorphicModelSerializer):
         FlutterwaveBankAccountSerializer,
         LipishaBankAccountSerializer,
         VitepayBankAccountSerializer,
+        TelesomBankAccountSerializer,
         PledgeBankAccountSerializer
     ]
 
@@ -588,6 +591,7 @@ class PayoutBankAccountSerializer(PolymorphicModelSerializer):
         PayoutFlutterwaveBankAccountSerializer,
         PayoutLipishaBankAccountSerializer,
         PayoutVitepayBankAccountSerializer,
+        PayoutTelesomBankAccountSerializer,
         PayoutPledgeBankAccountSerializer
     ]
 

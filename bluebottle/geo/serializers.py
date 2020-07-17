@@ -17,7 +17,7 @@ staticmap_url_signer = StaticMapURLSigner(
 
 class StaticMapsField(serializers.ReadOnlyField):
     url = (
-        "http://maps.googleapis.com/maps/api/staticmap"
+        "https://maps.googleapis.com/maps/api/staticmap"
         "?center={latitude},{longitude}&zoom=10&size=220x220"
         "&maptype=roadmap&markers={latitude},{longitude}&sensor=false"
         "&style=feature:poi|visibility:off&style=feature:poi.park|visibility:on"
@@ -46,8 +46,8 @@ class CountrySerializer(serializers.ModelSerializer):
 
 
 class LocationSerializer(serializers.ModelSerializer):
-    latitude = serializers.DecimalField(source='position.latitude', max_digits=10, decimal_places=3)
-    longitude = serializers.DecimalField(source='position.longitude', max_digits=10, decimal_places=3)
+    latitude = serializers.DecimalField(source='position.latitude', required=False, max_digits=10, decimal_places=3)
+    longitude = serializers.DecimalField(source='position.longitude', required=False, max_digits=10, decimal_places=3)
     image = ImageSerializer(required=False)
 
     static_map_url = StaticMapsField(source='position')

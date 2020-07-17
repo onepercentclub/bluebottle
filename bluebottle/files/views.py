@@ -42,6 +42,16 @@ class PrivateFileList(FileList):
     queryset = PrivateDocument.objects.all()
     serializer_class = PrivateFileSerializer
 
+    def perform_create(self, serializer):
+        uploaded_file = self.request.FILES['file']
+        mime_type = mime.from_buffer(uploaded_file.read())
+        if not mime_type == uploaded_file.content_type:
+            raise ValidationError('Mime-type does not match Content-Type')
+
+        if mime_type not in settings.PRIVATE_FILE_ALLOWED_MIME_TYPES:
+            raise ValidationError('Mime-type is not allowed for this endpoint')
+        serializer.save(owner=self.request.user)
+
 
 class FileContentView(RetrieveAPIView):
 

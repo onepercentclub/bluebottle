@@ -18,6 +18,8 @@ from django.template.response import TemplateResponse
 from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 
+from parler.admin import TranslatableAdmin
+
 from bluebottle.activities.models import Contribution
 from bluebottle.clients import properties
 from bluebottle.fsm import TransitionNotPossible
@@ -26,7 +28,7 @@ from bluebottle.projects.models import CustomProjectFieldSettings, Project, Cust
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.forms import FSMModelForm
 from bluebottle.utils.forms import TransitionConfirmationForm
-from .models import Language
+from .models import Language, TranslationPlatformSettings
 
 
 class LanguageAdmin(admin.ModelAdmin):
@@ -300,4 +302,9 @@ class FSMAdminMixin(object):
 
 
 class FSMAdmin(FSMAdminMixin, admin.ModelAdmin):
+    pass
+
+
+@admin.register(TranslationPlatformSettings)
+class TranslationPlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
     pass

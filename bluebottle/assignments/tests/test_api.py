@@ -483,7 +483,8 @@ class ApplicantAPITestCase(BluebottleTestCase):
             }
         }
         self.private_document_url = reverse('private-document-list')
-        self.document_path = './bluebottle/files/tests/files/test.rtf'
+        self.php_document_path = './bluebottle/files/tests/files/index.php'
+        self.png_document_path = './bluebottle/files/tests/files/test-image.png'
         mail.outbox = []
 
     def test_apply(self):
@@ -496,11 +497,11 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertTrue("Review the application and decide", mail.outbox[0].body)
 
     def test_apply_with_document(self):
-        with open(self.document_path) as test_file:
+        with open(self.png_document_path) as test_file:
             response = self.client.post(
                 self.private_document_url,
                 test_file.read(),
-                content_type="text/rtf",
+                content_type="image/png",
                 HTTP_CONTENT_DISPOSITION='attachment; filename="test.rtf"',
                 user=self.user
             )
@@ -520,6 +521,38 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(data['data']['relationships']['document']['data']['id'], document_id)
         document = get_included(response, 'private-documents')
         self.assertTrue('.rtf' in document['meta']['filename'])
+
+    def test_apply_with_document_illegal_type(self):
+        with open(self.php_document_path) as test_file:
+            response = self.client.post(
+                self.private_document_url,
+                test_file.read(),
+                content_type="text/x-php",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="index.php"',
+                user=self.user
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()['errors'][0],
+            u'Mime-type is not allowed for this endpoint'
+        )
+
+    def test_apply_with_document_fake_mime(self):
+        with open(self.php_document_path) as test_file:
+            response = self.client.post(
+                self.private_document_url,
+                test_file.read(),
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="test.png"',
+                user=self.user
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()['errors'][0],
+            u'Mime-type does not match Content-Type'
+        )
 
     def test_confirm_hours(self):
         self.assertEqual(self.assignment.status, 'open')

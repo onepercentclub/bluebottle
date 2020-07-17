@@ -8,8 +8,8 @@ from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
-from parler.models import TranslatableModel
 from polymorphic.models import PolymorphicModel
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.utils.managers import (
     SortableTranslatableManager,
@@ -183,3 +183,30 @@ class AnonymizationMixin(object):
         anonymization_age = MemberPlatformSettings.load().anonymization_age
         if anonymization_age:
             return self.created < (now() - timedelta(days=anonymization_age))
+
+
+class TranslationPlatformSettings(TranslatableModel, BasePlatformSettings):
+    translations = TranslatedFields(
+        office=models.CharField(
+            'Office',
+            max_length=100, null=True, blank=True
+        ),
+
+        office_location=models.CharField(
+            'Office location',
+            max_length=100, null=True, blank=True
+        ),
+        select_an_office_location=models.CharField(
+            'Select an office location',
+            max_length=100, null=True, blank=True
+        ),
+        whats_the_location_of_your_office=models.CharField(
+            u'What\u2019s the location of your office?',
+            max_length=100, null=True, blank=True
+        ),
+
+    )
+
+    class Meta:
+        verbose_name_plural = _('translation settings')
+        verbose_name = _('translation settings')

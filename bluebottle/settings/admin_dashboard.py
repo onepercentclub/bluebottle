@@ -314,6 +314,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['mails.change_mailplatformsettings']
             },
             {
+                'name': 'utils.translationplatformsettings',
+                'permissions': ['utils.change_translationplatformsettings']
+            },
+
+            {
                 'name': 'funding.paymentprovider',
                 'permissions': ['funding.change_paymentprovider']
             },

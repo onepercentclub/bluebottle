@@ -35,18 +35,18 @@ class ReviewStateMachine(ModelStateMachine):
     rejected = State(
         _('rejected'),
         'rejected',
-        _('The initiative doesn’t fit the program or the rules of the game. '
-          'The initiative won’t show up on the search page in the front end, '
-          'but does count in the reporting. '
-          'The initiative cannot be edited by the initiator.')
+        _("The initiative doesn't fit the program or the rules of the game. "
+          "The initiative won't show up on the search page in the front end, "
+          "but does count in the reporting. "
+          "The initiative cannot be edited by the initiator.")
     )
     cancelled = State(
         _('cancelled'),
         'cancelled',
-        _('The initiative is not executed. '
-          'The initiative won’t show up on the search page in the front end, '
-          'but does count in the reporting. '
-          'The initiative cannot be edited by the initiator.')
+        _("The initiative is not executed. "
+          "The initiative won't show up on the search page in the front end, "
+          "but does count in the reporting. "
+          "The initiative cannot be edited by the initiator.")
     )
     deleted = State(
         _('deleted'),
@@ -131,7 +131,7 @@ class ReviewStateMachine(ModelStateMachine):
         AllStates(),
         rejected,
         name=_('Reject'),
-        description=_("Reject in case this initiative doesn’t fit your program or the rules of the game. "
+        description=_("Reject in case this initiative doesn't fit your program or the rules of the game. "
                       "The initiator will not be able to edit the initiative and "
                       "it won't show up on the search page in the front end. "
                       "The initiative will still be available in the back office and appear in your reporting. "),

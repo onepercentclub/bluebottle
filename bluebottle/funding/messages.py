@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
-from bluebottle.notifications.messages import TransitionMessage
 from django.utils.translation import ugettext_lazy as _
+
+from bluebottle.funding.models import Donation, Funding, PayoutAccount
+from bluebottle.notifications.messages import TransitionMessage
 
 
 class DonationSuccessActivityManagerMessage(TransitionMessage):
+    """
+    Someone donated to your funding campaign
+    """
     subject = _(u"You have a new donation!💰")
     template = 'messages/donation_success_owner'
+    model = Donation
 
     def get_recipients(self):
         """the activity organizer"""
@@ -13,8 +19,12 @@ class DonationSuccessActivityManagerMessage(TransitionMessage):
 
 
 class DonationSuccessDonorMessage(TransitionMessage):
+    """
+    You just donated to a funding campaign
+    """
     subject = _("Thanks for your donation!")
     template = 'messages/donation_success_donor'
+    model = Donation
 
     def get_recipients(self):
         """the donor (unless it is a guest donation)"""
@@ -25,8 +35,12 @@ class DonationSuccessDonorMessage(TransitionMessage):
 
 
 class DonationRefundedDonorMessage(TransitionMessage):
+    """
+    Your donation has been refunded
+    """
     subject = _('Your donation for the campaign "{title}" will be refunded')
     template = 'messages/donation_refunded_donor'
+    model = Donation
 
     context = {
         'title': 'activity.title'
@@ -57,8 +71,12 @@ class DonationActivityRefundedDonorMessage(TransitionMessage):
 
 
 class FundingPartiallyFundedMessage(TransitionMessage):
+    """
+    Your funding campaign ended and was partially funded
+    """
     subject = _(u"Your crowdfunding campaign deadline passed")
     template = 'messages/funding_partially_funded'
+    model = Funding
 
     def get_recipients(self):
         """the activity organizer"""
@@ -66,8 +84,12 @@ class FundingPartiallyFundedMessage(TransitionMessage):
 
 
 class FundingRealisedOwnerMessage(TransitionMessage):
+    """
+    Your funding campaign ended successfully
+    """
     subject = _(u'Your campaign "{title}" has been successfully completed! 🎉')
     template = 'messages/funding_realised_owner'
+    model = Funding
 
     context = {
         'title': 'title'
@@ -79,8 +101,12 @@ class FundingRealisedOwnerMessage(TransitionMessage):
 
 
 class FundingRejectedMessage(TransitionMessage):
+    """
+    Your funding campaign was rejected
+    """
     subject = _(u"Your crowdfunding campaign has been rejected.")
     template = 'messages/funding_rejected'
+    model = Funding
 
     def get_recipients(self):
         """the activity organizer"""
@@ -88,8 +114,12 @@ class FundingRejectedMessage(TransitionMessage):
 
 
 class FundingExpiredMessage(TransitionMessage):
+    """
+    Your funding campaign was closed
+    """
     subject = _(u"Your crowdfunding campaign has expired")
     template = 'messages/funding_expired'
+    model = Funding
 
     def get_recipients(self):
         """the activity organizer"""
@@ -151,8 +181,12 @@ class FundingCancelledMessage(TransitionMessage):
 
 
 class PayoutAccountRejected(TransitionMessage):
+    """
+    Your identity verification was rejected
+    """
     subject = _(u'Your identity verification needs some work')
     template = 'messages/payout_account_rejected'
+    model = PayoutAccount
 
     def get_recipients(self):
         """the activity organizer"""
@@ -160,8 +194,12 @@ class PayoutAccountRejected(TransitionMessage):
 
 
 class PayoutAccountVerified(TransitionMessage):
+    """
+    Your identity verification has been approved
+    """
     subject = _(u'Your identity has been verified')
     template = 'messages/payout_account_verified'
+    model = PayoutAccount
 
     def get_recipients(self):
         """the activity organizer"""

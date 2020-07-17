@@ -13,7 +13,6 @@ from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation, Location
-from bluebottle.initiatives.messages import AssignedReviewerMessage
 from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.exchange_rates import convert
@@ -24,13 +23,6 @@ from bluebottle.utils.utils import get_current_host, get_current_language, clean
 class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.Model):
     status = models.CharField(max_length=40)
     title = models.CharField(_('title'), max_length=255)
-
-    @classmethod
-    def get_messages(cls, old, new):
-        messages = []
-        if old.reviewer != new.reviewer and new.reviewer is not None:
-            messages.append(AssignedReviewerMessage)
-        return messages
 
     owner = models.ForeignKey(
         'members.Member',
@@ -272,3 +264,4 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
 from bluebottle.initiatives.wallposts import *  # noqa
 from bluebottle.initiatives.states import *  # noqa
+from bluebottle.initiatives.triggers import *  # noqa

@@ -64,7 +64,10 @@ class TransitionMessage(object):
             'first_name': recipient.first_name
         }
         for key, item in self.context.items():
-            context[key] = attrgetter(item)(self.obj)
+            try:
+                context[key] = attrgetter(item)(self.obj)
+            except AttributeError:
+                context[key] = 'Oeps {} {}'.format(key, item)
 
         if 'context' in self.options:
             context.update(self.options['context'])

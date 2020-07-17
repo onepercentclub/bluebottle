@@ -23,5 +23,3 @@ class DatabaseStatisticFactory(factory.DjangoModelFactory):
 class ImpactStatisticFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = ImpactStatistic
-
-    name = factory.Faker('sentence')

@@ -6,7 +6,7 @@ from django.utils import timezone
 from moneyed.classes import Money
 
 from bluebottle.members.models import Member
-from bluebottle.statistics.views import Statistics
+from bluebottle.statistics.statistics import Statistics
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.funding.tests.factories import (
     FundingFactory, DonationFactory, BankAccountFactory, BudgetLineFactory

@@ -3,6 +3,7 @@ import datetime
 
 from django.urls import reverse
 from django.utils import timezone
+from django.test.utils import override_settings
 
 from rest_framework import status
 
@@ -19,6 +20,13 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+)
 class ImpactTypeListAPITestCase(BluebottleTestCase):
 
     def setUp(self):
@@ -74,7 +82,6 @@ class ImpactTypeListAPITestCase(BluebottleTestCase):
             if resource['id'] == unicode(self.impact.pk):
                 self.assertEqual(resource['type'], 'statistics/impact-statistics')
                 self.assertEqual(resource['attributes']['value'], self.impact_goal.realized)
-                self.assertEqual(resource['attributes']['name'], self.impact.name)
                 self.assertEqual(resource['relationships']['impact-type']['data']['id'], unicode(self.impact_type.pk))
 
             if resource['id'] == unicode(self.database.pk):

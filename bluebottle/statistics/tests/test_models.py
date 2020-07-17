@@ -1,6 +1,7 @@
 # coding=utf-8
 import datetime
 from django.utils import timezone
+from django.test.utils import override_settings
 
 from bluebottle.impact.tests.factories import (
     ImpactTypeFactory, ImpactGoalFactory
@@ -13,6 +14,13 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+)
 class StatisticsModelTestCase(BluebottleTestCase):
     def setUp(self):
         super(StatisticsModelTestCase, self).setUp()
@@ -31,7 +39,7 @@ class StatisticsModelTestCase(BluebottleTestCase):
             realized=50
         )
 
-        stat = ImpactStatisticFactory.create(name='Test', impact_type=type)
+        stat = ImpactStatisticFactory.create(impact_type=type)
 
         self.assertEqual(stat.get_value(), 250.0)
 
@@ -48,7 +56,7 @@ class StatisticsModelTestCase(BluebottleTestCase):
         activity.status = 'failed'
         activity.save()
 
-        stat = ImpactStatisticFactory.create(name='Test', impact_type=type)
+        stat = ImpactStatisticFactory.create(impact_type=type)
 
         self.assertEqual(stat.get_value(), 200.0)
 

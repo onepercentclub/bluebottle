@@ -20,7 +20,21 @@
 
 {% block content %}
     <h2>{% trans "Confirm action" %}</h2>
-    <p>{% blocktrans %}You are about to  {{ action_text }}. {% endblocktrans %} of this object.</p>
+    {% if transition %}
+        <p>
+            {% blocktrans with transition_target=transition.target.name.title %}You are about to transition "{{ obj }}" to <b>{{ transition_target }}</b>.{% endblocktrans %}
+        </p>
+        <p>
+            <i>
+                {{ transition.target.description }}
+            </i>
+        </p>
+    {% else %}
+        <p>
+            {% blocktrans %}You are about to <b>{{ action_text }}</b> for <b>{{ obj }}</b>.{% endblocktrans %}
+        </p>
+    {% endif %}
+    <i>{{ action. }}</i>
     {% if effects|length %}
         {% blocktrans  %}
             This will have these effects:

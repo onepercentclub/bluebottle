@@ -150,6 +150,7 @@ class StateMachineAdminMixin(object):
             cancel_url=cancel_link,
             obj=instance,
             pk=instance.pk,
+            transition=transition,
             action_text=action_text,
             form=form,
             has_notifications=any(

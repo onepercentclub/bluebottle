@@ -5,20 +5,20 @@ from parler.models import TranslatedFields
 
 from bluebottle.utils.models import SortableTranslatableModel
 
+ICONS = [
+    ('people', _('People')),
+    ('time', _('Time')),
+    ('money', _('Money')),
+    ('trees', _('Trees')),
+    ('animals', _('Animals')),
+    ('jobs', _('Jobs')),
+    ('co2', _('C02')),
+    ('water', _('Water')),
+    ('plastic', _('plastic')),
+]
+
 
 class ImpactType(SortableTranslatableModel):
-    ICONS = [
-        ('people', _('People')),
-        ('time', _('Time')),
-        ('money', _('Money')),
-        ('trees', _('Trees')),
-        ('animals', _('Animals')),
-        ('jobs', _('Jobs')),
-        ('co2', _('C02')),
-        ('water', _('Water')),
-        ('plastic', _('plastic')),
-    ]
-
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     active = models.BooleanField(_('active'), default=True)
 

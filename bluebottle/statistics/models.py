@@ -10,6 +10,7 @@ from django_extensions.db.fields import CreationDateTimeField, \
 from parler.models import TranslatedFields
 
 from bluebottle.utils.models import TranslatablePolymorphicModel
+from bluebottle.impact.models import ICONS
 
 from bluebottle.clients import properties
 from bluebottle.statistics.statistics import Statistics
@@ -29,6 +30,10 @@ class ManualStatistic(BaseStatistic):
 
     translations = TranslatedFields(
         name=models.CharField(_('Name'), max_length=100)
+    )
+    icon = models.CharField(
+        _('icon'), choices=ICONS,
+        null=True, blank=True, max_length=20
     )
 
     def get_value(self, start=None, end=None):
@@ -68,12 +73,16 @@ class DatabaseStatistic(BaseStatistic):
 
     query = models.CharField(
         _('query'),
-        max_length=20,
+        max_length=30,
         choices=QUERIES,
         db_index=True
     )
     translations = TranslatedFields(
         name=models.CharField(_('Name'), max_length=100)
+    )
+    icon = models.CharField(
+        _('icon'), choices=ICONS,
+        null=True, blank=True, max_length=20
     )
 
     def get_value(self, start=None, end=None):

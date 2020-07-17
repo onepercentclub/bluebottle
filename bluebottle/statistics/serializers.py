@@ -10,7 +10,17 @@ class BaseStatisticSerializer(ModelSerializer):
     value = serializers.SerializerMethodField()
 
     def get_value(self, obj):
-        return obj.get_value()
+        value = obj.get_value()
+
+        try:
+            return {
+                'amount': value.amount,
+                'currency': str(value.currency)
+            }
+        except AttributeError:
+            return value
+
+        return value
 
 
 class ManualStatisticSerializer(BaseStatisticSerializer):
@@ -20,13 +30,13 @@ class ManualStatisticSerializer(BaseStatisticSerializer):
 
     class JSONAPIMeta:
         resource_name = 'statistics/manual-statistics'
-        fields = ('id', 'value', 'name', )
+        fields = ('id', 'value', 'name', 'icon', )
 
 
 class DatabaseStatisticSerializer(BaseStatisticSerializer):
     class Meta:
         model = DatabaseStatistic
-        fields = ('id', 'value', 'name', 'query',)
+        fields = ('id', 'value', 'name', 'query', 'icon', )
 
     class JSONAPIMeta:
         resource_name = 'statistics/database-statistics'

@@ -45,7 +45,6 @@ class ManualStatistic(BaseStatistic):
 
 class DatabaseStatistic(BaseStatistic):
     QUERIES = [
-        ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
         ('participants', _('Participants')),
 
@@ -80,10 +79,29 @@ class DatabaseStatistic(BaseStatistic):
     translations = TranslatedFields(
         name=models.CharField(_('Name'), max_length=100)
     )
-    icon = models.CharField(
-        _('icon'), choices=ICONS,
-        null=True, blank=True, max_length=20
-    )
+
+    @property
+    def icon(self):
+        mapping = {
+            'people_involved': 'people',
+            'participants': 'people',
+
+            'fundings_succeeded': 'money',
+
+            'assignment_members': 'people',
+            'event_members': 'people',
+
+            'fundings_online': 'money',
+
+            'donations': 'money',
+            'donated_total': 'money',
+            'pledged_total': 'money',
+            'amount_matched': 'money',
+
+            'time_spent': 'time',
+            'members': 'people',
+        }
+        return mapping.get(self.query)
 
     def get_value(self, start=None, end=None):
         return getattr(Statistics(), self.query)

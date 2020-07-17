@@ -13,13 +13,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='databasestatistic',
-            name='icon',
-            field=models.CharField(blank=True, choices=[(b'people', 'People'), (b'time', 'Time'), (b'money', 'Money'), (b'trees', 'Trees'), (b'animals', 'Animals'), (b'jobs', 'Jobs'), (b'co2', 'C02'), (b'water', 'Water'), (b'plastic', 'plastic')], max_length=20, null=True, verbose_name='icon'),
-        ),
-        migrations.AddField(
             model_name='manualstatistic',
             name='icon',
-            field=models.CharField(blank=True, choices=[(b'people', 'People'), (b'time', 'Time'), (b'money', 'Money'), (b'trees', 'Trees'), (b'animals', 'Animals'), (b'jobs', 'Jobs'), (b'co2', 'C02'), (b'water', 'Water'), (b'plastic', 'plastic')], max_length=20, null=True, verbose_name='icon'),
+            field=models.CharField(blank=True, choices=[(b'people', 'People'), (b'time', 'Time'), (b'money', 'Money'), (b'trees', 'Trees'), (b'animals', 'Animals'), (
+                b'jobs', 'Jobs'), (b'co2', 'C02'), (b'water', 'Water'), (b'plastic', 'plastic')], max_length=20, null=True, verbose_name='icon'),
         ),
     ]

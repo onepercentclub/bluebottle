@@ -1,15 +1,13 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition, AllStates
 from bluebottle.fsm.effects import RelatedTransitionEffect
+from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition
 from bluebottle.initiatives.effects import (
     ApproveActivities, RejectActivities, CancelActivities, DeleteActivities
 )
 from bluebottle.initiatives.messages import InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage, \
     InitiativeCancelledOwnerMessage
-
 from bluebottle.initiatives.models import Initiative
-
 from bluebottle.notifications.effects import NotificationEffect
 
 
@@ -122,7 +120,13 @@ class ReviewStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        AllStates(),
+        [
+            draft,
+            submitted,
+            needs_work,
+            approved,
+            cancelled
+        ],
         rejected,
         name=_('Reject'),
         description=_("Reject in case this initiative doesn't fit your program or the rules of the game. "
@@ -138,9 +142,7 @@ class ReviewStateMachine(ModelStateMachine):
     )
 
     cancel = Transition(
-        [
-            approved, draft, needs_work, submitted
-        ],
+        approved,
         cancelled,
         name=_('Cancel'),
         description=_("Cancel if the initiative will not be executed. "

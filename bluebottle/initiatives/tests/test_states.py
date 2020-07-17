@@ -281,6 +281,9 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
 
     def test_cancel(self):
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+        mail.outbox = []
         self.initiative.states.cancel(save=True)
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.cancelled.value
@@ -294,6 +297,8 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
 
     def test_cancel_with_activities(self):
         event = EventFactory.create(initiative=self.initiative)
+        self.initiative.states.submit()
+        self.initiative.states.approve()
         self.initiative.states.cancel(save=True)
 
         self.assertEqual(

@@ -589,11 +589,11 @@ TENANT_JWT_SECRET = 'global-tenant-secret'
 
 # email properties
 TENANT_MAIL_PROPERTIES = {
-    'logo': '',
-    'address': '',
-    'sender': '',
-    'footer': '',
-    'website': '',
+    'logo': 'Platform logo',
+    'address': 'Platform address',
+    'sender': 'Platform sender',
+    'footer': 'Platform footer',
+    'website': 'Platform website',
 }
 
 CLOSED_SITE = False

@@ -11,6 +11,6 @@
 {% endif %}
 
 {% trans "Date" %}: {{obj.created}}
-{% trans "Order" %}: {{obj.id}}
+{% trans "Donation id" %}: {{obj.id}}
 {% trans "Initiator" %}: {{obj.activity.owner.full_name}}
 {% if obj.activity.initiative.organization %}{% trans "Organization" %}: {{obj.activity.initiative.organization.name}}{% endif %}

@@ -4,6 +4,9 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class ApplicantAcceptedMessage(TransitionMessage):
+    """
+    Applicant has been accepted
+    """
     subject = _('You have been accepted for the task "{assignment_title}"!')
     template = 'messages/applicant_accepted'
     context = {
@@ -16,6 +19,9 @@ class ApplicantAcceptedMessage(TransitionMessage):
 
 
 class ApplicantRejectedMessage(TransitionMessage):
+    """
+    Applicant has been rejected
+    """
     subject = _('You have not been selected for the task "{assignment_title}"')
     template = 'messages/applicant_rejected'
     context = {
@@ -28,6 +34,9 @@ class ApplicantRejectedMessage(TransitionMessage):
 
 
 class AssignmentExpiredMessage(TransitionMessage):
+    """
+    Task has expired. There where no sign-ups before the deadline to apply.
+    """
     subject = _('Your task "{assignment_title}" has expired')
     template = 'messages/assignment_expired'
     context = {
@@ -64,6 +73,12 @@ class AssignmentRejectedMessage(TransitionMessage):
 
 
 class AssignmentClosedMessage(TransitionMessage):
+    """
+    Task rejected. The task has been rejected by an admin.
+    """
+    name = 'Task'
+    description = ''
+
     subject = _('Your task "{assignment_title}" has been closed')
     template = 'messages/assignment_closed'
     context = {
@@ -76,6 +91,9 @@ class AssignmentClosedMessage(TransitionMessage):
 
 
 class AssignmentCompletedMessage(TransitionMessage):
+    """
+    Task completed. The task was completed successfully.
+    """
     subject = _(u'Your task "{title}" has been successfully completed! 🎉')
     template = 'messages/assignment_completed'
     context = {
@@ -88,6 +106,9 @@ class AssignmentCompletedMessage(TransitionMessage):
 
 
 class AssignmentApplicationMessage(TransitionMessage):
+    """
+    Someone applied to the task.
+    """
     subject = _(u'Someone applied to your task "{assignment_title}"! 🙌')
     template = 'messages/assignment_application'
     context = {
@@ -100,6 +121,9 @@ class AssignmentApplicationMessage(TransitionMessage):
 
 
 class AssignmentDateChanged(TransitionMessage):
+    """
+    The date of the task changed.
+    """
     subject = _('The date of your task "{assignment_title}" has been changed.')
     template = 'messages/assignment_date_changed'
     context = {
@@ -116,6 +140,9 @@ class AssignmentDateChanged(TransitionMessage):
 
 
 class AssignmentDeadlineChanged(TransitionMessage):
+    """
+    The deadline of the task changed.
+    """
     subject = _('The deadline for your task "{assignment_title}" has been changed.')
     template = 'messages/assignment_deadline_changed'
     context = {
@@ -132,6 +159,10 @@ class AssignmentDeadlineChanged(TransitionMessage):
 
 
 class AssignmentReminderOnDate(TransitionMessage):
+    """
+    Task takes place in 5 days.
+    """
+
     subject = _('"{assignment_title}" will take place in 5 days!')
     template = 'messages/assignment_reminder_on_date'
     context = {
@@ -149,6 +180,10 @@ class AssignmentReminderOnDate(TransitionMessage):
 
 
 class AssignmentReminderDeadline(TransitionMessage):
+    """
+    Task deadline is in 5 days.
+    """
+
     subject = _(
         'The deadline for your task "{assignment_title}" is getting close')
     template = 'messages/assignment_reminder_deadline'

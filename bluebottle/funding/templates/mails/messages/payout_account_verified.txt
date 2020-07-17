@@ -1,4 +1,4 @@
-{% extends "base.mail.txt" %}
+test_source_chargeable_us{% extends "base.mail.txt" %}
 {% load money %}
 {% load i18n %}
 

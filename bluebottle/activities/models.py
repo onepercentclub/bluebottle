@@ -70,7 +70,9 @@ class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, Polymo
     segments = models.ManyToManyField(
         'segments.segment',
         verbose_name=_('Segment'),
-        related_name='activities'
+        related_name='activities',
+        null=True,
+        blank=True
     )
 
     followers = GenericRelation('follow.Follow', object_id_field='instance_id')

@@ -90,6 +90,7 @@ class EventAdmin(ActivityChildAdmin):
         'is_online',
         'location',
         'location_hint',
+        'segments',
     )
 
     export_to_csv_fields = (

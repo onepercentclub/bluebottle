@@ -22,15 +22,15 @@ class TransitionActivitiesEffect(Effect):
                 failed.append(activity)
         if len(failed):
             raise TransitionNotPossible(
-                _("Effect failed. Could not transition {count} activities.").format(count=len(failed))
+                _("Could not transition {count} activities.").format(count=len(failed))
             )
 
     @property
     def description(self):
         if self.activities.count() < 3:
             return "{} {}".format(
-                self.transition,
-                " + ".join('"{}"'.format(a.title) for a in self.activities.all()))
+                self.transition.title(),
+                _("and").join(' "{}" '.format(a.title) for a in self.activities.all()))
         return _('{transition} "{activity}" and {count} other activities.').format(
             transition=self.transition.title(),
             activity=self.activities.first(),

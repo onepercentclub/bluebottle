@@ -89,7 +89,6 @@ class Transition(BaseTransition):
             raise TransitionNotPossible(
                 _('You are not allowed to perform this transition')
             )
-
             return result and (not user or self.permission(machine, user))
         else:
             return result

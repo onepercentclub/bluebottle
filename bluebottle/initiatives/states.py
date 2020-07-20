@@ -1,9 +1,9 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition
 from bluebottle.initiatives.effects import (
-    ApproveActivities, RejectActivities, CancelActivities, DeleteActivities
+    ApproveActivitiesEffect, RejectActivitiesEffect, CancelActivitiesEffect, DeleteActivitiesEffect,
+    RestoreActivitiesEffect, SubmitActivitiesEffect
 )
 from bluebottle.initiatives.messages import InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage, \
     InitiativeCancelledOwnerMessage
@@ -89,7 +89,7 @@ class ReviewStateMachine(ModelStateMachine):
         conditions=[is_complete, is_valid],
         automatic=False,
         effects=[
-            RelatedTransitionEffect('activities', 'submit')
+            SubmitActivitiesEffect
         ]
     )
 
@@ -103,7 +103,7 @@ class ReviewStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_staff,
         effects=[
-            ApproveActivities,
+            ApproveActivitiesEffect,
             NotificationEffect(InitiativeApprovedOwnerMessage)
         ]
     )
@@ -136,7 +136,7 @@ class ReviewStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_staff,
         effects=[
-            RejectActivities,
+            RejectActivitiesEffect,
             NotificationEffect(InitiativeRejectedOwnerMessage)
         ]
     )
@@ -150,7 +150,7 @@ class ReviewStateMachine(ModelStateMachine):
                       "The initiative will still be available in the back office and appear in your reporting."),
         automatic=False,
         effects=[
-            CancelActivities,
+            CancelActivitiesEffect,
             NotificationEffect(InitiativeCancelledOwnerMessage)
         ]
     )
@@ -167,7 +167,7 @@ class ReviewStateMachine(ModelStateMachine):
                       "The initiative will still be available in the back office."),
         automatic=False,
         effects=[
-            DeleteActivities,
+            DeleteActivitiesEffect,
         ]
     )
 
@@ -183,4 +183,7 @@ class ReviewStateMachine(ModelStateMachine):
                       "The initiator can edit and submit the initiative again."),
         automatic=False,
         permission=is_staff,
+        effects=[
+            RestoreActivitiesEffect,
+        ]
     )

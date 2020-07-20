@@ -8,6 +8,7 @@ from django.template.response import TemplateResponse
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.notifications.effects import BaseNotificationEffect
 from bluebottle.utils.forms import TransitionConfirmationForm
 
@@ -120,7 +121,10 @@ class StateMachineAdminMixin(object):
                 getattr(state_machine, transition_name)(
                     user=request.user,
                 )
-                instance.save(send_messages=send_messages)
+                try:
+                    instance.save(send_messages=send_messages)
+                except TransitionNotPossible as e:
+                    messages.warning(request, 'Effect failed: {}'.format(e))
 
                 log_action(
                     instance,

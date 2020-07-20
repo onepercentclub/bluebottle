@@ -18,7 +18,7 @@ from bluebottle.fsm.effects import (
     TransitionEffect,
     RelatedTransitionEffect
 )
-from bluebottle.fsm.state import State, EmptyState, Transition, AllStates
+from bluebottle.fsm.state import State, EmptyState, Transition
 from bluebottle.notifications.effects import NotificationEffect
 
 
@@ -145,7 +145,11 @@ class EventStateMachine(ActivityStateMachine):
     )
 
     reject = Transition(
-        AllStates(),
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.submitted
+        ],
         ActivityStateMachine.rejected,
         name=_('Reject'),
         description=_('Reject the activity. This will make sure the initiative is no longer visible'),

@@ -128,7 +128,11 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        AllStates(),
+        [
+            draft,
+            needs_work,
+            submitted
+        ],
         rejected,
         name=_('Reject'),
         description=_('Reject the activity. This will make sure the activity is no longer visible.'),
@@ -140,7 +144,11 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     cancel = Transition(
-        AllStates(),
+        [
+            draft,
+            needs_work,
+            submitted
+        ],
         cancelled,
         name=_('Cancel'),
         description=_('Cancel the activity.'),
@@ -152,7 +160,11 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     restore = Transition(
-        [rejected, cancelled, deleted],
+        [
+            rejected,
+            cancelled,
+            deleted
+        ],
         draft,
         name=_('Restore'),
         description=_('Restore the activity. The will mark the activity as draft again.'),

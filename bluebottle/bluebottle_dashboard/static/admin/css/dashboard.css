@@ -126,7 +126,8 @@
     padding-bottom: 0;
 }
 
-/*Elegant tooltip*/
+/* Elegant tooltip */
+
 .et .et-arrow::after, .et .et-arrow::before, .et::after {
     content: ''
 }

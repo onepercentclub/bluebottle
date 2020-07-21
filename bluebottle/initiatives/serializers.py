@@ -164,6 +164,8 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
         'activities': 'bluebottle.activities.serializers.ActivityListSerializer',
         'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'activities.goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
+        'activities.goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
     }
 
     class Meta:
@@ -188,6 +190,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'owner', 'reviewer', 'promoter', 'activity_manager',
             'categories', 'theme', 'place', 'location',
             'image', 'organization', 'organization_contact', 'activities', 'activities.location',
+            'activities.goals', 'activities.goals.type'
         ]
         resource_name = 'initiatives'
 

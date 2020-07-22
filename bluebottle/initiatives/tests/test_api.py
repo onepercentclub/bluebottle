@@ -413,10 +413,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 u'available': True,
                 u'name': u'request_changes',
                 u'target': u'needs_work'
-            }, {
-                u'available': True,
-                u'name': u'cancel',
-                u'target': u'cancelled'
             }])
         self.assertEqual(data['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
         self.assertEqual(data['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))

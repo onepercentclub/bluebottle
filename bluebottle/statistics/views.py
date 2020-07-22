@@ -7,7 +7,5 @@ from bluebottle.utils.permissions import TenantConditionalOpenClose
 
 class StatisticList(JsonApiViewMixin, ListAPIView):
     serializer_class = StatisticSerializer
-
     permission_classes = [TenantConditionalOpenClose, ]
-
     queryset = BaseStatistic.objects.filter(active=True)

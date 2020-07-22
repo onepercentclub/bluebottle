@@ -1,3 +1,4 @@
+from adminsortable.models import SortableMixin
 from django.db import models
 from django.db.models import Sum
 from django.utils.translation import ugettext_lazy as _
@@ -20,9 +21,25 @@ def get_languages():
     return properties.LANGUAGES
 
 
-class BaseStatistic(TranslatablePolymorphicModel):
-    active = models.BooleanField(help_text=_(
-        'Should this be shown or hidden.'), default=True)
+class BaseStatistic(TranslatablePolymorphicModel, SortableMixin):
+    active = models.BooleanField(
+        help_text=_('Should this be shown or hidden.'),
+        default=True
+    )
+    sequence = models.PositiveIntegerField(
+        help_text=_('Order in which metrics are shown.'),
+        default=0, editable=False, db_index=True)
+
+    def __unicode__(self):
+        for child in (DatabaseStatistic, ManualStatistic, ImpactStatistic):
+            try:
+                return u"{}".format(getattr(self, child.__name__.lower()).name)
+            except child.DoesNotExist:
+                pass
+        return "Stat #{}".format(self.id)
+
+    class Meta:
+        ordering = ['sequence']
 
 
 class ManualStatistic(BaseStatistic):
@@ -41,6 +58,9 @@ class ManualStatistic(BaseStatistic):
 
     class JSONAPIMeta:
         resource_name = 'statistics/manual-statistics'
+
+    def __unicode__(self):
+        return self.translations.name
 
 
 class DatabaseStatistic(BaseStatistic):
@@ -121,6 +141,10 @@ class ImpactStatistic(BaseStatistic):
         )['sum'] or 0
 
     translations = TranslatedFields()
+
+    @property
+    def name(self):
+        return self.impact_type
 
     class JSONAPIMeta:
         resource_name = 'statistics/impact-statistics'

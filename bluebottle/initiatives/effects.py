@@ -15,15 +15,12 @@ class TransitionActivitiesEffect(Effect):
     def execute(self, **kwargs):
         failed = []
         for activity in self.activities.all():
-
             try:
                 getattr(activity.states, self.transition)(save=True)
             except TransitionNotPossible:
                 failed.append(activity)
         if len(failed):
-            raise TransitionNotPossible(
-                _("Could not transition {count} activities.").format(count=len(failed))
-            )
+            pass
 
     @property
     def description(self):

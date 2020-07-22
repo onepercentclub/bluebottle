@@ -24,7 +24,6 @@ class BaseActivitySerializer(ModelSerializer):
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
-
     goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
 
@@ -98,7 +97,7 @@ class BaseActivityListSerializer(ModelSerializer):
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
-
+    goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
 
     included_serializers = {

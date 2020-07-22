@@ -23,11 +23,11 @@
     {% if transition %}
         <p>
             {% blocktrans with transition_target=transition.target.name.title %}You are about to transition "{{ obj }}" to <b>{{ transition_target }}</b>.{% endblocktrans %}
-        </p>
-        <p>
-            <i>
-                {{ transition.target.description }}
-            </i>
+            <span class="et icon-info">
+                <span class="et-right">
+                    {{ transition.target.description }}
+                </span>
+            </span>
         </p>
     {% else %}
         <p>

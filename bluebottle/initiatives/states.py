@@ -5,8 +5,10 @@ from bluebottle.initiatives.effects import (
     ApproveActivitiesEffect, RejectActivitiesEffect, CancelActivitiesEffect, DeleteActivitiesEffect,
     RestoreActivitiesEffect, SubmitActivitiesEffect
 )
-from bluebottle.initiatives.messages import InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage, \
+from bluebottle.initiatives.messages import (
+    InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage,
     InitiativeCancelledOwnerMessage
+)
 from bluebottle.initiatives.models import Initiative
 from bluebottle.notifications.effects import NotificationEffect
 

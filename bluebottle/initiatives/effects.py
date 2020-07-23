@@ -1,71 +1,88 @@
 from django.utils.translation import ugettext as _
 
 from bluebottle.fsm.effects import Effect
+from bluebottle.fsm.state import TransitionNotPossible
 
 
-class ApproveActivities(Effect):
-    post_save = True
-    conditions = []
+class TransitionActivitiesEffect(Effect):
+    title = _('Change activity status')
+    transition = ''
 
-    title = _('Change status of related objects')
+    @property
+    def activities(self):
+        return self.instance.activities
 
     def execute(self, **kwargs):
-        for activity in self.instance.activities.filter(status='submitted'):
-            activity.states.approve(save=True)
-
-    def __unicode__(self):
-        return _('Approve related activities')
-
-
-class RejectActivities(Effect):
-    post_save = True
-    conditions = []
-
-    title = _('Change status of related objects')
+        failed = []
+        for activity in self.activities.all():
+            try:
+                getattr(activity.states, self.transition)(save=True)
+            except TransitionNotPossible:
+                failed.append(activity)
+        if len(failed):
+            pass
 
     @property
     def description(self):
-        return unicode(self)
-
-    def execute(self, **kwargs):
-        for activity in self.instance.activities.all():
-            activity.states.reject(save=True)
+        if self.activities.count() < 3:
+            return "{} {}".format(
+                self.transition.title(),
+                _("and").join(' "{}" '.format(a.title) for a in self.activities.all()))
+        return _('{transition} "{activity}" and {count} other activities.').format(
+            transition=self.transition.title(),
+            activity=self.activities.first(),
+            count=self.activities.count() - 1
+        )
 
     def __unicode__(self):
-        return _('Reject related activities')
+        return _('{transition} related activities').format(transition=self.transition.title())
 
 
-class CancelActivities(Effect):
+class ApproveActivitiesEffect(TransitionActivitiesEffect):
     post_save = True
     conditions = []
-
-    title = _('Change status of related objects')
+    transition = 'approve'
 
     @property
-    def description(self):
-        return unicode(self)
-
-    def execute(self, **kwargs):
-        for activity in self.instance.activities.all():
-            activity.states.cancel(save=True)
-
-    def __unicode__(self):
-        return _('Cancel related activities')
+    def activities(self):
+        return self.instance.activities.filter(status='submitted')
 
 
-class DeleteActivities(Effect):
+class SubmitActivitiesEffect(TransitionActivitiesEffect):
     post_save = True
     conditions = []
-
-    title = _('Change status of related objects')
+    transition = 'submit'
 
     @property
-    def description(self):
-        return unicode(self)
+    def activities(self):
+        return self.instance.activities.filter(status__in=['draft', 'needs_work'])
 
-    def execute(self, **kwargs):
-        for activity in self.instance.activities.all():
-            activity.states.delete(save=True)
 
-    def __unicode__(self):
-        return _('Delete related activities')
+class RejectActivitiesEffect(TransitionActivitiesEffect):
+    post_save = True
+    conditions = []
+    transition = 'reject'
+
+
+class CancelActivitiesEffect(TransitionActivitiesEffect):
+    post_save = True
+    conditions = []
+    transition = 'cancel'
+
+
+class DeleteActivitiesEffect(TransitionActivitiesEffect):
+    post_save = True
+    conditions = []
+    transition = 'delete'
+
+
+class RestoreActivitiesEffect(TransitionActivitiesEffect):
+    post_save = True
+    conditions = []
+    transition = 'restore'
+
+    @property
+    def activities(self):
+        return self.instance.activities.filter(
+            status__in=['cancelled', 'rejected', 'deleted']
+        )

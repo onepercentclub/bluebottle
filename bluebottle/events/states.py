@@ -18,7 +18,7 @@ from bluebottle.fsm.effects import (
     TransitionEffect,
     RelatedTransitionEffect
 )
-from bluebottle.fsm.state import State, EmptyState, Transition, AllStates
+from bluebottle.fsm.state import State, EmptyState, Transition
 from bluebottle.notifications.effects import NotificationEffect
 
 
@@ -44,7 +44,7 @@ class EventStateMachine(ActivityStateMachine):
 
     def should_start(self):
         "the start time has passed"
-        return self.instance.start and self.instance.start < timezone.now()
+        return self.instance.start and self.instance.start < timezone.now() and not self.should_finish()
 
     def should_open(self):
         "the start time has not passed"
@@ -61,6 +61,44 @@ class EventStateMachine(ActivityStateMachine):
     full = State(_('full'), 'full', _('The activity is full, users can no longer sign up'))
     running = State(_('running'), 'running', _('The activity is currently running'))
 
+    submit = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.cancelled
+        ],
+        submitted,
+        description=_('Submit the activity for approval.'),
+        automatic=False,
+        name=_('Submit'),
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_submitted
+        ],
+        effects=[
+            TransitionEffect(
+                'approve',
+                conditions=[
+                    ActivityStateMachine.initiative_is_approved,
+                    should_open
+                ]
+            ),
+            TransitionEffect(
+                'expire',
+                conditions=[should_start, has_no_participants]
+            ),
+            TransitionEffect(
+                'expire',
+                conditions=[should_finish, has_no_participants]
+            ),
+            TransitionEffect(
+                'succeed',
+                conditions=[should_finish, has_participants]
+            ),
+        ]
+    )
+
     approve = Transition(
         [
             ActivityStateMachine.submitted,
@@ -74,8 +112,35 @@ class EventStateMachine(ActivityStateMachine):
             RelatedTransitionEffect('organizer', 'succeed'),
             TransitionEffect(
                 'expire',
+                conditions=[should_start, has_no_participants]
+            ),
+            TransitionEffect(
+                'expire',
                 conditions=[should_finish, has_no_participants]
             ),
+            TransitionEffect(
+                'succeed',
+                conditions=[should_finish, has_participants]
+            ),
+        ]
+    )
+
+    cancel = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.open,
+            running,
+            full,
+            submitted
+        ],
+        ActivityStateMachine.cancelled,
+        name=_('Cancel'),
+        description=_('Cancel the event.'),
+        automatic=False,
+        effects=[
+            RelatedTransitionEffect('organizer', 'fail'),
+            RelatedTransitionEffect('participants', 'fail')
         ]
     )
 
@@ -121,7 +186,11 @@ class EventStateMachine(ActivityStateMachine):
     )
 
     expire = Transition(
-        ActivityStateMachine.open,
+        [
+            ActivityStateMachine.submitted,
+            ActivityStateMachine.open,
+            ActivityStateMachine.succeeded
+        ],
         ActivityStateMachine.cancelled,
         name=_("Expire"),
         description=_("Event expired. No one signed-up before the start of the event.")
@@ -145,7 +214,11 @@ class EventStateMachine(ActivityStateMachine):
     )
 
     reject = Transition(
-        AllStates(),
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.submitted
+        ],
         ActivityStateMachine.rejected,
         name=_('Reject'),
         description=_('Reject the activity. This will make sure the initiative is no longer visible'),
@@ -225,7 +298,7 @@ class ParticipantStateMachine(ContributionStateMachine):
 
     def event_will_be_empty(self):
         "event will be empty"
-        return len(self.instance.activity.participants) == 1
+        return self.instance.activity.participants.exclude(id=self.instance.id).count() == 0
 
     initiate = Transition(
         EmptyState(),
@@ -318,7 +391,7 @@ class ParticipantStateMachine(ContributionStateMachine):
         effects=[
             ResetTimeSpent,
             RelatedTransitionEffect(
-                'activity', 'cancel',
+                'activity', 'expire',
                 conditions=[event_is_finished, event_will_be_empty]
             ),
             UnFollowActivityEffect

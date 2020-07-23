@@ -190,7 +190,6 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
     def test_submit_with_activities(self):
         event = EventFactory.create(initiative=self.initiative)
         incomplete_event = EventFactory.create(initiative=self.initiative, title='')
-
         self.initiative.states.submit(save=True)
 
         event.refresh_from_db()
@@ -351,5 +350,5 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         event.refresh_from_db()
 
         self.assertEqual(
-            event.status, EventStateMachine.rejected.value
+            event.status, EventStateMachine.draft.value
         )

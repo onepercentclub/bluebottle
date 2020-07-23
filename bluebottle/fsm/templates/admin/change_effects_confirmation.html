@@ -7,15 +7,16 @@
     <script type="text/javascript" src="{% static 'admin/js/cancel.js' %}"></script>
 {% endblock %}
 
-{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} delete-confirmation delete-selected-confirmation{% endblock %}
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} delete-confirmation
+    delete-selected-confirmation{% endblock %}
 
 {% block breadcrumbs %}
-<div class="breadcrumbs">
-<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
-&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
-&rsaquo; {% trans 'Confirm side effects' %}
-</div>
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+        &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+        &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+        &rsaquo; {% trans 'Confirm side effects' %}
+    </div>
 {% endblock %}
 
 {% block content %}
@@ -36,19 +37,17 @@
     {% endif %}
     <i>{{ action. }}</i>
     {% if effects|length %}
-        {% blocktrans  %}
-            This will have these effects:
-        {% endblocktrans %}
+        {% blocktrans %}This will have these effects:{% endblocktrans %}
         <ul></ul>
         <ul>
             {% for effect in effects %}
                 {% if effect.display %}
                     <li>
-                      <h3>{{effect.title}}</h3>
-                      <p>{{ effect.description }}</p>
-                      {% if effect.help %}
-                        <i>{{ effect.help }}</i>
-                      {% endif %}
+                        <h3>{{ effect.title }}</h3>
+                        <p>{{ effect.description }}</p>
+                        {% if effect.help %}
+                            <i>{{ effect.help }}</i>
+                        {% endif %}
                     </li>
                 {% endif %}
             {% endfor %}
@@ -56,25 +55,25 @@
     {% endif %}
 
     <form method="post">{% csrf_token %}
-    <div>
-        {% for name, value in post.items %}
-            <input type="hidden" name="{{name}}" value="{{value}}">
-        {% endfor %}
-        {% for obj in queryset.items %}
-            <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}" />
-        {% endfor %}
-        {% if has_notifications %}
-          <div>
-              <input type="checkbox" name="disable_messages" checked id="id_send_messages">
-              <label for="id_send_messages">{% trans "Don't send any messages" %}</label><br>
-          </div>
-        {% endif %}
-        <br>
-        <br>
-        <input type="hidden" name="action" value="transition_selected" />
-        <input type="hidden" name="post" value="yes" />
-        <input type="submit" name="confirm" value="{% trans "Yes, I'm sure" %}" />
-        <a href="{{ cancel_url }}" class="button cancel-link">{% trans "No, take me back" %}</a>
-    </div>
+        <div>
+            {% for name, value in post.items %}
+                <input type="hidden" name="{{ name }}" value="{{ value }}">
+            {% endfor %}
+            {% for obj in queryset.items %}
+                <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}"/>
+            {% endfor %}
+            {% if has_notifications %}
+                <div>
+                    <input type="checkbox" name="disable_messages" checked id="id_send_messages">
+                    <label for="id_send_messages">{% trans "Don't send any messages" %}</label><br>
+                </div>
+            {% endif %}
+            <br>
+            <br>
+            <input type="hidden" name="action" value="transition_selected"/>
+            <input type="hidden" name="post" value="yes"/>
+            <input type="submit" name="confirm" value="{% trans "Yes, I'm sure" %}"/>
+            <a href="{{ cancel_url }}" class="button cancel-link">{% trans "No, take me back" %}</a>
+        </div>
     </form>
 {% endblock %}

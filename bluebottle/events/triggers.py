@@ -1,5 +1,3 @@
-from datetime import timedelta
-from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
@@ -15,8 +13,14 @@ class CapacityChangedTrigger(ModelChangedTrigger):
     field = 'capacity'
 
     effects = [
-        TransitionEffect('reopen', conditions=[EventStateMachine.is_not_full]),
-        TransitionEffect('lock', conditions=[EventStateMachine.is_full]),
+        TransitionEffect('reopen', conditions=[
+            EventStateMachine.should_open,
+            EventStateMachine.is_not_full
+        ]),
+        TransitionEffect('lock', conditions=[
+            EventStateMachine.should_open,
+            EventStateMachine.is_full
+        ]),
     ]
 
 
@@ -25,55 +29,32 @@ class DateChangedTrigger(ModelChangedTrigger):
 
     effects = [
         NotificationEffect(EventDateChanged),
-        TransitionEffect('succeed', conditions=[EventStateMachine.should_finish, EventStateMachine.has_participants]),
-        TransitionEffect('cancel', conditions=[EventStateMachine.should_finish, EventStateMachine.has_no_participants]),
-        TransitionEffect('reschedule', conditions=[EventStateMachine.should_open]),
-        TransitionEffect('lock', conditions=[EventStateMachine.is_full]),
+        TransitionEffect('succeed', conditions=[
+            EventStateMachine.should_finish,
+            EventStateMachine.has_participants
+        ]),
+        TransitionEffect('start', conditions=[
+            EventStateMachine.should_start,
+            EventStateMachine.has_participants
+        ]),
+        TransitionEffect('expire', conditions=[
+            EventStateMachine.should_start,
+            EventStateMachine.has_no_participants
+        ]),
+        TransitionEffect('expire', conditions=[
+            EventStateMachine.should_finish,
+            EventStateMachine.has_no_participants
+        ]),
+        TransitionEffect('reschedule', conditions=[
+            EventStateMachine.should_open
+        ]),
+        TransitionEffect('lock', conditions=[
+            EventStateMachine.is_full
+        ]),
     ]
 
 
-class StartedTrigger(ModelChangedTrigger):
-    @property
-    def is_valid(self):
-        "The event has started"
-        return (
-            self.instance.duration and
-            (self.instance.start and self.instance.start < timezone.now()) and
-            self.instance.status not in ('succeeded', 'deleted', 'rejected')
-        )
-
-    effects = [
-        TransitionEffect('start', conditions=[EventStateMachine.should_start, EventStateMachine.has_participants]),
-        TransitionEffect('cancel', conditions=[EventStateMachine.should_start, EventStateMachine.has_no_participants]),
-    ]
-
-    def __unicode__(self):
-        return unicode(_("Start date has passed"))
-
-
-class FinishedTrigger(ModelChangedTrigger):
-    @property
-    def is_valid(self):
-        "The event has ended"
-        return (
-            self.instance.duration and
-            (
-                self.instance.start and
-                self.instance.start + timedelta(hours=self.instance.duration) < timezone.now()
-            ) and
-            self.instance.status not in ('succeeded', 'deleted', 'rejected', 'cancelled')
-        )
-
-    effects = [
-        TransitionEffect('succeed', conditions=[EventStateMachine.should_finish, EventStateMachine.has_participants]),
-        TransitionEffect('cancel', conditions=[EventStateMachine.should_finish, EventStateMachine.has_no_participants]),
-    ]
-
-    def __unicode__(self):
-        return unicode(_("Event has changed"))
-
-
-Event.triggers = [CapacityChangedTrigger, DateChangedTrigger, StartedTrigger, FinishedTrigger]
+Event.triggers = [CapacityChangedTrigger, DateChangedTrigger]
 
 
 class ParticipantDeletedTrigger(ModelDeletedTrigger):

@@ -103,7 +103,7 @@ class FundingStateMachine(ActivityStateMachine):
             SetDateEffect('started'),
             SetDeadlineEffect,
             TransitionEffect(
-                'cancel',
+                'expire',
                 conditions=[should_finish]
             ),
         ]

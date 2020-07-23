@@ -104,7 +104,7 @@ class EventStatisticsTest(StatisticsTest):
         )
 
     def test_closed(self):
-        self.event.states.reject(save=True)
+        self.event.states.cancel(save=True)
 
         self.initiative.save()
         self.event.save()
@@ -240,10 +240,9 @@ class AssignmentStatisticsTest(StatisticsTest):
             self.stats.people_involved, 1
         )
 
-    def test_closed(self):
+    def test_cancelled(self):
         self.assignment.states.start(save=True)
-        self.assignment.states.succeed(save=True)
-        self.assignment.states.reject(save=True)
+        self.assignment.states.cancel(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0
@@ -604,23 +603,24 @@ class StatisticsDateTest(BluebottleTestCase):
 
         for diff in (10, 5, 1):
             initiative = InitiativeFactory.create(owner=user)
-            initiative.states.submit()
-            initiative.states.approve(save=True)
-
             past_date = timezone.now() - datetime.timedelta(days=diff)
             initiative.created = past_date
             initiative.save()
+            initiative.states.submit()
+            initiative.states.approve(save=True)
 
             event = EventFactory(
                 start=past_date,
                 initiative=initiative,
                 duration=1,
                 transition_date=past_date,
+                status='succeeded',
                 owner=BlueBottleUserFactory.create(),
             )
 
             ParticipantFactory.create(
                 activity=event,
+                status='succeeded',
                 time_spent=1,
                 user=other_user
             )

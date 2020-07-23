@@ -130,12 +130,13 @@ class EventStateMachine(ActivityStateMachine):
             ActivityStateMachine.draft,
             ActivityStateMachine.needs_work,
             ActivityStateMachine.open,
+            running,
             full,
             submitted
         ],
         ActivityStateMachine.cancelled,
         name=_('Cancel'),
-        description=_('Cancel the activity.'),
+        description=_('Cancel the event.'),
         automatic=False,
         effects=[
             RelatedTransitionEffect('organizer', 'fail'),

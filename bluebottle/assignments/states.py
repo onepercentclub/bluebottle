@@ -105,6 +105,25 @@ class AssignmentStateMachine(ActivityStateMachine):
         ]
     )
 
+    cancel = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.open,
+            full,
+            running,
+            submitted
+        ],
+        ActivityStateMachine.cancelled,
+        name=_('Cancel'),
+        description=_('Cancel the task.'),
+        automatic=False,
+        effects=[
+            RelatedTransitionEffect('organizer', 'fail'),
+            RelatedTransitionEffect('accepted_applicants', 'fail')
+        ]
+    )
+
     reopen = Transition(
         [
             full,

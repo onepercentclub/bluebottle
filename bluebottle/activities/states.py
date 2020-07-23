@@ -153,7 +153,6 @@ class ActivityStateMachine(ModelStateMachine):
         name=_('Cancel'),
         description=_('Cancel the activity.'),
         automatic=False,
-        permission=is_staff,
         effects=[
             RelatedTransitionEffect('organizer', 'fail')
         ]

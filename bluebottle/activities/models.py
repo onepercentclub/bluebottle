@@ -110,7 +110,7 @@ class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, Polymo
 
         super(Activity, self).save(**kwargs)
 
-        if not len(self.segments.all()):
+        if not self.segments.count():
             for segment in self.owner.segments.all():
                 self.segments.add(segment)
 

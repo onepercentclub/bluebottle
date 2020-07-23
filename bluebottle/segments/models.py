@@ -24,6 +24,9 @@ class SegmentType(models.Model):
 
         super(SegmentType, self).save(**kwargs)
 
+    def __unicode__(self):
+        return unicode(self.name)
+
 
 class Segment(models.Model):
     name = models.CharField(_('name'), max_length=255)

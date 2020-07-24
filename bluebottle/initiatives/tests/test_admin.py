@@ -50,7 +50,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'You are about to')
-        self.assertContains(response, 'Don\'t send any messages')
+        self.assertContains(response, 'Send messages')
 
         # Confirm should change status
         response = self.client.post(self.approve_url, {'confirm': True, 'send_messages': True})
@@ -67,7 +67,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'You are about to')
-        self.assertContains(response, 'Don\'t send any messages')
+        self.assertContains(response, 'Send messages')
 
         # Confirm should change status
         response = self.client.post(self.approve_url, {'confirm': True, 'send_messages': False})

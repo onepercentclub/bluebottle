@@ -79,7 +79,7 @@ class StateMachineAdminMixin(object):
         """
         Given a model instance save it to the database.
         """
-        send_messages = request.POST.get('disable_messages') != 'on'
+        send_messages = request.POST.get('enable_messages') == 'on'
         obj.save(send_messages=send_messages)
 
     def get_transition(self, instance, name, field_name):
@@ -88,7 +88,7 @@ class StateMachineAdminMixin(object):
             if transition.name == name:
                 return transition
 
-    def transition(self, request, pk, field_name, transition_name, send_messages=True):
+    def transition(self, request, pk, field_name, transition_name):
         link = reverse(
             'admin:{}_{}_change'.format(
                 self.model._meta.app_label, self.model._meta.model_name
@@ -117,7 +117,6 @@ class StateMachineAdminMixin(object):
         if 'confirm' in request.POST and request.POST['confirm']:
             if form.is_valid():
                 send_messages = form.cleaned_data['send_messages']
-
                 getattr(state_machine, transition_name)(
                     user=request.user,
                 )

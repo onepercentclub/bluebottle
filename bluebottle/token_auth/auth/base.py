@@ -4,8 +4,8 @@ from django.contrib.auth import get_user_model
 
 from bluebottle.geo.models import Location
 from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
+from bluebottle.clients import properties
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
-from bluebottle.token_auth.utils import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -14,11 +14,11 @@ class BaseTokenAuthentication(object):
     """
     Base class for TokenAuthentication.
     """
-    def __init__(self, request, **kwargs):
+    def __init__(self, request, prop='TOKEN_AUTH', **kwargs):
         self.args = kwargs
         self.request = request
 
-        self.settings = get_settings()
+        self.settings = getattr(properties, prop)
 
     def sso_url(self, target_url=None):
         raise NotImplementedError()

@@ -13,10 +13,10 @@ from django.utils import timezone
 from Crypto import Random
 from Crypto.Cipher import AES
 
+from bluebottle.clients import properties
 from bluebottle.token_auth.models import CheckedToken
 from bluebottle.token_auth.auth.base import BaseTokenAuthentication
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
-from bluebottle.token_auth.utils import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ def _encode_message(message):
     encrypted message.
     2. The HMAC-SHA1 hash of that string.
     """
-    aes_key = get_settings()['aes_key']
-    hmac_key = get_settings()['hmac_key']
+    aes_key = properties.TOKEN_AUTH['aes_key']
+    hmac_key = properties.TOKEN_AUTH['hmac_key']
 
     pad = lambda s: s + (AES.block_size - len(s) % AES.block_size) * chr(
         AES.block_size - len(s) % AES.block_size)

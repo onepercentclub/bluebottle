@@ -7,17 +7,17 @@ from django.template import loader
 from django.utils.module_loading import import_string
 from django.views.generic.base import View, TemplateView
 
+from bluebottle.clients import properties
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
-from bluebottle.token_auth.utils import get_settings
 
 
-def get_auth(request, **kwargs):
-    settings = get_settings()
+def get_auth(request, prop='TOKEN_AUTH', **kwargs):
+    settings = getattr(properties, prop)
     try:
         backend = settings['backend']
         if not backend.startswith('bluebottle'):
             backend = 'bluebottle.{}'.format(backend)
-    except AttributeError:
+    except (KeyError, AttributeError):
         raise ImproperlyConfigured('TokenAuth backend not set')
 
     try:
@@ -26,7 +26,7 @@ def get_auth(request, **kwargs):
         raise ImproperlyConfigured(
             'TokenAuth backend {} is not defined'.format(backend)
         )
-    return cls(request, **kwargs)
+    return cls(request, prop=prop, **kwargs)
 
 
 class TokenRedirectView(View):
@@ -36,9 +36,10 @@ class TokenRedirectView(View):
     permanent = False
     query_string = True
     pattern_name = 'article-detail'
+    settings_prop = 'TOKEN_AUTH'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, prop=self.settings_prop, **kwargs)
         sso_url = auth.sso_url(target_url=request.GET.get('url'))
         return HttpResponseRedirect(sso_url)
 
@@ -48,8 +49,11 @@ class TokenLoginView(View):
     Parse GET/POST request and login through set Authentication backend
     """
 
+    settings_prop = 'TOKEN_AUTH'
+    admin_login = False
+
     def get(self, request, link=None, token=None):
-        auth = get_auth(request, token=token, link=link)
+        auth = get_auth(request, prop=self.settings_prop, token=token, link=link)
 
         try:
             user, created = auth.authenticate()
@@ -59,7 +63,7 @@ class TokenLoginView(View):
             return HttpResponseRedirect(url)
 
         target_url = auth.target_url or "/"
-        if target_url and re.match('^\/\w\w\/admin', target_url):
+        if self.admin_login or (target_url and re.match('^\/\w\w\/admin', target_url)):
             # Admin login:
             # Log user in using cookies and redirect directly
             login(request, user)
@@ -82,8 +86,10 @@ class TokenLogoutView(TemplateView):
     query_string = True
     template_name = 'token/token-logout.tpl'
 
+    settings_prop = 'TOKEN_AUTH'
+
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, prop=self.settings_prop, **kwargs)
         url = auth.process_logout()
         if url:
             return HttpResponseRedirect(url)
@@ -94,11 +100,12 @@ class TokenErrorView(TemplateView):
 
     query_string = True
     template_name = 'token/token-error.tpl'
+    settings_prop = 'TOKEN_AUTH'
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         context['message'] = request.GET.get('message', 'Unknown')
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, prop=self.settings_prop, **kwargs)
         context['ssoUrl'] = auth.sso_url()
         return self.render_to_response(context)
 
@@ -107,9 +114,10 @@ class MembersOnlyView(TemplateView):
 
     query_string = True
     template_name = 'token/members-only.tpl'
+    settings_prop = 'TOKEN_AUTH'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, prop=self.settings_prop, **kwargs)
         context = self.get_context_data(**kwargs)
         context['url'] = request.GET.get('url', '')
         context['ssoUrl'] = auth.sso_url()
@@ -120,8 +128,30 @@ class MetadataView(View):
     """
     Show (SAML) metadata
     """
+    settings_prop = 'TOKEN_AUTH'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, prop=self.settings_prop, **kwargs)
         metadata = auth.get_metadata()
         return HttpResponse(content=metadata, content_type='text/xml')
+
+
+class SupportTokenRedirectView(TokenRedirectView):
+    settings_prop = 'SUPPORT_TOKEN_AUTH'
+
+
+class SupportTokenLoginView(TokenLoginView):
+    settings_prop = 'SUPPORT_TOKEN_AUTH'
+    admin_login = True
+
+
+class SupportTokenLogoutView(TokenLogoutView):
+    settings_prop = 'SUPPORT_TOKEN_AUTH'
+
+
+class SupportTokenErrorView(TokenErrorView):
+    settings_prop = 'SUPPORT_TOKEN_AUTH'
+
+
+class SupportMetadataView(MetadataView):
+    settings_prop = 'SUPPORT_TOKEN_AUTH'

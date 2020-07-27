@@ -91,7 +91,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -112,7 +112,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url,
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -128,7 +128,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[initiative_location.id]={}'.format(location.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -174,7 +174,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[date]=2019-04-01',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -182,7 +182,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[date]=2019-01-01',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -210,7 +210,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             self.url + '?filter[segment.{}]={}'.format(
                 segment.type.slug, segment.pk
             ),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -235,7 +235,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             self.url + '?filter[segment.{}]={}'.format(
                 first_segment.type.slug, second_segment.pk
             ),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -252,7 +252,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -271,7 +271,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -296,7 +296,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -321,7 +321,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=Roggeveenstraat',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -345,7 +345,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=test title',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -366,7 +366,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=marketing',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -381,7 +381,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=alphabetical',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -405,7 +405,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=date',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -437,7 +437,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -466,7 +466,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -494,7 +494,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -529,7 +529,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -574,7 +574,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -649,7 +649,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -673,7 +673,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -720,7 +720,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -741,13 +741,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         response = self.client.get(
             self.url + '?page[size]=150',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
         self.assertEqual(len(response.json()['data']), 105)
 
         response = self.client.get(
             self.url + '?page[size]=10',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
         self.assertEqual(len(response.json()['data']), 10)
 

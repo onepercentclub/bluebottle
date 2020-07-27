@@ -22,11 +22,10 @@ from django.utils.http import int_to_base36
 from django.utils.translation import ugettext_lazy as _
 from permissions_widget.forms import PermissionSelectMultipleField
 
-from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-
 from bluebottle.assignments.models import Applicant
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.bb_follow.models import Follow
+from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
 from bluebottle.events.models import Participant
@@ -34,17 +33,18 @@ from bluebottle.funding.models import Donation
 from bluebottle.geo.admin import PlaceInline
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative
+from bluebottle.members.forms import (
+    LoginAsConfirmationForm,
+    SendWelcomeMailConfirmationForm,
+    SendPasswordResetMailConfirmationForm
+)
 from bluebottle.members.models import (
     CustomMemberFieldSettings,
     CustomMemberField,
     MemberPlatformSettings,
     UserActivity,
 )
-from bluebottle.members.forms import (
-    LoginAsConfirmationForm,
-    SendWelcomeMailConfirmationForm,
-    SendPasswordResetMailConfirmationForm
-)
+from bluebottle.segments.models import SegmentType
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
@@ -260,7 +260,7 @@ class MemberAdmin(UserAdmin):
                     _("Profile"),
                     {
                         'fields':
-                        ['picture', 'about_me', 'favourite_themes', 'skills', 'segments']
+                        ['picture', 'about_me', 'favourite_themes', 'skills']
                     }
                 ],
                 [
@@ -278,6 +278,9 @@ class MemberAdmin(UserAdmin):
 
             if Location.objects.count():
                 fieldsets[1][1]['fields'].append('location')
+
+            if SegmentType.objects.filter(is_active=True).count():
+                fieldsets[1][1]['fields'].append('segments')
 
             if 'Pledge' not in (
                 item['name'] for item in properties.PAYMENT_METHODS

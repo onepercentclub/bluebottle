@@ -207,7 +207,6 @@ class FundingAdmin(ActivityChildAdmin):
         'donations_link',
         'bank_account',
         'payout_links',
-        'segments',
     )
 
     export_to_csv_fields = (

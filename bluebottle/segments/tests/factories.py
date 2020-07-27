@@ -10,6 +10,7 @@ class SegmentTypeFactory(factory.DjangoModelFactory):
         model = SegmentType
 
     name = factory.Faker('word')
+    is_active = True
 
 
 class SegmentFactory(factory.DjangoModelFactory):

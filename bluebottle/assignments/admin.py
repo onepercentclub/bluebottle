@@ -111,7 +111,6 @@ class AssignmentAdmin(ActivityChildAdmin):
         'expertise',
         'is_online',
         'location',
-        'segments',
     )
 
     export_to_csv_fields = (

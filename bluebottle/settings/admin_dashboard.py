@@ -201,6 +201,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'auth.group',
                 'permissions': ['auth.change_group']
             },
+            {
+                'name': 'segments.segmenttype',
+                'permissions': ['segments.change_segment']
+            },
         ]
     },
     {
@@ -256,10 +260,6 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             {
                 'name': 'wallposts.reaction',
                 'permissions': ['wallposts.change_wallpost']
-            },
-            {
-                'name': 'segments.segmenttype',
-                'permissions': ['segments.change_segment']
             },
 
         ]

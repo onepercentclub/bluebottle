@@ -256,4 +256,5 @@ class Applicant(Contribution):
         super(Applicant, self).delete(*args, **kwargs)
         self.activity.check_capacity()
 
+
 from bluebottle.assignments.signals import *  # noqa

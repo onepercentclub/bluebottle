@@ -140,7 +140,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     detail_fields = (
         'description',
         'highlight'
-        'segments',
     )
 
     def get_fieldsets(self, request, obj=None):

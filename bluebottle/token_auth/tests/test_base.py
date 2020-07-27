@@ -122,8 +122,31 @@ class TestBaseTokenAuthentication(TestCase):
 
             self.assertEqual(authenticate_request.call_count, 1)
             self.assertTrue(created)
+
+            user.refresh_from_db()
+
             self.assertEqual(user.email, 'test@example.com')
             self.assertEqual(user.location, location)
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com',
+            'location.slug': 'AMS'
+        }
+    )
+    def test_user_created_location_missing(self, authenticate_request):
+        """ When the user is succesfully authenticated, a new user should
+        be created
+        """
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+            self.assertEqual(user.email, 'test@example.com')
 
     @patch.object(
         BaseTokenAuthentication,

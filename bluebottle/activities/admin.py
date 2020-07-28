@@ -16,6 +16,7 @@ from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.funding.models import Funding, Donation
 from bluebottle.funding.transitions import FundingTransitions
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.impact.models import ImpactType
 from bluebottle.utils.admin import FSMAdmin
@@ -77,12 +78,12 @@ class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
 class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative']
-    inlines = (FollowAdminInline, WallpostInline, )
+    inlines = (FollowAdminInline, WallpostInline)
 
     def get_inline_instances(self, request, obj=None):
         inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)
 
-        if ImpactType.objects.filter(active=True).count():
+        if InitiativePlatformSettings.objects.get().enable_impact:
             impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
             if (
                 impact_goal_inline.has_add_permission(request) and

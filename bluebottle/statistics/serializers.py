@@ -11,7 +11,6 @@ class BaseStatisticSerializer(ModelSerializer):
 
     def get_value(self, obj):
         value = obj.get_value()
-
         try:
             return {
                 'amount': value.amount,
@@ -19,8 +18,6 @@ class BaseStatisticSerializer(ModelSerializer):
             }
         except AttributeError:
             return value
-
-        return value
 
 
 class ManualStatisticSerializer(BaseStatisticSerializer):

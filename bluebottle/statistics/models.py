@@ -1,5 +1,6 @@
 from adminsortable.models import SortableMixin
-from django.db import models
+from django.core.cache import cache
+from django.db import models, connection
 from django.db.models import Sum
 from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import lazy
@@ -124,7 +125,13 @@ class DatabaseStatistic(BaseStatistic):
         return mapping.get(self.query)
 
     def get_value(self, start=None, end=None):
-        return getattr(Statistics(), self.query)
+        cache_key = '{}.statistics.{}'.format(connection.tenant.schema_name, self.id)
+        total = cache.get(cache_key)
+        if not total:
+            print "not found in cache"
+            total = getattr(Statistics(), self.query)
+            cache.set(cache_key, total)
+        return total
 
     class JSONAPIMeta:
         resource_name = 'statistics/database-statistics'

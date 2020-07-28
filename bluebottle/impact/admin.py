@@ -12,6 +12,7 @@ class ImpactGoalInline(admin.TabularInline):
 
 class ImpactTypeAdmin(TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('name', 'active')
+    list_editable = ('active',)
     fields = (
         'slug', 'name', 'unit', 'active',
         'icon', 'text', 'text_with_target',

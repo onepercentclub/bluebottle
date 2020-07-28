@@ -23,8 +23,9 @@ class DatabaseStatisticChildAdmin(TranslatableAdmin):
 
 
 @admin.register(ImpactStatistic)
-class ImpactStatisticChildAdmin(TranslatableAdmin):
+class ImpactStatisticChildAdmin(admin.ModelAdmin):
     model = ImpactStatistic
+    raw_id_fields = ['impact_type']
 
 
 @admin.register(BaseStatistic)

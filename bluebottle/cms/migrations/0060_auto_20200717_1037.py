@@ -46,9 +46,11 @@ def migrate_hompepage_statistics(apps, schema_editor):
                         polymorphic_ctype_id=ContentType.objects.get_for_model(DatabaseStatistic).pk
                     )
                     DatabaseStatisticTranslation.objects.get_or_create(
-                        name=stat.title,
                         language_code=language,
                         master=database_statistic,
+                        defaults={
+                            'name': stat.title
+                        }
                     )
                 else:
                     manual_statistic, _ = ManualStatistic.objects.get_or_create(
@@ -56,9 +58,11 @@ def migrate_hompepage_statistics(apps, schema_editor):
                         polymorphic_ctype_id=ContentType.objects.get_for_model(ManualStatistic).pk
                     )
                     ManualStatisticTranslation.objects.get_or_create(
-                        name=stat.title,
                         language_code=language,
-                        master=manual_statistic
+                        master=manual_statistic,
+                        defaults={
+                            'name': stat.title
+                        }
                     )
 
 

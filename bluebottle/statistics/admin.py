@@ -3,6 +3,7 @@ from django.contrib import admin
 from parler.admin import TranslatableAdmin
 from polymorphic.admin import PolymorphicParentModelAdmin
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.statistics.models import (
     BaseStatistic, ManualStatistic, DatabaseStatistic, ImpactStatistic
 )
@@ -35,9 +36,18 @@ class StatisticAdmin(SortableAdmin, PolymorphicParentModelAdmin):
     list_editable = ('active',)
     child_models = (
         DatabaseStatistic,
-        ManualStatistic,
-        ImpactStatistic
+        ManualStatistic
     )
+    _child_models = child_models
+
+    def get_child_models(self):
+        # Make sure we can dynamically add
+        return self._child_models
+
+    def get_child_type_choices(self, request, action):
+        if InitiativePlatformSettings.load().enable_impact:
+            self._child_models += (ImpactStatistic,)
+        return super(StatisticAdmin, self).get_child_type_choices(request, action)
 
     # We need this because Django Polymorphic uses a calculated property to
     # override change_list_template instead of using get_changelist_template.

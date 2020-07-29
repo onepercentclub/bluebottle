@@ -87,5 +87,15 @@ class ImpactGoal(models.Model):
         related_name='goals'
     )
 
-    target = models.FloatField(_('target'), blank=False, null=True)
-    realized = models.FloatField(_('realized'), blank=False, null=True)
+    target = models.FloatField(
+        _('target'),
+        help_text=_('the impact target'),
+        blank=False, null=True)
+    realized = models.FloatField(
+        _('realized'),
+        help_text=_('the realised impact'),
+        blank=False, null=True)
+
+    class Meta:
+        verbose_name = _('impact goal')
+        verbose_name_plural = _('impact goals')

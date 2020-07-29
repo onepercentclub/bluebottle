@@ -41,8 +41,7 @@ def migrate_hompepage_statistics(apps, schema_editor):
             homepage_stats_content.save()
             for stat in stats_content.stats.all():
                 if stat.type:
-                    print stat.type, len(stat.type)
-                    database_statistic = DatabaseStatistic.objects.create(
+                    database_statistic, _ = DatabaseStatistic.objects.get_or_create(
                         query=stat.type,
                         polymorphic_ctype_id=ContentType.objects.get_for_model(DatabaseStatistic).pk
                     )
@@ -52,7 +51,7 @@ def migrate_hompepage_statistics(apps, schema_editor):
                         master=database_statistic,
                     )
                 else:
-                    manual_statistic = ManualStatistic.objects.create(
+                    manual_statistic, _ = ManualStatistic.objects.get_or_create(
                         value=stat.value,
                         polymorphic_ctype_id=ContentType.objects.get_for_model(ManualStatistic).pk
                     )

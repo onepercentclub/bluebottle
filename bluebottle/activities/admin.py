@@ -125,7 +125,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
             ActivityReviewTransitions.values.closed
         ]:
             return [
-                'title',
                 'complete',
                 'valid',
                 'review_status',

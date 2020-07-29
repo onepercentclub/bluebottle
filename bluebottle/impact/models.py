@@ -81,6 +81,7 @@ class ImpactGoal(models.Model):
         verbose_name=_('type'),
         related_name='goals'
     )
+
     activity = models.ForeignKey(
         'activities.activity',
         verbose_name=_('activity'),
@@ -90,11 +91,16 @@ class ImpactGoal(models.Model):
     target = models.FloatField(
         _('target'),
         help_text=_('the impact target'),
-        blank=False, null=True)
+        blank=False,
+        null=True
+    )
+
     realized = models.FloatField(
         _('realized'),
         help_text=_('the realised impact'),
-        blank=False, null=True)
+        blank=True,
+        null=True
+    )
 
     class Meta:
         verbose_name = _('impact goal')

@@ -1,0 +1,25 @@
+from bluebottle.initiatives.models import InitiativePlatformSettings
+from django import template
+
+from jet.utils import get_menu_items
+
+
+register = template.Library()
+
+
+@register.assignment_tag(takes_context=True)
+def dashboard_get_menu(context):
+    """
+    Iterate over menu items and remove some based on feature flags
+    """
+    groups = get_menu_items(context)
+    i = 0
+    for group in groups:
+        j = 0
+        for item in group['items']:
+            if item.get('name', '') == 'impacttype':
+                if not InitiativePlatformSettings.load().enable_impact:
+                    del groups[i]['items'][j]
+            j += 1
+        i += 1
+    return groups

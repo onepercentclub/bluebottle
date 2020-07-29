@@ -7,7 +7,7 @@ JET_APP_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomAppIn
 JET_DEFAULT_THEME = 'goodup'
 
 
-JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
+JET_SIDE_MENU_ITEMS = [
     {
         'label': _('Initiatives'),
         'app_label': 'initiatives',
@@ -346,5 +346,6 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
     },
 
 ]
+
 
 JET_SIDE_MENU_COMPACT = False

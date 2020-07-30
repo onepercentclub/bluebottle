@@ -16,12 +16,12 @@ ICONS = [
     ('water', _('Water')),
     ('plastic', _('plastic')),
 
-    ('task', _('task')),
-    ('task-completed', _('task completed')),
-    ('event', _('event')),
-    ('event-completed', _('event completed')),
-    ('funding', _('funding')),
-    ('funding-completed', _('funding completed')),
+    ('task', _('Task')),
+    ('task-completed', _('Task completed')),
+    ('event', _('Event')),
+    ('event-completed', _('Event completed')),
+    ('funding', _('Funding')),
+    ('funding-completed', _('Funding completed')),
 
 ]
 

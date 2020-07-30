@@ -106,7 +106,7 @@ class DatabaseStatistic(BaseStatistic):
             'people_involved': 'people',
             'participants': 'people',
 
-            'activities_succeeded': '',
+            'activities_succeeded': 'default',
             'assignments_succeeded': 'task-completed',
             'events_succeeded': 'event-completed',
             'fundings_succeeded': 'funding-completed',
@@ -123,7 +123,7 @@ class DatabaseStatistic(BaseStatistic):
             'pledged_total': 'money',
             'amount_matched': 'money',
 
-            'activities_online': '',
+            'activities_online': 'default',
 
             'time_spent': 'time',
             'members': 'people',

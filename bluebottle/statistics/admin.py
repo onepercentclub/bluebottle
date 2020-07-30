@@ -1,5 +1,6 @@
 from adminsortable.admin import SortableAdmin
 from django.contrib import admin
+from django.utils.html import format_html
 from parler.admin import TranslatableAdmin
 from polymorphic.admin import PolymorphicParentModelAdmin
 
@@ -14,6 +15,12 @@ class ManualStatisticChildAdmin(TranslatableAdmin):
     model = ManualStatistic
     list_editable = ('active', )
     list_display = ('name', 'active')
+    readonly_fields = ('icon_preview',)
+
+    def icon_preview(self, obj):
+        if not obj.icon:
+            return '-'
+        return format_html(u'<img src="/goodicons/impact/{}-impact.svg">', obj.icon)
 
 
 @admin.register(DatabaseStatistic)
@@ -21,12 +28,24 @@ class DatabaseStatisticChildAdmin(TranslatableAdmin):
     model = DatabaseStatistic
     list_editable = ('active', )
     list_display = ('name', 'active')
+    readonly_fields = ('icon_preview',)
+
+    def icon_preview(self, obj):
+        if not obj.icon:
+            return '-'
+        return format_html(u'<img src="/goodicons/impact/{}-impact.svg">', obj.icon)
 
 
 @admin.register(ImpactStatistic)
 class ImpactStatisticChildAdmin(admin.ModelAdmin):
     model = ImpactStatistic
     raw_id_fields = ['impact_type']
+    readonly_fields = ('icon_preview',)
+
+    def icon_preview(self, obj):
+        if not obj.icon:
+            return '-'
+        return format_html(u'<img src="/goodicons/impact/{}-impact.svg">', obj.icon)
 
 
 @admin.register(BaseStatistic)

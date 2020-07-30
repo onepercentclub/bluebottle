@@ -15,6 +15,14 @@ ICONS = [
     ('co2', _('C02')),
     ('water', _('Water')),
     ('plastic', _('plastic')),
+
+    ('task', _('task')),
+    ('task-completed', _('task completed')),
+    ('event', _('event')),
+    ('event-completed', _('event completed')),
+    ('funding', _('funding')),
+    ('funding-completed', _('funding completed')),
+
 ]
 
 

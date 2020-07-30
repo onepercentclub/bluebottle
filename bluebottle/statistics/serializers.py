@@ -26,7 +26,7 @@ class BaseStatisticSerializer(ModelSerializer):
 class ManualStatisticSerializer(BaseStatisticSerializer):
     class Meta:
         model = ManualStatistic
-        fields = ('id', 'value', 'name', )
+        fields = ('id', 'value', 'name', 'icon')
 
     class JSONAPIMeta:
         resource_name = 'statistics/manual-statistics'

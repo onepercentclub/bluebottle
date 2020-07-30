@@ -36,7 +36,7 @@ class BaseStatistic(TranslatablePolymorphicModel, SortableMixin):
                 return u"{}".format(getattr(self, child.__name__.lower()).name)
             except child.DoesNotExist:
                 pass
-        return "Stat #{}".format(self.id)
+        return u"Stat #{}".format(self.id)
 
     class Meta:
         ordering = ['sequence']
@@ -60,7 +60,7 @@ class ManualStatistic(BaseStatistic):
         resource_name = 'statistics/manual-statistics'
 
     def __unicode__(self):
-        return self.translations.name
+        return unicode(self.translations.name)
 
 
 class DatabaseStatistic(BaseStatistic):
@@ -85,7 +85,6 @@ class DatabaseStatistic(BaseStatistic):
         ('pledged_total', _('Pledged total')),
         ('amount_matched', _('Amount matched')),
         ('activities_online', _('Activities Online')),
-        ('votes_cast', _('Votes casts')),
         ('time_spent', _('Time spent')),
         ('members', _("Number of members"))
     ]
@@ -103,20 +102,28 @@ class DatabaseStatistic(BaseStatistic):
     @property
     def icon(self):
         mapping = {
+
             'people_involved': 'people',
             'participants': 'people',
 
-            'fundings_succeeded': 'money',
+            'activities_succeeded': 'default',
+            'assignments_succeeded': 'task-completed',
+            'events_succeeded': 'event-completed',
+            'fundings_succeeded': 'funding-completed',
 
             'assignment_members': 'people',
             'event_members': 'people',
 
-            'fundings_online': 'money',
+            'assignments_online': 'task',
+            'events_online': 'event',
+            'fundings_online': 'funding',
 
             'donations': 'money',
             'donated_total': 'money',
             'pledged_total': 'money',
             'amount_matched': 'money',
+
+            'activities_online': 'default',
 
             'time_spent': 'time',
             'members': 'people',
@@ -141,6 +148,12 @@ class ImpactStatistic(BaseStatistic):
         )['sum'] or 0
 
     translations = TranslatedFields()
+
+    @property
+    def icon(self):
+        if not self.impact_type:
+            return
+        return self.impact_type.icon
 
     @property
     def name(self):

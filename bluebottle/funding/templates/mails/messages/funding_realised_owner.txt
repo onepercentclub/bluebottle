@@ -3,12 +3,23 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans with recipient_name=obj.owner.first_name title=obj.title context 'email' %}
-        Hi {{ recipient_name }},
-        Congrats! Your funding deadline for "{{title}}" has passed and you’ve successfully reached your funding goal.
-        Head over to your campaign page and thank your awesome backers for their support.
-    {% endblocktrans %}
-{% endblock content %} 
+{% if obj.goals.count %}
+{% blocktrans with recipient_name=to.first_name funding_title=obj.title context 'email' %}
+Hi {{ recipient_name }},
+
+Well done, your funding campaign "{{ funding_title }}" has succeeded. Congratulations!
+A couple of things we would like to ask from you:
+1. Add your impact results
+2. Post an update to celebrate with the people who helped you out
+{% endblocktrans %}
+{% else %}
+{% blocktrans with recipient_name=obj.owner.first_name funding_title=obj.title context 'email' %}
+Hi {{ recipient_name }},
+Congrats! Your funding deadline for "{{funding_title}}" has passed and you’ve successfully reached your funding goal.
+Head over to your campaign page and thank your awesome backers for their support.
+{% endblocktrans %}
+{% endif %}
+{% endblock content %}
 
 {% block action %}
    {% trans 'Go to campaign' context 'email' %}: {{ obj.get_absolute_url }}

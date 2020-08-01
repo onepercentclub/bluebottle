@@ -110,7 +110,9 @@ class Member(BlueBottleBaseUser):
     segments = models.ManyToManyField(
         'segments.segment',
         verbose_name=_('Segment'),
-        related_name='users'
+        related_name='users',
+        blank=True,
+        null=True
     )
 
     def __init__(self, *args, **kwargs):

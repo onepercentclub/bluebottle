@@ -72,6 +72,11 @@ class MemberPlatformSettings(BasePlatformSettings):
 
     background = models.ImageField(null=True, blank=True, upload_to='site_content/')
 
+    enable_segments = models.BooleanField(
+        default=False,
+        help_text=_('')
+    )
+
     anonymization_age = models.IntegerField(
         default=0,
         help_text=_("The number of days after which user data should be anonymised. 0 for no anonymisation")

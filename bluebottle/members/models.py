@@ -74,7 +74,7 @@ class MemberPlatformSettings(BasePlatformSettings):
 
     enable_segments = models.BooleanField(
         default=False,
-        help_text=_('')
+        help_text=_('Enable segments for users e.g. department or job title.')
     )
 
     anonymization_age = models.IntegerField(

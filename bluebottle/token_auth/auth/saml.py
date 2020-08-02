@@ -98,10 +98,11 @@ class SAMLAuthentication(BaseTokenAuthentication):
         return data
 
     def authenticate_request(self):
-        if 'saml_request_id' not in self.request.session:
-            error = 'SAML request id missing from session'
-            logger.error('Saml login error: {}'.format(error))
-            raise TokenAuthenticationError(error)
+        # See BB-17150
+        # if 'saml_request_id' not in self.request.session:
+        #     error = 'SAML request id missing from session'
+        #     logger.error('Saml login error: {}'.format(error))
+        #     raise TokenAuthenticationError(error)
 
         try:
             self.auth.process_response(self.request.session['saml_request_id'])

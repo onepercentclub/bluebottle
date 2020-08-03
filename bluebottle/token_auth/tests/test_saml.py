@@ -102,10 +102,12 @@ class TestSAMLTokenAuthentication(TestCase):
             self.assertEqual(user.email, 'smartin@yaco.es')
             self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
 
-            self.assertRaises(
-                TokenAuthenticationError,
-                auth_backend.authenticate
-            )
+            # BB-17150
+            # Make sure the request cannot be repeated
+            # self.assertRaises(
+            #     TokenAuthenticationError,
+            #     auth_backend.authenticate
+            # )
 
     @patch('bluebottle.token_auth.auth.saml.logger.error')
     def test_auth_session_reuse(self, error):

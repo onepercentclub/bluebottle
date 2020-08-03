@@ -111,7 +111,8 @@ class SAMLAuthentication(BaseTokenAuthentication):
             raise TokenAuthenticationError(e)
 
         if self.auth.is_authenticated():
-            del self.request.session['saml_request_id']
+            # See BB-17150
+            # del self.request.session['saml_request_id']
             user_data = self.auth.get_attributes()
             user_data['nameId'] = [self.auth.get_nameid()]
 

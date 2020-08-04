@@ -3,7 +3,7 @@ import logging
 from django.contrib.auth import get_user_model
 
 from bluebottle.geo.models import Location
-from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
+from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings, MemberPlatformSettings
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.utils import get_settings
@@ -64,12 +64,11 @@ class BaseTokenAuthentication(object):
 
         for (path, value) in segments:
             type_slug = path.split('.')[-1]
-            segment_type, _created = SegmentType.objects.get_or_create(
-                slug=type_slug,
-                defaults={
-                    'name': type_slug.title()
-                }
-            )
+            try:
+                segment_type = SegmentType.objects.get(slug=type_slug)
+            except SegmentType.DoesNotExist:
+                logger.error('SSO Error: Missing segment type: {}'.format(type_slug))
+                return
 
             try:
                 current_segment = user.segments.get(
@@ -92,12 +91,13 @@ class BaseTokenAuthentication(object):
 
                     user.segments.add(segment)
                 except Segment.DoesNotExist:
-                    segment = Segment.objects.create(
-                        type=segment_type,
-                        name=val,
-                        alternate_names=[val]
-                    )
-                    user.segments.add(segment)
+                    if MemberPlatformSettings.load().create_segments:
+                        segment = Segment.objects.create(
+                            type=segment_type,
+                            name=val,
+                            alternate_names=[val]
+                        )
+                        user.segments.add(segment)
 
     def set_custom_data(self, user, data):
         """
@@ -113,7 +113,7 @@ class BaseTokenAuthentication(object):
                         field=field, member=user, defaults={'value': value}
                     )
                 except CustomMemberFieldSettings.DoesNotExist:
-                    logger.error('Missing custom field: {}'.format(name))
+                    logger.error('SSO Error: Missing custom field: {}'.format(name))
 
     def get_or_create_user(self, data):
         """

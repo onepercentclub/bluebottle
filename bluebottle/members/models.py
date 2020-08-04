@@ -77,6 +77,12 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_('Enable segments for users e.g. department or job title.')
     )
 
+    create_segments = models.BooleanField(
+        default=False,
+        help_text=_('Create new segments when a user logs in. '
+                    'Leave unchecked if only priorly specified ones should be used.')
+    )
+
     anonymization_age = models.IntegerField(
         default=0,
         help_text=_("The number of days after which user data should be anonymised. 0 for no anonymisation")

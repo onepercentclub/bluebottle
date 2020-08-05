@@ -16,6 +16,7 @@ from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.funding.models import Funding, Donation
 from bluebottle.funding.transitions import FundingTransitions
+from bluebottle.segments.models import Segment
 from bluebottle.utils.admin import FSMAdmin
 from bluebottle.wallposts.admin import WallpostInline
 
@@ -108,7 +109,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
             ActivityReviewTransitions.values.closed
         ]:
             return [
-                'title',
                 'complete',
                 'valid',
                 'review_status',
@@ -131,6 +131,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         'transition_date'
     )
 
+    def get_detail_fields(self, request, obj):
+        fields = self.detail_fields
+        if Segment.objects.filter(type__is_active=True).count():
+            fields += ('segments',)
+        return fields
+
     detail_fields = (
         'description',
         'highlight'
@@ -139,7 +145,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     def get_fieldsets(self, request, obj=None):
         return (
             (_('Basic'), {'fields': self.basic_fields}),
-            (_('Details'), {'fields': self.detail_fields}),
+            (_('Details'), {'fields': self.get_detail_fields(request, obj)}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
 

@@ -23,9 +23,7 @@ class ElasticSearchFilter(filters.SearchFilter):
     def filter_queryset(self, request, queryset, view):
         search = self.document.search()
 
-        filter_fields = self.get_filter_fields(request)
-        filters = [self.get_filter(request, field) for field in filter_fields] + self.get_default_filters(request)
-
+        filters = self.get_filters(request)
         if filters:
             search = search.filter(Bool(must=filters))
 
@@ -47,6 +45,14 @@ class ElasticSearchFilter(filters.SearchFilter):
         return [
             field for field in self.filters if request.GET.get('filter[{}]'.format(field))
         ]
+
+    def get_filters(self, request):
+        filter_fields = self.get_filter_fields(request)
+
+        return [
+            self.get_filter(request, field)
+            for field in filter_fields
+        ] + self.get_default_filters(request)
 
     def get_search_query(self, request):
         terms = request.GET.get(self.search_field)

@@ -367,6 +367,11 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
 
 
 class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
+    has_locations = serializers.SerializerMethodField()
+
+    def get_has_locations(self, obj):
+        return Location.objects.count()
+
     class Meta:
         model = InitiativePlatformSettings
 
@@ -375,7 +380,8 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'initiative_search_filters',
             'activity_search_filters',
             'require_organization',
-            'contact_method'
+            'contact_method',
+            'has_locations',
         )
 
 

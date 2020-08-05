@@ -67,6 +67,12 @@ class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, Polymo
             "You can paste the link to YouTube or Vimeo video here"
         )
     )
+    segments = models.ManyToManyField(
+        'segments.segment',
+        verbose_name=_('Segment'),
+        related_name='activities',
+        blank=True
+    )
 
     followers = GenericRelation('follow.Follow', object_id_field='instance_id')
     messages = GenericRelation('notifications.Message')
@@ -102,6 +108,11 @@ class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, Polymo
             self.owner = self.initiative.owner
 
         super(Activity, self).save(**kwargs)
+
+        if not self.segments.count():
+            for segment in self.owner.segments.all():
+                self.segments.add(segment)
+
         Organizer.objects.update_or_create(
             activity=self,
             defaults={

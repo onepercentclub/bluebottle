@@ -67,7 +67,7 @@ class BaseTokenAuthentication(object):
             try:
                 segment_type = SegmentType.objects.get(slug=type_slug)
             except SegmentType.DoesNotExist:
-                logger.error('SSO Error: Missing segment type: {}'.format(type_slug))
+                logger.info('SSO Error: Missing segment type: {}'.format(type_slug))
                 return
 
             try:

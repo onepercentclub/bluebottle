@@ -206,6 +206,10 @@ JET_SIDE_MENU_ITEMS = [
                 'name': 'auth.group',
                 'permissions': ['auth.change_group']
             },
+            {
+                'name': 'segments.segmenttype',
+                'permissions': ['segments.change_segment']
+            },
         ]
     },
     {
@@ -268,6 +272,7 @@ JET_SIDE_MENU_ITEMS = [
                 'name': 'wallposts.reaction',
                 'permissions': ['wallposts.change_wallpost']
             },
+
         ]
     },
     {

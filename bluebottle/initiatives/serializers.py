@@ -370,6 +370,11 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
 
 
 class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
+    has_locations = serializers.SerializerMethodField()
+
+    def get_has_locations(self, obj):
+        return Location.objects.count()
+
     class Meta:
         model = InitiativePlatformSettings
 
@@ -380,6 +385,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'require_organization',
             'contact_method',
             'enable_impact',
+            'has_locations'
         )
 
 

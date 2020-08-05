@@ -1,4 +1,6 @@
 import dateutil
+import re
+
 from django_filters.rest_framework import DjangoFilterBackend
 
 from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, Range
@@ -31,13 +33,14 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'status',
         'date',
         'initiative_location.id',
+        'segment',
     )
 
     search_fields = (
         'status', 'title', 'description', 'owner.full_name',
         'initiative.title', 'initiative.pitch', 'initiative.pitch',
         'initiative_location.name', 'initiative_location.city',
-        'location.formatted_address',
+        'location.formatted_address', 'segments.name',
     )
 
     boost = {
@@ -160,6 +163,25 @@ class ActivitySearchFilter(ElasticSearchFilter):
         start = date.replace(date.year, date.month, 1)
         end = start + dateutil.relativedelta.relativedelta(day=31)
         return Range(activity_date={'gt': start, 'lt': end})
+
+    def get_filters(self, request):
+        filters = super(ActivitySearchFilter, self).get_filters(request)
+        regex = re.compile(b'^filter\[segment\.(?P<type>[\w\-]+)\]$')
+        for key, value in request.GET.items():
+            matches = regex.match(key)
+            if matches:
+                filters.append(
+                    Nested(
+                        path='segments',
+                        query=Term(
+                            segments__type=matches.groupdict()['type']
+                        ) & Term(
+                            segments__id=value
+                        )
+                    )
+                )
+
+        return filters
 
     def get_default_filters(self, request):
         permission = 'activities.api_read_activity'

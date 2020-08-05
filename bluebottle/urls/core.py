@@ -84,12 +84,14 @@ urlpatterns = [
         include('bluebottle.funding_lipisha.urls.api')),
     url(r'^api/funding/telesom',
         include('bluebottle.funding_telesom.urls.api')),
+    url(r'^api/impact/',
+        include('bluebottle.impact.urls.api')),
+    url(r'^api/segments/',
+        include('bluebottle.segments.urls.api')),
 
     url(r'^api/files/',
         include('bluebottle.files.urls.api')),
 
-    url(r'^api/impact/',
-        include('bluebottle.impact.urls.api')),
 
     url(r'^payments_mock/',
         include('bluebottle.payments_mock.urls.core')),

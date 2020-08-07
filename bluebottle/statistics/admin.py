@@ -1,6 +1,7 @@
 from adminsortable.admin import SortableAdmin
 from django.contrib import admin
 from django.db import connection
+from django import forms
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.html import format_html
@@ -34,9 +35,25 @@ class StatisticsChildAdmin(PolymorphicChildModelAdmin):
         return format_html(u'<img src="/goodicons/impact/{}-impact.svg">', obj.icon)
 
 
+class IconWidget(forms.RadioSelect):
+    option_template_name = 'admin/impact/select_icon_option.html'
+    template_name = 'admin/impact/select_icon.html'
+
+
+class ManualStatisticForm(forms.ModelForm):
+
+    class Meta:
+        model = ManualStatistic
+        widgets = {
+            'icon': IconWidget(),
+        }
+        fields = '__all__'
+
+
 @admin.register(ManualStatistic)
 class ManualStatisticChildAdmin(TranslatableAdmin, StatisticsChildAdmin):
     model = ManualStatistic
+    form = ManualStatisticForm
 
 
 @admin.register(DatabaseStatistic)

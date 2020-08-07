@@ -158,10 +158,6 @@ class ImageTextRoundItem(ContentItem):
 
 
 class Page(PublishableModel):
-    """
-    Slides for homepage.
-    """
-
     class PageStatus(DjangoChoices):
         published = ChoiceItem('published', label=_('Published'))
         draft = ChoiceItem('draft', label=_('Draft'))

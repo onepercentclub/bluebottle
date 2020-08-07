@@ -1,0 +1,15 @@
+{% load i18n %}
+{% if wrap_label %}
+    <label{% if widget.attrs.id %} for="{{ widget.attrs.id }}"{% endif %}>
+{% endif %}
+    {% include "django/forms/widgets/input.html" %}
+{% if wrap_label %}
+    {% if widget.value %}
+        <img src="/goodicons/impact/{{ widget.value }}-impact.svg" alt="{{ widget.label }}">
+    {% else %}
+        <span>
+            {% trans "Default" %}
+        </span>
+    {% endif %}
+    </label>
+{% endif %}

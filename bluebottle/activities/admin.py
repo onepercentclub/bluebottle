@@ -16,6 +16,7 @@ from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.funding.models import Funding, Donation
 from bluebottle.funding.transitions import FundingTransitions
+from bluebottle.segments.models import Segment
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.utils.admin import FSMAdmin
@@ -147,6 +148,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         'transition_date'
     )
 
+    def get_detail_fields(self, request, obj):
+        fields = self.detail_fields
+        if Segment.objects.filter(type__is_active=True).count():
+            fields += ('segments',)
+        return fields
+
     detail_fields = (
         'description',
         'highlight'
@@ -155,7 +162,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     def get_fieldsets(self, request, obj=None):
         return (
             (_('Basic'), {'fields': self.basic_fields}),
-            (_('Details'), {'fields': self.detail_fields}),
+            (_('Details'), {'fields': self.get_detail_fields(request, obj)}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
 

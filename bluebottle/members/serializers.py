@@ -17,6 +17,8 @@ from bluebottle.geo.serializers import LocationSerializer, PlaceSerializer
 from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.organizations.serializers import OrganizationSerializer
+from bluebottle.segments.models import Segment
+from bluebottle.segments.serializers import SegmentTypeSerializer
 from bluebottle.tasks.models import Skill
 from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
 
@@ -207,6 +209,17 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
         )
 
 
+class OldSegmentSerializer(serializers.ModelSerializer):
+
+    type = SegmentTypeSerializer()
+
+    class Meta:
+        model = Segment
+        fields = (
+            'id', 'name', 'type'
+        )
+
+
 class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
@@ -241,6 +254,8 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     tasks_performed = serializers.ReadOnlyField()
     is_active = serializers.BooleanField(read_only=True)
 
+    segments = OldSegmentSerializer(many=True, read_only=True)
+
     class Meta:
         model = BB_USER_MODEL
         fields = (
@@ -250,7 +265,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'fundraiser_count', 'task_count', 'time_spent', 'is_active',
             'tasks_performed', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
-            'subscribed',
+            'subscribed', 'segments'
         )
 
 

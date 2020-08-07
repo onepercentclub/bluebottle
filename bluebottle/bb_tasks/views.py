@@ -22,7 +22,7 @@ from bluebottle.utils.permissions import (
 from bluebottle.utils.views import (
     PrivateFileView, ListAPIView, ListCreateAPIView,
     RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView, OwnerListViewMixin,
-    TranslatedApiViewMixin)
+    TranslatedApiViewMixin, RetrieveAPIView)
 from bluebottle.bb_tasks.permissions import (
     ActiveProjectOrReadOnlyPermission
 )
@@ -329,6 +329,11 @@ class TaskFileDetail(RetrieveUpdateAPIView):
 
 
 class SkillList(TranslatedApiViewMixin, ListAPIView):
+    queryset = Skill.objects.filter(disabled=False)
+    serializer_class = SkillSerializer
+
+
+class SkillDetail(TranslatedApiViewMixin, RetrieveAPIView):
     queryset = Skill.objects.filter(disabled=False)
     serializer_class = SkillSerializer
 

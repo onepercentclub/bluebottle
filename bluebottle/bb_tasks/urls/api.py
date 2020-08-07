@@ -3,7 +3,7 @@ from django.conf.urls import url
 from ..views import (
     TaskDetail, TaskList, TaskMemberList, TaskMemberDetail, TaskMemberStatus,
     TaskFileList, TaskFileDetail, MyTaskList, MyTaskDetail,
-    TaskPreviewList, MyTaskMemberList, SkillList, UsedSkillList)
+    TaskPreviewList, MyTaskMemberList, SkillList, UsedSkillList, SkillDetail)
 
 urlpatterns = [
     url(r'^$', TaskList.as_view(), name='task-list'),
@@ -13,6 +13,7 @@ urlpatterns = [
 
     url(r'^previews/$', TaskPreviewList.as_view(), name='task_preview_list'),
 
+    url(r'^skills/(?P<pk>\d+)$', SkillDetail.as_view(), name='task_skill_detail'),
     url(r'^skills/$', SkillList.as_view(), name='task_skill_list'),
     url(r'^used_skills/$', UsedSkillList.as_view(), name='used_task_skill_list'),
 

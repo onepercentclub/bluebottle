@@ -17,6 +17,7 @@ from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
@@ -90,7 +91,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -111,7 +112,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url,
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -127,7 +128,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[initiative_location.id]={}'.format(location.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -173,7 +174,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[date]=2019-04-01',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -181,7 +182,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[date]=2019-01-01',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -194,6 +195,53 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertTrue(unicode(deadline_assignment.pk) in found)
         self.assertTrue(unicode(funding.pk) in found)
 
+    def test_filter_segment(self):
+        segment = SegmentFactory.create()
+        first = EventFactory.create(
+            review_status='approved',
+        )
+        first.segments.add(segment)
+
+        EventFactory.create(
+            review_status='approved'
+        )
+
+        response = self.client.get(
+            self.url + '?filter[segment.{}]={}'.format(
+                segment.type.slug, segment.pk
+            ),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
+
+    def test_filter_segment_mismatch(self):
+        first = EventFactory.create(
+            review_status='approved',
+        )
+        first_segment = SegmentFactory.create()
+        first.segments.add(first_segment)
+        second_segment = SegmentFactory.create()
+        first.segments.add(second_segment)
+
+        EventFactory.create(
+            review_status='approved'
+        )
+
+        response = self.client.get(
+            self.url + '?filter[segment.{}]={}'.format(
+                first_segment.type.slug, second_segment.pk
+            ),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 0)
+
     def test_search(self):
         first = EventFactory.create(
             title='Lorem ipsum dolor sit amet',
@@ -204,7 +252,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -223,7 +271,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -248,7 +296,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -273,7 +321,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=Roggeveenstraat',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -297,7 +345,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=test title',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -306,6 +354,26 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], unicode(second.pk))
         self.assertEqual(data['data'][1]['id'], unicode(first.pk))
 
+    def test_search_segment_name(self):
+        first = EventFactory.create(
+            review_status='approved',
+        )
+        first.segments.add(SegmentFactory(name='Online Marketing'))
+
+        EventFactory.create(
+            review_status='approved'
+        )
+
+        response = self.client.get(
+            self.url + '?filter[search]=marketing',
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
+
     def test_sort_title(self):
         second = EventFactory.create(title='B: something else', review_status='approved')
         first = EventFactory.create(title='A: something', review_status='approved')
@@ -313,7 +381,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=alphabetical',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -337,7 +405,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=date',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -369,7 +437,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -398,7 +466,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -426,7 +494,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -461,7 +529,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -506,7 +574,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -581,7 +649,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -605,7 +673,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -652,7 +720,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             self.url + '?sort=popularity',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
 
         data = json.loads(response.content)
@@ -673,13 +741,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         response = self.client.get(
             self.url + '?page[size]=150',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
         self.assertEqual(len(response.json()['data']), 105)
 
         response = self.client.get(
             self.url + '?page[size]=10',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            user=self.owner
         )
         self.assertEqual(len(response.json()['data']), 10)
 

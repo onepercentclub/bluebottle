@@ -147,6 +147,10 @@ ul.icon-picker li img{
 ul.icon-picker label{
     cursor: pointer;
 }
+ul.icon-picker span{
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    padding: 4px;
+}
 ul.icon-picker input{
     display: none;
 }

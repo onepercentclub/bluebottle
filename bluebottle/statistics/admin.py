@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.html import format_html
 from parler.admin import TranslatableAdmin
+from parler.forms import TranslatableModelForm
 from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
@@ -40,20 +41,21 @@ class IconWidget(forms.RadioSelect):
     template_name = 'admin/impact/select_icon.html'
 
 
-class ManualStatisticForm(forms.ModelForm):
+class ManualStatisticForm(TranslatableModelForm):
 
     class Meta:
         model = ManualStatistic
         widgets = {
             'icon': IconWidget(),
         }
-        fields = '__all__'
+        exclude = []
 
 
 @admin.register(ManualStatistic)
 class ManualStatisticChildAdmin(TranslatableAdmin, StatisticsChildAdmin):
     model = ManualStatistic
     form = ManualStatisticForm
+    fields = ('name', 'icon', 'active')
 
 
 @admin.register(DatabaseStatistic)

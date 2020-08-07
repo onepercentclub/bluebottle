@@ -1,8 +1,12 @@
 from adminsortable.admin import SortableAdmin
 from django.contrib import admin
+from django.db import connection
+from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils.html import format_html
 from parler.admin import TranslatableAdmin
-from polymorphic.admin import PolymorphicParentModelAdmin
+from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
+from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.statistics.models import (
@@ -10,63 +14,57 @@ from bluebottle.statistics.models import (
 )
 
 
-@admin.register(ManualStatistic)
-class ManualStatisticChildAdmin(TranslatableAdmin):
-    model = ManualStatistic
-    list_editable = ('active', )
+class StatisticsChildAdmin(PolymorphicChildModelAdmin):
     list_display = ('name', 'active')
     readonly_fields = ('icon_preview',)
+    base_model = BaseStatistic
+
+    def response_add(self, request, obj, post_url_continue=None):
+        return redirect(reverse('admin:statistics_basestatistic_changelist'))
+
+    def response_change(self, request, obj):
+        return redirect(reverse('admin:statistics_basestatistic_changelist'))
+
+    def response_delete(self, request, obj_display, obj_id):
+        return redirect(reverse('admin:statistics_basestatistic_changelist'))
 
     def icon_preview(self, obj):
         if not obj.icon:
             return '-'
         return format_html(u'<img src="/goodicons/impact/{}-impact.svg">', obj.icon)
+
+
+@admin.register(ManualStatistic)
+class ManualStatisticChildAdmin(TranslatableAdmin, StatisticsChildAdmin):
+    model = ManualStatistic
 
 
 @admin.register(DatabaseStatistic)
-class DatabaseStatisticChildAdmin(TranslatableAdmin):
+class DatabaseStatisticChildAdmin(TranslatableAdmin, StatisticsChildAdmin):
     model = DatabaseStatistic
-    list_editable = ('active', )
-    list_display = ('name', 'active')
-    readonly_fields = ('icon_preview',)
-
-    def icon_preview(self, obj):
-        if not obj.icon:
-            return '-'
-        return format_html(u'<img src="/goodicons/impact/{}-impact.svg">', obj.icon)
 
 
 @admin.register(ImpactStatistic)
-class ImpactStatisticChildAdmin(admin.ModelAdmin):
+class ImpactStatisticChildAdmin(StatisticsChildAdmin):
     model = ImpactStatistic
-    raw_id_fields = ['impact_type']
-    readonly_fields = ('icon_preview',)
-
-    def icon_preview(self, obj):
-        if not obj.icon:
-            return '-'
-        return format_html(u'<img src="/goodicons/impact/{}-impact.svg">', obj.icon)
 
 
 @admin.register(BaseStatistic)
 class StatisticAdmin(SortableAdmin, PolymorphicParentModelAdmin):
     base_model = BaseStatistic
-    list_display = ('sequence', 'name', 'polymorphic_ctype', 'active')
-    list_editable = ('active',)
+    list_display = ('name', 'polymorphic_ctype', 'active')
+    list_editable = ('active', )
     child_models = (
         DatabaseStatistic,
-        ManualStatistic
+        ManualStatistic,
+        ImpactStatistic
     )
-    _child_models = child_models
 
     def get_child_models(self):
-        # Make sure we can dynamically add
-        return self._child_models
-
-    def get_child_type_choices(self, request, action):
-        if InitiativePlatformSettings.load().enable_impact:
-            self._child_models += (ImpactStatistic,)
-        return super(StatisticAdmin, self).get_child_type_choices(request, action)
+        if not isinstance(connection.tenant, FakeTenant):
+            if not InitiativePlatformSettings.load().enable_impact:
+                return tuple(x for x in self.child_models if x != ImpactStatistic)
+        return self.child_models
 
     # We need this because Django Polymorphic uses a calculated property to
     # override change_list_template instead of using get_changelist_template.

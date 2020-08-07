@@ -1,27 +1,28 @@
 from adminsortable.models import SortableMixin
 from django.db import models
 from django.db.models import Sum
-from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import lazy
-
-from djchoices import DjangoChoices, ChoiceItem
+from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, \
     ModificationDateTimeField
-
-from parler.models import TranslatedFields
-
-from bluebottle.utils.models import TranslatablePolymorphicModel
-from bluebottle.impact.models import ICONS
+from djchoices import DjangoChoices, ChoiceItem
+from parler.models import TranslatedFields, TranslatableModel
+from polymorphic.models import PolymorphicModel
 
 from bluebottle.clients import properties
+from bluebottle.impact.models import ICONS
 from bluebottle.statistics.statistics import Statistics
+from bluebottle.utils.managers import TranslatablePolymorphicManager
 
 
 def get_languages():
     return properties.LANGUAGES
 
 
-class BaseStatistic(TranslatablePolymorphicModel, SortableMixin):
+class BaseStatistic(PolymorphicModel, SortableMixin):
+
+    objects = TranslatablePolymorphicManager()
+
     active = models.BooleanField(
         help_text=_('Should this be shown or hidden.'),
         default=True
@@ -40,14 +41,17 @@ class BaseStatistic(TranslatablePolymorphicModel, SortableMixin):
 
     class Meta:
         ordering = ['sequence']
+        verbose_name = _('Statistic')
+        verbose_name_plural = _('Statistics')
 
 
-class ManualStatistic(BaseStatistic):
+class ManualStatistic(BaseStatistic, TranslatableModel):
     value = models.IntegerField()
-
+    objects = TranslatablePolymorphicManager()
     translations = TranslatedFields(
         name=models.CharField(_('Name'), max_length=100)
     )
+
     icon = models.CharField(
         _('icon'), choices=ICONS,
         null=True, blank=True, max_length=20
@@ -62,8 +66,12 @@ class ManualStatistic(BaseStatistic):
     def __unicode__(self):
         return unicode(self.translations.name)
 
+    class Meta:
+        verbose_name = _('Custom statistic')
+        verbose_name_plural = _('Custom statistics')
 
-class DatabaseStatistic(BaseStatistic):
+
+class DatabaseStatistic(BaseStatistic, TranslatableModel):
     QUERIES = [
         ('people_involved', _('People involved')),
         ('participants', _('Participants')),
@@ -88,15 +96,16 @@ class DatabaseStatistic(BaseStatistic):
         ('time_spent', _('Time spent')),
         ('members', _("Number of members"))
     ]
+    translations = TranslatedFields(
+        name=models.CharField(_('Name'), max_length=100)
+    )
+    objects = TranslatablePolymorphicManager()
 
     query = models.CharField(
         _('query'),
         max_length=30,
         choices=QUERIES,
         db_index=True
-    )
-    translations = TranslatedFields(
-        name=models.CharField(_('Name'), max_length=100)
     )
 
     @property
@@ -136,6 +145,10 @@ class DatabaseStatistic(BaseStatistic):
     class JSONAPIMeta:
         resource_name = 'statistics/database-statistics'
 
+    class Meta:
+        verbose_name = _('Engagement statistic')
+        verbose_name_plural = _('Engagement statistics')
+
 
 class ImpactStatistic(BaseStatistic):
     impact_type = models.ForeignKey('impact.ImpactType')
@@ -146,8 +159,6 @@ class ImpactStatistic(BaseStatistic):
         ).aggregate(
             sum=Sum('realized')
         )['sum'] or 0
-
-    translations = TranslatedFields()
 
     @property
     def icon(self):
@@ -161,6 +172,10 @@ class ImpactStatistic(BaseStatistic):
 
     class JSONAPIMeta:
         resource_name = 'statistics/impact-statistics'
+
+    class Meta:
+        verbose_name = _('Impact statistic')
+        verbose_name_plural = _('Impact statistics')
 
 
 class Statistic(models.Model):

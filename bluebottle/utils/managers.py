@@ -102,8 +102,16 @@ class TranslatablePolymorphicQuerySet(TranslatableQuerySet, PolymorphicQuerySet)
     pass
 
 
+class SortableTranslatablePolymorphicQuerySet(TranslatableQuerySet, PolymorphicQuerySet):
+    queryset_class = SortableTranslatableQuerySet
+
+
 class TranslatablePolymorphicManager(PolymorphicManager, TranslatableManager):
     queryset_class = TranslatablePolymorphicQuerySet
+
+
+class SortableTranslatablePolymorphicManager(PolymorphicManager, TranslatableManager):
+    queryset_class = SortableTranslatablePolymorphicQuerySet
 
 
 class PublishedQuerySet(QuerySet):

@@ -41,7 +41,7 @@ class BaseStatistic(PolymorphicModel, SortableMixin):
 
     class Meta:
         ordering = ['sequence']
-        verbose_name = _('Statistics')
+        verbose_name = _('Statistic')
         verbose_name_plural = _('Statistics')
 
 
@@ -67,7 +67,7 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
         return unicode(self.translations.name)
 
     class Meta:
-        verbose_name = _('Custom statistics')
+        verbose_name = _('Custom statistic')
         verbose_name_plural = _('Custom statistics')
 
 
@@ -146,7 +146,7 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
         resource_name = 'statistics/database-statistics'
 
     class Meta:
-        verbose_name = _('Engagement statistics')
+        verbose_name = _('Engagement statistic')
         verbose_name_plural = _('Engagement statistics')
 
 
@@ -174,7 +174,7 @@ class ImpactStatistic(BaseStatistic):
         resource_name = 'statistics/impact-statistics'
 
     class Meta:
-        verbose_name = _('Impact statistics')
+        verbose_name = _('Impact statistic')
         verbose_name_plural = _('Impact statistics')
 
 

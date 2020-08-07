@@ -78,7 +78,6 @@ class ImpactType(SortableTranslatableModel):
         super(ImpactType, self).save(**kwargs)
 
     class Meta:
-        ordering = ['translations__name']
         verbose_name = _('impact type')
         verbose_name_plural = _('impact types')
 

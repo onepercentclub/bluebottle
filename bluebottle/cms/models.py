@@ -29,7 +29,6 @@ class ResultPage(TranslatableModel):
         'QuotesBlockPlugin',
         'ActivitiesBlockPlugin',
         'ShareResultsBlockPlugin',
-        'StatsBlockPlugin',
         'SurveyBlockPlugin',
         'TasksBlockPlugin',
         'SupporterTotalBlockPlugin',

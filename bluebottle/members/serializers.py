@@ -19,7 +19,7 @@ from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
-from bluebottle.tasks.models import Skill
+from bluebottle.segments.models import Skill
 from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
 
 BB_USER_MODEL = get_user_model()
@@ -245,6 +245,11 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
                                                    queryset=Skill.objects)
     favourite_theme_ids = serializers.PrimaryKeyRelatedField(
         many=True, source='favourite_themes', queryset=ProjectTheme.objects)
+
+    segment_ids = serializers.PrimaryKeyRelatedField(many=True,
+                                                     source='segments',
+                                                     required=False,
+                                                     queryset=Segment.objects)
 
     project_count = serializers.ReadOnlyField()
     donation_count = serializers.ReadOnlyField()

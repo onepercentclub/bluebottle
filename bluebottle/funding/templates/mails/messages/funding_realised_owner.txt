@@ -7,17 +7,20 @@
 {% blocktrans with recipient_name=to.first_name funding_title=obj.title context 'email' %}
 Hi {{ recipient_name }},
 
-Well done, your funding campaign "{{ funding_title }}" has succeeded. Congratulations!
-A couple of things we would like to ask from you:
-1. Add your impact results
-2. Post an update to celebrate with the people who helped you out
-{% endblocktrans %}
+Congratulations, your funding deadline for "{{ funding_title }}" has passed and you've successfully reached your funding goal! 
+
+Head over to your campaign page and:
+
+1. Enter the impact the campaign made, so that everybody can see how effective your campaign was.
+2. Thank your awesome backers for their donations and support. {% endblocktrans %}
+
 {% else %}
 {% blocktrans with recipient_name=obj.owner.first_name funding_title=obj.title context 'email' %}
 Hi {{ recipient_name }},
-Congrats! Your funding deadline for "{{funding_title}}" has passed and you’ve successfully reached your funding goal.
-Head over to your campaign page and thank your awesome backers for their support.
-{% endblocktrans %}
+
+Congratulations, your funding deadline for "{{ funding_title }}" has passed and you've successfully reached your funding goal! 
+
+Head over to your campaign page and thank your awesome backers for their donations and support. {% endblocktrans %}
 {% endif %}
 {% endblock content %}
 

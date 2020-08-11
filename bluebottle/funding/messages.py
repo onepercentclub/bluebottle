@@ -42,8 +42,12 @@ class FundingPartiallyFundedMessage(TransitionMessage):
 
 
 class FundingRealisedOwnerMessage(TransitionMessage):
-    subject = _(u"You successfully completed your crowdfunding campaign! 🎉")
+    subject = _(u'Your campaign "{{title}}" has been successfully completed! 🎉')
     template = 'messages/funding_realised_owner'
+
+    context = {
+        'title': 'title'
+    }
 
     def get_recipients(self):
         return [self.obj.owner]

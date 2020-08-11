@@ -42,7 +42,7 @@ class FundingPartiallyFundedMessage(TransitionMessage):
 
 
 class FundingRealisedOwnerMessage(TransitionMessage):
-    subject = _(u'Your campaign "{{title}}" has been successfully completed! 🎉')
+    subject = _(u'Your campaign "{title}" has been successfully completed! 🎉')
     template = 'messages/funding_realised_owner'
 
     context = {

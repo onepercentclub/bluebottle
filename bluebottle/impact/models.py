@@ -38,14 +38,6 @@ class ImpactType(SortableTranslatableModel):
             _('name'),
             max_length=100
         ),
-        unit=models.CharField(
-            _('unit'),
-            blank=True,
-            null=True,
-            max_length=100,
-            help_text=_('E.g. "liters" or "kg"')
-
-        ),
         text=models.CharField(
             _('Text'),
             max_length=100,
@@ -57,12 +49,12 @@ class ImpactType(SortableTranslatableModel):
             help_text=_('E.g. "save {} animals" or "reach {} people"')
         ),
         text_passed=models.CharField(
-            _('Text in passed tense'),
+            _('Text in past tense'),
             max_length=100,
             help_text=_('E.g. "animals saved" or "people reached"')
         ),
         text_passed_with_value=models.CharField(
-            _('Text in passed tense with realized  value'),
+            _('Text in past tense with realized  value'),
             max_length=100,
             help_text=_('E.g. "{} animals saved" or "{} people reached"')
         ),

@@ -6,22 +6,19 @@
 {% blocktrans with recipient_name=to.first_name event_title=obj.title context 'email' %}
 Hi {{ recipient_name }},
 
-Well done, your event "{{ event_title }}" has succeeded. Congratulations!
+You did it! Your event "{{ event_title }}" took place, that calls for a celebration.
 
-A couple of things we would like to ask from you:
-1. Add your impact results
-2. Post an update to celebrate with the people who helped you out
-{% endblocktrans %}
+Head over to your event page and:
+
+1. Enter the impact your event made, so that everybody can see how effective your event was.
+2. Thank the awesome attendees for their support.{% endblocktrans %}
 {% else %}
 {% blocktrans with recipient_name=obj.owner.first_name event_title=obj.title context 'email' %}
 Hi {{ recipient_name }},
 
-You did it! Your event "{{ event_title }}" was marked 'successful',
-which means you successfully completed your event. That calls for a celebration.
+You did it! Your event "{{ event_title }}" took place, that calls for a celebration.
 
-Why not post something on the activity page to update everyone who participated,
-so you can celebrate together. Make sure the email notification is turned on, so all attendees
-will be notified of the update.
+Head over to your event page and thank the awesome attendees for their support.
 {% endblocktrans %}
 {% endif %}
 {% endblock %}

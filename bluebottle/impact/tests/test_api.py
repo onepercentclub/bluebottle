@@ -34,7 +34,6 @@ class ImpactTypeListAPITestCase(BluebottleTestCase):
 
         self.assertTrue('slug' in resource)
         self.assertTrue('name' in resource)
-        self.assertTrue('unit' in resource)
         self.assertTrue('text' in resource)
         self.assertTrue('text-with-target' in resource)
         self.assertTrue('text-passed' in resource)

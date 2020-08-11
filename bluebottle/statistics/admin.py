@@ -2,8 +2,6 @@ from adminsortable.admin import SortableAdmin
 from django.contrib import admin
 from django import forms
 from django.db import connection
-from django.shortcuts import redirect
-from django.urls import reverse
 from django.utils.html import format_html
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
@@ -20,15 +18,6 @@ class StatisticsChildAdmin(PolymorphicChildModelAdmin):
     list_display = ('name', 'active')
     readonly_fields = ('icon_preview',)
     base_model = BaseStatistic
-
-    def response_add(self, request, obj, post_url_continue=None):
-        return redirect(reverse('admin:statistics_basestatistic_changelist'))
-
-    def response_change(self, request, obj):
-        return redirect(reverse('admin:statistics_basestatistic_changelist'))
-
-    def response_delete(self, request, obj_display, obj_id):
-        return redirect(reverse('admin:statistics_basestatistic_changelist'))
 
     def icon_preview(self, obj):
         if not obj.icon:

@@ -10,7 +10,6 @@ class ImpactTypeFactory(factory.DjangoModelFactory):
         model = ImpactType
 
     name = factory.Faker('sentence')
-    unit = factory.fuzzy.FuzzyChoice(['people', 'kg CO2', 'vaccinations'])
 
     text = factory.fuzzy.FuzzyChoice(
         ['reach people', 'save kg CO2', 'administer vaccinations']

@@ -11,7 +11,7 @@ class ImpactTypeSerializer(ModelSerializer):
     class Meta:
         model = ImpactType
         fields = (
-            'id', 'slug', 'name',
+            'id', 'slug', 'name', 'unit',
             'text', 'text_with_target',
             'text_passed', 'text_passed_with_value',
             'icon',

@@ -38,6 +38,14 @@ class ImpactType(SortableTranslatableModel):
             _('name'),
             max_length=100
         ),
+        unit=models.CharField(
+            _('unit'),
+            blank=True,
+            null=True,
+            max_length=100,
+            help_text=_('E.g. "liters" or "kg"')
+
+        ),
         text=models.CharField(
             _('Text'),
             max_length=100,

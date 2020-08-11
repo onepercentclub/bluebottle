@@ -17,7 +17,7 @@ class ImpactTypeAdmin(TranslatableAdmin):
         return {'slug': ('name',)}
 
     fields = (
-        'name', 'slug', 'active',
+        'name', 'slug', 'unit', 'active',
         'icon', 'text', 'text_with_target',
         'text_passed', 'text_passed_with_value',
     )

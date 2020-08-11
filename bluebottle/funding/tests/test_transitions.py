@@ -173,7 +173,12 @@ class FundingTestCase(BluebottleAdminTestCase):
             self.funding.refresh_from_db()
 
         self.assertEqual(len(mail.outbox), 5)
-        self.assertEqual(mail.outbox[4].subject, u'You successfully completed your crowdfunding campaign! 🎉')
+        self.assertEqual(
+            mail.outbox[4].subject,
+            u'Your campaign "{}" has been successfully completed! \U0001f389'.format(
+                self.funding.title
+            )
+        )
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[4].body)
         self.assertTrue(self.funding.title in mail.outbox[4].body)
         url = 'http://testserver/en/initiatives/activities/details/funding/{}/{}'.format(

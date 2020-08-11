@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
@@ -27,7 +28,12 @@ ICONS = [
 
 
 class ImpactType(SortableTranslatableModel):
-    slug = models.SlugField(_('slug'), max_length=100, unique=True)
+    slug = models.SlugField(
+        _('slug'),
+        max_length=100,
+        unique=True,
+        help_text=_('Do not change this field')
+    )
     active = models.BooleanField(_('active'), default=True)
 
     icon = models.CharField(_('icon'), choices=ICONS,
@@ -47,24 +53,30 @@ class ImpactType(SortableTranslatableModel):
 
         ),
         text=models.CharField(
-            _('Text'),
+            _('Formulate the goal "Our goal is to..."'),
             max_length=100,
-            help_text=_('E.g. "save animals" or "reach people"')
+            help_text=_('E.g. "Save plastic" or "Reduce CO₂emission"')
         ),
         text_with_target=models.CharField(
-            _('Text including target'),
+            _('Formulate the goal including the target “Our goal is to…”'),
             max_length=100,
-            help_text=_('E.g. "save {} animals" or "reach {} people"')
+            help_text=_(
+                (
+                    'E.g. “Save {} plastic” or “Reduce CO₂ emissions by {}”.'
+                    ' Make sure to add “{}” where the value should go.'
+                )
+            )
         ),
         text_passed=models.CharField(
-            _('Text in past tense'),
+            _('Formulate the result in past tense'),
             max_length=100,
-            help_text=_('E.g. "animals saved" or "people reached"')
+            help_text=_('E.g. "Plastic saved" or "CO₂ emissions reduced"')
         ),
         text_passed_with_value=models.CharField(
-            _('Text in past tense with realized  value'),
+            _('Formulate the result in past tense including the value'),
             max_length=100,
-            help_text=_('E.g. "{} animals saved" or "{} people reached"')
+            help_text=_(
+                'E.g. "{} Plastic saved" or "{} CO₂ emissions reduced"')
         ),
     )
 
@@ -97,14 +109,15 @@ class ImpactGoal(models.Model):
 
     target = models.FloatField(
         _('target'),
-        help_text=_('the impact target'),
+        help_text=_('Set a target for the impact you expect to make'),
         blank=False,
         null=True
     )
 
     realized = models.FloatField(
         _('realized'),
-        help_text=_('the realised impact'),
+        help_text=_(
+            'Enter your impact results here when the activity is finished'),
         blank=True,
         null=True
     )

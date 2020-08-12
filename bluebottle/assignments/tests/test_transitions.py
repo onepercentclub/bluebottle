@@ -54,8 +54,8 @@ class AssignmentTransitionMessagesTestCase(BluebottleTestCase):
         self.assignment.transitions.succeed()
         self.assignment.save()
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, u'Your task "Nice things" has been completed! 🎉')
-        self.assertTrue('Great news!' in mail.outbox[0].body)
+        self.assertEqual(mail.outbox[0].subject, u'Your task "Nice things" has been successfully completed! 🎉')
+        self.assertTrue('You did it!' in mail.outbox[0].body)
 
     def test_applied(self):
         someone = BlueBottleUserFactory.create(first_name='Henk')

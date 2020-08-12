@@ -1,3 +1,4 @@
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from django import template
 
@@ -17,6 +18,9 @@ def dashboard_get_menu(context):
     for group in groups:
         j = 0
         for item in group['items']:
+            if item.get('name', '') == 'impacttype':
+                if not InitiativePlatformSettings.load().enable_impact:
+                    del groups[i]['items'][j]
             if item.get('name', '') == 'segmenttype':
                 if not MemberPlatformSettings.load().enable_segments:
                     del groups[i]['items'][j]

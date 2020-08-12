@@ -36,10 +36,10 @@ class AssignmentClosedMessage(TransitionMessage):
 
 
 class AssignmentCompletedMessage(TransitionMessage):
-    subject = _(u'Your task "{assignment_title}" has been completed! 🎉')
+    subject = _(u'Your task "{title}" has been successfully completed! 🎉')
     template = 'messages/assignment_completed'
     context = {
-        'assignment_title': 'title'
+        'title': 'title'
     }
 
 
@@ -85,7 +85,8 @@ class AssignmentReminderOnDate(TransitionMessage):
 
 
 class AssignmentReminderDeadline(TransitionMessage):
-    subject = _('The deadline for your task "{assignment_title}" is getting close')
+    subject = _(
+        'The deadline for your task "{assignment_title}" is getting close')
     template = 'messages/assignment_reminder_deadline'
     context = {
         'assignment_title': 'title'

@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 from bluebottle.notifications.messages import TransitionMessage
 from django.utils.translation import ugettext_lazy as _
 
 
 class EventSucceededOwnerMessage(TransitionMessage):
-    subject = _('You completed your event "{title}"!')
+    subject = _(u'Your event "{title}" took place! 🎉')
     template = 'messages/event_succeeded_owner'
     context = {
         'title': 'title'

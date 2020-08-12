@@ -265,7 +265,7 @@ class Statistics(object):
             ).distinct('owner').values_list('owner_id', flat=True)
         )
 
-        return project_owner_count + self.task_members
+        return project_owner_count + self.event_members + self.assignment_members
 
     @property
     @memoize(timeout=timeout)

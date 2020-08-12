@@ -32,10 +32,13 @@ from bluebottle.utils.views import (
 
 class ActivityList(JsonApiViewMixin, ListAPIView):
     queryset = Activity.objects.select_related(
-        'owner', 'initiative',
+        'owner',
+        'initiative',
         'initiative__owner',
-        'initiative__location', 'initiative__theme',
-        'initiative__place', 'initiative__image',
+        'initiative__location',
+        'initiative__theme',
+        'initiative__place',
+        'initiative__image',
         'initiative__activity_manager',
         'initiative__location__country',
         'initiative__organization',

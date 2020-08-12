@@ -125,3 +125,37 @@
     padding-top: 0;
     padding-bottom: 0;
 }
+
+
+ul.icon-picker {
+    margin: 0;
+    padding: 0;
+}
+
+ul.icon-picker li {
+    display: inline-block;
+}
+
+ul.icon-picker li{
+    cursor: pointer;
+}
+ul.icon-picker li img{
+    padding: 4px;
+    border: 2px solid transparent;
+}
+
+ul.icon-picker label{
+    cursor: pointer;
+}
+ul.icon-picker span{
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    padding: 4px;
+}
+ul.icon-picker input{
+    display: none;
+}
+ul.icon-picker input:checked+img,
+ul.icon-picker input:checked+span {
+    border: 2px solid #64A03C;
+}
+

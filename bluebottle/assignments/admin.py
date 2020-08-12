@@ -89,7 +89,7 @@ class AssignmentAdmin(ActivityChildAdmin):
     date_hierarchy = 'date'
 
     model = Assignment
-    raw_id_fields = ('owner', 'location')
+    raw_id_fields = ('owner', 'location', 'initiative')
 
     list_display = (
         '__unicode__', 'initiative', 'created', 'status', 'highlight',

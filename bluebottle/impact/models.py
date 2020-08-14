@@ -49,20 +49,20 @@ class ImpactType(SortableTranslatableModel):
             blank=True,
             null=True,
             max_length=100,
-            help_text=_('E.g. "liters" or "kg"')
+            help_text=_('"l" or "kg". Leave this field blank if a unit is not applicable.')
 
         ),
         text=models.CharField(
             _(u'Formulate the goal "Our goal is to..."'),
             max_length=100,
-            help_text=_(u'E.g. "Save plastic" or "Reduce CO₂emission"')
+            help_text=_(u'E.g. "Save plastic" or "Reduce CO₂ emission"')
         ),
         text_with_target=models.CharField(
             _(u'Formulate the goal including the target “Our goal is to…”'),
             max_length=100,
             help_text=_(
                 (
-                    u'E.g. “Save {} plastic” or “Reduce CO₂ emissions by {}”.'
+                    u'E.g. “Save {} kg plastic” or “Reduce CO₂ emissions by {} liters”.'
                     u'Make sure to add “{}” where the value should go.'
                 )
             )
@@ -76,7 +76,7 @@ class ImpactType(SortableTranslatableModel):
             _(u'Formulate the result in past tense including the value'),
             max_length=100,
             help_text=_(
-                u'E.g. "{} Plastic saved" or "{} CO₂ emissions reduced"')
+                u'E.g. "{} kg of plastic saved" or "Reduced CO₂ emssisions by {} liters"')
         ),
     )
 

@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
+
 from parler.admin import TranslatableAdmin
 
 from bluebottle.impact.models import ImpactType, ImpactGoal
@@ -7,7 +9,12 @@ from bluebottle.impact.models import ImpactType, ImpactGoal
 class ImpactGoalInline(admin.TabularInline):
     model = ImpactGoal
     extra = 0
-    fields = ('type', 'target', 'realized')
+    readonly_fields = ('unit', )
+    fields = ('type', 'target', 'unit', 'realized')
+
+    def unit(self, obj):
+        return obj.type.unit
+    unit.short_description = _('Unit')
 
 
 class ImpactTypeAdmin(TranslatableAdmin):

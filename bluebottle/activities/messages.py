@@ -60,3 +60,14 @@ class ActivityWallpostFollowerMessage(TransitionMessage):
         )
 
         return [follow.user for follow in follows]
+
+
+class ImpactReminderMessage(TransitionMessage):
+    subject = (u'Please share the impact results for your activity "{title}".')
+    template = 'messages/activity_impact_reminder'
+    context = {
+        'title': 'title'
+    }
+
+    def get_recipients(self):
+        return [self.obj.owner]

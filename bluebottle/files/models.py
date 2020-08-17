@@ -9,12 +9,27 @@ from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.files.fields import ImageField
 from bluebottle.utils.models import AnonymizationMixin
+from bluebottle.utils.validators import FileMimetypeValidator
 
 
 class File(AnonymizationMixin, models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateField(_('created'), default=timezone.now)
-    file = models.FileField(_('file'), upload_to='files')
+    file = models.FileField(
+        _('file'),
+        upload_to='files',
+        validators=[FileMimetypeValidator(
+            allowed_mimetypes=[
+                'application/pdf',
+                'image/jpeg',
+                'image/png',
+                'image/gif',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ]
+        )]
+
+    )
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('owner'),

@@ -72,12 +72,6 @@ class ImpactType(SortableTranslatableModel):
             max_length=100,
             help_text=_(u'E.g. "Plastic saved" or "CO₂ emissions reduced"')
         ),
-        text_passed_with_value=models.CharField(
-            _(u'Formulate the result in past tense including the value'),
-            max_length=100,
-            help_text=_(
-                u'E.g. "{} kg of plastic saved" or "Reduced CO₂ emssisions by {} liters"')
-        ),
     )
 
     def __unicode__(self):

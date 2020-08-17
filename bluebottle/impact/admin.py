@@ -26,7 +26,7 @@ class ImpactTypeAdmin(TranslatableAdmin):
     fields = (
         'name', 'slug', 'unit', 'active',
         'icon', 'text', 'text_with_target',
-        'text_passed', 'text_passed_with_value',
+        'text_passed',
     )
 
 

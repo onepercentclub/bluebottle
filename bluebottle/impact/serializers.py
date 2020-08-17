@@ -13,7 +13,7 @@ class ImpactTypeSerializer(ModelSerializer):
         fields = (
             'id', 'slug', 'name', 'unit',
             'text', 'text_with_target',
-            'text_passed', 'text_passed_with_value',
+            'text_passed',
             'icon',
         )
 

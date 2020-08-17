@@ -164,7 +164,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         if Segment.objects.filter(type__is_active=True).count():
             fields = fields + ('segments',)
 
-        if obj and obj.status in ('succeeded', 'partially_funded'):
+        if (
+            obj and
+            obj.status in ('succeeded', 'partially_funded') and
+            InitiativePlatformSettings.objects.get().enable_impact
+        ):
             fields = fields + ('send_impact_reminder_message_link', )
 
         return fields

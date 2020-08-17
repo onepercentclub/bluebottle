@@ -11,6 +11,7 @@ from django.http import Http404, HttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView, View
+from django.views.decorators.csrf import csrf_protect
 
 import rules
 from celery.result import AsyncResult
@@ -33,6 +34,7 @@ class ExportPermissionMixin(object):
     Check permissions
     """
     @method_decorator(login_required)
+    @method_decorator(csrf_protect)
     def dispatch(self, request, *args, **kwargs):
         if not rules.test_rule('exportdb.can_export', request.user):
             raise PermissionDenied

@@ -16,7 +16,7 @@ from bluebottle.activities.transitions import (
 )
 from bluebottle.follow.models import Follow
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
-from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
 class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
@@ -106,6 +106,8 @@ class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, Polymo
 
         if not self.owner_id:
             self.owner = self.initiative.owner
+
+        self.description = clean_html(self.description)
 
         super(Activity, self).save(**kwargs)
 

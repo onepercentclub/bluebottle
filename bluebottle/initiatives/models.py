@@ -17,7 +17,7 @@ from bluebottle.notifications.models import NotificationModelMixin
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.models import BasePlatformSettings, Validator, ValidatedModelMixin, AnonymizationMixin
-from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
 class UniqueTitleValidator(Validator):
@@ -241,6 +241,8 @@ class Initiative(TransitionsMixin, AnonymizationMixin, NotificationModelMixin, V
         if self.has_organization is False:
             self.organization = None
             self.organization_contact = None
+
+        self.story = clean_html(self.story)
 
         super(Initiative, self).save(**kwargs)
 

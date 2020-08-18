@@ -69,12 +69,10 @@ class ActivityStateMachineTests(BluebottleTestCase):
     def test_restore(self):
         self.event.states.cancel(save=True)
         self.event.states.restore(save=True)
+        self.assertEqual(self.event.status, EventStateMachine.needs_work.value)
         self.event.states.submit(save=True)
-
         self.assertEqual(self.event.status, EventStateMachine.open.value)
-
         organizer = self.event.contributions.get()
-
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
 
     def test_create_unapproved_initiative(self):

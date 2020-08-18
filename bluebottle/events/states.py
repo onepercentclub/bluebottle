@@ -236,7 +236,7 @@ class EventStateMachine(ActivityStateMachine):
             ActivityStateMachine.cancelled,
             ActivityStateMachine.deleted,
         ],
-        ActivityStateMachine.draft,
+        ActivityStateMachine.needs_work,
         name=_("Restore"),
         description=_("Restore a cancelled, rejected or deleted event."),
         effects=[

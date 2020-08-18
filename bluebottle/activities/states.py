@@ -164,9 +164,9 @@ class ActivityStateMachine(ModelStateMachine):
             cancelled,
             deleted
         ],
-        draft,
+        needs_work,
         name=_('Restore'),
-        description=_('Restore the activity. The will mark the activity as draft again.'),
+        description=_('Restore the activity. The will mark the activity as needs work again.'),
         automatic=False,
         permission=is_staff,
         effects=[

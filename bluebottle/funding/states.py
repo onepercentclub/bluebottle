@@ -111,7 +111,6 @@ class FundingStateMachine(ActivityStateMachine):
 
     request_changes = Transition(
         [
-            ActivityStateMachine.draft,
             ActivityStateMachine.submitted
         ],
         ActivityStateMachine.needs_work,

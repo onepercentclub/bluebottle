@@ -1,6 +1,7 @@
 import os
 import uuid
 
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -19,14 +20,7 @@ class File(AnonymizationMixin, models.Model):
         _('file'),
         upload_to='files',
         validators=[FileMimetypeValidator(
-            allowed_mimetypes=[
-                'application/pdf',
-                'image/jpeg',
-                'image/png',
-                'image/gif',
-                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            ]
+            allowed_mimetypes=settings.PRIVATE_FILE_ALLOWED_MIME_TYPES
         )]
 
     )

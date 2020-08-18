@@ -102,8 +102,6 @@ class FileMimetypeValidator:
         value.file.seek(0)
 
         if self.allowed_mimetypes is not None and mimetype not in self.allowed_mimetypes:
-            import ipdb
-            ipdb.set_trace()
             raise ValidationError(
                 self.message,
                 code=self.code,

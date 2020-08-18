@@ -172,7 +172,10 @@ class FundingStateMachine(ActivityStateMachine):
     )
 
     succeed = Transition(
-        [ActivityStateMachine.open, partially_funded],
+        [
+            ActivityStateMachine.open,
+            partially_funded
+        ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         description=_("The campaign is successfully completed."),
@@ -203,8 +206,7 @@ class FundingStateMachine(ActivityStateMachine):
     partial = Transition(
         [
             ActivityStateMachine.open,
-            ActivityStateMachine.succeeded,
-            ActivityStateMachine.cancelled
+            ActivityStateMachine.succeeded
         ],
         partially_funded,
         name=_('Partial'),

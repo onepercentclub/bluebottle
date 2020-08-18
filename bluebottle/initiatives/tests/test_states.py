@@ -334,7 +334,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         self.initiative.states.reject(save=True)
         self.initiative.states.restore(save=True)
         self.assertEqual(
-            self.initiative.status, ReviewStateMachine.draft.value
+            self.initiative.status, ReviewStateMachine.needs_work.value
         )
 
     def test_restore_with_activities(self):

@@ -75,6 +75,7 @@ class FundingStateMachineTests(BluebottleTestCase):
             funding.states.submit()
 
     def test_needs_work(self):
+        self.funding.states.submit(save=True)
         self.funding.states.request_changes(save=True)
         self.assertEqual(self.funding.status, 'needs_work')
 

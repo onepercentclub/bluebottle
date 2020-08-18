@@ -126,7 +126,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assignment.states.reject(save=True)
         self.assignment.states.restore(save=True)
 
-        self.assertEqual(self.assignment.status, AssignmentStateMachine.draft.value)
+        self.assertEqual(self.assignment.status, AssignmentStateMachine.needs_work.value)
 
     def test_fill(self):
         self.assignment.states.submit(save=True)

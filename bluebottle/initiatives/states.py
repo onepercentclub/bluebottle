@@ -186,7 +186,7 @@ class ReviewStateMachine(ModelStateMachine):
             cancelled,
             deleted
         ],
-        draft,
+        needs_work,
         name=_('Restore'),
         description=_("The status of the initiative is set to 'Draft'. "
                       "The initiator can edit and submit the initiative again."),

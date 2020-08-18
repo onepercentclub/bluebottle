@@ -344,11 +344,11 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         self.initiative.states.restore(save=True)
 
         self.assertEqual(
-            self.initiative.status, ReviewStateMachine.draft.value
+            self.initiative.status, ReviewStateMachine.needs_work.value
         )
 
         event.refresh_from_db()
 
         self.assertEqual(
-            event.status, EventStateMachine.draft.value
+            event.status, EventStateMachine.needs_work.value
         )

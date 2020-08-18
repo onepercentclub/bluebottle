@@ -3,6 +3,8 @@ from django.contrib import admin
 from django import forms
 from django.db import connection
 from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
+
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin
@@ -59,13 +61,17 @@ class ImpactStatisticChildAdmin(StatisticsChildAdmin):
 @admin.register(BaseStatistic)
 class StatisticAdmin(SortableAdmin, PolymorphicParentModelAdmin):
     base_model = BaseStatistic
-    list_display = ('name', 'polymorphic_ctype', 'active')
+    list_display = ('name', 'statistics_type', 'active')
     list_editable = ('active', )
     child_models = (
         DatabaseStatistic,
         ManualStatistic,
         ImpactStatistic
     )
+
+    def statistics_type(self, obj):
+        return obj.get_real_instance_class()._meta.verbose_name
+    statistics_type.short_description = _('Type')
 
     def get_child_models(self):
         if not isinstance(connection.tenant, FakeTenant):

@@ -16,6 +16,7 @@ import bluebottle.utils.monkey_patch_migration  # noqa
 import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa
 import bluebottle.utils.monkey_patch_parler  # noqa
 import bluebottle.utils.monkey_patch_password_validators  # noqa
+import bluebottle.utils.monkey_patch_jet  # noqa
 from bluebottle.utils.managers import (
     SortableTranslatableManager,
     PublishedManager

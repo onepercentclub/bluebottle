@@ -27,7 +27,7 @@ class InitiativeTestCase(TestCase):
         self.assertEqual(initiative.status, 'rejected')
 
         initiative.states.restore(save=True)
-        self.assertEqual(initiative.status, 'draft')
+        self.assertEqual(initiative.status, 'needs_work')
 
     def test_activity_manager(self):
         initiative = InitiativeFactory(activity_manager=None)

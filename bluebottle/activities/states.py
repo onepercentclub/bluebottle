@@ -166,7 +166,7 @@ class ActivityStateMachine(ModelStateMachine):
         ],
         needs_work,
         name=_('Restore'),
-        description=_('Restore the activity. The will mark the activity as needs_work again.'),
+        description=_('Restore the activity. The will mark the activity as needs work again.'),
         automatic=False,
         permission=is_staff,
         effects=[

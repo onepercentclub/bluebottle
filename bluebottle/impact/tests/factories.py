@@ -9,21 +9,14 @@ class ImpactTypeFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = ImpactType
 
-    name = factory.Faker('sentence')
+    text = factory.Faker('sentence')
 
-    text = factory.fuzzy.FuzzyChoice(
-        ['reach people', 'save kg CO2', 'administer vaccinations']
-    )
     text_with_target = factory.fuzzy.FuzzyChoice(
         ['reach {} people', 'save {} kg CO2', 'administer {} vaccinations']
     )
 
     text_passed = factory.fuzzy.FuzzyChoice(
         ['people reached', 'kg CO2 saved', 'vaccinations administered']
-    )
-
-    text_passed = factory.fuzzy.FuzzyChoice(
-        ['{} people reached', '{} kg CO2 saved', '{} vaccinations administered']
     )
 
 

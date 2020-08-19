@@ -1,14 +1,17 @@
 import json
+import posixpath
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ImproperlyConfigured
+from django.core.signing import BadSignature
 from django.db import connection
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView, View
+from django.views.decorators.csrf import csrf_protect
 
 import rules
 from celery.result import AsyncResult
@@ -17,6 +20,10 @@ from bluebottle.exports.tasks import plain_export
 from .compat import import_string, jquery_in_vendor
 from .exporter import get_export_models, Exporter
 from .tasks import export
+
+from bluebottle.utils.views import (
+    PrivateFileView
+)
 
 
 EXPORTDB_EXPORT_KEY = 'exportdb_export'
@@ -27,6 +34,7 @@ class ExportPermissionMixin(object):
     Check permissions
     """
     @method_decorator(login_required)
+    @method_decorator(csrf_protect)
     def dispatch(self, request, *args, **kwargs):
         if not rules.test_rule('exportdb.can_export', request.user):
             raise PermissionDenied
@@ -121,3 +129,26 @@ class ExportPendingView(ExportPermissionMixin, View):
             'file': async_result.result if async_result.ready() else None
         }
         return self.json_response(content)
+
+
+class ExportDownloadView(PrivateFileView):
+    """ Serve private files using X-sendfile header. """
+
+    def get(self, request, filename):
+        try:
+            url = self.signer.unsign(self.request.GET['signature'], max_age=self.max_age)
+        except (KeyError, BadSignature):
+            raise Http404()
+
+        if not url == self.request.path:
+            raise Http404()
+
+        response = HttpResponse()
+
+        response['X-Accel-Redirect'] = posixpath.join(settings.EXPORTDB_EXPORT_MEDIA_URL, filename)
+        response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
+            filename
+        )
+
+        return response

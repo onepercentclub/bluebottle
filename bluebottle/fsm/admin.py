@@ -135,6 +135,7 @@ class StateMachineAdminMixin(object):
 
         getattr(state_machine, transition_name)()
         effects = [effect for effect in instance._effects if effect.display]
+
         cancel_link = reverse(
             'admin:{}_{}_change'.format(
                 self.model._meta.app_label, self.model._meta.model_name

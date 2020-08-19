@@ -198,6 +198,7 @@ class EventStateMachine(ActivityStateMachine):
             full,
             running,
             ActivityStateMachine.open,
+            ActivityStateMachine.submitted,
             ActivityStateMachine.rejected,
             ActivityStateMachine.cancelled
         ],
@@ -238,8 +239,7 @@ class EventStateMachine(ActivityStateMachine):
         automatic=False,
         description=_("Restore a cancelled, rejected or deleted event."),
         effects=[
-            RelatedTransitionEffect('participants', 'reset'),
-            RelatedTransitionEffect('organizer', 'reset')
+            RelatedTransitionEffect('contributions', 'reset')
         ]
     )
 
@@ -426,9 +426,12 @@ class ParticipantStateMachine(ContributionStateMachine):
     )
 
     reset = Transition(
-        ContributionStateMachine.succeeded,
+        [
+            ContributionStateMachine.succeeded,
+            ContributionStateMachine.failed,
+        ],
         ContributionStateMachine.new,
         name=_('Reset'),
-        description=_("The participant is reset to new after being successful."),
+        description=_("The participant is reset to new after being successful or failed."),
         effects=[ResetTimeSpent]
     )

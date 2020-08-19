@@ -164,6 +164,21 @@ class AssignmentStateMachine(ActivityStateMachine):
         ]
     )
 
+    restore = Transition(
+        [
+            ActivityStateMachine.rejected,
+            ActivityStateMachine.cancelled,
+            ActivityStateMachine.deleted,
+        ],
+        ActivityStateMachine.needs_work,
+        name=_("Restore"),
+        automatic=False,
+        description=_("Restore a cancelled, rejected or deleted task."),
+        effects=[
+            RelatedTransitionEffect('contributions', 'reset')
+        ]
+    )
+
 
 class ApplicantStateMachine(ContributionStateMachine):
     model = Applicant
@@ -382,4 +397,15 @@ class ApplicantStateMachine(ContributionStateMachine):
             ),
             FollowActivityEffect
         ]
+    )
+
+    reset = Transition(
+        [
+            ContributionStateMachine.succeeded,
+            ContributionStateMachine.failed,
+        ],
+        ContributionStateMachine.new,
+        name=_('Reset'),
+        description=_("The applicant is reset to new after being successful or failed."),
+        effects=[ClearTimeSpent]
     )

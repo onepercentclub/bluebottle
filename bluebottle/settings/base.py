@@ -284,7 +284,6 @@ SHARED_APPS = (
     'geoposition',
     'tenant_extras',
     'localflavor',
-    'filetransfers',
     'corsheaders',
     'djmoney_rates',
     'parler',

@@ -35,7 +35,6 @@ class StateMachineAdminMixin(object):
             obj = self.model.objects.get(pk=object_id)
             ModelForm = self.get_form(request, obj)
             form = ModelForm(request.POST, request.FILES, instance=obj)
-
             # If there are form errors, then don't go to the confirm page yet.
             if not form.is_valid():
                 return super(StateMachineAdminMixin, self).changeform_view(request, object_id, form_url, extra_context)

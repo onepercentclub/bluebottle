@@ -81,8 +81,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'updated',
         'valid',
         'complete',
-        'review_status',
         'transition_date',
+        'review_status',
         'stats_data'
     ]
 
@@ -111,11 +111,18 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     )
 
     def get_fieldsets(self, request, obj=None):
-        return (
+        fieldsets = (
             (_('Basic'), {'fields': self.basic_fields}),
             (_('Details'), {'fields': self.detail_fields}),
             (_('Status'), {'fields': self.status_fields}),
         )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': (
+                    'force_status',
+                )}),
+            )
+        return fieldsets
 
     def stats_data(self, obj):
         template = loader.get_template(

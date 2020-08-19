@@ -162,9 +162,9 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(self.assignment.status, AssignmentStateMachine.succeeded.value)
         self.assertEqual(
             mail.outbox[-1].subject,
-            u'Your task "{}" has been completed! 🎉'.format(self.assignment.title)
+            u'Your task "{}" has been successfully completed! 🎉'.format(self.assignment.title)
         )
-        self.assertTrue('Great news!' in mail.outbox[-1].body)
+        self.assertTrue('You did it!' in mail.outbox[-1].body)
 
     def test_succeed_then_reopen(self):
         self.assignment.states.submit(save=True)

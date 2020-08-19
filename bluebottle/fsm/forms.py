@@ -32,7 +32,8 @@ class StateMachineModelFormMetaClass(ModelFormMetaclass):
                 attrs[force_name] = forms.ChoiceField(
                     required=False,
                     choices=[(s.value, s.name) for s in machine.states.values()],
-                    widget=Select()
+                    widget=Select(),
+                    help_text=_("Careful! This will change the status without triggering any side effects!")
                 )
         return super(StateMachineModelFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
@@ -67,11 +68,11 @@ class StateMachineModelForm(forms.ModelForm):
             self.fields[force_field].initial = machine.current_state.value
 
     def save(self, commit=True):
-        for field in self.cleaned_data:
+        for field in self.data:
             if field.startswith('force_'):
                 force_data = field.replace('force_', '')
-                if self.cleaned_data[field]:
-                    setattr(self.instance, force_data, self.cleaned_data[field])
+                if self.data[field]:
+                    setattr(self.instance, force_data, self.data[field])
         return super(StateMachineModelForm, self).save(commit=commit)
 
     @property

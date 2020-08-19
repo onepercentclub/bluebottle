@@ -168,8 +168,6 @@ class AssignmentDetailAPITestCase(BluebottleTestCase):
         response = self.client.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'in_review')
-
         self.assertEqual(
             len(response.json()['data']['relationships']['goals']['data']),
             2

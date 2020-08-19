@@ -1,10 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition
-from bluebottle.initiatives.effects import (
-    ApproveActivitiesEffect, RejectActivitiesEffect, CancelActivitiesEffect, DeleteActivitiesEffect,
-    RestoreActivitiesEffect, SubmitActivitiesEffect
-)
+from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.initiatives.messages import (
     InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage,
     InitiativeCancelledOwnerMessage
@@ -97,7 +94,7 @@ class ReviewStateMachine(ModelStateMachine):
         conditions=[is_complete, is_valid],
         automatic=False,
         effects=[
-            SubmitActivitiesEffect
+            RelatedTransitionEffect('activities', 'submit'),
         ]
     )
 
@@ -111,7 +108,7 @@ class ReviewStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_staff,
         effects=[
-            ApproveActivitiesEffect,
+            RelatedTransitionEffect('activities', 'approve'),
             NotificationEffect(InitiativeApprovedOwnerMessage)
         ]
     )
@@ -132,8 +129,6 @@ class ReviewStateMachine(ModelStateMachine):
             draft,
             submitted,
             needs_work,
-            approved,
-            cancelled
         ],
         rejected,
         name=_('Reject'),
@@ -144,7 +139,7 @@ class ReviewStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_staff,
         effects=[
-            RejectActivitiesEffect,
+            RelatedTransitionEffect('activities', 'reject'),
             NotificationEffect(InitiativeRejectedOwnerMessage)
         ]
     )
@@ -159,7 +154,7 @@ class ReviewStateMachine(ModelStateMachine):
                       "The initiative will still be available in the back office and appear in your reporting."),
         automatic=False,
         effects=[
-            CancelActivitiesEffect,
+            RelatedTransitionEffect('activities', 'cancel'),
             NotificationEffect(InitiativeCancelledOwnerMessage)
         ]
     )
@@ -176,7 +171,7 @@ class ReviewStateMachine(ModelStateMachine):
                       "The initiative will still be available in the back office."),
         automatic=False,
         effects=[
-            DeleteActivitiesEffect,
+            RelatedTransitionEffect('activities', 'delete'),
         ]
     )
 
@@ -193,6 +188,6 @@ class ReviewStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_staff,
         effects=[
-            RestoreActivitiesEffect,
+            RelatedTransitionEffect('activities', 'restore'),
         ]
     )

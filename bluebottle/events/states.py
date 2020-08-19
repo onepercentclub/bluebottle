@@ -65,7 +65,6 @@ class EventStateMachine(ActivityStateMachine):
         [
             ActivityStateMachine.draft,
             ActivityStateMachine.needs_work,
-            ActivityStateMachine.cancelled
         ],
         submitted,
         description=_('Submit the activity for approval.'),
@@ -127,12 +126,10 @@ class EventStateMachine(ActivityStateMachine):
 
     cancel = Transition(
         [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
             ActivityStateMachine.open,
             running,
             full,
-            submitted
+            ActivityStateMachine.succeeded,
         ],
         ActivityStateMachine.cancelled,
         name=_('Cancel'),
@@ -238,6 +235,7 @@ class EventStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.needs_work,
         name=_("Restore"),
+        automatic=False,
         description=_("Restore a cancelled, rejected or deleted event."),
         effects=[
             RelatedTransitionEffect('participants', 'reset'),

@@ -107,12 +107,10 @@ class AssignmentStateMachine(ActivityStateMachine):
 
     cancel = Transition(
         [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-            ActivityStateMachine.open,
             full,
             running,
-            submitted
+            ActivityStateMachine.succeeded,
+            ActivityStateMachine.open,
         ],
         ActivityStateMachine.cancelled,
         name=_('Cancel'),

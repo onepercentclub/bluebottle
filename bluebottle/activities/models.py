@@ -158,9 +158,9 @@ class Organizer(Contribution):
 
     def __unicode__(self):
         if self.user:
-            return unicode(_("Organizer: {name}".format(name=self.user.full_name)))
+            return self.user.full_name
         else:
-            return _('Organizer')
+            return _('None')
 
 
 from bluebottle.activities.signals import *  # noqa

@@ -22,7 +22,25 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     list_filter = ['status', ]
     ordering = ('-created', )
     show_in_index = True
-    readonly_fields = ['contribution_date', 'created', 'activity_link', 'status']
+
+    readonly_fields = [
+        'contribution_date',
+        'created',
+        'activity_link',
+        'status'
+    ]
+
+    fields = ['activity', 'user', 'states'] + readonly_fields
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Basic'), {'fields': self.fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': ['force_status']}),
+            )
+        return fieldsets
 
     def activity_link(self, obj):
         url = reverse("admin:{}_{}_change".format(

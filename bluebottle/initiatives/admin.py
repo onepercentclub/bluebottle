@@ -129,7 +129,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         else:
             details.append('place')
 
-        return (
+        fieldsets = (
             (_('Basic'), {'fields': (
                 'title', 'link', 'slug', 'owner',
                 'image', 'video_url',
@@ -137,11 +137,18 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             (_('Details'), {'fields': details}),
             (_('Organization'), {'fields': (
                 'has_organization', 'organization', 'organization_contact')}),
-            (_('Review'), {'fields': (
+            (_('Status'), {'fields': (
                 'valid', 'complete',
                 'reviewer', 'activity_manager',
                 'promoter', 'status', 'states')}),
         )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': (
+                    'force_status',
+                )}),
+            )
+        return fieldsets
 
     inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]
 

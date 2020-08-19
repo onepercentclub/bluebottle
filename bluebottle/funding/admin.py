@@ -221,7 +221,7 @@ class FundingAdmin(ActivityChildAdmin):
     payout_links.short_description = _('Payouts')
 
 
-class DonationAdminForm(forms.ModelForm):
+class DonationAdminForm(StateMachineModelForm):
     class Meta:
         model = Donation
         exclude = ()
@@ -295,6 +295,19 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     raw_id_fields = ['donation']
     change_form_template = 'admin/funding/payment/change_form.html'
+
+    readonly_fields = ['status', 'created', 'updated']
+    fields = readonly_fields
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Basic'), {'fields': self.get_fields(request, obj)}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': ['force_status']}),
+            )
+        return fieldsets
 
     def get_urls(self):
         urls = super(PaymentChildAdmin, self).get_urls()

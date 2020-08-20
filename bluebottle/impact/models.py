@@ -40,10 +40,6 @@ class ImpactType(SortableTranslatableModel):
                             null=True, blank=True, max_length=20)
 
     translations = TranslatedFields(
-        name=models.CharField(
-            _('name'),
-            max_length=100
-        ),
         unit=models.CharField(
             _('unit'),
             blank=True,
@@ -72,20 +68,14 @@ class ImpactType(SortableTranslatableModel):
             max_length=100,
             help_text=_(u'E.g. "Plastic saved" or "CO₂ emissions reduced"')
         ),
-        text_passed_with_value=models.CharField(
-            _(u'Formulate the result in past tense including the value'),
-            max_length=100,
-            help_text=_(
-                u'E.g. "{} kg of plastic saved" or "Reduced CO₂ emssisions by {} liters"')
-        ),
     )
 
     def __unicode__(self):
-        return self.name
+        return self.text
 
     def save(self, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            self.slug = slugify(self.text)
 
         super(ImpactType, self).save(**kwargs)
 

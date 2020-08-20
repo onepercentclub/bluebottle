@@ -151,6 +151,12 @@ class EventTestCase(BluebottleTestCase):
 
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_description_is_save(self):
+        event = EventFactory(
+            description='<img src="test" onerror="alert(\'XSS\')">',
+        )
+        self.assertEqual(event.description, '<img src="test">')
+
 
 class ParticipantTestCase(BluebottleTestCase):
 

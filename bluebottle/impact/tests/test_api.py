@@ -33,12 +33,10 @@ class ImpactTypeListAPITestCase(BluebottleTestCase):
         resource = response.json()['data'][0]['attributes']
 
         self.assertTrue('slug' in resource)
-        self.assertTrue('name' in resource)
         self.assertTrue('unit' in resource)
         self.assertTrue('text' in resource)
         self.assertTrue('text-with-target' in resource)
         self.assertTrue('text-passed' in resource)
-        self.assertTrue('text-passed-with-value' in resource)
 
         resource_type = response.json()['data'][0]['type']
 

@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.conf.urls import url
 from django.db.models import Q
+from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
@@ -11,7 +13,10 @@ from polymorphic.admin import (
 
 from bluebottle.activities.models import Activity, Contribution, Organizer
 from bluebottle.activities.transitions import ActivityReviewTransitions
+from bluebottle.activities.forms import ImpactReminderConfirmationForm
+from bluebottle.activities.messages import ImpactReminderMessage
 from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.funding.models import Funding, Donation
@@ -47,7 +52,8 @@ class OrganizerAdmin(ContributionChildAdmin):
     list_display = ['user', 'status', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
-    readonly_fields = ContributionChildAdmin.readonly_fields + ['status', 'created', 'transition_date']
+    readonly_fields = ContributionChildAdmin.readonly_fields + \
+        ['status', 'created', 'transition_date']
 
     date_hierarchy = 'contribution_date'
 
@@ -65,7 +71,8 @@ class OrganizerAdmin(ContributionChildAdmin):
 class ContributionAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     base_model = Contribution
     child_models = (Participant, Donation, Applicant, Organizer)
-    list_display = ['created', 'contribution_date', 'owner', 'type', 'activity', 'status']
+    list_display = ['created', 'contribution_date',
+                    'owner', 'type', 'activity', 'status']
     list_filter = (PolymorphicChildModelFilter, 'status')
     date_hierarchy = 'contribution_date'
 
@@ -81,7 +88,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
     inlines = (FollowAdminInline, WallpostInline, )
 
     def get_inline_instances(self, request, obj=None):
-        inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)
+        inlines = super(ActivityChildAdmin,
+                        self).get_inline_instances(request, obj)
 
         if InitiativePlatformSettings.objects.get().enable_impact:
             impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
@@ -106,7 +114,9 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         'valid',
         'complete',
         'transition_date',
-        'stats_data']
+        'stats_data',
+        'send_impact_reminder_message_link',
+    ]
 
     basic_fields = (
         'title',
@@ -150,8 +160,17 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 
     def get_detail_fields(self, request, obj):
         fields = self.detail_fields
+
         if Segment.objects.filter(type__is_active=True).count():
-            fields += ('segments',)
+            fields = fields + ('segments',)
+
+        if (
+            obj and
+            obj.status in ('succeeded', 'partially_funded') and
+            InitiativePlatformSettings.objects.get().enable_impact
+        ):
+            fields = fields + ('send_impact_reminder_message_link', )
+
         return fields
 
     detail_fields = (
@@ -195,6 +214,53 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
 
     complete.short_description = _('Missing data')
 
+    def get_urls(self):
+        urls = super(ActivityChildAdmin, self).get_urls()
+        extra_urls = [
+            url(r'^send-impact-reminder-message/(?P<pk>\d+)/$',
+                self.admin_site.admin_view(self.send_impact_reminder_message),
+                name='{}_{}_send_impact_reminder_message'.format(
+                    self.model._meta.app_label,
+                    self.model._meta.model_name
+                ),
+                )
+        ]
+        return extra_urls + urls
+
+    @confirmation_form(
+        ImpactReminderConfirmationForm,
+        Activity,
+        'admin/activities/send_impact_reminder_message.html'
+    )
+    def send_impact_reminder_message(self, request, activity):
+        if not request.user.has_perm('{}.change_{}'.format(
+                self.model._meta.app_label,
+                self.model._meta.model_name
+        )):
+            return HttpResponseForbidden('Not allowed to change user')
+
+        ImpactReminderMessage(activity).compose_and_send()
+
+        message = _('User {name} will receive a message.').format(
+            name=activity.owner.full_name)
+        self.message_user(request, message)
+
+        return HttpResponseRedirect(reverse('admin:activities_activity_change', args=(activity.id, )))
+
+    def send_impact_reminder_message_link(self, obj):
+        url = reverse(
+            'admin:{}_{}_send_impact_reminder_message'.format(
+                self.model._meta.app_label,
+                self.model._meta.model_name
+            ),
+            args=(obj.pk,)
+        )
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            url, _('Send impact reminder message')
+        )
+    send_impact_reminder_message.short_description = _('impact reminder')
+
 
 class ActivityStatusFilter(SimpleListFilter):
 
@@ -209,8 +275,11 @@ class ActivityStatusFilter(SimpleListFilter):
         return queryset
 
     def lookups(self, request, model_admin):
-        return [(k, v) for k, v in ActivityReviewTransitions.values.choices if k != 'closed'] + \
-               [(k, v) for k, v in FundingTransitions.values.choices if k != 'in_review']
+        return (
+            [(k, v) for k, v in ActivityReviewTransitions.values.choices if k != 'closed'] +
+            [(k, v)
+             for k, v in FundingTransitions.values.choices if k != 'in_review']
+        )
 
 
 @admin.register(Activity)
@@ -219,13 +288,15 @@ class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     child_models = (Event, Funding, Assignment)
     date_hierarchy = 'transition_date'
     readonly_fields = ['link']
-    list_filter = (PolymorphicChildModelFilter, ActivityStatusFilter, 'highlight')
+    list_filter = (PolymorphicChildModelFilter,
+                   ActivityStatusFilter, 'highlight')
     list_editable = ('highlight',)
 
     list_display = ['__unicode__', 'created', 'type', 'combined_status',
                     'link', 'highlight']
 
-    search_fields = ('title', 'description', 'owner__first_name', 'owner__last_name')
+    search_fields = ('title', 'description',
+                     'owner__first_name', 'owner__last_name')
 
     def link(self, obj):
         return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title)
@@ -268,17 +339,20 @@ class ActivityAdminInline(StackedPolymorphicInline):
         link.short_description = _('View on site')
 
     class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'link', 'start', 'duration', 'status']
+        readonly_fields = ['activity_link',
+                           'link', 'start', 'duration', 'status']
         fields = readonly_fields
         model = Event
 
     class FundingInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'link', 'target', 'deadline', 'status']
+        readonly_fields = ['activity_link',
+                           'link', 'target', 'deadline', 'status']
         fields = readonly_fields
         model = Funding
 
     class AssignmentInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
-        readonly_fields = ['activity_link', 'link', 'date', 'duration', 'status']
+        readonly_fields = ['activity_link',
+                           'link', 'date', 'duration', 'status']
         fields = readonly_fields
         model = Assignment
 

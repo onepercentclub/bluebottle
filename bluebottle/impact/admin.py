@@ -18,15 +18,15 @@ class ImpactGoalInline(admin.TabularInline):
 
 
 class ImpactTypeAdmin(TranslatableAdmin):
-    list_display = admin.ModelAdmin.list_display + ('name', 'active')
+    list_display = admin.ModelAdmin.list_display + ('text', 'active')
 
     def get_prepopulated_fields(self, request, obj=None):
-        return {'slug': ('name',)}
+        return {'slug': ('text',)}
 
     fields = (
-        'name', 'slug', 'unit', 'active',
+        'slug', 'unit', 'active',
         'icon', 'text', 'text_with_target',
-        'text_passed', 'text_passed_with_value',
+        'text_passed',
     )
 
 

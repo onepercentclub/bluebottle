@@ -202,12 +202,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_filter_segment(self):
         segment = SegmentFactory.create()
         first = EventFactory.create(
-            review_status='approved',
+            status='open',
         )
         first.segments.add(segment)
 
         EventFactory.create(
-            review_status='approved'
+            status='open'
         )
 
         response = self.client.get(
@@ -224,7 +224,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_filter_segment_mismatch(self):
         first = EventFactory.create(
-            review_status='approved',
+            status='open',
         )
         first_segment = SegmentFactory.create()
         first.segments.add(first_segment)
@@ -232,7 +232,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first.segments.add(second_segment)
 
         EventFactory.create(
-            review_status='approved'
+            status='open'
         )
 
         response = self.client.get(
@@ -360,12 +360,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_search_segment_name(self):
         first = EventFactory.create(
-            review_status='approved',
+            status='open',
         )
         first.segments.add(SegmentFactory(name='Online Marketing'))
 
         EventFactory.create(
-            review_status='approved'
+            status='open'
         )
 
         response = self.client.get(

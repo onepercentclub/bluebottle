@@ -1,7 +1,9 @@
 from django.conf.urls import url
-from ..views import StatisticDetail
+from ..views import StatisticList
 
 urlpatterns = [
-    url(r'^current$', StatisticDetail.as_view(),
-        name='stats'),
+    url(
+        r'^$', StatisticList.as_view(),
+        name='statistic-list'
+    ),
 ]

@@ -170,6 +170,8 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
         'activities': 'bluebottle.activities.serializers.ActivityListSerializer',
         'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'activities.goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
+        'activities.goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
     }
 
     class Meta:
@@ -194,6 +196,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'owner', 'reviewer', 'promoter', 'activity_manager',
             'categories', 'theme', 'place', 'location',
             'image', 'organization', 'organization_contact', 'activities', 'activities.location',
+            'activities.goals', 'activities.goals.type'
         ]
         resource_name = 'initiatives'
 
@@ -374,6 +377,11 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
 
 
 class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
+    has_locations = serializers.SerializerMethodField()
+
+    def get_has_locations(self, obj):
+        return Location.objects.count()
+
     class Meta:
         model = InitiativePlatformSettings
 
@@ -382,7 +390,9 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'initiative_search_filters',
             'activity_search_filters',
             'require_organization',
-            'contact_method'
+            'contact_method',
+            'enable_impact',
+            'has_locations'
         )
 
 

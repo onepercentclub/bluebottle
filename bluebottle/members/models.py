@@ -72,6 +72,17 @@ class MemberPlatformSettings(BasePlatformSettings):
 
     background = models.ImageField(null=True, blank=True, upload_to='site_content/')
 
+    enable_segments = models.BooleanField(
+        default=False,
+        help_text=_('Enable segments for users e.g. department or job title.')
+    )
+
+    create_segments = models.BooleanField(
+        default=False,
+        help_text=_('Create new segments when a user logs in. '
+                    'Leave unchecked if only priorly specified ones should be used.')
+    )
+
     anonymization_age = models.IntegerField(
         default=0,
         help_text=_("The number of days after which user data should be anonymised. 0 for no anonymisation")
@@ -105,6 +116,14 @@ class Member(BlueBottleBaseUser):
 
     matching_options_set = models.DateTimeField(
         null=True, blank=True, help_text=_('When the user updated their matching preferences.')
+    )
+
+    segments = models.ManyToManyField(
+        'segments.segment',
+        verbose_name=_('Segment'),
+        related_name='users',
+        blank=True,
+        null=True
     )
 
     def __init__(self, *args, **kwargs):

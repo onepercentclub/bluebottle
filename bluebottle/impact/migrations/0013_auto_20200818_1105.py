@@ -141,11 +141,12 @@ def create_default_impact_types(apps, schema_editor):
         )
         if created:
             for language in languages:
-                ImpactTypeTranslation.objects.get_or_create(
-                    language_code=language,
-                    master=impact_type,
-                    defaults=definition[language]
-                )
+                if language in definition:
+                    ImpactTypeTranslation.objects.get_or_create(
+                        language_code=language,
+                        master=impact_type,
+                        defaults=definition[language]
+                    )
 
 
 class Migration(migrations.Migration):

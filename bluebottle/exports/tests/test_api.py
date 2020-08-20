@@ -33,7 +33,7 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertTrue(
             response['X-Accel-Redirect'].startswith(
-                '/media/exports/export'
+                '/media/private/exports/export'
             )
         )
         self.assertEqual(

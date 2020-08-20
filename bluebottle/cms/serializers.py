@@ -45,7 +45,7 @@ class ItemSerializer(serializers.ModelSerializer):
 
 
 class RawHtmlItemSerializer(ItemSerializer):
-    html = serializers.CharField()
+    html = SafeField()
     item_type = 'raw-html'
 
     class Meta:

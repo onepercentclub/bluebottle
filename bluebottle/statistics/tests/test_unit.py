@@ -1,6 +1,5 @@
 
 import datetime
-
 from django.test.utils import override_settings
 from django.utils import timezone
 from moneyed.classes import Money
@@ -13,7 +12,7 @@ from bluebottle.funding.tests.factories import (
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import Member
-from bluebottle.statistics.views import Statistics
+from bluebottle.statistics.statistics import Statistics
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 

@@ -88,10 +88,10 @@ class EventAdmin(ActivityChildAdmin):
         'start',
         'local_start',
         'duration',
-        # 'registration_deadline',  # Disabled until feature is ready - BB-16853
+        'registration_deadline',
         'is_online',
         'location',
-        'location_hint',
+        'location_hint'
     )
 
     export_to_csv_fields = (

@@ -1,5 +1,4 @@
 from django.contrib.contenttypes.fields import GenericRelation
-
 from django.db import models
 from django.db.models import Max
 from django.db.models.deletion import SET_NULL
@@ -11,15 +10,15 @@ from multiselectfield import MultiSelectField
 
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField
-from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.follow.models import Follow
+from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.messages import AssignedReviewerMessage
 from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin
-from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
 class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.Model):
@@ -225,6 +224,9 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         if self.has_organization is False:
             self.organization = None
             self.organization_contact = None
+
+        self.story = clean_html(self.story)
+
         super(Initiative, self).save(**kwargs)
 
 
@@ -243,6 +245,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('theme', _('Theme')),
         ('category', _('Category')),
         ('status', _('Status')),
+        ('segments', _('Segments')),
     )
     INITIATIVE_SEARCH_FILTERS = (
         ('location', _('Office location')),
@@ -260,6 +263,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     initiative_search_filters = MultiSelectField(max_length=1000, choices=INITIATIVE_SEARCH_FILTERS)
     activity_search_filters = MultiSelectField(max_length=1000, choices=ACTIVITY_SEARCH_FILTERS)
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
+    enable_impact = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = _('initiative settings')

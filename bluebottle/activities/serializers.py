@@ -46,6 +46,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'initiative.location': 'bluebottle.geo.serializers.LocationSerializer',
         'initiative.place': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
     }
 
     class Meta:
@@ -53,7 +54,8 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         meta_fields = (
             'permissions',
             'transitions',
-            'created', 'updated',
+            'created',
+            'updated',
         )
 
     class JSONAPIMeta:
@@ -62,9 +64,10 @@ class ActivityListSerializer(PolymorphicModelSerializer):
             'initiative',
             'location',
             'image',
+            'goals',
+            'goals.type',
             'initiative.image',
             'initiative.place',
-            'initiative.location',
         ]
 
 
@@ -79,6 +82,8 @@ class ActivitySerializer(PolymorphicModelSerializer):
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
+        'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
@@ -93,8 +98,10 @@ class ActivitySerializer(PolymorphicModelSerializer):
         meta_fields = (
             'permissions',
             'transitions',
-            'created', 'updated',
-            'errors', 'required',
+            'created',
+            'updated',
+            'errors',
+            'required',
         )
 
     class JSONAPIMeta:
@@ -102,6 +109,8 @@ class ActivitySerializer(PolymorphicModelSerializer):
             'owner',
             'image',
             'initiative',
+            'goals',
+            'goals.type',
             'location',
             'initiative.image',
             'initiative.place',

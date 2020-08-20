@@ -7,7 +7,7 @@ JET_APP_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomAppIn
 JET_DEFAULT_THEME = 'goodup'
 
 
-JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
+JET_SIDE_MENU_ITEMS = [
     {
         'label': _('Initiatives'),
         'app_label': 'initiatives',
@@ -25,6 +25,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'activities.contribution',
                 'permissions': ['activities.change_contribution']
             },
+            {
+                'name': 'impact.impacttype',
+                'permissions': ['impact.change_impacttype']
+            },
+
             {
                 'name': 'categories.category',
                 'permissions': ['categories.change_category']
@@ -201,6 +206,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'auth.group',
                 'permissions': ['auth.change_group']
             },
+            {
+                'name': 'segments.segmenttype',
+                'permissions': ['segments.change_segment']
+            },
         ]
     },
     {
@@ -221,6 +230,12 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'label': _('Homepage'),
                 'permissions': ['cms.change_homepage']
             },
+            {
+                'name': 'statistics.basestatistic',
+                'label': _('Statistics'),
+                'permissions': ['statistics.change_statistic']
+            },
+
             {
                 'name': 'slides.slide',
                 'permissions': ['slides.change_slide']
@@ -257,6 +272,7 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'wallposts.reaction',
                 'permissions': ['wallposts.change_wallpost']
             },
+
         ]
     },
     {
@@ -335,5 +351,6 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
     },
 
 ]
+
 
 JET_SIDE_MENU_COMPACT = False

@@ -227,6 +227,17 @@ class StatsContent(TitledContent):
         return unicode(self.stats)
 
 
+class HomepageStatisticsContent(TitledContent):
+    type = 'homepage-statistics'
+    preview_template = 'admin/cms/preview/homepage-statistics.html'
+
+    class Meta:
+        verbose_name = _('Statistics')
+
+    def __unicode__(self):
+        return unicode(self.title)
+
+
 class SurveyContent(TitledContent):
     type = 'survey'
     preview_template = 'admin/cms/preview/results.html'

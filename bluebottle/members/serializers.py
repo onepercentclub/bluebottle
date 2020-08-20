@@ -17,6 +17,8 @@ from bluebottle.geo.serializers import LocationSerializer, PlaceSerializer
 from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.organizations.serializers import OrganizationSerializer
+from bluebottle.segments.models import Segment
+from bluebottle.segments.serializers import SegmentTypeSerializer
 from bluebottle.tasks.models import Skill
 from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
 
@@ -74,7 +76,8 @@ class PrivateProfileMixin(object):
         data = super(PrivateProfileMixin, self).to_representation(obj)
 
         user = self.context['request'].user
-        can_read_full_profile = self.context['request'].user.has_perm('members.api_read_full_member')
+        can_read_full_profile = self.context['request'].user.has_perm(
+            'members.api_read_full_member')
 
         if obj != user and not can_read_full_profile:
             for field in self.private_fields:
@@ -97,8 +100,10 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
     avatar = SorlImageField('133x133', source='picture', crop='center')
 
     # TODO: Remove first/last name and only use these
-    full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
-    short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
+    full_name = serializers.ReadOnlyField(
+        source='get_full_name', read_only=True)
+    short_name = serializers.ReadOnlyField(
+        source='get_short_name', read_only=True)
     is_active = serializers.BooleanField(read_only=True)
     is_anonymous = serializers.SerializerMethodField()
 
@@ -194,7 +199,8 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     location = LocationSerializer()
     permissions = UserPermissionsSerializer(read_only=True)
-    organization = OrganizationSerializer(read_only=True, source='partner_organization')
+    organization = OrganizationSerializer(
+        read_only=True, source='partner_organization')
 
     class Meta:
         model = BB_USER_MODEL
@@ -204,6 +210,17 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
             'verified', 'permissions', 'matching_options_set',
             'organization'
+        )
+
+
+class OldSegmentSerializer(serializers.ModelSerializer):
+
+    type = SegmentTypeSerializer()
+
+    class Meta:
+        model = Segment
+        fields = (
+            'id', 'name', 'type'
         )
 
 
@@ -241,6 +258,8 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     tasks_performed = serializers.ReadOnlyField()
     is_active = serializers.BooleanField(read_only=True)
 
+    segments = OldSegmentSerializer(many=True, read_only=True)
+
     class Meta:
         model = BB_USER_MODEL
         fields = (
@@ -250,7 +269,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'fundraiser_count', 'task_count', 'time_spent', 'is_active',
             'tasks_performed', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
-            'subscribed',
+            'subscribed', 'segments'
         )
 
 
@@ -373,12 +392,14 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
             not email.endswith('@{}'.format(settings.email_domain))
         ):
             raise serializers.ValidationError(
-                ('Only emails for the domain {} are allowed').format(settings.email_domain)
+                ('Only emails for the domain {} are allowed').format(
+                    settings.email_domain)
             )
 
         if len(BB_USER_MODEL.objects.filter(email=email, is_active=True)):
             raise serializers.ValidationError(
-                ('member with this email address already exists.').format(settings.email_domain)
+                ('member with this email address already exists.').format(
+                    settings.email_domain)
             )
 
         return email
@@ -447,7 +468,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
                 conflict['type'] = 'email'
 
             errors[
-                settings.REST_FRAMEWORK.get('NON_FIELD_ERRORS_KEY', 'non_field_errors')
+                settings.REST_FRAMEWORK.get(
+                    'NON_FIELD_ERRORS_KEY', 'non_field_errors')
             ] = [conflict]
 
         return errors
@@ -459,7 +481,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
         settings = MemberPlatformSettings.objects.get()
 
         if settings.confirm_signup:
-            raise serializers.ValidationError({'token': _('Signup requires a confirmation token')})
+            raise serializers.ValidationError(
+                {'token': _('Signup requires a confirmation token')})
 
         data['password'] = make_password(data['password'])
 
@@ -499,14 +522,16 @@ class EmailSetSerializer(PasswordProtectedMemberSerializer):
 
 
 class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
-    new_password = PasswordField(write_only=True, required=True, max_length=128)
+    new_password = PasswordField(
+        write_only=True, required=True, max_length=128)
 
     def save(self):
         self.instance.set_password(self.validated_data['new_password'])
         self.instance.save()
 
     class Meta(PasswordProtectedMemberSerializer.Meta):
-        fields = ('new_password', ) + PasswordProtectedMemberSerializer.Meta.fields
+        fields = ('new_password', ) + \
+            PasswordProtectedMemberSerializer.Meta.fields
 
 
 class PasswordSetSerializer(serializers.Serializer):
@@ -520,7 +545,8 @@ class PasswordSetSerializer(serializers.Serializer):
 
     def validate(self, data):
         if data['new_password1'] != data['new_password2']:
-            raise serializers.ValidationError(_('The two password fields didn\'t match.'))
+            raise serializers.ValidationError(
+                _('The two password fields didn\'t match.'))
 
         return data
 

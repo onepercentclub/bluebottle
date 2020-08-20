@@ -1,0 +1,11 @@
+{% with id=widget.attrs.id %}
+    <ul class="icon-picker">
+        {% for group, options, index in widget.optgroups %}
+            {% for option in options %}
+                <li>
+                    {% include option.template_name with widget=option %}
+                </li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+{% endwith %}

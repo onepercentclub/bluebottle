@@ -64,9 +64,9 @@ class StatisticsModelTestCase(BluebottleTestCase):
         initiative = InitiativeFactory.create()
         event = EventFactory.create(
             initiative=initiative,
+            owner=initiative.owner,
             start=timezone.now() - datetime.timedelta(hours=1),
             duration=0.1
-
         )
 
         initiative.states.submit(save=True)

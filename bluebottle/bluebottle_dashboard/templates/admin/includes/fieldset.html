@@ -20,16 +20,14 @@
                         </span>
                     {% else %}
                         {{ field.label_tag }}
-                        {% if field.is_readonly %}
-                            <p>{{ field.contents }}</p>
+                        {% if field.is_readonly and field.contents %}
+                            {{ field.contents }}
                         {% else %}
                             {{ field.field|jet_select2_lookups }}
                         {% endif %}
                     {% endif %}
-                    {% if field.field.help_text %}
-                        {% if not field.is_checkbox %}
-                            <p class="help">{{ field.field.help_text|safe }}</p>
-                        {%  endif %}
+                    {% if field.field.help_text and not field.is_checkbox %}
+                        <p class="help">{{ field.field.help_text|safe }}</p>
                     {% endif %}
                 </div>
             {% endfor %}

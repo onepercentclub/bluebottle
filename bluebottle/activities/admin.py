@@ -124,7 +124,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'created',
         'updated',
         'valid',
-        'complete',
         'transition_date',
         'stats_data',
         'send_impact_reminder_message_link',
@@ -143,7 +142,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     )
 
     status_fields = (
-        'complete',
         'valid',
         'status',
         'states',
@@ -193,32 +191,23 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     def valid(self, obj):
         errors = list(obj.errors)
-        if not errors and obj.states.initiative_is_approved():
+        required = list(obj.required)
+        if not errors and obj.states.initiative_is_approved() and not required:
             return '-'
+
+        errors += [
+            _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
+            for field in required
+        ]
 
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))
 
-        return format_html("<ul>{}</ul>", format_html("".join([
+        return format_html("<ul class='validation-error-list'>{}</ul>", format_html("".join([
             format_html(u"<li>{}</li>", value) for value in errors
         ])))
 
-    valid.short_description = _('Validation errors')
-
-    def complete(self, obj):
-        required = list(obj.required)
-        if not required:
-            return '-'
-
-        errors = [
-            obj._meta.get_field(field).verbose_name
-            for field in required
-        ]
-
-        return format_html("<ul>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in errors
-        ])))
-    complete.short_description = _('Missing data')
+    valid.short_description = _('Errors')
 
     def get_urls(self):
         urls = super(ActivityChildAdmin, self).get_urls()
@@ -265,6 +254,26 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             u"<a href='{}'>{}</a>",
             url, _('Send impact reminder message')
         )
+    send_impact_reminder_message.short_description = _('impact reminder')
+
+    @confirmation_form(
+        ImpactReminderConfirmationForm,
+        Activity,
+        'admin/activities/send_impact_reminder_message.html'
+    )
+    def send_impact_reminder_message(self, request, activity):
+        if not request.user.has_perm('{}.change_{}'.format(
+                self.model._meta.app_label,
+                self.model._meta.model_name
+        )):
+            return HttpResponseForbidden('Not allowed to change user')
+
+        ImpactReminderMessage(activity).compose_and_send()
+
+        message = _('User {name} will receive a message.').format(
+            name=activity.owner.full_name)
+        self.message_user(request, message)
+        return HttpResponseRedirect(reverse('admin:activities_activity_change', args=(activity.id, )))
     send_impact_reminder_message.short_description = _('impact reminder')
 
 

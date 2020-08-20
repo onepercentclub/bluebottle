@@ -84,7 +84,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
 
-    readonly_fields = ['link', 'created', 'updated', 'valid', 'complete']
+    readonly_fields = ['link', 'created', 'updated', 'valid']
 
     ordering = ('-created', )
 
@@ -138,7 +138,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             (_('Organization'), {'fields': (
                 'has_organization', 'organization', 'organization_contact')}),
             (_('Status'), {'fields': (
-                'valid', 'complete',
+                'valid',
                 'reviewer', 'activity_manager',
                 'promoter', 'status', 'states')}),
         )
@@ -158,26 +158,20 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     def valid(self, obj):
         errors = list(obj.errors)
-        return format_html("<ul>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in errors
-        ])))
-
-    valid.short_description = _('Validation errors')
-
-    def complete(self, obj):
         required = list(obj.required)
-        if not required:
+        if not errors and not required:
             return '-'
 
-        errors = [
-            obj._meta.get_field(field).verbose_name
+        errors += [
+            _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
             for field in required
         ]
 
-        return format_html("<ul>{}</ul>", format_html("".join([
+        return format_html("<ul class='validation-error-list'>{}</ul>", format_html("".join([
             format_html(u"<li>{}</li>", value) for value in errors
         ])))
-    complete.short_description = _('Missing data')
+
+    valid.short_description = _('Errors')
 
     class Media:
         js = ('admin/js/inline-activities-add.js',)

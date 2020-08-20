@@ -41,15 +41,13 @@
         <ul></ul>
         <ul>
             {% for effect in effects %}
-                {% if effect.display %}
-                    <li>
-                        <h3>{{ effect.title }}</h3>
-                        <p>{{ effect.description }}</p>
-                        {% if effect.help %}
-                            <i>{{ effect.help }}</i>
-                        {% endif %}
-                    </li>
-                {% endif %}
+                <li>
+                    <h3>{{ effect.title }}</h3>
+                    <p>{{ effect.description }}</p>
+                    {% if effect.help %}
+                        <i>{{ effect.help }}</i>
+                    {% endif %}
+                </li>
             {% endfor %}
         </ul>
     {% endif %}

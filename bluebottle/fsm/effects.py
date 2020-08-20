@@ -100,6 +100,10 @@ class BaseTransitionEffect(Effect):
     def __unicode__(self):
         return unicode(self.transition.target)
 
+    @property
+    def help(self):
+        return _('{}: {}').format(self.instance.__class__._meta.verbose_name, self.instance)
+
     def to_html(self):
         if self.conditions:
             return _('{transition} {object} if {conditions}').format(

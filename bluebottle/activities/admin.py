@@ -243,6 +243,26 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         )
     send_impact_reminder_message.short_description = _('impact reminder')
 
+    @confirmation_form(
+        ImpactReminderConfirmationForm,
+        Activity,
+        'admin/activities/send_impact_reminder_message.html'
+    )
+    def send_impact_reminder_message(self, request, activity):
+        if not request.user.has_perm('{}.change_{}'.format(
+                self.model._meta.app_label,
+                self.model._meta.model_name
+        )):
+            return HttpResponseForbidden('Not allowed to change user')
+
+        ImpactReminderMessage(activity).compose_and_send()
+
+        message = _('User {name} will receive a message.').format(
+            name=activity.owner.full_name)
+        self.message_user(request, message)
+        return HttpResponseRedirect(reverse('admin:activities_activity_change', args=(activity.id, )))
+    send_impact_reminder_message.short_description = _('impact reminder')
+
 
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):

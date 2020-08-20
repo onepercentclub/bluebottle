@@ -1,6 +1,4 @@
 from datetime import timedelta
-from operator import attrgetter
-
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
@@ -9,17 +7,21 @@ from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
+from operator import attrgetter
 from parler.models import TranslatableModel, TranslatedFields
 
-from bluebottle.utils.managers import SortableTranslatableManager, PublishedManager
-
-import bluebottle.utils.monkey_patch_migration  # noqa
 import bluebottle.utils.monkey_patch_corsheaders  # noqa
+import bluebottle.utils.monkey_patch_dj_money_rates  # noqa
+import bluebottle.utils.monkey_patch_django_elasticsearch_dsl  # noqa
+import bluebottle.utils.monkey_patch_migration  # noqa
+import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa
 import bluebottle.utils.monkey_patch_parler  # noqa
 import bluebottle.utils.monkey_patch_password_validators  # noqa
-import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa
-import bluebottle.utils.monkey_patch_django_elasticsearch_dsl  # noqa
-import bluebottle.utils.monkey_patch_dj_money_rates  # noqa
+import bluebottle.utils.monkey_patch_jet  # noqa
+from bluebottle.utils.managers import (
+    SortableTranslatableManager,
+    PublishedManager
+)
 
 
 class Language(models.Model):

@@ -9,6 +9,7 @@ from setuptools import setup, find_packages
 def read_file(name):
     return open(os.path.join(os.path.dirname(__file__), name)).read()
 
+
 readme = read_file('README.rst')
 changes = ''
 
@@ -36,7 +37,6 @@ install_requires = [
     'django-dynamic-fixture==1.9.5',
     'django-elasticsearch-dsl==0.5.0',
     'django-extensions==1.7.9',
-    'django-filetransfers @ hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1',
     'django-filter==1.1.0',
     'django-geoposition==0.3.0',
     'django-fluent-dashboard==1.0a1',

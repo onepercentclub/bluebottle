@@ -1,4 +1,4 @@
-{% load i18n static jet_tags %}<!DOCTYPE html>
+{% load i18n static jet_tags dashboard_tags %}<!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}{% get_current_language_bidi as LANGUAGE_BIDI %}
 {% jet_get_current_theme as THEME %}
 {% jet_get_current_version as JET_VERSION %}
@@ -226,7 +226,7 @@
                 </div>
 
                 {% if user.is_active and user.is_staff %}
-                    {% jet_get_menu as app_list %}
+                    {% dashboard_get_menu as app_list %}
                     <div class="sidebar-section">
                         <div class="apps-list-pinned">
                             {% for app in app_list %}

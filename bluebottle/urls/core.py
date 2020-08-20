@@ -52,7 +52,7 @@ urlpatterns = [
     # Homepage API urls
     url(r'^api/homepage/',
         include('bluebottle.homepage.urls.api')),
-    url(r'^api/stats',
+    url(r'^api/statistics/',
         include('bluebottle.statistics.urls.api')),
     url(r'^api/cms/',
         include('bluebottle.cms.urls.api')),
@@ -84,9 +84,14 @@ urlpatterns = [
         include('bluebottle.funding_lipisha.urls.api')),
     url(r'^api/funding/telesom',
         include('bluebottle.funding_telesom.urls.api')),
+    url(r'^api/impact/',
+        include('bluebottle.impact.urls.api')),
+    url(r'^api/segments/',
+        include('bluebottle.segments.urls.api')),
 
     url(r'^api/files/',
         include('bluebottle.files.urls.api')),
+
 
     url(r'^payments_mock/',
         include('bluebottle.payments_mock.urls.core')),

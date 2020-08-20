@@ -12,7 +12,7 @@ from bluebottle.files.fields import ImageField
 from bluebottle.initiatives.models import Initiative
 from bluebottle.follow.models import Follow
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
-from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
 class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
@@ -59,6 +59,12 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
             "You can paste the link to YouTube or Vimeo video here"
         )
     )
+    segments = models.ManyToManyField(
+        'segments.segment',
+        verbose_name=_('Segment'),
+        related_name='activities',
+        blank=True
+    )
 
     followers = GenericRelation('follow.Follow', object_id_field='instance_id')
     messages = GenericRelation('notifications.Message')
@@ -90,7 +96,13 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         if not self.owner_id:
             self.owner = self.initiative.owner
 
+        self.description = clean_html(self.description)
+
         super(Activity, self).save(**kwargs)
+
+        if not self.segments.count():
+            for segment in self.owner.segments.all():
+                self.segments.add(segment)
 
     def get_absolute_url(self):
         domain = get_current_host()
@@ -158,9 +170,9 @@ class Organizer(Contribution):
 
     def __unicode__(self):
         if self.user:
-            return unicode(_("Organizer: {name}".format(name=self.user.full_name)))
+            return self.user.full_name
         else:
-            return _('Organizer')
+            return _('None')
 
 
 from bluebottle.activities.signals import *  # noqa

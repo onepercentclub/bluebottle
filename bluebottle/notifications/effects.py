@@ -38,7 +38,10 @@ class BaseNotificationEffect(Effect):
 
     @property
     def is_valid(self):
-        return all([condition(self.instance) for condition in self.conditions])
+        return (
+            all([condition(self.instance) for condition in self.conditions]) and
+            self.message(self.instance).get_recipients()
+        )
 
     def to_html(self):
         return _('Message <em>{subject}</em> to {recipients}').format(**self._content())

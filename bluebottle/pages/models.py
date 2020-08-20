@@ -17,6 +17,7 @@ from fluent_contents.utils.filters import apply_filters
 from bluebottle.clients import properties
 from bluebottle.utils.models import PublishableModel
 from bluebottle.utils.serializers import MLStripper
+from bluebottle.utils.validators import FileMimetypeValidator
 
 
 def get_languages():
@@ -26,7 +27,21 @@ def get_languages():
 class DocumentItem(ContentItem):
 
     text = models.CharField(_('Link title'), max_length=100)
-    document = models.FileField(_("Document"), upload_to='pages')
+    document = models.FileField(
+        _("Document"),
+        upload_to='pages',
+        validators=[FileMimetypeValidator(
+            allowed_mimetypes=[
+                'application/pdf',
+                'application/zip',
+                'image/jpeg',
+                'image/png',
+                'image/gif',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ]
+        )]
+    )
 
     def __str__(self):
         return Truncator(strip_tags(self.text)).words(20)
@@ -158,10 +173,6 @@ class ImageTextRoundItem(ContentItem):
 
 
 class Page(PublishableModel):
-    """
-    Slides for homepage.
-    """
-
     class PageStatus(DjangoChoices):
         published = ChoiceItem('published', label=_('Published'))
         draft = ChoiceItem('draft', label=_('Draft'))

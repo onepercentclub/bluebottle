@@ -12,7 +12,7 @@ from bluebottle.cms.models import (
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, StepsContent, SlidesContent,
     CategoriesContent, LocationsContent, LogosContent,
-    LinksContent, WelcomeContent,
+    LinksContent, WelcomeContent, HomepageStatisticsContent,
     ActivitiesContent)
 from fluent_contents.forms import ContentItemForm
 
@@ -52,6 +52,14 @@ class StatsBlockPlugin(CMSContentPlugin):
     model = StatsContent
     inlines = [StatInline]
     category = _('Stats')
+
+
+@plugin_pool.register
+class HomepageStatisticsBlockPlugin(CMSContentPlugin):
+    model = HomepageStatisticsContent
+    category = _('Stats')
+
+    category = _('Homepage')
 
 
 @plugin_pool.register

@@ -42,7 +42,7 @@ class StateMachineAdminMixin(object):
 
             new_obj = self.save_form(request, form, change=True)
 
-            effects = list(new_obj.all_effects)
+            effects = [effect for effect in list(new_obj.all_effects) if effect.display]
             cancel_link = reverse(
                 'admin:{}_{}_change'.format(
                     self.model._meta.app_label, self.model._meta.model_name
@@ -133,9 +133,8 @@ class StateMachineAdminMixin(object):
 
                 return HttpResponseRedirect(link)
 
-        effects = []
-        for effect in transition.effects:
-            effects += effect(instance).all_effects()
+        getattr(state_machine, transition_name)()
+        effects = [effect for effect in instance._effects if effect.display]
 
         cancel_link = reverse(
             'admin:{}_{}_change'.format(

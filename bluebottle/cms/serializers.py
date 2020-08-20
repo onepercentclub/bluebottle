@@ -27,11 +27,12 @@ from bluebottle.cms.models import (
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
-    SitePlatformSettings, WelcomeContent,
+    SitePlatformSettings, WelcomeContent, HomepageStatisticsContent,
     ActivitiesContent)
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.slides.models import Slide
+from bluebottle.statistics.models import BaseStatistic
 from bluebottle.surveys.serializers import QuestionSerializer
 from bluebottle.utils.fields import SafeField
 
@@ -44,7 +45,7 @@ class ItemSerializer(serializers.ModelSerializer):
 
 
 class RawHtmlItemSerializer(ItemSerializer):
-    html = serializers.CharField()
+    html = SafeField()
     item_type = 'raw-html'
 
     class Meta:
@@ -147,7 +148,20 @@ class StatsContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StatsContent
-        fields = ('id', 'type', 'stats', 'title', 'sub_title')
+        fields = ('id', 'type', 'stats', 'title', 'sub_title', )
+
+
+class HomepageStatisticsContentSerializer(serializers.ModelSerializer):
+    title = serializers.CharField()
+    sub_title = serializers.CharField()
+    count = serializers.SerializerMethodField()
+
+    def get_count(self, obj):
+        return len(BaseStatistic.objects.filter(active=True))
+
+    class Meta:
+        model = HomepageStatisticsContent
+        fields = ('id', 'type', 'title', 'sub_title', 'count')
 
 
 class QuoteSerializer(serializers.ModelSerializer):
@@ -175,7 +189,8 @@ class SurveyContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SurveyContent
-        fields = ('id', 'type', 'response_count', 'answers', 'title', 'sub_title')
+        fields = ('id', 'type', 'response_count',
+                  'answers', 'title', 'sub_title')
 
 
 class ProjectImageSerializer(serializers.ModelSerializer):
@@ -215,8 +230,10 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
 class ProjectsMapContentSerializer(serializers.ModelSerializer):
     def __repr__(self):
         if 'start_date' in self.context and 'end_date'in self.context:
-            start = self.context['start_date'].strftime('%s') if self.context['start_date'] else 'none'
-            end = self.context['end_date'].strftime('%s') if self.context['end_date'] else 'none'
+            start = self.context['start_date'].strftime(
+                '%s') if self.context['start_date'] else 'none'
+            end = self.context['end_date'].strftime(
+                '%s') if self.context['end_date'] else 'none'
             return 'MapsContent({},{})'.format(start, end)
         return 'MapsContent'
 
@@ -339,7 +356,8 @@ class StepsContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StepsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'steps', 'action_text', 'action_link')
+        fields = ('id', 'type', 'title', 'sub_title',
+                  'steps', 'action_text', 'action_link')
 
 
 class LogoSerializer(serializers.ModelSerializer):
@@ -355,7 +373,8 @@ class LogosContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LogosContent
-        fields = ('id', 'type', 'title', 'sub_title', 'logos', 'action_text', 'action_link')
+        fields = ('id', 'type', 'title', 'sub_title',
+                  'logos', 'action_text', 'action_link')
 
 
 class LinkSerializer(serializers.ModelSerializer):
@@ -511,6 +530,8 @@ class BlockSerializer(serializers.Serializer):
     def to_representation(self, obj):
         if isinstance(obj, StatsContent):
             serializer = StatsContentSerializer
+        elif isinstance(obj, HomepageStatisticsContent):
+            serializer = HomepageStatisticsContentSerializer
         elif isinstance(obj, QuotesContent):
             serializer = QuotesContentSerializer
         elif isinstance(obj, ProjectImagesContent):
@@ -572,7 +593,8 @@ def watermark():
 
 
 class ResultPageSerializer(serializers.ModelSerializer):
-    blocks = BlockSerializer(source='content.contentitems.all.translated', many=True)
+    blocks = BlockSerializer(
+        source='content.contentitems.all.translated', many=True)
     image = ImageSerializer()
     share_image = SorlImageField(
         '1200x600', source='image', crop='center',
@@ -587,7 +609,8 @@ class ResultPageSerializer(serializers.ModelSerializer):
 
 
 class HomePageSerializer(serializers.ModelSerializer):
-    blocks = BlockSerializer(source='content.contentitems.all.translated', many=True)
+    blocks = BlockSerializer(
+        source='content.contentitems.all.translated', many=True)
 
     class Meta:
         model = HomePage

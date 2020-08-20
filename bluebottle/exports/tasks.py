@@ -1,12 +1,12 @@
 import logging
 import os
 import posixpath
-
 from django.conf import settings
 from django.utils import timezone
 
 from celery import shared_task, current_task
 
+from bluebottle.utils.utils import reverse_signed
 from .exporter import get_export_models, get_resource_for_model
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,8 @@ def export(exporter_class, format='xlsx', **kwargs):
         os.makedirs(export_root)
     with open(export_to, 'wb') as outfile:
         outfile.write(getattr(databook, format))
-    return posixpath.join(settings.EXPORTDB_EXPORT_MEDIA_URL, filename)
+
+    return reverse_signed('exportdb_download', args=(filename, ))
 
 
 def plain_export(exporter_class, format='xlsx', **kwargs):

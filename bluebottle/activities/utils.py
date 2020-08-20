@@ -4,6 +4,7 @@ from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity, Contribution
+from bluebottle.impact.models import ImpactGoal
 from bluebottle.members.models import Member
 from bluebottle.fsm.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
@@ -21,7 +22,7 @@ class BaseActivitySerializer(ModelSerializer):
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
-
+    goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
 
     errors = ValidationErrorsField()
@@ -30,6 +31,8 @@ class BaseActivitySerializer(ModelSerializer):
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
+        'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
     }
@@ -47,6 +50,7 @@ class BaseActivitySerializer(ModelSerializer):
             'image',
             'video_url',
             'initiative',
+            'goals',
             'owner',
             'title',
             'description',
@@ -55,6 +59,7 @@ class BaseActivitySerializer(ModelSerializer):
             'stats',
             'errors',
             'required',
+            'goals'
         )
 
         meta_fields = (
@@ -71,6 +76,8 @@ class BaseActivitySerializer(ModelSerializer):
             'owner',
             'image',
             'initiative',
+            'goals',
+            'goals.type',
             'initiative.place',
             'initiative.image',
         ]
@@ -85,13 +92,15 @@ class BaseActivityListSerializer(ModelSerializer):
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
-
+    goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
 
     included_serializers = {
         'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
+        'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
     }
 
     def get_is_follower(self, instance):
@@ -112,6 +121,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'is_follower',
             'status',
             'stats',
+            'goals',
         )
 
         meta_fields = (
@@ -128,6 +138,8 @@ class BaseActivityListSerializer(ModelSerializer):
             'initiative.image',
             'initiative.location',
             'initiative.place',
+            'goals',
+            'goals.type',
         ]
         resource_name = 'activities'
 

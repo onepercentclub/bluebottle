@@ -65,7 +65,8 @@ class StateMachineModelForm(forms.ModelForm):
                 if not transition.automatic
             ]
             force_field = "force_{}".format(machine.field)
-            self.fields[force_field].initial = machine.current_state.value
+            if machine.current_state:
+                self.fields[force_field].initial = machine.current_state.value
 
     def save(self, commit=True):
         for field in self.data:

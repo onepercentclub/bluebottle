@@ -13,6 +13,7 @@
     cursor: pointer;
     border-radius: 4px;
     height: 32px;
+    min-width: 100px;
     line-height: 32px;
     outline: 0;
     font-size: 0.9rem;
@@ -58,6 +59,10 @@
     background-color: transparent;
   }
 
+}
+
+.button.button_select_option {
+  vertical-align: middle;
 }
 
 .button[disabled], input[type=submit][disabled], input[type=button][disabled] {
@@ -199,6 +204,10 @@ input[type=checkbox] {
   }
 }
 
+form .aligned ul.validation-error-list li {
+  list-style: disc;
+
+}
 
 /* SELECTOR */
 

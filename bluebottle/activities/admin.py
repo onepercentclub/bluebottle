@@ -106,7 +106,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'created',
         'updated',
         'valid',
-        'complete',
         'review_status',
         'transition_date',
         'stats_data',
@@ -126,7 +125,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     )
 
     status_fields = (
-        'complete',
         'valid',
         'status',
         'states',
@@ -169,32 +167,23 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     def valid(self, obj):
         errors = list(obj.errors)
-        if not errors and obj.states.initiative_is_approved():
+        required = list(obj.required)
+        if not errors and obj.states.initiative_is_approved() and not required:
             return '-'
+
+        errors += [
+            _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
+            for field in required
+        ]
 
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))
 
-        return format_html("<ul>{}</ul>", format_html("".join([
+        return format_html("<ul class='validation-error-list'>{}</ul>", format_html("".join([
             format_html(u"<li>{}</li>", value) for value in errors
         ])))
 
-    valid.short_description = _('Validation errors')
-
-    def complete(self, obj):
-        required = list(obj.required)
-        if not required:
-            return '-'
-
-        errors = [
-            obj._meta.get_field(field).verbose_name
-            for field in required
-        ]
-
-        return format_html("<ul>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in errors
-        ])))
-    complete.short_description = _('Missing data')
+    valid.short_description = _('Errors')
 
     def get_urls(self):
         urls = super(ActivityChildAdmin, self).get_urls()

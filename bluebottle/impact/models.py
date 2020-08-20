@@ -40,6 +40,11 @@ class ImpactType(SortableTranslatableModel):
                             null=True, blank=True, max_length=20)
 
     translations = TranslatedFields(
+        name=models.CharField(
+            _('name'),
+            blank=True,
+            max_length=100
+        ),
         unit=models.CharField(
             _('unit'),
             blank=True,
@@ -71,11 +76,11 @@ class ImpactType(SortableTranslatableModel):
     )
 
     def __unicode__(self):
-        return self.text
+        return self.name
 
     def save(self, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.text)
+            self.slug = slugify(self.name)
 
         super(ImpactType, self).save(**kwargs)
 

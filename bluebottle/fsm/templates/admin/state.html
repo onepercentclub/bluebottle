@@ -1,11 +1,7 @@
-
 <input type="hidden" name="{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value|stringformat:'s' }}"{% endif %}{% include "django/forms/widgets/attrs.html" %} />
-
 <span class="state">
     {{widget.attrs.state.name|capfirst}}
 </span>
 {% if widget.attrs.state.description %}
-    <p class="help">
-        {{widget.attrs.state.description}}
-    </p>
+    <p class="help">{{widget.attrs.state.description}}</p>
 {% endif %}

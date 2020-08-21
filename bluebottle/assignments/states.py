@@ -133,6 +133,18 @@ class AssignmentStateMachine(ActivityStateMachine):
         automatic=True
     )
 
+    reschedule = Transition(
+        [
+            ActivityStateMachine.cancelled,
+            ActivityStateMachine.succeeded
+        ],
+        ActivityStateMachine.open,
+        name=_('Reschedule'),
+        description=_("Reschedule the activity for new sign-ups. "
+                      "Triggered by a changing to a future date."),
+        automatic=True
+    )
+
     succeed = Transition(
         [
             ActivityStateMachine.open,

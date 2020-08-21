@@ -106,7 +106,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         )
         self.assertTrue('nobody applied to your task' in mail.outbox[0].body)
 
-    def test_reopen_end_date(self):
+    def test_reschedule_end_date(self):
         self.assignment.states.submit(save=True)
         self.assignment.date = now() - timedelta(days=1)
         self.assignment.save()
@@ -114,12 +114,11 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assignment.registration_deadline = (now() + timedelta(days=1)).date()
         self.assignment.date = now() + timedelta(days=2)
         self.assignment.save()
-
+        self.assignment.refresh_from_db()
         self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
 
     def test_reject(self):
         self.assignment.states.reject(save=True)
-
         self.assertEqual(self.assignment.status, AssignmentStateMachine.rejected.value)
 
     def test_restore(self):
@@ -166,7 +165,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         )
         self.assertTrue('You did it!' in mail.outbox[-1].body)
 
-    def test_succeed_then_reopen(self):
+    def test_succeed_then_reschedule(self):
         self.assignment.states.submit(save=True)
         applicants = ApplicantFactory.create_batch(
             self.assignment.capacity, activity=self.assignment

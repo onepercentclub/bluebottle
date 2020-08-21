@@ -54,7 +54,7 @@ class DateChangedTrigger(ModelChangedTrigger):
             ]
         ),
         TransitionEffect(
-            'reopen',
+            'reschedule',
             conditions=[
                 AssignmentStateMachine.should_open
             ]
@@ -72,6 +72,12 @@ class RegistrationDeadlineChangedTrigger(ModelChangedTrigger):
     field = 'registration_deadline'
 
     effects = [
+        TransitionEffect(
+            'reschedule',
+            conditions=[
+                AssignmentStateMachine.should_open
+            ]
+        ),
         TransitionEffect(
             'start',
             conditions=[

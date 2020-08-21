@@ -69,6 +69,10 @@ class FundingStateMachine(ActivityStateMachine):
         """user has the permission to approve (staff member)"""
         return user.is_staff
 
+    def psp_allows_refunding(self):
+        """PSP allows refunding through their API"""
+        return self.instance.bank_account.provider_class.refund_enabled
+
     submit = Transition(
         [ActivityStateMachine.draft, ActivityStateMachine.needs_work],
         ActivityStateMachine.submitted,
@@ -226,6 +230,9 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Refund'),
         description=_("The campaign will be refunded and all donations will be returned to the donors."),
         automatic=False,
+        conditions=[
+            psp_allows_refunding
+        ],
         effects=[
             RelatedTransitionEffect('donations', 'activity_refund'),
             DeletePayoutsEffect

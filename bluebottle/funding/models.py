@@ -49,6 +49,8 @@ class PaymentProvider(PolymorphicModel):
     public_settings = {}
     private_settings = {}
 
+    refund_enabled = False
+
     @property
     def available_currencies(self):
         currencies = []

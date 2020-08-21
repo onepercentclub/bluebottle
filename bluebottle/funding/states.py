@@ -166,6 +166,9 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Extend'),
         description=_("The campaign will be extended and can receive more donations."),
         automatic=True,
+        conditions=[
+            without_approved_payouts
+        ],
         effects=[
             DeletePayoutsEffect
         ]

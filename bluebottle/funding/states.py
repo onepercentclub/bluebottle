@@ -71,7 +71,9 @@ class FundingStateMachine(ActivityStateMachine):
 
     def psp_allows_refunding(self):
         """PSP allows refunding through their API"""
-        return self.instance.bank_account and self.instance.bank_account.provider_class.refund_enabled
+        return self.instance.bank_account and \
+            self.instance.bank_account.provider_class and \
+            self.instance.bank_account.provider_class.refund_enabled
 
     submit = Transition(
         [ActivityStateMachine.draft, ActivityStateMachine.needs_work],

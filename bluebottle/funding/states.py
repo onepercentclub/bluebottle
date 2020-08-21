@@ -26,7 +26,7 @@ class FundingStateMachine(ActivityStateMachine):
     partially_funded = State(
         _('partially funded'),
         'partially_funded',
-        _("The activity has ended and received donations but didn't reached the target.")
+        _("The activity has ended and received donations but didn't reach the target.")
     )
     refunded = State(
         _('refunded'),

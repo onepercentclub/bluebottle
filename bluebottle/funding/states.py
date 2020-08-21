@@ -84,7 +84,6 @@ class FundingStateMachine(ActivityStateMachine):
 
     approve = Transition(
         [
-            ActivityStateMachine.draft,
             ActivityStateMachine.needs_work,
             ActivityStateMachine.submitted
         ],

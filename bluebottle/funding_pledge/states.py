@@ -7,6 +7,7 @@ from bluebottle.funding_pledge.models import PledgePayment
 
 class PledgePaymentStateMachine(BasePaymentStateMachine):
     model = PledgePayment
+    pending = None
 
     request_refund = Transition(
         BasePaymentStateMachine.succeeded,

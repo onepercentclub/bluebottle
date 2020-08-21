@@ -265,7 +265,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, FSMAdmin):
         kwargs.update({
             'help_texts': {
                 'send_impact_reminder_message_link': _(
-                    u"Request the activity manager to fill in the impact of his activity."
+                    u"Request the activity manager to fill in the impact of this activity."
                 )
             }
         })

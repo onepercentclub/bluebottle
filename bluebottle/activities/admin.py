@@ -126,6 +126,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'valid',
         'transition_date',
         'stats_data',
+        'review_status',
         'send_impact_reminder_message_link',
     ]
 
@@ -282,7 +283,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
     date_hierarchy = 'transition_date'
-    readonly_fields = ['link']
+    readonly_fields = ['link', 'review_status']
     list_filter = (PolymorphicChildModelFilter, 'status', 'highlight')
     list_editable = ('highlight',)
 

@@ -64,7 +64,8 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
             'notifications-message-content_type-object_id-INITIAL_FORMS': '0',
             'wallposts-wallpost-content_type-object_id-TOTAL_FORMS': '0',
             'wallposts-wallpost-content_type-object_id-INITIAL_FORMS': '0',
-
+            'goals-TOTAL_FORMS': '0',
+            'goals-INITIAL_FORMS': '0',
             'contributions-TOTAL_FORMS': '3',
             'contributions-INITIAL_FORMS': '3',
             'contributions-0-contribution_ptr': self.applicants[0].contribution_ptr_id,
@@ -84,7 +85,6 @@ class TestAssignmentAdmin(BluebottleAdminTestCase):
         }
 
         response = self.client.post(url, data)
-
         self.assertEqual(
             response.status_code, status.HTTP_302_FOUND,
             'Deleting applicants failed. '

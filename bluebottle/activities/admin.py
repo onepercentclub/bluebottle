@@ -208,7 +208,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             format_html(u"<li>{}</li>", value) for value in errors
         ])))
 
-    valid.short_description = _('Errors')
+    valid.short_description = _('Steps to complete activity')
 
     def get_urls(self):
         urls = super(ActivityChildAdmin, self).get_urls()

@@ -171,7 +171,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
             format_html(u"<li>{}</li>", value) for value in errors
         ])))
 
-    valid.short_description = _('Errors')
+    valid.short_description = _('Steps to complete initiative')
 
     class Media:
         js = ('admin/js/inline-activities-add.js',)

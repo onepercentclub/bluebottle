@@ -6,7 +6,9 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 import icalendar
 
-from bluebottle.activities.permissions import ActivityOwnerPermission, ActivityTypePermission
+from bluebottle.activities.permissions import (
+    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission
+)
 from bluebottle.events.filters import ParticipantListFilter
 from bluebottle.events.models import Event, Participant
 from bluebottle.events.serializers import (
@@ -60,6 +62,7 @@ class EventDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     serializer_class = EventSerializer
 
     permission_classes = (
+        ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 

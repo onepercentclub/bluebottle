@@ -17,6 +17,7 @@ from bluebottle.activities.models import Activity
 from bluebottle.files.models import RelatedImage
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.filters import InitiativeSearchFilter
+from bluebottle.initiatives.permissions import InitiativeStatusPermission
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.serializers import (
     InitiativeSerializer, InitiativeListSerializer, InitiativeReviewTransitionSerializer,
@@ -115,6 +116,7 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
     serializer_class = InitiativeSerializer
 
     permission_classes = (
+        InitiativeStatusPermission,
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 

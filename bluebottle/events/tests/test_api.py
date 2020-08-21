@@ -409,6 +409,24 @@ class EventDetailTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_update_cancelled(self):
+        self.event.states.cancel(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.event.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_deleted(self):
+        self.event.states.delete(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.event.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_rejected(self):
+        self.event.states.reject(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.event.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     @override_settings(DEBUG=False)
     def test_update_event_image(self):
 

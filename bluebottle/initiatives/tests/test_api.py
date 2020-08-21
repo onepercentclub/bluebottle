@@ -252,8 +252,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.initiative.states.submit(save=True)
         self.url = reverse('initiative-detail', args=(self.initiative.pk,))
 
-    def test_patch(self):
-        data = {
+        self.data = {
             'data': {
                 'id': self.initiative.id,
                 'type': 'initiatives',
@@ -262,9 +261,11 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 }
             }
         }
+
+    def test_patch(self):
         response = self.client.patch(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -360,38 +361,39 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
 
     def test_patch_anonymous(self):
-        data = {
-            'data': {
-                'id': self.initiative.id,
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title'
-                }
-            }
-        }
-
         response = self.client.patch(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_patch_wrong_user(self):
-        data = {
-            'data': {
-                'id': self.initiative.id,
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title'
-                }
-            }
-        }
-
         response = self.client.patch(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=BlueBottleUserFactory.create()
         )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_cancelled(self):
+        self.initiative.states.approve()
+        self.initiative.states.cancel(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.initiative.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_deleted(self):
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.delete(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.initiative.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_rejected(self):
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.reject(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.initiative.owner)
+
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_owner(self):

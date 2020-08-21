@@ -28,6 +28,20 @@ class ActivityTypePermission(ResourcePermission):
         return True
 
 
+class ActivityStatusPermission(ResourcePermission):
+    def has_object_action_permission(self, action, user, obj):
+        if (
+            action in ('PATCH', 'PUT') and
+            obj.status in ('rejected', 'deleted', 'cancelled')
+        ):
+            return False
+        else:
+            return True
+
+    def has_action_permission(self, action, user, model_cls):
+        return True
+
+
 class ApplicantPermission(ResourcePermission):
 
     perms_map = {

@@ -6,7 +6,7 @@ from bluebottle.utils.models import Validator
 class RegistrationDeadlineValidator(Validator):
     field = 'registration_deadline'
     code = 'registration_deadline'
-    message = _('The registration deadline must be before the end'),
+    message = _('The registration deadline must be before the end')
 
     def is_valid(self):
         return (

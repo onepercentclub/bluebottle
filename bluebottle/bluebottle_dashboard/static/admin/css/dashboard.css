@@ -128,6 +128,13 @@
     padding-bottom: 0;
 }
 
+.button_select_option {
+    vertical-align: middle;
+}
+
+form .aligned .state {
+    padding-left: 10px;
+}
 
 ul.icon-picker {
     margin: 0;

@@ -1,0 +1,13 @@
+
+{% load i18n %}
+<h3>{% trans "Generate a donation wallpost" %}</h3>
+
+<p>
+    {% trans "Generate a donation wallpost for " %}
+    "{{effects.0.instance}}" 
+    {% if effects|length > 1 %} 
+        {% blocktrans with extra=effects|length|add:"-1" %}
+        and {{ extra }} other donations.
+        {% endblocktrans %}
+    {% endif %} 
+</p>

@@ -187,7 +187,6 @@ class FundingStateMachineTests(BluebottleTestCase):
     def test_reject(self):
         mail.outbox = []
         self.funding.states.submit()
-        self.funding.states.approve(save=True)
         self.funding.states.reject(save=True)
         self.assertEqual(self.funding.status, 'rejected')
         organizer = self.funding.contributions.get()

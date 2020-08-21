@@ -62,7 +62,7 @@ class StateMachineModelForm(forms.ModelForm):
                 )
             self.fields[field].choices = [
                 (get_url(transition.field), transition) for transition in transitions
-                if not transition.automatic
+                if not transition.automatic and not transition.options.get('hide_from_admin')
             ]
             force_field = "force_{}".format(machine.field)
             if machine.current_state:

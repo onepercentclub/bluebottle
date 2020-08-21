@@ -127,6 +127,18 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'submitted')
 
+    def test_hide_delete_transition(self):
+        initiative = InitiativeFactory.create()
+        self.client.force_login(self.superuser)
+        admin_url = reverse('admin:initiatives_initiative_change', args=(initiative.pk,))
+
+        response = self.client.get(admin_url)
+        self.assertFalse(
+            '/en/admin/initiatives/initiative/{}/transition/states/delete'.format(
+                initiative.pk
+            ) in response.content
+        )
+
     def test_add_reviewer(self):
         self.client.force_login(self.superuser)
         user = BlueBottleUserFactory.create()

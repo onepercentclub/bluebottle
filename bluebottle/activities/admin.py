@@ -254,8 +254,19 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         )
         return format_html(
             u"<a href='{}'>{}</a>",
-            url, _('Send impact reminder message')
+            url, _('Send reminder message')
         )
+    send_impact_reminder_message.short_description = _('Impact Reminder')
+
+    def get_form(self, request, obj=None, **kwargs):
+        kwargs.update({
+            'help_texts': {
+                'send_impact_reminder_message_link': _(
+                    u"Request the activity manager to fill in the impact of this activity."
+                )
+            }
+        })
+        return super(ActivityChildAdmin, self).get_form(request, obj, **kwargs)
 
 
 @admin.register(Activity)

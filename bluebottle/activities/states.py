@@ -28,7 +28,7 @@ class ActivityStateMachine(ModelStateMachine):
     submitted = State(
         _('submitted'),
         'submitted',
-        _('The activity is complete and needs to be review.')
+        _('The activity is complete and needs to be reviewed.')
     )
     needs_work = State(
         _('needs work'),

@@ -9,7 +9,8 @@ from bluebottle.funding_flutterwave.models import FlutterwavePayment, Flutterwav
 @admin.register(FlutterwavePayment)
 class FlutterwavePaymentAdmin(PaymentChildAdmin):
     base_model = Payment
-
+    readonly_fields = PaymentChildAdmin.readonly_fields
+    fields = ['donation', 'tx_ref'] + readonly_fields
     search_fields = ['tx_ref', ]
     list_display = ['__unicode__', 'created', 'status', 'tx_ref']
 

@@ -32,7 +32,7 @@ from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, Fl
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount, LipishaPayment
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider, PledgeBankAccount
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
-    StripeSourcePayment, ExternalAccount
+    StripeSourcePayment, ExternalAccount, StripePayment
 from bluebottle.funding_telesom.models import TelesomPaymentProvider, TelesomPayment
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.notifications.admin import MessageAdminInline
@@ -221,7 +221,7 @@ class FundingAdmin(ActivityChildAdmin):
     payout_links.short_description = _('Payouts')
 
 
-class DonationAdminForm(forms.ModelForm):
+class DonationAdminForm(StateMachineModelForm):
     class Meta:
         model = Donation
         exclude = ()
@@ -296,6 +296,19 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     raw_id_fields = ['donation']
     change_form_template = 'admin/funding/payment/change_form.html'
 
+    readonly_fields = ['status', 'created', 'updated']
+    fields = ['donation'] + readonly_fields
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Basic'), {'fields': self.get_fields(request, obj)}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': ['force_status']}),
+            )
+        return fieldsets
+
     def get_urls(self):
         urls = super(PaymentChildAdmin, self).get_urls()
         process_urls = [
@@ -361,6 +374,7 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
 
     child_models = (
         StripeSourcePayment,
+        StripePayment,
         FlutterwavePayment,
         LipishaPayment,
         VitepayPayment,
@@ -426,6 +440,16 @@ class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     readonly_fields = ['status', 'created']
     fields = ['owner', 'status', 'created', 'reviewed']
     show_in_index = True
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Basic'), {'fields': self.get_fields(request, obj)}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': ['force_status']}),
+            )
+        return fieldsets
 
 
 @admin.register(PayoutAccount)

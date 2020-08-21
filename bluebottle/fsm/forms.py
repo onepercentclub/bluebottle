@@ -1,3 +1,4 @@
+from django.forms import Select
 from django.utils.translation import ugettext_lazy as _
 from django import forms
 from django.core.urlresolvers import reverse
@@ -26,6 +27,14 @@ class StateMachineModelFormMetaClass(ModelFormMetaclass):
                     widget=StateWidget()
                 )
 
+                # Create a sto force setting state by super users
+                force_name = "force_{}".format(machine.field)
+                attrs[force_name] = forms.ChoiceField(
+                    required=False,
+                    choices=[(s.value, s.name) for s in machine.states.values()],
+                    widget=Select(),
+                    help_text=_("Careful! This will change the status without triggering any side effects!")
+                )
         return super(StateMachineModelFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
@@ -35,13 +44,13 @@ class StateMachineModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(StateMachineModelForm, self).__init__(*args, **kwargs)
         for field in self.state_machine_fields:
-            manager = getattr(self.instance, field)
-            transitions = manager.possible_transitions()
+            machine = getattr(self.instance, field)
+            transitions = machine.possible_transitions()
 
             self.fields[field].widget.attrs['obj'] = self.instance
             self.fields[field].label = _('Transitions')
 
-            self.fields[manager.field].widget.attrs['state'] = manager.current_state
+            self.fields[machine.field].widget.attrs['state'] = machine.current_state
 
             def get_url(name):
                 url_name = 'admin:{}_{}_state_transition'.format(
@@ -55,6 +64,17 @@ class StateMachineModelForm(forms.ModelForm):
                 (get_url(transition.field), transition) for transition in transitions
                 if not transition.automatic
             ]
+            force_field = "force_{}".format(machine.field)
+            if machine.current_state:
+                self.fields[force_field].initial = machine.current_state.value
+
+    def save(self, commit=True):
+        for field in self.data:
+            if field.startswith('force_'):
+                force_data = field.replace('force_', '')
+                if self.data[field]:
+                    setattr(self.instance, force_data, self.data[field])
+        return super(StateMachineModelForm, self).save(commit=commit)
 
     @property
     def state_machine_fields(self):

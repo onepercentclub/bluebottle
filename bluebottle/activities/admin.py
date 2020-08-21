@@ -30,7 +30,25 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     list_filter = ['status', ]
     ordering = ('-created', )
     show_in_index = True
-    readonly_fields = ['contribution_date', 'created', 'activity_link', 'status']
+
+    readonly_fields = [
+        'contribution_date',
+        'created',
+        'activity_link',
+        'status'
+    ]
+
+    fields = ['activity', 'user', 'states'] + readonly_fields
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Basic'), {'fields': self.fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': ['force_status']}),
+            )
+        return fieldsets
 
     def activity_link(self, obj):
         url = reverse("admin:{}_{}_change".format(
@@ -106,9 +124,9 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'created',
         'updated',
         'valid',
-        'review_status',
         'transition_date',
         'stats_data',
+        'review_status',
         'send_impact_reminder_message_link',
     ]
 
@@ -151,11 +169,18 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     )
 
     def get_fieldsets(self, request, obj=None):
-        return (
+        fieldsets = (
             (_('Basic'), {'fields': self.basic_fields}),
             (_('Details'), {'fields': self.get_detail_fields(request, obj)}),
             (_('Status'), {'fields': self.status_fields}),
         )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': (
+                    'force_status',
+                )}),
+            )
+        return fieldsets
 
     def stats_data(self, obj):
         template = loader.get_template(
@@ -258,7 +283,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
     date_hierarchy = 'transition_date'
-    readonly_fields = ['link']
+    readonly_fields = ['link', 'review_status']
     list_filter = (PolymorphicChildModelFilter, 'status', 'highlight')
     list_editable = ('highlight',)
 

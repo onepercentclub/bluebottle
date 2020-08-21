@@ -24,15 +24,15 @@ def create_default_impact_types(apps, schema_editor):
                 'name': u'Reduce CO₂ emissions',
                 'unit': u'kg',
                 'text': u'reduce CO₂ emissions',
-                'text_passed': 'CO₂ emissions reduced',
-                'text_with_target': u'reduce CO₂ emissions by {} kg',
+                'text_with_target': 'CO₂ emissions reduced',
+                'text_passed': u'reduce CO₂ emissions by {} kg',
             },
             'nl': {
                 'name': u'CO₂ uitstoot verminderen',
                 'unit': u'kg',
                 'text': u'CO₂ uitstoot te verminderen',
-                'text_passed': u'CO₂ uitstoot met {} kg te verminderen',
-                'text_with_target': u'CO₂ uitstoot verminderd'
+                'text_with_target': u'CO₂ uitstoot met {} kg te verminderen',
+                'text_passed': u'CO₂ uitstoot verminderd'
             }
         },
         {
@@ -42,15 +42,15 @@ def create_default_impact_types(apps, schema_editor):
                 'name': u'Reach people',
                 'unit': u'',
                 'text': u'reach people',
-                'text_passed': 'reach {} people',
-                'text_with_target': u'people reached',
+                'text_with_target': 'reach {} people',
+                'text_passed': u'people reached',
             },
             'nl': {
                 'name': u'Mensen bereiken',
                 'unit': u'',
                 'text': u'mensen te bereiken',
-                'text_passed': '{} mensen te bereiken',
-                'text_with_target': u'mensen bereikt'
+                'text_with_target': '{} mensen te bereiken',
+                'text_passed': u'mensen bereikt'
             }
         },
         {
@@ -60,15 +60,15 @@ def create_default_impact_types(apps, schema_editor):
                 'name': u'Reduce food waste',
                 'unit': u'kg',
                 'text': u'reduce food waste',
-                'text_passed': 'reduce food waste by {} kg',
-                'text_with_target': u'food waste reduced',
+                'text_with_target': 'reduce food waste by {} kg',
+                'text_passed': u'food waste reduced',
             },
             'nl': {
                 'name': u'Voedselverspilling verminderen',
                 'unit': u'kg',
                 'text': u'voedselverspilling te verminderen',
-                'text_passed': 'voedselverspilling met {} kg te verminderen',
-                'text_with_target': u'voedselverspilling verminderd'
+                'text_with_target': 'voedselverspilling met {} kg te verminderen',
+                'text_passed': u'voedselverspilling verminderd'
             }
         },
         {
@@ -78,15 +78,15 @@ def create_default_impact_types(apps, schema_editor):
                 'name': u'Save water',
                 'unit': u'l',
                 'text': u'save water',
-                'text_passed': 'save {} l water',
-                'text_with_target': u'water saved',
+                'text_with_target': 'save {} l water',
+                'text_passed': u'water saved',
             },
             'nl': {
                 'name': u'Water besparen',
                 'unit': u'l',
                 'text': u'water te besparen',
-                'text_passed': '{} l water te besparen',
-                'text_with_target': u'water bespaard'
+                'text_with_target': '{} l water te besparen',
+                'text_passed': u'water bespaard'
             }
         },
         {
@@ -96,15 +96,15 @@ def create_default_impact_types(apps, schema_editor):
                 'name': u'Save plastic',
                 'unit': u'kg',
                 'text': u'save plastic',
-                'text_passed': 'save {} kg plastic',
-                'text_with_target': u'plastic saved',
+                'text_with_target': 'save {} kg plastic',
+                'text_passed': u'plastic saved',
             },
             'nl': {
                 'name': u'Plastic besparen',
                 'unit': u'kg',
                 'text': u'plastic te besparen',
-                'text_passed': '{} kg plastic te besparen',
-                'text_with_target': u'plastic bespaard'
+                'text_with_target': '{} kg plastic te besparen',
+                'text_passed': u'plastic bespaard'
             }
         },
         {
@@ -114,15 +114,15 @@ def create_default_impact_types(apps, schema_editor):
                 'name': u'Plant trees',
                 'unit': u'',
                 'text': u'plant trees',
-                'text_passed': 'plant {} trees',
-                'text_with_target': u'trees planted',
+                'text_with_target': 'plant {} trees',
+                'text_passed': u'trees planted',
             },
             'nl': {
                 'name': u'Bomen planten',
                 'unit': u'',
                 'text': u'bomen te planten',
-                'text_passed': '{} bomen te planten',
-                'text_with_target': u'bomen geplant'
+                'text_with_target': '{} bomen te planten',
+                'text_passed': u'bomen geplant'
             }
         },
         {
@@ -132,15 +132,15 @@ def create_default_impact_types(apps, schema_editor):
                 'name': u'Create jobs',
                 'unit': u'',
                 'text': u'create jobs',
-                'text_passed': 'create {} jobs',
-                'text_with_target': u'jobs created',
+                'text_with_target': 'create {} jobs',
+                'text_passed': u'jobs created',
             },
             'nl': {
                 'name': u'Banen creëren',
                 'unit': u'',
                 'text': u'banen te creëren',
-                'text_passed': '{} banen te creëren',
-                'text_with_target': u'banen gecreëerd'
+                'text_with_target': '{} banen te creëren',
+                'text_passed': u'banen gecreëerd'
             }
         },
     ]
@@ -149,7 +149,6 @@ def create_default_impact_types(apps, schema_editor):
         impact_type, created = ImpactType.objects.update_or_create(
             slug=definition['slug'],
             defaults={
-                'active': False,
                 'icon': definition['icon']
             }
         )

@@ -586,7 +586,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        [new, incomplete, verified],
+        [new, incomplete, verified, pending],
         rejected,
         name=_('Reject'),
         description=_("Reject the payout account."),

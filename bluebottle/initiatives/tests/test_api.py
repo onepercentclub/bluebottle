@@ -17,12 +17,14 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
+from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
 from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.test.utils import JSONAPITestClient
+from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 
 
 def get_include(response, name):
@@ -1132,3 +1134,59 @@ class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class ThemeListAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(ThemeListAPITestCase, self).setUp()
+
+        self.client = JSONAPITestClient()
+        for theme in ProjectTheme.objects.all():
+            theme.delete()
+
+        self.url = reverse('initiative-theme-list')
+        self.user = BlueBottleUserFactory()
+
+        ProjectThemeFactory.create_batch(5, disabled=False)
+
+    def test_list(self):
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            len(response.json()['data']), 5
+        )
+        result = response.json()['data'][0]
+
+        theme = ProjectTheme.objects.get(pk=result['id'])
+
+        self.assertEqual(theme.name, result['attributes']['name'])
+
+    def test_list_anonymous(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            len(response.json()['data']), 5
+        )
+
+    def test_list_closed(self):
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_list_disabled(self):
+        ProjectThemeFactory.create(disabled=True)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            len(response.json()['data']), 5
+        )

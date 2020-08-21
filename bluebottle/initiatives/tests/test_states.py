@@ -295,9 +295,13 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
 
     def test_cancel_with_activities(self):
-        event = EventFactory.create(initiative=self.initiative)
-        self.initiative.states.submit()
+        self.initiative.states.submit(save=True)
+
         self.initiative.states.approve()
+
+        event = EventFactory.create(initiative=self.initiative)
+        event.states.submit(save=True)
+
         self.initiative.states.cancel(save=True)
 
         self.assertEqual(

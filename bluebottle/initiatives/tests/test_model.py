@@ -23,8 +23,8 @@ class InitiativeTestCase(TestCase):
         initiative.states.approve(save=True)
         self.assertEqual(initiative.status, 'approved')
 
-        initiative.states.reject(save=True)
-        self.assertEqual(initiative.status, 'rejected')
+        initiative.states.cancel(save=True)
+        self.assertEqual(initiative.status, 'cancelled')
 
         initiative.states.restore(save=True)
         self.assertEqual(initiative.status, 'needs_work')

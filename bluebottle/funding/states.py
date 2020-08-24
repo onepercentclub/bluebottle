@@ -114,7 +114,21 @@ class FundingStateMachine(ActivityStateMachine):
         ]
     )
 
-    cancel = None
+    cancel = Transition(
+        [
+            ActivityStateMachine.open,
+        ],
+        cancelled,
+        name=_('Cancel'),
+        description=_('Cancel the activity.'),
+        automatic=False,
+        conditions=[
+            no_donations
+        ],
+        effects=[
+            RelatedTransitionEffect('organizer', 'fail')
+        ]
+    )
 
     request_changes = Transition(
         [
@@ -148,7 +162,9 @@ class FundingStateMachine(ActivityStateMachine):
     )
 
     expire = Transition(
-        ActivityStateMachine.open,
+        [
+            ActivityStateMachine.open,
+        ],
         ActivityStateMachine.cancelled,
         name=_('Expire'),
         description=_("The campaign has ended without any successful donations and will be cancelled."),
@@ -228,7 +244,10 @@ class FundingStateMachine(ActivityStateMachine):
     )
 
     refund = Transition(
-        [ActivityStateMachine.succeeded, partially_funded],
+        [
+            ActivityStateMachine.succeeded,
+            partially_funded
+        ],
         refunded,
         name=_('Refund'),
         description=_("The campaign will be refunded and all donations will be returned to the donors."),

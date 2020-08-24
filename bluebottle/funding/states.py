@@ -114,6 +114,8 @@ class FundingStateMachine(ActivityStateMachine):
         ]
     )
 
+    cancel = None
+
     request_changes = Transition(
         [
             ActivityStateMachine.submitted
@@ -232,7 +234,8 @@ class FundingStateMachine(ActivityStateMachine):
         description=_("The campaign will be refunded and all donations will be returned to the donors."),
         automatic=False,
         conditions=[
-            psp_allows_refunding
+            psp_allows_refunding,
+            without_approved_payouts
         ],
         effects=[
             RelatedTransitionEffect('donations', 'activity_refund'),

@@ -1,0 +1,13 @@
+{% load i18n %}
+<h3>{% trans "Request a refund" %}</h3>
+
+<p>
+    {% trans "Request a refund at the PSP for" %}
+    "{{effects.0.instance}}" 
+    {% if effects|length > 1 %} 
+        {% blocktrans with extra=effects|length|add:"-1" %}
+        and {{ extra }} other donations 
+        {% endblocktrans %}
+    {% endif %} 
+</p>
+<p>{% trans 'It will most likely take a couple of days for the PSP to handle the request, after which the donation will be marked as "refunded"' %}

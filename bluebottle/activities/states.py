@@ -100,7 +100,6 @@ class ActivityStateMachine(ModelStateMachine):
         [
             draft,
             needs_work,
-            cancelled
         ],
         submitted,
         description=_('Submit the activity for approval.'),
@@ -145,9 +144,8 @@ class ActivityStateMachine(ModelStateMachine):
 
     cancel = Transition(
         [
-            draft,
-            needs_work,
-            submitted
+            open,
+            succeeded,
         ],
         cancelled,
         name=_('Cancel'),

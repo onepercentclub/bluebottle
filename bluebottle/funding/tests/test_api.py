@@ -606,7 +606,6 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_cancelled(self):
-        self.funding = FundingFactory.create()
         self.funding.states.cancel(save=True)
         response = self.client.put(self.funding_url, json.dumps(self.data), user=self.funding.owner)
 
@@ -620,6 +619,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_rejected(self):
+        self.funding = FundingFactory.create()
         self.funding.states.reject(save=True)
         response = self.client.put(self.funding_url, json.dumps(self.data), user=self.funding.owner)
 

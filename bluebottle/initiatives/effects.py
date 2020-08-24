@@ -27,7 +27,7 @@ class TransitionActivitiesEffect(Effect):
         if self.activities.count() < 3:
             return "{} {}".format(
                 self.transition.title(),
-                _("and").join(' "{}" '.format(a.title) for a in self.activities.all()))
+                _("and").join(' "{}" '.format(a.title or '-empty-') for a in self.activities.all()))
         return _('{transition} "{activity}" and {count} other activities.').format(
             transition=self.transition.title(),
             activity=self.activities.first(),

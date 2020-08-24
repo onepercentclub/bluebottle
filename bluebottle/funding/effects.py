@@ -14,6 +14,7 @@ class GeneratePayoutsEffect(Effect):
     post_save = True
     conditions = []
     title = _('Generate payouts')
+    template = 'admin/generate_payout_effect.html'
 
     def execute(self, **kwargs):
         Payout.generate(self.instance)
@@ -26,6 +27,7 @@ class DeletePayoutsEffect(Effect):
     post_save = True
     conditions = []
     title = _('Delete payouts')
+    template = 'admin/delete_payout_effect.html'
 
     def execute(self, **kwargs):
         self.instance.payouts.all().delete()
@@ -39,6 +41,8 @@ class UpdateFundingAmountsEffect(Effect):
     conditions = []
     title = _('Update amounts')
 
+    display = False
+
     def execute(self, **kwargs):
         self.instance.activity.update_amounts()
 
@@ -49,7 +53,8 @@ class UpdateFundingAmountsEffect(Effect):
 class SetDeadlineEffect(Effect):
     post_save = False
     conditions = []
-    title = _('Update amounts')
+    title = _('Set deadline')
+    template = 'admin/set_deadline_effect.html'
 
     def execute(self, **kwargs):
         if not self.instance.deadline:
@@ -74,6 +79,8 @@ class ExecuteRefundEffect(Effect):
     conditions = []
     title = _('Refund payment')
 
+    template = 'admin/execute_refund_effect.html'
+
     def execute(self, **kwargs):
         self.instance.refund()
 
@@ -85,6 +92,7 @@ class GenerateDonationWallpostEffect(Effect):
     post_save = True
     conditions = []
     title = _('Create wallpost')
+    template = 'admin/generate_donation_wallpost_effect.html'
 
     def execute(self, **kwargs):
         SystemWallpost.objects.get_or_create(
@@ -104,6 +112,7 @@ class RemoveDonationWallpostEffect(Effect):
     post_save = True
     conditions = []
     title = _('Delete wallpost')
+    template = 'admin/remove_donation_wallpost_effect.html'
 
     def execute(self, **kwargs):
         SystemWallpost.objects.filter(
@@ -119,6 +128,7 @@ class SubmitConnectedActivitiesEffect(Effect):
     post_save = True
     conditions = []
     title = _('Submit activities')
+    template = 'admin/submit_connected_activities_effect.html'
 
     def execute(self, **kwargs):
         for external_account in self.instance.external_accounts.all():
@@ -135,6 +145,7 @@ class DeleteDocumentEffect(Effect):
     post_save = False
     conditions = []
     title = _('Delete uploaded document')
+    template = 'admin/delete_uploaded_document_effect.html'
 
     def execute(self, **kwargs):
         if self.instance.document:
@@ -149,6 +160,7 @@ class SubmitPayoutEffect(Effect):
     post_save = True
     conditions = []
     title = _('Trigger payout')
+    template = 'admin/submit_payout_effect.html'
 
     def execute(self, **kwargs):
         adapter = DoradoPayoutAdapter(self.instance)
@@ -163,6 +175,8 @@ class BaseSetDateEffect(Effect):
     conditions = []
     field = 'date'
     title = _('Set date')
+
+    display = False
 
     def execute(self, **kwargs):
         setattr(self.instance, self.field, timezone.now())
@@ -183,6 +197,7 @@ class ClearPayoutDatesEffect(Effect):
     post_save = False
     conditions = []
     field = 'date'
+    display = False
 
     def execute(self, **kwargs):
         self.instance.date_approved = None

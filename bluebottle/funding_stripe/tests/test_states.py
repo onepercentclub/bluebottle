@@ -45,19 +45,25 @@ class StripeSourcePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
     def test_request_refund(self):
         self.payment.states.succeed(save=True)
         self.assertEqual(self.payment.status, 'succeeded')
+
         with patch('bluebottle.funding_stripe.models.StripeSourcePayment.refund') as refund:
             self.payment.states.request_refund(save=True)
             refund.assert_called_once()
-            self.assertEqual(self.payment.status, 'refund_requested')
+
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, 'refund_requested')
 
     def test_refund_activity(self):
         self.payment.states.succeed(save=True)
         self.assertEqual(self.payment.status, 'succeeded')
         self.funding.states.succeed(save=True)
+
         with patch('bluebottle.funding_stripe.models.StripeSourcePayment.refund') as refund:
             self.funding.states.refund(save=True)
             refund.assert_called_once()
-            self.assertEqual(self.payment.status, 'refund_requested')
+
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, 'refund_requested')
 
     def test_authorize(self):
         self.payment.states.charge(save=True)

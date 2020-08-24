@@ -82,8 +82,7 @@ class RefundPaymentAtPSPEffect(Effect):
     template = 'admin/execute_refund_effect.html'
 
     def execute(self, **kwargs):
-        if self.instance.status == 'succeeded':
-            self.instance.refund()
+        self.instance.refund()
 
     def __unicode__(self):
         return _('Request refund payment at PSP')

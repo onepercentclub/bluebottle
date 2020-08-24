@@ -1,4 +1,5 @@
 from django.utils.translation import ugettext_lazy as _
+from django.template.loader import render_to_string
 
 
 class Effect(object):
@@ -7,6 +8,15 @@ class Effect(object):
     post_save = False
     conditions = []
     display = True
+    do_not_call_in_templates = True
+
+    @classmethod
+    def render(cls, effects):
+        context = {
+            'opts': effects[0].instance.__class__._meta,
+            'effects': effects
+        }
+        return render_to_string(cls.template, context)
 
     @property
     def description(self):
@@ -57,6 +67,7 @@ class Effect(object):
 class BaseTransitionEffect(Effect):
     field = 'states'
     title = _('Change the status')
+    template = 'admin/transition_effect.html'
 
     @property
     def description(self):

@@ -539,10 +539,22 @@ class PayoutAdmin(StateMachineAdmin):
     model = Payout
     inlines = [DonationInline]
     raw_id_fields = ('activity', )
-    readonly_fields = ['status', 'total_amount', 'account_link',
-                       'date_approved', 'date_started', 'date_completed']
+    readonly_fields = [
+        'status',
+        'total_amount',
+        'account_link',
+        'currency',
+        'provider',
+        'date_approved',
+        'date_started',
+        'date_completed'
+    ]
     list_display = ['created', 'activity_link', 'status']
     list_filter = ['status']
+
+    fields = [
+        'activity'
+    ] + readonly_fields
 
     def account_link(self, obj):
         url = reverse('admin:funding_bankaccount_change', args=(obj.activity.bank_account.id,))
@@ -551,6 +563,16 @@ class PayoutAdmin(StateMachineAdmin):
     def activity_link(self, obj):
         url = reverse('admin:funding_funding_change', args=(obj.activity.id,))
         return format_html(u'<a href="{}">{}</a>', url, obj.activity)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Basic'), {'fields': self.get_fields(request, obj)}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': ['force_status']}),
+            )
+        return fieldsets
 
 
 @admin.register(FundingPlatformSettings)

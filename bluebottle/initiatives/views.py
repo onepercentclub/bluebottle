@@ -164,10 +164,15 @@ class InitiativeReviewTransitionList(TransitionList):
     queryset = Initiative.objects.all()
 
 
+class ThemePagination(PageNumberPagination):
+    page_size = 10000
+
+
 class ThemeList(JsonApiViewMixin, ListAPIView):
     serializer_class = ThemeSerializer
     queryset = ProjectTheme.objects.filter(disabled=False)
     permission_classes = [TenantConditionalOpenClose, ]
+    pagination_class = ThemePagination
 
 
 from collections import namedtuple

@@ -160,16 +160,13 @@ class ReviewStateMachine(ModelStateMachine):
     )
 
     delete = Transition(
-        [
-            draft,
-            rejected,
-            cancelled
-        ],
+        [draft],
         deleted,
         name=_('Delete'),
         description=_("Delete the initiative if you don't want it to appear in your reporting. "
                       "The initiative will still be available in the back office."),
         automatic=False,
+        hide_from_admin=True,
         effects=[
             RelatedTransitionEffect('activities', 'delete'),
         ]

@@ -392,6 +392,15 @@ class FundingDetailTestCase(BluebottleTestCase):
             self.funding.states.approve()
 
         self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
+        self.data = {
+            'data': {
+                'id': self.funding.pk,
+                'type': 'activities/fundings',
+                'attributes': {
+                    'title': 'New title',
+                }
+            }
+        }
 
     def test_view_funding_owner(self):
         co_financer = BlueBottleUserFactory.create(is_co_financer=True)
@@ -527,24 +536,15 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertIsNone(response.json()['data']['attributes']['supporters-export-url'])
 
     def test_update(self):
-        new_title = 'New title'
         response = self.client.patch(
             self.funding_url,
-            data=json.dumps({
-                'data': {
-                    'id': self.funding.pk,
-                    'type': 'activities/fundings',
-                    'attributes': {
-                        'title': new_title,
-                    }
-                }
-            }),
+            data=json.dumps(self.data),
             user=self.user
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['data']['attributes']['title'],
-            new_title
+            'New title'
         )
 
     def test_update_bank_account(self):
@@ -593,22 +593,37 @@ class FundingDetailTestCase(BluebottleTestCase):
             bank_account['type'], 'payout-accounts/stripe-external-accounts'
         )
 
-    def test_update_other_user(self):
-        response = self.client.patch(
-            self.funding_url,
-            data=json.dumps({
-                'data': {
-                    'id': self.funding.pk,
-                    'type': 'activities/fundings',
-                    'attributes': {
-                        'title': 'new title',
-                    }
+    def test_update_unauthenticated(self):
+        response = self.client.put(self.funding_url, json.dumps(self.data))
 
-                }
-            }),
-            user=BlueBottleUserFactory.create()
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_update_wrong_user(self):
+        response = self.client.put(
+            self.funding_url, json.dumps(self.data), user=BlueBottleUserFactory.create()
         )
-        self.assertEqual(response.status_code, 403)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_cancelled(self):
+        self.funding = FundingFactory.create()
+        self.funding.states.cancel(save=True)
+        response = self.client.put(self.funding_url, json.dumps(self.data), user=self.funding.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_deleted(self):
+        self.funding = FundingFactory.create()
+        self.funding.states.delete(save=True)
+        response = self.client.put(self.funding_url, json.dumps(self.data), user=self.funding.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_rejected(self):
+        self.funding.states.reject(save=True)
+        response = self.client.put(self.funding_url, json.dumps(self.data), user=self.funding.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class FundraiserListTestCase(BluebottleTestCase):

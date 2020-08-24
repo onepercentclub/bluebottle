@@ -30,7 +30,25 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     list_filter = ['status', ]
     ordering = ('-created', )
     show_in_index = True
-    readonly_fields = ['contribution_date', 'created', 'activity_link', 'status']
+
+    readonly_fields = [
+        'contribution_date',
+        'created',
+        'activity_link',
+        'status'
+    ]
+
+    fields = ['activity', 'user', 'states'] + readonly_fields
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Basic'), {'fields': self.fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': ['force_status']}),
+            )
+        return fieldsets
 
     def activity_link(self, obj):
         url = reverse("admin:{}_{}_change".format(
@@ -106,9 +124,9 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'created',
         'updated',
         'valid',
-        'review_status',
         'transition_date',
         'stats_data',
+        'review_status',
         'send_impact_reminder_message_link',
     ]
 
@@ -151,11 +169,18 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     )
 
     def get_fieldsets(self, request, obj=None):
-        return (
+        fieldsets = (
             (_('Basic'), {'fields': self.basic_fields}),
             (_('Details'), {'fields': self.get_detail_fields(request, obj)}),
             (_('Status'), {'fields': self.status_fields}),
         )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': (
+                    'force_status',
+                )}),
+            )
+        return fieldsets
 
     def stats_data(self, obj):
         template = loader.get_template(
@@ -183,7 +208,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             format_html(u"<li>{}</li>", value) for value in errors
         ])))
 
-    valid.short_description = _('Errors')
+    valid.short_description = _('Steps to complete activity')
 
     def get_urls(self):
         urls = super(ActivityChildAdmin, self).get_urls()
@@ -217,6 +242,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         self.message_user(request, message)
 
         return HttpResponseRedirect(reverse('admin:activities_activity_change', args=(activity.id, )))
+    send_impact_reminder_message.short_description = _('impact reminder')
 
     def send_impact_reminder_message_link(self, obj):
         url = reverse(
@@ -228,29 +254,19 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         )
         return format_html(
             u"<a href='{}'>{}</a>",
-            url, _('Send impact reminder message')
+            url, _('Send reminder message')
         )
-    send_impact_reminder_message.short_description = _('impact reminder')
+    send_impact_reminder_message.short_description = _('Impact Reminder')
 
-    @confirmation_form(
-        ImpactReminderConfirmationForm,
-        Activity,
-        'admin/activities/send_impact_reminder_message.html'
-    )
-    def send_impact_reminder_message(self, request, activity):
-        if not request.user.has_perm('{}.change_{}'.format(
-                self.model._meta.app_label,
-                self.model._meta.model_name
-        )):
-            return HttpResponseForbidden('Not allowed to change user')
-
-        ImpactReminderMessage(activity).compose_and_send()
-
-        message = _('User {name} will receive a message.').format(
-            name=activity.owner.full_name)
-        self.message_user(request, message)
-        return HttpResponseRedirect(reverse('admin:activities_activity_change', args=(activity.id, )))
-    send_impact_reminder_message.short_description = _('impact reminder')
+    def get_form(self, request, obj=None, **kwargs):
+        kwargs.update({
+            'help_texts': {
+                'send_impact_reminder_message_link': _(
+                    u"Request the activity manager to fill in the impact of this activity."
+                )
+            }
+        })
+        return super(ActivityChildAdmin, self).get_form(request, obj, **kwargs)
 
 
 @admin.register(Activity)
@@ -258,7 +274,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
     child_models = (Event, Funding, Assignment)
     date_hierarchy = 'transition_date'
-    readonly_fields = ['link']
+    readonly_fields = ['link', 'review_status']
     list_filter = (PolymorphicChildModelFilter, 'status', 'highlight')
     list_editable = ('highlight',)
 

@@ -67,14 +67,12 @@ class LoginTestCase(BluebottleTestCase):
         self.password = 'blablabla'
         self.email = 'test@example.com'
         self.user = BlueBottleUserFactory.create(email=self.email, password=self.password)
-
         super(LoginTestCase, self).setUp()
 
     def test_login(self):
         response = self.client.post(
             reverse('token-auth'), {'email': self.email, 'password': self.password}
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         current_user_response = self.client.get(
             reverse('user-current'), token='JWT {}'.format(response.json()['token'])

@@ -157,11 +157,73 @@ class AssignmentDetailAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.url = reverse('assignment-detail', args=(self.assignment.id,))
 
+        self.data = {
+            'data': {
+                'type': 'activities/assignments',
+                'id': self.assignment.id,
+                'attributes': {
+                    'title': 'Design Sprint',
+                    'start': str(timezone.now() + timedelta(days=21)),
+                    'duration': 4,
+                    'registration_deadline': str((timezone.now() + timedelta(days=14)).date()),
+                    'capacity': 10,
+                    'address': 'Zuid-Boulevard Katwijk aan Zee',
+                    'description': 'We will clean up the beach south of Katwijk'
+                },
+                'relationships': {
+                    'initiative': {
+                        'data': {
+                            'type': 'initiatives', 'id': self.initiative.id
+                        },
+                    },
+                }
+            }
+        }
+
     def test_retrieve_assignment(self):
         response = self.client.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'draft')
+
+    def test_update(self):
+        response = self.client.put(self.url, json.dumps(self.data), user=self.assignment.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['attributes']['title'],
+            self.data['data']['attributes']['title']
+        )
+
+    def test_update_unauthenticated(self):
+        response = self.client.put(self.url, json.dumps(self.data))
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_update_wrong_user(self):
+        response = self.client.put(
+            self.url, json.dumps(self.data), user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_cancelled(self):
+        self.assignment.states.cancel(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.assignment.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_deleted(self):
+        self.assignment.states.delete(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.assignment.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_rejected(self):
+        self.assignment.states.reject(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.assignment.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_retrieve_impact(self):
         goals = ImpactGoalFactory.create_batch(2, activity=self.assignment)

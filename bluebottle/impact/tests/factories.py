@@ -9,6 +9,7 @@ class ImpactTypeFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = ImpactType
 
+    name = factory.Faker('sentence')
     text = factory.Faker('sentence')
 
     text_with_target = factory.fuzzy.FuzzyChoice(

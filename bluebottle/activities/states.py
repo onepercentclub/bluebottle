@@ -175,11 +175,12 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     delete = Transition(
-        [draft, needs_work, submitted, cancelled, rejected],
+        [draft],
         deleted,
         name=_('Delete'),
         automatic=False,
         permission=is_owner,
+        hide_from_admin=True,
         description=_('Delete the activity and remove it from the platform'),
         effects=[
             RelatedTransitionEffect('organizer', 'fail')

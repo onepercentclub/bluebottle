@@ -180,6 +180,28 @@ class StateMachineAdminMixin(object):
         ]
         return custom_urls + urls
 
+    def state_name(self, obj):
+        if obj.states.current_state:
+            return obj.states.current_state.name
+
+    state_name.short_description = _('status')
+
 
 class StateMachineAdmin(StateMachineAdminMixin, admin.ModelAdmin):
     pass
+
+
+class StateMachineFilter(admin.SimpleListFilter):
+    title = _('status')
+    parameter_name = 'status'
+
+    def lookups(self, request, model_admin):
+        return [(status, state.name) for (status, state) in model_admin.model._state_machines['states'].states.items()]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(
+                status=self.value()
+            )
+        else:
+            return queryset

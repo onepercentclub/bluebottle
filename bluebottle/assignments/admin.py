@@ -9,6 +9,7 @@ from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdm
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine
 from bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.fsm.admin import StateMachineFilter
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.tasks.models import Skill
 from bluebottle.utils.admin import export_as_csv_action
@@ -28,7 +29,7 @@ class ApplicantInline(admin.TabularInline):
     model = Applicant
 
     raw_id_fields = ('user', )
-    readonly_fields = ('applicant', 'status', 'created', 'motivation')
+    readonly_fields = ('applicant', 'created', 'motivation')
     fields = ('applicant', 'user', 'time_spent', 'status', 'created', 'motivation')
     extra = 0
 
@@ -47,7 +48,7 @@ class ApplicantAdminForm(StateMachineModelForm):
 class ApplicantAdmin(ContributionChildAdmin):
     model = Applicant
     form = ApplicantAdminForm
-    list_display = ['user', 'status', 'time_spent', 'activity_link']
+    list_display = ['user', 'state_name', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
     date_hierarchy = 'transition_date'
@@ -92,11 +93,11 @@ class AssignmentAdmin(ActivityChildAdmin):
     raw_id_fields = ('owner', 'location', 'initiative')
 
     list_display = (
-        '__unicode__', 'initiative', 'created', 'status', 'highlight',
+        '__unicode__', 'initiative', 'created', 'state_name', 'highlight',
         'date', 'is_online', 'registration_deadline'
     )
     search_fields = ['title', 'description']
-    list_filter = ['status', ExpertiseFilter, 'is_online']
+    list_filter = [StateMachineFilter, ExpertiseFilter, 'is_online']
     readonly_fields = ActivityChildAdmin.readonly_fields + ['local_date', ]
 
     detail_fields = (

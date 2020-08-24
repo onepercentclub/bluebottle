@@ -17,7 +17,7 @@ from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.fsm.admin import StateMachineAdmin, StateMachineAdminMixin
+from bluebottle.fsm.admin import StateMachineAdmin, StateMachineAdminMixin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.filters import DonationAdminStatusFilter, DonationAdminCurrencyFilter, DonationAdminPledgeFilter
@@ -129,7 +129,7 @@ class FundingAdmin(ActivityChildAdmin):
     base_model = Funding
     form = FundingAdminForm
     date_hierarchy = 'transition_date'
-    list_filter = ['status', CurrencyFilter]
+    list_filter = [StateMachineFilter, CurrencyFilter]
 
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
@@ -139,11 +139,11 @@ class FundingAdmin(ActivityChildAdmin):
 
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         'amount_donated', 'amount_raised',
-        'donations_link', 'payout_links', 'started', 'status'
+        'donations_link', 'payout_links', 'started',
     ]
 
     list_display = [
-        '__unicode__', 'initiative', 'created', 'status',
+        '__unicode__', 'initiative', 'created', 'state_name',
         'highlight', 'deadline', 'percentage_donated', 'percentage_matching'
 
     ]
@@ -242,8 +242,8 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     form = DonationAdminForm
 
     raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'status', 'payment_link', 'payout_amount', 'contribution_date']
-    list_display = ['contribution_date', 'payment_link', 'activity_link', 'user_link', 'status', 'amount', ]
+    readonly_fields = ['payment_link', 'payment_link', 'payout_amount', 'contribution_date']
+    list_display = ['contribution_date', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
     list_filter = [
         DonationAdminStatusFilter,
         DonationAdminCurrencyFilter,

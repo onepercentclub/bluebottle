@@ -14,6 +14,10 @@ class SetTimeSpent(Effect):
         if not self.instance.time_spent:
             self.instance.time_spent = self.instance.activity.duration
 
+    @property
+    def time_spent(self):
+        return self.instance.activity.duration
+
     def __unicode__(self):
         participant = self.instance
         if not self.instance.id:

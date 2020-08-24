@@ -76,7 +76,7 @@ class StateMachineAdminMixin(object):
                     media=self.media,
                     has_notifications=any(
                         isinstance(effect, BaseNotificationEffect)
-                        for effect in effects
+                        for effect in new_obj.all_effects
                     ),
                     effects=effects
                 )
@@ -168,7 +168,7 @@ class StateMachineAdminMixin(object):
             form=form,
             has_notifications=any(
                 isinstance(effect, BaseNotificationEffect)
-                for effect in effects
+                for effect in instance._effects
             ),
             source=instance.status,
             effects=effects,

@@ -130,7 +130,6 @@ class FundingStateMachine(ActivityStateMachine):
             ActivityStateMachine.submitted,
             ActivityStateMachine.draft,
             ActivityStateMachine.needs_work,
-            ActivityStateMachine.open,
         ],
         ActivityStateMachine.rejected,
         name=_('Reject'),

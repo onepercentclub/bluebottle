@@ -64,7 +64,7 @@ class EventListAPITestCase(BluebottleTestCase):
                 transition['name'] for transition in
                 response.json()['data']['meta']['transitions']
             ],
-            ['submit', 'cancel', 'delete']
+            ['submit', 'delete']
         )
 
         # Add an event with the same title should NOT return an error
@@ -410,7 +410,11 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_cancelled(self):
+        self.event.initiative.states.submit()
+        self.event.initiative.states.approve(save=True)
+        self.event.refresh_from_db()
         self.event.states.cancel(save=True)
+
         response = self.client.put(self.url, json.dumps(self.data), user=self.event.owner)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -543,7 +547,6 @@ class EventTransitionTestCase(BluebottleTestCase):
             data['data']['meta']['transitions'],
             [
                 {u'available': True, u'name': u'submit', u'target': u'submitted'},
-                {u'available': True, u'name': u'cancel', u'target': u'cancelled'},
                 {u'available': True, u'name': u'delete', u'target': u'deleted'}
             ],
         )
@@ -577,15 +580,6 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content)
         self.assertEqual(data['errors'][0], "Transition is not available")
-
-    def test_cancel(self):
-        self.review_data['data']['attributes']['transition'] = 'cancel'
-        response = self.client.post(
-            self.transition_url,
-            json.dumps(self.review_data),
-            user=self.owner
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_approve(self):
         self.review_data['data']['attributes']['transition'] = 'approve'

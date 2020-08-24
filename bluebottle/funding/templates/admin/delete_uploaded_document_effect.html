@@ -1,0 +1,13 @@
+{% load i18n %}
+<h3>{% trans "Delete uploaded document" %}</h3>
+
+<p>
+    {% trans "Delete the uploaded document for " %}
+    "{{effects.0.instance}}" 
+    {% if effects|length > 1 %} 
+        {% blocktrans with extra=effects|length|add:"-1" %}
+        and {{ extra }} other payout accounts
+        {% endblocktrans %}
+    {% endif %}
+</p>
+<p>{% trans "After reviewing, we do not keep the document, in order to best protect the users' privacy" %}

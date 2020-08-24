@@ -7,6 +7,8 @@ class RefundStripePaymentAtPSPEffect(Effect):
     post_save = True
     conditions = []
 
+    template = 'admin/execute_refund_effect.html'
+
     def execute(self, **kwargs):
         intent = self.instance.payment_intent.intent
         intent.charges.data[0].refund(

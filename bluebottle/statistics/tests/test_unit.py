@@ -385,7 +385,7 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_closed(self):
-        self.funding.states.reject(save=True)
+        self.funding.states.cancel(save=True)
         self.funding.amount_matching = Money(100, 'EUR')
         self.funding.save()
 

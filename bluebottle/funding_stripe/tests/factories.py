@@ -18,6 +18,15 @@ class StripeSourcePaymentFactory(factory.DjangoModelFactory):
 
     donation = factory.SubFactory(DonationFactory)
 
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        source_payment = stripe.Source(kwargs.get('souce_id', 'some source id'))
+        source_payment.update({
+            'client_secret': 'some client secret',
+        })
+        with mock.patch('stripe.Source.modify', return_value=source_payment):
+            return super(StripeSourcePaymentFactory, cls)._create(model_class, *args, **kwargs)
+
 
 class StripePaymentIntentFactory(factory.DjangoModelFactory):
     class Meta(object):

@@ -3,7 +3,7 @@ from django.utils.translation import ugettext as _
 from bluebottle.fsm.effects import Effect
 
 
-class RefundStripePaymentAtPSP(Effect):
+class RefundStripePaymentAtPSPEffect(Effect):
     post_save = True
     conditions = []
 

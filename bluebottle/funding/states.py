@@ -9,7 +9,7 @@ from bluebottle.fsm.effects import (
 )
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState
 from bluebottle.funding.effects import GeneratePayoutsEffect, GenerateDonationWallpostEffect, \
-    RemoveDonationWallpostEffect, UpdateFundingAmountsEffect, ExecuteRefundEffect, SetDeadlineEffect, \
+    RemoveDonationWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect, \
     DeletePayoutsEffect, \
     SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect, \
     ClearPayoutDatesEffect
@@ -299,7 +299,6 @@ class DonationStateMachine(ContributionStateMachine):
         description=_("Refund this donation."),
         automatic=True,
         effects=[
-            RelatedTransitionEffect('payment', 'request_refund'),
             RemoveDonationWallpostEffect,
             UnFollowActivityEffect,
             UpdateFundingAmountsEffect
@@ -399,15 +398,13 @@ class BasePaymentStateMachine(ModelStateMachine):
     )
 
     request_refund = Transition(
-        [
-            ContributionStateMachine.succeeded
-        ],
+        succeeded,
         refund_requested,
         name=_('Request refund'),
         description=_("Request to refund the payment."),
-        automatic=True,
+        automatic=False,
         effects=[
-            ExecuteRefundEffect
+            RefundPaymentAtPSPEffect
         ]
     )
 
@@ -527,7 +524,6 @@ class PayoutStateMachine(ModelStateMachine):
 
 
 class PayoutAccountStateMachine(ModelStateMachine):
-
     new = State(
         _('new'),
         'new',
@@ -615,7 +611,6 @@ class PayoutAccountStateMachine(ModelStateMachine):
 
 
 class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
-
     model = PlainPayoutAccount
 
     verify = Transition(

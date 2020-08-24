@@ -69,13 +69,14 @@ class SetDeadlineEffect(Effect):
         return _('Set deadline according to the duration')
 
 
-class ExecuteRefundEffect(Effect):
-    post_save = True
-    conditions = []
+class RefundPaymentAtPSPEffect(Effect):
+    post_save = False
+
     title = _('Refund payment')
 
     def execute(self, **kwargs):
-        self.instance.refund()
+        if self.instance.status == 'succeeded':
+            self.instance.refund()
 
     def __unicode__(self):
         return _('Request refund payment at PSP')

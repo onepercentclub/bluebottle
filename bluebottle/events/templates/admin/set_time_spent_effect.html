@@ -11,6 +11,6 @@
         and {{effects|length}} others
     {% endblocktrans %}
 {% endif %} 
-{% blocktrans with duration=effects.0.instance.activity.duration %}
-"to {{ duration }}." 
+{% blocktrans with time_spent=effects.0.time_spent %}
+to {{ time_spent  }}.
 {% endblocktrans %}

@@ -136,6 +136,10 @@ class Assignment(Activity):
         return self.contributions.instance_of(Applicant).filter(status__in=accepted_states)
 
     @property
+    def applicants(self):
+        return self.contributions.instance_of(Applicant)
+
+    @property
     def active_applicants(self):
         return self.contributions.instance_of(Applicant).filter(status__in=['active'])
 
@@ -171,6 +175,9 @@ class Applicant(Contribution):
 
     def delete(self, *args, **kwargs):
         super(Applicant, self).delete(*args, **kwargs)
+
+    def __unicode__(self):
+        return self.user.full_name
 
 
 from bluebottle.assignments.states import *  # noqa

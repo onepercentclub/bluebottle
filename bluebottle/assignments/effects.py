@@ -7,9 +7,15 @@ class SetTimeSpent(Effect):
     post_save = True
     save = True
 
+    template = 'admin/set_time_spent_effect.html'
+
     def execute(self, **kwargs):
         if not self.instance.time_spent:
-            self.instance.time_spent = self.instance.activity.duration + (self.instance.activity.preparation or 0)
+            self.instance.time_spent = self.time_spent
+
+    @property
+    def time_spent(self):
+        return self.instance.activity.duration + (self.instance.activity.preparation or 0)
 
     def __unicode__(self):
         return _('Set time spent to {} on {}').format(
@@ -20,6 +26,7 @@ class SetTimeSpent(Effect):
 
 class ClearTimeSpent(Effect):
     post_save = True
+    template = 'admin/reset_time_spent_effect.html'
 
     def execute(self, **kwargs):
         self.instance.time_spent = 0

@@ -37,16 +37,12 @@
     {% endif %}
     <i>{{ action. }}</i>
     {% if effects|length %}
-        {% blocktrans %}This will have these effects:{% endblocktrans %}
+        {% blocktrans %}That will have these effects:{% endblocktrans %}
         <ul></ul>
         <ul>
             {% for effect in effects %}
                 <li>
-                    <h3>{{ effect.title }}</h3>
-                    <p>{{ effect.description }}</p>
-                    {% if effect.help %}
-                        <i>{{ effect.help }}</i>
-                    {% endif %}
+                    {{effect}}
                 </li>
             {% endfor %}
         </ul>

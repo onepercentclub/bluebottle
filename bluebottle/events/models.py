@@ -212,7 +212,7 @@ class Participant(Contribution):
         super(Participant, self).save(*args, **kwargs)
 
     def __unicode__(self):
-        return _('Participant (%s)') % self.user
+        return _('%s') % self.user.full_name
 
 
 from bluebottle.events.states import *  # noqa

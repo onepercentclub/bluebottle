@@ -1,4 +1,5 @@
 from django.utils import timezone
+
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
@@ -433,5 +434,17 @@ class ParticipantStateMachine(ContributionStateMachine):
         ContributionStateMachine.new,
         name=_('Reset'),
         description=_("The participant is reset to new after being successful or failed."),
-        effects=[ResetTimeSpent]
+        effects=[ResetTimeSpent, FollowActivityEffect]
+    )
+
+    fail = Transition(
+        (
+            ContributionStateMachine.new,
+            ContributionStateMachine.succeeded,
+            ContributionStateMachine.failed,
+        ),
+        ContributionStateMachine.failed,
+        name=_('fail'),
+        description=_("The contribution failed. It will not be visible in reports."),
+        effects=[ResetTimeSpent, UnFollowActivityEffect]
     )

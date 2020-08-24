@@ -8,9 +8,15 @@ class SetTimeSpent(Effect):
     post_save = False
     title = _('Reset time spent')
 
+    template = 'admin/set_time_spent_effect.html'
+
     def execute(self, **kwargs):
         if not self.instance.time_spent:
             self.instance.time_spent = self.instance.activity.duration
+
+    @property
+    def time_spent(self):
+        return self.instance.activity.duration
 
     def __unicode__(self):
         participant = self.instance
@@ -27,9 +33,15 @@ class ResetTimeSpent(Effect):
     post_save = False
     title = _('Reset time spent')
 
+    template = 'admin/reset_time_spent_effect.html'
+
     def execute(self, **kwargs):
         if self.instance.time_spent == self.instance.activity.duration:
             self.instance.time_spent = 0
+
+    @property
+    def is_valid(self):
+        return self.instance.time_spent != 0
 
     def __unicode__(self):
         participant = self.instance

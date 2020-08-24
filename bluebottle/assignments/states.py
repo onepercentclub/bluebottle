@@ -98,6 +98,7 @@ class AssignmentStateMachine(ActivityStateMachine):
         description=_("Approve the task. Users can start signing up to it."),
         effects=[
             RelatedTransitionEffect('organizer', 'succeed'),
+            RelatedTransitionEffect('applicants', 'reset'),
             TransitionEffect(
                 'expire',
                 conditions=[should_finish, has_no_accepted_applicants]
@@ -183,7 +184,9 @@ class AssignmentStateMachine(ActivityStateMachine):
         automatic=False,
         description=_("Restore a cancelled, rejected or deleted task."),
         effects=[
-            RelatedTransitionEffect('contributions', 'reset')
+            RelatedTransitionEffect('organizer', 'fail'),
+            RelatedTransitionEffect('accepted_applicants', 'fail')
+
         ]
     )
 
@@ -410,6 +413,7 @@ class ApplicantStateMachine(ContributionStateMachine):
     reset = Transition(
         [
             ContributionStateMachine.succeeded,
+            accepted,
             ContributionStateMachine.failed,
         ],
         ContributionStateMachine.new,

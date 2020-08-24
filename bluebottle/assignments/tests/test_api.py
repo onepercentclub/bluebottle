@@ -307,7 +307,6 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         transitions = [
-            {u'available': True, u'name': u'cancel', u'target': u'cancelled'},
             {u'available': True, u'name': u'delete', u'target': u'deleted'}
         ]
         self.assertEqual(data['data']['meta']['transitions'], transitions)
@@ -335,7 +334,6 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
             data['data']['meta']['transitions'],
             [
                 {u'available': True, u'name': u'submit', u'target': u'submitted'},
-                {u'available': True, u'name': u'cancel', u'target': u'cancelled'},
                 {u'available': True, u'name': u'delete', u'target': u'deleted'}
             ]
         )
@@ -390,6 +388,8 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 
     def test_cancel(self):
         # Owner should be allowed to cancel own assignment
+        self.assignment.states.submit()
+        self.assignment.states.approve(save=True)
         self.transition_data['data']['attributes']['transition'] = 'cancel'
         response = self.client.post(
             self.transition_url,

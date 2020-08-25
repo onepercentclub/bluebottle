@@ -141,7 +141,12 @@ class AssignmentStateMachine(ActivityStateMachine):
         name=_('Reschedule'),
         description=_("Reschedule the activity for new sign-ups. "
                       "Triggered by a changing to a future date."),
-        automatic=True
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('accepted_applicants', 'reaccept'),
+        ]
+
+
     )
 
     succeed = Transition(
@@ -303,6 +308,18 @@ class ApplicantStateMachine(ContributionStateMachine):
         ]
     )
 
+    reaccept = Transition(
+        ContributionStateMachine.succeeded,
+        accepted,
+        name=_('Accept'),
+        description=_("Applicant was accepted."),
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('activity', 'lock', conditions=[assignment_will_become_full]),
+            ClearTimeSpent,
+        ]
+    )
+
     reject = Transition(
         [
             ContributionStateMachine.new,
@@ -330,6 +347,7 @@ class ApplicantStateMachine(ContributionStateMachine):
         description=_("Applicant withdrew and will no longer join the activity."),
         automatic=False,
         permission=is_user,
+        hide_from_admin=True,
         effects=[
             UnFollowActivityEffect
         ]

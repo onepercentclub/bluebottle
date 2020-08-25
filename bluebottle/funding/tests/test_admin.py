@@ -33,6 +33,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
     def test_funding_admin(self):
         self.client.force_login(self.superuser)
+        self.funding.states.submit(save=True)
         response = self.client.get(self.admin_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
@@ -43,44 +44,16 @@ class FundingTestCase(BluebottleAdminTestCase):
 
     def test_funding_admin_review(self):
         self.client.force_login(self.superuser)
+        self.funding.states.submit(save=True)
         response = self.client.get(self.admin_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
         self.assertContains(response, 'approve')
         reviewed_url = reverse('admin:funding_funding_state_transition',
                                args=(self.funding.id, 'states', 'approve'))
-
         self.assertContains(response, reviewed_url)
         response = self.client.get(reviewed_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_funding_admin_refund(self):
-        self.funding.states.submit()
-        self.funding.states.approve()
-        self.funding.target = Money(100, 'EUR')
-        donation = DonationFactory.create(
-            activity=self.funding,
-            amount=Money(70, 'EUR'))
-        payment = PledgePaymentFactory.create(donation=donation)
-        self.funding.deadline = now() - timedelta(days=1)
-        self.funding.save()
-
-        self.client.force_login(self.superuser)
-        response = self.client.get(self.admin_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertContains(response, self.funding.title)
-        self.assertContains(response, 'refund')
-        refund_url = reverse('admin:funding_funding_state_transition',
-                             args=(self.funding.id, 'states', 'refund'))
-
-        self.assertContains(response, refund_url)
-        self.client.post(refund_url, {'confirm': True})
-        self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, 'refunded')
-        donation.refresh_from_db()
-        self.assertEqual(donation.status, 'activity_refunded')
-        payment.refresh_from_db()
-        self.assertEqual(payment.status, 'refunded')
 
     def test_funding_admin_add_matching(self):
         self.funding.states.submit()
@@ -103,10 +76,6 @@ class FundingTestCase(BluebottleAdminTestCase):
         response = self.client.get(self.admin_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
-        self.assertContains(response, 'refund')
-        refund_url = reverse('admin:funding_funding_state_transition',
-                             args=(self.funding.id, 'states', 'refund'))
-        self.assertContains(response, refund_url)
         self.assertContains(response, 'recalculate')
         recalculate_url = reverse('admin:funding_funding_state_transition',
                                   args=(self.funding.id, 'states', 'recalculate'))

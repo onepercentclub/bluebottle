@@ -223,6 +223,8 @@ class StripePaymentProvider(PaymentProvider):
         )
     ]
 
+    refund_enabled = True
+
     @property
     def public_settings(self):
         return {

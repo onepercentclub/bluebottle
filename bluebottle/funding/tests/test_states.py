@@ -1,5 +1,4 @@
 from datetime import timedelta
-
 from django.core import mail
 from django.utils.timezone import now
 from djmoney.money import Money
@@ -8,10 +7,9 @@ from mock import patch
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
     PlainPayoutAccountFactory, DonationFactory, PayoutFactory
-from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
-    ExternalAccountFactory
+    ExternalAccountFactory, StripeSourcePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.wallposts.models import Wallpost
@@ -27,8 +25,8 @@ class FundingStateMachineTests(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = PlainPayoutAccountFactory.create()
-        self.bank_account = BankAccountFactory.create(connect_account=payout_account)
+        payout_account = StripePayoutAccountFactory.create(status='verified')
+        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
         self.funding.bank_account = self.bank_account
         self.funding.save()
 
@@ -218,8 +216,8 @@ class DonationStateMachineTests(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = PlainPayoutAccountFactory.create()
-        bank_account = BankAccountFactory.create(connect_account=payout_account)
+        payout_account = StripePayoutAccountFactory.create(status='verified')
+        bank_account = ExternalAccountFactory.create(connect_account=payout_account)
         self.funding.bank_account = bank_account
         self.funding.save()
         self.funding.states.submit()
@@ -293,11 +291,12 @@ class DonationStateMachineTests(BluebottleTestCase):
 
     def test_refund_payment_request_refund(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        payment = FlutterwavePaymentFactory.create(donation=donation)
+        payment = StripeSourcePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
-        with patch('bluebottle.funding_flutterwave.models.FlutterwavePayment.refund') as refund:
-            donation.states.activity_refund(save=True)
-            refund.assert_called_once()
+        self.funding.states.succeed(save=True)
+        with patch('bluebottle.funding_stripe.models.StripeSourcePayment.refund') as refund:
+            payment.states.request_refund(save=True)
+            refund.asssert_called_once()
         self.assertEqual(payment.status, 'refund_requested')
 
     def test_refund_remove_wallpost(self):
@@ -332,11 +331,14 @@ class DonationStateMachineTests(BluebottleTestCase):
 
     def test_refund_activity_payment_request_refund(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        payment = FlutterwavePaymentFactory.create(donation=donation)
+        payment = StripeSourcePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
-        with patch('bluebottle.funding_flutterwave.models.FlutterwavePayment.refund') as refund:
-            donation.states.activity_refund(save=True)
+        self.funding.states.succeed(save=True)
+        with patch('bluebottle.funding_stripe.models.StripeSourcePayment.refund') as refund:
+            self.funding.states.refund(save=True)
             refund.assert_called_once()
+
+        payment.refresh_from_db()
         self.assertEqual(payment.status, 'refund_requested')
 
     def test_refund_activity_mail_supporter(self):
@@ -401,19 +403,12 @@ class BasePaymentStateMachineTests(BluebottleTestCase):
 
     def test_request_refund(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        payment = FlutterwavePaymentFactory.create(donation=donation)
+        payment = StripeSourcePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
-        with patch('bluebottle.funding_flutterwave.models.FlutterwavePayment.refund'):
-            payment.states.request_refund(save=True)
-        self.assertEqual(payment.status, 'refund_requested')
-
-    def test_request_refund_call_psp(self):
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        payment = FlutterwavePaymentFactory.create(donation=donation)
-        payment.states.succeed(save=True)
-        with patch('bluebottle.funding_flutterwave.models.FlutterwavePayment.refund') as refund:
+        with patch('bluebottle.funding_stripe.models.StripeSourcePayment.refund') as refund:
             payment.states.request_refund(save=True)
             refund.assert_called_once()
+        self.assertEqual(payment.status, 'refund_requested')
 
     def test_refund(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))

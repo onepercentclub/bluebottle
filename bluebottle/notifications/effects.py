@@ -8,7 +8,7 @@ class BaseNotificationEffect(Effect):
     title = _('Send email')
     template = 'admin/notification_effect.html'
 
-    def execute(self, send_messages=True):
+    def execute(self, send_messages=True, **kwargs):
         if send_messages and self.is_valid:
             self.message(
                 self.instance,

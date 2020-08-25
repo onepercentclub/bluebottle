@@ -337,6 +337,7 @@ class DonationStateMachineTests(BluebottleTestCase):
         with patch('bluebottle.funding_stripe.models.StripeSourcePayment.refund') as refund:
             self.funding.states.refund(save=True)
             refund.assert_called_once()
+
         payment.refresh_from_db()
         self.assertEqual(payment.status, 'refund_requested')
 

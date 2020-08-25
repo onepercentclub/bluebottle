@@ -146,7 +146,7 @@ class Assignment(Activity):
 
 
 class Applicant(Contribution):
-    motivation = models.TextField()
+    motivation = models.TextField(blank=True)
     time_spent = models.FloatField(_('time spent'), null=True, blank=True)
 
     document = PrivateDocumentField(blank=True, null=True)

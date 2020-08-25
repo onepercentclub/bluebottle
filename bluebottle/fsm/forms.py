@@ -22,7 +22,6 @@ class StateMachineModelFormMetaClass(ModelFormMetaclass):
                     required=False,
                     widget=TransitionSelectWidget()
                 )
-                print name, machine.field
                 attrs[machine.field] = forms.CharField(
                     required=False,
                     widget=StateWidget()

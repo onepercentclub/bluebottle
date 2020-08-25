@@ -439,9 +439,10 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(data['included'][0]['type'], 'activities/assignments')
         self.assertEqual(data['included'][0]['attributes']['status'], 'deleted')
 
-    def test_approve_owner(self):
+    def test_cancel_owner(self):
+        self.assignment.states.submit(save=True)
         # Owner should not be allowed to approve own assignment
-        self.review_data['data']['attributes']['transition'] = 'approve'
+        self.review_data['data']['attributes']['transition'] = 'cancel'
         response = self.client.post(
             self.transition_url,
             json.dumps(self.review_data),
@@ -454,8 +455,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 
     def test_cancel(self):
         # Owner should be allowed to cancel own assignment
-        self.assignment.states.submit()
-        self.assignment.states.approve(save=True)
+        self.assignment.states.submit(save=True)
         self.transition_data['data']['attributes']['transition'] = 'cancel'
         response = self.client.post(
             self.transition_url,

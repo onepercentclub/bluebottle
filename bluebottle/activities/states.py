@@ -96,6 +96,18 @@ class ActivityStateMachine(ModelStateMachine):
         effects=[CreateOrganizer]
     )
 
+    auto_submit = Transition(
+        [
+            draft,
+            needs_work,
+        ],
+        submitted,
+        description=_('Submit the activity for approval.'),
+        automatic=True,
+        name=_('Submit'),
+        conditions=[is_complete, is_valid],
+    )
+
     submit = Transition(
         [
             draft,
@@ -107,19 +119,18 @@ class ActivityStateMachine(ModelStateMachine):
         name=_('Submit'),
         conditions=[is_complete, is_valid, initiative_is_submitted],
         effects=[
-            TransitionEffect('approve', conditions=[initiative_is_approved])
+            TransitionEffect('auto_approve', conditions=[initiative_is_approved])
         ]
     )
 
-    approve = Transition(
+    auto_approve = Transition(
         [
             submitted,
             rejected,
             needs_work
         ],
         open,
-        automatic=False,
-        permission=is_staff,
+        automatic=True,
         name=_('Approve'),
         effects=[
             RelatedTransitionEffect('organizer', 'succeed')

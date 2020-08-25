@@ -94,7 +94,7 @@ class ReviewStateMachine(ModelStateMachine):
         conditions=[is_complete, is_valid],
         automatic=False,
         effects=[
-            RelatedTransitionEffect('activities', 'submit'),
+            RelatedTransitionEffect('activities', 'auto_submit'),
         ]
     )
 
@@ -108,7 +108,7 @@ class ReviewStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_staff,
         effects=[
-            RelatedTransitionEffect('activities', 'approve'),
+            RelatedTransitionEffect('activities', 'auto_approve'),
             NotificationEffect(InitiativeApprovedOwnerMessage)
         ]
     )

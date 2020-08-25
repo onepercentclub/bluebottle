@@ -294,44 +294,49 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         return obj.get_real_instance_class()._meta.verbose_name
 
 
+class ActivityInlineChild(StackedPolymorphicInline.Child):
+    def state_name(self, obj):
+        if obj.states.current_state:
+            return obj.states.current_state.name
+
+    def activity_link(self, obj):
+        url = reverse("admin:{}_{}_change".format(
+            obj._meta.app_label,
+            obj._meta.model_name),
+            args=(obj.id,)
+        )
+        return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
+
+    activity_link.short_description = _('Edit activity')
+
+    def link(self, obj):
+        return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
+
+    link.short_description = _('View on site')
+
+
 class ActivityAdminInline(StackedPolymorphicInline):
     model = Activity
-    readonly_fields = ['title', 'created', 'status', 'owner']
+    readonly_fields = ['title', 'created', 'owner']
     fields = readonly_fields
     extra = 0
     can_delete = False
 
-    class ActivityLinkMixin(object):
-        def activity_link(self, obj):
-            url = reverse("admin:{}_{}_change".format(
-                obj._meta.app_label,
-                obj._meta.model_name),
-                args=(obj.id,)
-            )
-            return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
-
-        activity_link.short_description = _('Edit activity')
-
-        def link(self, obj):
-            return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
-
-        link.short_description = _('View on site')
-
-    class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
+    class EventInline(ActivityInlineChild):
         readonly_fields = ['activity_link',
-                           'link', 'start', 'duration', 'status']
+                           'link', 'start', 'duration', 'state_name']
         fields = readonly_fields
         model = Event
 
-    class FundingInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
+    class FundingInline(ActivityInlineChild):
         readonly_fields = ['activity_link',
-                           'link', 'target', 'deadline', 'status']
+                           'link', 'target', 'deadline', 'state_name']
         fields = readonly_fields
         model = Funding
 
-    class AssignmentInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
+    class AssignmentInline(ActivityInlineChild):
         readonly_fields = ['activity_link',
-                           'link', 'date', 'duration', 'status']
+                           'link', 'date', 'duration', 'state_name']
         fields = readonly_fields
         model = Assignment
 

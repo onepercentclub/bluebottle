@@ -393,7 +393,7 @@ class BasePaymentStateMachine(ModelStateMachine):
         refund_requested,
         name=_('Request refund'),
         description=_("Request to refund the payment."),
-        automatic=True,
+        automatic=False,
         effects=[
             ExecuteRefundEffect
         ]

@@ -81,7 +81,6 @@ class StripePayment(Payment):
         charge.refund(
             reverse_transfer=True,
         )
-        # self.save()
 
     def update(self):
         intent = self.payment_intent.intent

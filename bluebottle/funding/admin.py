@@ -297,7 +297,7 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     change_form_template = 'admin/funding/payment/change_form.html'
 
     readonly_fields = ['status', 'created', 'updated']
-    fields = ['donation'] + readonly_fields
+    fields = ['donation', 'states'] + readonly_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (

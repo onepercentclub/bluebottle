@@ -1,25 +1,13 @@
-from bluebottle.fsm.effects import RelatedTransitionEffect
 from django.utils.translation import ugettext_lazy as _
 
+from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.fsm.state import Transition, State
-from bluebottle.funding.effects import ExecuteRefundEffect
 from bluebottle.funding.states import BasePaymentStateMachine, PayoutAccountStateMachine
-from bluebottle.funding_stripe.effects import RefundStripePaymentAtPSP
 from bluebottle.funding_stripe.models import StripePayment, StripeSourcePayment, StripePayoutAccount
 
 
 class StripePaymentStateMachine(BasePaymentStateMachine):
     model = StripePayment
-
-    request_refund = Transition(
-        BasePaymentStateMachine.succeeded,
-        BasePaymentStateMachine.refund_requested,
-        name=_('Request refund'),
-        automatic=False,
-        effects=[
-            RefundStripePaymentAtPSP
-        ]
-    )
 
 
 class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
@@ -88,16 +76,6 @@ class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
         automatic=True,
         effects=[
             RelatedTransitionEffect('donation', 'refund')
-        ]
-    )
-
-    request_refund = Transition(
-        BasePaymentStateMachine.succeeded,
-        BasePaymentStateMachine.refund_requested,
-        name=_('Request refund'),
-        automatic=False,
-        effects=[
-            ExecuteRefundEffect
         ]
     )
 

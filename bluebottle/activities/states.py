@@ -131,7 +131,6 @@ class ActivityStateMachine(ModelStateMachine):
         ],
         open,
         automatic=True,
-        permission=is_staff,
         name=_('Approve'),
         effects=[
             RelatedTransitionEffect('organizer', 'succeed')

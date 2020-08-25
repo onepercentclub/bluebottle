@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django_summernote.widgets import SummernoteWidget
 
+from bluebottle.fsm.admin import StateMachineFilter
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
 from bluebottle.events.models import Event, Participant
 from bluebottle.notifications.admin import MessageAdminInline
@@ -44,11 +45,11 @@ class ParticipantAdminForm(StateMachineModelForm):
 class ParticipantAdmin(ContributionChildAdmin):
     model = Participant
     form = ParticipantAdminForm
-    list_display = ['user', 'status', 'time_spent', 'activity_link']
+    list_display = ['user', 'state_name', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
     readonly_fields = ContributionChildAdmin.readonly_fields
-    fields = ['user', 'activity', 'time_spent', 'states'] + readonly_fields
+    fields = ContributionChildAdmin.fields + ['time_spent']
 
     date_hierarchy = 'transition_date'
 
@@ -70,11 +71,11 @@ class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
     inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
     list_display = [
-        '__unicode__', 'initiative', 'status',
+        '__unicode__', 'initiative', 'state_name',
         'highlight', 'start', 'duration', 'created'
     ]
     search_fields = ['title', 'description']
-    list_filter = ['status', 'is_online']
+    list_filter = [StateMachineFilter, 'is_online']
     date_hierarchy = 'start'
 
     base_model = Event

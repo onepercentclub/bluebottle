@@ -16,7 +16,7 @@ from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
-from bluebottle.fsm.admin import StateMachineAdmin
+from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.funding.models import Funding, Donation
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -27,7 +27,7 @@ from bluebottle.wallposts.admin import WallpostInline
 class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Contribution
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
-    list_filter = ['status', ]
+    list_filter = [StateMachineFilter, ]
     ordering = ('-created', )
     show_in_index = True
 
@@ -35,10 +35,9 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'contribution_date',
         'created',
         'activity_link',
-        'status'
     ]
 
-    fields = ['activity', 'user', 'states'] + readonly_fields
+    fields = ['activity', 'user', 'states', 'status'] + readonly_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
@@ -275,10 +274,10 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     child_models = (Event, Funding, Assignment)
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status']
-    list_filter = (PolymorphicChildModelFilter, 'status', 'highlight')
+    list_filter = (PolymorphicChildModelFilter, StateMachineFilter, 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['__unicode__', 'created', 'type', 'status',
+    list_display = ['__unicode__', 'created', 'type', 'state_name',
                     'link', 'highlight']
 
     search_fields = ('title', 'description',

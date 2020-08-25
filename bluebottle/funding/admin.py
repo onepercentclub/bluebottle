@@ -55,6 +55,7 @@ class PaymentLinkMixin(object):
 
 class BudgetLineInline(admin.TabularInline):
     model = BudgetLine
+    readonly_fields = ['created']
 
     extra = 0
 
@@ -139,7 +140,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         'amount_donated', 'amount_raised',
-        'donations_link', 'payout_links', 'started',
+        'donations_link', 'started',
     ]
 
     list_display = [
@@ -179,8 +180,7 @@ class FundingAdmin(ActivityChildAdmin):
         'amount_donated',
         'amount_raised',
         'donations_link',
-        'bank_account',
-        'payout_links',
+        'bank_account'
     )
 
     export_to_csv_fields = (
@@ -208,17 +208,6 @@ class FundingAdmin(ActivityChildAdmin):
         total = obj.donations.filter(status=DonationStateMachine.succeeded.value).count()
         return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
     donations_link.short_description = _("Donations")
-
-    def payout_links(self, obj):
-        return format_html(", ".join([
-            format_html(
-                u"<a href='{}'>{}</a>",
-                reverse('admin:funding_payout_change', args=(p.id,)),
-                p.id
-            ) for p in obj.payouts.all()
-        ]))
-
-    payout_links.short_description = _('Payouts')
 
 
 class DonationAdminForm(StateMachineModelForm):

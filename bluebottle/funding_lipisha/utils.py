@@ -86,7 +86,7 @@ def check_payment_status(payment):
             # Update donation amount based on the amount registered at Lipisha
             amount = Money(data['transaction_amount'], 'KES')
             payment.donation.amount = amount
-        payment.donation.name = data['transaction_account_name']
+        payment.donation.name = data['transaction_name'].replace('+', ' ').title()
         payment.donation.save()
 
     payment.mobile_number = data['transaction_mobile_number']

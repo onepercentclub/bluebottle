@@ -1,7 +1,13 @@
 from django.core import mail
 
 from bluebottle.events.tests.factories import EventFactory
+from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
 from bluebottle.events.states import EventStateMachine
+from bluebottle.funding.states import FundingStateMachine
+from bluebottle.funding_stripe.tests.factories import (
+    StripePayoutAccountFactory,
+    ExternalAccountFactory,
+)
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
@@ -21,6 +27,8 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             owner=self.user,
             organization=None
         )
+        payout_account = StripePayoutAccountFactory.create(status='verified')
+        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
 
     def test_default_status(self):
         self.assertEqual(
@@ -189,12 +197,20 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
 
     def test_submit_with_activities(self):
         event = EventFactory.create(initiative=self.initiative)
+        funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
+        BudgetLineFactory.create(activity=funding)
+
         incomplete_event = EventFactory.create(initiative=self.initiative, title='')
         self.initiative.states.submit(save=True)
 
         event.refresh_from_db()
         self.assertEqual(
             event.status, ReviewStateMachine.submitted.value
+        )
+
+        funding.refresh_from_db()
+        self.assertEqual(
+            funding.status, ReviewStateMachine.submitted.value
         )
 
         incomplete_event.refresh_from_db()
@@ -237,6 +253,8 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
     def test_approve_with_activities(self):
         event = EventFactory.create(initiative=self.initiative)
         incomplete_event = EventFactory.create(initiative=self.initiative, title='')
+        funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
+        BudgetLineFactory.create(activity=funding)
 
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
@@ -251,6 +269,10 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         incomplete_event.refresh_from_db()
         self.assertEqual(
             incomplete_event.status, EventStateMachine.draft.value
+        )
+        funding.refresh_from_db()
+        self.assertEqual(
+            funding.status, FundingStateMachine.open.value
         )
 
     def test_reject(self):

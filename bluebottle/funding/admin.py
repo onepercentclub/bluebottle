@@ -553,7 +553,8 @@ class PayoutAdmin(StateMachineAdmin):
     list_filter = ['status']
 
     fields = [
-        'activity'
+        'activity',
+        'states',
     ] + readonly_fields
 
     def account_link(self, obj):

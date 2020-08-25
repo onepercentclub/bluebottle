@@ -74,9 +74,9 @@ class SetDeadlineEffect(Effect):
         return _('Set deadline according to the duration')
 
 
-class ExecuteRefundEffect(Effect):
-    post_save = True
-    conditions = []
+class RefundPaymentAtPSPEffect(Effect):
+    post_save = False
+
     title = _('Refund payment')
 
     template = 'admin/execute_refund_effect.html'

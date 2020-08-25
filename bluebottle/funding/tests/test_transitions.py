@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import mock
+from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, ExternalAccountFactory
 from datetime import timedelta, datetime
 
 from django.core import mail
@@ -27,12 +28,14 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create(activity_manager=user)
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
+        payout_account = StripePayoutAccountFactory.create(status='verified')
+        bank_account = ExternalAccountFactory.create(connect_account=payout_account)
         self.funding = FundingFactory.create(
             owner=user,
             initiative=self.initiative,
             target=Money(500, 'EUR'),
             deadline=now() + timedelta(weeks=2),
-            bank_account=BankAccountFactory.create()
+            bank_account=bank_account
         )
         BudgetLineFactory.create(activity=self.funding)
         self.funding.bank_account.reviewed = True
@@ -102,12 +105,10 @@ class FundingTestCase(BluebottleAdminTestCase):
     def test_no_donations(self):
         self.assertEqual(self.funding.initiative.status, 'approved')
         self.assertEqual(self.funding.status, 'open')
-        self.funding.deadline = now() + timedelta(days=1)
-        self.funding.save()
 
         # Run scheduled task
         tenant = connection.tenant
-        future = now() + timedelta(days=2)
+        future = now() + timedelta(weeks=12)
         with mock.patch.object(timezone, 'now', return_value=future):
             funding_tasks()
         with LocalTenant(tenant, clear_tenant=True):

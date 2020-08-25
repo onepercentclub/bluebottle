@@ -9,7 +9,7 @@ from bluebottle.fsm.effects import (
 )
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState
 from bluebottle.funding.effects import GeneratePayoutsEffect, GenerateDonationWallpostEffect, \
-    RemoveDonationWallpostEffect, UpdateFundingAmountsEffect, ExecuteRefundEffect, SetDeadlineEffect, \
+    RemoveDonationWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect, \
     DeletePayoutsEffect, \
     SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect, \
     ClearPayoutDatesEffect
@@ -26,7 +26,7 @@ class FundingStateMachine(ActivityStateMachine):
     partially_funded = State(
         _('partially funded'),
         'partially_funded',
-        _("The activity has ended and received donations but didn't reached the target.")
+        _("The activity has ended and received donations but didn't reach the target.")
     )
     refunded = State(
         _('refunded'),
@@ -69,6 +69,12 @@ class FundingStateMachine(ActivityStateMachine):
         """user has the permission to approve (staff member)"""
         return user.is_staff
 
+    def psp_allows_refunding(self):
+        """PSP allows refunding through their API"""
+        return self.instance.bank_account and \
+            self.instance.bank_account.provider_class and \
+            self.instance.bank_account.provider_class.refund_enabled
+
     submit = Transition(
         [ActivityStateMachine.draft, ActivityStateMachine.needs_work],
         ActivityStateMachine.submitted,
@@ -84,7 +90,6 @@ class FundingStateMachine(ActivityStateMachine):
 
     approve = Transition(
         [
-            ActivityStateMachine.draft,
             ActivityStateMachine.needs_work,
             ActivityStateMachine.submitted
         ],
@@ -106,6 +111,22 @@ class FundingStateMachine(ActivityStateMachine):
                 'expire',
                 conditions=[should_finish]
             ),
+        ]
+    )
+
+    cancel = Transition(
+        [
+            ActivityStateMachine.open,
+        ],
+        cancelled,
+        name=_('Cancel'),
+        description=_('Cancel the activity.'),
+        automatic=False,
+        conditions=[
+            no_donations
+        ],
+        effects=[
+            RelatedTransitionEffect('organizer', 'fail')
         ]
     )
 
@@ -141,7 +162,9 @@ class FundingStateMachine(ActivityStateMachine):
     )
 
     expire = Transition(
-        ActivityStateMachine.open,
+        [
+            ActivityStateMachine.open,
+        ],
         ActivityStateMachine.cancelled,
         name=_('Expire'),
         description=_("The campaign has ended without any successful donations and will be cancelled."),
@@ -165,6 +188,9 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Extend'),
         description=_("The campaign will be extended and can receive more donations."),
         automatic=True,
+        conditions=[
+            without_approved_payouts
+        ],
         effects=[
             DeletePayoutsEffect
         ]
@@ -218,11 +244,18 @@ class FundingStateMachine(ActivityStateMachine):
     )
 
     refund = Transition(
-        [ActivityStateMachine.succeeded, partially_funded],
+        [
+            ActivityStateMachine.succeeded,
+            partially_funded
+        ],
         refunded,
         name=_('Refund'),
         description=_("The campaign will be refunded and all donations will be returned to the donors."),
         automatic=False,
+        conditions=[
+            psp_allows_refunding,
+            without_approved_payouts
+        ],
         effects=[
             RelatedTransitionEffect('donations', 'activity_refund'),
             DeletePayoutsEffect
@@ -287,7 +320,6 @@ class DonationStateMachine(ContributionStateMachine):
         description=_("Refund this donation."),
         automatic=True,
         effects=[
-            RelatedTransitionEffect('payment', 'request_refund'),
             RemoveDonationWallpostEffect,
             UnFollowActivityEffect,
             UpdateFundingAmountsEffect
@@ -387,15 +419,13 @@ class BasePaymentStateMachine(ModelStateMachine):
     )
 
     request_refund = Transition(
-        [
-            ContributionStateMachine.succeeded
-        ],
+        succeeded,
         refund_requested,
         name=_('Request refund'),
         description=_("Request to refund the payment."),
         automatic=False,
         effects=[
-            ExecuteRefundEffect
+            RefundPaymentAtPSPEffect
         ]
     )
 
@@ -515,7 +545,6 @@ class PayoutStateMachine(ModelStateMachine):
 
 
 class PayoutAccountStateMachine(ModelStateMachine):
-
     new = State(
         _('new'),
         'new',
@@ -583,7 +612,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        [new, incomplete, verified],
+        [new, incomplete, verified, pending],
         rejected,
         name=_('Reject'),
         description=_("Reject the payout account."),
@@ -603,7 +632,6 @@ class PayoutAccountStateMachine(ModelStateMachine):
 
 
 class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
-
     model = PlainPayoutAccount
 
     verify = Transition(

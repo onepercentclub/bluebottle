@@ -4,10 +4,10 @@ from djmoney.money import Money
 from mock import patch
 import stripe
 
-from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonationFactory
 from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, StripeSourcePaymentFactory, \
-    StripePaymentFactory
+    StripePaymentFactory, ExternalAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -23,10 +23,12 @@ class BaseStripePaymentStateMachineTests(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = StripePayoutAccountFactory.create()
-        self.bank_account = BankAccountFactory.create(connect_account=payout_account)
+        payout_account = StripePayoutAccountFactory.create(status='verified')
+        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
         self.funding.bank_account = self.bank_account
         self.funding.save()
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
 
 
 class StripeSourcePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
@@ -43,10 +45,25 @@ class StripeSourcePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
     def test_request_refund(self):
         self.payment.states.succeed(save=True)
         self.assertEqual(self.payment.status, 'succeeded')
+
         with patch('bluebottle.funding_stripe.models.StripeSourcePayment.refund') as refund:
             self.payment.states.request_refund(save=True)
             refund.assert_called_once()
-            self.assertEqual(self.payment.status, 'refund_requested')
+
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, 'refund_requested')
+
+    def test_refund_activity(self):
+        self.payment.states.succeed(save=True)
+        self.assertEqual(self.payment.status, 'succeeded')
+        self.funding.states.succeed(save=True)
+
+        with patch('bluebottle.funding_stripe.models.StripeSourcePayment.refund') as refund:
+            self.funding.states.refund(save=True)
+            refund.assert_called_once()
+
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, 'refund_requested')
 
     def test_authorize(self):
         self.payment.states.charge(save=True)

@@ -95,8 +95,8 @@ class BaseTransitionEffect(Effect):
         for effect_class in self.transition.effects:
             yield effect_class(self.instance)
 
-    def execute(self, **kwargs):
-        self.transition.execute(self.machine, effects=False)
+    def execute(self, effects=False, **kwargs):
+        self.transition.execute(self.machine, effects=effects)
 
     def __eq__(self, other):
         return (

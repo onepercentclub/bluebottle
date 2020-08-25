@@ -87,7 +87,7 @@ class AssignmentStateMachine(ActivityStateMachine):
         description=_("The activity has reached its capacity isn't open for new applications."),
     )
 
-    approve = Transition(
+    auto_approve = Transition(
         [
             ActivityStateMachine.submitted,
             ActivityStateMachine.rejected

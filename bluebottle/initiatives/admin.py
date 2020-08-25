@@ -10,7 +10,7 @@ from bluebottle.geo.models import Location, Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action
-from bluebottle.fsm.admin import StateMachineAdmin
+from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.wallposts.admin import WallpostInline
 
@@ -79,7 +79,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                      'place', 'organization', 'organization_contact')
 
     date_hierarchy = 'created'
-    list_display = ['__unicode__', 'created', 'owner', 'status']
+    list_display = ['__unicode__', 'created', 'owner', 'state_name']
 
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
@@ -112,7 +112,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
     def get_list_filter(self, instance):
-        filters = [InitiativeReviewerFilter, 'categories', 'theme', 'status']
+        filters = [InitiativeReviewerFilter, 'categories', 'theme', StateMachineFilter, ]
 
         if Location.objects.count():
             filters.append('location')

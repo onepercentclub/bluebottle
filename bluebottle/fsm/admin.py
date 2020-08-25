@@ -193,6 +193,9 @@ class StateMachineAdminMixin(object):
         return custom_urls + urls
 
     def state_name(self, obj):
+        if hasattr(self, 'child_models'):
+            obj = obj.get_real_instance()
+
         if obj.states.current_state:
             return obj.states.current_state.name
 
@@ -208,7 +211,14 @@ class StateMachineFilter(admin.SimpleListFilter):
     parameter_name = 'status'
 
     def lookups(self, request, model_admin):
-        return [(status, state.name) for (status, state) in model_admin.model._state_machines['states'].states.items()]
+        if hasattr(model_admin, 'child_models'):
+            states = []
+            for model in model_admin.child_models:
+                states += model._state_machines['states'].states.items()
+        else:
+            states = model_admin.model._state_machines['states'].states.items()
+
+        return set((status, state.name) for (status, state) in states)
 
     def queryset(self, request, queryset):
         if self.value():

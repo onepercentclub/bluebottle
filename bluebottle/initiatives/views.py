@@ -22,16 +22,17 @@ from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.serializers import (
     InitiativeSerializer, InitiativeListSerializer, InitiativeReviewTransitionSerializer,
     InitiativeMapSerializer, InitiativeRedirectSerializer,
-    RelatedInitiativeImageSerializer
+    RelatedInitiativeImageSerializer, ThemeSerializer
 )
+from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.tasks.models import Task
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission
+    OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView,
+    CreateAPIView, ListAPIView
 )
 
 
@@ -163,6 +164,17 @@ class RelatedInitiativeImageContent(ImageContentView):
 class InitiativeReviewTransitionList(TransitionList):
     serializer_class = InitiativeReviewTransitionSerializer
     queryset = Initiative.objects.all()
+
+
+class ThemePagination(PageNumberPagination):
+    page_size = 10000
+
+
+class ThemeList(JsonApiViewMixin, ListAPIView):
+    serializer_class = ThemeSerializer
+    queryset = ProjectTheme.objects.filter(disabled=False)
+    permission_classes = [TenantConditionalOpenClose, ]
+    pagination_class = ThemePagination
 
 
 from collections import namedtuple

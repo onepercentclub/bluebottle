@@ -172,7 +172,7 @@ class Organizer(Contribution):
         if self.user:
             return self.user.full_name
         else:
-            return _('None')
+            return _('Organizer')
 
 
 from bluebottle.activities.signals import *  # noqa

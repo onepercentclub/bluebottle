@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.conf.urls import url
 from django.contrib import admin, messages
 from django.core.urlresolvers import reverse
@@ -24,6 +26,17 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
     )
 
 
+def get_effects(effects):
+    displayed_effects = [effect for effect in effects if effect.display]
+    displayed_effects.sort(key=lambda x: x.__class__)
+    grouped_effects = defaultdict(list)
+
+    for effect in displayed_effects:
+        grouped_effects[effect.__class__].append(effect)
+
+    return [cls.render(grouped) for cls, grouped in grouped_effects.items()]
+
+
 class StateMachineAdminMixin(object):
     form = StateMachineModelForm
 
@@ -41,7 +54,7 @@ class StateMachineAdminMixin(object):
 
             new_obj = self.save_form(request, form, change=True)
 
-            effects = [effect for effect in list(new_obj.all_effects) if effect.display]
+            effects = get_effects(new_obj.all_effects)
             cancel_link = reverse(
                 'admin:{}_{}_change'.format(
                     self.model._meta.app_label, self.model._meta.model_name
@@ -63,7 +76,7 @@ class StateMachineAdminMixin(object):
                     media=self.media,
                     has_notifications=any(
                         isinstance(effect, BaseNotificationEffect)
-                        for effect in effects
+                        for effect in new_obj.all_effects
                     ),
                     effects=effects
                 )
@@ -133,8 +146,7 @@ class StateMachineAdminMixin(object):
                 return HttpResponseRedirect(link)
 
         getattr(state_machine, transition_name)()
-        effects = [effect for effect in instance._effects if effect.display]
-
+        effects = get_effects(instance._effects)
         cancel_link = reverse(
             'admin:{}_{}_change'.format(
                 self.model._meta.app_label, self.model._meta.model_name
@@ -156,7 +168,7 @@ class StateMachineAdminMixin(object):
             form=form,
             has_notifications=any(
                 isinstance(effect, BaseNotificationEffect)
-                for effect in effects
+                for effect in instance._effects
             ),
             source=instance.status,
             effects=effects,

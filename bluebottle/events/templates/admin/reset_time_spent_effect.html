@@ -7,8 +7,8 @@
 {% endblocktrans %}
 
 {% if effects|length > 1%} 
-    {% blocktrans with count=effects|length %}
-        and {{effects|length}} others
+    {% blocktrans with count=effects|length|add:"-1" %}
+        and {{count}} others
     {% endblocktrans %}
 {% endif %} 
 {% trans "to 0." %}

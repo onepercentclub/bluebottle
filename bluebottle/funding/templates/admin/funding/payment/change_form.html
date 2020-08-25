@@ -4,7 +4,7 @@
 {% block object-tools-items %}
     {% if perms.funding.refund_payment and original.can_refund %}
         <li>
-            <a href="{% url 'admin:funding_payment_refund' object_id %}" style="color: white; background-color: #E62828">
+            <a href="{% url 'admin:funding_payment' object_id %}" style="color: white; background-color: #E62828">
                 {% trans "Refund" %}
             </a>
         </li>

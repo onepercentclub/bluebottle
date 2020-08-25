@@ -17,7 +17,7 @@ class ModelPeriodicTask(object):
             for effect_class in self.effects:
                 effect = effect_class(instance)
                 if effect.is_valid:
-                    effect.execute()
+                    effect.execute(effects=True)
                     instance.save()
 
     def __unicode__(self):

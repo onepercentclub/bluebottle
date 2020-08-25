@@ -98,6 +98,7 @@ class AssignmentStateMachine(ActivityStateMachine):
         description=_("Approve the task. Users can start signing up to it."),
         effects=[
             RelatedTransitionEffect('organizer', 'succeed'),
+            RelatedTransitionEffect('applicants', 'reset'),
             TransitionEffect(
                 'expire',
                 conditions=[should_finish, has_no_accepted_applicants]
@@ -140,7 +141,12 @@ class AssignmentStateMachine(ActivityStateMachine):
         name=_('Reschedule'),
         description=_("Reschedule the activity for new sign-ups. "
                       "Triggered by a changing to a future date."),
-        automatic=True
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('accepted_applicants', 'reaccept'),
+        ]
+
+
     )
 
     succeed = Transition(
@@ -183,7 +189,9 @@ class AssignmentStateMachine(ActivityStateMachine):
         automatic=False,
         description=_("Restore a cancelled, rejected or deleted task."),
         effects=[
-            RelatedTransitionEffect('contributions', 'reset')
+            RelatedTransitionEffect('organizer', 'fail'),
+            RelatedTransitionEffect('accepted_applicants', 'fail')
+
         ]
     )
 
@@ -300,6 +308,18 @@ class ApplicantStateMachine(ContributionStateMachine):
         ]
     )
 
+    reaccept = Transition(
+        ContributionStateMachine.succeeded,
+        accepted,
+        name=_('Accept'),
+        description=_("Applicant was accepted."),
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('activity', 'lock', conditions=[assignment_will_become_full]),
+            ClearTimeSpent,
+        ]
+    )
+
     reject = Transition(
         [
             ContributionStateMachine.new,
@@ -327,6 +347,7 @@ class ApplicantStateMachine(ContributionStateMachine):
         description=_("Applicant withdrew and will no longer join the activity."),
         automatic=False,
         permission=is_user,
+        hide_from_admin=True,
         effects=[
             UnFollowActivityEffect
         ]
@@ -410,6 +431,7 @@ class ApplicantStateMachine(ContributionStateMachine):
     reset = Transition(
         [
             ContributionStateMachine.succeeded,
+            accepted,
             ContributionStateMachine.failed,
         ],
         ContributionStateMachine.new,

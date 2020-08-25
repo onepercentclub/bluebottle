@@ -103,8 +103,9 @@ class Transition(BaseTransition):
 
         super(Transition, self).on_execute(machine)
 
-        for effect in self.effects:
-            machine.instance._effects += effect(machine.instance, **kwargs).all_effects()
+        if effects:
+            for effect in self.effects:
+                machine.instance._effects += effect(machine.instance, **kwargs).all_effects()
 
         if save:
             machine.save()

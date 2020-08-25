@@ -85,8 +85,8 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Contribution
     child_models = (Participant, Donation, Applicant, Organizer)
     list_display = ['created', 'contribution_date',
-                    'owner', 'type', 'activity', 'status']
-    list_filter = (PolymorphicChildModelFilter, 'status')
+                    'owner', 'type', 'activity', 'state_name']
+    list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
     date_hierarchy = 'contribution_date'
 
     ordering = ('-created', )

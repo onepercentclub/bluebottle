@@ -334,7 +334,10 @@ class DonationStateMachine(ContributionStateMachine):
     )
 
     refund = Transition(
-        ContributionStateMachine.succeeded,
+        [
+            ContributionStateMachine.new,
+            ContributionStateMachine.succeeded,
+        ],
         refunded,
         name=_('Refund'),
         description=_("Refund this donation."),
@@ -452,7 +455,8 @@ class BasePaymentStateMachine(ModelStateMachine):
 
     refund = Transition(
         [
-            ContributionStateMachine.succeeded,
+            new,
+            succeeded,
             refund_requested
         ],
         refunded,

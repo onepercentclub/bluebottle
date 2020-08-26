@@ -51,7 +51,7 @@ class UpdateFundingAmountsEffect(Effect):
 
 
 class RemoveDonationFromPayoutEffect(Effect):
-    post_save = True
+    post_save = False
     conditions = []
     title = _('Remove donation from payout')
 
@@ -59,7 +59,6 @@ class RemoveDonationFromPayoutEffect(Effect):
 
     def execute(self, **kwargs):
         self.instance.payout = None
-        self.instance.save()
 
     def __unicode__(self):
         return _('Remove donation from payout')

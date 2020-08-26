@@ -268,6 +268,30 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return super(ActivityChildAdmin, self).get_form(request, obj, **kwargs)
 
 
+class ContributionInline(admin.TabularInline):
+    raw_id_fields = ('user', )
+    readonly_fields = ('created', 'edit', 'state_name', )
+    fields = ('edit', 'user', 'created', 'state_name', )
+
+    extra = 0
+
+    def state_name(self, obj):
+        if obj.states.current_state:
+            return obj.states.current_state.name
+    state_name.short_description = _('status')
+
+    def edit(self, obj):
+        url = reverse(
+            'admin:{}_{}_change'.format(
+                obj._meta.app_label,
+                obj._meta.model_name,
+            ),
+            args=(obj.id,)
+        )
+        return format_html('<a href="{}">{}</a>', url, obj.id)
+    edit.short_description = _('edit')
+
+
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
@@ -298,6 +322,7 @@ class ActivityInlineChild(StackedPolymorphicInline.Child):
     def state_name(self, obj):
         if obj.states.current_state:
             return obj.states.current_state.name
+    state_name.short_description = _('status')
 
     def activity_link(self, obj):
         url = reverse("admin:{}_{}_change".format(

@@ -240,6 +240,62 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.assertEqual(donation.status, 'refunded')
         self.assertEqual(payment.status, 'refunded')
 
+    def test_refund_from_requested_refund(self):
+        with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
+            data = json.load(hook_file)
+            data['object']['id'] = self.intent.intent_id
+
+        transfer = stripe.Transfer(data['object']['charges']['data'][0]['transfer'])
+        transfer.update({
+            'id': data['object']['charges']['data'][0]['transfer'],
+            'amount': 2500,
+            'currency': 'eur'
+        })
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'payment_intent.succeeded', data
+            )
+        ):
+            with mock.patch(
+                'stripe.Transfer.retrieve',
+                return_value=transfer
+            ):
+                response = self.client.post(
+                    self.webhook,
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        with mock.patch(
+            'bluebottle.funding_stripe.models.StripePayment.refund',
+        ):
+            self.intent.payment.states.request_refund(save=True)
+
+        with open('bluebottle/funding_stripe/tests/files/intent_webhook_refund.json') as hook_file:
+            data = json.load(hook_file)
+            data['object']['payment_intent'] = self.intent.intent_id
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.refunded', data
+            )
+        ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.intent.payment.refresh_from_db()
+
+        donation = Donation.objects.get(pk=self.donation.pk)
+
+        self.assertEqual(donation.status, 'refunded')
+        self.assertEqual(self.intent.payment.status, 'refunded')
+
 
 class SourcePaymentWebhookTestCase(BluebottleTestCase):
     def setUp(self):
@@ -544,6 +600,38 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self.payment.charge_token = 'some-charge-token'
         self.payment.states.charge(save=True)
         self.payment.states.succeed(save=True)
+
+        data = {
+            'object': {
+                'id': self.payment.charge_token
+            }
+        }
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.refunded', data
+            )
+        ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self._refresh()
+        self.assertEqual(self.payment.status, 'refunded')
+        self.assertEqual(self.donation.status, 'refunded')
+
+    def test_charge_refunded_refund_requested(self):
+        self.payment.charge_token = 'some-charge-token'
+        self.payment.states.charge(save=True)
+        self.payment.states.succeed(save=True)
+
+        with mock.patch(
+            'bluebottle.funding_stripe.models.StripeSourcePayment.refund',
+        ):
+            self.payment.states.request_refund(save=True)
 
         data = {
             'object': {

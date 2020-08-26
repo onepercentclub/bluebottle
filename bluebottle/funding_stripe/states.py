@@ -70,7 +70,10 @@ class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
     )
 
     dispute = Transition(
-        BasePaymentStateMachine.succeeded,
+        [
+            BasePaymentStateMachine.new,
+            BasePaymentStateMachine.succeeded,
+        ],
         disputed,
         name=_('Dispute'),
         automatic=True,

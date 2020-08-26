@@ -84,7 +84,6 @@ class StripePayment(Payment):
 
     def update(self):
         intent = self.payment_intent.intent
-
         if len(intent.charges) == 0:
             # No charge. Do we still need to charge?
             self.states.fail()
@@ -158,17 +157,19 @@ class StripeSourcePayment(Payment):
                 self.states.cancel(save=True)
 
             if self.charge_token:
-                if (not self.status == 'failed') and self.charge.status == 'failed':
-                    self.states.fail(save=True)
+                if self.charge.status == 'failed':
+                    if self.status != 'failed':
+                        self.states.fail(save=True)
+                elif self.charge.refunded:
+                    if self.status != 'refunded':
+                        self.states.refund(save=True)
+                elif self.charge.dispute:
+                    if self.status != 'disputed':
+                        self.states.dispute(save=True)
+                elif self.charge.status == 'succeeded':
+                    if self.status != 'succeeded':
+                        self.states.succeed(save=True)
 
-                if (not self.status == 'succeeded') and self.charge.status == 'succeeded':
-                    self.states.succeed(save=True)
-
-                if (not self.status == 'refunded') and self.charge.refunded:
-                    self.states.refund(save=True)
-
-                if (not self.status == 'disputed') and self.charge.dispute:
-                    self.states.dispute(save=True)
         except StripeError as error:
             raise PaymentException(error.message)
 

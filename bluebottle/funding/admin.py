@@ -230,8 +230,10 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     model = Donation
     form = DonationAdminForm
 
-    raw_id_fields = ['activity', 'user']
-    readonly_fields = ['payment_link', 'payment_link', 'payout_amount', 'contribution_date']
+    raw_id_fields = ['activity', 'payout', 'user']
+    readonly_fields = ContributionChildAdmin.readonly_fields + [
+        'payment_link', 'payment_link', 'amount', 'payout_amount',
+    ]
     list_display = ['contribution_date', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
     list_filter = [
         DonationAdminStatusFilter,
@@ -244,7 +246,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
 
     fields = [
         'contribution_date', 'created',
-        'activity', 'user', 'amount', 'payout_amount',
+        'activity', 'payout', 'user', 'payout_amount',
         'reward', 'anonymous', 'name', 'status', 'payment_link'
     ]
 

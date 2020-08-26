@@ -286,7 +286,7 @@ class DonationStateMachineTests(BluebottleTestCase):
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(donation.status, 'succeeded')
-        donation.states.refund(save=True)
+        donation.payment.states.refund(save=True)
         self.assertEqual(donation.status, 'refunded')
 
     def test_refund_payment_request_refund(self):
@@ -303,7 +303,7 @@ class DonationStateMachineTests(BluebottleTestCase):
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(Wallpost.objects.count(), 1)
-        donation.states.refund(save=True)
+        donation.payment.states.refund(save=True)
         self.assertEqual(Wallpost.objects.count(), 0)
 
     def test_refund_update_amounts(self):
@@ -312,14 +312,14 @@ class DonationStateMachineTests(BluebottleTestCase):
         donation = DonationFactory.create(activity=self.funding, amount=Money(250, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(self.funding.amount_raised, Money(750, 'EUR'))
-        donation.states.refund(save=True)
+        donation.payment.states.refund(save=True)
         self.assertEqual(self.funding.amount_raised, Money(500, 'EUR'))
 
     def test_refund_unfollow(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         self.assertTrue(self.funding.followers.filter(user=donation.user).exists())
-        donation.states.refund(save=True)
+        donation.payment.states.refund(save=True)
         self.assertFalse(self.funding.followers.filter(user=donation.user).exists())
 
     def test_refund_activity(self):

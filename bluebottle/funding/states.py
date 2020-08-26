@@ -12,7 +12,7 @@ from bluebottle.funding.effects import GeneratePayoutsEffect, GenerateDonationWa
     RemoveDonationWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect, \
     DeletePayoutsEffect, \
     SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect, \
-    ClearPayoutDatesEffect
+    ClearPayoutDatesEffect, RemoveDonationFromPayoutEffect
 from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
     FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage, PayoutAccountVerified, \
     PayoutAccountRejected, DonationRefundedDonorMessage, FundingRejectedMessage
@@ -328,12 +328,16 @@ class DonationStateMachine(ContributionStateMachine):
         automatic=True,
         effects=[
             RemoveDonationWallpostEffect,
-            UpdateFundingAmountsEffect
+            UpdateFundingAmountsEffect,
+            RemoveDonationFromPayoutEffect
         ]
     )
 
     refund = Transition(
-        ContributionStateMachine.succeeded,
+        [
+            ContributionStateMachine.new,
+            ContributionStateMachine.succeeded,
+        ],
         refunded,
         name=_('Refund'),
         description=_("Refund this donation."),
@@ -341,7 +345,8 @@ class DonationStateMachine(ContributionStateMachine):
         effects=[
             RemoveDonationWallpostEffect,
             UnFollowActivityEffect,
-            UpdateFundingAmountsEffect
+            UpdateFundingAmountsEffect,
+            RemoveDonationFromPayoutEffect
         ]
     )
 
@@ -450,7 +455,9 @@ class BasePaymentStateMachine(ModelStateMachine):
 
     refund = Transition(
         [
-            ContributionStateMachine.succeeded
+            new,
+            succeeded,
+            refund_requested
         ],
         refunded,
         name=_('Refund'),

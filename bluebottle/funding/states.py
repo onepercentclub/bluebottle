@@ -12,7 +12,7 @@ from bluebottle.funding.effects import GeneratePayoutsEffect, GenerateDonationWa
     RemoveDonationWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect, \
     DeletePayoutsEffect, \
     SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect, \
-    ClearPayoutDatesEffect
+    ClearPayoutDatesEffect, RemoveDonationFromPayoutEffect
 from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
     FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage, PayoutAccountVerified, \
     PayoutAccountRejected, DonationRefundedDonorMessage, FundingRejectedMessage
@@ -328,7 +328,8 @@ class DonationStateMachine(ContributionStateMachine):
         automatic=True,
         effects=[
             RemoveDonationWallpostEffect,
-            UpdateFundingAmountsEffect
+            UpdateFundingAmountsEffect,
+            RemoveDonationFromPayoutEffect
         ]
     )
 
@@ -341,7 +342,8 @@ class DonationStateMachine(ContributionStateMachine):
         effects=[
             RemoveDonationWallpostEffect,
             UnFollowActivityEffect,
-            UpdateFundingAmountsEffect
+            UpdateFundingAmountsEffect,
+            RemoveDonationFromPayoutEffect
         ]
     )
 

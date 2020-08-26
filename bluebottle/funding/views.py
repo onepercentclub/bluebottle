@@ -228,8 +228,7 @@ class PlainPayoutAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
-        serializer.instance.transitions.submit()
-        serializer.instance.save()
+        serializer.instance.states.submit(save=True)
 
 
 class PlainPayoutAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):

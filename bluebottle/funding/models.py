@@ -473,7 +473,7 @@ class Payout(TriggerMixin, models.Model):
         verbose_name_plural = _('payouts')
 
     def __unicode__(self):
-        return '{} #{}'.format(_('Payout'), self.id)
+        return '{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
 
 
 class Donation(Contribution):

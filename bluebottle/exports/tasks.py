@@ -6,7 +6,6 @@ from django.utils import timezone
 
 from celery import shared_task, current_task
 
-from bluebottle.utils.utils import reverse_signed
 from .exporter import get_export_models, get_resource_for_model
 
 logger = logging.getLogger(__name__)
@@ -46,7 +45,7 @@ def export(exporter_class, format='xlsx', **kwargs):
     with open(export_to, 'wb') as outfile:
         outfile.write(getattr(databook, format))
 
-    return reverse_signed('exportdb_download', args=(filename, ))
+    return filename
 
 
 def plain_export(exporter_class, format='xlsx', **kwargs):

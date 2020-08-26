@@ -5,6 +5,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.utils import reverse_signed
 
 from bluebottle.exports.exporter import Exporter
 from bluebottle.exports.tasks import export
@@ -24,7 +25,7 @@ class TestExportAdmin(BluebottleTestCase):
             to_date=timezone.now() - datetime.timedelta(days=180)
         )
 
-        response = self.client.get(result)
+        response = self.client.get(reverse_signed('exportdb_download', args=(result, )))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(
             response['Content-Disposition'].startswith(
@@ -49,6 +50,6 @@ class TestExportAdmin(BluebottleTestCase):
             to_date=timezone.now() - datetime.timedelta(days=180)
         )
 
-        response = self.client.get(result + '123')
+        response = self.client.get(reverse_signed('exportdb_download', args=(result, )) + '123')
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

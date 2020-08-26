@@ -567,6 +567,38 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self.assertEqual(self.payment.status, 'refunded')
         self.assertEqual(self.donation.status, 'refunded')
 
+    def test_charge_refunded_refund_requested(self):
+        self.payment.charge_token = 'some-charge-token'
+        self.payment.states.charge(save=True)
+        self.payment.states.succeed(save=True)
+
+        with mock.patch(
+            'bluebottle.funding_stripe.models.StripeSourcePayment.refund',
+        ):
+            self.payment.states.request_refund(save=True)
+
+        data = {
+            'object': {
+                'id': self.payment.charge_token
+            }
+        }
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.refunded', data
+            )
+        ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self._refresh()
+        self.assertEqual(self.payment.status, 'refunded')
+        self.assertEqual(self.donation.status, 'refunded')
+
     def test_charge_dispute_closed(self):
         self.payment.charge_token = 'some-charge-token'
         self.payment.states.charge(save=True)

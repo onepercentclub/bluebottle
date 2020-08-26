@@ -450,7 +450,8 @@ class BasePaymentStateMachine(ModelStateMachine):
 
     refund = Transition(
         [
-            ContributionStateMachine.succeeded
+            ContributionStateMachine.succeeded,
+            refund_requested
         ],
         refunded,
         name=_('Refund'),

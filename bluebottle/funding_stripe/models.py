@@ -84,7 +84,6 @@ class StripePayment(Payment):
 
     def update(self):
         intent = self.payment_intent.intent
-
         if len(intent.charges) == 0:
             # No charge. Do we still need to charge?
             self.states.fail()

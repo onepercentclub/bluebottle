@@ -1,10 +1,8 @@
 from django.contrib import admin
-from django.urls import reverse
-from django.utils.html import format_html
 from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.fsm.admin import StateMachineFilter
-from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin, ContributionInline
 from bluebottle.events.models import Event, Participant
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import export_as_csv_action
@@ -21,18 +19,11 @@ class EventAdminForm(StateMachineModelForm):
         }
 
 
-class ParticipantInline(admin.TabularInline):
+class ParticipantInline(ContributionInline):
     model = Participant
 
-    raw_id_fields = ('user', )
-    readonly_fields = ('created', 'status', 'participant')
-    fields = ('participant', 'user', 'created', 'status', 'time_spent')
-
-    extra = 0
-
-    def participant(self, obj):
-        url = reverse('admin:events_participant_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.id)
+    readonly_fields = ContributionInline.readonly_fields + ('time_spent', )
+    fields = ContributionInline.fields + ('time_spent', )
 
 
 class ParticipantAdminForm(StateMachineModelForm):

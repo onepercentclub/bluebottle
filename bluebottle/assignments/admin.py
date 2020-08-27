@@ -1,11 +1,9 @@
 from django.contrib import admin
-from django.urls import reverse
 from django.utils import translation
-from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin, ContributionInline
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine
 from bluebottle.fsm.forms import StateMachineModelForm
@@ -25,17 +23,11 @@ class AssignmentAdminForm(StateMachineModelForm):
         }
 
 
-class ApplicantInline(admin.TabularInline):
+class ApplicantInline(ContributionInline):
     model = Applicant
 
-    raw_id_fields = ('user', )
-    readonly_fields = ('applicant', 'created', 'motivation')
-    fields = ('applicant', 'user', 'time_spent', 'status', 'created', 'motivation')
-    extra = 0
-
-    def applicant(self, obj):
-        url = reverse('admin:assignments_applicant_change', args=(obj.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj.user.full_name)
+    readonly_fields = ContributionInline.readonly_fields + ('time_spent', )
+    fields = ContributionInline.fields + ('time_spent', )
 
 
 class ApplicantAdminForm(StateMachineModelForm):

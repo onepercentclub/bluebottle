@@ -581,8 +581,20 @@ class EventTransitionTestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['errors'][0], "Transition is not available")
 
-    def test_approve(self):
+    def test_reject(self):
         self.review_data['data']['attributes']['transition'] = 'reject'
+        response = self.client.post(
+            self.transition_url,
+            json.dumps(self.review_data),
+            user=self.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = json.loads(response.content)
+        self.assertEqual(data['errors'][0], "Transition is not available")
+
+    def test_approve(self):
+        self.review_data['data']['attributes']['transition'] = 'approve'
         response = self.client.post(
             self.transition_url,
             json.dumps(self.review_data),

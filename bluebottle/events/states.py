@@ -220,7 +220,7 @@ class EventStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.rejected,
         name=_('Reject'),
-        description=_('Reject the activity. This will make sure the initiative is no longer visible'),
+        description=_('Reject the activity. This will make sure the activity is no longer visible'),
         automatic=False,
         permission=ActivityStateMachine.is_staff,
         effects=[

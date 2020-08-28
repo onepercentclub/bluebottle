@@ -149,7 +149,7 @@ class ReviewStateMachine(ModelStateMachine):
         cancelled,
         name=_('Cancel'),
         description=_("Cancel if the initiative will not be executed. "
-                      "The initiator will not be able to edit the initiative and"
+                      "The initiator will not be able to edit the initiative and "
                       "it won't show up on the search page in the front end. "
                       "The initiative will still be available in the back office and appear in your reporting."),
         automatic=False,

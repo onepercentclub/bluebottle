@@ -17,6 +17,8 @@ import rules
 from celery.result import AsyncResult
 
 from bluebottle.exports.tasks import plain_export
+from bluebottle.utils.utils import reverse_signed
+
 from .compat import import_string, jquery_in_vendor
 from .exporter import get_export_models, Exporter
 from .tasks import export
@@ -126,7 +128,7 @@ class ExportPendingView(ExportPermissionMixin, View):
         content = {
             'status': async_result.state,
             'progress': progress,
-            'file': async_result.result if async_result.ready() else None
+            'file': reverse_signed('exportdb_download', args=(async_result.result, )) if async_result.ready() else None
         }
         return self.json_response(content)
 

@@ -180,7 +180,7 @@ class ReviewStateMachine(ModelStateMachine):
         ],
         needs_work,
         name=_('Restore'),
-        description=_("The status of the initiative is set to 'Draft'. "
+        description=_("The status of the initiative is set to 'needs work'. "
                       "The initiator can edit and submit the initiative again."),
         automatic=False,
         permission=is_staff,

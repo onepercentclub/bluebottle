@@ -160,7 +160,7 @@ class ReviewStateMachine(ModelStateMachine):
     )
 
     delete = Transition(
-        [draft],
+        draft,
         deleted,
         name=_('Delete'),
         description=_("Delete the initiative if you don't want it to appear in your reporting. "

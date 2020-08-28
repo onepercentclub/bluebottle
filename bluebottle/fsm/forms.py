@@ -31,7 +31,7 @@ class StateMachineModelFormMetaClass(ModelFormMetaclass):
                 force_name = "force_{}".format(machine.field)
                 attrs[force_name] = forms.ChoiceField(
                     required=False,
-                    choices=[(s.value, s.name) for s in machine.states.values()],
+                    choices=[(None, '---')] + [(s.value, s.name) for s in machine.states.values()],
                     widget=Select(),
                     help_text=_("Careful! This will change the status without triggering any side effects!")
                 )

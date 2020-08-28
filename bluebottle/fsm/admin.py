@@ -32,9 +32,9 @@ def get_effects(effects):
     grouped_effects = defaultdict(list)
 
     for effect in displayed_effects:
-        grouped_effects[effect.__class__].append(effect)
+        grouped_effects[(effect.__class__, effect.instance.__class__)].append(effect)
 
-    return [cls.render(grouped) for cls, grouped in grouped_effects.items()]
+    return [cls.render(grouped) for (cls, instance_cls), grouped in grouped_effects.items()]
 
 
 class StateMachineAdminMixin(object):

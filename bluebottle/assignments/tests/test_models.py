@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.utils.timezone import now
+from django.utils import formats
 
 from django.core import mail
 
@@ -12,7 +13,8 @@ class AssignmentTestCase(BluebottleTestCase):
     def test_absolute_url(self):
         activity = AssignmentFactory()
         expected = 'http://testserver/en/initiatives/activities/' \
-                   'details/assignment/{}/{}'.format(activity.id, activity.slug)
+                   'details/assignment/{}/{}'.format(activity.id,
+                                                     activity.slug)
         self.assertEqual(activity.get_absolute_url(), expected)
 
     def test_slug(self):
@@ -40,7 +42,8 @@ class AssignmentTestCase(BluebottleTestCase):
             date=now() + timedelta(days=4),
         )
         ApplicantFactory.create_batch(3, activity=assignment, status='new')
-        ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
+        ApplicantFactory.create_batch(
+            3, activity=assignment, status='accepted')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
         withdrawn.states.withdraw(save=True)
 
@@ -49,13 +52,14 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment.date = assignment.date + timedelta(days=1)
         assignment.save()
 
-        messages = dict((message.to[0], message.body) for message in mail.outbox)
+        messages = dict((message.to[0], message.body)
+                        for message in mail.outbox)
 
         for participant in assignment.contributions.instance_of(Applicant).all():
             if participant.status in ('new', 'accepted'):
                 self.assertTrue(participant.user.email in messages)
                 self.assertTrue(
-                    assignment.date.strftime('%b. %d, %Y').replace(' 0', ' ') in
+                    formats.date_format(assignment.date) in
                     messages[participant.user.email]
                 )
             else:

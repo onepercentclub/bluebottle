@@ -123,20 +123,6 @@ class ActivityStateMachine(ModelStateMachine):
         ]
     )
 
-    auto_approve = Transition(
-        [
-            submitted,
-            rejected,
-            needs_work
-        ],
-        open,
-        automatic=True,
-        name=_('Approve'),
-        effects=[
-            RelatedTransitionEffect('organizer', 'succeed')
-        ]
-    )
-
     reject = Transition(
         [
             draft,

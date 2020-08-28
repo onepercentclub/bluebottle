@@ -189,7 +189,7 @@ class AssignmentStateMachine(ActivityStateMachine):
         automatic=False,
         description=_("Restore a cancelled, rejected or deleted task."),
         effects=[
-            RelatedTransitionEffect('organizer', 'fail'),
+            RelatedTransitionEffect('organizer', 'reset'),
             RelatedTransitionEffect('accepted_applicants', 'fail')
 
         ]

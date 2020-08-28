@@ -78,7 +78,7 @@ class EventStateMachine(ActivityStateMachine):
         ],
         effects=[
             TransitionEffect(
-                'approve',
+                'auto_approve',
                 conditions=[
                     ActivityStateMachine.initiative_is_approved,
                     should_open
@@ -99,7 +99,7 @@ class EventStateMachine(ActivityStateMachine):
         ]
     )
 
-    approve = Transition(
+    auto_approve = Transition(
         [
             ActivityStateMachine.submitted,
             ActivityStateMachine.rejected

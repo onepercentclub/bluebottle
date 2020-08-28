@@ -113,25 +113,6 @@ class FundingStateMachine(ActivityStateMachine):
             ),
         ]
     )
-    auto_approve = Transition(
-        [
-            ActivityStateMachine.submitted,
-            ActivityStateMachine.rejected,
-            ActivityStateMachine.needs_work
-        ],
-        ActivityStateMachine.open,
-        automatic=True,
-        name=_('Approve'),
-        effects=[
-            RelatedTransitionEffect('organizer', 'succeed'),
-            SetDateEffect('started'),
-            SetDeadlineEffect,
-            TransitionEffect(
-                'expire',
-                conditions=[should_finish]
-            ),
-        ]
-    )
 
     cancel = Transition(
         [

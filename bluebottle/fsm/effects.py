@@ -81,11 +81,11 @@ class BaseTransitionEffect(Effect):
 
     @property
     def transition(self):
-        return self.machine.transitions[self.name]
+        return self.machine.transitions.get(self.name)
 
     @property
     def is_valid(self):
-        return (
+        return self.transition and (
             all(condition(self.machine) for condition in self.conditions) and
             self.transition in self.machine.possible_transitions()
         )

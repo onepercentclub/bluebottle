@@ -44,10 +44,10 @@ class TransitionSerializer(serializers.Serializer):
         states = getattr(resource, self.field)
         user = self.context['request'].user
 
-        transition = states.transitions[transition_name]
         try:
+            transition = states.transitions[transition_name]
             transition.can_execute(states, user=user, automatic=False)
-        except TransitionNotPossible:
+        except (TransitionNotPossible, KeyError):
             raise ValidationError('Transition is not available')
 
         self.instance = Transition(resource, transition_name, message)

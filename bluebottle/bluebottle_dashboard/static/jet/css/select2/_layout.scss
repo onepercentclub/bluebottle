@@ -1,5 +1,9 @@
 @import "../globals";
 
+.field-image .select2 {
+  display: none;
+}
+
 .select2-container--jet {
   @import "single";
   @import "multiple";

@@ -272,7 +272,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
         funding.refresh_from_db()
         self.assertEqual(
-            funding.status, FundingStateMachine.open.value
+            funding.status, FundingStateMachine.submitted.value
         )
 
     def test_reject(self):

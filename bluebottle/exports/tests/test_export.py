@@ -180,9 +180,9 @@ class TestExportAdmin(BluebottleTestCase):
             book.sheet_by_name('Tasks').cell(0, 23).value,
             'Department'
         )
-        self.assertEqual(
-            book.sheet_by_name('Tasks').cell(1, 23).value,
-            'Engineering, Rubbish'
+        self.assertTrue(
+            book.sheet_by_name('Tasks').cell(1, 23).value in
+            ['Engineering, Rubbish', 'Rubbish, Engineering']
         )
 
     def test_export_impact(self):

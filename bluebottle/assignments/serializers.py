@@ -6,6 +6,7 @@ from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer,
     BaseActivityListSerializer, BaseTinyActivitySerializer
 )
+from bluebottle.tasks.models import Skill
 from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.permissions import ApplicantDocumentPermission
@@ -190,3 +191,15 @@ class ApplicantTransitionSerializer(TransitionSerializer):
             'resource',
             'resource.activity',
         ]
+
+
+class SkillSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+
+    class Meta:
+        model = Skill
+        fields = ('id', 'name', 'expertise')
+
+    class JSONAPIMeta:
+        included_resources = ['resource', ]
+        resource_name = 'skills'

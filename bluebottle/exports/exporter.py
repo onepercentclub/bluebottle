@@ -44,7 +44,7 @@ class ExportModelResource(resources.ModelResource):
         if field_name.startswith('segment:'):
             slug = field_name.replace('segment:', '')
             if obj.segments.filter(type__slug=slug).first():
-                return ','.join([segment.name for segment in obj.segments.filter(type__slug=slug).all()])
+                return ', '.join([segment.name for segment in obj.segments.filter(type__slug=slug).all()])
             else:
                 return None
         method = getattr(self, 'dehydrate_%s' % field_name, None)

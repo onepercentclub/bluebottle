@@ -9,6 +9,7 @@ from setuptools import setup, find_packages
 def read_file(name):
     return open(os.path.join(os.path.dirname(__file__), name)).read()
 
+
 readme = read_file('README.rst')
 changes = ''
 
@@ -24,9 +25,11 @@ install_requires = [
     'beyonic==0.1.14',
     'celery==3.1.24',
     'dotted==0.1.8',
-    'django-admin-sortable==2.1',
+    'django-admin-sortable==2.2.1',
     'django-admin-tools==0.8.1',
     'django-adminfilters==0.3',
+    'django-appconf==1.0.3',
+    'django-axes==4.5.4',
     'django-celery==3.2.1',
     'django-choices==1.5.0',
     'django-cors-headers==2.1.0',
@@ -34,13 +37,12 @@ install_requires = [
     'django-dynamic-fixture==1.9.5',
     'django-elasticsearch-dsl==0.5.0',
     'django-extensions==1.7.9',
-    'django-filetransfers @ hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1',
     'django-filter==1.1.0',
     'django-geoposition==0.3.0',
     'django-fluent-dashboard==1.0a1',
     'django-fsm==2.5.0',
     'django-hashers-passlib==0.3',
-    'django-ipware==1.1.6',
+    'django-ipware==2.1.0',
     'django-jet==1.0.7',
     'django-localflavor==1.5.2',
     'django-lockdown==1.4.2',
@@ -52,6 +54,7 @@ install_requires = [
     'django-parler==1.9.2',
     'django-permissions-widget==1.5.1',
     'django_polymorphic==1.2',
+    'django-recaptcha==2.0.6',
     'django-rest-polymorphic==0.1.8',
     'django-rest-swagger==2.1.2',
     'django-singleton-admin==0.0.4',
@@ -104,9 +107,12 @@ install_requires = [
     'sorl-watermark==1.0.0',
     'South==1.0.2',
     'Sphinx==1.6.3',
+    'staticmaps-signature==0.2.0',
     'stripe==2.33.0',
     'suds-jurko==0.6',
     'SurveyGizmo==1.2.2',
+    'tablib==0.14.0',
+    'timezonefinder==3.4.2',
     'transifex-client==0.12.4',
     'unicodecsv==0.14.1',
     'wheel==0.29.0',

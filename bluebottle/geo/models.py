@@ -1,13 +1,12 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
-from django.utils.html import format_html
+from django.template.defaultfilters import slugify
 
+from django.utils.translation import ugettext_lazy as _
 from geoposition.fields import GeopositionField
-from sorl.thumbnail import ImageField
 from parler.models import TranslatedFields
+from sorl.thumbnail import ImageField
 
 from bluebottle.geo.fields import PointField
 from bluebottle.utils.models import SortableTranslatableModel
@@ -120,6 +119,8 @@ class LocationGroup(models.Model):
 
 class Location(models.Model):
     name = models.CharField(_('name'), max_length=255)
+    slug = models.SlugField(_('slug'), blank=False, null=True, max_length=255)
+
     position = GeopositionField(null=True)
     group = models.ForeignKey('geo.LocationGroup', verbose_name=_('location group'),
                               null=True, blank=True)
@@ -133,6 +134,12 @@ class Location(models.Model):
         ordering = ['name']
         verbose_name = _('office location')
         verbose_name_plural = _('office locations')
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+
+        super(Location, self).save()
 
     def __unicode__(self):
         return self.name
@@ -180,11 +187,13 @@ class Geolocation(models.Model):
 
     position = PointField()
 
+    anonymized = False
+
     class JSONAPIMeta:
         resource_name = 'locations'
 
     def __unicode__(self):
         if self.locality:
-            return format_html(u"{}, {}", self.locality, self.country.name)
+            return u"{}, {}".format(self.locality, self.country.name)
         else:
             return self.country.name

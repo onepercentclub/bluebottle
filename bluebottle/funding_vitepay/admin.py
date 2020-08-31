@@ -8,6 +8,9 @@ from bluebottle.funding_vitepay.models import VitepayPayment, VitepayPaymentProv
 @admin.register(VitepayPayment)
 class VitepayPaymentAdmin(PaymentChildAdmin):
     base_model = Payment
+    readonly_fields = PaymentChildAdmin.readonly_fields
+    fields = ['donation', 'mobile_number', 'payment_url', 'unique_id'] + readonly_fields
+    search_fields = ['mobile_number', 'unique_id']
 
 
 @admin.register(VitepayPaymentProvider)

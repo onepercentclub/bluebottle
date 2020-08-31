@@ -27,6 +27,7 @@ class ResultPage(TranslatableModel):
         'ProjectMapBlockPlugin',
         'ProjectsBlockPlugin',
         'QuotesBlockPlugin',
+        'ActivitiesBlockPlugin',
         'ShareResultsBlockPlugin',
         'StatsBlockPlugin',
         'SurveyBlockPlugin',
@@ -224,6 +225,17 @@ class StatsContent(TitledContent):
 
     def __unicode__(self):
         return unicode(self.stats)
+
+
+class HomepageStatisticsContent(TitledContent):
+    type = 'homepage-statistics'
+    preview_template = 'admin/cms/preview/homepage-statistics.html'
+
+    class Meta:
+        verbose_name = _('Statistics')
+
+    def __unicode__(self):
+        return unicode(self.title)
 
 
 class SurveyContent(TitledContent):
@@ -530,9 +542,7 @@ class WelcomeContent(ContentItem):
         return unicode(_('Welcome'))
 
 
-class SitePlatformSettings(BasePlatformSettings):
-    logo = models.ImageField(null=True, blank=True, upload_to='site_content/')
-
+class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     contact_email = models.EmailField(null=True, blank=True)
     contact_phone = models.CharField(max_length=100, null=True, blank=True)
     copyright = models.CharField(max_length=100, null=True, blank=True)
@@ -544,6 +554,22 @@ class SitePlatformSettings(BasePlatformSettings):
         validators=[FileExtensionValidator(allowed_extensions=['svg'])]
     )
     favicon = models.ImageField(null=True, blank=True, upload_to='site_content/')
+
+    translations = TranslatedFields(
+        metadata_title=models.CharField(
+            max_length=100, null=True, blank=True),
+        metadata_description=models.TextField(
+            null=True, blank=True),
+        metadata_keywords=models.CharField(
+            max_length=300, null=True, blank=True),
+        start_page=models.CharField(
+            max_length=100,
+            null=True,
+            blank=True,
+            help_text=_('Slug of the start initiative page')
+        ),
+
+    )
 
     class Meta:
         verbose_name_plural = _('site platform settings')

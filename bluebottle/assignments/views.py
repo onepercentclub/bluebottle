@@ -1,6 +1,11 @@
 from rest_framework_json_api.views import AutoPrefetchMixin
 
-from bluebottle.activities.permissions import ActivityOwnerPermission, ActivityTypePermission, ApplicantPermission
+from bluebottle.activities.permissions import (
+    ActivityOwnerPermission,
+    ActivityTypePermission,
+    ActivityStatusPermission,
+    ApplicantPermission
+)
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.serializers import (
     ApplicantSerializer, AssignmentTransitionSerializer,
@@ -36,6 +41,7 @@ class AssignmentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
     serializer_class = AssignmentSerializer
 
     permission_classes = (
+        ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 

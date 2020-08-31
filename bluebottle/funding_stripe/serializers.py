@@ -45,6 +45,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
     account = serializers.DictField(read_only=True)
 
     external_accounts = ResourceRelatedField(read_only=True, many=True)
+    status = serializers.CharField(read_only=True)
 
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
@@ -61,7 +62,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
             'id', 'token', 'country', 'document_type',
             'verified', 'owner', 'disabled', 'account',
             'external_accounts', 'required', 'errors',
-            'required_fields',
+            'required_fields', 'status'
         )
         meta_fields = ('required', 'errors', 'required_fields',)
 

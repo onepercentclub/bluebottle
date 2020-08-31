@@ -224,6 +224,7 @@ PASSWORD_HASHERS = (
 )
 
 AUTHENTICATION_BACKENDS = (
+    'axes.backends.AxesModelBackend',
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'social.backends.facebook.FacebookAppOAuth2',
     'django.contrib.auth.backends.ModelBackend',
@@ -279,12 +280,10 @@ SHARED_APPS = (
     'raven.contrib.django',
     'djcelery',
     'micawber.contrib.mcdjango',  # Embedding videos
-    'rest_framework',
     'loginas',
     'geoposition',
     'tenant_extras',
     'localflavor',
-    'filetransfers',
     'corsheaders',
     'djmoney_rates',
     'parler',
@@ -310,6 +309,8 @@ TENANT_APPS = (
     'jet',
     'jet.dashboard',
 
+    'rest_framework',
+
     'admin_tools',
     # 'admin_tools.theming',
     # 'admin_tools.menu',
@@ -331,12 +332,14 @@ TENANT_APPS = (
     'rest_framework.authtoken',
     'django_elasticsearch_dsl',
 
+    'bluebottle.fsm',
     'bluebottle.looker',
     'bluebottle.exports',
 
     'bluebottle.members',
     'bluebottle.projects',
     'bluebottle.organizations',
+    'bluebottle.impact',
 
     'bluebottle.transitions',
     'bluebottle.files',
@@ -351,6 +354,8 @@ TENANT_APPS = (
     'bluebottle.funding_vitepay',
     'bluebottle.funding_flutterwave',
     'bluebottle.funding_lipisha',
+    'bluebottle.funding_telesom',
+    'bluebottle.segments',
 
     'bluebottle.tasks',
     'bluebottle.homepage',
@@ -429,6 +434,8 @@ TENANT_APPS = (
     'nested_inline',
     'permissions_widget',
     'django.forms',
+    'axes',
+    'captcha',
 )
 
 
@@ -503,12 +510,11 @@ LOGGING = {
             'formatter': 'json',
             'when': 'midnight',
         },
-        'file': {
+        'syslog': {
             'level': 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(PROJECT_ROOT, 'logs', 'api.log'),
-            'formatter': 'simple',
-            'when': 'midnight',
+            'class': 'logging.handlers.SysLogHandler',
+            'formatter': 'verbose',
+            'facility': 'local0',
         },
         'default': {
             'level': 'INFO',
@@ -523,7 +529,7 @@ LOGGING = {
             'level': 'ERROR',
         },
         'bluebottle': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'syslog'],
             'propagate': True,
             'level': 'INFO',
         },
@@ -663,6 +669,12 @@ DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', 'image/svg+xml')
+PRIVATE_FILE_ALLOWED_MIME_TYPES = (
+    'image/png', 'image/jpeg', 'image/gif', 'image/tiff',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/pdf', 'application/vnd.oasis.opendocument.text',
+    'text/rtf'
+)
 
 EXPORTDB_EXPORT_CONF = {
     'models': OrderedDict([
@@ -727,9 +739,10 @@ EXPORTDB_EXPORT_CONF = {
                 ('skill', 'Expertise'),
                 ('capacity', 'People needed'),
                 ('duration', 'Time needed'),
+                ('preparation', 'Preparation time'),
+                ('start_time', 'Start time'),
                 ('people_applied', 'People applied'),
-                ('time_spent', 'Time Spent'),
-                ('end_date', 'End date'),
+                ('date', 'End date'),
                 ('end_date_type', 'End date type'),
 
                 ('created', 'Date created'),
@@ -773,9 +786,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('location__country__alpha2_code', 'Country Code'),
 
                 ('capacity', 'People needed'),
+                ('start', 'Start'),
                 ('duration', 'Time needed'),
-                ('end_date', 'End date'),
-                ('end_date_type', 'End date type'),
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),
@@ -847,10 +859,10 @@ EXPORTDB_EXPORT_CONF = {
     ])
 }
 EXPORTDB_CONFIRM_FORM = 'bluebottle.exports.forms.ExportDBForm'
-EXPORTDB_EXPORT_ROOT = os.path.join(MEDIA_ROOT, '%s', 'exports')
+EXPORTDB_EXPORT_ROOT = os.path.join(MEDIA_ROOT, '%s', 'private', 'exports')
 EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser
 EXPORTDB_USE_CELERY = True
-EXPORTDB_EXPORT_MEDIA_URL = os.path.join(MEDIA_URL, 'exports')
+EXPORTDB_EXPORT_MEDIA_URL = os.path.join(MEDIA_URL, 'private/exports')
 
 # maximum delta between from/to date for exports
 EXPORT_MAX_DAYS = 366 * 3
@@ -900,6 +912,8 @@ SURVEYGIZMO_API_TOKEN = ''
 SURVEYGIZMO_API_SECRET = ''
 
 GEOPOSITION_GOOGLE_MAPS_API_KEY = ''
+STATIC_MAPS_API_KEY = ''
+STATIC_MAPS_API_SECRET = ''
 
 DJANGO_MONEY_RATES = {
     'DEFAULT_BACKEND': 'djmoney_rates.backends.OpenExchangeBackend',
@@ -909,7 +923,11 @@ DJANGO_MONEY_RATES = {
 }
 AUTO_CONVERT_MONEY = False
 
-LOCKDOWN_URL_EXCEPTIONS = [r'^/api/funding/vitepay/webhook/']
+LOCKDOWN_URL_EXCEPTIONS = [
+    r'^/api/funding/vitepay/webhook/'
+    r'^/api/scim/v2/'
+]
+
 THUMBNAIL_ENGINE = 'sorl_watermarker.engines.pil_engine.Engine'
 THUMBNAIL_WATERMARK_ALWAYS = False
 
@@ -996,4 +1014,15 @@ JSON_API_FORMAT_FIELD_NAMES = 'dasherize'
 JSON_API_UNIFORM_EXCEPTIONS = True
 
 # Don't show url warnings
-SILENCED_SYSTEM_CHECKS = ['urls.W002']
+SILENCED_SYSTEM_CHECKS = ['urls.W002', 'captcha.recaptcha_test_key_error']
+
+AXES_LOCKOUT_URL = '/admin/locked/'
+AXES_FAILURE_LIMIT = 10
+AXES_COOLOFF_TIME = datetime.timedelta(minutes=10)
+AXES_META_PRECEDENCE_ORDER = [
+    'HTTP_X_FORWARDED_FOR',
+    'REMOTE_ADDR',
+]
+
+RECAPTCHA_PRIVATE_KEY = "6LdJvSUTAAAAALYWDHKOyhRkSt8MOAOW9ScSPcjS"
+RECAPTCHA_PUBLIC_KEY = "6LdJvSUTAAAAAMLwr45uU-qD7IScJM3US0J_RZQM"

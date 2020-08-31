@@ -4,7 +4,8 @@ from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
-from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
+from rest_framework_jwt.views import refresh_jwt_token
+from bluebottle.bb_accounts.views import AxesObtainJSONWebToken
 
 
 from bluebottle.auth.views import GetAuthToken
@@ -48,24 +49,11 @@ urlpatterns = [
     url(r'^api/metadata/',
         include('bluebottle.utils.urls.api')),
 
-    url(r'^api/orders/',
-        include('bluebottle.bb_orders.urls.api')),
-    url(r'^api/donations/',
-        include('bluebottle.donations.urls.api')),
-    url(r'^api/order_payments/',
-        include('bluebottle.payments.urls.order_payments_api')),
-    url(r'^api/payments/',
-        include('bluebottle.payments.urls.api')),
-    url(r'^api/rewards/',
-        include('bluebottle.rewards.urls.api')),
-
     # Homepage API urls
     url(r'^api/homepage/',
         include('bluebottle.homepage.urls.api')),
-    url(r'^api/stats',
+    url(r'^api/statistics/',
         include('bluebottle.statistics.urls.api')),
-    url(r'^api/bb_projects/',
-        include('bluebottle.projects.urls.api')),
     url(r'^api/cms/',
         include('bluebottle.cms.urls.api')),
     url(r'^api/initiatives',
@@ -94,9 +82,16 @@ urlpatterns = [
         include('bluebottle.funding_flutterwave.urls.api')),
     url(r'^api/funding/lipisha',
         include('bluebottle.funding_lipisha.urls.api')),
+    url(r'^api/funding/telesom',
+        include('bluebottle.funding_telesom.urls.api')),
+    url(r'^api/impact/',
+        include('bluebottle.impact.urls.api')),
+    url(r'^api/segments/',
+        include('bluebottle.segments.urls.api')),
 
     url(r'^api/files/',
         include('bluebottle.files.urls.api')),
+
 
     url(r'^payments_mock/',
         include('bluebottle.payments_mock.urls.core')),
@@ -132,7 +127,7 @@ urlpatterns = [
         include('bluebottle.organizations.urls.api')),
 
     # JSON Web Token based authentication for Django REST framework
-    url(r'^api/token-auth/', obtain_jwt_token, name='token-auth'),
+    url(r'^api/token-auth/', AxesObtainJSONWebToken.as_view(), name='token-auth'),
 
     url(r'^api/token-auth-refresh/$', refresh_jwt_token),
 
@@ -157,7 +152,6 @@ urlpatterns = [
         LoginWithView.as_view(), name='login-with'),
 
     url(r'^downloads/', include('bluebottle.projects.urls.media')),
-
 ]
 
 

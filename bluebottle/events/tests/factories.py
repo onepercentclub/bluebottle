@@ -16,8 +16,6 @@ class EventFactory(factory.DjangoModelFactory):
 
     title = factory.Faker('sentence')
     description = factory.Faker('text')
-    status = 'in_review'
-    review_status = 'draft'
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
@@ -25,8 +23,7 @@ class EventFactory(factory.DjangoModelFactory):
     automatically_accept = True
     is_online = False
 
-    start_date = (now() + timedelta(weeks=4)).date()
-    start_time = (now() + timedelta(weeks=4)).time()
+    start = (now() + timedelta(weeks=4))
     duration = 100
 
     location = factory.SubFactory(GeolocationFactory)

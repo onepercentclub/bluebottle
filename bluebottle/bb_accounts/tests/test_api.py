@@ -17,6 +17,7 @@ from django.utils.http import int_to_base36
 from rest_framework import status
 
 from bluebottle.members.tokens import login_token_generator
+from bluebottle.members.models import MemberPlatformSettings
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
@@ -126,6 +127,21 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
     def test_user_profile_unauthenticated(self):
         user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
+
+        response = self.client.get(user_profile_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_profile_detail_unauthenticated(self):
+        user_profile_url = reverse('user-profile-detail', kwargs={'pk': self.user_1.id})
+
+        response = self.client.get(user_profile_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_profile_detail_unauthenticated_closed(self):
+        user_profile_url = reverse('user-profile-detail', kwargs={'pk': self.user_1.id})
+        MemberPlatformSettings.objects.update_or_create(
+            closed=True,
+        )
 
         response = self.client.get(user_profile_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -337,6 +353,22 @@ class UserApiIntegrationTest(BluebottleTestCase):
                          {u'GET': True, u'OPTIONS': True})
         self.client.logout()
 
+    def test_logout_authenticated(self):
+        """
+        Test logout of authenticated user
+        """
+
+        response = self.client.post(reverse('user-logout'), token=self.user_1_token)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+
+    def test_logout_unauthenticated(self):
+        """
+        Test logout of unauthenticated user
+        """
+
+        response = self.client.post(reverse('user-logout'))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+
     def test_current_user_organization(self):
         """
         Test retrieving the currently logged in user with partner organization
@@ -353,6 +385,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         """
         Test creating a user with the api and activating the new user.
         """
+        mail.outbox = []
         # Create a user.
         new_user_email = 'nijntje27@hetkonijntje.nl'
         new_user_password = 'test-password'
@@ -364,6 +397,19 @@ class UserApiIntegrationTest(BluebottleTestCase):
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [new_user_email])
         self.assertTrue('Take me there: https://testserver\n' in welcome_email.body)
+
+    @override_settings(SEND_WELCOME_MAIL=True)
+    def test_user_create_closed_site(self):
+        """
+        Test creating a user with the api and activating the new user.
+        """
+        MemberPlatformSettings.objects.update_or_create(closed=True)
+
+        new_user_email = 'nijntje27@hetkonijntje.nl'
+        new_user_password = 'test-password'
+        response = self.client.post(self.user_create_api_url,
+                                    {'email': new_user_email, 'password': new_user_password})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
     def test_user_create_required_email(self):
         response = self.client.post(self.user_create_api_url, {'password': 'test-password'})

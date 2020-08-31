@@ -30,11 +30,11 @@ class AssignmentDocument(ActivityDocument):
 
     def prepare_deadline(self, instance):
         if instance.end_date_type == 'deadline':
-            return instance.end_date
+            return instance.date
 
     def prepare_date(self, instance):
         if instance.end_date_type == 'on_date':
-            return instance.end_date
+            return instance.date
 
     def prepare_country(self, instance):
         if not instance.is_online and instance.location:
@@ -46,3 +46,6 @@ class AssignmentDocument(ActivityDocument):
         if not instance.is_online and instance.location:
             position = instance.location.position
             return {'lat': position.get_y(), 'lon': position.get_x()}
+
+    def prepare_activity_date(self, instance):
+        return instance.date

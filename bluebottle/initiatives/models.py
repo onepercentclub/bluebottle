@@ -1,50 +1,28 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import Max
 from django.db.models.deletion import SET_NULL
-from django.contrib.contenttypes.fields import GenericRelation
 from django.template.defaultfilters import slugify
 from django.urls import reverse
-from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
-
 from moneyed import Money
-
 from multiselectfield import MultiSelectField
 
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField
-from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
 from bluebottle.follow.models import Follow
+from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.messages import AssignedReviewerMessage
-from bluebottle.initiatives.transitions import InitiativeReviewTransitions
-from bluebottle.notifications.models import NotificationModelMixin
+from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.models import BasePlatformSettings, Validator, ValidatedModelMixin
-from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin
+from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
-class UniqueTitleValidator(Validator):
-    field = 'title'
-    code = 'required'
-    message = _('The title must be unique')
-
-    def is_valid(self):
-        return not Initiative.objects.exclude(
-            pk=self.instance.pk
-        ).filter(
-            status='approved', title=self.instance.title
-        )
-
-
-class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, models.Model):
-    status = FSMField(
-        default=InitiativeReviewTransitions.values.draft,
-        choices=InitiativeReviewTransitions.values.choices,
-        protected=True
-    )
-
+class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.Model):
+    status = models.CharField(max_length=40)
     title = models.CharField(_('title'), max_length=255)
 
     @classmethod
@@ -150,8 +128,6 @@ class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, 
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
 
-    transitions = TransitionManager(InitiativeReviewTransitions, 'status')
-
     class JSONAPIMeta:
         resource_name = 'initiatives'
 
@@ -207,13 +183,13 @@ class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, 
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        link = format_html('{}/{}/initiatives/details/{}/{}', domain, language, self.id, self.slug)
+        link = '{}/{}/initiatives/details/{}/{}'.format(domain, language, self.id, self.slug)
         return link
 
     def get_admin_url(self):
         domain = get_current_host()
         url = reverse('admin:initiatives_initiative_change', args=(self.id,))
-        link = format_html('{}/{}', domain, url)
+        link = '{}/{}'.format(domain, url)
         return link
 
     def save(self, **kwargs):
@@ -249,6 +225,8 @@ class Initiative(TransitionsMixin, NotificationModelMixin, ValidatedModelMixin, 
             self.organization = None
             self.organization_contact = None
 
+        self.story = clean_html(self.story)
+
         super(Initiative, self).save(**kwargs)
 
 
@@ -267,6 +245,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('theme', _('Theme')),
         ('category', _('Category')),
         ('status', _('Status')),
+        ('segments', _('Segments')),
     )
     INITIATIVE_SEARCH_FILTERS = (
         ('location', _('Office location')),
@@ -284,6 +263,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     initiative_search_filters = MultiSelectField(max_length=1000, choices=INITIATIVE_SEARCH_FILTERS)
     activity_search_filters = MultiSelectField(max_length=1000, choices=ACTIVITY_SEARCH_FILTERS)
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
+    enable_impact = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = _('initiative settings')
@@ -291,3 +271,4 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
 
 from bluebottle.initiatives.wallposts import *  # noqa
+from bluebottle.initiatives.states import *  # noqa

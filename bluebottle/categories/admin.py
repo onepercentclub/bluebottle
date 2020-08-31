@@ -6,6 +6,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from parler.admin import TranslatableStackedInline, TranslatableAdmin
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.initiatives.models import Initiative
@@ -13,7 +14,7 @@ from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Category, CategoryContent
 
 
-class CategoryContentInline(SortableStackedInline):
+class CategoryContentInline(SortableStackedInline, TranslatableStackedInline):
     formfield_overrides = {
         models.TextField: {'widget': forms.Textarea(attrs={'rows': 3, 'cols': 80})},
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
@@ -30,11 +31,10 @@ class CategoryInitiativesInline(TabularInline):
     extra = 0
 
 
-class CategoryAdmin(AdminImageMixin, NonSortableParentAdmin):
+class CategoryAdmin(TranslatableAdmin, AdminImageMixin, NonSortableParentAdmin):
     model = Category
-    list_display = ('title', 'slug', 'initiatives')
+    list_display = ('slug', 'title', 'initiatives')
     inlines = (CategoryContentInline, CategoryInitiativesInline)
-    ordering = ['title']
 
     def initiatives(self, obj):
         url = reverse('admin:initiatives_initiative_changelist')

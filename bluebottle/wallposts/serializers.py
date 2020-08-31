@@ -22,7 +22,7 @@ class ReactionSerializer(serializers.ModelSerializer):
     """
     Serializer for Wallpost Reactions.
     """
-    author = UserPreviewSerializer()
+    author = UserPreviewSerializer(read_only=True)
     text = ContentTextField()
     wallpost = serializers.PrimaryKeyRelatedField(queryset=Wallpost.objects)
 
@@ -88,6 +88,7 @@ class WallpostDonationSerializer(serializers.ModelSerializer):
             'id',
             'user',
             'amount',
+            'name',
             'fundraiser',
             'reward',
             'anonymous',)
@@ -111,7 +112,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
     please subclass it.
     """
     type = serializers.ReadOnlyField(source='wallpost_type', required=False)
-    author = UserPreviewSerializer()
+    author = UserPreviewSerializer(read_only=True)
     parent_type = WallpostContentTypeField(slug_field='model',
                                            source='content_type')
     parent_id = WallpostParentIdField(source='object_id')
@@ -139,6 +140,12 @@ class MediaWallpostPhotoSerializer(serializers.ModelSerializer):
     mediawallpost = serializers.PrimaryKeyRelatedField(required=False,
                                                        read_only=False,
                                                        queryset=MediaWallpost.objects)
+
+    def validate(self, data):
+        if 'mediawallpost' in data and data['mediawallpost'].author != self.instance.author:
+            raise ValidationError('Wallpost author and photo author should match')
+
+        return data
 
     class Meta:
         model = MediaWallpostPhoto
@@ -209,6 +216,7 @@ class SystemWallpostSerializer(WallpostSerializerBase):
 
 class WallpostSerializer(serializers.ModelSerializer):
     type = serializers.ReadOnlyField(source='wallpost_type', required=False)
+    author = UserPreviewSerializer()
 
     def to_representation(self, obj):
         """

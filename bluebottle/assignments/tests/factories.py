@@ -7,6 +7,7 @@ from bluebottle.assignments.models import Applicant, Assignment
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.tasks import SkillFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory
 
 
 class AssignmentFactory(factory.DjangoModelFactory):
@@ -22,9 +23,11 @@ class AssignmentFactory(factory.DjangoModelFactory):
     is_online = True
     duration = 4
     end_date_type = 'deadline'
-    end_date = (now() + timedelta(weeks=3)).date()
+    date = now() + timedelta(weeks=3)
     capacity = 3
     registration_deadline = (now() + timedelta(weeks=2)).date()
+
+    location = factory.SubFactory(GeolocationFactory)
 
 
 class ApplicantFactory(factory.DjangoModelFactory):

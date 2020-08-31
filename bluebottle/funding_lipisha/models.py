@@ -1,10 +1,7 @@
 from django.db import models
-from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, BankAccount
-from bluebottle.funding.transitions import PaymentTransitions
 
 
 class LipishaPaymentProvider(PaymentProvider):
@@ -43,9 +40,6 @@ class LipishaPayment(Payment):
     method = models.CharField(max_length=30, default='Paybill (M-Pesa)')
     transaction = models.CharField(max_length=200, blank=True, null=True)
     unique_id = models.CharField(max_length=30)
-    transitions = TransitionManager(PaymentTransitions, 'status')
-    provider = 'lipisha'
-
     provider = 'lipisha'
 
     def update(self):
@@ -55,7 +49,7 @@ class LipishaPayment(Payment):
     def save(self, *args, **kwargs):
         if not self.unique_id:
             provider = LipishaPaymentProvider.objects.get()
-            self.unique_id = format_html("{}-{}", provider.prefix, self.donation.id)
+            self.unique_id = "{}-{}".format(provider.prefix, self.donation.id)
         super(LipishaPayment, self).save(*args, **kwargs)
 
 
@@ -96,3 +90,6 @@ class LipishaBankAccount(BankAccount):
             'business': provider.paybill,
             'account': self.mpesa_code
         }
+
+
+from states import *  # noqa

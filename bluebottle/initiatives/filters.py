@@ -10,6 +10,15 @@ class InitiativeSearchFilter(ElasticSearchFilter):
 
     sort_fields = {
         'date': ('-created', ),
+        'activity_date': ({
+            'activities.contribution_date': {
+                'order': 'desc',
+                'mode': 'max',
+                'nested': {
+                    'path': 'activities'
+                }
+            }
+        }, ),
         'alphabetical': ('title_keyword', ),
     }
     default_sort_field = 'date'

@@ -13,5 +13,5 @@ When you’re ready, you can submit your identity verification again and we’ll
 {% endblocktrans %}
 {% endblock content %} 
 {% block action %}
-   {% trans 'Go to your activity' context 'email' %}: {{ obj.funding.get_absolute_url }}
+   {% trans 'Update your data' context 'email' %}: {{ site }}/initiatives/activities/funding/kyc
 {% endblock %}`

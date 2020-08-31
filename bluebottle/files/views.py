@@ -11,8 +11,8 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
-from bluebottle.files.models import Document, Image
-from bluebottle.files.serializers import FileSerializer, ImageSerializer
+from bluebottle.files.models import Document, Image, PrivateDocument
+from bluebottle.files.serializers import FileSerializer, ImageSerializer, PrivateFileSerializer
 from bluebottle.utils.views import CreateAPIView, RetrieveAPIView
 
 mime = magic.Magic(mime=True)
@@ -35,6 +35,21 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
     }
 
     def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class PrivateFileList(FileList):
+    queryset = PrivateDocument.objects.all()
+    serializer_class = PrivateFileSerializer
+
+    def perform_create(self, serializer):
+        uploaded_file = self.request.FILES['file']
+        mime_type = mime.from_buffer(uploaded_file.read())
+        if not mime_type == uploaded_file.content_type:
+            raise ValidationError('Mime-type does not match Content-Type')
+
+        if mime_type not in settings.PRIVATE_FILE_ALLOWED_MIME_TYPES:
+            raise ValidationError('Mime-type is not allowed for this endpoint')
         serializer.save(owner=self.request.user)
 
 
@@ -85,6 +100,11 @@ class ImageList(FileList):
 
     def perform_create(self, serializer):
         uploaded_file = self.request.FILES['file']
-        if not mime.from_buffer(uploaded_file.read()) == uploaded_file.content_type:
+        mime_type = mime.from_buffer(uploaded_file.read())
+        if not mime_type == uploaded_file.content_type:
             raise ValidationError('Mime-type does not match Content-Type')
+
+        if mime_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
+            raise ValidationError('Mime-type is not allowed for this endpoint')
+
         serializer.save(owner=self.request.user)

@@ -20,10 +20,15 @@ from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization, OrganizationContact
-from bluebottle.transitions.serializers import (
+from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer
 )
-from bluebottle.utils.fields import SafeField, ValidationErrorsField, RequiredErrorsField
+from bluebottle.utils.fields import (
+    SafeField,
+    ValidationErrorsField,
+    RequiredErrorsField,
+    FSMField
+)
 from bluebottle.utils.serializers import (
     ResourcePermissionField, NoCommitMixin,
     FilteredPolymorphicResourceRelatedField)
@@ -52,6 +57,28 @@ class CategorySerializer(ModelSerializer):
         resource_name = 'categories'
 
 
+class BaseMemberSerializer(ModelSerializer):
+    avatar = SorlImageField('133x133', source='picture', crop='center')
+    full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
+    short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
+    is_anonymous = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Member
+        fields = (
+            'id', 'first_name', 'last_name', 'initials', 'avatar',
+            'full_name', 'short_name', 'is_active', 'date_joined',
+            'about_me', 'is_co_financer', 'is_anonymous'
+        )
+
+    def get_is_anonymous(self, obj):
+        return False
+
+    class JSONAPIMeta:
+        resource_name = 'members'
+
+
 class MemberSerializer(ModelSerializer):
     avatar = SorlImageField('133x133', source='picture', crop='center')
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
@@ -63,11 +90,16 @@ class MemberSerializer(ModelSerializer):
         fields = (
             'id', 'first_name', 'last_name', 'initials', 'avatar',
             'full_name', 'short_name', 'is_active', 'date_joined',
-            'about_me', 'is_co_financer'
+            'about_me', 'is_co_financer', 'is_anonymous'
         )
 
     class JSONAPIMeta:
         resource_name = 'members'
+
+    def to_representation(self, instance):
+        if 'parent' in self.context and getattr(self.context['parent'], 'anonymized', False):
+            return {"id": 0, "is_anonymous": True}
+        return BaseMemberSerializer(instance, context=self.context).to_representation(instance)
 
 
 class InitiativeImageSerializer(ImageSerializer):
@@ -102,6 +134,7 @@ class InitiativeMapSerializer(serializers.ModelSerializer):
 
 
 class InitiativeSerializer(NoCommitMixin, ModelSerializer):
+    status = FSMField(read_only=True)
     image = ImageField(required=False, allow_null=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
@@ -121,7 +154,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     required = RequiredErrorsField()
 
     stats = serializers.ReadOnlyField()
-    transitions = AvailableTransitionsField()
+    transitions = AvailableTransitionsField(source='states')
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -137,6 +170,8 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
         'activities': 'bluebottle.activities.serializers.ActivityListSerializer',
         'activities.location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'activities.goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
+        'activities.goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
     }
 
     class Meta:
@@ -161,11 +196,13 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'owner', 'reviewer', 'promoter', 'activity_manager',
             'categories', 'theme', 'place', 'location',
             'image', 'organization', 'organization_contact', 'activities', 'activities.location',
+            'activities.goals', 'activities.goals.type'
         ]
         resource_name = 'initiatives'
 
 
 class InitiativeListSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
     image = ImageField(required=False, allow_null=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
@@ -173,7 +210,7 @@ class InitiativeListSerializer(ModelSerializer):
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
-    transitions = AvailableTransitionsField()
+    transitions = AvailableTransitionsField(source='states')
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -329,7 +366,7 @@ class InitiativeSubmitSerializer(ModelSerializer):
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Initiative.objects.all())
-    field = 'transitions'
+    field = 'states'
     included_serializers = {
         'resource': 'bluebottle.initiatives.serializers.InitiativeSerializer',
     }
@@ -340,6 +377,11 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
 
 
 class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
+    has_locations = serializers.SerializerMethodField()
+
+    def get_has_locations(self, obj):
+        return Location.objects.count()
+
     class Meta:
         model = InitiativePlatformSettings
 
@@ -348,7 +390,9 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'initiative_search_filters',
             'activity_search_filters',
             'require_organization',
-            'contact_method'
+            'contact_method',
+            'enable_impact',
+            'has_locations'
         )
 
 

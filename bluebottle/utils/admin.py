@@ -17,17 +17,17 @@ from django.template import loader
 from django.template.response import TemplateResponse
 from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
+from parler.admin import TranslatableAdmin
 
 from bluebottle.activities.models import Contribution
 from bluebottle.clients import properties
 from bluebottle.fsm import TransitionNotPossible
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
-from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.forms import FSMModelForm
 from bluebottle.utils.forms import TransitionConfirmationForm
-from .models import Language
+from .models import Language, TranslationPlatformSettings
 
 
 class LanguageAdmin(admin.ModelAdmin):
@@ -103,11 +103,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 
         if header:
             row = labels if labels else field_names
-            # For project check if we have extra fields
-            if queryset.model is Project:
-                for field in CustomProjectFieldSettings.objects.all():
-                    labels.append(field.name)
-            if queryset.model is Member or queryset.model is TaskMember:
+            if queryset.model is Member or issubclass(queryset.model, Contribution):
                 for field in CustomMemberFieldSettings.objects.all():
                     labels.append(field.name)
             writer.writerow([escape_csv_formulas(item) for item in row])
@@ -129,10 +125,10 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                     except CustomMemberField.DoesNotExist:
                         value = ''
                     row.append(value.encode('utf-8'))
-            if queryset.model is Contribution:
+            if isinstance(obj, Contribution):
                 for field in CustomMemberFieldSettings.objects.all():
                     try:
-                        value = obj.member.extra.get(field=field).value
+                        value = obj.user.extra.get(field=field).value
                     except CustomMemberField.DoesNotExist:
                         value = ''
                     row.append(value.encode('utf-8'))
@@ -305,4 +301,9 @@ class FSMAdminMixin(object):
 
 
 class FSMAdmin(FSMAdminMixin, admin.ModelAdmin):
+    pass
+
+
+@admin.register(TranslationPlatformSettings)
+class TranslationPlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
     pass

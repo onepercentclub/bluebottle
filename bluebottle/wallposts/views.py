@@ -2,12 +2,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
 
 import django_filters
+from rest_framework.generics import RetrieveDestroyAPIView
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
-    ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, OwnerListViewMixin
-)
+    ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, OwnerListViewMixin,
+    CreateAPIView)
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, RelatedResourceOwnerPermission, ResourceOwnerPermission
 )
@@ -181,7 +182,7 @@ class MediaWallpostDetail(TextWallpostDetail):
     serializer_class = MediaWallpostSerializer
 
 
-class WallpostDetail(RetrieveUpdateDestroyAPIView):
+class WallpostDetail(RetrieveDestroyAPIView, SetAuthorMixin):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (
@@ -233,7 +234,7 @@ class MediaWallpostPhotoDetail(RetrieveUpdateDestroyAPIView):
     permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission), )
 
 
-class ReactionList(OwnerListViewMixin, SetAuthorMixin, ListCreateAPIView):
+class ReactionList(OwnerListViewMixin, SetAuthorMixin, CreateAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
 

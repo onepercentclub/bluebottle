@@ -13,14 +13,13 @@
                 Are you sure you want to change status from <b>{{source}}</b> to <b>{{target}}</b>?<br/>
             {% endblocktrans %}
 
-            {% if notifications %}
+            {% if effects %}
                 {% blocktrans with message_count=notifications|length %}
-                    This will send out {{message_count}} email(s).
+                    This will have side effects:
                 {% endblocktrans %}
                 <ul>
-                    {% for message in notifications %}
-                        <li>
-                            <b>{{message.subject}}</b> - {{message.recipient.full_name}} - {{message.recipient.email}}
+                    {% for effect in effects %}
+                            <b>{{effect}}</b>
                         </li>
                     {% endfor %}
                 </ul>

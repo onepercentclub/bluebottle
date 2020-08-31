@@ -1,27 +1,69 @@
+from axes.attempts import is_already_locked
 from django import forms
 from django.conf import settings
-from django.contrib.auth import get_user_model, password_validation
+from django.contrib.auth import get_user_model, password_validation, authenticate
 from django.contrib.auth.hashers import make_password
-
 from django.core.signing import TimestampSigner
-
 from django.utils.translation import ugettext_lazy as _
-from rest_framework import serializers
+from rest_framework import serializers, exceptions
+from rest_framework_jwt.serializers import JSONWebTokenSerializer
+from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import LocationSerializer, PlaceSerializer
-from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.members.messages import SignUptokenMessage
+from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.organizations.serializers import OrganizationSerializer
-from bluebottle.projects.models import Project
-from bluebottle.donations.models import Donation
-from bluebottle.tasks.models import Skill, Task, TaskMember
-from bluebottle.utils.serializers import PermissionField
+from bluebottle.segments.models import Segment
+from bluebottle.segments.serializers import SegmentTypeSerializer
+from bluebottle.tasks.models import Skill
+from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
 
 BB_USER_MODEL = get_user_model()
+
+
+jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+
+class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
+    def validate(self, attrs):
+        credentials = {
+            self.username_field: attrs.get(self.username_field),
+            'password': attrs.get('password')
+        }
+
+        if all(credentials.values()):
+            request = self.context['request']
+
+            if is_already_locked(request):
+                raise exceptions.Throttled(
+                    600, 'Too many failed password attempts.'
+                )
+
+            user = authenticate(request, **credentials)
+
+            if user:
+                if not user.is_active:
+                    msg = _('User account is disabled.')
+                    raise serializers.ValidationError(msg)
+
+                payload = jwt_payload_handler(user)
+
+                return {
+                    'token': jwt_encode_handler(payload),
+                    'user': user
+                }
+            else:
+                msg = _('Unable to log in with provided credentials.')
+                raise serializers.ValidationError(msg)
+        else:
+            msg = _('Must include "{username_field}" and "password".')
+            msg = msg.format(username_field=self.username_field)
+            raise serializers.ValidationError(msg)
 
 
 class PrivateProfileMixin(object):
@@ -34,7 +76,8 @@ class PrivateProfileMixin(object):
         data = super(PrivateProfileMixin, self).to_representation(obj)
 
         user = self.context['request'].user
-        can_read_full_profile = self.context['request'].user.has_perm('members.api_read_full_member')
+        can_read_full_profile = self.context['request'].user.has_perm(
+            'members.api_read_full_member')
 
         if obj != user and not can_read_full_profile:
             for field in self.private_fields:
@@ -44,7 +87,7 @@ class PrivateProfileMixin(object):
         return data
 
 
-class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
+class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a subset of a member's public profile. This is usually
     embedded into other serializers.
@@ -52,19 +95,80 @@ class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         kwargs['read_only'] = True
-        super(UserPreviewSerializer, self).__init__(*args, **kwargs)
+        super(BaseUserPreviewSerializer, self).__init__(*args, **kwargs)
 
     avatar = SorlImageField('133x133', source='picture', crop='center')
 
     # TODO: Remove first/last name and only use these
-    full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
-    short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
+    full_name = serializers.ReadOnlyField(
+        source='get_full_name', read_only=True)
+    short_name = serializers.ReadOnlyField(
+        source='get_short_name', read_only=True)
     is_active = serializers.BooleanField(read_only=True)
+    is_anonymous = serializers.SerializerMethodField()
+
+    def get_is_anonymous(self, obj):
+        return False
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'initials',
-                  'avatar', 'full_name', 'short_name', 'is_active')
+        fields = ('id', 'first_name', 'last_name', 'initials', 'about_me',
+                  'avatar', 'full_name', 'short_name', 'is_active', 'is_anonymous')
+
+
+class AnonymizedUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
+    """
+    Serializer for a subset of a member's public profile. This is usually
+    embedded into other serializers.
+    """
+    is_anonymous = serializers.SerializerMethodField()
+
+    def __init__(self, *args, **kwargs):
+        kwargs['read_only'] = True
+        super(AnonymizedUserPreviewSerializer, self).__init__(*args, **kwargs)
+
+    id = 0
+
+    def get_is_anonymous(self, obj):
+        return False
+
+    class Meta:
+        model = BB_USER_MODEL
+        fields = ('id', 'is_anonymous')
+
+
+class UserPreviewSerializer(serializers.ModelSerializer):
+    """
+    User preview serializer that respects anonymization_age
+    """
+
+    def to_representation(self, instance):
+        if self.parent.__class__.__name__ == 'ReactionSerializer':
+            # For some reason self.parent.instance doesn't work on ReactionSerializer
+            if self.parent.instance:
+                if self.parent.instance.anonymized:
+                    return {"id": 0, "is_anonymous": True}
+            else:
+                wallpost = self.parent.parent.parent.instance
+                if wallpost.anonymized:
+                    return {"id": 0, "is_anonymous": True}
+        if self.parent and self.parent.instance and getattr(self.parent.instance, 'anonymized', False):
+            return {"id": 0, "is_anonymous": True}
+        return BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
+
+    class Meta:
+        model = BB_USER_MODEL
+        fields = (
+            'id',
+            'first_name',
+            'last_name',
+            'initials',
+            'about_me',
+            'avatar',
+            'full_name',
+            'short_name',
+            'is_active'
+        )
 
 
 class UserPermissionsSerializer(serializers.Serializer):
@@ -83,7 +187,7 @@ class UserPermissionsSerializer(serializers.Serializer):
         ]
 
 
-class CurrentUserSerializer(UserPreviewSerializer):
+class CurrentUserSerializer(BaseUserPreviewSerializer):
     """
     Serializer for the current authenticated user. This is the same as the
     serializer for the member preview with the
@@ -95,7 +199,8 @@ class CurrentUserSerializer(UserPreviewSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     location = LocationSerializer()
     permissions = UserPermissionsSerializer(read_only=True)
-    organization = OrganizationSerializer(read_only=True, source='partner_organization')
+    organization = OrganizationSerializer(
+        read_only=True, source='partner_organization')
 
     class Meta:
         model = BB_USER_MODEL
@@ -105,6 +210,17 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
             'verified', 'permissions', 'matching_options_set',
             'organization'
+        )
+
+
+class OldSegmentSerializer(serializers.ModelSerializer):
+
+    type = SegmentTypeSerializer()
+
+    class Meta:
+        model = Segment
+        fields = (
+            'id', 'name', 'type'
         )
 
 
@@ -142,6 +258,8 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     tasks_performed = serializers.ReadOnlyField()
     is_active = serializers.BooleanField(read_only=True)
 
+    segments = OldSegmentSerializer(many=True, read_only=True)
+
     class Meta:
         model = BB_USER_MODEL
         fields = (
@@ -151,7 +269,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'fundraiser_count', 'task_count', 'time_spent', 'is_active',
             'tasks_performed', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
-            'subscribed',
+            'subscribed', 'segments'
         )
 
 
@@ -159,7 +277,7 @@ class UserActivitySerializer(serializers.ModelSerializer):
     """
     Serializer for user activity (log paths)
     """
-    path = serializers.CharField(required=False)
+    path = TruncatedCharField(length=200, required=False)
 
     class Meta:
         model = UserActivity
@@ -213,42 +331,6 @@ class UserDataExportSerializer(UserProfileSerializer):
     """
     Serializer for the a member's data dump.
     """
-    tasks = serializers.SerializerMethodField()
-    projects = serializers.SerializerMethodField()
-    task_members = serializers.SerializerMethodField()
-    donations = serializers.SerializerMethodField()
-
-    def get_tasks(self, obj):
-        from bluebottle.tasks.serializers import MyTasksSerializer
-
-        tasks = Task.objects.filter(author=obj)
-        return MyTasksSerializer(
-            tasks, many=True, context=self.context
-        ).to_representation(tasks)
-
-    def get_projects(self, obj):
-        from bluebottle.projects.serializers import ProjectSerializer
-
-        projects = Project.objects.filter(owner=obj)
-        return ProjectSerializer(
-            projects, many=True, context=self.context
-        ).to_representation(projects)
-
-    def get_task_members(self, obj):
-        from bluebottle.tasks.serializers import MyTaskMemberSerializer
-
-        task_members = TaskMember.objects.filter(member=obj)
-        return MyTaskMemberSerializer(
-            task_members, many=True, context=self.context
-        ).to_representation(task_members)
-
-    def get_donations(self, obj):
-        from bluebottle.donations.serializers import ManageDonationSerializer
-
-        donations = Donation.objects.filter(order__user=obj)
-        return ManageDonationSerializer(
-            donations, many=True, context=self.context
-        ).to_representation(donations)
 
     class Meta:
         model = BB_USER_MODEL
@@ -257,11 +339,8 @@ class UserDataExportSerializer(UserProfileSerializer):
             'url', 'full_name', 'short_name', 'initials', 'picture',
             'gender', 'first_name', 'last_name', 'phone_number',
             'primary_language', 'about_me', 'location', 'avatar',
-            'project_count', 'donation_count', 'date_joined',
-            'fundraiser_count', 'task_count', 'time_spent',
-            'tasks_performed', 'website', 'twitter', 'facebook',
-            'skypename', 'skills', 'favourite_themes',
-            'projects', 'tasks', 'task_members', 'donations'
+            'date_joined', 'website', 'twitter', 'facebook',
+            'skypename', 'skills', 'favourite_themes'
         )
 
 
@@ -313,12 +392,14 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
             not email.endswith('@{}'.format(settings.email_domain))
         ):
             raise serializers.ValidationError(
-                ('Only emails for the domain {} are allowed').format(settings.email_domain)
+                ('Only emails for the domain {} are allowed').format(
+                    settings.email_domain)
             )
 
         if len(BB_USER_MODEL.objects.filter(email=email, is_active=True)):
             raise serializers.ValidationError(
-                ('member with this email address already exists.').format(settings.email_domain)
+                ('member with this email address already exists.').format(
+                    settings.email_domain)
             )
 
         return email
@@ -387,7 +468,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
                 conflict['type'] = 'email'
 
             errors[
-                settings.REST_FRAMEWORK.get('NON_FIELD_ERRORS_KEY', 'non_field_errors')
+                settings.REST_FRAMEWORK.get(
+                    'NON_FIELD_ERRORS_KEY', 'non_field_errors')
             ] = [conflict]
 
         return errors
@@ -399,7 +481,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
         settings = MemberPlatformSettings.objects.get()
 
         if settings.confirm_signup:
-            raise serializers.ValidationError({'token': _('Signup requires a confirmation token')})
+            raise serializers.ValidationError(
+                {'token': _('Signup requires a confirmation token')})
 
         data['password'] = make_password(data['password'])
 
@@ -439,14 +522,16 @@ class EmailSetSerializer(PasswordProtectedMemberSerializer):
 
 
 class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
-    new_password = PasswordField(write_only=True, required=True, max_length=128)
+    new_password = PasswordField(
+        write_only=True, required=True, max_length=128)
 
     def save(self):
         self.instance.set_password(self.validated_data['new_password'])
         self.instance.save()
 
     class Meta(PasswordProtectedMemberSerializer.Meta):
-        fields = ('new_password', ) + PasswordProtectedMemberSerializer.Meta.fields
+        fields = ('new_password', ) + \
+            PasswordProtectedMemberSerializer.Meta.fields
 
 
 class PasswordSetSerializer(serializers.Serializer):
@@ -460,7 +545,8 @@ class PasswordSetSerializer(serializers.Serializer):
 
     def validate(self, data):
         if data['new_password1'] != data['new_password2']:
-            raise serializers.ValidationError(_('The two password fields didn\'t match.'))
+            raise serializers.ValidationError(
+                _('The two password fields didn\'t match.'))
 
         return data
 
@@ -495,3 +581,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
 class TokenLoginSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=True)
     token = serializers.CharField(required=True)
+
+
+class CaptchaSerializer(serializers.Serializer):
+    token = CaptchaField(required=True)

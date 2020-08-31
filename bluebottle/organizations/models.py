@@ -8,10 +8,10 @@ from django_extensions.db.fields import (
 )
 
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.models import ValidatedModelMixin
+from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 
 
-class Organization(ValidatedModelMixin, models.Model):
+class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
     """
     Organizations can run Projects. An organization has one or more members.
     """

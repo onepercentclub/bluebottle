@@ -17,9 +17,16 @@ from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated, ValidationError
 
+from rest_framework_jwt.views import ObtainJSONWebToken
+
 from rest_framework_json_api.views import AutoPrefetchMixin
 
-from bluebottle.bb_accounts.permissions import CurrentUserPermission
+from axes.utils import reset
+
+from bluebottle.bb_accounts.permissions import (
+    CurrentUserPermission, IsAuthenticatedOrOpenPermission
+)
+from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.members.models import UserActivity
 from bluebottle.utils.views import RetrieveAPIView, UpdateAPIView, JsonApiViewMixin, CreateAPIView
 
@@ -29,15 +36,42 @@ from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 from bluebottle.initiatives.serializers import MemberSerializer
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
     PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
     UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
     EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
-    SignUpTokenConfirmationSerializer, UserActivitySerializer)
+    SignUpTokenConfirmationSerializer, UserActivitySerializer,
+    CaptchaSerializer, AxesJSONWebTokenSerializer
+)
 from bluebottle.members.tokens import login_token_generator
+from bluebottle.utils.utils import get_client_ip
 
 USER_MODEL = get_user_model()
+
+
+class AxesObtainJSONWebToken(ObtainJSONWebToken):
+    """
+    API View that receives a POST with a user's username and password.
+
+    Returns a JSON Web Token that can be used for authenticated requests.
+    """
+    serializer_class = AxesJSONWebTokenSerializer
+
+
+class CaptchaVerification(generics.CreateAPIView):
+    serializer_class = CaptchaSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+
+        serializer.is_valid(raise_exception=True)
+
+        ip = get_client_ip(request)
+        reset(ip=ip)
+
+        return response.Response(status=status.HTTP_201_CREATED)
 
 
 class UserProfileDetail(RetrieveAPIView):
@@ -47,6 +81,8 @@ class UserProfileDetail(RetrieveAPIView):
     """
     queryset = USER_MODEL.objects.all()
     serializer_class = UserProfileSerializer
+
+    permission_classes = [IsAuthenticatedOrOpenPermission]
 
 
 class UserActivityDetail(CreateAPIView):
@@ -152,6 +188,8 @@ class Logout(generics.CreateAPIView):
     Log the user out
 
     """
+    permission_classes = (IsAuthenticated, )
+
     def create(self, request, *args, **kwargs):
         if self.request.user.is_authenticated:
             self.request.user.last_logout = timezone.now()
@@ -195,6 +233,7 @@ class SignUpTokenConfirmation(generics.UpdateAPIView):
 
     def perform_update(self, serializer):
         serializer.save(is_active=True)
+        send_welcome_mail(serializer.instance)
 
 
 class UserCreate(generics.CreateAPIView):
@@ -209,6 +248,9 @@ class UserCreate(generics.CreateAPIView):
         return "Users"
 
     def perform_create(self, serializer):
+        settings = MemberPlatformSettings.objects.get()
+        if settings.closed:
+            raise PermissionDenied()
         if 'primary_language' not in serializer.validated_data:
             serializer.save(primary_language=properties.LANGUAGE_CODE, is_active=True)
         else:
@@ -267,7 +309,10 @@ class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
         password = serializer.validated_data.pop('password')
 
         if not self.request.user.check_password(password):
-            raise PermissionDenied()
+            raise PermissionDenied('Platform is closed')
+
+        self.request.user.last_logout = now()
+        self.request.user.save()
 
         return super(PasswordProtectedMemberUpdateApiView, self).perform_update(serializer)
 

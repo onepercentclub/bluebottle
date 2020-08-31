@@ -1,8 +1,10 @@
-from datetime import timedelta, date, datetime
-from django.utils.timezone import get_current_timezone
+from datetime import timedelta
+from django.utils.timezone import now
+from django.utils import formats
 
 from django.core import mail
 
+from bluebottle.assignments.models import Applicant
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -11,7 +13,8 @@ class AssignmentTestCase(BluebottleTestCase):
     def test_absolute_url(self):
         activity = AssignmentFactory()
         expected = 'http://testserver/en/initiatives/activities/' \
-                   'details/assignment/{}/{}'.format(activity.id, activity.slug)
+                   'details/assignment/{}/{}'.format(activity.id,
+                                                     activity.slug)
         self.assertEqual(activity.get_absolute_url(), expected)
 
     def test_slug(self):
@@ -36,34 +39,60 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment = AssignmentFactory(
             title='Test Title',
             status='open',
-            end_date=date.today() + timedelta(days=4),
+            date=now() + timedelta(days=4),
         )
         ApplicantFactory.create_batch(3, activity=assignment, status='new')
+        ApplicantFactory.create_batch(
+            3, activity=assignment, status='accepted')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
-        withdrawn.transitions.withdraw()
+        withdrawn.states.withdraw(save=True)
 
         mail.outbox = []
 
-        assignment.end_date = assignment.end_date + timedelta(days=1)
+        assignment.date = assignment.date + timedelta(days=1)
         assignment.save()
 
-        recipients = [message.to[0] for message in mail.outbox]
+        messages = dict((message.to[0], message.body)
+                        for message in mail.outbox)
 
-        for participant in assignment.contributions.all():
-            if participant.status == 'new':
-                self.assertTrue(participant.user.email in recipients)
+        for participant in assignment.contributions.instance_of(Applicant).all():
+            if participant.status in ('new', 'accepted'):
+                self.assertTrue(participant.user.email in messages)
+                self.assertTrue(
+                    formats.date_format(assignment.date) in
+                    messages[participant.user.email]
+                )
             else:
-                self.assertFalse(participant.user.email in recipients)
+                self.assertFalse(participant.user.email in messages)
+
+    def test_end_date_type_changed(self):
+        assignment = AssignmentFactory(
+            title='Test Title',
+            status='open',
+            end_date_type='on_date',
+            preparation=5,
+            date=now() + timedelta(days=4),
+        )
+
+        assignment.end_date_type = 'deadline'
+        assignment.save()
+
+        self.assertEqual(
+            assignment.end_date_type, 'deadline'
+        )
+        self.assertIsNone(
+            assignment.preparation
+        )
 
     def test_date_not_changed(self):
         assignment = AssignmentFactory(
             title='Test Title',
             status='open',
-            end_date=date.today() + timedelta(days=4),
+            date=now() + timedelta(days=4),
         )
         ApplicantFactory.create_batch(3, activity=assignment, status='new')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
-        withdrawn.transitions.withdraw()
+        withdrawn.states.withdraw(save=True)
 
         mail.outbox = []
 
@@ -76,11 +105,13 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment = AssignmentFactory(
             title='Test Title',
             status='open',
-            end_date=date.today() + timedelta(days=4),
+            date=now() + timedelta(days=4),
             capacity=3,
         )
-        ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
+        for applicant in ApplicantFactory.create_batch(3, activity=assignment):
+            applicant.states.accept(save=True)
 
+        assignment.refresh_from_db()
         self.assertEqual(assignment.status, 'full')
 
         assignment.capacity = 10
@@ -92,10 +123,12 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment = AssignmentFactory(
             title='Test Title',
             status='open',
-            end_date=date.today() + timedelta(days=4),
+            date=now() + timedelta(days=4),
             capacity=3,
         )
-        applicants = ApplicantFactory.create_batch(3, activity=assignment, status='accepted')
+        applicants = ApplicantFactory.create_batch(3, activity=assignment)
+        for applicant in applicants:
+            applicant.states.accept(save=True)
 
         self.assertEqual(assignment.status, 'full')
 
@@ -110,29 +143,24 @@ class ApplicantTestCase(BluebottleTestCase):
         assignment = AssignmentFactory(
             title='Test Title',
             status='open',
-            end_date=date.today() + timedelta(days=4),
+            date=now() + timedelta(days=4),
         )
 
         applicant = ApplicantFactory.create(activity=assignment)
-        applicant.transitions.accept()
-        applicant.save()
-        assignment.transitions.succeed()
-        assignment.save()
+        applicant.states.accept(save=True)
+        assignment.states.start(save=True)
+        assignment.states.succeed(save=True)
         applicant.refresh_from_db()
 
+        self.assertEqual(assignment.status, 'succeeded')
         self.assertEqual(applicant.status, 'succeeded')
         applicant.time_spent = 0
         applicant.save()
-        self.assertEqual(applicant.status, 'failed')
+        self.assertEqual(applicant.status, 'no_show')
         applicant.time_spent = 10
         applicant.save()
         self.assertEqual(applicant.status, 'succeeded')
         self.assertEqual(
-            applicant.contribution_date, get_current_timezone().localize(
-                datetime(
-                    assignment.end_date.year,
-                    assignment.end_date.month,
-                    assignment.end_date.day
-                )
-            )
+            applicant.contribution_date,
+            assignment.date
         )

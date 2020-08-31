@@ -25,6 +25,7 @@ from permissions_widget.forms import PermissionSelectMultipleField
 from bluebottle.assignments.models import Applicant
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.bb_follow.models import Follow
+from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
 from bluebottle.events.models import Participant
@@ -32,7 +33,18 @@ from bluebottle.funding.models import Donation
 from bluebottle.geo.admin import PlaceInline
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative
-from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings, UserActivity
+from bluebottle.members.forms import (
+    LoginAsConfirmationForm,
+    SendWelcomeMailConfirmationForm,
+    SendPasswordResetMailConfirmationForm
+)
+from bluebottle.members.models import (
+    CustomMemberFieldSettings,
+    CustomMemberField,
+    MemberPlatformSettings,
+    UserActivity,
+)
+from bluebottle.segments.models import SegmentType
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
@@ -102,8 +114,9 @@ class CustomMemberFieldSettingsInline(SortableTabularInline):
 
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
     fields = (
-        'closed', 'confirm_signup', 'login_methods',
+        'closed', 'confirm_signup', 'enable_segments', 'create_segments', 'login_methods',
         'email_domain', 'background', 'require_consent', 'consent_link',
+        'anonymization_age'
     )
 
     inlines = [
@@ -227,6 +240,7 @@ class MemberAdmin(UserAdmin):
                             'last_name',
                             'username',
                             'phone_number',
+                            'login_as_link',
                             'reset_password',
                             'resend_welcome_link',
                             'last_login',
@@ -265,6 +279,9 @@ class MemberAdmin(UserAdmin):
             if Location.objects.count():
                 fieldsets[1][1]['fields'].append('location')
 
+            if SegmentType.objects.filter(is_active=True).count():
+                fieldsets[1][1]['fields'].append('segments')
+
             if 'Pledge' not in (
                 item['name'] for item in properties.PAYMENT_METHODS
             ):
@@ -287,7 +304,7 @@ class MemberAdmin(UserAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = [
             'date_joined', 'last_login',
-            'updated', 'deleted', 'login_as_user',
+            'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'events', 'assignments', 'funding'
         ]
@@ -412,7 +429,7 @@ class MemberAdmin(UserAdmin):
     following.short_description = _('Following')
 
     def reset_password(self, obj):
-        reset_mail_url = reverse('admin:auth_user_password_reset_mail', kwargs={'user_id': obj.id})
+        reset_mail_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': obj.id})
         properties.set_tenant(connection.tenant)
 
         return format_html(
@@ -421,17 +438,10 @@ class MemberAdmin(UserAdmin):
         )
 
     def resend_welcome_link(self, obj):
-        welcome_mail_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'user_id': obj.id})
+        welcome_mail_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': obj.id})
         return format_html(
             "<a href='{}'>{}</a>",
             welcome_mail_url, _("Resend welcome email"),
-        )
-
-    def login_as_user(self, obj):
-        return format_html(
-            u"<a href='/login/user/{}'>{}</a>",
-            obj.id,
-            _('Login as user')
         )
 
     def get_inline_instances(self, request, obj=None):
@@ -444,23 +454,29 @@ class MemberAdmin(UserAdmin):
         urls = super(MemberAdmin, self).get_urls()
 
         extra_urls = [
-            url(r'^login-as/(?P<user_id>\d+)/$', self.admin_site.admin_view(self.login_as)),
-            url(r'^password-reset/(?P<user_id>\d+)/$',
+            url(r'^login-as/(?P<pk>\d+)/$',
+                self.admin_site.admin_view(self.login_as),
+                name='members_member_login_as'
+                ),
+            url(r'^password-reset/(?P<pk>\d+)/$',
                 self.send_password_reset_mail,
                 name='auth_user_password_reset_mail'
                 ),
-            url(r'^resend_welcome_email/(?P<user_id>\d+)/$',
+            url(r'^resend_welcome_email/(?P<pk>\d+)/$',
                 self.resend_welcome_email,
                 name='auth_user_resend_welcome_mail'
                 )
         ]
         return extra_urls + urls
 
-    def send_password_reset_mail(self, request, user_id):
+    @confirmation_form(
+        SendPasswordResetMailConfirmationForm,
+        Member,
+        'admin/members/password_reset.html'
+    )
+    def send_password_reset_mail(self, request, user):
         if not request.user.has_perm('members.change_member'):
             return HttpResponseForbidden('Not allowed to change user')
-
-        user = Member.objects.get(pk=user_id)
 
         context = {
             'email': user.email,
@@ -482,19 +498,28 @@ class MemberAdmin(UserAdmin):
         self.message_user(request, message)
         return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))
 
-    def resend_welcome_email(self, request, user_id):
+    @confirmation_form(
+        SendWelcomeMailConfirmationForm,
+        Member,
+        'admin/members/resend_welcome_mail.html'
+    )
+    def resend_welcome_email(self, request, user):
         if not request.user.has_perm('members.change_member'):
             return HttpResponseForbidden('Not allowed to change user')
 
-        user = Member.objects.get(pk=user_id)
         send_welcome_mail(user)
+
         message = _('User {name} will receive an welcome email.').format(name=user.full_name)
         self.message_user(request, message)
 
         return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))
 
-    def login_as(self, request, *args, **kwargs):
-        user = Member.objects.get(id=kwargs.get('user_id', None))
+    @confirmation_form(
+        LoginAsConfirmationForm,
+        Member,
+        'admin/members/login_as.html'
+    )
+    def login_as(self, request, user):
         template = loader.get_template('utils/login_with.html')
         context = {'token': user.get_jwt_token(), 'link': '/'}
         response = HttpResponse(template.render(context, request), content_type='text/html')
@@ -502,13 +527,16 @@ class MemberAdmin(UserAdmin):
         return response
 
     def login_as_link(self, obj):
+        url = reverse('admin:members_member_login_as', args=(obj.pk,))
         return format_html(
-            u"<a target='_blank' href='{}members/member/login-as/{}/'>{}</a>",
-            reverse('admin:index'), obj.pk, _('Login as user')
+            u"<a target='_blank' href='{}'>{}</a>",
+            url, _('Login as user')
         )
-    login_as_link.short_description = _('Login as link')
+    login_as_link.short_description = _('Login as')
 
     def has_delete_permission(self, request, obj=None):
+        if obj and obj.contribution_set.exclude(status__in=['deleted', 'failed']).count() == 0:
+            return True
         return False
 
 

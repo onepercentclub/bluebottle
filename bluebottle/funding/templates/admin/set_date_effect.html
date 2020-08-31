@@ -1,0 +1,15 @@
+{% load i18n %}
+<h3>{% trans "Set date" %}</h3>
+
+<p>
+    {% blocktrans with field=effects.0.field %}
+        Set the field "{field}" of  
+    {{% endblocktrans %}
+    "{{effects.0.instance}}" 
+    {% if effects|length > 1 %} 
+        {% blocktrans with extra=effects|length|add:"-1" %}
+        and {{ extra }} other payout accounts
+        {% endblocktrans %}
+    {% endif %}
+    {% trans "to now" %}
+</p>

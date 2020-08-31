@@ -1,21 +1,20 @@
 from django.contrib import admin
-from django.urls import reverse
 from django.utils import translation
-from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin, ContributionInline
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.assignments.transitions import AssignmentTransitions, ApplicantTransitions
+from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine
+from bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.fsm.admin import StateMachineFilter
+from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.tasks.models import Skill
 from bluebottle.utils.admin import export_as_csv_action
-from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.utils.forms import FSMModelForm
 from bluebottle.wallposts.admin import WallpostInline
 
 
-class AssignmentAdminForm(FSMModelForm):
+class AssignmentAdminForm(StateMachineModelForm):
     class Meta:
         model = Assignment
         fields = '__all__'
@@ -24,33 +23,28 @@ class AssignmentAdminForm(FSMModelForm):
         }
 
 
-class ApplicantInline(admin.TabularInline):
+class ApplicantInline(ContributionInline):
     model = Applicant
 
-    raw_id_fields = ('user', )
-    readonly_fields = ('applicant', 'status', 'created', 'motivation')
-    fields = ('applicant', 'user', 'time_spent', 'status', 'created', 'motivation')
-    extra = 0
-
-    can_delete = False
-
-    def applicant(self, obj):
-        url = reverse('admin:assignments_applicant_change', args=(obj.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj.user.full_name)
+    readonly_fields = ContributionInline.readonly_fields + ('time_spent', )
+    fields = ContributionInline.fields + ('time_spent', )
 
 
-class ApplicantAdminForm(FSMModelForm):
+class ApplicantAdminForm(StateMachineModelForm):
     class Meta:
         model = Applicant
-        exclude = ['status', ]
+        exclude = ('transition_date', )
 
 
 @admin.register(Applicant)
 class ApplicantAdmin(ContributionChildAdmin):
     model = Applicant
     form = ApplicantAdminForm
-    list_display = ['user', 'status', 'time_spent', 'activity_link']
+    list_display = ['user', 'state_name', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
+
+    readonly_fields = ContributionChildAdmin.readonly_fields
+    fields = ContributionChildAdmin.fields + ['time_spent', 'motivation']
 
     date_hierarchy = 'transition_date'
 
@@ -63,6 +57,7 @@ class ApplicantAdmin(ContributionChildAdmin):
         ('motivation', 'Motivation'),
         ('time_spent', 'Time Spent'),
         ('document', 'Document'),
+        ('contribution_date', 'Contribution Date'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
@@ -87,28 +82,31 @@ class AssignmentAdmin(ActivityChildAdmin):
     form = AssignmentAdminForm
     inlines = (ApplicantInline, MessageAdminInline, WallpostInline)
 
-    date_hierarchy = 'end_date'
+    date_hierarchy = 'date'
 
     model = Assignment
-    raw_id_fields = ('owner', 'location')
+    raw_id_fields = ('owner', 'location', 'initiative')
 
     list_display = (
-        '__unicode__', 'initiative', 'created', 'status', 'highlight',
-        'end_date', 'is_online', 'registration_deadline'
+        '__unicode__', 'initiative', 'created', 'state_name', 'highlight',
+        'date', 'is_online', 'registration_deadline'
     )
     search_fields = ['title', 'description']
-    list_filter = ['status', ExpertiseFilter, 'is_online']
+    list_filter = [StateMachineFilter, ExpertiseFilter, 'is_online']
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['local_date', ]
 
     detail_fields = (
         'description',
         'capacity',
-        'end_date',
+        'date',
+        'local_date',
         'end_date_type',
         'registration_deadline',
         'duration',
+        'preparation',
         'expertise',
         'is_online',
-        'location'
+        'location',
     )
 
     export_to_csv_fields = (
@@ -119,8 +117,9 @@ class AssignmentAdmin(ActivityChildAdmin):
         ('initiative__title', 'Initiative'),
         ('expertise', 'Expertise'),
         ('end_date_type', 'End Time Type'),
-        ('end_date', 'End Date'),
+        ('date', 'End Date'),
         ('duration', 'Duration'),
+        ('preparation', 'Preparation'),
         ('registration_deadline', 'Registration Deadline'),
         ('owner__full_name', 'Owner'),
         ('owner__email', 'Email'),
@@ -138,8 +137,8 @@ class AssignmentAdmin(ActivityChildAdmin):
             # set it to succeeded when assignment is succeeded
             if (instance.__class__ == Applicant and
                     not instance.pk and
-                    form.instance.status == AssignmentTransitions.values.succeeded):
+                    form.instance.status == AssignmentStateMachine.succeeded.value):
                 instance.time_spent = form.instance.duration
-                instance.status = ApplicantTransitions.values.succeeded
+                instance.status = ApplicantStateMachine.succeeded.value
             instance.save()
-        formset.save_m2m()
+        super(AssignmentAdmin, self).save_formset(request, form, formset, change)

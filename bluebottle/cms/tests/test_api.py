@@ -60,7 +60,7 @@ class ResultPageTestCase(BluebottleTestCase):
             response = self.client.get(self.url)
             self.assertEquals(response.status_code, status.HTTP_200_OK)
             # Image should come in 4 sizes
-            self.assertEqual(len(response.data['image']), 5)
+            self.assertEqual(len(response.data['image']), 6)
             self.assertEqual(response.data['title'], self.page.title)
             self.assertEqual(response.data['description'], self.page.description)
             self.assertEqual(watermark_mock.call_args[0][1]['watermark'], 'test/logo-overlay.png')
@@ -74,14 +74,14 @@ class ResultPageTestCase(BluebottleTestCase):
         DonationFactory.create(
             activity=funding,
             status='succeeded',
-            transition_date=yesterday,
+            contribution_date=yesterday,
             user=user,
             amount=Money(50, 'EUR')
         )
         DonationFactory.create(
             activity=funding,
             status='succeeded',
-            transition_date=long_ago,
+            contribution_date=long_ago,
             user=user,
             amount=Money(50, 'EUR')
         )
@@ -630,13 +630,20 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.init_projects()
 
     def test_site_platform_settings_header(self):
-        SitePlatformSettings.objects.create(
+        settings = SitePlatformSettings.objects.create(
             contact_email='info@example.com',
             contact_phone='+31207158980',
             copyright='GoodUp',
             powered_by_text='Powered by',
             powered_by_link='https://goodup.com'
         )
+        settings.set_current_language('en')
+        settings.metadata_title = "Let's do some good!"
+        settings.metadata_description = "Join our platform and start fulfilling your purpose!"
+        settings.metadata_keywords = "Do-good, Awesome, Purpose"
+        settings.set_current_language('nl')
+        settings.metadata_title = "Doe es iets goeds!"
+        settings.save()
 
         response = self.client.get(reverse('settings'))
         self.assertEqual(response.data['platform']['content']['contact_email'], 'info@example.com')
@@ -644,6 +651,15 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['copyright'], 'GoodUp')
         self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
         self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://goodup.com')
+        self.assertEqual(response.data['platform']['content']['metadata_title'], "Let's do some good!")
+        self.assertEqual(
+            response.data['platform']['content']['metadata_description'],
+            "Join our platform and start fulfilling your purpose!"
+        )
+
+        response = self.client.get(reverse('settings'), HTTP_X_APPLICATION_LANGUAGE='nl')
+        self.assertEqual(response.data['platform']['content']['metadata_title'], "Doe es iets goeds!")
+        self.assertEqual(response.data['platform']['content']['metadata_description'], None)
 
     def test_site_platform_settings_favicons(self):
         favicon = File(open('./bluebottle/projects/test_images/upload.png'))

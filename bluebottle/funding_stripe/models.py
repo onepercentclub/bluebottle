@@ -1,8 +1,11 @@
+import re
 import json
 from operator import attrgetter
 
 from django.utils.functional import cached_property
 from djmoney.money import Money
+
+from django_extensions.db.fields.json import JSONField
 
 from bluebottle.funding.exception import PaymentException
 from django.conf import settings
@@ -12,18 +15,12 @@ from django.utils.translation import ugettext_lazy as _
 from memoize import memoize
 from stripe.error import AuthenticationError, StripeError
 
-from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount, BankAccount)
-from bluebottle.funding.transitions import PayoutAccountTransitions
-from bluebottle.funding_stripe.transitions import (
-    StripePaymentTransitions,
-    StripeSourcePaymentTransitions,
-    StripePayoutAccountTransitions
-)
 from bluebottle.funding_stripe.utils import stripe
+from bluebottle.utils.models import ValidatorError
 
 
 class PaymentIntent(models.Model):
@@ -34,6 +31,9 @@ class PaymentIntent(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             # FIXME: First verify that the funding activity has a valid Stripe account connected.
+
+            statement_descriptor = connection.tenant.name[:22]
+
             account_id = self.donation.activity.bank_account.connect_account.account_id
             intent = stripe.PaymentIntent.create(
                 amount=int(self.donation.amount.amount * 100),
@@ -41,6 +41,8 @@ class PaymentIntent(models.Model):
                 transfer_data={
                     'destination': account_id,
                 },
+                statement_descriptor=statement_descriptor,
+                statement_descriptor_suffix=statement_descriptor[:18],
                 metadata=self.metadata
             )
             self.intent_id = intent.id
@@ -64,10 +66,12 @@ class PaymentIntent(models.Model):
     class JSONAPIMeta:
         resource_name = 'payments/stripe-payment-intents'
 
+    def __unicode__(self):
+        return self.intent_id
+
 
 class StripePayment(Payment):
     payment_intent = models.OneToOneField(PaymentIntent, related_name='payment')
-    transitions = TransitionManager(StripePaymentTransitions, 'status')
 
     provider = 'stripe'
 
@@ -77,30 +81,29 @@ class StripePayment(Payment):
         charge.refund(
             reverse_transfer=True,
         )
-        self.save()
 
     def update(self):
         intent = self.payment_intent.intent
         if len(intent.charges) == 0:
             # No charge. Do we still need to charge?
-            self.transitions.fail()
-            self.save()
-        elif intent.charges.data[0].refunded and self.status != StripePaymentTransitions.values.refunded:
-            self.transitions.refund()
-            self.save()
-        elif intent.status == 'failed' and self.status != StripePaymentTransitions.values.failed:
-            self.transitions.fail()
-            self.save()
-        elif intent.status == 'succeeded' and self.status != StripePaymentTransitions.values.succeeded:
-            self.transitions.succeed()
-            self.save()
+            self.states.fail()
+        elif intent.charges.data[0].refunded and self.status != self.states.refunded.value:
+            self.states.refund()
+        elif intent.status == 'failed' and self.status != self.states.failed.value:
+            self.states.fail()
+        elif intent.status == 'succeeded':
+            transfer = stripe.Transfer.retrieve(intent.charges.data[0].transfer)
+            self.donation.payout_amount = Money(
+                transfer.amount / 100.0, transfer.currency
+            )
+            self.donation.save()
+            if self.status != self.states.succeeded.value:
+                self.states.succeed(save=True)
 
 
 class StripeSourcePayment(Payment):
     source_token = models.CharField(max_length=30)
     charge_token = models.CharField(max_length=30, blank=True, null=True)
-
-    transitions = TransitionManager(StripeSourcePaymentTransitions, 'status')
 
     provider = 'stripe'
 
@@ -122,6 +125,8 @@ class StripeSourcePayment(Payment):
 
     def do_charge(self):
         account_id = self.donation.activity.bank_account.connect_account.account_id
+
+        statement_descriptor = connection.tenant.name[:22]
         charge = stripe.Charge.create(
             amount=int(self.donation.amount.amount * 100),
             currency=self.donation.amount.currency,
@@ -129,12 +134,12 @@ class StripeSourcePayment(Payment):
             transfer_data={
                 'destination': account_id,
             },
+            statement_descriptor_suffix=statement_descriptor[:18],
             metadata=self.metadata
         )
 
         self.charge_token = charge.id
-        self.transitions.charge()
-        self.save()
+        self.states.charge(save=True)
 
     def update(self):
         try:
@@ -146,25 +151,25 @@ class StripeSourcePayment(Payment):
             if not self.charge_token and self.source.status == 'chargeable':
                 self.do_charge()
             if (not self.status == 'failed') and self.source.status == 'failed':
-                self.transitions.fail()
+                self.states.fail(save=True)
 
             if (not self.status == 'canceled') and self.source.status == 'canceled':
-                self.transitions.cancel()
+                self.states.cancel(save=True)
 
             if self.charge_token:
-                if (not self.status == 'failed') and self.charge.status == 'failed':
-                    self.transitions.fail()
+                if self.charge.status == 'failed':
+                    if self.status != 'failed':
+                        self.states.fail(save=True)
+                elif self.charge.refunded:
+                    if self.status != 'refunded':
+                        self.states.refund(save=True)
+                elif self.charge.dispute:
+                    if self.status != 'disputed':
+                        self.states.dispute(save=True)
+                elif self.charge.status == 'succeeded':
+                    if self.status != 'succeeded':
+                        self.states.succeed(save=True)
 
-                if (not self.status == 'succeeded') and self.charge.status == 'succeeded':
-                    self.transitions.succeed()
-
-                if (not self.status == 'refunded') and self.charge.refunded:
-                    self.transitions.refund()
-
-                if (not self.status == 'disputed') and self.charge.dispute:
-                    self.transitions.dispute()
-
-            self.save()
         except StripeError as error:
             raise PaymentException(error.message)
 
@@ -218,6 +223,8 @@ class StripePaymentProvider(PaymentProvider):
         )
     ]
 
+    refund_enabled = True
+
     @property
     def public_settings(self):
         return {
@@ -268,8 +275,7 @@ class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2)
     document_type = models.CharField(max_length=20, blank=True)
-
-    transitions = TransitionManager(StripePayoutAccountTransitions, 'status')
+    eventually_due = JSONField(null=True, default=[])
 
     @property
     def country_spec(self):
@@ -280,6 +286,25 @@ class StripePayoutAccount(PayoutAccount):
         for spec in DOCUMENT_SPEC:
             if spec['id'] == self.country:
                 return spec
+        for spec in DOCUMENT_SPEC:
+            if spec['id'] == 'DEFAULT':
+                return spec
+
+    @property
+    def errors(self):
+        for error in super(StripePayoutAccount, self).errors:
+            yield error
+
+        if self.account_id and hasattr(self.account.requirements, 'errors'):
+            for error in self.account.requirements.errors:
+                if error['requirement'] == 'individual.verification.document':
+                    requirement = 'individual.verification.document.front'
+                else:
+                    requirement = error['requirement']
+
+                yield ValidatorError(
+                    requirement, error['code'], error['reason']
+                )
 
     @property
     def required_fields(self):
@@ -287,21 +312,26 @@ class StripePayoutAccount(PayoutAccount):
 
         if self.account_id:
             fields += [
-                field for field in self.country_spec['additional'] + self.country_spec['minimum'] if
+                field for field in self.eventually_due if
                 field not in [
-                    'business_type', 'external_account', 'tos_acceptance.date',
+                    'external_account', 'tos_acceptance.date',
                     'tos_acceptance.ip', 'business_profile.url', 'business_profile.mcc',
                 ]
             ]
+            if 'individual.verification.additional_document' not in fields:
+                fields.append('individual.verification.additional_document')
 
             if 'individual.verification.document' in fields:
                 fields.remove('individual.verification.document')
 
+            if 'document_type' not in fields:
                 fields.append('document_type')
+
+            if 'individual.verification.document.front' not in fields:
                 fields.append('individual.verification.document.front')
 
-                if self.document_type in self.document_spec['document_types_requiring_back']:
-                    fields.append('individual.verification.document.back')
+            if self.document_type in self.document_spec['document_types_requiring_back']:
+                fields.append('individual.verification.document.back')
 
             dob_fields = [field for field in fields if '.dob' in field]
             if dob_fields:
@@ -321,6 +351,15 @@ class StripePayoutAccount(PayoutAccount):
                             yield 'individual.dob'
                     except AttributeError:
                         yield 'individual.dob'
+                elif field == 'individual.verification.additional_document':
+                    try:
+                        if attrgetter(
+                            'individual.verification.additional_document.front'
+                        )(self.account) in (None, ''):
+                            yield field
+                    except AttributeError:
+                        yield field
+
                 else:
                     try:
                         if attrgetter(field)(self.account) in (None, ''):
@@ -328,35 +367,69 @@ class StripePayoutAccount(PayoutAccount):
                     except AttributeError:
                         yield field
             else:
-                value = attrgetter(field)(self)
-                if value in (None, ''):
+                try:
+                    value = attrgetter(field)(self)
+                    if value in (None, ''):
+                        yield field
+                except AttributeError:
                     yield field
 
         if not self.account.external_accounts.total_count > 0:
             yield 'external_account'
 
+    @property
+    def missing_fields(self):
+        account_details = getattr(self.account, 'individual', None)
+        if account_details:
+            requirements = account_details.requirements
+            missing = requirements.currently_due + requirements.eventually_due + requirements.past_due
+            if getattr(self.account.requirements, 'disabled_reason', None):
+                missing += [self.account.requirements.disabled_reason]
+            if getattr(account_details.verification, 'document', None) and \
+                    account_details.verification.document.details:
+                missing += [account_details.verification.document.details]
+            return missing
+        return []
+
+    @property
+    def pending_fields(self):
+        account_details = getattr(self.account, 'individual', None)
+        if account_details:
+            requirements = account_details.requirements
+            return requirements.pending_verification
+        return []
+
     def check_status(self):
         if self.account:
             del self.account
         account_details = getattr(self.account, 'individual', None)
-
         if account_details:
-            if account_details.verification.status == 'verified':
-                if self.status != PayoutAccountTransitions.values.verified:
-                    self.transitions.verify()
-            elif account_details.verification.status == 'pending':
-                if self.status != PayoutAccountTransitions.values.pending:
-                    self.transitions.pending()
+            if getattr(account_details.verification, 'document', None) and \
+                    account_details.verification.document.details:
+                if self.status != self.states.rejected.value:
+                    self.states.reject()
+            elif getattr(self.account.requirements, 'disabled_reason', None):
+                if self.status != self.states.incomplete.value:
+                    self.states.set_incomplete()
+            elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
+                if self.status != self.states.verified.value:
+                    self.states.verify()
+            elif len(self.missing_fields):
+                if self.status != self.states.incomplete.value:
+                    self.states.set_incomplete()
+            elif len(self.pending_fields):
+                if self.status != self.states.pending.value:
+                    # Submit to transition to pending
+                    self.states.submit()
             else:
-                if self.status != PayoutAccountTransitions.values.rejected:
-                    self.transitions.reject()
+                if self.status != self.states.incomplete.value:
+                    self.states.set_incomplete()
         else:
-            if self.status != PayoutAccountTransitions.values.rejected:
-                self.transitions.reject()
+            if self.status != self.states.incomplete.value:
+                self.states.set_incomplete()
 
         externals = self.account['external_accounts']['data']
         for external in externals:
-            print external
             external_account, _created = ExternalAccount.objects.get_or_create(
                 account_id=external['id']
             )
@@ -375,19 +448,37 @@ class StripePayoutAccount(PayoutAccount):
         return self._account
 
     def save(self, *args, **kwargs):
+
         if self.account_id and not self.country == self.account.country:
             self.account_id = None
 
         if not self.account_id:
+            if len(self.owner.activities.all()):
+                url = self.owner.activities.first().get_absolute_url()
+            else:
+                url = 'https://{}'.format(connection.tenant.domain_url)
+
+            if 'localhost' in url:
+                url = re.sub('localhost', 't.goodup.com', url)
+
             self._account = stripe.Account.create(
                 country=self.country,
                 type='custom',
                 settings=self.account_settings,
                 business_type='individual',
-                requested_capabilities=["legacy_payments"],
+                requested_capabilities=["transfers"],
+                business_profile={
+                    'url': url,
+                    'mcc': '8398'
+                },
                 metadata=self.metadata
             )
             self.account_id = self._account.id
+
+        if self.account_id:
+            for field in self.account.requirements.eventually_due:
+                if field not in self.eventually_due:
+                    self.eventually_due.append(field)
 
         super(StripePayoutAccount, self).save(*args, **kwargs)
 
@@ -419,17 +510,21 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def account_settings(self):
-        statement_descriptor = connection.tenant.name[:21]
+        statement_descriptor = connection.tenant.name[:22]
         while len(statement_descriptor) < 5:
             statement_descriptor += '-'
         return {
             'payouts': {
                 'schedule': {
                     'interval': 'manual'
-                }
+                },
+                'statement_descriptor': statement_descriptor
             },
             'payments': {
                 'statement_descriptor': statement_descriptor
+            },
+            'card_payments': {
+                'statement_descriptor_prefix': statement_descriptor[:10]
             }
         }
 
@@ -482,6 +577,10 @@ class ExternalAccount(BankAccount):
         return self.connect_account.verified
 
     @property
+    def ready(self):
+        return self.connect_account.verified
+
+    @property
     def metadata(self):
         return {
             "tenant_name": connection.tenant.client_name,
@@ -497,3 +596,6 @@ class ExternalAccount(BankAccount):
 
     def __unicode__(self):
         return "Stripe external account {}".format(self.account_id)
+
+
+from states import *  # noqa

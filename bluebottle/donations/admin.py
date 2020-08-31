@@ -243,9 +243,6 @@ class DonationAdmin(admin.ModelAdmin):
     admin_fundraiser.short_description = _('Fundraiser')
 
 
-admin.site.register(Donation, DonationAdmin)
-
-
 class DonationInline(admin.TabularInline):
     model = Donation
     extra = 0

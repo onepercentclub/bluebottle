@@ -1,22 +1,27 @@
-from operator import attrgetter
-
+from datetime import timedelta
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
-from parler.models import TranslatableModel
+from operator import attrgetter
+from parler.models import TranslatableModel, TranslatedFields
 
-from bluebottle.utils.managers import SortableTranslatableManager, PublishedManager
-
-import bluebottle.utils.monkey_patch_migration  # noqa
 import bluebottle.utils.monkey_patch_corsheaders  # noqa
+import bluebottle.utils.monkey_patch_dj_money_rates  # noqa
+import bluebottle.utils.monkey_patch_django_elasticsearch_dsl  # noqa
+import bluebottle.utils.monkey_patch_migration  # noqa
+import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa
 import bluebottle.utils.monkey_patch_parler  # noqa
 import bluebottle.utils.monkey_patch_password_validators  # noqa
-import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa
-import bluebottle.utils.monkey_patch_django_elasticsearch_dsl  # noqa
+import bluebottle.utils.monkey_patch_jet  # noqa
+from bluebottle.utils.managers import (
+    SortableTranslatableManager,
+    PublishedManager
+)
 
 
 class Language(models.Model):
@@ -156,6 +161,46 @@ class ValidatedModelMixin(object):
     @property
     def required(self):
         for field in self.required_fields:
-            value = attrgetter(field)(self)
-            if value in (None, ''):
+            try:
+                value = attrgetter(field)(self)
+                if value in (None, ''):
+                    yield field
+            except ObjectDoesNotExist:
                 yield field
+
+
+class AnonymizationMixin(object):
+
+    @property
+    def anonymized(self):
+        from bluebottle.members.models import MemberPlatformSettings
+        anonymization_age = MemberPlatformSettings.load().anonymization_age
+        if anonymization_age:
+            return self.created < (now() - timedelta(days=anonymization_age))
+
+
+class TranslationPlatformSettings(TranslatableModel, BasePlatformSettings):
+    translations = TranslatedFields(
+        office=models.CharField(
+            'Office',
+            max_length=100, null=True, blank=True
+        ),
+
+        office_location=models.CharField(
+            'Office location',
+            max_length=100, null=True, blank=True
+        ),
+        select_an_office_location=models.CharField(
+            'Select an office location',
+            max_length=100, null=True, blank=True
+        ),
+        whats_the_location_of_your_office=models.CharField(
+            u'What\u2019s the location of your office?',
+            max_length=100, null=True, blank=True
+        ),
+
+    )
+
+    class Meta:
+        verbose_name_plural = _('translation settings')
+        verbose_name = _('translation settings')

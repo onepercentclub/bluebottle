@@ -1,10 +1,7 @@
 from django.db import models
-from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, BankAccount
-from bluebottle.funding.transitions import PaymentTransitions
 
 
 class VitepayPaymentProvider(PaymentProvider):
@@ -40,7 +37,6 @@ class VitepayPaymentProvider(PaymentProvider):
 class VitepayPayment(Payment):
     mobile_number = models.CharField(max_length=30, blank=True, null=True)
     unique_id = models.CharField(max_length=30)
-    transitions = TransitionManager(PaymentTransitions, 'status')
     payment_url = models.CharField(max_length=200, blank=True, null=True)
 
     provider = 'vitepay'
@@ -51,7 +47,7 @@ class VitepayPayment(Payment):
     def save(self, *args, **kwargs):
         if not self.unique_id:
             provider = VitepayPaymentProvider.objects.get()
-            self.unique_id = format_html("{}-{}", provider.prefix, self.donation.id)
+            self.unique_id = "{}-{}".format(provider.prefix, self.donation.id)
         super(VitepayPayment, self).save(*args, **kwargs)
 
 
@@ -69,3 +65,6 @@ class VitepayBankAccount(BankAccount):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/vitepay-external-accounts'
+
+
+from states import *  # noqa

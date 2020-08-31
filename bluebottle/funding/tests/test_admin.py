@@ -20,9 +20,8 @@ class FundingTestCase(BluebottleAdminTestCase):
     def setUp(self):
         super(FundingTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.initiative.save()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         bank_account = BankAccountFactory.create()
         self.funding = FundingFactory.create(
             owner=self.superuser,
@@ -30,76 +29,46 @@ class FundingTestCase(BluebottleAdminTestCase):
             bank_account=bank_account
         )
         BudgetLineFactory.create(activity=self.funding)
-        self.funding.review_transitions.submit()
-        self.funding.save()
         self.admin_url = reverse('admin:funding_funding_change', args=(self.funding.id, ))
 
     def test_funding_admin(self):
         self.client.force_login(self.superuser)
+        self.funding.states.submit(save=True)
         response = self.client.get(self.admin_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
         self.assertContains(response, 'approve')
-        reviewed_url = reverse('admin:funding_funding_transition',
-                               args=(self.funding.id, 'review_transitions', 'approve'))
+        reviewed_url = reverse('admin:funding_funding_state_transition',
+                               args=(self.funding.id, 'states', 'approve'))
         self.assertContains(response, reviewed_url)
 
     def test_funding_admin_review(self):
         self.client.force_login(self.superuser)
+        self.funding.states.submit(save=True)
         response = self.client.get(self.admin_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
         self.assertContains(response, 'approve')
-        reviewed_url = reverse('admin:funding_funding_transition',
-                               args=(self.funding.id, 'review_transitions', 'approve'))
-
+        reviewed_url = reverse('admin:funding_funding_state_transition',
+                               args=(self.funding.id, 'states', 'approve'))
         self.assertContains(response, reviewed_url)
         response = self.client.get(reviewed_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_funding_admin_refund(self):
-        self.funding.review_transitions.approve()
-        self.funding.target = Money(100, 'EUR')
-        donation = DonationFactory.create(
-            activity=self.funding,
-            amount=Money(70, 'EUR'))
-        payment = PledgePaymentFactory.create(donation=donation)
-        self.funding.deadline = now() - timedelta(days=1)
-        self.funding.save()
-        self.funding.transitions.partial()
-        self.funding.save()
-
-        self.client.force_login(self.superuser)
-        response = self.client.get(self.admin_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertContains(response, self.funding.title)
-        self.assertContains(response, 'refund')
-        refund_url = reverse('admin:funding_funding_transition',
-                             args=(self.funding.id, 'transitions', 'refund'))
-
-        self.assertContains(response, refund_url)
-        self.client.post(refund_url, {'confirm': True})
-        self.funding.refresh_from_db()
-        self.assertEqual(self.funding.status, 'refunded')
-        donation.refresh_from_db()
-        self.assertEqual(donation.status, 'refunded')
-        payment.refresh_from_db()
-        self.assertEqual(payment.status, 'refunded')
-
     def test_funding_admin_add_matching(self):
-        self.funding.review_transitions.approve()
+        self.funding.states.submit()
+        self.funding.states.approve()
         self.funding.target = Money(100, 'EUR')
         donation = DonationFactory.create(
             activity=self.funding,
-            amount=Money(70, 'EUR'))
+            amount=Money(70, 'EUR')
+        )
+        donation.states.succeed(save=True)
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(self.funding.amount_raised, Money(70, 'EUR'))
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
-        self.funding.transitions.partial()
-        self.funding.save()
         self.assertEqual(self.funding.amount_raised, Money(70, 'EUR'))
-
         self.funding.amount_matching = Money(30, 'EUR')
         self.funding.save()
 
@@ -107,9 +76,9 @@ class FundingTestCase(BluebottleAdminTestCase):
         response = self.client.get(self.admin_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.funding.title)
-        self.assertContains(response, 'refund')
-        recalculate_url = reverse('admin:funding_funding_transition',
-                                  args=(self.funding.id, 'transitions', 'recalculate'))
+        self.assertContains(response, 'recalculate')
+        recalculate_url = reverse('admin:funding_funding_state_transition',
+                                  args=(self.funding.id, 'states', 'recalculate'))
 
         self.assertContains(response, recalculate_url)
         self.client.post(recalculate_url, {'confirm': True})
@@ -124,9 +93,8 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
     def setUp(self):
         super(DonationAdminTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
-        self.initiative.save()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         account = StripePayoutAccountFactory.create()
         bank_account = ExternalAccountFactory.create(connect_account=account)
 

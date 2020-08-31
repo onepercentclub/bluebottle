@@ -11,7 +11,7 @@ class ButtonSelectWidget(forms.Select):
 
 class FSMModelFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
-        if 'Meta' in attrs:
+        if 'Meta' in attrs and False:
             for transition in attrs['Meta'].model._transitions:
                 attrs[transition[0]] = forms.ChoiceField(
                     required=False,
@@ -41,6 +41,7 @@ class FSMModelForm(forms.ModelForm):
 
             self.fields[fsm_field].choices = [
                 (get_url(transition.name), transition.name) for transition in transitions
+                if not transition.options.get('automatic')
             ]
 
     def clean(self, *args, **kwargs):

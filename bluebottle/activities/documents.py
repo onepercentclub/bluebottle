@@ -20,7 +20,6 @@ class ActivityDocument(DocType):
     description = fields.TextField()
     status = fields.KeywordField()
     status_score = fields.FloatField()
-    review_status = fields.KeywordField()
     created = fields.DateField()
 
     date = fields.DateField()
@@ -63,6 +62,14 @@ class ActivityDocument(DocType):
         }
     )
 
+    segments = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'type': fields.KeywordField(attr='type.slug'),
+            'name': fields.TextField()
+        }
+    )
+
     location = fields.NestedField(
         attr='location',
         properties={
@@ -82,6 +89,8 @@ class ActivityDocument(DocType):
 
     contributions = fields.DateField()
     contribution_count = fields.IntegerField()
+
+    activity_date = fields.DateField()
 
     class Meta:
         model = Activity

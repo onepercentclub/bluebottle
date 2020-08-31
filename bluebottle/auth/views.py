@@ -53,7 +53,7 @@ def load_drf_strategy(request=None):
      load_strategy=load_drf_strategy)
 def complete(request, backend):
     try:
-        user = request.backend.auth_complete()
+        user = request.backend.auth_complete(request=request)
     except AuthCanceled:
         return None
 

@@ -1,4 +1,5 @@
 from bluebottle.activities.documents import ActivityDocument, activity
+
 from bluebottle.events.models import Event, Participant
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
@@ -29,7 +30,7 @@ class EventDocument(ActivityDocument):
         return SCORE_MAP.get(instance.status, 0)
 
     def prepare_date(self, instance):
-        return instance.start_date
+        return instance.start
 
     def prepare_country(self, instance):
         if not instance.is_online and instance.location:
@@ -41,3 +42,6 @@ class EventDocument(ActivityDocument):
         if not instance.is_online and instance.location:
             position = instance.location.position
             return {'lat': position.get_y(), 'lon': position.get_x()}
+
+    def prepare_activity_date(self, instance):
+        return instance.start

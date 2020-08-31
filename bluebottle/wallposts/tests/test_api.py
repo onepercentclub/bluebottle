@@ -12,7 +12,7 @@ from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.wallposts import (
-    TextWallpostFactory, MediaWallpostFactory
+    TextWallpostFactory, MediaWallpostFactory, MediaWallpostPhotoFactory
 )
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.tests.test_unit import UserTestsMixin
@@ -133,7 +133,6 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
                                     token=self.other_token)
-
         self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_filtering_on_wallpost_list(self):
@@ -329,20 +328,6 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         # https://docs.djangoproject.com/en/dev/topics/templates/#automatic-html-escaping
         self.assertTrue('not so sure' in response.data['text'])
 
-        # retrieve the list of Reactions for this Wallpost should return two
-        response = self.client.get(self.wallpost_reaction_url,
-                                   {'wallpost': self.some_wallpost.id},
-                                   token=self.another_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['count'], 2)
-        self.assertTrue(
-            new_reaction_text in response.data['results'][0]['text'])
-
-        # Only check the substring because the single quote in "I'm" is escaped.
-        # https://docs.djangoproject.com/en/dev/topics/templates/#automatic-html-escaping
-        self.assertTrue('not so sure' in response.data['results'][1]['text'])
-
         # Delete Reaction by author should work
         response = self.client.delete(
             reaction_detail_url, token=self.some_token)
@@ -379,21 +364,6 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
             response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertTrue(reaction_text_2 in response.data['text'])
 
-        # Check the size of the reaction list is correct.
-        response = self.client.get(self.wallpost_reaction_url,
-                                   {'wallpost': self.some_wallpost.id},
-                                   token=self.some_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['count'], 2)
-
-        # Check that the reaction listing without a wallpost id is working.
-        response = self.client.get(
-            self.wallpost_reaction_url, token=self.some_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['count'], 2)
-
         # Create a reaction on second blog post.
         reaction_text_3 = 'Super!'
         response = self.client.post(self.wallpost_reaction_url,
@@ -406,28 +376,6 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         # Save the detail url to be used in the authorization test below.
         second_reaction_detail_url = reverse(
             'wallpost_reaction_detail', kwargs={'pk': response.data['id']})
-
-        # Check that the size and data in the first reaction list is correct.
-        response = self.client.get(self.wallpost_reaction_url,
-                                   {'wallpost': self.some_wallpost.id},
-                                   token=self.some_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_200_OK, response.data)
-
-        # filter_fields seems to do not work...WHYYYYY
-        self.assertEqual(response.data['count'], 2)
-
-        self.assertTrue(reaction_text_1 in response.data['results'][0]['text'])
-        self.assertTrue(reaction_text_2 in response.data['results'][1]['text'])
-
-        # Check that the size and data in the second reaction list is correct.
-        response = self.client.get(self.wallpost_reaction_url,
-                                   {'wallpost': self.another_wallpost.id},
-                                   token=self.some_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['count'], 1)
-        self.assertTrue(reaction_text_3 in response.data['results'][0]['text'])
 
         # Test that a reaction update from a user who is not the author is
         # forbidden.
@@ -501,7 +449,7 @@ class TestDonationWallpost(BluebottleTestCase):
         super(TestDonationWallpost, self).setUp()
 
         self.init_projects()
-        self.user = BlueBottleUserFactory.create()
+        self.user = BlueBottleUserFactory.create(about_me="I like to give away all my moneys!")
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
         self.funding = FundingFactory.create(status='open')
@@ -513,8 +461,7 @@ class TestDonationWallpost(BluebottleTestCase):
             activity=self.funding,
             fundraiser=None
         )
-        donation.transitions.succeed()
-        donation.save()
+        donation.states.succeed(save=True)
 
         self.data = {
             "title": "",
@@ -552,6 +499,7 @@ class TestDonationWallpost(BluebottleTestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['type'], 'text')
         self.assertEqual(response.data['results'][0]['text'], '<p>What a nice project!</p>')
+        self.assertEqual(response.data['results'][0]['author']['about_me'], 'I like to give away all my moneys!')
 
     def test_donation_wallposts_other_user(self):
         other_user = BlueBottleUserFactory.create()
@@ -753,8 +701,7 @@ class FundingWallpostTest(BluebottleTestCase):
             user=None,
             activity=self.funding
         )
-        self.donation.transitions.succeed()
-        self.donation.save()
+        self.donation.states.succeed(save=True)
 
         response = self.client.get(self.updates_url, token=self.owner_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -762,6 +709,7 @@ class FundingWallpostTest(BluebottleTestCase):
         self.assertEqual(
             response.data['results'][0]['donation'],
             {
+                'name': None,
                 'fundraiser': None,
                 'amount': {'currency': 'EUR', 'amount': 35.00},
                 'user': None,
@@ -772,3 +720,91 @@ class FundingWallpostTest(BluebottleTestCase):
             }
         )
         self.assertEqual(response.data['results'][1]['donation'], None)
+
+    def test_wallposts_with_fake_name(self):
+        self.donation = DonationFactory(
+            amount=Money(35, 'EUR'),
+            user=None,
+            name='Tante Ans',
+            activity=self.funding
+        )
+        self.donation.states.succeed(save=True)
+
+        response = self.client.get(self.updates_url, token=self.owner_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(
+            response.data['results'][0]['donation'],
+            {
+                'name': 'Tante Ans',
+                'fundraiser': None,
+                'amount': {'currency': 'EUR', 'amount': 35.00},
+                'user': None,
+                'anonymous': False,
+                'reward': None,
+                'type': 'contributions/donations',
+                'id': self.donation.id
+            }
+        )
+
+    def test_put(self):
+        wallpost = MediaWallpostFactory.create(content_object=self.funding)
+        author = wallpost.author
+
+        url = reverse('wallpost_detail', args=(wallpost.pk, ))
+
+        response = self.client.put(
+            url,
+            data={
+                'author': BlueBottleUserFactory.create().pk,
+                'parent_id': self.funding.pk,
+                'parent_type': 'funding'
+            },
+            token="JWT {0}".format(author.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class WallpostPhotoTest(BluebottleTestCase):
+    def setUp(self):
+        super(WallpostPhotoTest, self).setUp()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+        self.funding = FundingFactory.create(target=Money(5000, 'EUR'), status='open', initiative=self.initiative)
+
+        self.wallpost = MediaWallpostFactory.create(content_object=self.funding)
+
+        self.photo = MediaWallpostPhotoFactory(
+            author=self.wallpost.author,
+            mediawallpost=MediaWallpostFactory.create(content_object=self.funding, author=self.wallpost.author)
+        )
+
+        self.url = reverse('mediawallpost_photo_detail', args=(self.photo.pk, ))
+
+    def test_photo(self):
+        response = self.client.put(
+            self.url,
+            data={
+                'mediawallpost': self.wallpost.pk
+            },
+            token="JWT {0}".format(self.photo.author.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_photo_different_wallpost_owner(self):
+        photo_author = BlueBottleUserFactory.create()
+        self.photo.author = photo_author
+        self.photo.mediawallpost = MediaWallpostFactory.create(content_object=self.funding, author=photo_author)
+        self.photo.save()
+
+        response = self.client.put(
+            self.url,
+            data={
+                'mediawallpost': self.wallpost.pk
+            },
+            token="JWT {0}".format(self.photo.author.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

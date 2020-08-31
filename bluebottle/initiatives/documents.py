@@ -61,6 +61,12 @@ class InitiativeDocument(DocType):
         'slug': fields.KeywordField(),
     })
 
+    activities = fields.NestedField(properties={
+        'id': fields.LongField(),
+        'title': fields.KeywordField(),
+        'contribution_date': fields.KeywordField(),
+    })
+
     place = fields.NestedField(properties={
         'country': fields.LongField(attr='country.pk'),
         'province': fields.TextField(),
@@ -96,6 +102,23 @@ class InitiativeDocument(DocType):
             return list(related_instance.own_initiatives.all()) + list(related_instance.review_initiatives.all())
         if isinstance(related_instance, Activity):
             return [related_instance.initiative]
+
+    def prepare_activities(self, instance):
+        return [
+            {
+                'id': activity.pk,
+                'title': activity.title,
+                'contribution_date': activity.contribution_date
+            } for activity in instance.activities.filter(
+                status__in=(
+                    'succeeded',
+                    'open',
+                    'partially_funded',
+                    'full',
+                    'running'
+                )
+            )
+        ]
 
     def prepare_activity_owners(self, instance):
         return [

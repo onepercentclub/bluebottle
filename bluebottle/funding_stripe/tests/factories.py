@@ -1,4 +1,5 @@
 import factory.fuzzy
+import bunch
 import mock
 
 from bluebottle.funding.tests.factories import DonationFactory
@@ -17,6 +18,15 @@ class StripeSourcePaymentFactory(factory.DjangoModelFactory):
 
     donation = factory.SubFactory(DonationFactory)
 
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        source_payment = stripe.Source(kwargs.get('souce_id', 'some source id'))
+        source_payment.update({
+            'client_secret': 'some client secret',
+        })
+        with mock.patch('stripe.Source.modify', return_value=source_payment):
+            return super(StripeSourcePaymentFactory, cls)._create(model_class, *args, **kwargs)
+
 
 class StripePaymentIntentFactory(factory.DjangoModelFactory):
     class Meta(object):
@@ -26,7 +36,7 @@ class StripePaymentIntentFactory(factory.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
-        payment_intent = stripe.PaymentIntent('some intent id')
+        payment_intent = stripe.PaymentIntent(kwargs.get('intent_id', 'some intent id'))
         payment_intent.update({
             'client_secret': 'some client secret',
         })
@@ -53,7 +63,16 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
         account_id = 'acct_1234567890'
-        with mock.patch('stripe.Account.create', return_value=stripe.Account(id=account_id)):
+        account = stripe.Account(
+            id=account_id,
+        )
+        account.requirements = bunch.bunchify({
+            'eventually_due': [
+                'individual.first_name', 'individual.last_name'
+            ]
+        })
+
+        with mock.patch('stripe.Account.create', return_value=account):
             return super(StripePayoutAccountFactory, cls)._create(model_class, *args, **kwargs)
 
 

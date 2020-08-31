@@ -31,9 +31,8 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
 
         self.bank_account = ExternalAccountFactory.create()
 
@@ -139,9 +138,8 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
 
         self.bank_account = ExternalAccountFactory.create()
 
@@ -238,6 +236,8 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 }),
                 'requirements': bunch.bunchify({
                     'eventually_due': ['external_accounts', 'individual.dob.month'],
+                    'currently_due': [],
+                    'past_due': [],
                 })
             }),
             'requirements': bunch.bunchify({
@@ -297,6 +297,8 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 }),
                 'requirements': bunch.bunchify({
                     'eventually_due': ['external_accounts', 'individual.dob.month'],
+                    'currently_due': [],
+                    'past_due': [],
                 })
             }),
             'requirements': bunch.bunchify({
@@ -308,30 +310,38 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 'data': []
             })
         })
-        with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
-        ):
+        with mock.patch('stripe.CountrySpec.retrieve', return_value=self.country_spec):
             with mock.patch('stripe.Account.create', return_value=connect_account) as create_account:
                 with mock.patch('stripe.Account.modify', return_value=connect_account) as modify_account:
-                    response = self.client.post(
-                        self.account_list_url, data=json.dumps(self.data), user=self.user
-                    )
-                    create_account.assert_called_with(
-                        business_type='individual',
-                        country=self.data['data']['attributes']['country'],
-                        metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.user.pk},
-                        requested_capabilities=['legacy_payments'],
-                        settings={
-                            'payments': {'statement_descriptor': 'tst--'},
-                            'payouts': {'schedule': {'interval': 'manual'}}
-                        },
-                        # business_type='individual',
-                        type='custom'
-                    )
-                    modify_account.assert_called_with(
-                        'some-connect-id',
-                        account_token='some-account-token'
-                    )
+                    with mock.patch('stripe.Account.retrieve', return_value=connect_account):
+                        response = self.client.post(
+                            self.account_list_url, data=json.dumps(self.data), user=self.user
+                        )
+                        create_account.assert_called_with(
+                            business_profile={'url': 'https://testserver', 'mcc': '8398'},
+                            business_type='individual',
+                            country=self.data['data']['attributes']['country'],
+                            metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.user.pk},
+                            requested_capabilities=['transfers'],
+                            settings={
+                                'card_payments': {
+                                    'statement_descriptor_prefix': u'tst--'
+                                },
+                                'payments': {
+                                    'statement_descriptor': u'tst--'
+                                },
+                                'payouts': {
+                                    'statement_descriptor': u'tst--',
+                                    'schedule': {'interval': 'manual'}
+                                }
+                            },
+                            # business_type='individual',
+                            type='custom'
+                        )
+                        modify_account.assert_called_with(
+                            'some-connect-id',
+                            account_token='some-account-token'
+                        )
 
         data = json.loads(response.content)
 
@@ -347,7 +357,14 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['data']['meta']['required-fields'],
-            ['country', 'external_accounts', 'individual.first_name']
+            [
+                u'country',
+                u'external_accounts',
+                u'individual.verification.additional_document',
+                u'document_type',
+                u'individual.verification.document.front',
+                u'individual.dob'
+            ]
         )
         self.assertEqual(
             data['data']['attributes']['account']['individual']['first_name'],
@@ -369,12 +386,8 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get(self):
-        with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
-        ):
-            with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
-            ) as retrieve:
+        with mock.patch('stripe.CountrySpec.retrieve', return_value=self.country_spec):
+            with mock.patch('stripe.Account.retrieve', return_value=self.connect_account) as retrieve:
                 response = self.client.get(
                     self.account_url, user=self.user
                 )
@@ -394,7 +407,14 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['data']['meta']['required-fields'],
-            ['country', 'external_accounts', 'individual.first_name']
+            [
+                u'country',
+                u'external_accounts',
+                u'individual.verification.additional_document',
+                u'document_type',
+                u'individual.verification.document.front',
+                u'individual.dob'
+            ]
         )
         self.assertEqual(
             data['data']['attributes']['account']['individual']['first_name'],
@@ -404,6 +424,46 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.assertEqual(
             data['data']['relationships']['owner']['data']['id'],
             unicode(self.user.pk)
+        )
+
+    def test_get_verification_error(self):
+        error = {
+            "reason": (
+                "The date of birth (DOB) on the document does not match "
+                "the DOB on the account. Please upload a document with a "
+                "DOB that matches the DOB on the account. You can also "
+                "update the DOB on the account."
+            ),
+            "code": "verification_document_dob_mismatch",
+            "requirement": "individual.verification.document"
+        }
+        self.connect_account.update({
+            'requirements': bunch.bunchify({
+                'eventually_due': ['external_accounts', 'individual.dob.month'],
+                'errors': [error],
+                'disabled': False
+            }),
+        })
+
+        with mock.patch('stripe.CountrySpec.retrieve', return_value=self.country_spec):
+            with mock.patch('stripe.Account.retrieve', return_value=self.connect_account) as retrieve:
+                response = self.client.get(
+                    self.account_url, user=self.user
+                )
+                retrieve.assert_called_with(self.check.account_id)
+
+        data = json.loads(response.content)
+        self.assertEqual(
+            data['data']['meta']['errors'][0]['source']['pointer'],
+            '/data/attributes/individual/verification/document/front'
+        )
+        self.assertEqual(
+            data['data']['meta']['errors'][0]['title'],
+            error['reason']
+        )
+        self.assertEqual(
+            data['data']['meta']['errors'][0]['code'],
+            error['code']
         )
 
     def test_get_no_user(self):
@@ -462,6 +522,19 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_get_bank_accounts_no_user(self):
+        response = self.client.get(
+            self.account_list_url
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_bank_accounts_other_user(self):
+        response = self.client.get(
+            self.account_list_url,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 class ExternalAccountsTestCase(BluebottleTestCase):
     def setUp(self):
@@ -499,6 +572,9 @@ class ExternalAccountsTestCase(BluebottleTestCase):
         self.connect_account.update({
             'country': country,
             'external_accounts': external_accounts,
+            'requirements': bunch.bunchify({
+                'eventually_due': ['document_type']
+            })
         })
 
         self.country_spec = stripe.CountrySpec(country)
@@ -522,6 +598,23 @@ class ExternalAccountsTestCase(BluebottleTestCase):
 
         self.url = reverse('connect-account-details', args=(self.check.id, ))
         self.external_account_url = reverse('stripe-external-account-list')
+        self.external_account_detail_url = reverse(
+            'stripe-external-account-details',
+            args=(self.external_account.pk, )
+        )
+
+    def test_get_accounts_no_user(self):
+        response = self.client.get(
+            self.external_account_url
+        )
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_get_accounts_other_user(self):
+        response = self.client.get(
+            self.external_account_url,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_get(self):
         with mock.patch(
@@ -637,3 +730,27 @@ class ExternalAccountsTestCase(BluebottleTestCase):
         self.assertEqual(
             external_account['last4'], self.connect_external_account.last4
         )
+
+    def test_get_external_account_detail(self):
+        response = self.client.get(
+            self.external_account_detail_url,
+            user=self.external_account.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['attributes']['account-id'],
+            'some-external-account-id'
+        )
+
+    def test_get_external_account_anonymous(self):
+        response = self.client.get(
+            self.external_account_detail_url
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_external_account_other_user(self):
+        response = self.client.get(
+            self.external_account_detail_url,
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

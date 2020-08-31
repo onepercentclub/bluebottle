@@ -1,6 +1,7 @@
 import bunch
 import mock
 import stripe
+from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory
 from django.db import ProgrammingError, connection
 
 from bluebottle.funding_stripe.models import (
@@ -26,11 +27,19 @@ class ConnectAccountTestCase(BluebottleTestCase):
                     'status': 'verified',
                 },
                 'requirements': bunch.bunchify({
-                    'eventually_due': ['external_accounts', 'individual.dob.month'],
+                    'eventually_due': [
+                        'external_accounts',
+                        'individual.verification.document',
+                        'document_type',
+                    ]
                 }),
             }),
             'requirements': bunch.bunchify({
-                'eventually_due': ['external_accounts', 'individual.dob.month'],
+                'eventually_due': [
+                    'external_accounts',
+                    'individual.verification.document.front',
+                    'document_type',
+                ],
                 'disabled': False
             }),
             'external_accounts': bunch.bunchify({
@@ -57,17 +66,26 @@ class ConnectAccountTestCase(BluebottleTestCase):
         tenant.save()
 
         with mock.patch(
-            'stripe.Account.create', return_value=self.connect_account
+                'stripe.Account.create', return_value=self.connect_account
         ) as create:
             self.check.save()
             create.assert_called_with(
+                business_profile={'url': 'https://testserver', 'mcc': '8398'},
                 business_type='individual',
                 country=self.check.country,
                 metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},
-                requested_capabilities=['legacy_payments'],
+                requested_capabilities=['transfers'],
                 settings={
-                    'payments': {'statement_descriptor': u'GoDoGood'},
-                    'payouts': {'schedule': {'interval': 'manual'}}
+                    'card_payments': {
+                        'statement_descriptor_prefix': 'GoDoGood'
+                    },
+                    'payments': {
+                        'statement_descriptor': 'GoDoGood'
+                    },
+                    'payouts': {
+                        'statement_descriptor': 'GoDoGood',
+                        'schedule': {'interval': 'manual'}
+                    }
                 },
                 type='custom'
             )
@@ -81,17 +99,17 @@ class ConnectAccountTestCase(BluebottleTestCase):
 
     def test_save_already_created(self):
         with mock.patch(
-            'stripe.Account.create', return_value=self.connect_account
+                'stripe.Account.create', return_value=self.connect_account
         ) as create:
             with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
+                    'stripe.Account.retrieve', return_value=self.connect_account
             ):
                 self.check.save()
                 self.assertEqual(create.call_count, 0)
 
     def test_update(self):
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.check.save()
 
@@ -106,7 +124,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
 
     def test_account(self):
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ) as retrieve:
             self.assertTrue(isinstance(self.check.account, stripe.Account))
             self.assertEqual(self.check.account.id, self.connect_account.id)
@@ -116,40 +134,84 @@ class ConnectAccountTestCase(BluebottleTestCase):
     def test_complete(self):
         self.connect_account.individual.requirements.eventually_due = []
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.assertTrue(self.check.complete)
 
     def test_not_verified(self):
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.assertFalse(self.check.verified)
 
     def test_required(self):
         with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
-        ):
-            with mock.patch(
                 'stripe.Account.retrieve', return_value=self.connect_account
-            ):
-                self.assertEqual(
-                    list(self.check.required),
-                    ['document_type', 'individual.verification.document.front', 'external_account']
-                )
+        ):
+            self.check.save()
+            self.assertEqual(
+                list(self.check.required),
+                [
+                    'individual.verification.document.front',
+                    'document_type',
+                    'individual.verification.additional_document',
+                    'external_account'
+                ]
+            )
 
     def test_disabled(self):
         self.connect_account.requirements.disabled = True
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.assertTrue(self.check.disabled)
 
     def test_not_disabled(self):
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.assertFalse(self.check.disabled)
+
+    def test_country_spec(self):
+        account = StripePayoutAccountFactory.create(country='BE')
+        self.assertEqual(
+            account.document_spec['id'],
+            'BE'
+        )
+        self.assertEqual(
+            account.document_spec['supported_document_types'],
+            [u'passport', u'id-card', u'drivers-license']
+        )
+        self.assertEqual(
+            account.document_spec['document_types_requiring_back'],
+            [u'id-card']
+        )
+        account = StripePayoutAccountFactory.create(country='NL')
+        self.assertEqual(
+            account.document_spec['id'],
+            'NL'
+        )
+        self.assertEqual(
+            account.document_spec['supported_document_types'],
+            [u'passport', u'id-card', u'drivers-license']
+        )
+        self.assertEqual(
+            account.document_spec['document_types_requiring_back'],
+            [u'id-card', u'drivers-license']
+        )
+        account = StripePayoutAccountFactory.create(country='XX')
+        self.assertEqual(
+            account.document_spec['id'],
+            'DEFAULT'
+        )
+        self.assertEqual(
+            account.document_spec['supported_document_types'],
+            [u'passport', u'id-card', u'drivers-license']
+        )
+        self.assertEqual(
+            account.document_spec['document_types_requiring_back'],
+            [u'id-card', u'drivers-license']
+        )
 
 
 class StripeExternalAccountTestCase(BluebottleTestCase):
@@ -175,7 +237,7 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
         })
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.check = StripePayoutAccount(
                 owner=BlueBottleUserFactory.create(), country=country, account_id=account_id
@@ -208,10 +270,10 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
     def test_save(self):
         self.external_account.account_id = None
         with mock.patch(
-            'stripe.Account.create_external_account', return_value=self.connect_account
+                'stripe.Account.create_external_account', return_value=self.connect_account
         ) as create:
             with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
+                    'stripe.Account.retrieve', return_value=self.connect_account
             ):
                 self.external_account.create('some-token')
                 create.assert_called_with(
@@ -235,10 +297,10 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
 
     def test_retrieve(self):
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=self.connect_external_account
+                    'stripe.ListObject.retrieve', return_value=self.connect_external_account
             ) as retrieve_external_account:
                 self.assertEqual(
                     self.external_account.account.id,
@@ -258,10 +320,10 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
         self.connect_account.external_accounts = list_object
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.connect_account
+                'stripe.Account.retrieve', return_value=self.connect_account
         ):
             with mock.patch(
-                'stripe.ListObject.retrieve', return_value=self.connect_external_account
+                    'stripe.ListObject.retrieve', return_value=self.connect_external_account
             ) as retrieve_external_account:
                 self.assertEqual(
                     self.external_account.account.id,

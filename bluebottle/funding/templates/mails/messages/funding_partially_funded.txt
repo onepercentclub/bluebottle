@@ -3,9 +3,13 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans with recipient_name=obj.owner.first_name title=obj.activity.title context 'email' %}
+    {% blocktrans with recipient_name=obj.owner.first_name title=obj.title context 'email' %}
         Hi {{ recipient_name }},
-        Your funding deadline for {{title}} passed. Unfortunately, you didn’t reach your funding goal within the deadline.
+        Your funding deadline for "{{title}}" passed. Unfortunately, you didn’t reach your funding goal within the deadline.
         We will send you a follow-up email with more information soon.
     {% endblocktrans %}
 {% endblock content %} 
+
+{% block action %}
+   {% trans 'Go to campaign' context 'email' %}: {{ obj.get_absolute_url }}
+{% endblock %}`

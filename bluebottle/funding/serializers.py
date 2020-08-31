@@ -37,11 +37,11 @@ from bluebottle.funding_pledge.serializers import (
 from bluebottle.funding_stripe.serializers import (
     ExternalAccountSerializer, ConnectAccountSerializer, PayoutStripeBankSerializer
 )
+from bluebottle.funding_telesom.serializers import PayoutTelesomBankAccountSerializer, TelesomBankAccountSerializer
 from bluebottle.funding_vitepay.serializers import (
     VitepayBankAccountSerializer, PayoutVitepayBankAccountSerializer
 )
 from bluebottle.members.models import Member
-from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import (
     MoneySerializer, FilteredRelatedField, ResourcePermissionField, NoCommitMixin,
@@ -61,11 +61,17 @@ class FundingCurrencyValidator(object):
         self.fields = fields
         self.message = message or self.message
 
+    def set_context(self, serializer):
+        if serializer.instance:
+            self.activity = serializer.instance.activity
+
     def __call__(self, data):
+        activity = data.get('activity') or self.activity
         for field in self.fields:
             if (
-                data['activity'].target and
-                data[field].currency != data['activity'].target.currency
+                activity.target and
+                field in data and
+                data[field].currency != activity.target.currency
             ):
                 raise ValidationError(self.message)
 
@@ -168,12 +174,13 @@ class BudgetLineSerializer(ModelSerializer):
 class PaymentMethodSerializer(serializers.Serializer):
     code = serializers.CharField()
     name = serializers.CharField()
+    provider = serializers.CharField()
     currencies = serializers.SerializerMethodField()
     countries = serializers.ListField()
 
     class Meta():
         model = PaymentMethod
-        fields = ('code', 'name', 'currencies', 'countries', 'activity')
+        fields = ('code', 'name', 'provider', 'currencies', 'countries', 'activity')
 
     class JSONAPIMeta:
         resource_name = 'payments/payment-methods'
@@ -193,6 +200,7 @@ class BankAccountSerializer(PolymorphicModelSerializer):
         FlutterwaveBankAccountSerializer,
         LipishaBankAccountSerializer,
         VitepayBankAccountSerializer,
+        TelesomBankAccountSerializer,
         PledgeBankAccountSerializer
     ]
 
@@ -228,12 +236,12 @@ class FundingListSerializer(BaseActivityListSerializer):
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
         resource_name = 'activities/fundings'
 
-    included_serializers = {
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
-        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
-        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-    }
+    included_serializers = dict(
+        BaseActivitySerializer.included_serializers,
+        **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        }
+    )
 
 
 class TinyFundingSerializer(BaseTinyActivitySerializer):
@@ -286,7 +294,6 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             del fields['bank_account']
             del fields['required']
             del fields['errors']
-            del fields['review_status']
         return fields
 
     class Meta(BaseActivitySerializer.Meta):
@@ -355,7 +362,7 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
         return methods
 
 
-class FundingTransitionSerializer(TransitionSerializer):
+class FundingTransitionSerializer(ModelSerializer):
     resource = ResourceRelatedField(queryset=Funding.objects.all())
     field = 'transitions'
     included_serializers = {
@@ -425,7 +432,7 @@ class DonationListSerializer(BaseContributionListSerializer):
 
     class Meta(BaseContributionListSerializer.Meta):
         model = Donation
-        fields = BaseContributionListSerializer.Meta.fields + ('amount', 'fundraiser', 'reward', 'anonymous',)
+        fields = BaseContributionListSerializer.Meta.fields + ('amount', 'fundraiser', 'name', 'reward', 'anonymous',)
         meta_fields = ('created', 'updated', )
 
     class JSONAPIMeta(BaseContributionListSerializer.JSONAPIMeta):
@@ -462,7 +469,7 @@ class DonationSerializer(BaseContributionSerializer):
 
     class Meta(BaseContributionSerializer.Meta):
         model = Donation
-        fields = BaseContributionSerializer.Meta.fields + ('amount', 'fundraiser', 'reward', 'anonymous',)
+        fields = BaseContributionSerializer.Meta.fields + ('amount', 'fundraiser', 'name', 'reward', 'anonymous',)
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/donations'
@@ -582,6 +589,7 @@ class PayoutBankAccountSerializer(PolymorphicModelSerializer):
         PayoutFlutterwaveBankAccountSerializer,
         PayoutLipishaBankAccountSerializer,
         PayoutVitepayBankAccountSerializer,
+        PayoutTelesomBankAccountSerializer,
         PayoutPledgeBankAccountSerializer
     ]
 
@@ -592,7 +600,7 @@ class PayoutBankAccountSerializer(PolymorphicModelSerializer):
 
 class PayoutDonationSerializer(serializers.ModelSerializer):
     # For Payout service
-    amount = MoneySerializer()
+    amount = MoneySerializer(source='payout_amount')
 
     class Meta:
         fields = (

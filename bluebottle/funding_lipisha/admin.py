@@ -8,6 +8,9 @@ from bluebottle.funding_lipisha.models import LipishaPayment, LipishaPaymentProv
 @admin.register(LipishaPayment)
 class LipishaPaymentAdmin(PaymentChildAdmin):
     base_model = Payment
+    readonly_fields = PaymentChildAdmin.readonly_fields
+    fields = ['donation', 'mobile_number', 'transaction', 'unique_id'] + readonly_fields
+    search_fields = ['mobile_number', 'transaction', 'unique_id']
 
 
 @admin.register(LipishaPaymentProvider)

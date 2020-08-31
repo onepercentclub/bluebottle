@@ -2,8 +2,12 @@ import json
 import re
 from HTMLParser import HTMLParser
 
+from urllib2 import HTTPError
+from django.conf import settings
+from django.db import models
 from django.core.urlresolvers import resolve, reverse
 from django.core.validators import BaseValidator
+from django.http.request import validate_host
 from django.utils.translation import ugettext_lazy as _
 from moneyed import Money
 from rest_framework import serializers
@@ -11,8 +15,11 @@ from rest_framework.utils import model_meta
 from rest_framework_json_api.relations import SerializerMethodResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer as JSONAPIModelSerializer
 
+from captcha import client
+
 from bluebottle.utils.fields import FSMField
-from .models import Address, Language
+from bluebottle.utils.utils import get_client_ip
+from .models import Address, Language, TranslationPlatformSettings
 from .validators import validate_postal_code
 
 
@@ -358,6 +365,28 @@ class RelatedField(serializers.Field):
         return value
 
 
+class CaptchaField(serializers.CharField):
+    def to_internal_value(self, data):
+        result = super(CaptchaField, self).to_internal_value(data)
+
+        try:
+            captcha = client.submit(
+                recaptcha_response=result,
+                private_key=settings.RECAPTCHA_PRIVATE_KEY,
+                remoteip=get_client_ip(self.context['request'])
+            )
+        except HTTPError:  # Catch timeouts, etc
+            raise serializers.ValidationError(
+                self.error_messages["captcha_error"],
+                code="captcha_error"
+            )
+
+        if not captcha.is_valid or not validate_host(captcha.extra_data['hostname'], settings.ALLOWED_HOSTS):
+            raise serializers.ValidationError('Captcha value is not valid')
+
+        return result
+
+
 class NoCommitMixin():
     def update(self, instance, validated_data):
         serializers.raise_errors_on_nested_writes('update', self, validated_data)
@@ -378,3 +407,37 @@ class NoCommitMixin():
             instance.save()
 
         return instance
+
+
+class TruncatedCharField(serializers.CharField):
+    def __init__(self, length, *args, **kwargs):
+        self.length = length
+
+        super(TruncatedCharField, self).__init__(*args, **kwargs)
+
+    def to_internal_value(self, data):
+        return data[:self.length]
+
+
+class TranslationPlatformSettingsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TranslationPlatformSettings
+        fields = '__all__'
+
+    def get_fields(self):
+        try:
+            translation = self.instance.get_translation(self.instance.language_code)
+        except self.instance.DoesNotExist:
+            return {}
+
+        result = dict(
+            (field.verbose_name, serializers.CharField(max_length=100, source=field.name))
+            for field in translation._meta.fields
+            if isinstance(field, models.CharField) and field.name != 'language_code'
+        )
+
+        return result
+
+    def to_representation(self, obj):
+        return super(TranslationPlatformSettingsSerializer, self).to_representation(obj)

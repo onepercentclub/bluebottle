@@ -21,9 +21,13 @@ class UserResource(DateRangeResource):
     range_field = 'date_joined'
     select_related = ('location', 'location__group')
 
+    def get_queryset(self):
+        return super(UserResource, self).get_queryset().exclude(email='devteam+accounting@onepercentclub.com')
+
     def get_extra_fields(self):
         return tuple([
-            ("extra_{}".format(extra.name), extra.description) for extra in CustomMemberFieldSettings.objects.all()
+            ("extra_{}".format(extra.name), extra.description)
+            for extra in CustomMemberFieldSettings.objects.all()
         ])
 
 
@@ -44,6 +48,12 @@ class ApplicantResource(DateRangeResource):
         'activity', 'user'
     )
 
+    def get_extra_fields(self):
+        return tuple([
+            ("user__extra_{}".format(extra.name), extra.description)
+            for extra in CustomMemberFieldSettings.objects.all()
+        ])
+
 
 class EventResource(DateRangeResource):
     select_related = (
@@ -56,6 +66,12 @@ class ParticipantResource(DateRangeResource):
         'activity', 'user'
     )
 
+    def get_extra_fields(self):
+        return tuple([
+            ("user__extra_{}".format(extra.name), extra.description)
+            for extra in CustomMemberFieldSettings.objects.all()
+        ])
+
 
 class FundingResource(DateRangeResource):
     select_related = (
@@ -67,3 +83,9 @@ class DonationResource(DateRangeResource):
     select_related = (
         'activity', 'user'
     )
+
+    def get_extra_fields(self):
+        return tuple([
+            ("user__extra_{}".format(extra.name), extra.description)
+            for extra in CustomMemberFieldSettings.objects.all()
+        ])

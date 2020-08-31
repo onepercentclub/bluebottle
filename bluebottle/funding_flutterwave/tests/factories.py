@@ -1,12 +1,13 @@
 import factory
 
-from bluebottle.funding.tests.factories import DonationFactory
+from bluebottle.funding.tests.factories import DonationFactory, PlainPayoutAccountFactory
 from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwavePaymentProvider, FlutterwaveBankAccount
 
 
 class FlutterwavePaymentFactory(factory.DjangoModelFactory):
 
     donation = factory.SubFactory(DonationFactory)
+    tx_ref = factory.Sequence(lambda n: 'uid-{0}'.format(n))
 
     class Meta(object):
         model = FlutterwavePayment
@@ -28,6 +29,8 @@ class FlutterwaveBankAccountFactory(factory.DjangoModelFactory):
     bank_country_code = 'NG'
     bank_code = '044'
     account = 'FW-123456'
+    reviewed = True
+    connect_account = factory.SubFactory(PlainPayoutAccountFactory)
 
     class Meta(object):
         model = FlutterwaveBankAccount

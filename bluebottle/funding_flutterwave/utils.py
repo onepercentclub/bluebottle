@@ -12,7 +12,7 @@ def post(url, data):
 
 
 def check_payment_status(payment):
-
+    from states import FlutterwavePaymentStateMachine
     verify_url = "https://api.ravepay.co/flwv3-pug/getpaidx/api/v2/verify"
 
     from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider
@@ -25,12 +25,25 @@ def check_payment_status(payment):
         'txref': payment.tx_ref,
         'SECKEY': provider.private_settings['sec_key']
     }
-    data = post(verify_url, data)
+    try:
+        data = post(verify_url, data)
+    except PaymentException:
+        if payment.status != FlutterwavePaymentStateMachine.failed.value:
+            payment.states.fail()
+        payment.save()
+        return payment
+
     payment.update_response = data
+    if payment.donation.amount != data['data']['amount']:
+        payment.donation.amount = data['data']['amount']
+        payment.donation.save()
     if data['data']['status'] == 'successful':
-        payment.transitions.succeed()
+        from states import FlutterwavePaymentStateMachine
+        if payment.status != FlutterwavePaymentStateMachine.succeeded.value:
+            payment.states.succeed()
     else:
-        payment.transitions.fail()
+        if payment.status != FlutterwavePaymentStateMachine.failed.value:
+            payment.states.fail()
     payment.save()
     return payment
 

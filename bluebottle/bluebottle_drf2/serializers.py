@@ -2,7 +2,6 @@ import logging
 import os
 from os.path import isfile
 import re
-from StringIO import StringIO
 import sys
 from urllib2 import URLError
 import urlparse
@@ -10,13 +9,10 @@ import urlparse
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.files import File
 from django.template import defaultfilters
 from django.template.defaultfilters import linebreaks
 from django.utils.encoding import smart_str
 from django.utils.html import strip_tags, urlize
-
-import requests
 
 from micawber.contrib.mcdjango import providers
 from micawber.exceptions import ProviderException
@@ -35,18 +31,6 @@ def is_absolute_url(url):
 
 class RestrictedImageField(serializers.ImageField):
     def to_internal_value(self, data):
-        if isinstance(data, unicode) and is_absolute_url(data):
-            response = requests.get(data, verify=False)
-            try:
-                response.raise_for_status()
-            except requests.HTTPError, e:
-                raise ValidationError(e.message)
-
-            data = File(
-                StringIO(response.content),
-                name=data.split('/')[-1],
-            )
-            data.content_type = response.headers['content-type']
         if data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
             # We restrict images to a fixed set of mimetypes.
             # This prevents users from uploading broken eps files (for example),
@@ -287,6 +271,8 @@ class ImageSerializer(RestrictedImageField):
                 get_thumbnail(value, '600x600', crop=self.crop))
             wide = settings.MEDIA_URL + unicode(
                 get_thumbnail(value, '1024x256', crop=self.crop))
+            original = settings.MEDIA_URL + unicode(
+                get_thumbnail(value, '1920', upscale=False))
 
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
@@ -301,8 +287,9 @@ class ImageSerializer(RestrictedImageField):
                 'small': request.build_absolute_uri(small),
                 'square': request.build_absolute_uri(square),
                 'wide': request.build_absolute_uri(wide),
+                'original': request.build_absolute_uri(original),
             }
-        return {'full': full, 'large': large, 'small': small, 'square': square}
+        return {'full': full, 'large': large, 'small': small, 'square': square, 'original': original}
 
 
 class PhotoSerializer(RestrictedImageField):

@@ -6,6 +6,7 @@ from django.views.generic import RedirectView
 
 from bluebottle.views import HomeView
 from bluebottle.auth.views import admin_password_reset
+from bluebottle.bluebottle_dashboard.views import locked_out
 from bluebottle.looker.dashboard_views import LookerEmbedView  # noqa This has to be imported early so that custom urls will work
 
 
@@ -18,6 +19,7 @@ urlpatterns = [
     url(r'^admin/jet/', include('jet.urls', 'jet')),
     url(r'^admin/jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
 
+    url(r'^admin/locked/$', locked_out, name='admin-locked-out'),
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$',
         admin_password_reset,

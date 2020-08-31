@@ -2,18 +2,34 @@
 {% load i18n %}
 
 {% block content %}
-    {% if custom_message %}
-        {{ custom_message }}
-    {% else %}
-        {% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
-        Hi {{ recipient_name }},
-        Great news! Your task {{ assignment_title }} has been completed.
-        Go to your activity page to review the hours people spent on the task.
-        And while you're there, why not post an update to celebrate with the people who helped you out?
-        {% endblocktrans %}
-    {% endif %}
+{% if custom_message %}
+{{ custom_message }}
+{% elif obj.goals.count %}
+{% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
+Hi {{ recipient_name }},
+
+You did it! Your task "{{ assignment_title }}" has been successfully completed, that calls for a celebration.
+
+Head over to your task page and:
+
+1. Enter the impact your task made, so that everybody can see how effective your task was.
+2. Review the hours all participants have spent on your task.
+3. Thank your awesome participants for their support.
+{% endblocktrans %}
+{% else %}
+{% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
+Hi {{ recipient_name }},
+
+You did it! Your task "{{ assignment_title }}" has been successfully completed, that calls for a celebration.
+
+Head over to your task page and:
+
+1. Enter the impact your task made, so that everybody can see how effective your task was.
+2. Review the hours all participants have spent on your task.
+{% endblocktrans %}
+{% endif %}
 {% endblock %}
 
 {% block action %}
-   {% trans 'Review hours' context 'email' %}: {{ obj.get_absolute_url }}
+   {% trans 'Go to task' context 'email' %}: {{ obj.get_absolute_url }}
 {% endblock %}`

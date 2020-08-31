@@ -145,6 +145,26 @@ class EventTestCase(BluebottleTestCase):
             else:
                 self.assertFalse(participant.user.email in recipients)
 
+    def test_date_changed_passed(self):
+        event = EventFactory(
+            title='Test Title',
+            status='open',
+            start=now() - timedelta(days=4),
+        )
+
+        ParticipantFactory.create_batch(3, activity=event, status='new')
+        ParticipantFactory.create(activity=event, status='withdrawn')
+
+        mail.outbox = []
+
+        event.start = event.start + timedelta(days=1)
+        event.save()
+
+        recipients = [message.to[0] for message in mail.outbox]
+
+        for participant in event.contributions.instance_of(Participant):
+            self.assertFalse(participant.user.email in recipients)
+
     def test_date_not_changed(self):
         event = EventFactory(
             title='Test Title',

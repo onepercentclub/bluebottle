@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from bluebottle.members.models import CustomMemberFieldSettings
 from .exporter import ExportModelResource
+from ..impact.models import ImpactType
 
 
 class DateRangeResource(ExportModelResource):
@@ -42,6 +43,12 @@ class AssignmentResource(DateRangeResource):
         'initiative', 'owner'
     )
 
+    def get_extra_fields(self):
+        return tuple([
+            ("impact_{}".format(impact.slug), impact.name)
+            for impact in ImpactType.objects.filter(active=True).all()
+        ])
+
 
 class ApplicantResource(DateRangeResource):
     select_related = (
@@ -60,6 +67,12 @@ class EventResource(DateRangeResource):
         'initiative', 'owner'
     )
 
+    def get_extra_fields(self):
+        return tuple([
+            ("impact_{}".format(impact.slug), impact.name)
+            for impact in ImpactType.objects.filter(active=True).all()
+        ])
+
 
 class ParticipantResource(DateRangeResource):
     select_related = (
@@ -77,6 +90,12 @@ class FundingResource(DateRangeResource):
     select_related = (
         'initiative', 'owner'
     )
+
+    def get_extra_fields(self):
+        return tuple([
+            ("impact_{}".format(impact.slug), impact.name)
+            for impact in ImpactType.objects.filter(active=True).all()
+        ])
 
 
 class DonationResource(DateRangeResource):

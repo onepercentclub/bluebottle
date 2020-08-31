@@ -3,6 +3,7 @@ from datetime import timedelta
 from bluebottle.members.models import CustomMemberFieldSettings
 from .exporter import ExportModelResource
 from ..impact.models import ImpactType
+from ..segments.models import SegmentType
 
 
 class DateRangeResource(ExportModelResource):
@@ -38,16 +39,28 @@ class InitiativeResource(DateRangeResource):
     )
 
 
-class AssignmentResource(DateRangeResource):
+class ImpactMixin(object):
+
+    def get_extra_fields(self):
+        return super(ImpactMixin, self).get_extra_fields() + tuple([
+            ("impact:{}".format(impact.slug), impact.name)
+            for impact in ImpactType.objects.filter(active=True).all()
+        ])
+
+
+class SegmentMixin(object):
+
+    def get_extra_fields(self):
+        return super(SegmentMixin, self).get_extra_fields() + tuple([
+            ("segment:{}".format(segment.slug), segment.name)
+            for segment in SegmentType.objects.filter(is_active=True).all()
+        ])
+
+
+class AssignmentResource(ImpactMixin, SegmentMixin, DateRangeResource):
     select_related = (
         'initiative', 'owner'
     )
-
-    def get_extra_fields(self):
-        return tuple([
-            ("impact_{}".format(impact.slug), impact.name)
-            for impact in ImpactType.objects.filter(active=True).all()
-        ])
 
 
 class ApplicantResource(DateRangeResource):
@@ -62,16 +75,10 @@ class ApplicantResource(DateRangeResource):
         ])
 
 
-class EventResource(DateRangeResource):
+class EventResource(ImpactMixin, SegmentMixin, DateRangeResource):
     select_related = (
         'initiative', 'owner'
     )
-
-    def get_extra_fields(self):
-        return tuple([
-            ("impact_{}".format(impact.slug), impact.name)
-            for impact in ImpactType.objects.filter(active=True).all()
-        ])
 
 
 class ParticipantResource(DateRangeResource):
@@ -86,16 +93,10 @@ class ParticipantResource(DateRangeResource):
         ])
 
 
-class FundingResource(DateRangeResource):
+class FundingResource(ImpactMixin, SegmentMixin, DateRangeResource):
     select_related = (
         'initiative', 'owner'
     )
-
-    def get_extra_fields(self):
-        return tuple([
-            ("impact_{}".format(impact.slug), impact.name)
-            for impact in ImpactType.objects.filter(active=True).all()
-        ])
 
 
 class DonationResource(DateRangeResource):

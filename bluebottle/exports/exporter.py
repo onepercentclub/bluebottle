@@ -35,10 +35,16 @@ class ExportModelResource(resources.ModelResource):
 
     def export_field(self, field, obj):
         field_name = self.get_field_name(field)
-        if field_name.startswith('impact_'):
-            slug = field_name.replace('impact_', '')
+        if field_name.startswith('impact:'):
+            slug = field_name.replace('impact:', '')
             if obj.goals.filter(type__slug=slug).first():
                 return obj.goals.filter(type__slug=slug).first().realized
+            else:
+                return None
+        if field_name.startswith('segment:'):
+            slug = field_name.replace('segment:', '')
+            if obj.segments.filter(type__slug=slug).first():
+                return ','.join([segment.name for segment in obj.segments.filter(type__slug=slug).all()])
             else:
                 return None
         method = getattr(self, 'dehydrate_%s' % field_name, None)

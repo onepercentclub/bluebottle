@@ -16,7 +16,7 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, PrivateFileView,
-    ListAPIView
+    ListAPIView, TranslatedApiViewMixin
 )
 
 
@@ -126,7 +126,7 @@ class SkillPagination(PageNumberPagination):
     page_size = 10000
 
 
-class SkillList(JsonApiViewMixin, ListAPIView):
+class SkillList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     serializer_class = SkillSerializer
     queryset = Skill.objects.filter(disabled=False)
     permission_classes = [TenantConditionalOpenClose, ]

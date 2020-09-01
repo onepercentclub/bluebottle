@@ -33,6 +33,25 @@ class ExportModelResource(resources.ModelResource):
 
         self.kwargs = kwargs  # by default, silently accept all kwargs
 
+    def export_field(self, field, obj):
+        field_name = self.get_field_name(field)
+        if field_name.startswith('impact:'):
+            slug = field_name.replace('impact:', '')
+            if obj.goals.filter(type__slug=slug).first():
+                return obj.goals.filter(type__slug=slug).first().realized
+            else:
+                return None
+        if field_name.startswith('segment:'):
+            slug = field_name.replace('segment:', '')
+            if obj.segments.filter(type__slug=slug).first():
+                return ', '.join([segment.name for segment in obj.segments.filter(type__slug=slug).all()])
+            else:
+                return None
+        method = getattr(self, 'dehydrate_%s' % field_name, None)
+        if method is not None:
+            return method(obj)
+        return field.export(obj)
+
     def export(self, queryset=None, task_meta=None):
         if queryset is None:
             queryset = self.get_queryset()
@@ -168,6 +187,7 @@ def get_resource_for_model(model, **kwargs):
             if fields is not None:
                 # use own factory
                 return modelresource_factory(model, resource_class=resource_class, fields=fields)(**kwargs)
+
     return resources.modelresource_factory(model, resource_class=resource_class)(**kwargs)
 
 

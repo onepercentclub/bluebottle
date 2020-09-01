@@ -2,6 +2,26 @@ from datetime import timedelta
 
 from bluebottle.members.models import CustomMemberFieldSettings
 from .exporter import ExportModelResource
+from ..impact.models import ImpactType
+from ..segments.models import SegmentType
+
+
+class ImpactMixin(object):
+
+    def get_extra_fields(self):
+        return super(ImpactMixin, self).get_extra_fields() + tuple([
+            ("impact:{}".format(impact.slug), impact.name)
+            for impact in ImpactType.objects.filter(active=True).all()
+        ])
+
+
+class SegmentMixin(object):
+
+    def get_extra_fields(self):
+        return super(SegmentMixin, self).get_extra_fields() + tuple([
+            ("segment:{}".format(segment.slug), segment.name)
+            for segment in SegmentType.objects.filter(is_active=True).all()
+        ])
 
 
 class DateRangeResource(ExportModelResource):
@@ -17,7 +37,7 @@ class DateRangeResource(ExportModelResource):
         return qs.filter(**{'%s__range' % self.range_field: (frm, to)})
 
 
-class UserResource(DateRangeResource):
+class UserResource(SegmentMixin, DateRangeResource):
     range_field = 'date_joined'
     select_related = ('location', 'location__group')
 
@@ -25,7 +45,7 @@ class UserResource(DateRangeResource):
         return super(UserResource, self).get_queryset().exclude(email='devteam+accounting@onepercentclub.com')
 
     def get_extra_fields(self):
-        return tuple([
+        return super(UserResource, self).get_extra_fields() + tuple([
             ("extra_{}".format(extra.name), extra.description)
             for extra in CustomMemberFieldSettings.objects.all()
         ])
@@ -37,7 +57,7 @@ class InitiativeResource(DateRangeResource):
     )
 
 
-class AssignmentResource(DateRangeResource):
+class AssignmentResource(ImpactMixin, SegmentMixin, DateRangeResource):
     select_related = (
         'initiative', 'owner'
     )
@@ -55,7 +75,7 @@ class ApplicantResource(DateRangeResource):
         ])
 
 
-class EventResource(DateRangeResource):
+class EventResource(ImpactMixin, SegmentMixin, DateRangeResource):
     select_related = (
         'initiative', 'owner'
     )
@@ -73,7 +93,7 @@ class ParticipantResource(DateRangeResource):
         ])
 
 
-class FundingResource(DateRangeResource):
+class FundingResource(ImpactMixin, SegmentMixin, DateRangeResource):
     select_related = (
         'initiative', 'owner'
     )

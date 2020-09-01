@@ -31,7 +31,7 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView, ListAPIView
+    CreateAPIView, ListAPIView, TranslatedApiViewMixin
 )
 
 
@@ -168,7 +168,7 @@ class ThemePagination(PageNumberPagination):
     page_size = 10000
 
 
-class ThemeList(JsonApiViewMixin, ListAPIView):
+class ThemeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     serializer_class = ThemeSerializer
     queryset = ProjectTheme.objects.filter(disabled=False)
     permission_classes = [TenantConditionalOpenClose, ]

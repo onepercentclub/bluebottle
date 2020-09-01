@@ -28,7 +28,7 @@ class ApplicantRejectedMessage(TransitionMessage):
 
 
 class AssignmentExpiredMessage(TransitionMessage):
-    subject = _('Your task "{assignment_title}" has been closed')
+    subject = _('Your task "{assignment_title}" has expired')
     template = 'messages/assignment_expired'
     context = {
         'assignment_title': 'title'

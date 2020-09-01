@@ -25,8 +25,12 @@ class DonationSuccessDonorMessage(TransitionMessage):
 
 
 class DonationRefundedDonorMessage(TransitionMessage):
-    subject = _("Your donation has been refunded")
+    subject = _('Your donation for the campaign "{title}" will be refunded')
     template = 'messages/donation_refunded_donor'
+
+    context = {
+        'title': 'activity.title'
+    }
 
     def get_recipients(self):
         """the donor (unless it is a guest donation)"""
@@ -68,7 +72,7 @@ class FundingRejectedMessage(TransitionMessage):
 
 
 class FundingExpiredMessage(TransitionMessage):
-    subject = _(u"Your crowdfunding campaign has been closed")
+    subject = _(u"Your crowdfunding campaign has expired")
     template = 'messages/funding_expired'
 
     def get_recipients(self):

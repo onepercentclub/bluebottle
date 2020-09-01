@@ -85,7 +85,7 @@ class ParticipantApplicationManagerMessage(TransitionMessage):
 
 
 class ParticipantRejectedMessage(TransitionMessage):
-    subject = _('Your status for "{title}" was changed to "not going"')
+    subject = _('You have been rejected for the event “{title}”')
     template = 'messages/participant_rejected'
     context = {
         'title': 'activity.title'

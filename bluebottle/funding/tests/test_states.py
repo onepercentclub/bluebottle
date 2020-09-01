@@ -346,7 +346,10 @@ class DonationStateMachineTests(BluebottleTestCase):
         PledgePaymentFactory.create(donation=donation)
         mail.outbox = []
         donation.states.activity_refund(save=True)
-        self.assertEqual(mail.outbox[0].subject, u'Your donation has been refunded')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            u'Your donation for the campaign "{}" will be refunded'.format(self.funding.title)
+        )
 
 
 class BasePaymentStateMachineTests(BluebottleTestCase):

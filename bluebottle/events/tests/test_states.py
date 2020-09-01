@@ -470,12 +470,12 @@ class ParticipantStateMachineTests(BluebottleTestCase):
         self.assertEqual(
             len(self.messages(self.participant.user)), 3
         )
-
         self.assertEqual(
+
             [
-                'You were added to the event "{}"'.format(self.event.title),
-                'Your status for "{}" was changed to "not going"'.format(self.event.title),
-                'You were added to the event "{}"'.format(self.event.title)
+                u'You were added to the event "{}"'.format(self.event.title),
+                u'You have been rejected for the event "{}"'.format(self.event.title),
+                u'You were added to the event "{}"'.format(self.event.title)
             ],
             [
                 m.subject for m in self.messages(self.participant.user)

@@ -116,7 +116,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.assertEqual(self.funding.status, 'cancelled')
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your crowdfunding campaign has been closed')
+        self.assertEqual(mail.outbox[0].subject, 'Your crowdfunding campaign has expired')
         self.assertTrue(self.funding.title in mail.outbox[0].body)
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
 

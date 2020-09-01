@@ -105,7 +105,8 @@ class TestExportAdmin(BluebottleTestCase):
                 value='Parblue Yellow'
             )
         initiative = InitiativeFactory.create(owner=users[0])
-        assignment = AssignmentFactory.create(owner=users[1], initiative=initiative)
+        assignment = AssignmentFactory.create(
+            owner=users[1], initiative=initiative)
         ApplicantFactory.create(activity=assignment, user=users[2])
 
         data = {
@@ -130,11 +131,11 @@ class TestExportAdmin(BluebottleTestCase):
             'Parblue Yellow'
         )
         self.assertEqual(
-            book.sheet_by_name('Task contributions').cell(0, 10).value,
+            book.sheet_by_name('Task contributions').cell(0, 13).value,
             'Favourite colour'
         )
         self.assertEqual(
-            book.sheet_by_name('Task contributions').cell(1, 10).value,
+            book.sheet_by_name('Task contributions').cell(1, 13).value,
             'Parblue Yellow'
         )
 

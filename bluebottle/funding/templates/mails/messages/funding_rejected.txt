@@ -5,7 +5,7 @@
 {% block content %}
     {% blocktrans with recipient_name=obj.owner.first_name title=obj.title context 'email' %}
         Hi {{ recipient_name }},
-        Unfortunately, the platform manager rejected your crowdfunding campaign "{{ title }}".
+        Unfortunately your campaign “{{ title }}” has been cancelled.
         Didn’t expect this? Reach out to your platform manager to find out why.
     {% endblocktrans %}
 {% endblock content %}

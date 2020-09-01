@@ -5,14 +5,13 @@
 {% blocktrans with recipient_name=obj.owner.first_name event_title=obj.title context 'email' %}
 Hi {{ recipient_name }},
 
-We wanted to let you know that your event "{{ event_title }}" has been rejected.
+Unfortunately your event “{{ event_title }}” has been rejected.
 
-You can update your attendees by posting a message on your event page.
-Make sure the email notification is turned on, so all attendees will be notified of the update.
+If you have any questions, you can contact the platform manager by replying to this email.
 {% endblocktrans %}
 
 {% endblock %}
 
 {% block action %}
-   {% trans 'Post update' context 'email' %}: {{ obj.get_absolute_url }}
+   {% trans 'Go to initiative' context 'email' %}: {{ obj.initiative.get_absolute_url }}
 {% endblock %}`

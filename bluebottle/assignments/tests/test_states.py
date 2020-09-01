@@ -102,7 +102,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'Your task "{}" has been closed'.format(self.assignment.title)
+            'Your task "{}" has expired'.format(self.assignment.title)
         )
         self.assertTrue('nobody applied to your task' in mail.outbox[0].body)
 
@@ -323,7 +323,7 @@ class ApplicantStateMachineTestCase(BluebottleTestCase):
         )
 
         self.assertTrue(
-            '{} applied to join'.format(self.applicant.user.first_name)
+            '{} applied to '.format(self.applicant.user.first_name)
             in mail.outbox[0].body
         )
 

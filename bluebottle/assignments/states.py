@@ -19,17 +19,12 @@ class AssignmentStateMachine(ActivityStateMachine):
     running = State(
         _('running'),
         'running',
-        _('Activity is currently being execute, not accepting new contributions.')
+        _('The task is taking place and people can\'t apply any more.')
     )
     full = State(
         _('full'),
         'full',
-        _('Activity is full, not accepting new contributions.')
-    )
-    submitted = State(
-        _('submitted'),
-        'submitted',
-        _('The activity is ready to go online once the initiative has been approved.')
+        _('The number of people needed is reached and people can\'t apply any more.')
     )
 
     def should_finish(self):
@@ -84,7 +79,10 @@ class AssignmentStateMachine(ActivityStateMachine):
         full,
         automatic=True,
         name=_('Fill'),
-        description=_("The activity has reached its capacity isn't open for new applications."),
+        description=_(
+            "People can no longer apply. Triggered when the number of accepted people "
+            "equals the number of people needed."
+        ),
     )
 
     auto_approve = Transition(
@@ -95,7 +93,10 @@ class AssignmentStateMachine(ActivityStateMachine):
         ActivityStateMachine.open,
         name=_('Approve'),
         automatic=True,
-        description=_("Approve the task. Users can start signing up to it."),
+        description=_(
+            "The task will be visible in the frontend and people can apply to "
+            "the task."
+        ),
         effects=[
             RelatedTransitionEffect('organizer', 'succeed'),
             RelatedTransitionEffect('applicants', 'reset'),
@@ -115,7 +116,11 @@ class AssignmentStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.cancelled,
         name=_('Cancel'),
-        description=_('Cancel the task.'),
+        description=_(
+            'Cancel if the task will not be executed. The activity manager will not be able '
+            'to edit the task and it won\'t show up on the search page in the front end. The '
+            'task will still be available in the back office and appear in your reporting.'
+        ),
         automatic=False,
         effects=[
             RelatedTransitionEffect('organizer', 'fail'),
@@ -127,8 +132,10 @@ class AssignmentStateMachine(ActivityStateMachine):
         full,
         ActivityStateMachine.open,
         name=_('Reopen'),
-        description=_("Reopen the activity for new sign-ups. "
-                      "Triggered by a change in capacity or the number of applicants."),
+        description=_(
+            'People can apply to the task again. Triggered when the number of accepted people '
+            'become less than the number of people needed.'
+        ),
         automatic=True
     )
 
@@ -158,7 +165,9 @@ class AssignmentStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
-        description=_("The activity was successfully completed."),
+        description=_(
+            'The task ends and the contributions are counted. Triggered when the task date passes.'
+        ),
         automatic=True,
         effects=[
             RelatedTransitionEffect('accepted_applicants', 'succeed'),
@@ -170,7 +179,9 @@ class AssignmentStateMachine(ActivityStateMachine):
         ActivityStateMachine.open,
         ActivityStateMachine.cancelled,
         name=_('Expire'),
-        description=_("The activity expired. There were no sign-ups before the deadline to apply."),
+        description=_(
+            "The task didn't have any applicants before the deadline to apply and is cancelled."
+        ),
         automatic=True,
         effects=[
             RelatedTransitionEffect('organizer', 'fail'),

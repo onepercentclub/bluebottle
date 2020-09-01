@@ -84,7 +84,12 @@ class ReviewStateMachine(ModelStateMachine):
     def is_staff(self, user):
         return user.is_staff
 
-    initiate = Transition(EmptyState(), draft)
+    initiate = Transition(
+        EmptyState(),
+        draft,
+        name=_('Start'),
+        description=_('The initiative will be created.'),
+    )
 
     submit = Transition(
         [draft, needs_work],

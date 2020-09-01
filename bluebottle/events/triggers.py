@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
@@ -27,8 +28,17 @@ class CapacityChangedTrigger(ModelChangedTrigger):
 class DateChangedTrigger(ModelChangedTrigger):
     field = 'start'
 
+    def in_the_future(event):
+        """is in the future"""
+        return event.start > timezone.now()
+
     effects = [
-        NotificationEffect(EventDateChanged),
+        NotificationEffect(
+            EventDateChanged,
+            conditions=[
+                in_the_future
+            ]
+        ),
         TransitionEffect('succeed', conditions=[
             EventStateMachine.should_finish,
             EventStateMachine.has_participants

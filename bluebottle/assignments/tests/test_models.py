@@ -65,6 +65,29 @@ class AssignmentTestCase(BluebottleTestCase):
             else:
                 self.assertFalse(participant.user.email in messages)
 
+    def test_date_changed_passed(self):
+        assignment = AssignmentFactory(
+            title='Test Title',
+            status='open',
+            date=now() + timedelta(days=4),
+        )
+        ApplicantFactory.create_batch(3, activity=assignment, status='new')
+        ApplicantFactory.create_batch(
+            3, activity=assignment, status='accepted')
+        withdrawn = ApplicantFactory.create(activity=assignment, status='new')
+        withdrawn.states.withdraw(save=True)
+
+        mail.outbox = []
+
+        assignment.date = assignment.date - timedelta(days=4)
+        assignment.save()
+
+        messages = dict((message.to[0], message.body)
+                        for message in mail.outbox)
+
+        for participant in assignment.contributions.instance_of(Applicant).all():
+            self.assertFalse(participant.user.email in messages)
+
     def test_end_date_type_changed(self):
         assignment = AssignmentFactory(
             title='Test Title',

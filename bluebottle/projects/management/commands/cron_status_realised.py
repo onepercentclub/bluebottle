@@ -77,7 +77,7 @@ class Command(BaseCommand):
                                                   deadline__lte=now()):
                 try:
                     project.deadline_reached()
-                except Exception, e:
+                except Exception as e:
                     logger.error(e)
 
             """
@@ -92,7 +92,7 @@ class Command(BaseCommand):
                     deadline_to_apply__lt=now()).all():
                 try:
                     task.deadline_to_apply_reached()
-                except Exception, e:
+                except Exception as e:
                     logger.error(e)
 
             for task in Task.objects.filter(
@@ -101,7 +101,7 @@ class Command(BaseCommand):
                     deadline__lt=now()).all():
                 try:
                     task.deadline_reached()
-                except Exception, e:
+                except Exception as e:
                     logger.error(e)
 
             self.stdout.write(
@@ -117,7 +117,7 @@ class Command(BaseCommand):
                 try:
                     project.status = vote_done
                     project.save()
-                except Exception, e:
+                except Exception as e:
                     logger.error(e)
 
             self.stdout.write("Done checking projects with voting deadlines")

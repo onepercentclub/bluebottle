@@ -77,7 +77,7 @@ class Statistics(object):
             else:
                 participants[member['id']] = member
 
-        return sorted(participants.values(), key=lambda k: k['action_date'])
+        return sorted(list(participants.values()), key=lambda k: k['action_date'])
 
     # NOTE: Temporary Stats to count a special case of impact of considering only task members with status realised
     # on the
@@ -126,7 +126,7 @@ class Statistics(object):
             else:
                 participants[member['id']] = member
 
-        return sorted(participants.values(), key=lambda k: k['action_date'])
+        return sorted(list(participants.values()), key=lambda k: k['action_date'])
 
     # Projects Statistics
     @property

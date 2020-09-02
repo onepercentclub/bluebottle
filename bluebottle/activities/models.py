@@ -107,7 +107,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        link = u"{}/{}/initiatives/activities/details/{}/{}/{}".format(
+        link = "{}/{}/initiatives/activities/details/{}/{}/{}".format(
             domain, language,
             self.__class__.__name__.lower(),
             self.pk,

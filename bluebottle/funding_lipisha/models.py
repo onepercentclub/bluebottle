@@ -92,4 +92,4 @@ class LipishaBankAccount(BankAccount):
         }
 
 
-from states import *  # noqa
+from .states import *  # noqa

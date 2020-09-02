@@ -101,4 +101,4 @@ class ManagementCommandExportTenantsTests(TestCase):
         self.assertEqual(text[0]['name'], 'test2')
         self.assertEqual(text[0]['accounts'], [])
         self.assertEqual(text[1]['name'], 'onepercent')
-        self.assertEqual(text[1]['accounts'], [{u'service_type': u'docdata', u'username': u'1procentclub_nw'}])
+        self.assertEqual(text[1]['accounts'], [{'service_type': 'docdata', 'username': '1procentclub_nw'}])

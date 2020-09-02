@@ -252,8 +252,8 @@ class Task(models.Model, PreviousStatusMixin):
         super(Task, self).save(*args, **kwargs)
 
     class Meta:
-        verbose_name = _(u'task')
-        verbose_name_plural = _(u'tasks')
+        verbose_name = _('task')
+        verbose_name_plural = _('tasks')
         ordering = ['-created']
 
         permissions = (
@@ -288,8 +288,8 @@ class Skill(SortableTranslatableModel):
         permissions = (
             ('api_read_skill', 'Can view skills through the API'),
         )
-        verbose_name = _(u'Skill')
-        verbose_name_plural = _(u'Skills')
+        verbose_name = _('Skill')
+        verbose_name_plural = _('Skills')
 
 
 class TaskMember(models.Model, PreviousStatusMixin):
@@ -341,8 +341,8 @@ class TaskMember(models.Model, PreviousStatusMixin):
             ('api_read_taskmember_resume', 'Can read taskmembers resumes through the API'),
             ('api_read_own_taskmember_resume', 'Can read own taskmembers resumes through the API'),
         )
-        verbose_name = _(u'task member')
-        verbose_name_plural = _(u'task members')
+        verbose_name = _('task member')
+        verbose_name_plural = _('task members')
 
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
@@ -383,8 +383,8 @@ class TaskFile(models.Model):
     task = models.ForeignKey('tasks.Task', related_name="files")
 
     class Meta:
-        verbose_name = _(u'task file')
-        verbose_name_plural = _(u'task files')
+        verbose_name = _('task file')
+        verbose_name_plural = _('task files')
 
     @property
     def owner(self):
@@ -397,8 +397,8 @@ class TaskStatusLog(models.Model):
     start = CreationDateTimeField(_('created'), help_text=_('When this task entered in this status.'))
 
     class Meta:
-        verbose_name = _(u'task status log')
-        verbose_name_plural = _(u'task status logs')
+        verbose_name = _('task status log')
+        verbose_name_plural = _('task status logs')
 
     class Analytics:
         type = 'task'
@@ -430,8 +430,8 @@ class TaskMemberStatusLog(models.Model):
     start = CreationDateTimeField(_('created'), help_text=_('When this task member entered in this status.'))
 
     class Meta:
-        verbose_name = _(u'task member status log')
-        verbose_name_plural = _(u'task member status logs')
+        verbose_name = _('task member status log')
+        verbose_name_plural = _('task member status logs')
 
     class Analytics:
         type = 'task_member'

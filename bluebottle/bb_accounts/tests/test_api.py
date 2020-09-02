@@ -1,6 +1,6 @@
 import json
 import re
-import urlparse
+import urllib.parse
 import time
 
 import mock
@@ -346,11 +346,11 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['last_name'], self.user_1.first_name)
 
         self.assertEqual(response.data['permissions']['project_list'],
-                         {u'OPTIONS': True, u'GET': True})
+                         {'OPTIONS': True, 'GET': True})
         self.assertEqual(response.data['permissions']['project_manage_list'],
-                         {u'GET': True, u'OPTIONS': True, u'POST': True})
+                         {'GET': True, 'OPTIONS': True, 'POST': True})
         self.assertEqual(response.data['permissions']['homepage'],
-                         {u'GET': True, u'OPTIONS': True})
+                         {'GET': True, 'OPTIONS': True})
         self.client.logout()
 
     def test_logout_authenticated(self):
@@ -447,10 +447,10 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['non_field_errors'][0]['type'], 'email')
         self.assertEqual(response.data['non_field_errors'][0]['email'], 'nijntje27@hetkonijntje.nl')
         self.assertEqual(
-            unicode(response.data['non_field_errors'][0]['id']), unicode(user_1.pk)
+            str(response.data['non_field_errors'][0]['id']), str(user_1.pk)
         )
         self.assertEqual(
-            unicode(response.data['email'][0]), 'member with this email address already exists.'
+            str(response.data['email'][0]), 'member with this email address already exists.'
         )
 
     def test_generate_username(self):
@@ -595,7 +595,7 @@ class AuthLocaleMiddlewareTest(BluebottleTestCase):
 
 @httmock.urlmatch(netloc='www.google.com', path='/recaptcha/api/siteverify')
 def captcha_mock(url, request):
-    data = urlparse.parse_qs(request.body)
+    data = urllib.parse.parse_qs(request.body)
     if data.get('response')[0] == 'test-token':
         return json.dumps({'success': True})
     else:
@@ -625,7 +625,7 @@ class UserVerificationTest(BluebottleTestCase):
             self.assertEqual(response.status_code, 201)
             self.user.refresh_from_db()
             self.assertTrue(self.user.verified)
-            self.assertEqual(response.data, {'token': u'test-token', 'id': self.user.id})
+            self.assertEqual(response.data, {'token': 'test-token', 'id': self.user.id})
 
     def test_verify_unauthenticated(self):
         with httmock.HTTMock(captcha_mock):
@@ -672,7 +672,7 @@ class TokenLoginApiTest(BluebottleTestCase):
             data={'user_id': self.user.pk, 'token': token}
         )
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data.keys(), ['token'])
+        self.assertEqual(list(response.data.keys()), ['token'])
 
     def test_token_login_twice(self):
         token = login_token_generator.make_token(self.user)

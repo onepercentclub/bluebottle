@@ -44,4 +44,4 @@ def run(*args):
 
             mapping += [(payout['id'], model.pk) for (payout, model) in models]
 
-    print json.dumps(mapping)
+    print((json.dumps(mapping)))

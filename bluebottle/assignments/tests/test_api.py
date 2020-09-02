@@ -245,7 +245,7 @@ class AssignmentDetailAPITestCase(BluebottleTestCase):
             if resource['type'] == 'activities/impact-goals'
         ]
         for goal in goals:
-            self.assertTrue(unicode(goal.pk) in included_goals)
+            self.assertTrue(str(goal.pk) in included_goals)
 
 
 class AssignmentDetailApplicantsAPITestCase(BluebottleTestCase):
@@ -387,7 +387,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         transitions = [
-            {u'available': True, u'name': u'delete', u'target': u'deleted'}
+            {'available': True, 'name': 'delete', 'target': 'deleted'}
         ]
         self.assertEqual(data['data']['meta']['transitions'], transitions)
 
@@ -413,8 +413,8 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             data['data']['meta']['transitions'],
             [
-                {u'available': True, u'name': u'submit', u'target': u'submitted'},
-                {u'available': True, u'name': u'delete', u'target': u'deleted'}
+                {'available': True, 'name': 'submit', 'target': 'submitted'},
+                {'available': True, 'name': 'delete', 'target': 'deleted'}
             ]
         )
 
@@ -573,7 +573,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.data['motivation'], 'Pick me! Pick me!')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
-            mail.outbox[0].subject, u'Someone applied to your task "Make coffee"! 🙌')
+            mail.outbox[0].subject, 'Someone applied to your task "Make coffee"! 🙌')
         self.assertTrue("Review the application and decide",
                         mail.outbox[0].body)
 
@@ -618,7 +618,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json()['errors'][0],
-            u'Mime-type is not allowed for this endpoint'
+            'Mime-type is not allowed for this endpoint'
         )
 
     def test_apply_with_document_fake_mime(self):
@@ -634,7 +634,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json()['errors'][0],
-            u'Mime-type does not match Content-Type'
+            'Mime-type does not match Content-Type'
         )
 
     def test_confirm_hours(self):

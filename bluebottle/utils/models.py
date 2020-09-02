@@ -155,7 +155,7 @@ class ValidatedModelMixin(object):
         for validator in self.validators:
             try:
                 validator(self)()
-            except ValidatorError, e:
+            except ValidatorError as e:
                 yield e
 
     @property
@@ -195,7 +195,7 @@ class TranslationPlatformSettings(TranslatableModel, BasePlatformSettings):
             max_length=100, null=True, blank=True
         ),
         whats_the_location_of_your_office=models.CharField(
-            u'What\u2019s the location of your office?',
+            'What\u2019s the location of your office?',
             max_length=100, null=True, blank=True
         ),
 

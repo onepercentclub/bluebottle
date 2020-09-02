@@ -25,7 +25,7 @@ class SegmentType(models.Model):
         super(SegmentType, self).save(**kwargs)
 
     def __unicode__(self):
-        return unicode(self.name)
+        return str(self.name)
 
 
 class Segment(models.Model):
@@ -48,4 +48,4 @@ class Segment(models.Model):
         super(Segment, self).save(*args, **kwargs)
 
     def __unicode__(self):
-        return u'{}: {}'.format(self.type.name, self.name)
+        return '{}: {}'.format(self.type.name, self.name)

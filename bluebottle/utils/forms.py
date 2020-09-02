@@ -21,9 +21,7 @@ class FSMModelFormMetaClass(ModelFormMetaclass):
         return super(FSMModelFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
-class FSMModelForm(forms.ModelForm):
-    __metaclass__ = FSMModelFormMetaClass
-
+class FSMModelForm(forms.ModelForm, metaclass=FSMModelFormMetaClass):
     def __init__(self, *args, **kwargs):
         super(FSMModelForm, self).__init__(*args, **kwargs)
         for fsm_field in self.fsm_fields:

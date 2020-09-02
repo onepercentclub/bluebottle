@@ -14,7 +14,7 @@ from bluebottle.clients.utils import get_user_site_links
 
 def _group_by_name(results, name):
     groups = results['groups']
-    return (group for group in groups if group['name'] == name).next()
+    return next((group for group in groups if group['name'] == name))
 
 
 class TestSiteLinks(BluebottleTestCase):

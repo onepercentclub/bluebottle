@@ -12,7 +12,7 @@ original_display_for_field = admin_utils.display_for_field
 
 def display_for_field(value, field, empty):
     if isinstance(field, MoneyField):
-        return unicode(value)
+        return str(value)
 
     return original_display_for_field(value, field, empty)
 

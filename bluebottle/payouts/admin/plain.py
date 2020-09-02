@@ -39,7 +39,7 @@ class PayoutDocumentAdmin(admin.ModelAdmin):
 
         if url is not None:
             return format_html(
-                u"<a href='{}'>{}</a>",
+                "<a href='{}'>{}</a>",
                 str(url), _('Download')
             )
         return '(None)'

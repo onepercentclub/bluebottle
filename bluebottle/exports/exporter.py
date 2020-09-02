@@ -138,12 +138,12 @@ def get_export_models(admin_only=False):
         if admin_only:
             if admin.site._registry == {}:
                 admin.autodiscover()
-            return admin.site._registry.keys()
+            return list(admin.site._registry.keys())
         return get_models()
     else:
         models = []
         not_installed = []
-        for model, _ in export_conf.items():
+        for model, _ in list(export_conf.items()):
             app_label, model_class_name = model.split('.')
             model_class = get_model(app_label, model_class_name)
             if model_class is not None:
@@ -154,7 +154,7 @@ def get_export_models(admin_only=False):
         if not_installed:
             raise ImproperlyConfigured(
                 'The following models can\'t be exported because they haven\'t '
-                'been installed: %s' % u', '.join(not_installed)
+                'been installed: %s' % ', '.join(not_installed)
             )
         return models
 
@@ -165,7 +165,7 @@ def get_resource_for_model(model, **kwargs):
     """
     # TODO: settings to map model to resource
 
-    model_name = u'{app_label}.{name}'.format(
+    model_name = '{app_label}.{name}'.format(
         app_label=model._meta.app_label,
         name=model.__name__
     )
@@ -229,7 +229,7 @@ class Exporter(object):
             if resource.title is not None:
                 dataset.title = force_text(resource.title)[:31]  # maximum of 31 chars int title
             else:
-                dataset.title = u'{name} ({app}.{model})'.format(
+                dataset.title = '{name} ({app}.{model})'.format(
                     name=model._meta.verbose_name_plural,
                     app=model._meta.app_label,
                     model=model.__name__

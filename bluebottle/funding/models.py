@@ -185,7 +185,7 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) converted to the targets currency
         """
-        from states import DonationStateMachine
+        from .states import DonationStateMachine
         cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
@@ -213,7 +213,7 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) without pledges converted to the targets currency
         """
-        from states import DonationStateMachine
+        from .states import DonationStateMachine
         cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
@@ -240,7 +240,7 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) converted to the targets currency
         """
-        from states import DonationStateMachine
+        from .states import DonationStateMachine
         totals = self.donations.filter(
             status__in=(
                 DonationStateMachine.succeeded.value,
@@ -276,7 +276,7 @@ class Funding(Activity):
 
     @property
     def stats(self):
-        from states import DonationStateMachine
+        from .states import DonationStateMachine
         stats = self.donations.filter(
             status=DonationStateMachine.succeeded.value
         ).aggregate(
@@ -322,7 +322,7 @@ class Reward(models.Model):
 
     @property
     def count(self):
-        from states import DonationStateMachine
+        from .states import DonationStateMachine
         return self.donations.filter(
             status=DonationStateMachine.succeeded.value
         ).count()
@@ -365,7 +365,7 @@ class BudgetLine(models.Model):
         verbose_name_plural = _('budget lines')
 
     def __unicode__(self):
-        return u'{0} - {1}'.format(self.description, self.amount)
+        return '{0} - {1}'.format(self.description, self.amount)
 
 
 class Fundraiser(AnonymizationMixin, models.Model):
@@ -392,7 +392,7 @@ class Fundraiser(AnonymizationMixin, models.Model):
 
     @cached_property
     def amount_donated(self):
-        from states import DonationStateMachine
+        from .states import DonationStateMachine
         donations = self.donations.filter(
             status__in=[
                 DonationStateMachine.succeeded.value,
@@ -436,7 +436,7 @@ class Payout(TriggerMixin, models.Model):
 
     @classmethod
     def generate(cls, activity):
-        from states import PayoutStateMachine
+        from .states import PayoutStateMachine
         for payout in cls.objects.filter(activity=activity):
             if payout.status == PayoutStateMachine.new.value:
                 payout.delete()
@@ -512,7 +512,7 @@ class Donation(Contribution):
         verbose_name_plural = _('Donations')
 
     def __unicode__(self):
-        return u'{}'.format(self.amount)
+        return '{}'.format(self.amount)
 
     class JSONAPIMeta:
         resource_name = 'contributions/donations'

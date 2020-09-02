@@ -194,6 +194,6 @@ class Geolocation(models.Model):
 
     def __unicode__(self):
         if self.locality:
-            return u"{}, {}".format(self.locality, self.country.name)
+            return "{}, {}".format(self.locality, self.country.name)
         else:
             return self.country.name

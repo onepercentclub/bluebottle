@@ -28,7 +28,7 @@ class VerboseForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
                                               obj._meta.object_name.lower()),
                 args=(obj.pk,)
             )
-            return u'&nbsp;<strong><a href="{0}">{1}</a></strong>'.format(
+            return '&nbsp;<strong><a href="{0}">{1}</a></strong>'.format(
                 change_url, escape(obj))
         except (ValueError, self.rel.to.DoesNotExist):
             return '???'
@@ -53,8 +53,8 @@ class VerboseManyToManyRawIdWidget(ManyToManyRawIdWidget):
                     '<strong><a href="{0}">{1}</a></strong>'.format(change_url,
                                                                     escape(x))]
             except self.rel.to.DoesNotExist:
-                str_values += [u'???']
-        return u', '.join(str_values)
+                str_values += ['???']
+        return ', '.join(str_values)
 
 
 class ImprovedModelForm(admin.ModelAdmin):

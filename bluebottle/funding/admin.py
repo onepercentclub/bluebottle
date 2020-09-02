@@ -67,7 +67,7 @@ class RewardInline(admin.TabularInline):
 
     def link(self, obj):
         url = reverse('admin:funding_reward_change', args=(obj.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj.title)
+        return format_html('<a href="{}">{}</a>', url, obj.title)
 
 
 @admin.register(Reward)
@@ -271,7 +271,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
             return format_html('<i style="color: #999">anonymous</i>')
         if obj.user:
             user_url = reverse('admin:members_member_change', args=(obj.user.id,))
-            return format_html(u'<a href="{}">{}</a>', user_url, obj.user.full_name)
+            return format_html('<a href="{}">{}</a>', user_url, obj.user.full_name)
         return format_html('<i style="color: #999">guest</i>')
 
     user_link.short_description = _('User')
@@ -416,7 +416,7 @@ class PayoutAccountFundingLinkMixin(object):
     def funding_links(self, obj):
         return format_html(", ".join([
             format_html(
-                u"<a href='{}'>{}</a>",
+                "<a href='{}'>{}</a>",
                 reverse('admin:funding_funding_change', args=(p.id,)),
                 p.title
             ) for p in obj.funding_set.all()
@@ -550,11 +550,11 @@ class PayoutAdmin(StateMachineAdmin):
 
     def account_link(self, obj):
         url = reverse('admin:funding_bankaccount_change', args=(obj.activity.bank_account.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj.activity.bank_account)
+        return format_html('<a href="{}">{}</a>', url, obj.activity.bank_account)
 
     def activity_link(self, obj):
         url = reverse('admin:funding_funding_change', args=(obj.activity.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj.activity)
+        return format_html('<a href="{}">{}</a>', url, obj.activity)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (

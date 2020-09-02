@@ -142,7 +142,7 @@ class ImageSerializer(DocumentSerializer):
                     (
                         key,
                         reverse(self.content_view_name, args=(parent_id, size, )) + '?_={}'.format(hash)
-                    ) for key, size in self.sizes.items()
+                    ) for key, size in list(self.sizes.items())
                 )
             except relationship.model.DoesNotExist:
                 return {}

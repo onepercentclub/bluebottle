@@ -1,4 +1,5 @@
-import urllib
+from urllib import urlencode
+
 import itertools
 from collections import Counter, defaultdict
 
@@ -56,7 +57,7 @@ class Survey(models.Model):
         if task:
             query_params['task_id'] = task.id
 
-        return '{}?{}'.format(survey.link, urllib.urlencode(query_params))
+        return '{}?{}'.format(survey.link, urlencode(query_params))
 
     def synchronize(self):
         from bluebottle.surveys.adapters import SurveyGizmoAdapter
@@ -80,7 +81,7 @@ class Survey(models.Model):
                 project: list(answers) for project, answers in project_answers
             }
 
-            for project, values in answers_by_projects.items():
+            for project, values in list(answers_by_projects.items()):
                 aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
                     project=project, question=question,
                     aggregation_type='project'
@@ -100,7 +101,7 @@ class Survey(models.Model):
                 task: list(answers) for task, answers in task_answers
             }
 
-            for task, values in answers_by_tasks.items():
+            for task, values in list(answers_by_tasks.items()):
                 aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
                     task=task, project=task.project,
                     aggregation_type='task', question=question
@@ -118,7 +119,7 @@ class Survey(models.Model):
             answers_by_project = {
                 project: list(answers) for project, answers in task_aggregates
             }
-            for project, values in answers_by_project.items():
+            for project, values in list(answers_by_project.items()):
                 if len(values):
                     aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
                         project=project,
@@ -143,7 +144,7 @@ class Survey(models.Model):
                 project: list(answers) for project, answers in project_answers
             }
 
-            for project, values in answers_by_projects.items():
+            for project, values in list(answers_by_projects.items()):
                 aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
                     project=project, question=question,
                     aggregation_type='initiator'
@@ -167,7 +168,7 @@ class Survey(models.Model):
                 project: list(answers) for project, answers in project_answers
             }
 
-            for project, values in answers_by_projects.items():
+            for project, values in list(answers_by_projects.items()):
                 aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
                     project=project, question=question,
                     aggregation_type='organization'
@@ -188,7 +189,7 @@ class Survey(models.Model):
                 project: list(answers) for project, answers in combined_aggregates
             }
 
-            for project, values in answers_by_project.items():
+            for project, values in list(answers_by_project.items()):
                 aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
                     project=project,
                     question=question,
@@ -261,11 +262,11 @@ class Question(models.Model):
         elif self.type in ('radio', 'checkbox', 'table-radio'):
             values = defaultdict(list)
             for answer in answers:
-                [values[key].append(value) for key, value in answer.options.items()]
-            return dict((key, float(sum(value)) / len(value)) for key, value in values.items())
+                [values[key].append(value) for key, value in list(answer.options.items())]
+            return dict((key, float(sum(value)) / len(value)) for key, value in list(values.items()))
 
     def __unicode__(self):
-        return bleach.clean(unicode(self.title), strip=True, tags=[])
+        return bleach.clean(str(self.title), strip=True, tags=[])
 
 
 class SubQuestion(models.Model):
@@ -373,7 +374,7 @@ class AggregateAnswer(models.Model):
             options = Counter()
             for item in results:
                 options.update(item)
-            self.options = {k: v for k, v in options.items()}
+            self.options = {k: v for k, v in list(options.items())}
 
     def aggregate_table_radio(self, answers):
         """
@@ -388,7 +389,7 @@ class AggregateAnswer(models.Model):
                 if bool(item):
                     item_length += 1
                     options.update(item)
-            result = {k: float(v) / item_length for k, v in options.items()}
+            result = {k: float(v) / item_length for k, v in list(options.items())}
             self.options = {}
             for sub in self.question.subquestion_set.all():
                 try:

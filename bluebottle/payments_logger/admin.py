@@ -35,7 +35,7 @@ class PaymentLogEntryAdmin(admin.ModelAdmin):
                                                     payment._meta.model_name),
                       args=[payment.id])
         return format_html(
-            u"<a href='{}'>Order Payment</a>",
+            "<a href='{}'>Order Payment</a>",
             str(url)
         )
 
@@ -58,7 +58,7 @@ class PaymentLogEntryAdmin(admin.ModelAdmin):
                                                     payment._meta.model_name),
                       args=[payment.id])
         return format_html(
-            u"<a href='{}'>{}: {}</a>",
+            "<a href='{}'>{}: {}</a>",
             str(url),
             payment.polymorphic_ctype,
             payment.id

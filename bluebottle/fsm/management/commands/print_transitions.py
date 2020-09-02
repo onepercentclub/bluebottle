@@ -12,7 +12,7 @@ from bluebottle.members.models import Member
 def get_doc(element):
     if element.__doc__:
         return element.__doc__
-    return "{} (documentation missing)".format(unicode(element)).replace('<', '').replace('>', '')
+    return "{} (documentation missing)".format(str(element)).replace('<', '').replace('>', '')
 
 
 class Command(BaseCommand):
@@ -96,75 +96,75 @@ class Command(BaseCommand):
 
         text = ""
 
-        text += u"<h2>States</h2>"
-        text += u"<em>All states this instance can be in.</em>"
+        text += "<h2>States</h2>"
+        text += "<em>All states this instance can be in.</em>"
 
-        text += u"<table data-layout=\"default\"><tr><th>State Name</th><th>Description</th></tr>"
+        text += "<table data-layout=\"default\"><tr><th>State Name</th><th>Description</th></tr>"
 
-        for state in machine.states.values():
-            text += u"<tr><td>{}</td><td>{}</td></tr>".format(state.name.capitalize(), state.description)
+        for state in list(machine.states.values()):
+            text += "<tr><td>{}</td><td>{}</td></tr>".format(state.name.capitalize(), state.description)
 
-        text += u"</table>"
+        text += "</table>"
 
-        text += u"<h2>Transitions</h2>"
-        text += u"<em>An instance will always move from one state to the other through a transition. " \
-                u"A manual transition is initiated by a user. An automatic transition is initiated by the system, " \
-                u"either through a trigger or through a side effect of a related object.</em>"
-        text += u"<table data-layout=\"full-width\"><tr><th>Name</th><th>Description</th><th>From</th><th>To</th>" \
-                u"<th>Manual</th><th>Conditions</th><th>Side Effects</th></tr>"
+        text += "<h2>Transitions</h2>"
+        text += "<em>An instance will always move from one state to the other through a transition. " \
+                "A manual transition is initiated by a user. An automatic transition is initiated by the system, " \
+                "either through a trigger or through a side effect of a related object.</em>"
+        text += "<table data-layout=\"full-width\"><tr><th>Name</th><th>Description</th><th>From</th><th>To</th>" \
+                "<th>Manual</th><th>Conditions</th><th>Side Effects</th></tr>"
 
-        for transition in machine.transitions.values():
-            str = u"<tr><td>{}</td><td>{}</td><td><ul>{}</ul></td>" \
-                  u"<td>{}</td><td>{}</td><td><ul>{}</ul></td><td><ul>{}</ul></td></tr>"
+        for transition in list(machine.transitions.values()):
+            str = "<tr><td>{}</td><td>{}</td><td><ul>{}</ul></td>" \
+                  "<td>{}</td><td>{}</td><td><ul>{}</ul></td><td><ul>{}</ul></td></tr>"
 
             text += str.format(
                 transition.name,
                 transition.description,
-                u"".join(u"<li>{}</li>".format(state.name.capitalize()) for state in transition.sources),
+                "".join("<li>{}</li>".format(state.name.capitalize()) for state in transition.sources),
                 transition.target.name.capitalize(),
                 "Automatic" if transition.automatic else "Manual",
-                u"".join(
-                    u"<li>{}</li>".format(get_doc(condition))
+                "".join(
+                    "<li>{}</li>".format(get_doc(condition))
                     for condition
                     in transition.conditions
                 ),
-                u"".join(
-                    u"<li>{}</li>".format(effect(instance).to_html())
+                "".join(
+                    "<li>{}</li>".format(effect(instance).to_html())
                     for effect
                     in transition.effects
                 )
             )
-        text += u"</table>"
+        text += "</table>"
 
         if model.triggers:
-            text += u"<h2>Triggers</h2>"
-            text += u"<em>These are events that get triggered when the instance changes, " \
-                    u"other then through a transition. " \
-                    u"Mostly it would be triggered because a property changed (e.g. a deadline).</em>"
-            text += u"<table data-layout=\"full-width\">" \
-                    u"<tr><th>When</th>" \
-                    u"<th>Effects</th></tr>"
+            text += "<h2>Triggers</h2>"
+            text += "<em>These are events that get triggered when the instance changes, " \
+                    "other then through a transition. " \
+                    "Mostly it would be triggered because a property changed (e.g. a deadline).</em>"
+            text += "<table data-layout=\"full-width\">" \
+                    "<tr><th>When</th>" \
+                    "<th>Effects</th></tr>"
 
             for trigger in model.triggers:
-                text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
-                    unicode(trigger(instance)),
+                text += "<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
+                    str(trigger(instance)),
                     "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in trigger(instance).effects])
                 )
-            text += u"</table>"
+            text += "</table>"
 
         if model.triggers:
-            text += u"<h2>Periodic tasks</h2>"
-            text += u"<em>These are events that get triggered when certain dates are passed. " \
-                    u"Every 15 minutes the system checks for passing deadlines, registration dates and such.</em>"
+            text += "<h2>Periodic tasks</h2>"
+            text += "<em>These are events that get triggered when certain dates are passed. " \
+                    "Every 15 minutes the system checks for passing deadlines, registration dates and such.</em>"
 
-            text += u"<table data-layout=\"full-width\">" \
-                    u"<tr><th>When</th>" \
-                    u"<th>Effects</th></tr>"
+            text += "<table data-layout=\"full-width\">" \
+                    "<tr><th>When</th>" \
+                    "<th>Effects</th></tr>"
 
             for task in model.periodic_tasks:
-                text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
-                    unicode(task(instance)),
+                text += "<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
+                    str(task(instance)),
                     "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in task(instance).effects])
                 )
-            text += u"</table>"
+            text += "</table>"
         print(text)

@@ -97,8 +97,8 @@ class AggregateAnswerAdmin(admin.ModelAdmin):
 
     def survey_question(self, obj):
         return format_html(
-            u"<span title='{}'>{}</span>",
-            unicode(obj.question)[:30], obj.question
+            "<span title='{}'>{}</span>",
+            str(obj.question)[:30], obj.question
         )
 
 

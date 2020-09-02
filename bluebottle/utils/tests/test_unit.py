@@ -282,7 +282,7 @@ class TestTenantAwareMailServer(unittest.TestCase):
         be.send_messages([msg])
 
         self.assertTrue(smtp.called)
-        self.assertEquals(smtp.call_args[0], ('somehost', 1337))
+        self.assertEqual(smtp.call_args[0], ('somehost', 1337))
         self.assertTrue(connection.sendmail.called)
 
     @override_settings(
@@ -302,8 +302,9 @@ class TestTenantAwareMailServer(unittest.TestCase):
             properties.DKIM_PRIVATE_KEY = DKIM_PRIVATE_KEY
 
             be = TenantAwareBackend()
-            msg = EmailMultiAlternatives(subject="test", body="test",
-                                         to=["test@example.com"])
+            msg = EmailMultiAlternatives(
+                subject="test", body="test", to=["test@example.com"]
+            )
 
             be.open()
             connection = be.connection
@@ -312,12 +313,13 @@ class TestTenantAwareMailServer(unittest.TestCase):
             to_bytes = lambda s: force_bytes(s, 'utf-8')
 
             def _plain_key(s):
-                return b"".join([l for l in s.split(b'\n') if not l.startswith(b'---')])
+                return b"".join([ll for ll in s.split(b'\n') if not ll.startswith(b'---')])
 
             signed_msg = connection.sendmail.call_args[0][2]
             dkim_message = dkim.DKIM(message=to_bytes(signed_msg))
-            dkim_check = dkim_message.verify(dnsfunc=lambda name: b"".join([b"v=DKIM1; p=",
-                                                                            _plain_key(DKIM_PUBLIC_KEY)]))
+            dkim_check = dkim_message.verify(
+                dnsfunc=lambda name: b"".join([b"v=DKIM1; p=", _plain_key(DKIM_PUBLIC_KEY)])
+            )
 
             self.assertTrue(signed_msg.find("d=testserver") >= 0)
             self.assertTrue(signed_msg.find("s=key2") >= 0)
@@ -348,7 +350,7 @@ class TestTenantAwareMailServer(unittest.TestCase):
             be.send_messages([msg])
 
             self.assertTrue(smtp.called)
-            self.assertEquals(smtp.call_args[0], ('tenanthost', 4242))
+            self.assertEqual(smtp.call_args[0], ('tenanthost', 4242))
             self.assertTrue(connection.sendmail.called)
 
     def test_reply_to(self):
@@ -365,8 +367,8 @@ class TestTenantAwareMailServer(unittest.TestCase):
                 subject="test", body="test",
                 to=["test@example.com"]
             )
-            self.assertEquals(msg.extra_headers['Reply-To'], reply_to)
-            self.assertEquals(msg.from_email, 'Info Tester <info@example.com>')
+            self.assertEqual(msg.extra_headers['Reply-To'], reply_to)
+            self.assertEqual(msg.from_email, 'Info Tester <info@example.com>')
 
 
 class MoneySerializerTestCase(BluebottleTestCase):

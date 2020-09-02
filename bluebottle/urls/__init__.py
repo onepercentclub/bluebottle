@@ -11,7 +11,7 @@ include the i18n related urls.
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
 
-from core import urlpatterns
+from .core import urlpatterns
 
 urlpatterns += i18n_patterns(
     url(r'^', include('bluebottle.urls.i18n_urls')),

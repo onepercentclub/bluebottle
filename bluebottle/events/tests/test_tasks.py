@@ -90,7 +90,7 @@ class EventTasksTestCase(BluebottleTestCase):
         self.assertEqual(event.status, EventStateMachine.succeeded.value)
 
         self.assertEqual(len(mail.outbox), 11)
-        self.assertEqual(mail.outbox[-1].subject, u'Your event "{}" took place! \U0001f389'.format(event.title))
+        self.assertEqual(mail.outbox[-1].subject, 'Your event "{}" took place! \U0001f389'.format(event.title))
         self.assertTrue("Hi Nono,", mail.outbox[-1].body)
 
     def test_event_reminder_task(self):

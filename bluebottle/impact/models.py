@@ -54,24 +54,24 @@ class ImpactType(SortableTranslatableModel):
 
         ),
         text=models.CharField(
-            _(u'Formulate the goal "Our goal is to..."'),
+            _('Formulate the goal "Our goal is to..."'),
             max_length=100,
-            help_text=_(u'E.g. "Save plastic" or "Reduce CO₂ emission"')
+            help_text=_('E.g. "Save plastic" or "Reduce CO₂ emission"')
         ),
         text_with_target=models.CharField(
-            _(u'Formulate the goal including the target “Our goal is to…”'),
+            _('Formulate the goal including the target “Our goal is to…”'),
             max_length=100,
             help_text=_(
                 (
-                    u'E.g. “Save {} kg plastic” or “Reduce CO₂ emissions by {} liters”.'
-                    u'Make sure to add “{}” where the value should go.'
+                    'E.g. “Save {} kg plastic” or “Reduce CO₂ emissions by {} liters”.'
+                    'Make sure to add “{}” where the value should go.'
                 )
             )
         ),
         text_passed=models.CharField(
-            _(u'Formulate the result in past tense'),
+            _('Formulate the result in past tense'),
             max_length=100,
-            help_text=_(u'E.g. "Plastic saved" or "CO₂ emissions reduced"')
+            help_text=_('E.g. "Plastic saved" or "CO₂ emissions reduced"')
         ),
     )
 

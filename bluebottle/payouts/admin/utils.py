@@ -8,7 +8,7 @@ class PayoutAccountProjectLinkMixin(object):
     def project_links(self, obj):
         return format_html(", ".join([
             format_html(
-                u"<a href='{}'>{}</a>",
+                "<a href='{}'>{}</a>",
                 reverse('admin:projects_project_change', args=(p.id, )),
                 p.title
             ) for p in obj.projects

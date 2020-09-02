@@ -122,9 +122,7 @@ class ModelTransitionsMeta(type):
         return type.__new__(cls, name, bases, dct)
 
 
-class ModelTransitions():
-    __metaclass__ = ModelTransitionsMeta
-
+class ModelTransitions(metaclass=ModelTransitionsMeta):
     def __init__(self, instance, field):
         self.instance = instance
         self.field = field

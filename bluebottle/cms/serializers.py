@@ -229,7 +229,7 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
 
 class ProjectsMapContentSerializer(serializers.ModelSerializer):
     def __repr__(self):
-        if 'start_date' in self.context and 'end_date'in self.context:
+        if 'start_date' in self.context and 'end_date' in self.context:
             start = self.context['start_date'].strftime(
                 '%s') if self.context['start_date'] else 'none'
             end = self.context['end_date'].strftime(

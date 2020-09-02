@@ -1,8 +1,8 @@
 import json
 import re
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 
-from urllib2 import HTTPError
+from urllib.error import HTTPError
 from django.conf import settings
 from django.db import models
 from django.core.urlresolvers import resolve, reverse
@@ -51,7 +51,7 @@ class ProjectCurrencyValidator(object):
 
     def __call__(self, data):
         for field in self.fields:
-            if unicode(data[field].currency) not in data['project'].currencies:
+            if str(data[field].currency) not in data['project'].currencies:
                 raise serializers.ValidationError(
                     _('Currency does not match project any of the currencies.')
                 )
@@ -252,10 +252,10 @@ class RelatedResourcePermissionField(BasePermissionField):
 class FSMModelSerializer(JSONAPIModelSerializer):
     def update(self, instance, validated_data):
         fsm_fields = dict(
-            (key, validated_data.pop(key)) for key, field in self.fields.items()
+            (key, validated_data.pop(key)) for key, field in list(self.fields.items())
             if isinstance(field, FSMField) and key in validated_data
         )
-        for key, value in fsm_fields.items():
+        for key, value in list(fsm_fields.items()):
             transitions = getattr(
                 instance,
                 'get_available_{}_transitions'.format(key)
@@ -272,10 +272,10 @@ class FSMModelSerializer(JSONAPIModelSerializer):
 class FSMSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         fsm_fields = dict(
-            (key, validated_data.pop(key)) for key, field in self.fields.items()
+            (key, validated_data.pop(key)) for key, field in list(self.fields.items())
             if isinstance(field, FSMField)
         )
-        for key, value in fsm_fields.items():
+        for key, value in list(fsm_fields.items()):
             transitions = getattr(
                 instance,
                 'get_available_{}_transitions'.format(key)
@@ -396,7 +396,7 @@ class NoCommitMixin():
         # Note that unlike `.create()` we don't need to treat many-to-many
         # relationships as being a special case. During updates we already
         # have an instance pk for the relationships to be associated with.
-        for attr, value in validated_data.items():
+        for attr, value in list(validated_data.items()):
             if attr in info.relations and info.relations[attr].to_many:
                 field = getattr(instance, attr)
                 field.set(value)

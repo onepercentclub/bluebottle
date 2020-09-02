@@ -86,17 +86,17 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
                 fundraiser = Fundraiser.objects.get(pk=fundraiser_id)
                 filter_kwargs['fundraiser'] = fundraiser
             except Fundraiser.DoesNotExist:
-                raise Http404(u"No %(verbose_name)s found matching the query" %
+                raise Http404("No %(verbose_name)s found matching the query" %
                               {'verbose_name': Fundraiser._meta.verbose_name})
         elif project_slug:
             try:
                 project = Project.objects.get(slug=project_slug)
                 filter_kwargs['project'] = project
             except Project.DoesNotExist:
-                raise Http404(u"No %(verbose_name)s found matching the query" %
+                raise Http404("No %(verbose_name)s found matching the query" %
                               {'verbose_name': queryset.model._meta.verbose_name})
         else:
-            raise Http404(u"No %(verbose_name)s found matching the query" %
+            raise Http404("No %(verbose_name)s found matching the query" %
                           {'verbose_name': Project._meta.verbose_name})
 
         if 'co_financing' in self.request.query_params and \
@@ -135,7 +135,7 @@ class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
         try:
             project = Project.objects.get(slug=project_slug, owner=self.request.user)
         except Project.DoesNotExist:
-            raise Http404(u"No project found matching the query")
+            raise Http404("No project found matching the query")
 
         filter_kwargs['project'] = project
         queryset = queryset.filter(**filter_kwargs).order_by('-created')
@@ -157,7 +157,7 @@ class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
             fundraiser = Fundraiser.objects.get(pk=fundraiser_pk,
                                                 owner=self.request.user)
         except Fundraiser.DoesNotExist:
-            raise Http404(u"No fundraiser found matching the query")
+            raise Http404("No fundraiser found matching the query")
 
         filter_kwargs['fundraiser'] = fundraiser
         queryset = queryset.filter(**filter_kwargs).order_by('-created')

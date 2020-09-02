@@ -70,7 +70,7 @@ class BaseTransition(object):
         return '<Transition from {} to {}>'.format(self.sources, self.target)
 
     def __unicode__(self):
-        return unicode(self.name or self.field)
+        return str(self.name or self.field)
 
 
 pre_state_transition = Signal(providing_args=['instance', 'transition', 'kwargs'])
@@ -130,7 +130,7 @@ class State(object):
         return '<State {}>'.format(self.name)
 
     def __unicode__(self):
-        return unicode(self.name)
+        return str(self.name)
 
 
 class EmptyState(State):
@@ -182,7 +182,7 @@ class StateMachineMeta(type):
             for key in dir(result)
             if isinstance(getattr(result, key), Transition)
         )
-        for key, transition in transitions.items():
+        for key, transition in list(transitions.items()):
             transition.field = key
 
         result.transitions = transitions
@@ -190,14 +190,12 @@ class StateMachineMeta(type):
         return result
 
 
-class StateMachine(object):
-    __metaclass__ = StateMachineMeta
-
+class StateMachine(object, metaclass=StateMachineMeta):
     @property
     def initial_transition(self):
         initial_transitions = [
             transition
-            for transition in self.transitions.values()
+            for transition in list(self.transitions.values())
             if EmptyState() in transition.sources
         ]
         if (len(initial_transitions)) > 1:
@@ -210,13 +208,13 @@ class StateMachine(object):
 
     @property
     def current_state(self):
-        for state in self.states.values():
+        for state in list(self.states.values()):
             if state.value == self.state:
                 return state
 
     def possible_transitions(self, **kwargs):
         result = []
-        for transition in self.transitions.values():
+        for transition in list(self.transitions.values()):
             try:
                 transition.can_execute(self, **kwargs)
                 result.append(transition)
@@ -245,9 +243,7 @@ class ModelStateMachineMeta(StateMachineMeta):
         return result
 
 
-class ModelStateMachine(StateMachine):
-    __metaclass__ = ModelStateMachineMeta
-
+class ModelStateMachine(StateMachine, metaclass=ModelStateMachineMeta):
     def __init__(self, instance):
         self.instance = instance
 

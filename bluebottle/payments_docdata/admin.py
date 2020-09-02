@@ -46,7 +46,7 @@ class AbstractDocdataPaymentAdmin(PolymorphicChildModelAdmin):
                                                     object._meta.model_name),
                       args=[object.id])
         return format_html(
-            u"<a href='{}'>Order Payment: {}</a>",
+            "<a href='{}'>Order Payment: {}</a>",
             str(url),
             object.id
         )
@@ -55,7 +55,7 @@ class AbstractDocdataPaymentAdmin(PolymorphicChildModelAdmin):
         url = ('https://backoffice.docdatapayments.com/ps/com.tripledeal.'
                'paymentservice.backoffice.MerchantReportPayoutTransaction')
         return format_html(
-            u'{} <a href="{}" target="docdata">[Docdata Backoffice]</a>',
+            '{} <a href="{}" target="docdata">[Docdata Backoffice]</a>',
             obj.payment_cluster_id, url
         )
 

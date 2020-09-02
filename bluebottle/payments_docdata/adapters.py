@@ -1,5 +1,5 @@
 import logging
-import gateway
+from . import gateway
 
 from django.utils.http import urlencode
 from django.conf import settings
@@ -238,7 +238,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
     def check_payment_status(self):
         try:
             response = self._fetch_status()
-        except DocdataPaymentStatusException, e:
+        except DocdataPaymentStatusException as e:
             if 'REQUEST_DATA_INCORRECT' == e.message and 'Order could not be found' in e.report_type:
                 # The payment was not found in docdata: Mark the payment as failed
                 logger.error(

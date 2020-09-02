@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import json
 import logging
@@ -6,7 +6,7 @@ import requests
 
 from django.core.management import call_command
 
-from urlparse import urljoin
+from urllib.parse import urljoin
 from celery import shared_task
 from sorl.thumbnail.shortcuts import get_thumbnail
 
@@ -24,11 +24,11 @@ def _send_celery_mail(msg, tenant=None, send=False):
     """
     with LocalTenant(tenant, clear_tenant=True):
         body = msg.body
-        if isinstance(body, unicode):
+        if isinstance(body, str):
             body = msg.body.encode('utf_8')
 
         subject = msg.subject
-        if isinstance(subject, unicode):
+        if isinstance(subject, str):
             subject = msg.subject.encode('utf_8')
 
         if send:

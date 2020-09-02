@@ -197,7 +197,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     def __unicode__(self):
         if self.title:
-            return u'{}'.format(self.title)
+            return '{}'.format(self.title)
         return self.slug
 
     @classmethod
@@ -667,7 +667,7 @@ class ProjectBudgetLine(models.Model):
         verbose_name_plural = _('budget lines')
 
     def __unicode__(self):
-        return u'{0} - {1}'.format(self.description, self.amount)
+        return '{0} - {1}'.format(self.description, self.amount)
 
 
 class ProjectAddOn(PolymorphicModel):

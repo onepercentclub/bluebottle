@@ -111,7 +111,7 @@ class Command(BaseCommand):
         engagement_data = self.generate_engagement_data()
         aggregated_engagement_data = defaultdict(int)
 
-        for client_name, data in engagement_data.iteritems():
+        for client_name, data in engagement_data.items():
             tags = {'type': 'engagement_number_tenant', 'tenant': client_name}
             fields = {'start_date': self.start_date.isoformat(),
                       'end_date': self.end_date.isoformat()
@@ -224,7 +224,7 @@ class Command(BaseCommand):
         return raw_data
 
     def generate_raw_scores(self, data):
-        for _, entry in data.iteritems():
+        for _, entry in data.items():
             score = self.get_engagement_score(entry)
             entry['engagement_score'] = score
             entry['engagement_rating'] = self.get_engagement_rating(score)
@@ -319,7 +319,7 @@ class Command(BaseCommand):
 
     def write_raw_data(self, organisation, worksheet, data):
 
-        for member_id, entry in data.iteritems():
+        for member_id, entry in data.items():
             worksheet.write(self.row_counter_engagement_raw_data, 0, organisation)
             worksheet.write(self.row_counter_engagement_raw_data, 1, member_id)
             worksheet.write(self.row_counter_engagement_raw_data, 2, entry['comments'])
@@ -377,7 +377,7 @@ class Command(BaseCommand):
 
         aggregated_data = defaultdict(int)
 
-        for _, entry in data.iteritems():
+        for _, entry in data.items():
             engagement_score = self.get_engagement_score(entry)
             engagement_rating = self.get_engagement_rating(engagement_score)
 

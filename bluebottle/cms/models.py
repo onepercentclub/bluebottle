@@ -70,7 +70,7 @@ class LinkPermission(models.Model):
                                   help_text=_('Should the permission be present or not to access the link?'))
 
     def __unicode__(self):
-        return u"{0} - {1}".format(self.permission, self.present)
+        return "{0} - {1}".format(self.permission, self.present)
 
 
 class SiteLinks(models.Model):
@@ -81,7 +81,7 @@ class SiteLinks(models.Model):
         verbose_name_plural = _("Site links")
 
     def __unicode__(self):
-        return u"Site Links {0}".format(self.language.code.upper())
+        return "Site Links {0}".format(self.language.code.upper())
 
 
 class LinkGroup(SortableMixin):
@@ -205,7 +205,7 @@ class QuotesContent(TitledContent):
         verbose_name = _('Quotes')
 
     def __unicode__(self):
-        return unicode(self.quotes)
+        return str(self.quotes)
 
     @property
     def items(self):
@@ -224,7 +224,7 @@ class StatsContent(TitledContent):
         return self.stats
 
     def __unicode__(self):
-        return unicode(self.stats)
+        return str(self.stats)
 
 
 class HomepageStatisticsContent(TitledContent):
@@ -235,7 +235,7 @@ class HomepageStatisticsContent(TitledContent):
         verbose_name = _('Statistics')
 
     def __unicode__(self):
-        return unicode(self.title)
+        return str(self.title)
 
 
 class SurveyContent(TitledContent):
@@ -247,7 +247,7 @@ class SurveyContent(TitledContent):
         verbose_name = _('Platform Results')
 
     def __unicode__(self):
-        return unicode(self.survey)
+        return str(self.survey)
 
 
 class ActivitiesContent(TitledContent):
@@ -269,7 +269,7 @@ class ActivitiesContent(TitledContent):
         verbose_name = _('Activities')
 
     def __unicode__(self):
-        return unicode(self.title)
+        return str(self.title)
 
 
 class ProjectsContent(TitledContent):
@@ -291,7 +291,7 @@ class ProjectsContent(TitledContent):
         verbose_name = _('Projects')
 
     def __unicode__(self):
-        return unicode(self.title)
+        return str(self.title)
 
 
 class ProjectImagesContent(TitledContent):
@@ -410,7 +410,7 @@ class SlidesContent(TitledContent):
         verbose_name = _('Slides')
 
     def __unicode__(self):
-        return unicode(self.slides)
+        return str(self.slides)
 
 
 class Step(SortableMixin, models.Model):
@@ -440,7 +440,7 @@ class StepsContent(TitledContent):
         verbose_name = _('Steps')
 
     def __unicode__(self):
-        return unicode(_('Steps'))
+        return str(_('Steps'))
 
     @property
     def items(self):
@@ -455,7 +455,7 @@ class LocationsContent(TitledContent):
         verbose_name = _('Locations')
 
     def __unicode__(self):
-        return unicode(_('Locations'))
+        return str(_('Locations'))
 
 
 class CategoriesContent(TitledContent):
@@ -466,7 +466,7 @@ class CategoriesContent(TitledContent):
         verbose_name = _('Categories')
 
     def __unicode__(self):
-        return unicode(_('Categories'))
+        return str(_('Categories'))
 
 
 class Logo(SortableMixin, models.Model):
@@ -495,7 +495,7 @@ class LogosContent(TitledContent):
         verbose_name = _('Logos')
 
     def __unicode__(self):
-        return unicode(_('Logos'))
+        return str(_('Logos'))
 
 
 class ContentLink(SortableMixin, models.Model):
@@ -521,7 +521,7 @@ class LinksContent(TitledContent):
         verbose_name = _('Links')
 
     def __unicode__(self):
-        return unicode(_('Links'))
+        return str(_('Links'))
 
 
 class Greeting(models.Model):
@@ -539,7 +539,7 @@ class WelcomeContent(ContentItem):
         verbose_name = _('Welcome')
 
     def __unicode__(self):
-        return unicode(_('Welcome'))
+        return str(_('Welcome'))
 
 
 class SitePlatformSettings(TranslatableModel, BasePlatformSettings):

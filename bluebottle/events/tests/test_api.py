@@ -1,7 +1,7 @@
 # coding=utf-8
 import json
 from datetime import timedelta
-import urlparse
+import urllib.parse
 
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -337,14 +337,14 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.json()['data']['attributes']['title'], self.event.title)
 
     def test_get_event_calendar_links(self):
-        self.event.description = u"Just kidding, <br/>we're going&nbsp;to clean it up of course 😉"
+        self.event.description = "Just kidding, <br/>we're going&nbsp;to clean it up of course 😉"
         self.event.save()
         response = self.client.get(self.url, user=self.event.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         links = response.data['links']
-        google_link = urlparse.urlparse(links['google'])
-        google_query = urlparse.parse_qs(google_link.query)
+        google_link = urllib.parse.urlparse(links['google'])
+        google_query = urllib.parse.parse_qs(google_link.query)
 
         self.assertEqual(google_link.netloc, 'calendar.google.com')
         self.assertEqual(google_link.path, '/calendar/render')
@@ -359,29 +359,29 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(google_query['details'][0], details)
         self.assertEqual(
             google_query['dates'][0],
-            u'{}/{}'.format(
+            '{}/{}'.format(
                 self.event.start.astimezone(utc).strftime('%Y%m%dT%H%M%SZ'),
                 self.event.end.astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
             )
         )
 
-        outlook_link = urlparse.urlparse(links['outlook'])
-        outlook_query = urlparse.parse_qs(outlook_link.query)
+        outlook_link = urllib.parse.urlparse(links['outlook'])
+        outlook_query = urllib.parse.parse_qs(outlook_link.query)
 
         self.assertEqual(outlook_link.netloc, 'outlook.live.com')
         self.assertEqual(outlook_link.path, '/owa/')
 
         self.assertEqual(outlook_query['rru'][0], 'addevent')
-        self.assertEqual(outlook_query['path'][0], u'/calendar/action/compose&rru=addevent')
+        self.assertEqual(outlook_query['path'][0], '/calendar/action/compose&rru=addevent')
         self.assertEqual(outlook_query['location'][0], self.event.location.formatted_address)
         self.assertEqual(outlook_query['subject'][0], self.event.title)
         self.assertEqual(outlook_query['body'][0], details)
         self.assertEqual(
             outlook_query['startdt'][0],
-            unicode(self.event.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
+            str(self.event.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
         )
         self.assertEqual(
-            outlook_query['enddt'][0], unicode(self.event.end.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
+            outlook_query['enddt'][0], str(self.event.end.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
         )
 
         self.assertTrue(
@@ -546,8 +546,8 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             data['data']['meta']['transitions'],
             [
-                {u'available': True, u'name': u'submit', u'target': u'submitted'},
-                {u'available': True, u'name': u'delete', u'target': u'deleted'}
+                {'available': True, 'name': 'submit', 'target': 'submitted'},
+                {'available': True, 'name': 'delete', 'target': 'deleted'}
             ],
         )
 
@@ -818,7 +818,7 @@ class ParticipantDetailTestCase(BluebottleTestCase):
                 transition['name'] for transition in data['data']['meta']['transitions']
                 if transition['available']
             ],
-            [u'withdraw']
+            ['withdraw']
         )
 
     def test_possible_transitions_other_user(self):

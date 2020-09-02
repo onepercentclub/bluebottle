@@ -220,7 +220,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
         if 'place' in validated_data:
             if instance.place:
                 place = instance.place
-                for key, value in validated_data.pop('place').items():
+                for key, value in list(validated_data.pop('place').items()):
                     setattr(place, key, value)
                 place.save()
             else:

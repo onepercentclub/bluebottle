@@ -3,7 +3,8 @@ import hashlib
 import hmac
 import logging
 import re
-import urllib
+from urllib import urlencode
+
 from datetime import timedelta
 import string
 from datetime import datetime
@@ -150,7 +151,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         parts.pop(0)
         last_name = " ".join(parts)
         email = login_data[3].strip()
-        email = filter(lambda x: x in string.printable, email)
+        email = [x for x in email if x in string.printable]
 
         data = {
             'timestamp': login_data[0],
@@ -170,7 +171,7 @@ class TokenAuthentication(BaseTokenAuthentication):
     def sso_url(self, target_url=None):
         url = self.settings['sso_url']
         if target_url:
-            url += '?{}'.format(urllib.urlencode({'url': target_url.encode('utf-8')}))
+            url += '?{}'.format(urlencode({'url': target_url.encode('utf-8')}))
 
         return url
 

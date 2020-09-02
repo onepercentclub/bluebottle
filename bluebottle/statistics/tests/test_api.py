@@ -71,22 +71,22 @@ class ImpactTypeListAPITestCase(BluebottleTestCase):
         self.assertEqual(len(response.json()['data']), 3)
 
         for resource in response.json()['data']:
-            if resource['id'] == unicode(self.manual.pk):
+            if resource['id'] == str(self.manual.pk):
                 self.assertEqual(resource['type'], 'statistics/manual-statistics')
                 self.assertEqual(resource['attributes']['value'], self.manual.value)
                 self.assertEqual(resource['attributes']['name'], self.manual.name)
 
-            if resource['id'] == unicode(self.impact.pk):
+            if resource['id'] == str(self.impact.pk):
                 self.assertEqual(resource['type'], 'statistics/impact-statistics')
                 self.assertEqual(resource['attributes']['value'], self.impact_goal.realized)
-                self.assertEqual(resource['relationships']['impact-type']['data']['id'], unicode(self.impact_type.pk))
+                self.assertEqual(resource['relationships']['impact-type']['data']['id'], str(self.impact_type.pk))
 
-            if resource['id'] == unicode(self.database.pk):
+            if resource['id'] == str(self.database.pk):
                 self.assertEqual(resource['type'], 'statistics/database-statistics')
                 self.assertEqual(resource['attributes']['value'], 7)
                 self.assertEqual(resource['attributes']['name'], self.database.name)
 
-        self.assertEqual(response.json()['included'][0]['id'], unicode(self.impact_type.pk))
+        self.assertEqual(response.json()['included'][0]['id'], str(self.impact_type.pk))
         self.assertEqual(response.json()['included'][0]['type'], 'activities/impact-types')
 
     def test_get_anonymous(self):

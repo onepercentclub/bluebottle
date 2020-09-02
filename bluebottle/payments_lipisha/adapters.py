@@ -117,7 +117,7 @@ class LipishaPaymentAdapter(BasePaymentAdapter):
             payment = data[0]
             # Make sure we set the right properties
             payment['transaction_reference'] = payment['transaction']
-            for k, v in payment.iteritems():
+            for k, v in payment.items():
                 setattr(self.payment, k, v)
             if self.payment.transaction_amount != self.payment.order_payment.amount.amount:
                 # Update donation amount based on the amount registered at Lipisha
@@ -295,7 +295,7 @@ class LipishaPaymentInterface(object):
             )
 
         payment.response = json.dumps(data)
-        for k, v in data.items():
+        for k, v in list(data.items()):
             try:
                 setattr(payment, k, v)
             except AttributeError:
@@ -334,7 +334,7 @@ class LipishaPaymentInterface(object):
             payment = LipishaPayment.objects.filter(transaction_reference=transaction_reference).last()
 
         payment.response = json.dumps(data)
-        for k, v in data.items():
+        for k, v in list(data.items()):
             try:
                 setattr(payment, k, v)
             except AttributeError:

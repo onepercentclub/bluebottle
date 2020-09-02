@@ -31,17 +31,17 @@ class CategoriesTestCase(BluebottleTestCase):
         url = reverse('category-list')
 
         response = self.client.get(url, HTTP_X_APPLICATION_LANGUAGE='en')
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEquals(len(data), 1)
-        self.assertEquals(data[0]['title'], 'Nice things')
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['title'], 'Nice things')
 
         # Confirm that we can retrieve dutch titles too.
         response = self.client.get(url, HTTP_X_APPLICATION_LANGUAGE='nl')
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEquals(len(data), 1)
-        self.assertEquals(data[0]['title'], 'Leuke dingen')
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['title'], 'Leuke dingen')
 
     def test_category_content(self):
         category_details = {
@@ -65,14 +65,14 @@ class CategoriesTestCase(BluebottleTestCase):
         url = reverse('category-detail', kwargs={'slug': category.slug})
 
         response = self.client.get(url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEquals(data['contents'][0]['title'], 'category content title')
-        self.assertEquals(data['contents'][0]['description'], 'category content description')
-        self.assertEquals(data['contents'][0]['video_url'], 'http://vimeo.com')
-        self.assertEquals(data['contents'][0]['link_text'], 'Find out more...')
-        self.assertEquals(data['contents'][0]['link_url'], 'http://link.com')
+        self.assertEqual(data['contents'][0]['title'], 'category content title')
+        self.assertEqual(data['contents'][0]['description'], 'category content description')
+        self.assertEqual(data['contents'][0]['video_url'], 'http://vimeo.com')
+        self.assertEqual(data['contents'][0]['link_text'], 'Find out more...')
+        self.assertEqual(data['contents'][0]['link_url'], 'http://link.com')
         self.assertTrue(all(field in ('title', 'description', 'image', 'video_url', 'link_text', 'link_url', 'sequence')
-                            for field in data['contents'][0].keys()
+                            for field in list(data['contents'][0].keys())
                             )
                         )

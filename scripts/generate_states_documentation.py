@@ -1,5 +1,5 @@
 import sys
-from StringIO import StringIO
+from io import StringIO
 
 import requests
 from django.core.management import call_command
@@ -139,6 +139,6 @@ def run(*args):
         url += '?expand=body.storage'
         response = requests.put(url, json=data, auth=(api['user'], api['key']))
         if response.status_code == 200:
-            print "[OK] {}".format(model['title'])
+            print(("[OK] {}".format(model['title'])))
         else:
-            print "[ERROR] {}".format(model['title'])
+            print(("[ERROR] {}".format(model['title'])))

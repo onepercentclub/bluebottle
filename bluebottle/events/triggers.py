@@ -91,7 +91,7 @@ class ParticipantDeletedTrigger(ModelDeletedTrigger):
     ]
 
     def __unicode__(self):
-        return unicode(_("Participant has been deleted"))
+        return str(_("Participant has been deleted"))
 
 
 Participant.triggers = [ParticipantDeletedTrigger]

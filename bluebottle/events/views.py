@@ -135,7 +135,7 @@ class EventIcalView(PrivateFileView):
         event.add('summary', instance.title)
         event.add(
             'description',
-            u'{}\n{}'.format(strip_tags(instance.description), instance.get_absolute_url())
+            '{}\n{}'.format(strip_tags(instance.description), instance.get_absolute_url())
         )
         event.add('url', instance.get_absolute_url())
         event.add('dtstart', instance.start.astimezone(utc))

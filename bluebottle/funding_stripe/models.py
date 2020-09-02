@@ -598,4 +598,4 @@ class ExternalAccount(BankAccount):
         return "Stripe external account {}".format(self.account_id)
 
 
-from states import *  # noqa
+from .states import *  # noqa

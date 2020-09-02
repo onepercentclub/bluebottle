@@ -382,7 +382,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
             data.pop('payout_account')
         if self.instance and self.instance.status.slug in ('campaign', 'voting'):
             # When project is running, only a subset of the fields canb be changed
-            for field, value in data.items():
+            for field, value in list(data.items()):
                 current = getattr(self.instance, field)
                 if field not in self.editable_fields:
                     try:
@@ -405,7 +405,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
         if 'projectlocation' in validated_data:
             location = validated_data.pop('projectlocation')
 
-            for field, value in location.items():
+            for field, value in list(location.items()):
                 setattr(instance.projectlocation, field, value)
             instance.projectlocation.save()
 
@@ -428,7 +428,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
 
         instance = super(ManageProjectSerializer, self).create(validated_data)
         if location_data:
-            for field, value in location_data.items():
+            for field, value in list(location_data.items()):
                 setattr(instance.projectlocation, field, value)
 
             instance.projectlocation.save()

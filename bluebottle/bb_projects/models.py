@@ -85,7 +85,7 @@ class ProjectPhase(TranslatableModel):
         )
 
     def __unicode__(self):
-        return u'{0} - {1}'.format(self.sequence, self.name)
+        return '{0} - {1}'.format(self.sequence, self.name)
 
     def save(self, *args, **kwargs):
         if not self.slug:

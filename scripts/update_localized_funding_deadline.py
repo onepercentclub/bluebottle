@@ -26,10 +26,10 @@ def run(*args):
                     funding.deadline = new_deadline
                     funding.save()
                     funding.refresh_from_db()
-                    print client.client_name,
-                    print funding.id,
-                    print old_deadline,
-                    print '=>',
-                    print new_deadline
-                    print '=>',
-                    print funding.deadline
+                    print(client.client_name)
+                    print(funding.id)
+                    print(old_deadline)
+                    print('=>')
+                    print(new_deadline)
+                    print('=>')
+                    print(funding.deadline)

@@ -75,7 +75,7 @@ class ExportView(ExportPermissionMixin, FormView):
         context['title'] = _('Export database')
         context['jquery_in_vendor'] = jquery_in_vendor()
         context['models'] = [
-            u'{name} ({app}.{model})'.format(
+            '{name} ({app}.{model})'.format(
                 name=model._meta.verbose_name,
                 app=model._meta.app_label,
                 model=model.__name__

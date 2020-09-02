@@ -32,11 +32,11 @@ class TestPageAdmin(BluebottleAdminTestCase):
                                    obj=page,
                                    form=form, change=True)
         page.refresh_from_db()
-        self.assertEquals(page.author, self.superuser)
+        self.assertEqual(page.author, self.superuser)
 
         page.author = user
         self.page_admin.save_model(request=self.request,
                                    obj=page,
                                    form=form, change=True)
         page.refresh_from_db()
-        self.assertEquals(page.author, user)
+        self.assertEqual(page.author, user)

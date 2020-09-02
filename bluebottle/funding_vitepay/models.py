@@ -67,4 +67,4 @@ class VitepayBankAccount(BankAccount):
         resource_name = 'payout-accounts/vitepay-external-accounts'
 
 
-from states import *  # noqa
+from .states import *  # noqa

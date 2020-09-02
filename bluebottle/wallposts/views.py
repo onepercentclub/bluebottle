@@ -222,8 +222,8 @@ class MediaWallpostPhotoList(OwnerListViewMixin, SetAuthorMixin, ListCreateAPIVi
         Ember itself.
         """
         post = request.POST.get('mediawallpost', False)
-        if post and post == u'null':
-            request.POST['mediawallpost'] = u''
+        if post and post == 'null':
+            request.POST['mediawallpost'] = ''
         return super(MediaWallpostPhotoList, self).create(request, *args, **kwargs)
 
 

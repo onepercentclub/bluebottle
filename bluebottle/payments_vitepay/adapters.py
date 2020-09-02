@@ -2,7 +2,7 @@
 import hashlib
 import json
 import requests
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 from django.core.urlresolvers import reverse
 from moneyed import XOF

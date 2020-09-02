@@ -37,7 +37,7 @@ def process(instance, created):
     # the class values. It also handles translateable attrs.
     def _merge_attrs(data, attrs):
         try:
-            items = attrs.iteritems()
+            items = iter(attrs.items())
         except AttributeError:
             logger.exception('analytics_merge_attrs')
             return
@@ -47,7 +47,7 @@ def process(instance, created):
             # If a dict is passed then the key is the dotted
             # property string and the value is options.
             try:
-                new_attr = attr.keys()[0]
+                new_attr = list(attr.keys())[0]
                 options = attr[new_attr]
                 attr = new_attr
             except AttributeError:

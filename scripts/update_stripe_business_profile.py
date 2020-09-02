@@ -9,7 +9,7 @@ from bluebottle.funding_stripe.models import StripePayoutAccount
 
 def run(*args):
     for client in Client.objects.all():
-        print client.schema_name
+        print((client.schema_name))
         with LocalTenant(client):
             for account in StripePayoutAccount.objects.filter(
                 account_id__isnull=False
@@ -30,6 +30,6 @@ def run(*args):
                             'mcc': '8398'
                         },
                     )
-                    print url
-                except Exception, e:
-                    print e
+                    print(url)
+                except Exception as e:
+                    print(e)

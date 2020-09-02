@@ -78,7 +78,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
                 raise PaymentException(e.message)
 
     def update_from_charge(self, charge):
-        self.payment.data = json.loads(unicode(charge))
+        self.payment.data = json.loads(str(charge))
         self.payment.status = self._get_mapped_status(charge.status)
 
         if 'dispute' in charge and charge.dispute:

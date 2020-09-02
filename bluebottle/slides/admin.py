@@ -42,7 +42,7 @@ class SlideAdmin(admin.ModelAdmin):
     }
 
     def get_base_object(self, pk):
-        pk = long(pk)
+        pk = int(pk)
         if pk:
             return Slide.objects.get(pk=pk)
         else:

@@ -19,6 +19,6 @@ class NotificationEffectsTestCase(BluebottleTestCase):
         )
         subject = 'Your event "Bound to fail" has been rejected'
         effect = NotificationEffect(EventRejectedOwnerMessage)(event)
-        self.assertEqual(unicode(effect), 'Message {} to faal@haas.nl'.format(subject))
+        self.assertEqual(str(effect), 'Message {} to faal@haas.nl'.format(subject))
         effect.execute()
         self.assertEqual(mail.outbox[0].subject, subject)

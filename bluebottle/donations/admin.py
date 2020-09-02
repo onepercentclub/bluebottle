@@ -179,7 +179,7 @@ class DonationAdmin(admin.ModelAdmin):
                                                     object._meta.model_name),
                       args=[object.id])
         return format_html(
-            u"<a href='{}'>{}</a>",
+            "<a href='{}'>{}</a>",
             str(url),
             obj.id
         )
@@ -201,7 +201,7 @@ class DonationAdmin(admin.ModelAdmin):
                                                     user._meta.model_name),
                       args=[user.id])
         return format_html(
-            u"<a href='{}'>{}</a>",
+            "<a href='{}'>{}</a>",
             str(url),
             user
         )
@@ -210,7 +210,7 @@ class DonationAdmin(admin.ModelAdmin):
         project = obj.project
         url = reverse('admin:projects_project_change', args=[project.id])
         return format_html(
-            u"<a href='{}'>{}</a>",
+            "<a href='{}'>{}</a>",
             str(url),
             project
         )
@@ -221,7 +221,7 @@ class DonationAdmin(admin.ModelAdmin):
         url = reverse(
             'admin:fundraisers_fundraiser_change', args=[fundraiser.id])
         return format_html(
-            u"<a href='{}'>{}</a>",
+            "<a href='{}'>{}</a>",
             str(url),
             fundraiser
         )
@@ -234,12 +234,12 @@ class DonationAdmin(admin.ModelAdmin):
 
     def admin_project(self, obj):
         url = reverse('admin:projects_project_change', args=(obj.project.id, ))
-        return format_html(u'<a href="{}">{}</a>', url, obj.project)
+        return format_html('<a href="{}">{}</a>', url, obj.project)
     admin_project.short_description = _('Project')
 
     def admin_fundraiser(self, obj):
         url = reverse('admin:fundraisers_fundraiser_change', args=(obj.fundraiser.id, ))
-        return format_html(u'<a href="{}">{}</a>', url, obj.fundraiser)
+        return format_html('<a href="{}">{}</a>', url, obj.fundraiser)
     admin_fundraiser.short_description = _('Fundraiser')
 
 
@@ -261,7 +261,7 @@ class DonationInline(admin.TabularInline):
             object._meta.app_label, object._meta.model_name), args=[object.id])
 
         return format_html(
-            u"<a href='{}'>Donation: {}</a>",
+            "<a href='{}'>Donation: {}</a>",
             str(url),
             obj.id
         )

@@ -315,7 +315,7 @@ class ManageProfileSerializer(UserProfileSerializer):
         if place:
             if instance.place:
                 current_place = instance.place
-                for key, value in place.items():
+                for key, value in list(place.items()):
                     setattr(current_place, key, value)
                 current_place.save()
             else:
@@ -397,10 +397,7 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
             )
 
         if len(BB_USER_MODEL.objects.filter(email=email, is_active=True)):
-            raise serializers.ValidationError(
-                ('member with this email address already exists.').format(
-                    settings.email_domain)
-            )
+            raise serializers.ValidationError('member with this email address already exists.')
 
         return email
 

@@ -26,7 +26,7 @@ class StatisticsChildAdmin(PolymorphicChildModelAdmin):
             icon = 'default'
         else:
             icon = obj.icon
-        return format_html(u'<img src="/goodicons/impact/{}-impact.svg">', icon)
+        return format_html('<img src="/goodicons/impact/{}-impact.svg">', icon)
 
 
 class IconWidget(forms.RadioSelect):

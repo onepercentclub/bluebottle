@@ -1,6 +1,6 @@
-from __future__ import unicode_literals
 
-from urlparse import urlparse
+
+from urllib.parse import urlparse
 
 from django.contrib.admin.widgets import AdminURLFieldWidget
 

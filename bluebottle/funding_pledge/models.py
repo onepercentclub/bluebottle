@@ -60,4 +60,4 @@ class PledgeBankAccount(BankAccount):
         resource_name = 'payout-accounts/pledge-external-accounts'
 
 
-from states import *  # noqa
+from .states import *  # noqa

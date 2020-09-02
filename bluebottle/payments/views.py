@@ -77,7 +77,7 @@ class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
         try:
             service.check_payment_status()
         except PaymentException as error:
-            raise ParseError(detail=unicode(error))
+            raise ParseError(detail=str(error))
 
 
 class ManageOrderPaymentList(ListCreateAPIView):
@@ -100,7 +100,7 @@ class ManageOrderPaymentList(ListCreateAPIView):
             service = PaymentService(serializer.instance)
             service.start_payment()
         except PaymentException as error:
-            raise ParseError(detail=unicode(error))
+            raise ParseError(detail=str(error))
 
     def get_queryset(self):
         """

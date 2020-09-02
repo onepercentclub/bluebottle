@@ -91,7 +91,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
     def test_sso_url_custom_target_unicode(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             self.assertEqual(
-                self.auth_backend.sso_url(target_url=u'/test/\u2026/bla'),
+                self.auth_backend.sso_url(target_url='/test/\u2026/bla'),
                 TOKEN_AUTH_SETTINGS['sso_url'] + '?url=%2Ftest%2F%E2%80%A6%2Fbla'
             )
 

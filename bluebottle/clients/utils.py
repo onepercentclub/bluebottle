@@ -83,17 +83,17 @@ def tenant_site():
 def get_min_amounts(methods):
     result = defaultdict(list)
     for method in methods:
-        for currency, data in method['currencies'].items():
+        for currency, data in list(method['currencies'].items()):
             result[currency].append(data.get('min_amount', 0))
 
-    return dict((currency, min(amounts)) for currency, amounts in result.items())
+    return dict((currency, min(amounts)) for currency, amounts in list(result.items()))
 
 
 def get_currencies():
     properties = get_tenant_properties()
 
     currencies = set(itertools.chain(*[
-        method['currencies'].keys() for method in properties.PAYMENT_METHODS
+        list(method['currencies'].keys()) for method in properties.PAYMENT_METHODS
     ]))
     min_amounts = get_min_amounts(properties.PAYMENT_METHODS)
 
@@ -262,7 +262,7 @@ def get_public_properties(request):
 
         try:
             config['readOnlyFields'] = {
-                'user': properties.TOKEN_AUTH.get('assertion_mapping', {}).keys()
+                'user': list(properties.TOKEN_AUTH.get('assertion_mapping', {}).keys())
             }
         except AttributeError:
             pass

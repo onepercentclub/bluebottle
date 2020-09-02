@@ -42,7 +42,7 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
         self.assertEqual(segment_type.name, result['attributes']['name'])
         self.assertEqual(
             set(relation['id'] for relation in result['relationships']['segments']['data']),
-            set(unicode(segment.pk) for segment in segment_type.segments.all())
+            set(str(segment.pk) for segment in segment_type.segments.all())
         )
 
     def test_list_anonymous(self):
@@ -102,7 +102,7 @@ class SegmentListAPITestCase(BluebottleTestCase):
 
         self.assertEqual(segment.name, result['attributes']['name'])
         self.assertEqual(
-            unicode(segment.type_id),
+            str(segment.type_id),
             result['relationships']['type']['data']['id']
         )
 

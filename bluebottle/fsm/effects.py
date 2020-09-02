@@ -20,7 +20,7 @@ class Effect(object):
 
     @property
     def description(self):
-        return unicode(self)
+        return str(self)
 
     def __init__(self, instance, **kwargs):
         self.instance = instance
@@ -61,7 +61,7 @@ class Effect(object):
         return self.__class__.__name__
 
     def to_html(self):
-        return unicode(self)
+        return str(self)
 
 
 class BaseTransitionEffect(Effect):
@@ -72,7 +72,7 @@ class BaseTransitionEffect(Effect):
     @property
     def description(self):
         return 'Change status of {} to {}'.format(
-            unicode(self.instance), self.transition.target.name
+            str(self.instance), self.transition.target.name
         )
 
     @property
@@ -109,7 +109,7 @@ class BaseTransitionEffect(Effect):
         return '<Effect: {}>'.format(self.transition)
 
     def __unicode__(self):
-        return unicode(self.transition.target)
+        return str(self.transition.target)
 
     @property
     def help(self):
@@ -119,12 +119,12 @@ class BaseTransitionEffect(Effect):
         if self.conditions:
             return _('{transition} {object} if {conditions}').format(
                 transition=self.transition.name,
-                object=unicode(self.instance),
+                object=str(self.instance),
                 conditions=" and ".join([c.__doc__ for c in self.conditions])
             )
         return _('{transition} {object}').format(
             transition=self.transition.name,
-            object=unicode(self.instance)
+            object=str(self.instance)
         )
 
 
@@ -202,12 +202,12 @@ class BaseRelatedTransitionEffect(Effect):
         if self.conditions:
             return _('{transition} related {object} if {conditions}').format(
                 transition=self.transition_effect_class.name,
-                object=unicode(self.relation),
+                object=str(self.relation),
                 conditions=" and ".join([c.__doc__ for c in self.conditions])
             )
         return _('{transition} related {object}').format(
             transition=self.transition_effect_class.name,
-            object=unicode(self.relation)
+            object=str(self.relation)
         )
 
 

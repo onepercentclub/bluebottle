@@ -218,7 +218,7 @@ class TestExportAdmin(BluebottleTestCase):
 
         self.assertEqual(
             book.sheet_by_name('Tasks').cell(0, 23).value,
-            u'Reduce CO\u2082 emissions'
+            'Reduce CO\u2082 emissions'
         )
         self.assertEqual(
             book.sheet_by_name('Tasks').cell(1, 23).value,
@@ -226,7 +226,7 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertEqual(
             book.sheet_by_name('Tasks').cell(0, 24).value,
-            u'Save water'
+            'Save water'
         )
         self.assertEqual(
             book.sheet_by_name('Tasks').cell(1, 24).value,

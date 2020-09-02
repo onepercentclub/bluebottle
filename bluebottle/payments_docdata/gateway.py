@@ -12,8 +12,8 @@ from django.utils.translation import get_language
 
 from suds.client import Client
 from suds import plugin
-from urllib import urlencode
-from urllib2 import URLError
+from urllib.parse import urlencode
+from urllib.error import URLError
 
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
 
@@ -357,7 +357,7 @@ class DocdataClient(object):
 
     def convert_to_ascii(self, value):
         """ Normalize / convert unicode characters to ascii equivalents. """
-        if isinstance(value, unicode):
+        if isinstance(value, str):
             return unicodedata.normalize('NFKD', value).encode('ascii',
                                                                'ignore')
         else:
@@ -450,12 +450,12 @@ class Name(object):
         # Assigning values is perhaps very Java-esque, but it's very obvious too
         # what's happening here, while keeping Python-like constructor argument styles.
         node = factory.create('ns0:name')
-        node.first = unicode(self.first)
-        node.middle = unicode(self.middle) if self.middle else None
-        node.last = unicode(self.last)
-        node.initials = unicode(self.initials) if self.initials else None
-        node.prefix = unicode(self.prefix) if self.prefix else None
-        node.suffix = unicode(self.suffix) if self.suffix else None
+        node.first = str(self.first)
+        node.middle = str(self.middle) if self.middle else None
+        node.last = str(self.last)
+        node.initials = str(self.initials) if self.initials else None
+        node.prefix = str(self.prefix) if self.prefix else None
+        node.suffix = str(self.suffix) if self.suffix else None
         return node
 
 
@@ -560,23 +560,23 @@ class Address(object):
 
     def to_xml(self, factory):
         country = factory.create('ns0:country')
-        country._code = unicode(self.country_code)
+        country._code = str(self.country_code)
 
         node = factory.create('ns0:address')
-        node.street = unicode(self.street)
-        node.houseNumber = unicode(self.house_number)  # string35
-        node.houseNumberAddition = unicode(
+        node.street = str(self.street)
+        node.houseNumber = str(self.house_number)  # string35
+        node.houseNumberAddition = str(
             self.house_number_addition) if self.house_number_addition else None
         # Spaces aren't allowed in the Docdata postal code (type=NMTOKEN)
-        node.postalCode = unicode(self.postal_code.replace(' ', ''))
-        node.city = unicode(self.city)
-        node.state = unicode(self.state) if self.state else None
+        node.postalCode = str(self.postal_code.replace(' ', ''))
+        node.city = str(self.city)
+        node.state = str(self.state) if self.state else None
         node.country = country
 
         # Optional company info
-        node.company = unicode(self.company) if self.company else None
-        node.vatNumber = unicode(self.vatNumber) if self.vatNumber else None
-        node.careOf = unicode(self.careOf) if self.careOf else None
+        node.company = str(self.company) if self.company else None
+        node.vatNumber = str(self.vatNumber) if self.vatNumber else None
+        node.careOf = str(self.careOf) if self.careOf else None
         return node
 
 
@@ -642,8 +642,8 @@ class DirectDebitPayment(Payment):
         country._code = self.holder_country_code
 
         node = factory.create('ns0:directDebitPaymentInput')
-        node.holderName = unicode(self.holder_name)
-        node.holderCity = unicode(self.holder_city)
+        node.holderName = str(self.holder_name)
+        node.holderCity = str(self.holder_city)
         node.holderCountry = country
         node.bic = self.bic
         node.iban = self.iban

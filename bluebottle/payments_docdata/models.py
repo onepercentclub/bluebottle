@@ -159,4 +159,4 @@ class DocdataTransaction(Transaction):
     raw_response = models.TextField(blank=True)
 
     def __unicode__(self):
-        return unicode(self.id)
+        return str(self.id)

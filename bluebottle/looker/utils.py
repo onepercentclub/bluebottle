@@ -6,7 +6,7 @@ import base64
 from hashlib import sha1
 import time
 import os
-from urllib import urlencode, quote_plus
+from urllib.parse import urlencode, quote_plus
 
 from django.db import connection
 from django.conf import settings
@@ -86,7 +86,7 @@ class LookerSSOEmbed(object):
             }),
             ('force_logout_login', True),
         ])
-        json_params = OrderedDict((key, json.dumps(value)) for key, value in params.items())
+        json_params = OrderedDict((key, json.dumps(value)) for key, value in list(params.items()))
 
         json_params['signature'] = self.sign(json_params)
 

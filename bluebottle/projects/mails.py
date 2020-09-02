@@ -12,7 +12,7 @@ from django.utils.translation import ugettext as _
 
 def mail_project_complete(project):
     with TenantLanguage(project.owner.primary_language):
-        subject = _(u"The project '{0}' has been realised").format(project.title)
+        subject = _("The project '{0}' has been realised").format(project.title)
 
     survey_link = Survey.url(project, user_type='initiator')
 
@@ -29,7 +29,7 @@ def mail_project_complete(project):
 
     if project.organization:
         with TenantLanguage(project.owner.primary_language):
-            subject = _(u"The project '{0}' has been realised").format(project.title)
+            subject = _("The project '{0}' has been realised").format(project.title)
 
         survey_link = Survey.url(project, user_type='organization')
 
@@ -47,7 +47,7 @@ def mail_project_complete(project):
 
 def mail_project_incomplete(project):
     with TenantLanguage(project.owner.primary_language):
-        subject = _(u"The project '{0}' has expired").format(project.title)
+        subject = _("The project '{0}' has expired").format(project.title)
 
     send_mail(
         template_name="projects/mails/project_incomplete.mail",

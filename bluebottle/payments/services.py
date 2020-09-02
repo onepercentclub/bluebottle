@@ -45,7 +45,7 @@ def get_payment_methods(country=None, amount=None, user=None, currency=None, pro
     if currency:
         methods = [
             method for method in methods
-            if currency in method.get('currencies', {}).keys()
+            if currency in list(method.get('currencies', {}).keys())
         ]
 
     if project_id:

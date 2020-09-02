@@ -320,7 +320,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
              'newsletter', 'phone_number',
              'gender', 'birthdate', 'disable_token', 'campaign_notifications'])
 
-        self.assertEquals(
+        self.assertEqual(
             set(f.name for f in Member._meta.fields) & user_fields, user_fields)
 
     def test_anonymize(self):

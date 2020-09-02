@@ -39,7 +39,7 @@ class FundraiserAdmin(admin.ModelAdmin):
                       args=[object.id])
 
         return format_html(
-            u"<a href='{}'>{}</a>",
+            "<a href='{}'>{}</a>",
             str(url),
             object.title
         )
@@ -52,7 +52,7 @@ class FundraiserAdmin(admin.ModelAdmin):
                       args=[object.id])
 
         return format_html(
-            u"<a href='{}'>{}</a>",
+            "<a href='{}'>{}</a>",
             str(url),
             object.email
         )

@@ -29,6 +29,4 @@ class PaymentLogEntry(models.Model):
                                 Truncator(self.message).words(6))
 
     def log_entry(self):
-        return '[{0}]  {1: <5}  {2 <5}  {3}'.format(
-            self.timestamp.strftime("%d/%b/%Y %H:%M:%S"),
-            self.get_type_display(), self.get_level_display(), self.message)
+        return self.message

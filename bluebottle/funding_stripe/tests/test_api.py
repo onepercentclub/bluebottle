@@ -325,13 +325,13 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                             requested_capabilities=['transfers'],
                             settings={
                                 'card_payments': {
-                                    'statement_descriptor_prefix': u'tst--'
+                                    'statement_descriptor_prefix': 'tst--'
                                 },
                                 'payments': {
-                                    'statement_descriptor': u'tst--'
+                                    'statement_descriptor': 'tst--'
                                 },
                                 'payouts': {
-                                    'statement_descriptor': u'tst--',
+                                    'statement_descriptor': 'tst--',
                                     'schedule': {'interval': 'manual'}
                                 }
                             },
@@ -358,12 +358,12 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.assertEqual(
             data['data']['meta']['required-fields'],
             [
-                u'country',
-                u'external_accounts',
-                u'individual.verification.additional_document',
-                u'document_type',
-                u'individual.verification.document.front',
-                u'individual.dob'
+                'country',
+                'external_accounts',
+                'individual.verification.additional_document',
+                'document_type',
+                'individual.verification.document.front',
+                'individual.dob'
             ]
         )
         self.assertEqual(
@@ -373,7 +373,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
 
         self.assertEqual(
             data['data']['relationships']['owner']['data']['id'],
-            unicode(self.user.pk)
+            str(self.user.pk)
         )
 
     def test_create_no_user(self):
@@ -408,12 +408,12 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.assertEqual(
             data['data']['meta']['required-fields'],
             [
-                u'country',
-                u'external_accounts',
-                u'individual.verification.additional_document',
-                u'document_type',
-                u'individual.verification.document.front',
-                u'individual.dob'
+                'country',
+                'external_accounts',
+                'individual.verification.additional_document',
+                'document_type',
+                'individual.verification.document.front',
+                'individual.dob'
             ]
         )
         self.assertEqual(
@@ -423,7 +423,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
 
         self.assertEqual(
             data['data']['relationships']['owner']['data']['id'],
-            unicode(self.user.pk)
+            str(self.user.pk)
         )
 
     def test_get_verification_error(self):

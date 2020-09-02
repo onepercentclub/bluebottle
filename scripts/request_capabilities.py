@@ -16,6 +16,6 @@ def run(*args):
                         account.account_id,
                         requested_capabilities=["legacy_payments", "transfers"],
                     )
-                    print account.account.capabilities
-                except Exception, e:
-                    print e
+                    print((account.account.capabilities))
+                except Exception as e:
+                    print(e)

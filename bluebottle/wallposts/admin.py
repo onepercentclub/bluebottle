@@ -1,4 +1,4 @@
-import urlparse
+import urllib.parse
 
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
@@ -87,7 +87,7 @@ class MediaWallpostAdmin(BaseWallpostAdmin):
     def get_text(self, obj):
         if len(obj.text) > 150:
             return format_html(
-                u'<span title="{}">{} [...]</span>',
+                '<span title="{}">{} [...]</span>',
                 obj.text, obj.text[:145])
 
     def thumbnail(self, obj):
@@ -96,8 +96,8 @@ class MediaWallpostAdmin(BaseWallpostAdmin):
             data['video_url'] = obj.video_url
             if 'youtube.com' in obj.video_url:
                 try:
-                    urlparts = urlparse.urlparse(obj.video_url)
-                    data['youtubeid'] = urlparse.parse_qs(urlparts.query)['v'][
+                    urlparts = urllib.parse.urlparse(obj.video_url)
+                    data['youtubeid'] = urllib.parse.parse_qs(urlparts.query)['v'][
                         0]
                 except (KeyError, ValueError, IndexError):
                     pass
@@ -146,7 +146,7 @@ class TextWallpostAdmin(BaseWallpostAdmin):
         if obj.donation:
             link = reverse('admin:funding_donation_change', args=(obj.donation.id,))
             return format_html(
-                u"<a href='{}'>{}</a>",
+                "<a href='{}'>{}</a>",
                 link, obj.donation
             )
 
@@ -171,7 +171,7 @@ class SystemWallpostAdmin(BaseWallpostAdmin):
         if obj.donation:
             link = reverse('admin:funding_donation_change', args=(obj.donation.id,))
             return format_html(
-                u"<a href='{}'>{}</a>",
+                "<a href='{}'>{}</a>",
                 link, obj.donation
             )
 
@@ -220,7 +220,7 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
         except MediaWallpost.DoesNotExist:
             pass
         if len(text) > 40:
-            return format_html(u'{}&hellip;', text[:38])
+            return format_html('{}&hellip;', text[:38])
         return text
 
 
@@ -290,7 +290,7 @@ class DonationWallpostInline(admin.TabularInline):
 
     def wallpost(self, obj):
         url = reverse('admin:wallposts_wallpost_change', args=(obj.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj)
+        return format_html('<a href="{}">{}</a>', url, obj)
 
 
 class WallpostInline(GenericTabularInline):
@@ -306,7 +306,7 @@ class WallpostInline(GenericTabularInline):
 
     def wallpost(self, obj):
         url = reverse('admin:wallposts_wallpost_change', args=(obj.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj)
+        return format_html('<a href="{}">{}</a>', url, obj)
 
     def has_add_permission(self, request):
         return False

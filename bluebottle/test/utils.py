@@ -50,7 +50,7 @@ def css_dict(style):
         return dict([(k.strip(), v.strip()) for k, v in
                      [prop.split(':') for prop in
                       style.rstrip(';').split(';')]])
-    except ValueError, e:
+    except ValueError as e:
         raise ValueError('Could not parse CSS: %s (%s)' % (style, e))
 
 

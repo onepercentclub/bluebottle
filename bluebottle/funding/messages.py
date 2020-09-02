@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class DonationSuccessActivityManagerMessage(TransitionMessage):
-    subject = _(u"You have a new donation!💰")
+    subject = _("You have a new donation!💰")
     template = 'messages/donation_success_owner'
 
     def get_recipients(self):
@@ -41,7 +41,7 @@ class DonationRefundedDonorMessage(TransitionMessage):
 
 
 class FundingPartiallyFundedMessage(TransitionMessage):
-    subject = _(u"Your crowdfunding campaign deadline passed")
+    subject = _("Your crowdfunding campaign deadline passed")
     template = 'messages/funding_partially_funded'
 
     def get_recipients(self):
@@ -50,7 +50,7 @@ class FundingPartiallyFundedMessage(TransitionMessage):
 
 
 class FundingRealisedOwnerMessage(TransitionMessage):
-    subject = _(u'Your campaign "{title}" has been successfully completed! 🎉')
+    subject = _('Your campaign "{title}" has been successfully completed! 🎉')
     template = 'messages/funding_realised_owner'
 
     context = {
@@ -63,7 +63,7 @@ class FundingRealisedOwnerMessage(TransitionMessage):
 
 
 class FundingRejectedMessage(TransitionMessage):
-    subject = _(u"Your crowdfunding campaign has been rejected.")
+    subject = _("Your crowdfunding campaign has been rejected.")
     template = 'messages/funding_rejected'
 
     def get_recipients(self):
@@ -72,7 +72,7 @@ class FundingRejectedMessage(TransitionMessage):
 
 
 class FundingExpiredMessage(TransitionMessage):
-    subject = _(u"Your crowdfunding campaign has expired")
+    subject = _("Your crowdfunding campaign has expired")
     template = 'messages/funding_expired'
 
     def get_recipients(self):
@@ -81,7 +81,7 @@ class FundingExpiredMessage(TransitionMessage):
 
 
 class PayoutAccountRejected(TransitionMessage):
-    subject = _(u'Your identity verification needs some work')
+    subject = _('Your identity verification needs some work')
     template = 'messages/payout_account_rejected'
 
     def get_recipients(self):
@@ -90,7 +90,7 @@ class PayoutAccountRejected(TransitionMessage):
 
 
 class PayoutAccountVerified(TransitionMessage):
-    subject = _(u'Your identity has been verified')
+    subject = _('Your identity has been verified')
     template = 'messages/payout_account_verified'
 
     def get_recipients(self):

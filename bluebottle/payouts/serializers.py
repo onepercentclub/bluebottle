@@ -66,7 +66,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
     def get_legal_entity(self, obj):
         try:
             legal_entity = obj.account.legal_entity.to_dict()
-            return dict((key, value) for key, value in legal_entity.items() if key != 'verification')
+            return dict((key, value) for key, value in list(legal_entity.items()) if key != 'verification')
         except AttributeError:
             return {}
 
@@ -129,7 +129,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
     def create(self, data):
         try:
             account = self.create_stripe_account(data)
-        except stripe.error.InvalidRequestError, e:
+        except stripe.error.InvalidRequestError as e:
             param = 'payout_account.legal_entity.{}'.format(
                 '.'.join(e.param.replace(']', '').split('[')[1:])
             )
@@ -159,7 +159,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
                     self.update_stripe_account(instance, account, data)
             else:
                 account = self.create_stripe_account(data)
-        except stripe.error.InvalidRequestError, e:
+        except stripe.error.InvalidRequestError as e:
             param = 'payout_account.legal_entity.{}'.format(
                 '.'.join(e.param.replace(']', '').split('[')[1:])
             )

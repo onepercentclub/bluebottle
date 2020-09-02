@@ -9,7 +9,7 @@ from bluebottle.funding_pledge.models import PledgePayment
 def run(*args):
     for client in Client.objects.all():
         with LocalTenant(client):
-            print 'Migrating {}\n\n'.format(client.name)
+            print(('Migrating {}\n\n'.format(client.name)))
             for donation in Donation.objects.select_related('payment').filter(
                 payment__isnull=True,
                 status='succeeded'
@@ -23,7 +23,7 @@ def run(*args):
                         old_donation.order.order_payment and
                         old_donation.order.order_payment.payment_method == 'pledgeStandard'
                     ):
-                        print old_donation
+                        print(old_donation)
                         PledgePayment.objects.create(
                             donation=donation,
                             status='succeeded'

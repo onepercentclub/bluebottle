@@ -70,7 +70,7 @@ class Command(BaseCommand):
         while name is None:
             if not name:
                 input_msg = 'Tenant name'
-                name = input(force_str('%s: ' % input_msg))
+                name = eval(input(force_str('%s: ' % input_msg)))
 
             default_client_name = ''.join(ch if ch.isalnum() else '-' for ch in name).lower()
             default_schema_name = default_client_name.replace('-', '_')
@@ -81,19 +81,19 @@ class Command(BaseCommand):
                 if not client_name:
                     input_msg = 'Client name'
                     input_msg = "%s (leave blank to use '%s')" % (input_msg, default_client_name)
-                    client_name = input(force_str('%s: ' % input_msg)) or default_client_name
+                    client_name = eval(input(force_str('%s: ' % input_msg))) or default_client_name
 
             while schema_name is None:
                 if not schema_name:
                     input_msg = 'Database schema name'
                     input_msg = "%s (leave blank to use '%s')" % (input_msg, default_schema_name)
-                    schema_name = input(force_str('%s: ' % input_msg)) or default_schema_name
+                    schema_name = eval(input(force_str('%s: ' % input_msg))) or default_schema_name
 
             while domain_url is None:
                 if not domain_url:
                     input_msg = 'Domain url'
                     input_msg = "%s (leave blank to use '%s')" % (input_msg, default_domain_url)
-                    domain_url = input(force_str('%s: ' % input_msg)) or default_domain_url
+                    domain_url = eval(input(force_str('%s: ' % input_msg))) or default_domain_url
 
             client_name.replace('_', '-')
 

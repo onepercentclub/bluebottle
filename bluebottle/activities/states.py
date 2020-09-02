@@ -16,7 +16,7 @@ class CreateOrganizer(Effect):
         )
 
     def __unicode__(self):
-        return unicode(_('Create organizer'))
+        return str(_('Create organizer'))
 
 
 class ActivityStateMachine(ModelStateMachine):

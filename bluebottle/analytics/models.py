@@ -23,18 +23,7 @@ def get_report_model(db_table):
             model._meta.managed = False
             return model
 
-    class ReportClass(models.Model):
-        __metaclass__ = ReportMetaClass
-
-        #  Column  |           Type         |
-        # ---------+------------------------+
-        # year     | double precision       |
-        # quarter  | double precision       |
-        # month    | double precision       |
-        # location | character varying(255) |
-        # type     | character varying      |
-        # value    | bigint                 |
-
+    class ReportClass(models.Model, metaclass=ReportMetaClass):
         year = models.PositiveSmallIntegerField(_('year'))
         quarter = models.PositiveSmallIntegerField(_('quarter'))
         month = models.PositiveSmallIntegerField(_('month'), primary_key=True)
@@ -63,36 +52,7 @@ def get_raw_report_model(db_table):
             model._meta.managed = False
             return model
 
-    class RawReportClass(models.Model):
-        __metaclass__ = RawReportMetaClass
-
-        #          Column          |            Type             |
-        # -------------------------+-----------------------------+
-        # tenant                   | name                        |
-        # type                     | character varying           |
-        # type_id                  | integer                     |
-        # description              | character varying(255)      |
-        # parent_id                | integer                     |
-        # parent_description       | character varying           |
-        # grand_parent_id          | integer                     |
-        # grand_parent_description | character varying           |
-        # timestamp                | timestamp without time zone |
-        # status                   | character varying(20)       |
-        # status_friendly          | character varying(80)       |
-        # event_timestamp          | timestamp without time zone |
-        # event_status             | character varying(20)       |
-        # user_id                  | integer                     |
-        # user_email               | character varying(254)      |
-        # user_remote_id           | character varying(75)       |
-        # year                     | double precision            |
-        # quarter                  | double precision            |
-        # month                    | double precision            |
-        # week                     | double precision            |
-        # location                 | character varying(255)      |
-        # location_group           | character varying(255)      |
-        # value                    | integer                     |
-        # value_alt                | integer                     |
-
+    class RawReportClass(models.Model, metaclass=RawReportMetaClass):
         tenant = models.CharField(_('tenant'), max_length=255, primary_key=True)
         type = models.CharField(_('type'), max_length=255)
         type_id = models.PositiveIntegerField(_('type_id'))

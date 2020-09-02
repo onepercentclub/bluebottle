@@ -51,4 +51,4 @@ class Command(BaseCommand):
             text_file.write(json.dumps(results))
             text_file.close()
         else:
-            print json.dumps(results)
+            print(json.dumps(results))

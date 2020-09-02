@@ -76,9 +76,7 @@ class ShareFlyer(views.APIView):
 
         if project.image:
             project_image = self.request.build_absolute_uri(
-                settings.MEDIA_URL + unicode(get_thumbnail(project.image,
-                                                           "400x225",
-                                                           crop="center")))
+                settings.MEDIA_URL + str(get_thumbnail(project.image, "400x225", crop="center")))
         else:
             project_image = None
 
@@ -229,7 +227,7 @@ class RelatedPermissionMixin(object):
         Check if the request should be permitted for a given related object.
         Raises an appropriate exception if the request is not permitted.
         """
-        for related, permissions in self.related_permission_classes.items():
+        for related, permissions in list(self.related_permission_classes.items()):
             related_obj = getattr(obj, related)
             for permission in permissions:
                 if not permission().has_object_permission(request, None, related_obj):

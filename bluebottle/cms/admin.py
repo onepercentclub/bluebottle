@@ -69,7 +69,7 @@ class LinkGroupInline(SortableTabularInline):
             url = "admin:%s_%s_change" % (self.model._meta.app_label,
                                           self.model._meta.model_name)
             return format_html(
-                u"<a href='{}'>{}</a>",
+                "<a href='{}'>{}</a>",
                 str(reverse(url, args=(obj.id,))), _('Edit this group')
             )
         return _('First save to edit this group')

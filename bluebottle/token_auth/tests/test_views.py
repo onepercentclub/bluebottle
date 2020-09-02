@@ -1,4 +1,4 @@
-import urllib
+from urllib import urlencode
 
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test.utils import override_settings
@@ -88,7 +88,7 @@ class RedirectViewTestCase(TestCase):
     def test_get_custom_target(self, sso_url):
 
         response = self.view.get(
-            self.factory.get('/api/sso/redirect?' + urllib.urlencode({'url': '/test/'}))
+            self.factory.get('/api/sso/redirect?' + urlencode({'url': '/test/'}))
         )
         sso_url.assert_called_once_with(target_url='/test/')
         self.assertEqual(response.status_code, 302)

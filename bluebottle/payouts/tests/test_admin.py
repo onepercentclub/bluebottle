@@ -52,11 +52,11 @@ class StripePayoutTestAdmin(BluebottleAdminTestCase):
         details = self.admin.details(self.payout)
         self.assertEqual(details,
                          '<b>account number</b>: *************1234<br/>'
-                         u'<b>account holder name</b>: M\xe5lle Eppie<br/>'
+                         '<b>account holder name</b>: M\xe5lle Eppie<br/>'
                          '<b>last name</b>: Eppie<br/>'
                          '<b>country</b>: NL<br/>'
                          '<b>bank country</b>: DE<br/><b>currency</b>: eur<br/>'
-                         u'<b>first name</b>: M\xe5lle')
+                         '<b>first name</b>: M\xe5lle')
 
     @patch('bluebottle.payouts.models.stripe.Account.retrieve')
     def test_stripe_details_xss(self, stripe_retrieve):
@@ -67,11 +67,11 @@ class StripePayoutTestAdmin(BluebottleAdminTestCase):
         self.assertEqual(
             details,
             '<b>account number</b>: *************1234<br/>'
-            u'<b>account holder name</b>: M\xe5lle Eppie&lt;script&gt;alert(&#39;test&#39;)&lt;/script&gt;<br/>'
+            '<b>account holder name</b>: M\xe5lle Eppie&lt;script&gt;alert(&#39;test&#39;)&lt;/script&gt;<br/>'
             '<b>last name</b>: Eppie<br/>'
             '<b>country</b>: NL<br/>'
             '<b>bank country</b>: DE<br/><b>currency</b>: eur<br/>'
-            u'<b>first name</b>: M\xe5lle'
+            '<b>first name</b>: M\xe5lle'
         )
 
     @patch('bluebottle.payouts.models.stripe.Account.retrieve')
@@ -108,11 +108,11 @@ class StripePayoutTestAdmin(BluebottleAdminTestCase):
         details = self.admin.details(self.payout)
         self.assertEqual(details,
                          '<b>account number</b>: *************1234<br/>'
-                         u'<b>account holder name</b>: M\xe5lle Eppie<br/>'
+                         '<b>account holder name</b>: M\xe5lle Eppie<br/>'
                          '<b>last name</b>: Eppie<br/>'
                          '<b>country</b>: NL<br/>'
                          '<b>bank country</b>: DE<br/><b>currency</b>: eur<br/>'
-                         u'<b>first name</b>: M\xe5lle')
+                         '<b>first name</b>: M\xe5lle')
 
 
 class PayoutAccountAdminTestCase(BluebottleAdminTestCase):

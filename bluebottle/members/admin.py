@@ -529,7 +529,7 @@ class MemberAdmin(UserAdmin):
     def login_as_link(self, obj):
         url = reverse('admin:members_member_login_as', args=(obj.pk,))
         return format_html(
-            u"<a target='_blank' href='{}'>{}</a>",
+            "<a target='_blank' href='{}'>{}</a>",
             url, _('Login as user')
         )
     login_as_link.short_description = _('Login as')

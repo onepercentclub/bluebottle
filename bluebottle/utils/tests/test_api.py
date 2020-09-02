@@ -45,7 +45,7 @@ class TestShareFlyer(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        self.failUnless(send_mail.called)
+        self.assertTrue(send_mail.called)
 
     @mock.patch("bluebottle.utils.views.send_mail")
     def test_share_fail(self, send_mail):
@@ -64,7 +64,7 @@ class TestShareFlyer(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        self.failIf(send_mail.called)
+        self.assertFalse(send_mail.called)
 
     @mock.patch("bluebottle.utils.views.send_mail")
     def test_share_cc(self, send_mail):
@@ -81,8 +81,8 @@ class TestShareFlyer(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        self.failUnless(send_mail.called)
-        self.failUnless(self.user_1.email in send_mail.call_args[1].get('cc'))
+        self.assertTrue(send_mail.called)
+        self.assertTrue(self.user_1.email in send_mail.call_args[1].get('cc'))
 
 
 class TestLanguageApi(BluebottleTestCase):
@@ -121,6 +121,6 @@ class TranslationSettingsTestCase(BluebottleTestCase):
             'Site'
         )
         self.assertEqual(
-            response.data['platform']['translations'][u'What\u2019s the location of your office?'],
+            response.data['platform']['translations']['What\u2019s the location of your office?'],
             'What is your office site'
         )

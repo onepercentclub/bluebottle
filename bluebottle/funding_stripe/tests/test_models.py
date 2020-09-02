@@ -73,7 +73,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 business_profile={'url': 'https://testserver', 'mcc': '8398'},
                 business_type='individual',
                 country=self.check.country,
-                metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},
+                metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.check.owner.pk},
                 requested_capabilities=['transfers'],
                 settings={
                     'card_payments': {
@@ -180,11 +180,11 @@ class ConnectAccountTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             account.document_spec['supported_document_types'],
-            [u'passport', u'id-card', u'drivers-license']
+            ['passport', 'id-card', 'drivers-license']
         )
         self.assertEqual(
             account.document_spec['document_types_requiring_back'],
-            [u'id-card']
+            ['id-card']
         )
         account = StripePayoutAccountFactory.create(country='NL')
         self.assertEqual(
@@ -193,11 +193,11 @@ class ConnectAccountTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             account.document_spec['supported_document_types'],
-            [u'passport', u'id-card', u'drivers-license']
+            ['passport', 'id-card', 'drivers-license']
         )
         self.assertEqual(
             account.document_spec['document_types_requiring_back'],
-            [u'id-card', u'drivers-license']
+            ['id-card', 'drivers-license']
         )
         account = StripePayoutAccountFactory.create(country='XX')
         self.assertEqual(
@@ -206,11 +206,11 @@ class ConnectAccountTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             account.document_spec['supported_document_types'],
-            [u'passport', u'id-card', u'drivers-license']
+            ['passport', 'id-card', 'drivers-license']
         )
         self.assertEqual(
             account.document_spec['document_types_requiring_back'],
-            [u'id-card', u'drivers-license']
+            ['id-card', 'drivers-license']
         )
 
 

@@ -9,7 +9,7 @@ class PaymentException(Exception):
         return str(self.message)
 
     def __unicode__(self):
-        return unicode(self.message)
+        return str(self.message)
 
 
 class PaymentAdminException(Exception):

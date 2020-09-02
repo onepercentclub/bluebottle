@@ -1,5 +1,5 @@
 import json
-import urlparse
+import urllib.parse
 
 import mock
 import httmock
@@ -18,7 +18,7 @@ def facebook_me_mock(url, request):
 
 @httmock.urlmatch(netloc='graph.facebook.com', path='/[v0-9\.]+/oauth/access_token')
 def facebook_access_token(url, request):
-    if urlparse.parse_qs(request.body)['fb_exchange_token'][0] == 'test_token':
+    if urllib.parse.parse_qs(request.body)['fb_exchange_token'][0] == 'test_token':
         return json.dumps({'access_token': 'long_lived_token'})
     else:
         content = json.dumps({'error': 'invalid token'})

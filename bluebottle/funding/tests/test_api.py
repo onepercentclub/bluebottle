@@ -253,7 +253,7 @@ class RewardListTestCase(BluebottleTestCase):
             len(funding_data['data']['relationships']['rewards']['data']), 1
         )
         self.assertEqual(
-            funding_data['data']['relationships']['rewards']['data'][0]['id'], unicode(data['data']['id'])
+            funding_data['data']['relationships']['rewards']['data'][0]['id'], str(data['data']['id'])
         )
 
     def test_create_wrong_currency(self):
@@ -438,19 +438,19 @@ class FundingDetailTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['data']['attributes']['target'],
-            {u'currency': u'EUR', u'amount': 5000.0}
+            {'currency': 'EUR', 'amount': 5000.0}
         )
         self.assertEqual(
             data['data']['attributes']['amount-donated'],
-            {u'currency': u'EUR', u'amount': 1000.0}
+            {'currency': 'EUR', 'amount': 1000.0}
         )
         self.assertEqual(
             data['data']['attributes']['amount-matching'],
-            {u'currency': u'EUR', u'amount': 500.0}
+            {'currency': 'EUR', 'amount': 500.0}
         )
         self.assertEqual(
             data['data']['attributes']['amount-raised'],
-            {u'currency': u'EUR', u'amount': 1500.0}
+            {'currency': 'EUR', 'amount': 1500.0}
         )
 
         # Should only see the three successful donations
@@ -504,7 +504,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         bank_account = response.json()['data']['relationships']['bank-account']['data']
         self.assertEqual(
-            bank_account['id'], unicode(self.funding.bank_account.pk)
+            bank_account['id'], str(self.funding.bank_account.pk)
         )
 
     def test_other_user(self):
@@ -587,7 +587,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         bank_account = response.json()['data']['relationships']['bank-account']['data']
         self.assertEqual(
-            bank_account['id'], unicode(external_account.pk)
+            bank_account['id'], str(external_account.pk)
         )
         self.assertEqual(
             bank_account['type'], 'payout-accounts/stripe-external-accounts'
@@ -678,7 +678,7 @@ class FundraiserListTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['data']['relationships']['owner']['data']['id'],
-            unicode(self.user.pk)
+            str(self.user.pk)
         )
 
         response = self.client.get(self.funding_url)
@@ -702,7 +702,7 @@ class FundraiserListTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_deadline_to_long(self):
-        self.data['data']['attributes']['deadline'] = unicode(self.funding.deadline + timedelta(days=1))
+        self.data['data']['attributes']['deadline'] = str(self.funding.deadline + timedelta(days=1))
         response = self.client.post(
             self.create_url,
             data=json.dumps(self.data),
@@ -812,8 +812,8 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
-        self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
-        self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertEqual(data['data']['relationships']['activity']['data']['id'], str(self.funding.pk))
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
         self.assertIsNone(data['data']['attributes']['client-secret'])
 
     def test_donate(self):
@@ -828,7 +828,7 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.get(self.funding_url, user=self.user)
 
         donation = get_included(response, 'contributions/donations')
-        self.assertEqual(donation['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertEqual(donation['relationships']['user']['data']['id'], str(self.user.pk))
 
         self.assertTrue(response.json()['data']['attributes']['is-follower'])
 
@@ -937,7 +937,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(
             data['errors'][0]['detail'],
-            u'User can only be set, not changed.'
+            'User can only be set, not changed.'
         )
 
     def test_update_wrong_user(self):
@@ -996,7 +996,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
         self.assertEqual(len(data['data']['attributes']['client-secret']), 32)
-        self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
+        self.assertEqual(data['data']['relationships']['activity']['data']['id'], str(self.funding.pk))
         self.assertEqual(data['data']['relationships']['user']['data'], None)
 
     def test_claim(self):
@@ -1032,7 +1032,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
-        self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
         self.assertTrue('client-secret' not in data['data']['attributes'])
 
         patch_data = {
@@ -1146,7 +1146,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 200, 'currency': 'EUR'})
-        self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
 
     def test_update_no_user_wrong_token(self):
         response = self.client.post(self.create_url, json.dumps(self.data))
@@ -1186,7 +1186,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['relationships']['fundraiser']['data']['id'], unicode(fundraiser.pk))
+        self.assertEqual(data['data']['relationships']['fundraiser']['data']['id'], str(fundraiser.pk))
 
     def test_create_fundraiser_unrelated(self):
         fundraiser = FundraiserFactory.create()
@@ -1209,7 +1209,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['relationships']['reward']['data']['id'], unicode(reward.pk))
+        self.assertEqual(data['data']['relationships']['reward']['data']['id'], str(reward.pk))
 
     def test_create_reward_higher_amount(self):
         reward = RewardFactory.create(amount=Money(50, 'EUR'), activity=self.funding)
@@ -1222,7 +1222,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['relationships']['reward']['data']['id'], unicode(reward.pk))
+        self.assertEqual(data['data']['relationships']['reward']['data']['id'], str(reward.pk))
 
     def test_create_reward_lower_amount(self):
         reward = RewardFactory.create(amount=Money(150, 'EUR'), activity=self.funding)
@@ -1270,7 +1270,7 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                     'code': 'EUR',
                     'name': 'Euro',
                     'maxAmount': None,
-                    'symbol': u'\u20ac',
+                    'symbol': '\u20ac',
                     'minAmount': 5.00,
                     'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
                     'provider': 'stripe'
@@ -1288,7 +1288,7 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                     'code': 'NGN',
                     'name': 'Nigerian Naira',
                     'maxAmount': None,
-                    'symbol': u'\u20a6',
+                    'symbol': '\u20a6',
                     'minAmount': 1000.00,
                     'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
                     'provider': 'flutterwave'
@@ -1341,38 +1341,38 @@ class PayoutAccountTestCase(BluebottleTestCase):
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
         included = json.loads(response.content)['included']
 
-        payment_methods = [method['attributes'] for method in included if method['type'] == u'payments/payment-methods']
+        payment_methods = [method['attributes'] for method in included if method['type'] == 'payments/payment-methods']
 
         self.assertEqual(
             payment_methods,
             [
                 {
-                    u'code': u'bancontact',
-                    u'name': u'Bancontact',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR'],
-                    u'countries': [u'BE']
+                    'code': 'bancontact',
+                    'name': 'Bancontact',
+                    'provider': 'stripe',
+                    'currencies': ['EUR'],
+                    'countries': ['BE']
                 },
                 {
-                    u'code': u'credit-card',
-                    u'name': u'Credit card',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR', u'USD'],
-                    u'countries': []
+                    'code': 'credit-card',
+                    'name': 'Credit card',
+                    'provider': 'stripe',
+                    'currencies': ['EUR', 'USD'],
+                    'countries': []
                 },
                 {
-                    u'code': u'direct-debit',
-                    u'name': u'Direct debit',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR'],
-                    u'countries': []
+                    'code': 'direct-debit',
+                    'name': 'Direct debit',
+                    'provider': 'stripe',
+                    'currencies': ['EUR'],
+                    'countries': []
                 },
                 {
-                    u'code': u'ideal',
-                    u'name': u'iDEAL',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR'],
-                    u'countries': [u'NL']
+                    'code': 'ideal',
+                    'name': 'iDEAL',
+                    'provider': 'stripe',
+                    'currencies': ['EUR'],
+                    'countries': ['NL']
                 }
             ]
         )
@@ -1393,17 +1393,17 @@ class PayoutAccountTestCase(BluebottleTestCase):
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
         included = json.loads(response.content)['included']
 
-        payment_methods = [method['attributes'] for method in included if method['type'] == u'payments/payment-methods']
+        payment_methods = [method['attributes'] for method in included if method['type'] == 'payments/payment-methods']
 
         self.assertEqual(
             payment_methods,
             [
                 {
-                    u'code': u'credit-card',
-                    u'name': u'Credit card',
-                    u'currencies': [u'EUR', u'USD', u'GBP', u'AUD'],
-                    u'provider': u'stripe',
-                    u'countries': []
+                    'code': 'credit-card',
+                    'name': 'Credit card',
+                    'currencies': ['EUR', 'USD', 'GBP', 'AUD'],
+                    'provider': 'stripe',
+                    'countries': []
                 }
             ]
         )

@@ -130,14 +130,14 @@ class FundingTestCase(BluebottleAdminTestCase):
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(donation.status, donation.states.succeeded.value)
         self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(mail.outbox[0].subject, u'You have a new donation!💰')
+        self.assertEqual(mail.outbox[0].subject, 'You have a new donation!💰')
         self.assertEqual(mail.outbox[1].subject, 'Thanks for your donation!')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
         self.assertTrue('Hi Bill,' in mail.outbox[1].body)
 
         # Donation amount should appear in both emails
-        self.assertTrue(u'€ 50' in mail.outbox[0].body)
-        self.assertTrue(u'€ 50' in mail.outbox[1].body)
+        self.assertTrue('€ 50' in mail.outbox[0].body)
+        self.assertTrue('€ 50' in mail.outbox[1].body)
 
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
@@ -177,7 +177,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 5)
         self.assertEqual(
             mail.outbox[4].subject,
-            u'Your campaign "{}" has been successfully completed! \U0001f389'.format(
+            'Your campaign "{}" has been successfully completed! \U0001f389'.format(
                 self.funding.title
             )
         )
@@ -271,13 +271,13 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         new_funding.states.reject(save=True)
         organizer = new_funding.contributions.first()
-        self.assertEqual(organizer.status, u'failed')
+        self.assertEqual(organizer.status, 'failed')
 
         new_funding.states.restore(save=True)
         organizer.refresh_from_db()
-        self.assertEqual(organizer.status, u'new')
+        self.assertEqual(organizer.status, 'new')
 
         new_funding.states.submit()
         new_funding.states.approve(save=True)
         organizer.refresh_from_db()
-        self.assertEqual(organizer.status, u'succeeded')
+        self.assertEqual(organizer.status, 'succeeded')

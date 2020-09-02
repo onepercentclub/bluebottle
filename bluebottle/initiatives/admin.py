@@ -34,7 +34,7 @@ class InitiativeReviewerFilter(admin.SimpleListFilter):
             distinct('reviewer__id', 'reviewer__first_name', 'reviewer__last_name'). \
             values_list('reviewer__id', 'reviewer__first_name', 'reviewer__last_name'). \
             order_by('reviewer__first_name', 'reviewer__last_name', 'reviewer__id')
-        return [('me', _('My initiatives'))] + [(r[0], u"{} {}".format(r[1], r[2])) for r in reviewers]
+        return [('me', _('My initiatives'))] + [(r[0], "{} {}".format(r[1], r[2])) for r in reviewers]
 
     def queryset(self, request, queryset):
         if self.value() == 'me':
@@ -168,7 +168,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         ]
 
         return format_html("<ul class='validation-error-list'>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in errors
+            format_html("<li>{}</li>", value) for value in errors
         ])))
 
     valid.short_description = _('Steps to complete initiative')

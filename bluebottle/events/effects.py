@@ -22,7 +22,7 @@ class SetTimeSpent(Effect):
         participant = self.instance
         if not self.instance.id:
             participant = _('participant')
-        return unicode(_('Set time spent to {duration} on {participant}').format(
+        return str(_('Set time spent to {duration} on {participant}').format(
             duration=self.instance.activity.duration or _('event duration'),
             participant=participant
         ))

@@ -30,8 +30,11 @@ class TenantProperties(local):
                                   "settings.py")
             # try to load tenant specific properties. We're using execfile since tenant
             # directories are not python packages (e.g. no __init__.py)
-            execfile(props_mod, dict(settings=settings),
-                     self.tenant_properties)
+            exec(
+                compile(open(props_mod, "rb").read(), props_mod, 'exec'),
+                dict(settings=settings),
+                self.tenant_properties
+            )
 
         except (ImportError, AttributeError, IOError):
             if not isinstance(tenant, FakeTenant):

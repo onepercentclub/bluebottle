@@ -17,4 +17,4 @@ def run(*args):
             ).values_list('pk', 'funding_id'):
                 projects.append((client_name, pk, funding_id))
 
-    print json.dumps(projects)
+    print((json.dumps(projects)))

@@ -435,7 +435,7 @@ class ParticipantStateMachineTests(BluebottleTestCase):
         self.assertTrue(
             self.event.followers.filter(user=self.participant.user).exists()
         )
-        print [m.subject for m in self.messages(self.participant.user)]
+        print([m.subject for m in self.messages(self.participant.user)])
         self.assertEqual(
             len(self.messages(self.participant.user)), 2
         )
@@ -473,9 +473,9 @@ class ParticipantStateMachineTests(BluebottleTestCase):
         self.assertEqual(
 
             [
-                u'You were added to the event "{}"'.format(self.event.title),
-                u'You have been rejected for the event "{}"'.format(self.event.title),
-                u'You were added to the event "{}"'.format(self.event.title)
+                'You were added to the event "{}"'.format(self.event.title),
+                'You have been rejected for the event "{}"'.format(self.event.title),
+                'You were added to the event "{}"'.format(self.event.title)
             ],
             [
                 m.subject for m in self.messages(self.participant.user)

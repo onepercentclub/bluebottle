@@ -10,7 +10,7 @@ from suds.plugin import MessagePlugin
 class NameSpacePlugin(MessagePlugin):
 
     def sending(self, context):
-        print context.envelope
+        print(context.envelope)
         return context
 
 

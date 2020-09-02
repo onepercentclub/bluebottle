@@ -1,5 +1,5 @@
 import logging
-import urlparse
+import urllib.parse
 
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.errors import OneLogin_Saml2_Error
@@ -54,7 +54,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
     def target_url(self):
         relay_state = self.request.POST.get('RelayState')
         if relay_state:
-            parsed = urlparse.urlparse(relay_state)
+            parsed = urllib.parse.urlparse(relay_state)
 
             if (
                 (parsed.scheme.startswith('http') and parsed.netloc == self.request.get_host()) or
@@ -84,7 +84,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
     def parse_user(self, user_data):
         logger.info('SSO Data:{}'.format(user_data))
         data = {}
-        for target, source in self.settings['assertion_mapping'].items():
+        for target, source in list(self.settings['assertion_mapping'].items()):
             if isinstance(source, (list, tuple)):
                 target_data = [user_data[field][0] for field in source if field in user_data]
                 if target_data:
@@ -108,7 +108,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
         #     raise TokenAuthenticationError(error)
         try:
             self.auth.process_response(saml_request_id)
-        except OneLogin_Saml2_Error, e:
+        except OneLogin_Saml2_Error as e:
             logger.error('Saml login error: {}'.format(e))
             raise TokenAuthenticationError(e)
 

@@ -107,4 +107,4 @@ class FlutterwaveBankAccount(BankAccount):
         resource_name = 'payout-accounts/flutterwave-external-accounts'
 
 
-from states import *  # noqa
+from .states import *  # noqa

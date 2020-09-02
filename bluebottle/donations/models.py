@@ -66,7 +66,7 @@ class Donation(models.Model):
         return self.user
 
     def __unicode__(self):
-        return u'{} for {}'.format(self.amount, self.project)
+        return '{} for {}'.format(self.amount, self.project)
 
     def get_payment_method(self):
         order_payment = self.order.get_latest_order_payment()

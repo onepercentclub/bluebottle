@@ -32,27 +32,27 @@ class StripePayoutAccountTestCase(BluebottleTestCase):
         stripe_retrieve.return_value = json2obj(
             open(os.path.dirname(__file__) + '/data/stripe_account_verified.json').read()
         )
-        self.assertEquals(self.payout_account.reviewed, False)
+        self.assertEqual(self.payout_account.reviewed, False)
         self.payout_account.check_status()
         self.payout_account.refresh_from_db()
-        self.assertEquals(self.payout_account.reviewed, True)
+        self.assertEqual(self.payout_account.reviewed, True)
 
     @patch('bluebottle.payouts.models.stripe.Account.retrieve')
     def test_check_status_unverified(self, stripe_retrieve):
         stripe_retrieve.return_value = json2obj(
             open(os.path.dirname(__file__) + '/data/stripe_account_unverified.json').read()
         )
-        self.assertEquals(self.payout_account.reviewed, False)
+        self.assertEqual(self.payout_account.reviewed, False)
         self.payout_account.check_status()
         self.payout_account.refresh_from_db()
-        self.assertEquals(self.payout_account.reviewed, False)
+        self.assertEqual(self.payout_account.reviewed, False)
 
     @patch('bluebottle.payouts.models.stripe.Account.retrieve')
     def test_check_status_verified_missing_fields(self, stripe_retrieve):
         stripe_retrieve.return_value = json2obj(
             open(os.path.dirname(__file__) + '/data/stripe_account_verified_missing.json').read()
         )
-        self.assertEquals(self.payout_account.reviewed, False)
+        self.assertEqual(self.payout_account.reviewed, False)
         self.payout_account.check_status()
         self.payout_account.refresh_from_db()
-        self.assertEquals(self.payout_account.reviewed, False)
+        self.assertEqual(self.payout_account.reviewed, False)

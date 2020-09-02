@@ -82,11 +82,11 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(initiative.title, 'Some title')
         self.assertEqual(
             response_data['data']['relationships']['owner']['data']['id'],
-            unicode(self.owner.pk)
+            str(self.owner.pk)
         )
         self.assertEqual(
             response_data['data']['relationships']['theme']['data']['id'],
-            unicode(initiative.theme.pk)
+            str(initiative.theme.pk)
         )
         self.assertEqual(len(response_data['included']), 2)
 
@@ -354,7 +354,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         data = json.loads(response.content)
         self.assertEqual(
             data['data']['relationships']['location']['data']['id'],
-            unicode(location.pk)
+            str(location.pk)
         )
 
         self.assertEqual(
@@ -414,12 +414,12 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(
             data['meta']['transitions'],
             [{
-                u'available': True,
-                u'name': u'request_changes',
-                u'target': u'needs_work'
+                'available': True,
+                'name': 'request_changes',
+                'target': 'needs_work'
             }])
-        self.assertEqual(data['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
-        self.assertEqual(data['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
+        self.assertEqual(data['relationships']['theme']['data']['id'], str(self.initiative.theme.pk))
+        self.assertEqual(data['relationships']['owner']['data']['id'], str(self.initiative.owner.pk))
 
         geolocation = get_include(response, 'geolocations')
         self.assertEqual(geolocation['attributes']['position'], {'latitude': 43.0579025, 'longitude': 23.6851594})
@@ -438,7 +438,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data['relationships']['activities']['data']), 1)
-        self.assertEqual(data['relationships']['activities']['data'][0]['id'], unicode(event.pk))
+        self.assertEqual(data['relationships']['activities']['data'][0]['id'], str(event.pk))
         self.assertEqual(data['relationships']['activities']['data'][0]['type'], 'activities/events')
         activity_data = get_include(response, 'activities/events')
         self.assertEqual(
@@ -560,7 +560,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(len(data['data']), 1)
 
-        self.assertEqual(data['data'][0]['id'], unicode(owned.pk))
+        self.assertEqual(data['data'][0]['id'], str(owned.pk))
 
     def test_only_owner_permission_owner(self):
         owned = InitiativeFactory.create(owner=self.owner, status='draft')
@@ -583,7 +583,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(len(data['data']), 1)
 
-        self.assertEqual(data['data'][0]['id'], unicode(owned.pk))
+        self.assertEqual(data['data'][0]['id'], str(owned.pk))
 
     def test_not_approved(self):
         approved = InitiativeFactory.create(owner=self.owner, status='approved')
@@ -596,7 +596,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['id'], unicode(approved.pk))
+        self.assertEqual(data['data'][0]['id'], str(approved.pk))
 
     def test_filter_owner(self):
         InitiativeFactory.create_batch(2, status='submitted', owner=self.owner)
@@ -610,7 +610,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
 
     def test_filter_owner_activity(self):
         InitiativeFactory.create_batch(4, status='submitted')
@@ -626,7 +626,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['relationships']['activities']['data'][0]['id'], unicode(activity.pk))
+        self.assertEqual(data['data'][0]['relationships']['activities']['data'][0]['id'], str(activity.pk))
 
     def test_filter_location(self):
         location = LocationFactory.create()
@@ -641,7 +641,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['id'], unicode(initiative.pk))
+        self.assertEqual(data['data'][0]['id'], str(initiative.pk))
 
     def test_filter_not_owner(self):
         """
@@ -659,7 +659,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 4)
-        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
 
     def test_filter_activity_manager(self):
         """
@@ -676,7 +676,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['relationships']['activity-manager']['data']['id'], unicode(self.owner.pk))
+        self.assertEqual(data['data'][0]['relationships']['activity-manager']['data']['id'], str(self.owner.pk))
 
     def test_filter_promoter(self):
         """
@@ -725,8 +725,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(second.pk))
+        self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_search_boost(self):
         first = InitiativeFactory.create(title='Something else', pitch='Lorem ipsum dolor sit amet', status='approved')
@@ -740,8 +740,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(second.pk))
+        self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_search_location(self):
         location = LocationFactory.create(name='nameofoffice')
@@ -759,8 +759,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(second.pk))
+        self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_sort_title(self):
         second = InitiativeFactory.create(title='B: something else', status='approved')
@@ -775,9 +775,9 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 3)
-        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(third.pk))
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
+        self.assertEqual(data['data'][1]['id'], str(second.pk))
+        self.assertEqual(data['data'][2]['id'], str(third.pk))
 
     def test_sort_created(self):
         first = InitiativeFactory.create(status='approved')
@@ -799,9 +799,9 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 3)
-        self.assertEqual(data['data'][0]['id'], unicode(third.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][0]['id'], str(third.pk))
+        self.assertEqual(data['data'][1]['id'], str(first.pk))
+        self.assertEqual(data['data'][2]['id'], str(second.pk))
 
     def test_sort_activity_date(self):
         first = InitiativeFactory.create(status='approved')
@@ -842,9 +842,9 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 3)
-        self.assertEqual(data['data'][0]['id'], unicode(third.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][0]['id'], str(third.pk))
+        self.assertEqual(data['data'][1]['id'], str(first.pk))
+        self.assertEqual(data['data'][2]['id'], str(second.pk))
 
 
 class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
@@ -886,7 +886,7 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content)
-        self.assertEqual(data['errors'][0], u'Transition is not available')
+        self.assertEqual(data['errors'][0], 'Transition is not available')
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
         self.assertEqual(initiative.status, 'submitted')
@@ -1078,7 +1078,7 @@ class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
 
         self.assertEqual(
             response.json()['included'][0]['attributes']['links']['large'].split('?')[0],
-            u'/api/initiatives/{}/related-image/600'.format(response.json()['data']['id'])
+            '/api/initiatives/{}/related-image/600'.format(response.json()['data']['id'])
         )
 
     def test_create_non_owner(self):

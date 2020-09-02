@@ -78,10 +78,10 @@ class SCIMViewMixin(object):
 
         if isinstance(exc.detail, dict):
             data['details'] = '\n'.join(
-                '{}: {}'.format(key, ', '.join(value)) for key, value in exc.detail.items()
+                '{}: {}'.format(key, ', '.join(value)) for key, value in list(exc.detail.items())
             )
         else:
-            data['details'] = unicode(exc.detail)
+            data['details'] = str(exc.detail)
 
         return response.Response(data, status=exc.status_code)
 

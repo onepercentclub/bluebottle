@@ -1,7 +1,7 @@
 import json
 import mock
 import time
-from urlparse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs
 
 from django.conf import settings
 from django.test.utils import override_settings

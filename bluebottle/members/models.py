@@ -234,7 +234,7 @@ class Member(BlueBottleBaseUser):
         return initials
 
     def __unicode__(self):
-        return u"{} | {}".format(self.full_name, self.email)
+        return "{} | {}".format(self.full_name, self.email)
 
 
 class UserActivity(models.Model):
@@ -249,4 +249,4 @@ class UserActivity(models.Model):
         ordering = ['-created']
 
 
-import signals  # noqa
+from . import signals  # noqa

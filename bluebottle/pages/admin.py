@@ -68,7 +68,7 @@ class PageAdmin(PlaceholderFieldAdmin):
         return urlpatterns + base_urls
 
     def get_base_object(self, pk):
-        pk = long(pk)
+        pk = int(pk)
         if pk:
             return Page.objects.get(pk=pk)
         else:
@@ -136,7 +136,7 @@ class PageAdmin(PlaceholderFieldAdmin):
         icon = self.STATUS_ICONS[status]
         admin = settings.STATIC_URL + 'admin/img/'
         return format_html(
-            u'<img src="{}{}" width="10" height="10" alt="{}" title="{}" />',
+            '<img src="{}{}" width="10" height="10" alt="{}" title="{}" />',
             admin, icon, title, title)
 
     status_column.short_description = _('Status')

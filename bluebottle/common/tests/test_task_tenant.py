@@ -32,4 +32,4 @@ class TestCeleryMailTenant(unittest.TestCase):
         _send_celery_mail(msg, tenant, send=False)
 
         self.assertFalse(hasattr(properties, 'tenant'))
-        self.assertEquals(properties.tenant_properties, {})
+        self.assertEqual(properties.tenant_properties, {})

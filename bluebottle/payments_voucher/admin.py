@@ -22,7 +22,7 @@ class VoucherPaymentAdmin(PolymorphicChildModelAdmin):
                                                     object._meta.model_name),
                       args=[object.id])
         return format_html(
-            u"<a href='{}'>Order Payment: {}</a>",
+            "<a href='{}'>Order Payment: {}</a>",
             str(url),
             object.id
         )
@@ -33,7 +33,7 @@ class VoucherPaymentAdmin(PolymorphicChildModelAdmin):
                                                     object._meta.model_name),
                       args=[object.id])
         return format_html(
-            u"<a href='{}'>Voucher: {}</a>",
+            "<a href='{}'>Voucher: {}</a>",
             str(url), object.code
         )
 
@@ -55,7 +55,7 @@ class VoucherAdmin(admin.ModelAdmin):
                                               obj.order._meta.model_name),
                       args=[obj.order.id])
         return format_html(
-            u"<a href='{}'>View Buy Order</a>",
+            "<a href='{}'>View Buy Order</a>",
             str(url)
         )
 
@@ -64,7 +64,7 @@ class VoucherAdmin(admin.ModelAdmin):
                                               obj.payment._meta.model_name),
                       args=[obj.payment.id])
         return format_html(
-            u"<a href='{}'>Cash Voucher Payment</a>",
+            "<a href='{}'>Cash Voucher Payment</a>",
             str(url)
         )
 

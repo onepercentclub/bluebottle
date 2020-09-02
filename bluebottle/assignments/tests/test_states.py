@@ -161,7 +161,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(self.assignment.status, AssignmentStateMachine.succeeded.value)
         self.assertEqual(
             mail.outbox[-1].subject,
-            u'Your task "{}" has been successfully completed! 🎉'.format(self.assignment.title)
+            'Your task "{}" has been successfully completed! 🎉'.format(self.assignment.title)
         )
         self.assertTrue('You did it!' in mail.outbox[-1].body)
 
@@ -319,7 +319,7 @@ class ApplicantStateMachineTestCase(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Someone applied to your task "{}"! 🙌'.format(self.assignment.title)
+            'Someone applied to your task "{}"! 🙌'.format(self.assignment.title)
         )
 
         self.assertTrue(
@@ -358,7 +358,7 @@ class ApplicantStateMachineTestCase(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'You have been accepted for the task "{}"!'.format(
+            'You have been accepted for the task "{}"!'.format(
                 self.assignment.title
             )
         )

@@ -1,5 +1,5 @@
 import datetime
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 
 from django.db import models, connection
 from django.db.models import Count, Sum
@@ -50,7 +50,7 @@ class Event(Activity):
 
     @property
     def stats(self):
-        from states import ParticipantStateMachine
+        from .states import ParticipantStateMachine
         contributions = self.contributions.instance_of(Participant)
 
         stats = contributions.filter(
@@ -112,7 +112,7 @@ class Event(Activity):
 
     @property
     def participants(self):
-        from states import ParticipantStateMachine
+        from .states import ParticipantStateMachine
         return self.contributions.filter(
             status__in=[
                 ParticipantStateMachine.new.value,
@@ -140,7 +140,7 @@ class Event(Activity):
                 format_date(self.start), format_date(self.end)
             ),
             'details': HTMLParser().unescape(
-                u'{}\n{}'.format(
+                '{}\n{}'.format(
                     strip_tags(self.description), self.get_absolute_url()
                 )
             ),
@@ -170,7 +170,7 @@ class Event(Activity):
             'startdt': format_date(self.start),
             'enddt': format_date(self.end),
             'body': HTMLParser().unescape(
-                u'{}\n{}'.format(
+                '{}\n{}'.format(
                     strip_tags(self.description), self.get_absolute_url()
                 )
             ),

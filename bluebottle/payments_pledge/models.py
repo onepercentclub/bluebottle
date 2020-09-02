@@ -13,4 +13,4 @@ class PledgeStandardPayment(Payment):
         return 'Pledge'
 
 
-import signals  # noqa
+from . import signals  # noqa

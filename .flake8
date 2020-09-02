@@ -1,15 +1,18 @@
 [flake8]
 # Ignore lambda function assignment and inline imports (not at top of file)
-ignore = E731,E402,W504,W605
+ignore = E731,E402,W504,W605,E999
 
 # Lengthen max line length
 max-line-length = 120
 
 exclude =
-    **/*local.py,
+    **/local.py,
     **/secrets.py,
     **/migrations/*,
     **/scim_data/*,
+    **/static/*,
     docs,
     build,
-    tenants
+    logs,
+    tenants,
+

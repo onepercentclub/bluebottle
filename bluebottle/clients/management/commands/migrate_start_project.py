@@ -29,12 +29,12 @@ class Command(BaseCommand):
             tenants = [Client.objects.get(schema_name=options['tenant'])]
 
         for client in tenants:
-            print "\n\nCreating start project page for {}".format(client.name)
+            print("\n\nCreating start project page for {}".format(client.name))
             connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
                 Page.objects.filter(slug='start-project').delete()
                 try:
-                    for language, content in properties.START_PROJECT.items():
+                    for language, content in list(properties.START_PROJECT.items()):
                         page = Page(
                             title=content['title'],
                             slug='start-project',

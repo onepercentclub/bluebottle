@@ -85,7 +85,7 @@ def resume_link(obj):
         url = reverse_signed('task-member-resume', args=(obj.id, ))
 
         return format_html(
-            u"<a href='{}'>{}</a>",
+            "<a href='{}'>{}</a>",
             str(url), _('Resume')
         )
 
@@ -298,7 +298,7 @@ class TaskAdmin(admin.ModelAdmin):
         url = reverse('admin:projects_project_change', args=(obj.project.id,))
         title = obj.project.title
         title = (title[:30] + '&hellip;') if len(title) > 30 else title
-        return format_html(u"<a href='{}'>{}</a>", url, title)
+        return format_html("<a href='{}'>{}</a>", url, title)
     project_link.short_description = _('Project link')
 
 
@@ -320,7 +320,7 @@ class TaskAdminInline(admin.TabularInline):
             object._meta.app_label, object._meta.model_name),
             args=[object.id])
         return format_html(
-            u"<a href='{}'>{}</a>",
+            "<a href='{}'>{}</a>",
             str(url), obj.title.encode("utf8")
         )
 

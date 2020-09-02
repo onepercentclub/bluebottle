@@ -35,7 +35,7 @@ class FundraiserListView(ListCreateAPIView):
                 project = Project.objects.get(slug=project_slug)
             except Project.DoesNotExist:
                 raise Http404(
-                    _(u"No %(verbose_name)s found matching the query") %
+                    _("No %(verbose_name)s found matching the query") %
                     {'verbose_name': Project._meta.verbose_name})
 
             filter_kwargs['project'] = project

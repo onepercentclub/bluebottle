@@ -36,7 +36,7 @@ class TransitionMessage(object):
             'contact_email': properties.CONTACT_EMAIL,
             'first_name': _('Name')
         }
-        for key, item in self.context.items():
+        for key, item in list(self.context.items()):
             context[key] = attrgetter(item)(self.obj)
 
         if 'context' in self.options:
@@ -46,7 +46,7 @@ class TransitionMessage(object):
     @property
     def generic_subject(self):
         context = self.get_generic_context()
-        return unicode(self.subject.format(**context))
+        return str(self.subject.format(**context))
 
     @property
     def generic_content(self):
@@ -63,7 +63,7 @@ class TransitionMessage(object):
             'contact_email': properties.CONTACT_EMAIL,
             'first_name': recipient.first_name
         }
-        for key, item in self.context.items():
+        for key, item in list(self.context.items()):
             context[key] = attrgetter(item)(self.obj)
 
         if 'context' in self.options:
@@ -104,7 +104,7 @@ class TransitionMessage(object):
                         pass
 
                 context = self.get_context(recipient)
-                subject = unicode(self.subject.format(**context))
+                subject = str(self.subject.format(**context))
 
                 body_html = None
                 body_txt = None

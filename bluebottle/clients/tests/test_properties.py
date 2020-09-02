@@ -15,16 +15,16 @@ class TestProperties(TestCase):
             p = TenantProperties()
             p.tenant_properties = {'foo': 2}
 
-            self.failUnless(p.foo == 2)
-            self.failUnless(hasattr(p, 'foo'))
+            self.assertTrue(p.foo == 2)
+            self.assertTrue(hasattr(p, 'foo'))
 
     def test_settings_match(self):
         """ No match in properties but match in settings """
         with mock.patch("bluebottle.clients.settings", foo=1):
             p = TenantProperties()
 
-            self.failUnless(p.foo == 1)
-            self.failUnless(hasattr(p, 'foo'))
+            self.assertTrue(p.foo == 1)
+            self.assertTrue(hasattr(p, 'foo'))
 
     def test_nomatch(self):
         """ No match in either properties or settings """
@@ -32,11 +32,11 @@ class TestProperties(TestCase):
             p = TenantProperties()
             with self.assertRaises(AttributeError):
                 p.foo == 1
-            self.failIf(hasattr(p, 'foo'))
+            self.assertFalse(hasattr(p, 'foo'))
 
     def test_verify_settings(self):
         with mock.patch("bluebottle.clients.settings",
                         MULTI_TENANT_DIR='/tmp/') as settings, \
                 mock.patch("__builtin__.execfile") as execfile:
             properties.set_tenant(Mock(client_name='testtenant'))
-            self.assertEquals(execfile.call_args[0][1]['settings'], settings)
+            self.assertEqual(execfile.call_args[0][1]['settings'], settings)

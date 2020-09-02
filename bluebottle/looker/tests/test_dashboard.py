@@ -1,5 +1,5 @@
-from urllib import quote_plus
-from urlparse import urlparse
+from urllib.parse import quote_plus
+from urllib.parse import urlparse
 
 from django.contrib.auth.models import Permission
 from django.test.client import RequestFactory

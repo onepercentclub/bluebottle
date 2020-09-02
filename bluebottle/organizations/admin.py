@@ -20,7 +20,7 @@ class OrganizationInitiativeInline(admin.TabularInline):
         url = reverse('admin:{0}_{1}_change'.format(obj._meta.app_label,
                                                     obj._meta.model_name),
                       args=[obj.id])
-        return format_html(u"<a href='{}'>{}</a>", str(url), obj.title)
+        return format_html("<a href='{}'>{}</a>", str(url), obj.title)
 
     def has_delete_permission(self, request, obj=None):
         return False

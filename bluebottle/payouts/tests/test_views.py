@@ -31,7 +31,7 @@ class StripePayoutAccountUpdateTestCase(BluebottleTestCase):
             def __init__(self, type, object):
                 self.type = type
 
-                for key, value in object.items():
+                for key, value in list(object.items()):
                     setattr(self.data.object, key, value)
 
             class data:

@@ -120,7 +120,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
                                                     object._meta.model_name),
                       args=[object.id])
         return format_html(
-            u"<a href='{}'>Order: {}</a>",
+            "<a href='{}'>Order: {}</a>",
             str(url), object.id
         )
 
@@ -130,7 +130,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
                                                     object._meta.model_name),
                       args=[object.id])
         return format_html(
-            u"<a href='{}'>{}: {}</a>",
+            "<a href='{}'>{}: {}</a>",
             str(url),
             object.polymorphic_ctype,
             object.id

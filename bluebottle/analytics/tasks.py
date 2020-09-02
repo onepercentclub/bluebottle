@@ -20,7 +20,7 @@ def queue_analytics_record(timestamp, tags, fields):
     def _log(message):
         logger.warning(message, exc_info=1)
 
-    for _, backend in getattr(settings, 'ANALYTICS_BACKENDS', {}).iteritems():
+    for _, backend in getattr(settings, 'ANALYTICS_BACKENDS', {}).items():
         try:
             _process_handler(backend, timestamp, tags, fields)
         except AttributeError as exc:

@@ -17,7 +17,7 @@ class StateWidget(forms.TextInput):
 class StateMachineModelFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
         if 'Meta' in attrs:
-            for field, machine in attrs['Meta'].model._state_machines.items():
+            for field, machine in list(attrs['Meta'].model._state_machines.items()):
                 attrs[field] = forms.ChoiceField(
                     required=False,
                     widget=TransitionSelectWidget()
@@ -31,16 +31,14 @@ class StateMachineModelFormMetaClass(ModelFormMetaclass):
                 force_name = "force_{}".format(machine.field)
                 attrs[force_name] = forms.ChoiceField(
                     required=False,
-                    choices=[(None, '---')] + [(s.value, s.name) for s in machine.states.values()],
+                    choices=[(None, '---')] + [(s.value, s.name) for s in list(machine.states.values())],
                     widget=Select(),
                     help_text=_("Careful! This will change the status without triggering any side effects!")
                 )
         return super(StateMachineModelFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
-class StateMachineModelForm(forms.ModelForm):
-    __metaclass__ = StateMachineModelFormMetaClass
-
+class StateMachineModelForm(forms.ModelForm, metaclass=StateMachineModelFormMetaClass):
     def __init__(self, *args, **kwargs):
         super(StateMachineModelForm, self).__init__(*args, **kwargs)
         for field in self.state_machine_fields:

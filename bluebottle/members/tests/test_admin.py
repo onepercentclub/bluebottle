@@ -82,7 +82,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
             'csrfmiddlewaretoken': csrf
         }
         response = self.client.post(self.add_member_url, data)
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
         self.assertTrue('Set password' in welcome_email.body)
@@ -93,18 +93,18 @@ class MemberAdminTest(BluebottleAdminTestCase):
         user = BlueBottleUserFactory.create()
         member_url = reverse('admin:members_member_change', args=(user.id,))
         response = self.client.get(member_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Send reset password mail')
 
         # Assert password reset link sends the right email
         reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
 
         confirm_response = self.client.get(reset_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue('Are you sure' in confirm_response.content)
 
         response = self.client.post(reset_url, {'confirm': True})
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         reset_mail = mail.outbox[0]
         self.assertEqual(reset_mail.to, [user.email])
         self.assertTrue('Seems you\'ve requested a password reset for' in reset_mail.body)
@@ -114,24 +114,24 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.client.logout()
         reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
         response = self.client.post(reset_url, {'confirm': True})
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_resend_welcome(self):
         user = BlueBottleUserFactory.create(welcome_email_is_sent=True)
         member_url = reverse('admin:members_member_change', args=(user.id,))
         response = self.client.get(member_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Resend welcome email')
 
         welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
 
         confirm_response = self.client.get(welcome_email_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue('Are you sure' in confirm_response.content)
 
         response = self.client.post(welcome_email_url, {'confirm': True})
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [user.email])
         self.assertTrue(
@@ -144,7 +144,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
 
         welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
         response = self.client.post(welkcome_email_url, {'confirm': True})
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
 
 class MemberCustomFieldAdminTest(BluebottleAdminTestCase):
@@ -439,25 +439,25 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.bg'])
         # BG translations not set so we should receive default language translation
-        self.assertEqual(welcome_email.subject, u'You have been assimilated to Test')
-        self.assertTrue(u'You are no longer Bob.' in welcome_email.body)
-        self.assertTrue(u'We are borg' in welcome_email.body)
+        self.assertEqual(welcome_email.subject, 'You have been assimilated to Test')
+        self.assertTrue('You are no longer Bob.' in welcome_email.body)
+        self.assertTrue('We are borg' in welcome_email.body)
 
         # Now set BG translations
         self.message.set_current_language('bg')
-        self.message.subject = u'Асимилирани сте към {site_name}'
-        self.message.body_html = u'Ти вече не си {first_name}.<br/><h1>Ние сме Борг</h1>'
-        self.message.body_txt = u'Ти вече не си {first_name}.\nНие сме Борг'
+        self.message.subject = 'Асимилирани сте към {site_name}'
+        self.message.body_html = 'Ти вече не си {first_name}.<br/><h1>Ние сме Борг</h1>'
+        self.message.body_txt = 'Ти вече не си {first_name}.\nНие сме Борг'
         self.message.save()
         mail.outbox = []
 
         BlueBottleUserFactory.create(
-            first_name=u'Бубка',
+            first_name='Бубка',
             email='bubka@bob.bg',
             primary_language='bg'
         )
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bubka@bob.bg'])
-        self.assertEqual(welcome_email.subject, u'Асимилирани сте към Test')
-        self.assertTrue(u'Ти вече не си Бубка.' in welcome_email.body)
-        self.assertTrue(u'Ние сме Борг' in welcome_email.body)
+        self.assertEqual(welcome_email.subject, 'Асимилирани сте към Test')
+        self.assertTrue('Ти вече не си Бубка.' in welcome_email.body)
+        self.assertTrue('Ние сме Борг' in welcome_email.body)

@@ -41,7 +41,7 @@ class QuoteAdmin(admin.ModelAdmin):
         icon = self.STATUS_ICONS[status]
         admin = settings.STATIC_URL + 'admin/img/'
         return format_html(
-            u'<img src="{}{}" width="10" height="10" alt="{}" title="{}" />',
+            '<img src="{}{}" width="10" height="10" alt="{}" title="{}" />',
             admin, icon, title, title
         )
 

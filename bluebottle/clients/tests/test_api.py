@@ -96,30 +96,30 @@ class ClientSettingsTestCase(BluebottleTestCase):
             response.data['currencies'],
             [
                 {
-                    'symbol': u'CFA',
+                    'symbol': 'CFA',
                     'code': 'XOF',
-                    'name': u'West African CFA Franc',
+                    'name': 'West African CFA Franc',
                     'rate': Decimal(1000.0),
                     'minAmount': 5000
                 },
                 {
-                    'symbol': u'\u20a6',
+                    'symbol': '\u20a6',
                     'code': 'NGN',
-                    'name': u'Nigerian Naira',
+                    'name': 'Nigerian Naira',
                     'rate': Decimal(500.0),
                     'minAmount': 3000
                 },
                 {
-                    'symbol': u'$',
+                    'symbol': '$',
                     'code': 'USD',
-                    'name': u'US Dollar',
+                    'name': 'US Dollar',
                     'rate': Decimal(1.0),
                     'minAmount': 5
                 },
                 {
-                    'symbol': u'\u20ac',
+                    'symbol': '\u20ac',
                     'code': 'EUR',
-                    'name': u'Euro',
+                    'name': 'Euro',
                     'rate': Decimal(1.5),
                     'minAmount': 0
                 }
@@ -297,17 +297,17 @@ class TestPlatformSettingsApi(BluebottleTestCase):
 
     @override_settings(
         PAYOUT_METHODS=[{
-            'currencies': [u'EUR'],
-            'method': u'rabobank',
-            'payment_methods': [u'docdata-creditcard', u'docdata-ideal', u'docdata-directdebit']
+            'currencies': ['EUR'],
+            'method': 'rabobank',
+            'payment_methods': ['docdata-creditcard', 'docdata-ideal', 'docdata-directdebit']
         }, {
-            'currencies': [u'EUR', 'USD'],
-            'method': u'stripe',
-            'payment_methods': [u'stripe-creditcard', u'stripe-ideal', u'stripe-directdebit']
+            'currencies': ['EUR', 'USD'],
+            'method': 'stripe',
+            'payment_methods': ['stripe-creditcard', 'stripe-ideal', 'stripe-directdebit']
         }, {
-            'currencies': [u'EUR'],
-            'method': u'excel',
-            'payment_methods': [u'pledge-standard']
+            'currencies': ['EUR'],
+            'method': 'excel',
+            'payment_methods': ['pledge-standard']
         }]
     )
     def test_payout_settings(self):

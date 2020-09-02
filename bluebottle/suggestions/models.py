@@ -63,8 +63,7 @@ class Suggestion(models.Model):
         return self.deadline - date.today() < timedelta(0)
 
     def __unicode__(self):
-        return u'Suggestion "{0}" from {1}'.format(self.title,
-                                                   self.org_contactname)
+        return 'Suggestion "{0}" from {1}'.format(self.title, self.org_contactname)
 
     def save(self, *args, **kwargs):
         if not self.pk and not self.token:
@@ -73,4 +72,4 @@ class Suggestion(models.Model):
         super(Suggestion, self).save(*args, **kwargs)
 
 
-import signals  # noqa
+from . import signals  # noqa

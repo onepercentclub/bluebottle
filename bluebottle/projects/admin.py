@@ -97,7 +97,7 @@ class ProjectReviewerFilter(admin.SimpleListFilter):
             distinct('reviewer__id', 'reviewer__first_name', 'reviewer__last_name'). \
             values_list('reviewer__id', 'reviewer__first_name', 'reviewer__last_name'). \
             order_by('reviewer__first_name', 'reviewer__last_name', 'reviewer__id')
-        return [('me', _('My projects'))] + [(r[0], u"{} {}".format(r[1], r[2])) for r in reviewers]
+        return [('me', _('My projects'))] + [(r[0], "{} {}".format(r[1], r[2])) for r in reviewers]
 
     def queryset(self, request, queryset):
         if self.value() == 'me':
@@ -413,9 +413,9 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         for phase in ProjectPhase.objects.order_by('-sequence').all():
             action_name = 'mark_{}'.format(phase.slug)
             actions[action_name] = (
-                mark_as, action_name, _(u'Mark selected as "{}"'.format(_(phase.name)))
+                mark_as, action_name, _('Mark selected as "{}"'.format(_(phase.name)))
             )
-        return OrderedDict(reversed(actions.items()))
+        return OrderedDict(reversed(list(actions.items())))
 
     # Fields
     def num_votes(self, obj):
@@ -428,7 +428,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     def get_title_display(self, obj):
         if len(obj.title) > 35:
             return format_html(
-                u'<span title="{}" class="project-title">{} &hellip;</span>',
+                '<span title="{}" class="project-title">{} &hellip;</span>',
                 obj.title, obj.title[:45]
             )
         return obj.title
@@ -440,7 +440,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         owner = obj.owner
         url = reverse('admin:members_member_change', args=[owner.id])
         return format_html(
-            u"<a href='{}'>{}</a>",
+            "<a href='{}'>{}</a>",
             url,
             owner.get_full_name()
         )
@@ -485,14 +485,14 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
                 log_action(project, request.user, 'Approved payout')
             except PayoutValidationError as e:
                 errors = e.message['errors']
-                if type(errors) == unicode:
+                if type(errors) == str:
                     self.message_user(
                         request,
                         'Account details: {}.'.format(errors),
                         level=messages.ERROR
                     )
                 else:
-                    for field, errors in errors.items():
+                    for field, errors in list(errors.items()):
                         for error in errors:
                             self.message_user(
                                 request,
@@ -554,7 +554,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
-            unicode(slugify(project.title))
+            str(slugify(project.title))
         )
 
         writer = csv.writer(response)

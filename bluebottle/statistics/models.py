@@ -34,10 +34,10 @@ class BaseStatistic(PolymorphicModel, SortableMixin):
     def __unicode__(self):
         for child in (DatabaseStatistic, ManualStatistic, ImpactStatistic):
             try:
-                return u"{}".format(getattr(self, child.__name__.lower()).name)
+                return "{}".format(getattr(self, child.__name__.lower()).name)
             except child.DoesNotExist:
                 pass
-        return u"Stat #{}".format(self.id)
+        return "Stat #{}".format(self.id)
 
     class Meta:
         ordering = ['sequence']
@@ -64,7 +64,7 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
         resource_name = 'statistics/manual-statistics'
 
     def __unicode__(self):
-        return unicode(self.translations.name)
+        return str(self.translations.name)
 
     class Meta:
         verbose_name = _('Custom statistic')

@@ -18,7 +18,7 @@ class ModelTrigger(object):
                 yield effect
 
     def __unicode__(self):
-        return unicode(_("Model has been changed"))
+        return str(_("Model has been changed"))
 
 
 class ModelChangedTrigger(ModelTrigger):
@@ -37,8 +37,8 @@ class ModelChangedTrigger(ModelTrigger):
     def __unicode__(self):
         if self.field:
             field_name = self.instance._meta.get_field(self.field).verbose_name
-            return unicode(_("{} has been changed").format(field_name.capitalize()))
-        return unicode(_("Object has been changed"))
+            return str(_("{} has been changed").format(field_name.capitalize()))
+        return str(_("Object has been changed"))
 
 
 class ModelDeletedTrigger(ModelTrigger):
@@ -50,7 +50,7 @@ class ModelDeletedTrigger(ModelTrigger):
         pass
 
     def __unicode__(self):
-        return unicode(_("Model has been deleted"))
+        return str(_("Model has been deleted"))
 
 
 class TriggerMixin(object):
@@ -62,7 +62,7 @@ class TriggerMixin(object):
         self._effects = []
 
         if hasattr(self, '_state_machines'):
-            for name, machine_class in self._state_machines.items():
+            for name, machine_class in list(self._state_machines.items()):
                 machine = machine_class(self)
 
                 setattr(self, name, machine)
@@ -104,7 +104,7 @@ class TriggerMixin(object):
     @classmethod
     def from_db(cls, db, field_names, values):
         instance = super(TriggerMixin, cls).from_db(db, field_names, values)
-        instance._initial_values = dict(zip(field_names, values))
+        instance._initial_values = dict(list(zip(field_names, values)))
 
         return instance
 

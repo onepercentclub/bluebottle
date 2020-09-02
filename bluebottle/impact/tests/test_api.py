@@ -195,11 +195,11 @@ class ImpactGoalDetailsAPITestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['relationships']['type']['data']['id'],
-            unicode(self.goal.type.pk)
+            str(self.goal.type.pk)
         )
         self.assertEqual(
             data['relationships']['activity']['data']['id'],
-            unicode(self.goal.activity.pk)
+            str(self.goal.activity.pk)
         )
 
     def test_get_non_owner(self):

@@ -45,7 +45,7 @@ class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
 
     def get_base_object(self, pk):
         # Give a workable object, no matter whether it's a news or blogpost.
-        pk = long(pk)
+        pk = int(pk)
         if pk:
             return NewsItem.objects.get(pk=pk)
         else:

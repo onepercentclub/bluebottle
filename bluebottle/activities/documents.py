@@ -117,7 +117,7 @@ class ActivityDocument(DocType):
         ]
 
     def prepare_type(self, instance):
-        return unicode(instance.__class__.__name__.lower())
+        return str(instance.__class__.__name__.lower())
 
     def prepare_contribution_count(self, instance):
         return len(instance.contributions.filter(status__in=('new', 'success')))

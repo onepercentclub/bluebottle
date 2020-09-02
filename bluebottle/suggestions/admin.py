@@ -76,11 +76,11 @@ class SuggestionAdmin(admin.ModelAdmin):
                 args=[obj.project.id]
             )
             return format_html(
-                u"<a href='{}' target='_blank'>{}</a>",
+                "<a href='{}' target='_blank'>{}</a>",
                 url,
                 obj.project.title
             )
-        return u"(None)"
+        return "(None)"
 
     project_link.short_description = _('Project link')
 

@@ -27,4 +27,4 @@ class PictureItem(ContentItem):
         verbose_name_plural = _("Pictures")
 
     def __unicode__(self):
-        return self.image.name if self.image else u'(no image)'
+        return self.image.name if self.image else '(no image)'

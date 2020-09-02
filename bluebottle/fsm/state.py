@@ -105,7 +105,9 @@ class Transition(BaseTransition):
 
         if effects:
             for effect in self.effects:
-                machine.instance._effects += effect(machine.instance, **kwargs).all_effects()
+                for effect in effect(machine.instance, **kwargs).all_effects():
+                    if effect not in machine.instance._effects:
+                        machine.instance._effects.append(effect)
 
         if save:
             machine.save()

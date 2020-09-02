@@ -49,7 +49,7 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your crowdfunding campaign has been closed'
+            u'Your crowdfunding campaign has expired'
         )
 
     def test_funding_scheduled_task_succeed(self):

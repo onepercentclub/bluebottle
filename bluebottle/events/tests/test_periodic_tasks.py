@@ -44,12 +44,13 @@ class EventScheduledTasksTestCase(BluebottleTestCase):
         ParticipantFactory.create_batch(2, activity=self.event)
         self.assertEqual(self.event.status, 'full')
         tenant = connection.tenant
+        mail.outbox = []
         with mock.patch.object(timezone, 'now', return_value=(timezone.now() + timedelta(days=13))):
             event_tasks()
         with LocalTenant(tenant, clear_tenant=True):
             self.event.refresh_from_db()
-        event = Event.objects.get(pk=self.event.pk)
-        self.assertEqual(event.status, 'succeeded')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(self.event.status, 'succeeded')
 
     def test_event_scheduled_task_start(self):
         ParticipantFactory.create_batch(2, activity=self.event)

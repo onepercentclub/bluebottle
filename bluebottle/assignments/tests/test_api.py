@@ -319,6 +319,13 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
+
+        self.initiative = InitiativeFactory.create(
+            activity_manager=self.manager
+        )
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+
         self.assignment_incomplete = AssignmentFactory.create(
             owner=self.owner,
             initiative=self.initiative,
@@ -410,6 +417,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
                 {u'available': True, u'name': u'delete', u'target': u'deleted'}
             ]
         )
+
         self.assertEqual(data['data']['meta']['required'], [])
         self.assertEqual(data['data']['meta']['errors'], [])
 
@@ -460,6 +468,8 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['included'][0]['type'], 'activities/assignments')
         self.assertEqual(data['included'][0]['attributes']['status'], 'deleted')
+        self.assertEqual(data['included'][0]['attributes']
+                         ['status'], 'deleted')
 
     def test_cancel_owner(self):
         self.assignment.states.submit(save=True)
@@ -631,6 +641,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(self.assignment.status, 'open')
         applicant = ApplicantFactory.create(user=self.user, activity=self.assignment)
         applicant.states.accept(save=True)
+
         no_show = ApplicantFactory.create(activity=self.assignment)
         no_show.states.accept(save=True)
         tenant = connection.tenant

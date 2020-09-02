@@ -12,17 +12,17 @@ from bluebottle.notifications.effects import NotificationEffect
 class DateChangedTrigger(ModelChangedTrigger):
     field = 'date'
 
-    def is_on_date(assignment):
+    def is_on_date(effect):
         """task is on a specific date"""
-        return assignment.end_date_type == 'on_date'
+        return effect.instance.end_date_type == 'on_date'
 
-    def has_deadline(assignment):
+    def has_deadline(effect):
         """task has a deadline"""
-        return assignment.end_date_type == 'deadline'
+        return effect.instance.end_date_type == 'deadline'
 
-    def in_the_future(assignment):
+    def in_the_future(effect):
         """is in the future"""
-        return assignment.date > timezone.now()
+        return effect.instance.date > timezone.now()
 
     effects = [
         NotificationEffect(

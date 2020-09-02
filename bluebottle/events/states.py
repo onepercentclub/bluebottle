@@ -20,7 +20,7 @@ from bluebottle.fsm.effects import (
     RelatedTransitionEffect
 )
 from bluebottle.fsm.state import State, EmptyState, Transition
-from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.notifications.effects import NotificationEffect, BaseNotificationEffect
 
 
 class EventStateMachine(ActivityStateMachine):
@@ -319,8 +319,14 @@ class ParticipantStateMachine(ContributionStateMachine):
                 'succeed',
                 conditions=[event_is_finished]
             ),
-            NotificationEffect(ParticipantApplicationManagerMessage),
-            NotificationEffect(ParticipantApplicationMessage),
+            NotificationEffect(
+                ParticipantApplicationManagerMessage,
+                conditions=[BaseNotificationEffect.is_user]
+            ),
+            NotificationEffect(
+                ParticipantApplicationMessage,
+                conditions=[BaseNotificationEffect.is_not_user]
+            ),
             FollowActivityEffect,
         ]
     )
@@ -346,8 +352,14 @@ class ParticipantStateMachine(ContributionStateMachine):
         effects=[
             TransitionEffect('succeed', conditions=[event_is_finished]),
             RelatedTransitionEffect('activity', 'lock', conditions=[event_will_become_full]),
-            NotificationEffect(ParticipantApplicationManagerMessage),
-            NotificationEffect(ParticipantApplicationMessage),
+            NotificationEffect(
+                ParticipantApplicationManagerMessage,
+                conditions=[BaseNotificationEffect.is_not_user]
+            ),
+            NotificationEffect(
+                ParticipantApplicationMessage,
+                conditions=[BaseNotificationEffect.is_user]
+            ),
             FollowActivityEffect
         ]
     )

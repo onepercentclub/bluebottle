@@ -3,6 +3,7 @@ import json
 from datetime import timedelta
 import urlparse
 
+from django.core import mail
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now, utc
@@ -841,7 +842,11 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
         self.url = reverse('event-list')
         self.participant_user = BlueBottleUserFactory()
 
-        self.initiative = InitiativeFactory.create()
+        owner = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(
+            owner=owner,
+            activity_manager=owner
+        )
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
@@ -850,6 +855,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
         self.transition_url = reverse('participant-transition-list')
         self.event_url = reverse('event-detail', args=(self.event.pk, ))
+        self.participant_url = reverse('participant-list')
 
         self.data = {
             'data': {
@@ -867,6 +873,44 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
                 }
             }
         }
+        self.apply_data = {
+            'data': {
+                'type': 'contributions/participants',
+                'relationships': {
+                    'activity': {
+                        'data': {
+                            'type': 'activities/events',
+                            'id': self.event.id
+                        },
+                    },
+                }
+            }
+        }
+
+    def test_added(self):
+        mail.outbox = []
+        ParticipantFactory.create(activity=self.event)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            u'You were added to the event "{}"'.format(self.event.title)
+        )
+
+    def test_join(self):
+        user = BlueBottleUserFactory.create()
+        mail.outbox = []
+        response = self.client.post(
+            self.participant_url,
+            json.dumps(self.apply_data),
+            user=user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            u'A new member just signed up for your event "{}"'.format(self.event.title)
+        )
 
     def test_withdraw(self):
         response = self.client.post(

@@ -7,9 +7,17 @@ class BaseNotificationEffect(Effect):
     post_save = True
     title = _('Send email')
     template = 'admin/notification_effect.html'
+    user = None
+    conditions = []
 
-    def execute(self, send_messages=True, **kwargs):
-        if send_messages and self.is_valid:
+    def is_user(self, user=None):
+        return user == self.instance.user
+
+    def is_not_user(self, user=None):
+        return user != self.instance.user
+
+    def execute(self, send_messages=True, user=None, **kwargs):
+        if send_messages and self.validate(user):
             self.message(
                 self.instance,
                 custom_message=self.options.get('message')
@@ -40,10 +48,9 @@ class BaseNotificationEffect(Effect):
     def __unicode__(self):
         return _('Message {subject} to {recipients}').format(**self._content())
 
-    @property
-    def is_valid(self):
+    def validate(self, user):
         return (
-            all([condition(self.instance) for condition in self.conditions]) and
+            all([condition(self, user) for condition in self.conditions]) and
             self.message(self.instance).get_recipients()
         )
 

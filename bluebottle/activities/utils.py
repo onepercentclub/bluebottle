@@ -12,8 +12,19 @@ from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErr
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
+class BaseTransitionModelSerializer(ModelSerializer):
+
+    def create(self, validated_data):
+        validated_data['request_user'] = self.context['request'].user
+        return super(BaseTransitionModelSerializer, self).create(validated_data)
+
+    def update(self, validated_data):
+        validated_data['request_user'] = self.context['request'].user
+        return super(BaseTransitionModelSerializer, self).update(validated_data)
+
+
 # This can't be in serializers because of circular imports
-class BaseActivitySerializer(ModelSerializer):
+class BaseActivitySerializer(BaseTransitionModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
     owner = ResourceRelatedField(read_only=True)
@@ -84,7 +95,7 @@ class BaseActivitySerializer(ModelSerializer):
         resource_name = 'activities'
 
 
-class BaseActivityListSerializer(ModelSerializer):
+class BaseActivityListSerializer(BaseTransitionModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
@@ -144,7 +155,7 @@ class BaseActivityListSerializer(ModelSerializer):
         resource_name = 'activities'
 
 
-class BaseTinyActivitySerializer(ModelSerializer):
+class BaseTinyActivitySerializer(BaseTransitionModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     slug = serializers.CharField(read_only=True)
 
@@ -165,7 +176,7 @@ class BaseTinyActivitySerializer(ModelSerializer):
         pass
 
 
-class ActivitySubmitSerializer(ModelSerializer):
+class ActivitySubmitSerializer(BaseTransitionModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(required=True, queryset=Member.objects.all())
     title = serializers.CharField(required=True)
     description = serializers.CharField(
@@ -186,7 +197,7 @@ class ActivitySubmitSerializer(ModelSerializer):
 
 
 # This can't be in serializers because of circular imports
-class BaseContributionListSerializer(ModelSerializer):
+class BaseContributionListSerializer(BaseTransitionModelSerializer):
     status = FSMField(read_only=True)
     user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
@@ -209,7 +220,7 @@ class BaseContributionListSerializer(ModelSerializer):
 
 
 # This can't be in serializers because of circular imports
-class BaseContributionSerializer(ModelSerializer):
+class BaseContributionSerializer(BaseTransitionModelSerializer):
     status = FSMField(read_only=True)
     user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 

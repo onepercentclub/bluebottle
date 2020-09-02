@@ -58,6 +58,7 @@ class TriggerMixin(object):
     periodic_tasks = []
 
     def __init__(self, *args, **kwargs):
+        self._request_user = kwargs.pop('request_user', None)
         super(TriggerMixin, self).__init__(*args, **kwargs)
         self._effects = []
 
@@ -116,19 +117,19 @@ class TriggerMixin(object):
             for machine_name in self._state_machines:
                 machine = getattr(self, machine_name)
                 if not machine.state and machine.initial_transition:
-                    machine.initial_transition.execute(machine)
+                    machine.initial_transition.execute(machine, user=self._request_user)
 
             effects = self._effects + self.all_effects
         else:
             effects = []
 
         for effect in effects:
-            effect.do(post_save=False, send_messages=send_messages)
+            effect.do(post_save=False, send_messages=send_messages, user=self._request_user)
 
         super(TriggerMixin, self).save(*args, **kwargs)
 
         for effect in effects:
-            effect.do(post_save=True, send_messages=send_messages)
+            effect.do(post_save=True, send_messages=send_messages, user=self._request_user)
 
         self._effects = []
 

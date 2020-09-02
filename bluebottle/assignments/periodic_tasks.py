@@ -149,13 +149,13 @@ class AssignmentRegistrationReminderTask(ModelPeriodicTask):
             ]
         )
 
-    def is_on_date(assignment):
+    def is_on_date(effect, **kwargs):
         """task is on a specific date"""
-        return getattr(assignment, 'end_date_type') == 'on_date'
+        return effect.instance.end_date_type == 'on_date'
 
-    def has_deadline(assignment):
+    def has_deadline(effect, **kwargs):
         """task has a deadline"""
-        return getattr(assignment, 'end_date_type') == 'deadline'
+        return effect.instance.end_date_type == 'deadline'
 
     effects = [
         NotificationEffect(

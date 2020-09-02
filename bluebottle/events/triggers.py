@@ -28,9 +28,9 @@ class CapacityChangedTrigger(ModelChangedTrigger):
 class DateChangedTrigger(ModelChangedTrigger):
     field = 'start'
 
-    def in_the_future(event):
+    def in_the_future(effect):
         """is in the future"""
-        return event.start > timezone.now()
+        return effect.instance.start > timezone.now()
 
     effects = [
         NotificationEffect(

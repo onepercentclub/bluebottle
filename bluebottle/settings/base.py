@@ -755,7 +755,9 @@ EXPORTDB_EXPORT_CONF = {
             'fields': (
                 ('id', 'Contribution ID'),
                 ('activity__title', 'Activity Title'),
+                ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
+                ('activity__status', 'Activity status'),
                 ('user__id', 'User ID'),
                 ('user__remote_id', 'Remote ID'),
                 ('user__email', 'Email'),
@@ -763,7 +765,9 @@ EXPORTDB_EXPORT_CONF = {
 
                 ('time_spent', 'Time spent'),
 
-                ('created', 'Date created'),
+
+                ('activity__assignment__date', 'Activity date'),
+                ('created', 'Date registered'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.ApplicantResource',
@@ -798,7 +802,9 @@ EXPORTDB_EXPORT_CONF = {
             'fields': (
                 ('id', 'Contribution ID'),
                 ('activity__title', 'Activity Title'),
+                ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
+                ('activity__status', 'Activity status'),
                 ('user__id', 'User ID'),
                 ('user__remote_id', 'Remote ID'),
                 ('user__email', 'Email'),
@@ -806,7 +812,8 @@ EXPORTDB_EXPORT_CONF = {
 
                 ('time_spent', 'Time spent'),
 
-                ('created', 'Date created'),
+                ('activity__event__start', 'Activity date'),
+                ('created', 'Date registered'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.ParticipantResource',
@@ -829,7 +836,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('amount_donated', 'Amount donated'),
                 ('deadline', 'Deadline'),
 
-                ('created', 'Date created'),
+                ('created', 'created'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.EventResource',
@@ -839,7 +846,9 @@ EXPORTDB_EXPORT_CONF = {
             'fields': (
                 ('id', 'Contribution ID'),
                 ('activity__title', 'Activity Title'),
+                ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
+                ('activity__status', 'Activity status'),
                 ('user__id', 'User ID'),
                 ('user__remote_id', 'Remote ID'),
                 ('user__email', 'Email'),
@@ -850,7 +859,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('reward__name', 'Reward'),
                 ('name', 'Name'),
 
-                ('created', 'Date created'),
+                ('activity__funding__deadline', 'Activity date'),
+                ('created', 'Donation date'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.DonationResource',

@@ -9,6 +9,7 @@ from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
     ExternalAccountFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -36,7 +37,7 @@ class FundingTestCase(BluebottleTestCase):
         errors = list(funding.errors)
 
         self.assertEqual(len(errors), 2)
-        self.assertEqual(errors[1].message, ['Please specify a budget'])
+        self.assertEqual(errors[1].message, 'Please specify a budget')
 
         BudgetLineFactory.create_batch(5, activity=funding, amount=Money(20, 'EUR'))
 
@@ -62,7 +63,7 @@ class FundingTestCase(BluebottleTestCase):
         errors = list(funding.errors)
         self.assertEqual(len(errors), 3)
 
-        self.assertEqual(errors[1].message, ['Make sure deadline is in the future'])
+        self.assertEqual(errors[1].message, 'Make sure deadline is in the future')
 
     def test_deadline_in_past_with_duration(self):
         funding = FundingFactory.create(
@@ -80,22 +81,34 @@ class FundingTestCase(BluebottleTestCase):
             target=Money(100, 'EUR'), deadline=now() - timedelta(days=10), status='succeeded'
         )
 
-        errors = list(funding.errors)
-        self.assertEqual(len(errors), 2)
+        errors = [error.message for error in list(funding.errors)]
+        self.assertEqual(
+            errors,
+            [
+                u'Make sure your payout account is verified',
+                u'Make sure deadline is in the future',
+                u'Please specify a budget'
+            ]
+        )
 
 
 class PayoutTestCase(BluebottleTestCase):
 
     def setUp(self):
-        account = StripePayoutAccountFactory.create()
-        bank_account = ExternalAccountFactory.create(connect_account=account)
-        self.funding = FundingFactory(
-            deadline=now() + timedelta(days=10),
-            target=Money(4000, 'EUR'),
-            bank_account=bank_account
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+        self.funding = FundingFactory.create(
+            initiative=self.initiative,
+            duration=30,
+            target=Money(1000, 'EUR')
         )
-        self.funding.transitions.reviewed()
-        self.funding.save()
+        BudgetLineFactory.create(activity=self.funding)
+        payout_account = StripePayoutAccountFactory.create(reviewed=True, status='verified')
+        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
+        self.funding.bank_account = self.bank_account
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
 
         for donation in DonationFactory.create_batch(
                 3,
@@ -142,18 +155,17 @@ class PayoutTestCase(BluebottleTestCase):
             StripePaymentFactory.create(donation=donation)
 
     def test_auto_generate_payouts(self):
-        self.funding.transitions.succeed()
+        self.funding.states.succeed()
         self.funding.save()
         self.assertEqual(self.funding.payouts.count(), 3)
 
     def test_generate_payouts(self):
         Payout.generate(self.funding)
         self.assertEqual(self.funding.payouts.count(), 3)
-
-        amounts = [fund.total_amount for fund in self.funding.payouts.all()]
-        self.assertTrue(Money(1000, 'USD') in amounts)
-        self.assertTrue(Money(1500, 'EUR') in amounts)
-        self.assertTrue(Money(750, 'EUR') in amounts)
+        payout_amounts = [p.total_amount for p in self.funding.payouts.all()]
+        self.assertTrue(Money(1000, 'USD') in payout_amounts)
+        self.assertTrue(Money(1500, 'EUR') in payout_amounts)
+        self.assertTrue(Money(750, 'EUR') in payout_amounts)
 
         # More donations
         for donation in DonationFactory.create_batch(5,
@@ -165,15 +177,14 @@ class PayoutTestCase(BluebottleTestCase):
         # Recalculate should generate new payouts. One should be higher now.
         Payout.generate(self.funding)
         self.assertEqual(self.funding.payouts.count(), 3)
-
-        amounts = [fund.total_amount for fund in self.funding.payouts.all()]
-        self.assertTrue(Money(1000, 'USD') in amounts)
-        self.assertTrue(Money(2250, 'EUR') in amounts)
-        self.assertTrue(Money(750, 'EUR') in amounts)
+        payout_amounts = [p.total_amount for p in self.funding.payouts.all()]
+        self.assertTrue(Money(1000, 'USD') in payout_amounts)
+        self.assertTrue(Money(2250, 'EUR') in payout_amounts)
+        self.assertTrue(Money(750, 'EUR') in payout_amounts)
 
         with mock.patch('bluebottle.payouts_dorado.adapters.DoradoPayoutAdapter.trigger_payout'):
             for payout in self.funding.payouts.all():
-                payout.transitions.approve()
+                payout.states.approve()
                 payout.save()
 
         # More donations after approved payouts
@@ -186,12 +197,11 @@ class PayoutTestCase(BluebottleTestCase):
         # Recalculate should generate an additional payout
         Payout.generate(self.funding)
         self.assertEqual(self.funding.payouts.count(), 4)
-
-        amounts = [fund.total_amount for fund in self.funding.payouts.all()]
-        self.assertTrue(Money(2000, 'EUR') in amounts)
-        self.assertTrue(Money(1000, 'USD') in amounts)
-        self.assertTrue(Money(2250, 'EUR') in amounts)
-        self.assertTrue(Money(750, 'EUR') in amounts)
+        payout_amounts = [p.total_amount for p in self.funding.payouts.all()]
+        self.assertTrue(Money(1000, 'USD') in payout_amounts)
+        self.assertTrue(Money(2000, 'EUR') in payout_amounts)
+        self.assertTrue(Money(2250, 'EUR') in payout_amounts)
+        self.assertTrue(Money(750, 'EUR') in payout_amounts)
 
     def test_donation_contribution_date(self):
         self.assertEqual(self.donation.contribution_date, self.donation.created)

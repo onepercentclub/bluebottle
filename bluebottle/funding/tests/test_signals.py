@@ -24,7 +24,7 @@ class TestDonationSignalsTestCase(BluebottleTestCase):
             user=self.user,
             activity=self.funding
         )
-        self.donation.transitions.succeed()
+        self.donation.states.succeed()
         self.donation.save()
         self.assertEqual(SystemWallpost.objects.count(), 1)
         self.assertEqual(SystemWallpost.objects.all()[0].content_object, self.funding)
@@ -40,12 +40,12 @@ class TestDonationSignalsTestCase(BluebottleTestCase):
             user=self.user,
             activity=self.funding
         )
-        self.donation.transitions.succeed()
+        self.donation.states.succeed()
         self.donation.save()
         self.assertEqual(SystemWallpost.objects.count(), 1)
         self.assertEqual(SystemWallpost.objects.first().content_object, self.funding)
-        self.donation.transitions.fail()
-        self.donation.transitions.succeed()
+        self.donation.states.fail()
+        self.donation.states.succeed()
         self.donation.save()
         self.assertEqual(SystemWallpost.objects.count(), 1)
 
@@ -59,7 +59,7 @@ class TestDonationSignalsTestCase(BluebottleTestCase):
             user=None,
             activity=self.funding
         )
-        self.donation.transitions.succeed()
+        self.donation.states.succeed()
         self.donation.save()
 
         self.assertEqual(SystemWallpost.objects.count(), 1)

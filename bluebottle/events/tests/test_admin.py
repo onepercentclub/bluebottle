@@ -49,14 +49,17 @@ class TestEventAdmin(BluebottleAdminTestCase):
             'initiative': self.event.initiative_id,
             'description': self.event.description,
             'capacity': self.event.capacity,
-            'start': str(self.event.start),
+            'start_0': str(self.event.start.date()),
+            'start_1': str(self.event.start.time()),
             'duration': self.event.duration,
+            'status': self.event.status,
             'registration_deadline': str(self.event.registration_deadline),
             'is_online': self.event.is_online,
             'location': self.event.location_id,
             'location_hint': self.event.location_hint,
 
             '_continue': 'Save and continue editing',
+            'confirm': 'Yes',
 
             'follow-follow-content_type-instance_id-INITIAL_FORMS': '0',
             'follow-follow-content_type-instance_id-TOTAL_FORMS': '0',

@@ -1,6 +1,6 @@
 import factory.fuzzy
 
-from bluebottle.funding.tests.factories import DonationFactory
+from bluebottle.funding.tests.factories import DonationFactory, PlainPayoutAccountFactory
 from bluebottle.funding_lipisha.models import LipishaPayment
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount
 
@@ -31,6 +31,8 @@ class LipishaBankAccountFactory(factory.DjangoModelFactory):
     address = 'Main street 1'
     swift = '12345'
     mpesa_code = '123'
+    reviewed = True
+    connect_account = factory.SubFactory(PlainPayoutAccountFactory)
 
     class Meta(object):
         model = LipishaBankAccount

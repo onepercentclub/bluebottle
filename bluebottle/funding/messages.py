@@ -8,6 +8,7 @@ class DonationSuccessActivityManagerMessage(TransitionMessage):
     template = 'messages/donation_success_owner'
 
     def get_recipients(self):
+        """the activity organizer"""
         return [self.obj.activity.owner]
 
 
@@ -16,6 +17,7 @@ class DonationSuccessDonorMessage(TransitionMessage):
     template = 'messages/donation_success_donor'
 
     def get_recipients(self):
+        """the donor (unless it is a guest donation)"""
         if self.obj.user:
             return [self.obj.user]
         # Guest donation. Return empty list so no mails are send.
@@ -23,10 +25,15 @@ class DonationSuccessDonorMessage(TransitionMessage):
 
 
 class DonationRefundedDonorMessage(TransitionMessage):
-    subject = _("Your donation has been refunded")
+    subject = _('Your donation for the campaign "{title}" will be refunded')
     template = 'messages/donation_refunded_donor'
 
+    context = {
+        'title': 'activity.title'
+    }
+
     def get_recipients(self):
+        """the donor (unless it is a guest donation)"""
         if self.obj.user:
             return [self.obj.user]
         # Guest donation. Return empty list so no mails are send.
@@ -38,6 +45,7 @@ class FundingPartiallyFundedMessage(TransitionMessage):
     template = 'messages/funding_partially_funded'
 
     def get_recipients(self):
+        """the activity organizer"""
         return [self.obj.owner]
 
 
@@ -50,14 +58,25 @@ class FundingRealisedOwnerMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """the activity organizer"""
         return [self.obj.owner]
 
 
-class FundingClosedMessage(TransitionMessage):
-    subject = _(u"Your crowdfunding campaign has been closed")
-    template = 'messages/funding_closed'
+class FundingRejectedMessage(TransitionMessage):
+    subject = _(u"Your crowdfunding campaign has been rejected.")
+    template = 'messages/funding_rejected'
 
     def get_recipients(self):
+        """the activity organizer"""
+        return [self.obj.owner]
+
+
+class FundingExpiredMessage(TransitionMessage):
+    subject = _(u"Your crowdfunding campaign has expired")
+    template = 'messages/funding_expired'
+
+    def get_recipients(self):
+        """the activity organizer"""
         return [self.obj.owner]
 
 
@@ -66,12 +85,14 @@ class PayoutAccountRejected(TransitionMessage):
     template = 'messages/payout_account_rejected'
 
     def get_recipients(self):
+        """the activity organizer"""
         return [self.obj.owner]
 
 
 class PayoutAccountVerified(TransitionMessage):
-    subject = _(u'Your identity is verified')
+    subject = _(u'Your identity has been verified')
     template = 'messages/payout_account_verified'
 
     def get_recipients(self):
+        """the activity organizer"""
         return [self.obj.owner]

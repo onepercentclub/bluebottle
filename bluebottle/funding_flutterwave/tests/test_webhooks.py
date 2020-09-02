@@ -4,7 +4,6 @@ from mock import patch
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.funding.tests.factories import DonationFactory
-from bluebottle.funding.transitions import PaymentTransitions, DonationTransitions
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -58,8 +57,8 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
         self.payment.refresh_from_db()
         donation = self.payment.donation
         donation.refresh_from_db()
-        self.assertEqual(self.payment.status, PaymentTransitions.values.succeeded)
-        self.assertEqual(donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(self.payment.status, 'succeeded')
+        self.assertEqual(donation.status, 'succeeded')
 
     @patch('bluebottle.funding_flutterwave.utils.post',
            return_value=success_response)
@@ -79,6 +78,6 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
 
         response = self.client.post(self.webhook_url, data=payload)
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(donation.payment.status, PaymentTransitions.values.succeeded)
+        self.assertEqual(donation.payment.status, 'succeeded')
         donation.refresh_from_db()
-        self.assertEqual(donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(donation.status, 'succeeded')

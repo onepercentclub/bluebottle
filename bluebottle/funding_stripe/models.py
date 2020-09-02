@@ -15,17 +15,10 @@ from django.utils.translation import ugettext_lazy as _
 from memoize import memoize
 from stripe.error import AuthenticationError, StripeError
 
-from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Donation
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount, BankAccount)
-from bluebottle.funding.transitions import PayoutAccountTransitions
-from bluebottle.funding_stripe.transitions import (
-    StripePaymentTransitions,
-    StripeSourcePaymentTransitions,
-    StripePayoutAccountTransitions
-)
 from bluebottle.funding_stripe.utils import stripe
 from bluebottle.utils.models import ValidatorError
 
@@ -79,7 +72,6 @@ class PaymentIntent(models.Model):
 
 class StripePayment(Payment):
     payment_intent = models.OneToOneField(PaymentIntent, related_name='payment')
-    transitions = TransitionManager(StripePaymentTransitions, 'status')
 
     provider = 'stripe'
 
@@ -89,37 +81,29 @@ class StripePayment(Payment):
         charge.refund(
             reverse_transfer=True,
         )
-        self.save()
 
     def update(self):
         intent = self.payment_intent.intent
-
         if len(intent.charges) == 0:
             # No charge. Do we still need to charge?
-            self.transitions.fail()
-            self.save()
-        elif intent.charges.data[0].refunded and self.status != StripePaymentTransitions.values.refunded:
-            self.transitions.refund()
-            self.save()
-        elif intent.status == 'failed' and self.status != StripePaymentTransitions.values.failed:
-            self.transitions.fail()
-            self.save()
+            self.states.fail()
+        elif intent.charges.data[0].refunded and self.status != self.states.refunded.value:
+            self.states.refund()
+        elif intent.status == 'failed' and self.status != self.states.failed.value:
+            self.states.fail()
         elif intent.status == 'succeeded':
             transfer = stripe.Transfer.retrieve(intent.charges.data[0].transfer)
             self.donation.payout_amount = Money(
                 transfer.amount / 100.0, transfer.currency
             )
             self.donation.save()
-            if self.status != StripePaymentTransitions.values.succeeded:
-                self.transitions.succeed()
-                self.save()
+            if self.status != self.states.succeeded.value:
+                self.states.succeed(save=True)
 
 
 class StripeSourcePayment(Payment):
     source_token = models.CharField(max_length=30)
     charge_token = models.CharField(max_length=30, blank=True, null=True)
-
-    transitions = TransitionManager(StripeSourcePaymentTransitions, 'status')
 
     provider = 'stripe'
 
@@ -155,8 +139,7 @@ class StripeSourcePayment(Payment):
         )
 
         self.charge_token = charge.id
-        self.transitions.charge()
-        self.save()
+        self.states.charge(save=True)
 
     def update(self):
         try:
@@ -168,25 +151,25 @@ class StripeSourcePayment(Payment):
             if not self.charge_token and self.source.status == 'chargeable':
                 self.do_charge()
             if (not self.status == 'failed') and self.source.status == 'failed':
-                self.transitions.fail()
+                self.states.fail(save=True)
 
             if (not self.status == 'canceled') and self.source.status == 'canceled':
-                self.transitions.cancel()
+                self.states.cancel(save=True)
 
             if self.charge_token:
-                if (not self.status == 'failed') and self.charge.status == 'failed':
-                    self.transitions.fail()
+                if self.charge.status == 'failed':
+                    if self.status != 'failed':
+                        self.states.fail(save=True)
+                elif self.charge.refunded:
+                    if self.status != 'refunded':
+                        self.states.refund(save=True)
+                elif self.charge.dispute:
+                    if self.status != 'disputed':
+                        self.states.dispute(save=True)
+                elif self.charge.status == 'succeeded':
+                    if self.status != 'succeeded':
+                        self.states.succeed(save=True)
 
-                if (not self.status == 'succeeded') and self.charge.status == 'succeeded':
-                    self.transitions.succeed()
-
-                if (not self.status == 'refunded') and self.charge.refunded:
-                    self.transitions.refund()
-
-                if (not self.status == 'disputed') and self.charge.dispute:
-                    self.transitions.dispute()
-
-            self.save()
         except StripeError as error:
             raise PaymentException(error.message)
 
@@ -240,6 +223,8 @@ class StripePaymentProvider(PaymentProvider):
         )
     ]
 
+    refund_enabled = True
+
     @property
     def public_settings(self):
         return {
@@ -291,8 +276,6 @@ class StripePayoutAccount(PayoutAccount):
     country = models.CharField(max_length=2)
     document_type = models.CharField(max_length=20, blank=True)
     eventually_due = JSONField(null=True, default=[])
-
-    transitions = TransitionManager(StripePayoutAccountTransitions, 'status')
 
     @property
     def country_spec(self):
@@ -423,27 +406,27 @@ class StripePayoutAccount(PayoutAccount):
         if account_details:
             if getattr(account_details.verification, 'document', None) and \
                     account_details.verification.document.details:
-                if self.status != PayoutAccountTransitions.values.rejected:
-                    self.transitions.reject()
+                if self.status != self.states.rejected.value:
+                    self.states.reject()
             elif getattr(self.account.requirements, 'disabled_reason', None):
-                if self.status != PayoutAccountTransitions.values.incomplete:
-                    self.transitions.set_incomplete()
+                if self.status != self.states.incomplete.value:
+                    self.states.set_incomplete()
             elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
-                if self.status != PayoutAccountTransitions.values.verified:
-                    self.transitions.verify()
+                if self.status != self.states.verified.value:
+                    self.states.verify()
             elif len(self.missing_fields):
-                if self.status != PayoutAccountTransitions.values.incomplete:
-                    self.transitions.set_incomplete()
+                if self.status != self.states.incomplete.value:
+                    self.states.set_incomplete()
             elif len(self.pending_fields):
-                if self.status != PayoutAccountTransitions.values.pending:
+                if self.status != self.states.pending.value:
                     # Submit to transition to pending
-                    self.transitions.submit()
+                    self.states.submit()
             else:
-                if self.status != PayoutAccountTransitions.values.incomplete:
-                    self.transitions.set_incomplete()
+                if self.status != self.states.incomplete.value:
+                    self.states.set_incomplete()
         else:
-            if self.status != PayoutAccountTransitions.values.incomplete:
-                self.transitions.set_incomplete()
+            if self.status != self.states.incomplete.value:
+                self.states.set_incomplete()
 
         externals = self.account['external_accounts']['data']
         for external in externals:
@@ -594,6 +577,10 @@ class ExternalAccount(BankAccount):
         return self.connect_account.verified
 
     @property
+    def ready(self):
+        return self.connect_account.verified
+
+    @property
     def metadata(self):
         return {
             "tenant_name": connection.tenant.client_name,
@@ -609,3 +596,6 @@ class ExternalAccount(BankAccount):
 
     def __unicode__(self):
         return "Stripe external account {}".format(self.account_id)
+
+
+from states import *  # noqa

@@ -20,7 +20,6 @@ class ActivityDocument(DocType):
     description = fields.TextField()
     status = fields.KeywordField()
     status_score = fields.FloatField()
-    review_status = fields.KeywordField()
     created = fields.DateField()
 
     date = fields.DateField()

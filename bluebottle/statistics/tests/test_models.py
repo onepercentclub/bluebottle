@@ -64,21 +64,17 @@ class StatisticsModelTestCase(BluebottleTestCase):
         initiative = InitiativeFactory.create()
         event = EventFactory.create(
             initiative=initiative,
+            owner=initiative.owner,
             start=timezone.now() - datetime.timedelta(hours=1),
             duration=0.1
-
         )
 
-        initiative.transitions.submit()
-        initiative.transitions.approve()
+        initiative.states.submit(save=True)
+        initiative.states.approve(save=True)
 
         event.refresh_from_db()
 
         ParticipantFactory.create_batch(5, activity=event)
-
-        event.transitions.start()
-        event.transitions.succeed()
-        event.save()
 
         stat = DatabaseStatisticFactory.create(name='Test', query='people_involved')
 

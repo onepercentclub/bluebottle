@@ -1,5 +1,4 @@
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
-from bluebottle.funding.transitions import PaymentTransitions
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_lipisha.tests.factories import LipishaPaymentFactory, LipishaPaymentProviderFactory
 
@@ -14,9 +13,8 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         LipishaPaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding)
@@ -25,4 +23,4 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         payment = LipishaPaymentFactory(donation=self.donation)
         payment.save()
 
-        self.assertEqual(payment.status, PaymentTransitions.values.new)
+        self.assertEqual(payment.status, 'new')

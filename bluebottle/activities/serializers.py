@@ -12,12 +12,11 @@ from bluebottle.events.serializers import (
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
-
+from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
     DonationListSerializer, TinyFundingSerializer
 )
-from bluebottle.transitions.serializers import TransitionSerializer
 
 
 class ActivityImageSerializer(ImageSerializer):
@@ -55,9 +54,8 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         meta_fields = (
             'permissions',
             'transitions',
-            'review_transitions',
             'created',
-            'updated'
+            'updated',
         )
 
     class JSONAPIMeta:
@@ -100,7 +98,6 @@ class ActivitySerializer(PolymorphicModelSerializer):
         meta_fields = (
             'permissions',
             'transitions',
-            'review_transitions',
             'created',
             'updated',
             'errors',
@@ -188,16 +185,17 @@ class ContributionListSerializer(PolymorphicModelSerializer):
         )
 
 
-class ActivityReviewTransitionSerializer(TransitionSerializer):
+class ActivityTransitionSerializer(TransitionSerializer):
     resource = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
-    field = 'review_transitions'
+    field = 'states'
+
     included_serializers = {
         'resource': 'bluebottle.activities.serializers.ActivitySerializer',
     }
 
     class JSONAPIMeta:
         included_resources = ['resource']
-        resource_name = 'activities/review-transitions'
+        resource_name = 'activities/transitions'
 
 
 class RelatedActivityImageSerializer(ModelSerializer):

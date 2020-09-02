@@ -4,22 +4,18 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
 
-from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
+from bluebottle.fsm.triggers import TriggerMixin
 
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.files.fields import ImageField
 from bluebottle.initiatives.models import Initiative
-from bluebottle.activities.transitions import ActivityReviewTransitions
-from bluebottle.activities.transitions import (
-    ActivityTransitions, ContributionTransitions, OrganizerTransitions
-)
 from bluebottle.follow.models import Follow
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
-class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
+class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('owner'),
@@ -37,20 +33,16 @@ class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, Polymo
         null=True, blank=True
     )
 
-    status = FSMField(
-        default=ActivityTransitions.default
-    )
+    status = models.CharField(max_length=40)
 
-    review_status = FSMField(
-        default=ActivityReviewTransitions.default
-    )
+    review_status = models.CharField(max_length=40, default='draft')
 
     initiative = models.ForeignKey(Initiative, related_name='activities')
 
-    title = models.CharField(_('title'), max_length=255)
-    slug = models.SlugField(_('slug'), max_length=100, default='new')
+    title = models.CharField(_('Title'), max_length=255)
+    slug = models.SlugField(_('Slug'), max_length=100, default='new')
     description = models.TextField(
-        _('description'), blank=True
+        _('Description'), blank=True
     )
 
     image = ImageField(blank=True, null=True)
@@ -77,10 +69,7 @@ class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, Polymo
     followers = GenericRelation('follow.Follow', object_id_field='instance_id')
     messages = GenericRelation('notifications.Message')
 
-    review_transitions = TransitionManager(ActivityReviewTransitions, 'review_status')
     follows = GenericRelation(Follow, object_id_field='instance_id')
-
-    needs_review = False
 
     @property
     def stats(self):
@@ -115,13 +104,6 @@ class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, Polymo
             for segment in self.owner.segments.all():
                 self.segments.add(segment)
 
-        Organizer.objects.update_or_create(
-            activity=self,
-            defaults={
-                'user': self.owner
-            }
-        )
-
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
@@ -133,16 +115,18 @@ class Activity(TransitionsMixin, AnonymizationMixin, ValidatedModelMixin, Polymo
         )
         return link
 
+    @property
+    def organizer(self):
+        return self.contributions.instance_of(Organizer).first()
+
 
 def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
     # This fixing deleting related polymorphic objects through admin
     return models.CASCADE(collector, field, sub_objs.non_polymorphic(), using)
 
 
-class Contribution(TransitionsMixin, AnonymizationMixin, PolymorphicModel):
-    status = FSMField(
-        default=ContributionTransitions.values.new,
-    )
+class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
+    status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
@@ -171,8 +155,6 @@ class Contribution(TransitionsMixin, AnonymizationMixin, PolymorphicModel):
 
 
 class Organizer(Contribution):
-    transitions = TransitionManager(OrganizerTransitions, 'status')
-
     class Meta:
         verbose_name = _("Organizer")
         verbose_name_plural = _("Organizers")
@@ -186,6 +168,13 @@ class Organizer(Contribution):
 
         super(Organizer, self).save()
 
+    def __unicode__(self):
+        if self.user:
+            return self.user.full_name
+        else:
+            return _('Organizer')
+
 
 from bluebottle.activities.signals import *  # noqa
 from bluebottle.activities.wallposts import *  # noqa
+from bluebottle.activities.states import *  # noqa

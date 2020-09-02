@@ -8,6 +8,8 @@
         {% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
         Hi {{ recipient_name }},
         Unfortunately, you have not been selected for the task "{{ assignment_title }}".
+
+        Don’t worry, there is a lot more activities out there that need your help. Go to the activity overview page to see if there is something for you.
         {% endblocktrans %}
     {% endif %}
 {% endblock %}

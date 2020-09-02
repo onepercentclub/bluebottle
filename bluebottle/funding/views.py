@@ -6,7 +6,9 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from bluebottle.activities.permissions import ActivityOwnerPermission, ActivityTypePermission
+from bluebottle.activities.permissions import (
+    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission
+)
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.models import (
     Funding, Donation, Reward, Fundraiser,
@@ -155,6 +157,7 @@ class FundingDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
 
     serializer_class = FundingSerializer
     permission_classes = (
+        ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 
@@ -177,20 +180,16 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     permission_classes = (IsFinancialMember,)
 
     def perform_update(self, serializer):
-        status = serializer.validated_data['status']
-        # related to this Funding.
-        payout = serializer.instance
+        status = serializer.validated_data.pop('status')
+        if status == 'reset':
+            serializer.instance.states.reset()
+        if status in ['new', 'scheduled', 're_scheduled']:
+            serializer.instance.states.schedule()
         if status == 'started':
-            payout.transitions.start()
-        if status == 'scheduled':
-            payout.transitions.start()
-        if status == 'new':
-            payout.transitions.draft()
-        if status == 'succeeded':
-            payout.transitions.succeed()
-        if status == 'confirm':
-            payout.transitions.succeed()
-        payout.save()
+            serializer.instance.states.start()
+        if status in ['succeeded', 'confirmed']:
+            serializer.instance.states.succeed()
+        serializer.instance.save()
         return HttpResponse(200)
 
 
@@ -229,8 +228,7 @@ class PlainPayoutAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
-        serializer.instance.transitions.submit()
-        serializer.instance.save()
+        serializer.instance.states.submit(save=True)
 
 
 class PlainPayoutAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -249,15 +247,15 @@ class PlainPayoutAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpda
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
-        serializer.instance.transitions.submit()
+        serializer.instance.states.submit()
         serializer.instance.save()
 
     def get_queryset(self):
         return self.queryset.filter(owner=self.request.user)
 
     def perform_update(self, serializer):
-        if serializer.instance.status != serializer.instance.transitions.values.pending:
-            serializer.instance.transitions.submit()
+        if serializer.instance.status == serializer.instance.states.new.value:
+            serializer.instance.states.submit()
         serializer.instance.save()
 
 

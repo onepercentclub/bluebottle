@@ -4,6 +4,10 @@ jet = {
     jQuery: $
 };
 
+require("jquery-ui/ui/dialog");
+require("jquery-ui/ui/mouse");
+require("jquery-ui/ui/button");
+
 require('./layout-updaters/actions');
 require('./layout-updaters/breadcrumbs');
 require('./layout-updaters/paginator');

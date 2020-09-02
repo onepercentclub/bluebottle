@@ -51,8 +51,7 @@ def initiate_push_payment(payment):
         payment.transaction = response['content']['transaction']
         payment.save()
     else:
-        payment.transitions.fail()
-        payment.save()
+        payment.states.fail(save=True)
         raise PaymentException(response['status']['status_description'])
     return payment
 
@@ -76,7 +75,7 @@ def check_payment_status(payment):
     data = response['content']
     if len(data) == 0:
         try:
-            payment.transitions.fail()
+            payment.states.fail()
         except TransitionNotPossible:
             pass
         payment.save()
@@ -94,17 +93,17 @@ def check_payment_status(payment):
 
     if data['transaction_status'] in ['Completed', 'Settled', 'Acknowledged', 'Authorized']:
         try:
-            payment.transitions.succeed()
+            payment.states.succeed()
         except TransitionNotPossible:
             pass
     if data['transaction_status'] in ['Cancelled', 'Voided']:
         try:
-            payment.transitions.fail()
+            payment.states.fail()
         except TransitionNotPossible:
             pass
     if data['transaction_reversal_status'] == 'Reverse' or data['transaction_status'] in ['Reversed']:
         try:
-            payment.transitions.refund()
+            payment.states.refund()
         except TransitionNotPossible:
             pass
     payment.save()

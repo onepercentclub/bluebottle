@@ -1,29 +1,31 @@
-from datetime import timedelta
 import mock
-
 import stripe
-
-from django.utils.timezone import now
 from moneyed import Money
 
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, BudgetLineFactory
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentFactory, StripePayoutAccountFactory, ExternalAccountFactory,
 )
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
 class StripePaymentTransitionsTestCase(BluebottleTestCase):
     def setUp(self):
-        account = StripePayoutAccountFactory.create()
-        bank_account = ExternalAccountFactory.create(connect_account=account)
-        self.funding = FundingFactory(
-            deadline=now() + timedelta(days=10),
-            target=Money(4000, 'EUR'),
-            bank_account=bank_account
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+        self.funding = FundingFactory.create(
+            initiative=self.initiative,
+            duration=30,
+            target=Money(1000, 'EUR')
         )
-        self.funding.transitions.reviewed()
-        self.funding.save()
+        BudgetLineFactory.create(activity=self.funding)
+        payout_account = StripePayoutAccountFactory.create(reviewed=True, status='verified')
+        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
+        self.funding.bank_account = self.bank_account
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
 
         donation = DonationFactory.create(
             amount=Money(150, 'EUR'),
@@ -35,7 +37,7 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
         super(StripePaymentTransitionsTestCase, self).setUp()
 
     def test_refund(self):
-        self.payment.transitions.succeed()
+        self.payment.states.succeed(save=True)
         payment_intent = stripe.PaymentIntent('some intent id')
 
         charge = stripe.Charge('charge-id')
@@ -46,6 +48,6 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
 
         with mock.patch('stripe.PaymentIntent.retrieve', return_value=payment_intent):
             with mock.patch('stripe.Charge.refund') as refund_mock:
-                self.payment.transitions.request_refund()
+                self.payment.states.request_refund(save=True)
 
         self.assertTrue(refund_mock.called_once)

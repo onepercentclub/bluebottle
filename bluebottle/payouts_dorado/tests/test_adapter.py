@@ -7,6 +7,7 @@ from django.utils.timezone import now
 from moneyed.classes import Money
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -19,12 +20,12 @@ class TestPayoutAdapter(BluebottleTestCase):
     def setUp(self):
         super(TestPayoutAdapter, self).setUp()
         self.funding = FundingFactory.create(target=Money(500, 'EUR'), status='open')
-        DonationFactory.create_batch(
+        donations = DonationFactory.create_batch(
             7,
             activity=self.funding,
-            status='succeeded',
             amount=Money(100, 'EUR'))
-
+        for donation in donations:
+            PledgePaymentFactory.create(donation=donation)
         yesterday = now() - timedelta(days=1)
         self.funding.deadline = yesterday
         self.funding.save()

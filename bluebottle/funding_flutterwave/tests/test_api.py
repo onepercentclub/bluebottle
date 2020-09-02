@@ -6,7 +6,6 @@ from mock import patch
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, PlainPayoutAccountFactory
-from bluebottle.funding.transitions import DonationTransitions, PaymentTransitions
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -40,9 +39,8 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'NGN'), user=self.user)
 
@@ -74,10 +72,10 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['status'], PaymentTransitions.values.succeeded)
+        self.assertEqual(data['data']['attributes']['status'], 'succeeded')
         self.assertEqual(data['data']['attributes']['tx-ref'], self.tx_ref)
         self.donation.refresh_from_db()
-        self.assertEqual(self.donation.status, DonationTransitions.values.succeeded)
+        self.assertEqual(self.donation.status, 'succeeded')
 
     @patch('bluebottle.funding_flutterwave.utils.post', return_value=failed_response)
     def test_create_payment_failure(self, flutterwave_post):
@@ -86,10 +84,10 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['status'], PaymentTransitions.values.failed)
+        self.assertEqual(data['data']['attributes']['status'], 'failed')
         self.assertEqual(data['data']['attributes']['tx-ref'], self.tx_ref)
         self.donation.refresh_from_db()
-        self.assertEqual(self.donation.status, DonationTransitions.values.failed)
+        self.assertEqual(self.donation.status, 'failed')
 
     @patch('bluebottle.funding_flutterwave.utils.post', return_value=success_response)
     def test_create_payment_duplicate(self, flutterwave_post):
@@ -113,9 +111,8 @@ class FlutterwavePayoutAccountTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
         FlutterwavePaymentProviderFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.payout_account = PlainPayoutAccountFactory.create(
             status='verified',

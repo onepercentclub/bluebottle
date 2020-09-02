@@ -16,7 +16,7 @@ class PledgePaymentList(PaymentList):
     def perform_create(self, serializer):
         super(PledgePaymentList, self).perform_create(serializer)
         payment = serializer.instance
-        payment.transitions.succeed()
+        payment.states.succeed(save=True)
 
 
 class PledgeBankAccountAccountList(JsonApiViewMixin, ListCreateAPIView):

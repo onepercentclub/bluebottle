@@ -1,14 +1,14 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment, PaymentProvider, BankAccount
-from bluebottle.funding_pledge.transitions import PledgePaymentTransitions
 
 
 class PledgePayment(Payment):
     provider = 'pledge'
-    transitions = TransitionManager(PledgePaymentTransitions, 'status')
+
+    def refund(self):
+        pass
 
 
 class PledgePaymentProvider(PaymentProvider):
@@ -58,3 +58,6 @@ class PledgeBankAccount(BankAccount):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/pledge-external-accounts'
+
+
+from states import *  # noqa

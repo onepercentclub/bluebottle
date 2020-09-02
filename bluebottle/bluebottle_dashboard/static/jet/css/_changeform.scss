@@ -3,7 +3,6 @@
 /* FORM ROWS */
 
 .form-row {
-  overflow: hidden;
   padding: 14px;
 
   img, input {
@@ -82,11 +81,11 @@ form {
 .aligned {
   label {
     display: block;
-    padding: 8px 10px 0 0;
+    padding: 0 10px 0 0;
     float: left;
-    width: 160px;
+    width: 180px;
     word-wrap: break-word;
-    line-height: 1;
+    line-height: 1.5;
     color: $dim-text-color;
     font-weight: 500;
 
@@ -107,6 +106,14 @@ form {
 
     @include for-mobile {
       margin-left: 0;
+    }
+  }
+  .checkbox {
+    input[type=checkbox] + label {
+      width: 24px;
+      @include for-mobile {
+        margin-left: 0;
+      }
     }
   }
 
@@ -136,8 +143,8 @@ form {
 
 form .aligned {
   ul {
-    margin-left: 160px;
-    padding-left: 10px;
+    margin-left: 180px;
+    padding-left: 0;
 
     @include for-mobile {
       margin-left: 0;
@@ -174,11 +181,16 @@ form .aligned {
     padding-bottom: 0;
   }
 
+  span.state + p.help,
+  span.checkbox + p.help,
+  span.select2 + p.help,
+  a + p.help,
   input + p.help,
   textarea + p.help,
   select + p.help {
-    margin-left: 160px;
-    padding-left: 10px;
+    margin-left: 180px;
+    padding-left: 0;
+    padding-top: 4px;
 
     @include for-mobile {
       margin-left: 0;
@@ -193,6 +205,12 @@ form .aligned {
   table p {
     margin-left: 0;
     padding-left: 0;
+  }
+
+  div.transition-option {
+    margin-left: 180px;
+    margin-bottom: 24px;
+    vertical-align: middle;
   }
 }
 
@@ -528,7 +546,7 @@ body.popup .submit-row {
   }
 
   .aligned label {
-    width: 160px;
+    width: 180px;
   }
 
   > fieldset.module {

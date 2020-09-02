@@ -232,6 +232,9 @@
 .icon-calendar:before {
   content: "\e953";
 }
+.icon-clock:before {
+  content: "\e952";
+}
 .icon-bubble2:before {
   content: "\e96e";
 }

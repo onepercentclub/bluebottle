@@ -21,6 +21,8 @@ class StripePaymentAdmin(PaymentChildAdmin):
     base_model = StripePayment
     list_display = ['created', 'donation', 'status']
     search_fields = ['paymentintent__intent_id']
+    readonly_fields = PaymentChildAdmin.readonly_fields
+    fields = PaymentChildAdmin.fields + ['payment_intent']
 
 
 @admin.register(PaymentIntent)
@@ -32,6 +34,8 @@ class StripePaymentIntentAdmin(admin.ModelAdmin):
 @admin.register(StripeSourcePayment)
 class StripeSourcePaymentAdmin(PaymentChildAdmin):
     base_model = Payment
+    readonly_fields = PaymentChildAdmin.readonly_fields
+    fields = PaymentChildAdmin.fields + ['source_token', 'charge_token']
 
 
 @admin.register(StripePaymentProvider)

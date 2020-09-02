@@ -6,7 +6,7 @@ from django.contrib.gis.geos import Point
 from django.core.urlresolvers import reverse
 from django.test import TestCase, tag
 from django.test.utils import override_settings
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 
 from moneyed import Money
 from django_elasticsearch_dsl.test import ESTestCase
@@ -251,10 +251,10 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             owner=self.owner,
             place=GeolocationFactory(position=Point(23.6851594, 43.0579025))
         )
+        self.initiative.states.submit(save=True)
         self.url = reverse('initiative-detail', args=(self.initiative.pk,))
 
-    def test_patch(self):
-        data = {
+        self.data = {
             'data': {
                 'id': self.initiative.id,
                 'type': 'initiatives',
@@ -263,9 +263,11 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 }
             }
         }
+
+    def test_patch(self):
         response = self.client.patch(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -361,38 +363,39 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
 
     def test_patch_anonymous(self):
-        data = {
-            'data': {
-                'id': self.initiative.id,
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title'
-                }
-            }
-        }
-
         response = self.client.patch(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_patch_wrong_user(self):
-        data = {
-            'data': {
-                'id': self.initiative.id,
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title'
-                }
-            }
-        }
-
         response = self.client.patch(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=BlueBottleUserFactory.create()
         )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_cancelled(self):
+        self.initiative.states.approve()
+        self.initiative.states.cancel(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.initiative.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_deleted(self):
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.delete(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.initiative.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_rejected(self):
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.reject(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.initiative.owner)
+
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_owner(self):
@@ -411,9 +414,9 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(
             data['meta']['transitions'],
             [{
-                u'available': False,
-                u'name': u'submit',
-                u'target': u'submitted'
+                u'available': True,
+                u'name': u'request_changes',
+                u'target': u'needs_work'
             }])
         self.assertEqual(data['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
         self.assertEqual(data['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
@@ -804,31 +807,31 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         first = InitiativeFactory.create(status='approved')
         FundingFactory.create(
             initiative=first,
-            review_status='approved',
-            deadline=datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
+            status='open',
+            deadline=now() + datetime.timedelta(days=8)
         )
         FundingFactory.create(
             initiative=first,
-            review_status='submitted',
-            deadline=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+            status='submitted',
+            deadline=now() + datetime.timedelta(days=7)
         )
 
         second = InitiativeFactory.create(status='approved')
         EventFactory.create(
             initiative=second,
-            review_status='approved',
-            start=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+            status='open',
+            start=now() + datetime.timedelta(days=7)
         )
         third = InitiativeFactory.create(status='approved')
         EventFactory.create(
             initiative=third,
-            review_status='approved',
-            start=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+            status='open',
+            start=now() + datetime.timedelta(days=7)
         )
         AssignmentFactory.create(
             initiative=third,
-            review_status='approved',
-            date=datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
+            status='open',
+            date=now() + datetime.timedelta(days=9)
         )
 
         response = self.client.get(
@@ -855,38 +858,9 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
             owner=self.owner
         )
 
-    def test_transition_to_submitted(self):
-        data = {
-            'data': {
-                'type': 'initiative-transitions',
-                'attributes': {
-                    'transition': 'submit',
-                },
-                'relationships': {
-                    'resource': {
-                        'data': {
-                            'type': 'initiatives',
-                            'id': self.initiative.pk
-                        }
-                    }
-                }
-            }
-        }
-
-        response = self.client.post(
-            self.url,
-            json.dumps(data),
-            user=self.owner
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        data = json.loads(response.content)
-
-        initiative = Initiative.objects.get(pk=self.initiative.pk)
-        self.assertEqual(initiative.status, 'submitted')
-        self.assertTrue(data['data']['id'])
-        self.assertEqual(data['data']['attributes']['transition'], 'submit')
-
     def test_transition_disallowed(self):
+        self.initiative.states.submit(save=True)
+
         data = {
             'data': {
                 'type': 'initiative-transitions',
@@ -915,7 +889,7 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(data['errors'][0], u'Transition is not available')
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
-        self.assertEqual(initiative.status, 'draft')
+        self.assertEqual(initiative.status, 'submitted')
 
 
 class InitiativeRedirectTest(TestCase):

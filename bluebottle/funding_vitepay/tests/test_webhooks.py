@@ -3,7 +3,6 @@ from django.urls import reverse
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
-from bluebottle.funding.transitions import PaymentTransitions
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import VitepayPaymentFactory, VitepayPaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -24,9 +23,8 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         VitepayPaymentProviderFactory.create()
 
         self.initiative = InitiativeFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding)
@@ -46,7 +44,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(response.content, '{"status": "1"}')
         self.payment.refresh_from_db()
-        self.assertEqual(self.payment.status, PaymentTransitions.values.succeeded)
+        self.assertEqual(self.payment.status, 'succeeded')
 
     def test_failed(self):
         data = {
@@ -58,7 +56,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(response.content, '{"status": "1"}')
         self.payment.refresh_from_db()
-        self.assertEqual(self.payment.status, PaymentTransitions.values.failed)
+        self.assertEqual(self.payment.status, 'failed')
 
     def test_not_found(self):
         data = {
@@ -70,4 +68,4 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(response.content, '{"status": "0", "message": "Order not found."}')
         self.payment.refresh_from_db()
-        self.assertEqual(self.payment.status, PaymentTransitions.values.new)
+        self.assertEqual(self.payment.status, 'new')

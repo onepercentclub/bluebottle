@@ -1,25 +1,22 @@
 from django.contrib.contenttypes.models import ContentType
-
-from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_json_api.views import AutoPrefetchMixin
 
-
-from bluebottle.activities.models import Activity, Contribution
 from bluebottle.activities.filters import ActivitySearchFilter
+from bluebottle.activities.models import Activity, Contribution
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
-    ActivityReviewTransitionSerializer,
+    ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
     ActivityListSerializer,
     ContributionListSerializer
 )
 from bluebottle.assignments.models import Applicant
 from bluebottle.events.models import Participant
-from bluebottle.funding.models import Donation
-
-from bluebottle.files.views import ImageContentView
 from bluebottle.files.models import RelatedImage
+from bluebottle.files.views import ImageContentView
+from bluebottle.funding.models import Donation
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission
@@ -91,7 +88,7 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
         ).filter(
             user=self.request.user
         ).exclude(
-            status__in=['closed', 'failed']
+            status__in=['rejected', 'failed']
         ).exclude(
             donation__status__in=['new']
         ).order_by('-created')
@@ -138,6 +135,6 @@ class RelatedActivityImageContent(ImageContentView):
     field = 'image'
 
 
-class ActivityReviewTransitionList(TransitionList):
-    serializer_class = ActivityReviewTransitionSerializer
+class ActivityTransitionList(TransitionList):
+    serializer_class = ActivityTransitionSerializer
     queryset = Activity.objects.all()

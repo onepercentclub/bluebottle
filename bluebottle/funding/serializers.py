@@ -42,7 +42,6 @@ from bluebottle.funding_vitepay.serializers import (
     VitepayBankAccountSerializer, PayoutVitepayBankAccountSerializer
 )
 from bluebottle.members.models import Member
-from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import (
     MoneySerializer, FilteredRelatedField, ResourcePermissionField, NoCommitMixin,
@@ -295,7 +294,6 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             del fields['bank_account']
             del fields['required']
             del fields['errors']
-            del fields['review_status']
         return fields
 
     class Meta(BaseActivitySerializer.Meta):
@@ -364,7 +362,7 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
         return methods
 
 
-class FundingTransitionSerializer(TransitionSerializer):
+class FundingTransitionSerializer(ModelSerializer):
     resource = ResourceRelatedField(queryset=Funding.objects.all())
     field = 'transitions'
     included_serializers = {

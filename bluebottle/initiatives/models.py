@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import Max
 from django.db.models.deletion import SET_NULL
@@ -9,37 +10,19 @@ from multiselectfield import MultiSelectField
 
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField
-from bluebottle.fsm import FSMField, TransitionManager, TransitionsMixin
+from bluebottle.follow.models import Follow
+from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.messages import AssignedReviewerMessage
-from bluebottle.initiatives.transitions import InitiativeReviewTransitions
-from bluebottle.notifications.models import NotificationModelMixin
+from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.models import BasePlatformSettings, Validator, ValidatedModelMixin, AnonymizationMixin
+from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
-class UniqueTitleValidator(Validator):
-    field = 'title'
-    code = 'required'
-    message = _('The title must be unique')
-
-    def is_valid(self):
-        return not Initiative.objects.exclude(
-            pk=self.instance.pk
-        ).filter(
-            status='approved', title=self.instance.title
-        )
-
-
-class Initiative(TransitionsMixin, AnonymizationMixin, NotificationModelMixin, ValidatedModelMixin, models.Model):
-    status = FSMField(
-        default=InitiativeReviewTransitions.values.draft,
-        choices=InitiativeReviewTransitions.values.choices,
-        protected=True
-    )
-
+class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.Model):
+    status = models.CharField(max_length=40)
     title = models.CharField(_('title'), max_length=255)
 
     @classmethod
@@ -127,6 +110,8 @@ class Initiative(TransitionsMixin, AnonymizationMixin, NotificationModelMixin, V
     )
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
+    follows = GenericRelation(Follow, object_id_field='instance_id')
+
     class Meta:
         verbose_name = _("Initiative")
         verbose_name_plural = _("Initiatives")
@@ -142,8 +127,6 @@ class Initiative(TransitionsMixin, AnonymizationMixin, NotificationModelMixin, V
             ('api_change_own_running_initiative', 'Can change own initiative through the API'),
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
-
-    transitions = TransitionManager(InitiativeReviewTransitions, 'status')
 
     class JSONAPIMeta:
         resource_name = 'initiatives'
@@ -288,3 +271,4 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
 
 from bluebottle.initiatives.wallposts import *  # noqa
+from bluebottle.initiatives.states import *  # noqa

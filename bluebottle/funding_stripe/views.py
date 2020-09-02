@@ -12,7 +12,6 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
-from bluebottle.funding.transitions import PaymentTransitions
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding.models import Donation
 from bluebottle.funding_stripe.models import (
@@ -160,9 +159,10 @@ class IntentWebHookView(View):
         try:
             if event.type == 'payment_intent.succeeded':
                 payment = self.get_payment(event.data.object.id)
-                if payment.status != PaymentTransitions.values.succeeded:
-                    payment.transitions.succeed()
+                if payment.status != payment.states.succeeded.value:
+                    payment.states.succeed()
                     transfer = stripe.Transfer.retrieve(event.data.object.charges.data[0].transfer)
+                    # Fix this if we're going to support currencies that don't hae smaller units, like yen.
                     payment.donation.payout_amount = Money(
                         transfer.amount / 100.0, transfer.currency
                     )
@@ -173,16 +173,14 @@ class IntentWebHookView(View):
 
             elif event.type == 'payment_intent.payment_failed':
                 payment = self.get_payment(event.data.object.id)
-                if payment.status != PaymentTransitions.values.failed:
-                    payment.transitions.fail()
-                    payment.save()
+                if payment.status != payment.states.failed.value:
+                    payment.states.fail(save=True)
 
                 return HttpResponse('Updated payment')
 
             elif event.type == 'charge.refunded':
                 payment = self.get_payment(event.data.object.payment_intent)
-                payment.transitions.refund()
-                payment.save()
+                payment.states.refund(save=True)
 
                 return HttpResponse('Updated payment')
             else:
@@ -221,16 +219,13 @@ class SourceWebHookView(View):
         try:
             if event.type == 'source.canceled':
                 payment = self.get_payment_from_source(event.data.object.id)
-                payment.transitions.cancel()
-                payment.save()
-
+                payment.states.cancel(save=True)
                 return HttpResponse('Updated payment')
 
             if event.type == 'source.failed':
                 payment = self.get_payment_from_source(event.data.object.id)
-                if payment.status != PaymentTransitions.values.failed:
-                    payment.transitions.fail()
-                    payment.save()
+                if payment.status != payment.states.failed.value:
+                    payment.states.fail(save=True)
 
                 return HttpResponse('Updated payment')
 
@@ -243,45 +238,37 @@ class SourceWebHookView(View):
 
             if event.type == 'charge.failed':
                 payment = self.get_payment_from_charge(event.data.object.id)
-                if payment.status != PaymentTransitions.values.failed:
-                    payment.transitions.fail()
-                    payment.save()
+                if payment.status != payment.states.failed.value:
+                    payment.states.fail(save=True)
 
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.succeeded':
                 payment = self.get_payment_from_charge(event.data.object.id)
-                if payment.status != PaymentTransitions.values.succeeded:
+                if payment.status != payment.states.succeeded.value:
                     transfer = stripe.Transfer.retrieve(event.data.object.transfer)
                     payment.donation.payout_amount = Money(
                         transfer.amount / 100.0, transfer.currency
                     )
                     payment.donation.save()
-
-                    payment.transitions.succeed()
-                    payment.save()
+                    payment.states.succeed(save=True)
 
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.pending':
                 payment = self.get_payment_from_charge(event.data.object.id)
-                payment.transitions.pending()
-                payment.save()
-
+                payment.states.authorize(save=True)
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.refunded':
                 payment = self.get_payment_from_charge(event.data.object.id)
-                payment.transitions.refund()
-                payment.save()
+                payment.states.refund(save=True)
 
                 return HttpResponse('Updated payment')
 
             if event.type == 'charge.dispute.closed' and event.data.object.status == 'lost':
                 payment = self.get_payment_from_charge(event.data.object.charge)
-                payment.transitions.dispute()
-                payment.save()
-
+                payment.states.dispute(save=True)
                 return HttpResponse('Updated payment')
 
         except StripePayment.DoesNotExist:

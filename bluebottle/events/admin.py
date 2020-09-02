@@ -1,17 +1,15 @@
 from django.contrib import admin
-from django.urls import reverse
-from django.utils.html import format_html
 from django_summernote.widgets import SummernoteWidget
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
+from bluebottle.fsm.admin import StateMachineFilter
+from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin, ContributionInline
 from bluebottle.events.models import Event, Participant
-from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import export_as_csv_action
-from bluebottle.utils.forms import FSMModelForm
+from bluebottle.fsm.forms import StateMachineModelForm
 
 
-class EventAdminForm(FSMModelForm):
+class EventAdminForm(StateMachineModelForm):
 
     class Meta:
         model = Event
@@ -21,32 +19,28 @@ class EventAdminForm(FSMModelForm):
         }
 
 
-class ParticipantInline(admin.TabularInline):
+class ParticipantInline(ContributionInline):
     model = Participant
 
-    raw_id_fields = ('user', )
-    readonly_fields = ('created', 'status', 'participant')
-    fields = ('participant', 'user', 'created', 'status', 'time_spent')
-
-    extra = 0
-
-    def participant(self, obj):
-        url = reverse('admin:events_participant_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.id)
+    readonly_fields = ContributionInline.readonly_fields + ('time_spent', )
+    fields = ContributionInline.fields + ('time_spent', )
 
 
-class ParticipantAdminForm(FSMModelForm):
+class ParticipantAdminForm(StateMachineModelForm):
     class Meta:
         model = Participant
-        exclude = ['status', ]
+        exclude = ('transition_date', )
 
 
 @admin.register(Participant)
 class ParticipantAdmin(ContributionChildAdmin):
     model = Participant
     form = ParticipantAdminForm
-    list_display = ['user', 'status', 'time_spent', 'activity_link']
+    list_display = ['user', 'state_name', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
+
+    readonly_fields = ContributionChildAdmin.readonly_fields
+    fields = ContributionChildAdmin.fields + ['time_spent']
 
     date_hierarchy = 'transition_date'
 
@@ -68,11 +62,11 @@ class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
     inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
     list_display = [
-        '__unicode__', 'initiative', 'status',
+        '__unicode__', 'initiative', 'state_name',
         'highlight', 'start', 'duration', 'created'
     ]
     search_fields = ['title', 'description']
-    list_filter = ['status', 'is_online']
+    list_filter = [StateMachineFilter, 'is_online']
     date_hierarchy = 'start'
 
     base_model = Event
@@ -112,16 +106,3 @@ class EventAdmin(ActivityChildAdmin):
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
-
-    def save_formset(self, request, form, formset, change):
-        instances = formset.save(commit=False)
-        for instance in instances:
-            # If we created a new participant through admin then
-            # set it to succeeded when event is succeeded
-            if (instance.__class__ == Participant and
-                    not instance.pk and
-                    form.instance.status == EventTransitions.values.succeeded):
-                instance.time_spent = form.instance.duration
-                instance.status = ParticipantTransitions.values.succeeded
-            instance.save()
-        super(EventAdmin, self).save_formset(request, form, formset, change)

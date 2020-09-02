@@ -411,10 +411,7 @@ class ParticipantStateMachineTests(BluebottleTestCase):
             self.event.followers.filter(user=self.participant.user).exists()
         )
         self.assertEqual(
-            len(self.messages(self.user)), 1
-        )
-        self.assertEqual(
-            len(self.messages(self.initiator)), 1
+            len(self.messages(self.participant.user)), 1
         )
 
     def test_withdraw(self):
@@ -435,7 +432,6 @@ class ParticipantStateMachineTests(BluebottleTestCase):
         self.assertTrue(
             self.event.followers.filter(user=self.participant.user).exists()
         )
-        print [m.subject for m in self.messages(self.participant.user)]
         self.assertEqual(
             len(self.messages(self.participant.user)), 2
         )

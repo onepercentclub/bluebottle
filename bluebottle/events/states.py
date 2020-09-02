@@ -354,11 +354,11 @@ class ParticipantStateMachine(ContributionStateMachine):
             RelatedTransitionEffect('activity', 'lock', conditions=[event_will_become_full]),
             NotificationEffect(
                 ParticipantApplicationManagerMessage,
-                conditions=[BaseNotificationEffect.is_not_user]
+                conditions=[BaseNotificationEffect.is_user]
             ),
             NotificationEffect(
                 ParticipantApplicationMessage,
-                conditions=[BaseNotificationEffect.is_user]
+                conditions=[BaseNotificationEffect.is_not_user]
             ),
             FollowActivityEffect
         ]
@@ -434,7 +434,8 @@ class ParticipantStateMachine(ContributionStateMachine):
             SetTimeSpent,
             RelatedTransitionEffect(
                 'activity', 'succeed',
-                conditions=[event_is_finished])
+                conditions=[event_is_finished]
+            )
         ]
     )
 

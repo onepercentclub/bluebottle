@@ -164,7 +164,7 @@ MIDDLEWARE_CLASSES = (
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
-    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
+    'bluebottle.auth.middleware.LogAuthFailureMiddleWare'
 )
 
 REST_FRAMEWORK = {

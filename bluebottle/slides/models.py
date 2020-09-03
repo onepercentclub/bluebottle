@@ -7,10 +7,18 @@ from djchoices import DjangoChoices, ChoiceItem
 from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import PublishableModel
+from django.core.exceptions import ValidationError
 
 
 def get_languages():
     return properties.LANGUAGES
+
+
+def validate_file_size(value):
+    if value.size > 10485760:
+        raise ValidationError(_("Videos larger then 10MB will slow down the page too much."))
+    else:
+        return value
 
 
 class Slide(PublishableModel):
@@ -23,29 +31,43 @@ class Slide(PublishableModel):
         draft = ChoiceItem('draft', label=_("Draft"))
 
     slug = models.SlugField(_("Slug"))
-    language = models.CharField(_("language"), max_length=5,
-                                choices=lazy(get_languages, tuple)())
-    tab_text = models.CharField(_("Tab text"), max_length=100, help_text=_(
-        "This is shown on tabs beneath the banner."))
+    language = models.CharField(
+        _("language"), max_length=5,
+        choices=lazy(get_languages, tuple)())
+    tab_text = models.CharField(
+        _("Tab text"), max_length=100,
+        help_text=_("This is shown on tabs beneath the banner."))
 
     # Contents
     title = models.CharField(_("Title"), max_length=100, blank=True)
     body = models.TextField(_("Body text"), blank=True)
-    image = ImageField(_("Image"), max_length=255, blank=True, null=True,
-                       upload_to='banner_slides/')
-    background_image = ImageField(_("Background image"), max_length=255,
-                                  blank=True, null=True,
-                                  upload_to='banner_slides/')
-    video_url = models.URLField(_("Video url"), max_length=100, blank=True,
-                                default='')
-
-    link_text = models.CharField(_("Link text"), max_length=400, help_text=_(
-        "This is the text on the button inside the banner."), blank=True)
-    link_url = models.CharField(_("Link url"), max_length=400, help_text=_(
-        "This is the link for the button inside the banner."), blank=True)
-    style = models.CharField(_("Style"), max_length=40,
-                             help_text=_("Styling class name"),
-                             default='default', blank=True)
+    image = ImageField(
+        _("Image"), max_length=255,
+        blank=True, null=True,
+        upload_to='banner_slides/')
+    background_image = ImageField(
+        _("Background image"), max_length=255,
+        blank=True, null=True,
+        upload_to='banner_slides/')
+    video = models.FileField(
+        _("Video"), max_length=255,
+        blank=True, null=True,
+        validators=[validate_file_size],
+        upload_to='banner_slides/')
+    video_url = models.URLField(
+        _("Video url"),
+        max_length=100, blank=True,
+        default='')
+    link_text = models.CharField(
+        _("Link text"), max_length=400, blank=True,
+        help_text=_("This is the text on the button inside the banner."))
+    link_url = models.CharField(
+        _("Link url"), max_length=400, blank=True,
+        help_text=_("This is the link for the button inside the banner."))
+    style = models.CharField(
+        _("Style"), max_length=40,
+        help_text=_("Styling class name"),
+        default='default', blank=True)
 
     # Metadata
     sequence = models.IntegerField()

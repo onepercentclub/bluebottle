@@ -306,6 +306,7 @@ class SlideSerializer(serializers.ModelSerializer):
         model = Slide
         fields = (
             'background_image',
+            'video',
             'body',
             'id',
             'image',

@@ -141,11 +141,13 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'stats_data',
     )
 
-    status_fields = (
-        'valid',
-        'status',
-        'states',
-    )
+    def get_status_fields(self, request, obj):
+        fields = ('status', 'states', )
+
+        if obj and obj.status in ('draft', 'submitted', 'needs_work'):
+            fields = ('valid', ) + fields
+
+        return fields
 
     def get_detail_fields(self, request, obj):
         fields = self.detail_fields
@@ -171,7 +173,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         fieldsets = (
             (_('Basic'), {'fields': self.basic_fields}),
             (_('Details'), {'fields': self.get_detail_fields(request, obj)}),
-            (_('Status'), {'fields': self.status_fields}),
+            (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
         if request.user.is_superuser:
             fieldsets += (

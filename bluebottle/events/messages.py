@@ -19,6 +19,22 @@ class EventRejectedOwnerMessage(TransitionMessage):
     }
 
 
+class EventCancelledMessage(TransitionMessage):
+    subject = _('Your event "{title}" has been cancelled')
+    template = 'messages/event_cancelled'
+    context = {
+        'title': 'title'
+    }
+
+
+class EventExpiredMessage(TransitionMessage):
+    subject = _('Your event "{title}" has been cancelled')
+    template = 'messages/event_expired'
+    context = {
+        'title': 'title'
+    }
+
+
 class EventDateChanged(TransitionMessage):
     subject = _('The date and time for your event "{title}" changed')
     template = 'messages/event_date_changed'

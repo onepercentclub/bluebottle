@@ -40,6 +40,22 @@ class DonationRefundedDonorMessage(TransitionMessage):
         return []
 
 
+class DonationActivityRefundedDonorMessage(TransitionMessage):
+    subject = _('Your donation for the campaign "{title}" will be refunded')
+    template = 'messages/donation_activity_refunded_donor'
+
+    context = {
+        'title': 'activity.title'
+    }
+
+    def get_recipients(self):
+        """the donor (unless it is a guest donation)"""
+        if self.obj.user:
+            return [self.obj.user]
+        # Guest donation. Return empty list so no mails are send.
+        return []
+
+
 class FundingPartiallyFundedMessage(TransitionMessage):
     subject = _(u"Your crowdfunding campaign deadline passed")
     template = 'messages/funding_partially_funded'
@@ -74,6 +90,60 @@ class FundingRejectedMessage(TransitionMessage):
 class FundingExpiredMessage(TransitionMessage):
     subject = _(u"Your crowdfunding campaign has expired")
     template = 'messages/funding_expired'
+
+    def get_recipients(self):
+        """the activity organizer"""
+        return [self.obj.owner]
+
+
+class FundingRefundedMessage(TransitionMessage):
+    subject = _(u'The donations received for your campaign "{title}" will be refunded')
+    template = 'messages/funding_refunded'
+
+    context = {
+        'title': 'title'
+    }
+
+    def get_recipients(self):
+        """the activity organizer"""
+        return [self.obj.owner]
+
+
+class FundingApprovedMessage(TransitionMessage):
+    subject = _(
+        u'Your campaign "{title}" is approved and is now open for donations 💸'
+    )
+    template = 'messages/funding_approved'
+
+    context = {
+        'title': 'title'
+    }
+
+    def get_recipients(self):
+        """the activity organizer"""
+        return [self.obj.owner]
+
+
+class FundingExtendedMessage(TransitionMessage):
+    subject = _(u'Your campaign "{title}" is open for new donations 💸')
+    template = 'messages/funding_extended'
+
+    context = {
+        'title': 'title'
+    }
+
+    def get_recipients(self):
+        """the activity organizer"""
+        return [self.obj.owner]
+
+
+class FundingCancelledMessage(TransitionMessage):
+    subject = _(u'Your campaign "{title}" has been cancelled')
+    template = 'messages/funding_cancelled'
+
+    context = {
+        'title': 'title'
+    }
 
     def get_recipients(self):
         """the activity organizer"""

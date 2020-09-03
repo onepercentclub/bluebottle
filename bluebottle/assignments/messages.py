@@ -39,6 +39,30 @@ class AssignmentExpiredMessage(TransitionMessage):
         return [self.obj.owner]
 
 
+class AssignmentCancelledMessage(TransitionMessage):
+    subject = _('Your task "{assignment_title}" has been cancelled')
+    template = 'messages/assignment_cancelled'
+    context = {
+        'assignment_title': 'title'
+    }
+
+    def get_recipients(self):
+        """the organizer"""
+        return [self.obj.owner]
+
+
+class AssignmentRejectedMessage(TransitionMessage):
+    subject = _('Your task "{assignment_title}" has been rejected')
+    template = 'messages/assignment_rejected'
+    context = {
+        'assignment_title': 'title'
+    }
+
+    def get_recipients(self):
+        """the organizer"""
+        return [self.obj.owner]
+
+
 class AssignmentClosedMessage(TransitionMessage):
     subject = _('Your task "{assignment_title}" has been closed')
     template = 'messages/assignment_closed'

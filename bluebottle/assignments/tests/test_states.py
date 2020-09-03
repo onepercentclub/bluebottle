@@ -106,6 +106,23 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         )
         self.assertTrue('nobody applied to your task' in mail.outbox[0].body)
 
+    def test_cancel(self):
+        self.assignment.states.submit(save=True)
+        self.assignment.states.cancel(save=True)
+
+        self.assertEqual(self.assignment.status, AssignmentStateMachine.cancelled.value)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'Your task "{}" has been cancelled'.format(self.assignment.title)
+        )
+        self.assertTrue(
+            u'Unfortunately your task “{}” has been cancelled.'.format(
+                self.assignment.title
+            )
+            in mail.outbox[0].body
+        )
+
     def test_reschedule_end_date(self):
         self.assignment.states.submit(save=True)
         self.assignment.date = now() - timedelta(days=1)
@@ -119,7 +136,18 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
 
     def test_reject(self):
         self.assignment.states.reject(save=True)
+        self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(self.assignment.status, AssignmentStateMachine.rejected.value)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'Your task "{}" has been rejected'.format(self.assignment.title)
+        )
+        self.assertTrue(
+            u'Unfortunately your task “{}” has been rejected.'.format(
+                self.assignment.title
+            )
+            in mail.outbox[0].body
+        )
 
     def test_restore(self):
         self.assignment.states.reject(save=True)
@@ -300,6 +328,7 @@ class ApplicantStateMachineTestCase(BluebottleTestCase):
             owner=self.initiative.owner,
             initiative=self.initiative
         )
+        self.assignment.states.submit(save=True)
         mail.outbox = []
         self.applicant = ApplicantFactory.create(activity=self.assignment)
 
@@ -361,6 +390,30 @@ class ApplicantStateMachineTestCase(BluebottleTestCase):
             u'You have been accepted for the task "{}"!'.format(
                 self.assignment.title
             )
+        )
+
+    def test_reapply(self):
+        self.applicant.states.withdraw(save=True, user=self.applicant.user)
+        mail.outbox = []
+        self.applicant.states.reapply(save=True, user=self.applicant.user)
+
+        self.assertTrue(self.applicant.status, ApplicantStateMachine.new)
+
+        self.assertEqual(len(mail.outbox), 1)
+
+        self.assertEqual(
+            mail.outbox[0].recipients(),
+            [self.assignment.owner.email]
+        )
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            u'Someone applied to your task "{}"! 🙌'.format(self.assignment.title)
+        )
+
+        self.assertTrue(
+            '{} applied to '.format(self.applicant.user.first_name)
+            in mail.outbox[0].body
         )
 
     def test_accept_fill(self):

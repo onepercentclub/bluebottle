@@ -9,27 +9,24 @@ from setuptools import setup, find_packages
 def read_file(name):
     return open(os.path.join(os.path.dirname(__file__), name)).read()
 
-
 readme = read_file('README.rst')
 changes = ''
 
 
 install_requires = [
     'Babel==2.4.0',
-    'Django==1.11.15',
-    'Pillow==4.1.1',
+    'Django==1.11.17',
+    'Pillow==7.0.0',
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
     'bleach==2.1.4',
-    'bunch==1.0.1',
-    'beyonic==0.1.14',
+    'bunch @ git+https://github.com/dsc/bunch.git@34eedf58fae929b3bb017338d24e978156dafa2b#egg=bunch-1.0.1-github',
+    'beyonic @ git+https://github.com/beyonic/beyonic-python.git@0.2.0#egg=beyonic-0.2.0-github',
     'celery==3.1.24',
     'dotted==0.1.8',
     'django-admin-sortable==2.2.1',
     'django-admin-tools==0.8.1',
     'django-adminfilters==0.3',
-    'django-appconf==1.0.3',
-    'django-axes==4.5.4',
     'django-celery==3.2.1',
     'django-choices==1.5.0',
     'django-cors-headers==2.1.0',
@@ -50,7 +47,7 @@ install_requires = [
     'django-map-widgets==0.2.2',
     'django-memoize==2.1.0',
     'django-modeltranslation==0.12.1',
-    'django-money==0.14',
+    'django-money==1.0',
     'django-parler==1.9.2',
     'django-permissions-widget==1.5.1',
     'django_polymorphic==1.2',
@@ -78,7 +75,7 @@ install_requires = [
     'icalendar==4.0.4',
     'influxdb==4.1.1',
     'lipisha==0.2.4',
-    'lxml==4.3.0',
+    'lxml==4.5.2',
     'micawber==0.3.4',
     'mixpanel==4.3.2',
     'django-multiselectfield==0.1.8',
@@ -94,7 +91,7 @@ install_requires = [
     'python-dateutil==2.6.1',
     'python-magic==0.4.15',
     'python-memcached==1.58',
-    'python-saml==2.1.7',
+    'python3-saml==1.9.0',
     'python-social-auth==0.3.6',
     'social-auth-app-django==2.1.0',
     'surlex==0.2.0',
@@ -116,7 +113,7 @@ install_requires = [
     'transifex-client==0.12.4',
     'unicodecsv==0.14.1',
     'wheel==0.29.0',
-    'xlsxwriter==0.9.8',
+    'xlsxwriter==1.2.8',
 
     # Github requirements
     'django-exportdb @ git+https://github.com/onepercentclub/django-exportdb.git@0.4.8#egg=django-exportdb-0.4.8-github',

@@ -83,7 +83,8 @@ class EventAdmin(ActivityChildAdmin):
         'registration_deadline',
         'is_online',
         'location',
-        'location_hint'
+        'location_hint',
+        'highlight',
     )
 
     export_to_csv_fields = (

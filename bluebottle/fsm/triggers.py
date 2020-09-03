@@ -112,7 +112,7 @@ class TriggerMixin(object):
         return self._initial_values.get(field) != getattr(self, field)
 
     def save(self, send_messages=True, perform_effects=True, *args, **kwargs):
-        if perform_effects:
+        if perform_effects and hasattr(self, '_state_machines'):
             for machine_name in self._state_machines:
                 machine = getattr(self, machine_name)
                 if not machine.state and machine.initial_transition:

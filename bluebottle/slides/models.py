@@ -5,20 +5,13 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 
 from bluebottle.clients import properties
+from bluebottle.files.validators import validate_video_file_size
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import PublishableModel
-from django.core.exceptions import ValidationError
 
 
 def get_languages():
     return properties.LANGUAGES
-
-
-def validate_file_size(value):
-    if value.size > 10485760:
-        raise ValidationError(_("Videos larger then 10MB will slow down the page too much."))
-    else:
-        return value
 
 
 class Slide(PublishableModel):
@@ -52,7 +45,7 @@ class Slide(PublishableModel):
     video = models.FileField(
         _("Video"), max_length=255,
         blank=True, null=True,
-        validators=[validate_file_size],
+        validators=[validate_video_file_size],
         upload_to='banner_slides/')
     video_url = models.URLField(
         _("Video url"),

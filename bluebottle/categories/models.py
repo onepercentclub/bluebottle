@@ -4,6 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.clients import properties
+from bluebottle.files.validators import validate_video_file_size
 from bluebottle.utils.fields import ImageField
 from adminsortable.admin import SortableMixin
 
@@ -11,10 +12,19 @@ from adminsortable.admin import SortableMixin
 class Category(TranslatableModel):
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
 
-    image = ImageField(_("image"), max_length=255, blank=True, null=True, upload_to='categories/',
-                       help_text=_("Category image"))
-    image_logo = ImageField(_("logo"), max_length=255, blank=True, null=True, upload_to='categories/logos/',
-                            help_text=_("Category Logo image"))
+    image = ImageField(
+        _("image"), max_length=255, blank=True, null=True,
+        upload_to='categories/',
+        help_text=_("Category image"))
+    video = models.FileField(
+        _("video"), max_length=255,
+        blank=True, null=True,
+        validators=[validate_video_file_size],
+        upload_to='banner_slides/')
+    image_logo = ImageField(
+        _("logo"), max_length=255, blank=True, null=True,
+        upload_to='categories/logos/',
+        help_text=_("Category Logo image"))
 
     translations = TranslatedFields(
         title=models.CharField(_("name"), max_length=255),

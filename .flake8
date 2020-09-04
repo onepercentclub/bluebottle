@@ -10,6 +10,7 @@ exclude =
     **/secrets.py,
     **/migrations/*,
     **/scim_data/*,
+    **/node_modules/*,
     docs,
     build,
     tenants

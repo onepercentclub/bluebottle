@@ -25,8 +25,8 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
         if 'filter[used]' in self.request.GET:
             return qs.filter(
                 Q(geolocation__initiative__status='approved') |
-                Q(geolocation__event__review_status='approved') |
-                Q(geolocation__assignment__review_status='approved')
+                Q(geolocation__event__status__in=('open', 'succeeded', 'full', 'running', )) |
+                Q(geolocation__assignment__status__in=('open', 'succeeded', 'full', 'running'))
             ).distinct()
         else:
             return qs
@@ -45,10 +45,11 @@ class UsedCountryList(CountryList):
 
     def get_queryset(self):
         qs = super(UsedCountryList, self).get_queryset()
+
         return qs.filter(
             Q(geolocation__initiative__status='approved') |
-            Q(geolocation__event__review_status='approved') |
-            Q(geolocation__assignment__review_status='approved')
+            Q(geolocation__event__status__in=('open', 'succeeded', 'full', 'running', )) |
+            Q(geolocation__assignment__status__in=('open', 'succeeded', 'full', 'running'))
         ).distinct()
 
 

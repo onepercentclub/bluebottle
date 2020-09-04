@@ -63,22 +63,23 @@ class UsedCountryListTestCase(GeoTestCase):
 
     Endpoint: /api/geo/used_countries
     """
+
     def setUp(self):
         super(UsedCountryListTestCase, self).setUp()
 
         self.event = EventFactory.create(
-            review_status='approved', status='new'
+            status='open'
         )
         EventFactory.create(
-            review_status='approved', status='new', location=self.event.location
+            status='open', location=self.event.location
         )
 
         self.assignment = AssignmentFactory.create(
-            review_status='approved', status='new'
+            status='succeeded'
         )
 
         EventFactory.create(
-            review_status='submitted', status='in_review'
+            status='submitted'
         )
         self.initiative = InitiativeFactory.create(
             status='approved'
@@ -88,6 +89,7 @@ class UsedCountryListTestCase(GeoTestCase):
         """
         Ensure get request returns 200.
         """
+
         response = self.client.get(reverse('used-country-list'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -106,6 +108,7 @@ class LocationListTestCase(GeoTestCase):
 
     Endpoint: /api/geo/locations
     """
+
     def setUp(self):
         super(GeoTestCase, self).setUp()
 
@@ -146,6 +149,7 @@ class GeolocationCreateTestCase(GeoTestCase):
     Test case for ``GeolocationList`` API view.
     Endpoint: /api/geo/geolocations
     """
+
     def setUp(self):
         super(GeoTestCase, self).setUp()
         self.country = CountryFactory.create()

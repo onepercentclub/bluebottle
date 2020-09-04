@@ -10,6 +10,8 @@ from bluebottle.events.messages import (
     ParticipantRejectedMessage,
     ParticipantApplicationMessage,
     ParticipantApplicationManagerMessage,
+    EventCancelledMessage,
+    EventExpiredMessage,
 )
 from bluebottle.events.models import Event, Participant
 from bluebottle.follow.effects import (
@@ -141,7 +143,8 @@ class EventStateMachine(ActivityStateMachine):
         automatic=False,
         effects=[
             RelatedTransitionEffect('organizer', 'fail'),
-            RelatedTransitionEffect('participants', 'fail')
+            RelatedTransitionEffect('participants', 'fail'),
+            NotificationEffect(EventCancelledMessage),
         ]
     )
 
@@ -199,7 +202,10 @@ class EventStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.cancelled,
         name=_("Expire"),
-        description=_("The event didn\'t have any attendees before the start time and is cancelled.")
+        description=_("The event didn\'t have any attendees before the start time and is cancelled."),
+        effects=[
+            NotificationEffect(EventExpiredMessage),
+        ]
     )
 
     succeed = Transition(

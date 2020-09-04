@@ -1,0 +1,21 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% if custom_message %}
+        {{ custom_message|linebreaks }}
+    {% else %}
+        {% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
+            Hi {{ recipient_name }},<br>
+
+        Unfortunately your task “{{ assignment_title }}” has been rejected.
+        <br><br>
+        If you have any questions, you can contact the platform manager by replying to this email.
+        {% endblocktrans %}
+    {% endif %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ obj.initiative.get_absolute_url }}"
+       class="action-email">{% trans 'View initiative' context 'email' %}</a>
+{% endblock %}`

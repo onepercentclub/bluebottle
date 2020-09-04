@@ -109,12 +109,9 @@ class UsedCountryListTestCase(GeoTestCase):
         Ensure get request returns 200.
         """
         response = self.client.get(reverse('country-list'), {'filter[used]': True})
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), 3)
-
         countries = [country['id'] for country in response.json()]
-
         self.assertEqual(len(countries), 3)
 
 

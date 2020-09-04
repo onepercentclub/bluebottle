@@ -46,17 +46,6 @@ class CountryDetail(RetrieveAPIView):
         return qs
 
 
-class UsedCountryList(CountryList):
-
-    def get_queryset(self):
-        qs = super(UsedCountryList, self).get_queryset()
-        return qs.filter(
-            Q(geolocation__initiative__status='approved') |
-            Q(geolocation__event__review_status='approved') |
-            Q(geolocation__assignment__review_status='approved')
-        ).distinct()
-
-
 class LocationList(ListAPIView):
     serializer_class = LocationSerializer
     queryset = Location.objects.all()

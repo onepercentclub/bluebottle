@@ -156,8 +156,8 @@ class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
 class Organizer(Contribution):
     class Meta:
-        verbose_name = _("Organizer")
-        verbose_name_plural = _("Organizers")
+        verbose_name = _("Activity owner")
+        verbose_name_plural = _("Activity owners")
 
     class JSONAPIMeta:
         resource_name = 'contributions/organizers'
@@ -172,7 +172,7 @@ class Organizer(Contribution):
         if self.user:
             return self.user.full_name
         else:
-            return _('Organizer')
+            return _('Activity owner')
 
 
 from bluebottle.activities.signals import *  # noqa

@@ -93,7 +93,10 @@ class SAMLAuthentication(BaseTokenAuthentication):
                     logger.error('Missing claim {}({})'.format(source, target))
             else:
                 try:
-                    data[target] = user_data[source][0]
+                    if user_data[source] and len(user_data[source]):
+                        data[target] = user_data[source][0]
+                    else:
+                        data[target] = ''
                 except KeyError:
                     logger.error('Missing claim {}({})'.format(source, target))
         return data

@@ -15,6 +15,7 @@ from bluebottle.token_auth.auth.saml import SAMLAuthentication
 from bluebottle.token_auth.tests.saml_settings import TOKEN_AUTH2_SETTINGS
 
 from .saml_settings import TOKEN_AUTH_SETTINGS
+from ...test.factory_models.geo import LocationFactory
 
 
 class TestSAMLTokenAuthentication(TestCase):
@@ -523,3 +524,35 @@ class TestSAMLTokenAuthentication(TestCase):
             )
 
             self.assertTrue('email' not in result)
+
+    def test_empty_claims(self):
+        settings = dict(**TOKEN_AUTH_SETTINGS)
+        LocationFactory.create(slug='amsterdam')
+        settings.update(
+            assertion_mapping={
+                'email': 'mail',
+                'remote_id': 'nameId',
+                'location.slug': 'location',
+            }
+        )
+
+        with self.settings(TOKEN_AUTH=settings):
+
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+            auth_backend = SAMLAuthentication(request)
+
+            result = auth_backend.parse_user({
+                'nameId': ['1234325'],
+                'location': ['amsterdam']
+            })
+            self.assertEqual(
+                result['location.slug'], 'amsterdam'
+            )
+
+            result = auth_backend.parse_user({
+                'nameId': ['4573457'],
+                'location': []
+            })
+            self.assertEqual(
+                result['location.slug'], ''
+            )

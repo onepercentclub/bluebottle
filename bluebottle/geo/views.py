@@ -14,12 +14,8 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
     serializer_class = CountrySerializer
     queryset = Country.objects
 
-    @method_decorator(cache_page(3600))
-    def get(self, request, *args, **kwargs):
-        return super(CountryList, self).get(request, *args, **kwargs)
-
-    hidden_statuses = [
-        'draft', 'needs_work', 'submitted', 'deleted', 'rejected'
+    public_statuses = [
+        'open', 'running', 'full', 'succeeded', 'partially_funded', 'refunded',
     ]
 
     def get_queryset(self):
@@ -28,10 +24,10 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
         )
 
         if 'filter[used]' in self.request.GET:
-            return qs.filter(geolocation__isnull=False).exclude(
-                Q(geolocation__initiative__status__in=self.hidden_statuses) |
-                Q(geolocation__event__status__in=self.hidden_statuses) |
-                Q(geolocation__assignment__status__in=self.hidden_statuses)
+            return qs.filter(
+                Q(geolocation__initiative__status='approved') |
+                Q(geolocation__event__status__in=self.public_statuses) |
+                Q(geolocation__assignment__status__in=self.public_statuses)
             ).distinct()
         else:
             return qs

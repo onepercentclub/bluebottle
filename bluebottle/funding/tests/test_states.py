@@ -73,6 +73,14 @@ class FundingStateMachineTests(BluebottleTestCase):
         with self.assertRaisesMessage(TransitionNotPossible, 'Conditions not met for transition'):
             funding.states.submit()
 
+    def test_empty_target(self):
+        funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=None
+        )
+        funding.save()
+        self.assertFalse(funding.states.target_reached())
+
     def test_needs_work(self):
         self.funding.states.submit(save=True)
         self.funding.states.request_changes(save=True)

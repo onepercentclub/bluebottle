@@ -1,3 +1,7 @@
+from bluebottle.activities.models import Activity
+
+from bluebottle.wallposts.models import Wallpost, Reaction
+
 from bluebottle.notifications.messages import TransitionMessage
 from django.utils.translation import ugettext_lazy as _
 
@@ -5,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 class ActivityWallpostOwnerMessage(TransitionMessage):
     subject = _("You have a new post on '{title}'")
     template = 'messages/activity_wallpost_owner'
+    model = Wallpost
 
     context = {
         'title': 'content_object.title'
@@ -21,6 +26,7 @@ class ActivityWallpostOwnerMessage(TransitionMessage):
 class ActivityWallpostReactionMessage(TransitionMessage):
     subject = _("You have a new post on '{title}'")
     template = 'messages/activity_wallpost_reaction'
+    model = Reaction
 
     context = {
         'title': 'wallpost.content_object.title'
@@ -34,6 +40,7 @@ class ActivityWallpostReactionMessage(TransitionMessage):
 class ActivityWallpostOwnerReactionMessage(TransitionMessage):
     subject = _("You have a new post on '{title}'")
     template = 'messages/activity_wallpost_owner_reaction'
+    model = Wallpost
 
     context = {
         'title': 'wallpost.content_object.title'
@@ -50,6 +57,8 @@ class ActivityWallpostOwnerReactionMessage(TransitionMessage):
 class ActivityWallpostFollowerMessage(TransitionMessage):
     subject = _("Update from '{title}'")
     template = 'messages/activity_wallpost_follower'
+    model = Wallpost
+
     context = {
         'title': 'content_object.title'
     }
@@ -69,6 +78,8 @@ class ActivityWallpostFollowerMessage(TransitionMessage):
 class ImpactReminderMessage(TransitionMessage):
     subject = (u'Please share the impact results for your activity "{title}".')
     template = 'messages/activity_impact_reminder'
+    model = Activity
+
     context = {
         'title': 'title'
     }

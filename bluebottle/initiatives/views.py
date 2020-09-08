@@ -41,11 +41,7 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'place', 'location', 'owner', 'activity_manager', 'image', 'categories', 'theme'
     )
 
-    def get_serializer_class(self):
-        if self.request.method == 'POST' or self.request.GET.get('filter[owner.id]'):
-            return InitiativeSerializer
-        else:
-            return InitiativeListSerializer
+    serializer_class = InitiativeListSerializer
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),

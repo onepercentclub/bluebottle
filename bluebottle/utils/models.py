@@ -170,7 +170,6 @@ class ValidatedModelMixin(object):
 
 
 class AnonymizationMixin(object):
-
     @property
     def anonymized(self):
         from bluebottle.members.models import MemberPlatformSettings

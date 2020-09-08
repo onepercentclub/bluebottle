@@ -100,7 +100,7 @@ class EventListSerializer(BaseActivityListSerializer):
         resource_name = 'activities/events'
 
     included_serializers = dict(
-        BaseActivitySerializer.included_serializers,
+        BaseActivityListSerializer.included_serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }

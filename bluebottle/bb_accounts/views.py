@@ -263,6 +263,7 @@ class PasswordReset(views.APIView):
     email will be sent to the user with a
     password reset link upon successful submission.
     """
+
     def put(self, request, *args, **kwargs):
         serializer = PasswordResetSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -330,6 +331,7 @@ class PasswordSet(views.APIView):
     Allows a new password to be set in the resource that is a valid password
     reset hash.
     """
+
     def _get_user(self, uidb36):
         try:
             uid_int = base36_to_int(uidb36)

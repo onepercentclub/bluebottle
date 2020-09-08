@@ -237,7 +237,7 @@ class FundingListSerializer(BaseActivityListSerializer):
         resource_name = 'activities/fundings'
 
     included_serializers = dict(
-        BaseActivitySerializer.included_serializers,
+        BaseActivityListSerializer.included_serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }

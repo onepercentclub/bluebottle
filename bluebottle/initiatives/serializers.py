@@ -31,7 +31,9 @@ from bluebottle.utils.fields import (
 )
 from bluebottle.utils.serializers import (
     ResourcePermissionField, NoCommitMixin,
-    FilteredPolymorphicResourceRelatedField)
+    FilteredPolymorphicResourceRelatedField,
+    FilteredRelatedField
+)
 
 
 class ThemeSerializer(ModelSerializer):
@@ -207,6 +209,12 @@ class InitiativeListSerializer(ModelSerializer):
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     activity_manager = ResourceRelatedField(read_only=True)
+
+    activities = FilteredRelatedField(
+        filter_backend=ActivityFilter,
+        many=True,
+        read_only=True
+    )
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
@@ -229,7 +237,8 @@ class InitiativeListSerializer(ModelSerializer):
             'id', 'title', 'pitch', 'categories',
             'owner', 'activity_manager',
             'slug', 'has_organization', 'transitions',
-            'story', 'image', 'theme', 'place', 'location'
+            'story', 'image', 'theme', 'place', 'location',
+            'activities'
         )
 
         meta_fields = ('permissions', 'status', 'created', 'transitions',)

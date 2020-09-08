@@ -194,6 +194,7 @@ class RelatedResourceOwnerPermission(ResourceOwnerPermission):
 
     This class assumes the child resource has a `parent` property which will return the parent object.
     """
+
     def has_parent_permission(self, action, user, parent, model=None):
         return user == parent.owner
 

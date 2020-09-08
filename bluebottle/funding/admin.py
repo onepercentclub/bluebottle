@@ -415,13 +415,16 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
 
 class PayoutAccountFundingLinkMixin(object):
     def funding_links(self, obj):
-        return format_html(", ".join([
-            format_html(
-                u"<a href='{}'>{}</a>",
-                reverse('admin:funding_funding_change', args=(p.id,)),
-                p.title
-            ) for p in obj.funding_set.all()
-        ]))
+        if len(obj.funding_set.all()):
+            return format_html(", ".join([
+                format_html(
+                    u"<a href='{}'>{}</a>",
+                    reverse('admin:funding_funding_change', args=(p.id,)),
+                    p.title
+                ) for p in obj.funding_set.all()
+            ]))
+        else:
+            return _('None')
 
     funding_links.short_description = _('Funding activities')
 

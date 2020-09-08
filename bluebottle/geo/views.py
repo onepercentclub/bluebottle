@@ -18,6 +18,10 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
         'open', 'running', 'full', 'succeeded', 'partially_funded', 'refunded',
     ]
 
+    @method_decorator(cache_page(3600))
+    def get(self, request, *args, **kwargs):
+        return super(CountryList, self).get(request, *args, **kwargs)
+
     def get_queryset(self):
         qs = super(CountryList, self).get_queryset().filter(
             alpha2_code__isnull=False

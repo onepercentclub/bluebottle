@@ -62,6 +62,7 @@ class UsedCountryListTestCase(GeoTestCase):
 
     Endpoint: /api/geo/used_countries
     """
+
     def setUp(self):
         super(UsedCountryListTestCase, self).setUp()
 
@@ -76,6 +77,7 @@ class UsedCountryListTestCase(GeoTestCase):
 
         turkey = Country.objects.get(translations__name="Turkey")
         location_tr = LocationFactory.create(country=turkey)
+        LocationFactory.create(country=Country.objects.get(translations__name='France'))
 
         EventFactory.create(
             status='open',
@@ -121,6 +123,7 @@ class LocationListTestCase(GeoTestCase):
 
     Endpoint: /api/geo/locations
     """
+
     def setUp(self):
         super(GeoTestCase, self).setUp()
 
@@ -161,6 +164,7 @@ class GeolocationCreateTestCase(GeoTestCase):
     Test case for ``GeolocationList`` API view.
     Endpoint: /api/geo/geolocations
     """
+
     def setUp(self):
         super(GeoTestCase, self).setUp()
         self.country = CountryFactory.create()

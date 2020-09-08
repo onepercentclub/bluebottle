@@ -12,6 +12,11 @@ apps = [
         'page_id': '833192092'
     },
     {
+        'title': 'Notifications - Activities',
+        'app': 'bluebottle.activities',
+        'page_id': '961773675'
+    },
+    {
         'title': 'Notifications - Tasks',
         'app': 'bluebottle.assignments',
         'page_id': '830701653'

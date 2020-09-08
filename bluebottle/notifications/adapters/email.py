@@ -9,11 +9,13 @@ class EmailMessageAdapter(BaseMessageAdapter):
         return 'mails/{}'.format(self.message.template)
 
     def send(self, **context):
+        to = context.pop('to', self.message.recipient)
+        obj = context.pop('obj', self.message.content_object)
         send_mail(
             template_name=self.template_name,
             subject=self.message.subject,
-            to=self.message.recipient,
-            obj=self.message.content_object,
+            to=to,
+            obj=obj,
             custom_message=self.message.custom_message,
             body_html=self.message.body_html,
             body_txt=self.message.body_txt,

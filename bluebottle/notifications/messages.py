@@ -25,6 +25,13 @@ class TransitionMessage(object):
     template = 'messages/base'
     context = {}
     send_once = False
+    model = None
+
+    def __init__(self, obj, **options):
+        if self.model and not isinstance(obj, self.model):
+            raise AttributeError("Wrong object. Expected {} but got {}".format(self.model, obj.__class__))
+        self.obj = obj
+        self.options = options
 
     def get_generic_context(self):
         from bluebottle.clients.utils import tenant_url, tenant_name
@@ -48,10 +55,25 @@ class TransitionMessage(object):
         context = self.get_generic_context()
         return unicode(self.subject.format(**context))
 
+    def get_subject(self, recipient):
+        context = self.get_context(recipient)
+        return unicode(self.subject.format(**context))
+
     @property
     def generic_content(self):
         context = self.get_generic_context()
         template = loader.get_template("mails/{}.html".format(self.template))
+        return template.render(context)
+
+    @property
+    def generic_content_plain(self):
+        context = self.get_generic_context()
+        template = loader.get_template("mails/{}.txt".format(self.template))
+        return template.render(context)
+
+    def get_content(self, recipient, type='txt'):
+        context = self.get_context(recipient)
+        template = loader.get_template("mails/{}.{}".format(self.template, type))
         return template.render(context)
 
     def get_context(self, recipient):
@@ -61,7 +83,9 @@ class TransitionMessage(object):
             'site_name': tenant_name(),
             'language': recipient.primary_language,
             'contact_email': properties.CONTACT_EMAIL,
-            'first_name': recipient.first_name
+            'first_name': recipient.first_name,
+            'to': recipient,
+            'obj': self.obj
         }
         for key, item in self.context.items():
             try:
@@ -73,10 +97,6 @@ class TransitionMessage(object):
             context.update(self.options['context'])
 
         return context
-
-    def __init__(self, obj, **options):
-        self.obj = obj
-        self.options = options
 
     def __unicode__(self):
         return self.subject

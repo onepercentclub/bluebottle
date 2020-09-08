@@ -57,6 +57,7 @@ class DonationRefundedDonorMessage(TransitionMessage):
 class DonationActivityRefundedDonorMessage(TransitionMessage):
     subject = _('Your donation for the campaign "{title}" will be refunded')
     template = 'messages/donation_activity_refunded_donor'
+    model = Donation
 
     context = {
         'title': 'activity.title'
@@ -129,6 +130,7 @@ class FundingExpiredMessage(TransitionMessage):
 class FundingRefundedMessage(TransitionMessage):
     subject = _(u'The donations received for your campaign "{title}" will be refunded')
     template = 'messages/funding_refunded'
+    model = Funding
 
     context = {
         'title': 'title'
@@ -144,6 +146,7 @@ class FundingApprovedMessage(TransitionMessage):
         u'Your campaign "{title}" is approved and is now open for donations 💸'
     )
     template = 'messages/funding_approved'
+    model = Funding
 
     context = {
         'title': 'title'
@@ -157,6 +160,7 @@ class FundingApprovedMessage(TransitionMessage):
 class FundingExtendedMessage(TransitionMessage):
     subject = _(u'Your campaign "{title}" is open for new donations 💸')
     template = 'messages/funding_extended'
+    model = Funding
 
     context = {
         'title': 'title'
@@ -170,6 +174,7 @@ class FundingExtendedMessage(TransitionMessage):
 class FundingCancelledMessage(TransitionMessage):
     subject = _(u'Your campaign "{title}" has been cancelled')
     template = 'messages/funding_cancelled'
+    model = Funding
 
     context = {
         'title': 'title'

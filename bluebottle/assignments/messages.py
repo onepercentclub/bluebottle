@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from bluebottle.assignments.models import Applicant, Assignment
+
 from bluebottle.notifications.messages import TransitionMessage
 from django.utils.translation import ugettext_lazy as _
 
@@ -9,6 +11,7 @@ class ApplicantAcceptedMessage(TransitionMessage):
     """
     subject = _('You have been accepted for the task "{assignment_title}"!')
     template = 'messages/applicant_accepted'
+    model = Applicant
     context = {
         'assignment_title': 'activity.title'
     }
@@ -24,6 +27,7 @@ class ApplicantRejectedMessage(TransitionMessage):
     """
     subject = _('You have not been selected for the task "{assignment_title}"')
     template = 'messages/applicant_rejected'
+    model = Applicant
     context = {
         'assignment_title': 'activity.title'
     }
@@ -39,6 +43,7 @@ class AssignmentExpiredMessage(TransitionMessage):
     """
     subject = _('Your task "{assignment_title}" has expired')
     template = 'messages/assignment_expired'
+    model = Assignment
     context = {
         'assignment_title': 'title'
     }
@@ -51,6 +56,7 @@ class AssignmentExpiredMessage(TransitionMessage):
 class AssignmentCancelledMessage(TransitionMessage):
     subject = _('Your task "{assignment_title}" has been cancelled')
     template = 'messages/assignment_cancelled'
+    model = Assignment
     context = {
         'assignment_title': 'title'
     }
@@ -63,6 +69,7 @@ class AssignmentCancelledMessage(TransitionMessage):
 class AssignmentRejectedMessage(TransitionMessage):
     subject = _('Your task "{assignment_title}" has been rejected')
     template = 'messages/assignment_rejected'
+    model = Assignment
     context = {
         'assignment_title': 'title'
     }
@@ -76,11 +83,9 @@ class AssignmentClosedMessage(TransitionMessage):
     """
     Task rejected. The task has been rejected by an admin.
     """
-    name = 'Task'
-    description = ''
-
     subject = _('Your task "{assignment_title}" has been closed')
     template = 'messages/assignment_closed'
+    model = Assignment
     context = {
         'assignment_title': 'title'
     }
@@ -96,6 +101,7 @@ class AssignmentCompletedMessage(TransitionMessage):
     """
     subject = _(u'Your task "{title}" has been successfully completed! 🎉')
     template = 'messages/assignment_completed'
+    model = Assignment
     context = {
         'title': 'title'
     }
@@ -111,6 +117,7 @@ class AssignmentApplicationMessage(TransitionMessage):
     """
     subject = _(u'Someone applied to your task "{assignment_title}"! 🙌')
     template = 'messages/assignment_application'
+    model = Applicant
     context = {
         'assignment_title': 'activity.title'
     }
@@ -126,6 +133,7 @@ class AssignmentDateChanged(TransitionMessage):
     """
     subject = _('The date of your task "{assignment_title}" has been changed.')
     template = 'messages/assignment_date_changed'
+    model = Assignment
     context = {
         'assignment_title': 'title'
     }
@@ -145,6 +153,7 @@ class AssignmentDeadlineChanged(TransitionMessage):
     """
     subject = _('The deadline for your task "{assignment_title}" has been changed.')
     template = 'messages/assignment_deadline_changed'
+    model = Assignment
     context = {
         'assignment_title': 'title'
     }
@@ -165,6 +174,7 @@ class AssignmentReminderOnDate(TransitionMessage):
 
     subject = _('"{assignment_title}" will take place in 5 days!')
     template = 'messages/assignment_reminder_on_date'
+    model = Assignment
     context = {
         'assignment_title': 'title'
     }
@@ -187,6 +197,7 @@ class AssignmentReminderDeadline(TransitionMessage):
     subject = _(
         'The deadline for your task "{assignment_title}" is getting close')
     template = 'messages/assignment_reminder_deadline'
+    model = Assignment
     context = {
         'assignment_title': 'title'
     }

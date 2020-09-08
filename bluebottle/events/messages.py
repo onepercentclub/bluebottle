@@ -32,6 +32,7 @@ class EventRejectedOwnerMessage(TransitionMessage):
 class EventCancelledMessage(TransitionMessage):
     subject = _('Your event "{title}" has been cancelled')
     template = 'messages/event_cancelled'
+    model = Event
     context = {
         'title': 'title'
     }
@@ -40,6 +41,7 @@ class EventCancelledMessage(TransitionMessage):
 class EventExpiredMessage(TransitionMessage):
     subject = _('Your event "{title}" has been cancelled')
     template = 'messages/event_expired'
+    model = Event
     context = {
         'title': 'title'
     }

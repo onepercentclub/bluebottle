@@ -57,6 +57,8 @@ class FundingStateMachine(ActivityStateMachine):
 
     def target_reached(self):
         """target amount has been reached (100% or more)"""
+        if not self.instance.target:
+            return False
         return self.instance.amount_raised >= self.instance.target
 
     def target_not_reached(self):

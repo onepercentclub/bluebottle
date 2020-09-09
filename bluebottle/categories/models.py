@@ -1,3 +1,5 @@
+from adminsortable.admin import SortableMixin
+from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
@@ -6,7 +8,7 @@ from parler.models import TranslatableModel, TranslatedFields
 from bluebottle.clients import properties
 from bluebottle.files.validators import validate_video_file_size
 from bluebottle.utils.fields import ImageField
-from adminsortable.admin import SortableMixin
+from bluebottle.utils.validators import FileMimetypeValidator
 
 
 class Category(TranslatableModel):
@@ -19,7 +21,12 @@ class Category(TranslatableModel):
     video = models.FileField(
         _("video"), max_length=255,
         blank=True, null=True,
-        validators=[validate_video_file_size],
+        validators=[
+            validate_video_file_size,
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.VIDEO_FILE_ALLOWED_MIME_TYPES
+            )
+        ],
         upload_to='banner_slides/')
     image_logo = ImageField(
         _("logo"), max_length=255, blank=True, null=True,

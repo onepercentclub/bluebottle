@@ -191,11 +191,11 @@ class ActivitySearchFilter(ElasticSearchFilter):
                     path='owner',
                     query=Term(owner__id=request.user.pk)
                 ),
-                ~Terms(status=['draft', 'needs_work', 'submitted', 'deleted', 'closed', 'cancelled'])
+                ~Terms(status=['draft', 'needs_work', 'submitted', 'deleted', 'closed'])
             ]
         else:
             return [
-                ~Terms(status=['draft', 'needs_work', 'submitted', 'deleted', 'closed', 'cancelled'])
+                ~Terms(status=['draft', 'needs_work', 'submitted', 'deleted', 'closed'])
             ]
 
 

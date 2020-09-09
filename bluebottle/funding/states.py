@@ -13,9 +13,15 @@ from bluebottle.funding.effects import GeneratePayoutsEffect, GenerateDonationWa
     DeletePayoutsEffect, \
     SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect, \
     ClearPayoutDatesEffect, RemoveDonationFromPayoutEffect
-from bluebottle.funding.messages import DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage, \
-    FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage, PayoutAccountVerified, \
-    PayoutAccountRejected, DonationRefundedDonorMessage, FundingRejectedMessage
+from bluebottle.funding.messages import (
+    DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
+    FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage,
+    PayoutAccountVerified, PayoutAccountRejected,
+    DonationRefundedDonorMessage, DonationActivityRefundedDonorMessage,
+    FundingRejectedMessage, FundingRefundedMessage, FundingExtendedMessage,
+    FundingCancelledMessage, FundingApprovedMessage
+
+)
 from bluebottle.funding.models import Funding, Donation, Payout, PlainPayoutAccount
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -111,6 +117,7 @@ class FundingStateMachine(ActivityStateMachine):
                 'expire',
                 conditions=[should_finish]
             ),
+            NotificationEffect(FundingApprovedMessage)
         ]
     )
 
@@ -131,7 +138,8 @@ class FundingStateMachine(ActivityStateMachine):
             no_donations
         ],
         effects=[
-            RelatedTransitionEffect('organizer', 'fail')
+            RelatedTransitionEffect('organizer', 'fail'),
+            NotificationEffect(FundingCancelledMessage)
         ]
     )
 
@@ -206,7 +214,8 @@ class FundingStateMachine(ActivityStateMachine):
             without_approved_payouts
         ],
         effects=[
-            DeletePayoutsEffect
+            DeletePayoutsEffect,
+            NotificationEffect(FundingExtendedMessage)
         ]
     )
 
@@ -275,7 +284,8 @@ class FundingStateMachine(ActivityStateMachine):
         ],
         effects=[
             RelatedTransitionEffect('donations', 'activity_refund'),
-            DeletePayoutsEffect
+            DeletePayoutsEffect,
+            NotificationEffect(FundingRefundedMessage)
         ]
     )
 
@@ -344,7 +354,8 @@ class DonationStateMachine(ContributionStateMachine):
             RemoveDonationWallpostEffect,
             UnFollowActivityEffect,
             UpdateFundingAmountsEffect,
-            RemoveDonationFromPayoutEffect
+            RemoveDonationFromPayoutEffect,
+            NotificationEffect(DonationRefundedDonorMessage)
         ]
     )
 
@@ -356,7 +367,7 @@ class DonationStateMachine(ContributionStateMachine):
         automatic=True,
         effects=[
             RelatedTransitionEffect('payment', 'request_refund'),
-            NotificationEffect(DonationRefundedDonorMessage)
+            NotificationEffect(DonationActivityRefundedDonorMessage)
         ]
     )
 

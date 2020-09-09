@@ -1,8 +1,11 @@
 from django.utils import timezone
 
 from bluebottle.assignments.effects import SetTimeSpent, ClearTimeSpent
-from bluebottle.assignments.messages import AssignmentExpiredMessage, AssignmentApplicationMessage, \
-    ApplicantAcceptedMessage, ApplicantRejectedMessage, AssignmentCompletedMessage
+from bluebottle.assignments.messages import (
+    AssignmentExpiredMessage, AssignmentApplicationMessage,
+    ApplicantAcceptedMessage, ApplicantRejectedMessage, AssignmentCompletedMessage,
+    AssignmentRejectedMessage, AssignmentCancelledMessage
+)
 from bluebottle.follow.effects import UnFollowActivityEffect, FollowActivityEffect
 from bluebottle.notifications.effects import NotificationEffect
 from django.utils.translation import ugettext_lazy as _
@@ -107,6 +110,28 @@ class AssignmentStateMachine(ActivityStateMachine):
         ]
     )
 
+    reject = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.submitted
+        ],
+        ActivityStateMachine.rejected,
+        name=_('Reject'),
+        description=_(
+            'Reject in case this task doesn\'t fit your program or the rules of the game. '
+            'The activity owner will not be able to edit the task and it won\'t show up on '
+            'the search page in the front end. The task will still be available in the '
+            'back office and appear in your reporting.'
+        ),
+        automatic=False,
+        permission=ActivityStateMachine.is_staff,
+        effects=[
+            RelatedTransitionEffect('organizer', 'fail'),
+            NotificationEffect(AssignmentRejectedMessage),
+        ]
+    )
+
     cancel = Transition(
         [
             full,
@@ -124,7 +149,22 @@ class AssignmentStateMachine(ActivityStateMachine):
         automatic=False,
         effects=[
             RelatedTransitionEffect('organizer', 'fail'),
-            RelatedTransitionEffect('accepted_applicants', 'fail')
+            RelatedTransitionEffect('accepted_applicants', 'fail'),
+            NotificationEffect(AssignmentCancelledMessage),
+        ]
+    )
+
+    expire = Transition(
+        [
+            ActivityStateMachine.submitted,
+            ActivityStateMachine.open,
+            ActivityStateMachine.succeeded
+        ],
+        ActivityStateMachine.cancelled,
+        name=_("Expire"),
+        description=_("The tasks didn\'t have any applicants before the deadline and is cancelled."),
+        effects=[
+            NotificationEffect(AssignmentExpiredMessage),
         ]
     )
 
@@ -376,7 +416,8 @@ class ApplicantStateMachine(ContributionStateMachine):
         conditions=[assignment_is_open],
         permission=ContributionStateMachine.is_user,
         effects=[
-            FollowActivityEffect
+            FollowActivityEffect,
+            NotificationEffect(AssignmentApplicationMessage)
         ]
     )
 

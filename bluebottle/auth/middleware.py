@@ -1,27 +1,24 @@
-from calendar import timegm
-from datetime import datetime, timedelta
 import json
 import logging
+from calendar import timegm
 
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.contrib.auth.middleware import AuthenticationMiddleware
-from django.core.exceptions import ImproperlyConfigured
-from django.core.urlresolvers import reverse
+from datetime import datetime, timedelta
 from django.conf import settings
+from django.contrib.auth.middleware import AuthenticationMiddleware
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.core.exceptions import ImproperlyConfigured, RequestDataTooBig
+from django.core.urlresolvers import reverse
+from django.http.request import RawPostDataException
 from django.shortcuts import render_to_response
 from django.utils import timezone
-from django.http.request import RawPostDataException
-
+from lockdown import settings as lockdown_settings
+from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
+                                 compile_url_exceptions, get_lockdown_form)
 from rest_framework import exceptions
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 
-from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
-                                 compile_url_exceptions, get_lockdown_form)
-
-from lockdown import settings as lockdown_settings
 from bluebottle.utils.utils import get_client_ip
-
 
 LAST_SEEN_DELTA = 10  # in minutes
 
@@ -290,7 +287,7 @@ class LogAuthFailureMiddleWare:
         #           https://github.com/encode/django-rest-framework/issues/2774
         try:
             request.body  # touch the body so that we have access to it in process_response
-        except RawPostDataException:
+        except (RawPostDataException, RequestDataTooBig):
             pass
 
     def process_response(self, request, response):

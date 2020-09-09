@@ -52,6 +52,9 @@ class Slide(PublishableModel):
                 allowed_mimetypes=settings.VIDEO_FILE_ALLOWED_MIME_TYPES
             )
         ],
+        help_text=_('This video will autoplay at the background. '
+                    'Allowed types are mp4, ogg, 3gp, avi, mov and webm. '
+                    'File should be smaller then 10MB.'),
         upload_to='banner_slides/')
     video_url = models.URLField(
         _("Video url"),

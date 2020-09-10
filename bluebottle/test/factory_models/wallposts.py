@@ -1,10 +1,9 @@
-from builtins import object
 import factory
+from builtins import object
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.wallposts.models import (
-    TextWallpost, Reaction, SystemWallpost, MediaWallpost, MediaWallpostPhoto)
+from bluebottle.wallposts.models import TextWallpost, Reaction, SystemWallpost, MediaWallpost, MediaWallpostPhoto
 from .accounts import BlueBottleUserFactory
 
 

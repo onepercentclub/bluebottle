@@ -1,5 +1,7 @@
 from inspect import isclass
 
+from bluebottle.activities.models import Activity
+
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory, ReactionFactory
 from bluebottle.wallposts.models import Wallpost, Reaction
 
@@ -41,11 +43,21 @@ class Command(BaseCommand):
 
     def init_model(self, model):
         initiative = InitiativeFactory.create(
-            owner=self.user, reviewer=self.user, activity_manager=self.user, image=None
+            title='Do Good Initiative',
+            owner=self.user, reviewer=self.user,
+            activity_manager=self.user, image=None
         )
 
         if model == Initiative:
             return initiative
+
+        if model == Activity:
+            assignment = AssignmentFactory.create(
+                initiative=initiative,
+                title='Do Good Task',
+                owner=self.user
+            )
+            return assignment
 
         if model == Assignment:
             assignment = AssignmentFactory.create(
@@ -62,7 +74,8 @@ class Command(BaseCommand):
                 owner=self.user
             )
             applicant = ApplicantFactory.create(
-                activity=assignment, user=self.user
+                activity=assignment,
+                user=self.someone
             )
             return applicant
 
@@ -81,7 +94,8 @@ class Command(BaseCommand):
                 owner=self.user
             )
             participant = ParticipantFactory.create(
-                activity=event, user=self.user
+                activity=event,
+                user=self.someone
             )
             return participant
 
@@ -89,7 +103,7 @@ class Command(BaseCommand):
             funding = FundingFactory.create(
                 initiative=initiative,
                 title='Do Good Funding Campaign',
-                owner=self.user
+                owner=self.someone
             )
             return funding
 
@@ -102,7 +116,7 @@ class Command(BaseCommand):
         if model == Wallpost:
             post = TextWallpostFactory.create(
                 content_object=initiative,
-                author=self.user,
+                author=self.someone,
                 editor=self.user
             )
             return post
@@ -110,12 +124,12 @@ class Command(BaseCommand):
         if model == Reaction:
             post = TextWallpostFactory.create(
                 content_object=initiative,
-                author=self.user,
+                author=self.someone,
                 editor=self.user
             )
             reaction = ReactionFactory.create(
                 wallpost=post,
-                author=self.user
+                author=self.someone
             )
             return reaction
 
@@ -141,10 +155,17 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         client = Client.objects.get(schema_name='goodup_demo')
         with LocalTenant(client):
-            self.user, created = Member.objects.get_or_create(
-                email='admin@example.com',
+            self.user, created = Member.objects.update_or_create(
+                email='bart@example.com',
                 defaults={
-                    'first_name': 'Wanna',
+                    'first_name': 'Bart',
+                    'last_name': 'Do Good'
+                }
+            )
+            self.someone, created = Member.objects.update_or_create(
+                email='anna@example.com',
+                defaults={
+                    'first_name': 'Anna',
                     'last_name': 'Do Good'
                 }
             )

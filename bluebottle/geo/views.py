@@ -14,6 +14,10 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
     serializer_class = CountrySerializer
     queryset = Country.objects
 
+    public_statuses = [
+        'open', 'running', 'full', 'succeeded', 'partially_funded', 'refunded',
+    ]
+
     @method_decorator(cache_page(3600))
     def get(self, request, *args, **kwargs):
         return super(CountryList, self).get(request, *args, **kwargs)
@@ -22,11 +26,12 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
         qs = super(CountryList, self).get_queryset().filter(
             alpha2_code__isnull=False
         )
+
         if 'filter[used]' in self.request.GET:
             return qs.filter(
                 Q(geolocation__initiative__status='approved') |
-                Q(geolocation__event__review_status='approved') |
-                Q(geolocation__assignment__review_status='approved')
+                Q(geolocation__event__status__in=self.public_statuses) |
+                Q(geolocation__assignment__status__in=self.public_statuses)
             ).distinct()
         else:
             return qs
@@ -39,17 +44,6 @@ class CountryDetail(RetrieveAPIView):
     def get_queryset(self):
         qs = super(CountryDetail, self).get_queryset()
         return qs
-
-
-class UsedCountryList(CountryList):
-
-    def get_queryset(self):
-        qs = super(UsedCountryList, self).get_queryset()
-        return qs.filter(
-            Q(geolocation__initiative__status='approved') |
-            Q(geolocation__event__review_status='approved') |
-            Q(geolocation__assignment__review_status='approved')
-        ).distinct()
 
 
 class LocationList(ListAPIView):

@@ -8,6 +8,7 @@ from bluebottle.clients import properties
 from bluebottle.files.validators import validate_video_file_size
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import PublishableModel
+from bluebottle.utils.validators import FileMimetypeValidator
 
 
 def get_languages():
@@ -45,7 +46,15 @@ class Slide(PublishableModel):
     video = models.FileField(
         _("Video"), max_length=255,
         blank=True, null=True,
-        validators=[validate_video_file_size],
+        validators=[
+            validate_video_file_size,
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.VIDEO_FILE_ALLOWED_MIME_TYPES
+            )
+        ],
+        help_text=_('This video will autoplay at the background. '
+                    'Allowed types are mp4, ogg, 3gp, avi, mov and webm. '
+                    'File should be smaller then 10MB.'),
         upload_to='banner_slides/')
     video_url = models.URLField(
         _("Video url"),

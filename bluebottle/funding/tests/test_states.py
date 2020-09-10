@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from datetime import timedelta
 from django.core import mail
 from django.utils.timezone import now
@@ -72,6 +73,14 @@ class FundingStateMachineTests(BluebottleTestCase):
         with self.assertRaisesMessage(TransitionNotPossible, 'Conditions not met for transition'):
             funding.states.submit()
 
+    def test_empty_target(self):
+        funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=None
+        )
+        funding.save()
+        self.assertFalse(funding.states.target_reached())
+
     def test_needs_work(self):
         self.funding.states.submit(save=True)
         self.funding.states.request_changes(save=True)
@@ -79,8 +88,42 @@ class FundingStateMachineTests(BluebottleTestCase):
 
     def test_approve(self):
         self.funding.states.submit()
+        mail.outbox = []
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, 'open')
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            u'Your campaign "{}" is approved and is now open for donations 💸'.format(
+                self.funding.title
+            )
+        )
+        self.assertTrue(
+            u'Congratulations! Your campaign “{}” has been approved.'.format(
+                self.funding.title
+            )
+            in mail.outbox[0].body
+        )
+
+    def test_cancel(self):
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
+        mail.outbox = []
+        self.funding.states.cancel(save=True)
+        self.assertEqual(self.funding.status, 'cancelled')
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            u'Your campaign "{}" has been cancelled'.format(
+                self.funding.title
+            )
+        )
+        self.assertTrue(
+            u'Unfortunately your campaign “{}” has been cancelled.'.format(
+                self.funding.title
+            )
+            in mail.outbox[0].body
+        )
 
     def test_approve_organizer_succeed(self):
         self.funding.states.submit()
@@ -133,10 +176,28 @@ class FundingStateMachineTests(BluebottleTestCase):
     def test_extend(self):
         self._prepare_extend()
         # Changing the deadline to the future should open the campaign again
+        mail.outbox = []
         self.funding.deadline = now() + timedelta(days=7)
         self.funding.save()
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, 'open')
+        self.assertEqual(
+            mail.outbox[0].recipients(),
+            [self.funding.owner.email]
+        )
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            u'Your campaign "{}" is open for new donations 💸'.format(
+                self.funding.title
+            )
+        )
+
+        self.assertTrue(
+            u'The deadline for your campaign “{}” has been extended.'.format(
+                self.funding.title
+            ) in mail.outbox[0].body
+        )
 
     def test_extend_delete_payouts(self):
         self._prepare_extend()
@@ -164,6 +225,49 @@ class FundingStateMachineTests(BluebottleTestCase):
         self._prepare_succeeded()
         self.funding.states.succeed(save=True)
         self.assertEqual(self.funding.status, 'succeeded')
+
+    def test_refund(self):
+        self._prepare_succeeded()
+        self.funding.states.succeed(save=True)
+        mail.outbox = []
+        self.funding.states.refund(save=True)
+        self.assertEqual(self.funding.status, 'refunded')
+
+        donor_mail = [
+            message for message in mail.outbox if
+            self.funding.donations.get().user.email in message.recipients()
+        ][0]
+
+        self.assertEqual(
+            donor_mail.subject,
+            u'Your donation for the campaign "{}" will be refunded'.format(
+                self.funding.title
+            )
+        )
+
+        self.assertTrue(
+            'Unfortunately, the campaign "{}" did not reach its goal'.format(
+                self.funding.title
+            ) in donor_mail.body
+        )
+
+        owner_mail = [
+            message for message in mail.outbox if
+            self.funding.owner.email in message.recipients()
+        ][0]
+
+        self.assertEqual(
+            owner_mail.subject,
+            u'The donations received for your campaign "{}" will be refunded'.format(
+                self.funding.title
+            )
+        )
+
+        self.assertTrue(
+            'All donations received for your campaign "{}" will be refunded to the donors.'.format(
+                self.funding.title
+            ) in owner_mail.body
+        )
 
     def test_succeed_owner_message(self):
         self._prepare_succeeded()
@@ -286,8 +390,28 @@ class DonationStateMachineTests(BluebottleTestCase):
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         self.assertEqual(donation.status, 'succeeded')
+
+        mail.outbox = []
         donation.payment.states.refund(save=True)
         self.assertEqual(donation.status, 'refunded')
+
+        self.assertEqual(
+            mail.outbox[0].recipients(),
+            [donation.user.email]
+        )
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            u'Your donation for the campaign "{}" will be refunded'.format(
+                self.funding.title
+            )
+        )
+
+        self.assertTrue(
+            'You have requested a refund for your donation to the campaign "{}"'.format(
+                self.funding.title
+            ) in mail.outbox[0].body
+        )
 
     def test_refund_payment_request_refund(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))

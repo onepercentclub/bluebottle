@@ -1,0 +1,20 @@
+{% extends "base.mail.html" %}
+{% load money %}
+{% load i18n %}
+
+{% block content %}
+    <p class="donation-intro">
+        {% blocktrans with recipient_name=obj.owner.first_name title=obj.title context 'email' %}
+            Hi {{ recipient_name }},
+            <br><br>
+            Congratulations! Your campaign “{{ title }}” has been approved. This means that your campaign is open for donations.
+            <br><br>
+            Share your campaign to attract donations!
+        {% endblocktrans %}
+    </p>
+{% endblock content %} 
+{% block action %}
+    <a href="{{ obj.get_absolute_url }}" class="action-email">
+       {% trans 'Go to campaign' context 'email' %}
+    </a>
+{% endblock %}`

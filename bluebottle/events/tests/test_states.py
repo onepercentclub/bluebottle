@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bluebottle.clients.utils import LocalTenant
 
 from bluebottle.events.tasks import event_tasks
@@ -65,6 +66,22 @@ class ActivityStateMachineTests(BluebottleTestCase):
         organizer = self.event.contributions.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.failed.value)
+
+    def test_cancel(self):
+        self.event.states.submit(save=True)
+        self.event.states.cancel(save=True)
+
+        self.assertEqual(self.event.status, EventStateMachine.cancelled.value)
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'Your event "{}" has been cancelled'.format(self.event.title)
+        )
+        self.assertTrue(
+            u'Unfortunately your event “{}” has been cancelled.'.format(
+                self.event.title
+            )
+            in mail.outbox[1].body
+        )
 
     def test_restore(self):
         self.event.states.reject(save=True)
@@ -316,6 +333,16 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.passed_event.states.submit(save=True)
         self.passed_event.refresh_from_db()
         self.assertEqual(self.passed_event.status, EventStateMachine.cancelled.value)
+
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'Your event "{}" has been cancelled'.format(self.passed_event.title)
+        )
+        self.assertTrue(
+            u'Unfortunately, nobody joined your event “{}”'.format(self.passed_event.title)
+            in mail.outbox[1].body
+        )
 
     def test_not_succeed_change_start(self):
         self.event.states.submit(save=True)

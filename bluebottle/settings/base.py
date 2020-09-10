@@ -668,7 +668,13 @@ DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', 'image/svg+xml')
+IMAGE_ALLOWED_MIME_TYPES = (
+    'image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'
+)
+VIDEO_FILE_ALLOWED_MIME_TYPES = (
+    'video/ogg', 'video/mp4', 'video/webm', 'video/3gpp',
+    'video/x-msvideo', 'video/quicktime'
+)
 PRIVATE_FILE_ALLOWED_MIME_TYPES = (
     'image/png', 'image/jpeg', 'image/gif', 'image/tiff',
     'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

@@ -131,7 +131,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
 
     def stripe_link(self, obj):
         if properties.LIVE_PAYMENTS_ENABLED:
-            url = 'https://dashboard.stripe.com/test/connect/accounts/{}'.format(obj.account_id)
+            url = 'https://dashboard.stripe.com/connect/accounts/{}'.format(obj.account_id)
         else:
             url = 'https://dashboard.stripe.com/test/connect/accounts/{}'.format(obj.account_id)
         return format_html(

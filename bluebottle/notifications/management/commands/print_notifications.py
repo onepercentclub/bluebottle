@@ -1,16 +1,12 @@
 from inspect import isclass
 
-from bluebottle.activities.models import Activity
-
-from bluebottle.test.factory_models.wallposts import TextWallpostFactory, ReactionFactory
-from bluebottle.wallposts.models import Wallpost, Reaction
-
-from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory
+from bs4 import BeautifulSoup
 from django.core.management.base import BaseCommand
 from django.utils import translation
 from django.utils.module_loading import import_string
 from djmoney.money import Money
 
+from bluebottle.activities.models import Activity
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.clients.models import Client
@@ -19,10 +15,13 @@ from bluebottle.events.models import Event, Participant
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.funding.models import Funding, Donation, PayoutAccount
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import Member
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.test.factory_models.wallposts import TextWallpostFactory, ReactionFactory
+from bluebottle.wallposts.models import Wallpost, Reaction
 
 
 def get_doc(element):
@@ -145,12 +144,20 @@ class Command(BaseCommand):
             )
             return donation
 
-    def clean_mail(self, content):
+    def clean_text(self, content):
         return '\n'.join([
             line.strip() for line
             in content.strip().split('\n')
             if line.strip() and line.strip() not in ['-------------------', '-  -']
         ])
+
+    def clean_html(self, content):
+        soup = BeautifulSoup(content, "html")
+        for elem in soup.find_all(['html', 'body', 'table', 'tbody', 'tr', 'td', 'th']):
+            elem.unwrap()
+        soup.head.extract()
+        soup.contents[0].extract()
+        return self.clean_text(unicode(soup))
 
     def handle(self, *args, **options):
         client = Client.objects.get(schema_name='goodup_demo')
@@ -190,14 +197,16 @@ class Command(BaseCommand):
                       u"<tr><th>Subject</th><td>{}</td></tr>" \
                       u"</table>" \
                       u"<ac:structured-macro ac:name=\"code\"><ac:plain-text-body>" \
-                      u"<![CDATA[{}]]></ac:plain-text-body></ac:structured-macro>"
+                      u"<![CDATA[{}]]></ac:plain-text-body></ac:structured-macro>" \
+                      u"<blockquote>{}</blockquote>"
                 text += str.format(
                     get_doc(message),
                     "{}.{}".format(options["app"], Message.__name__),
                     "{}.{}".format(options["app"], Message.template),
                     get_doc(message.get_recipients),
                     message.get_subject(self.user),
-                    self.clean_mail(message.get_content(self.user))
+                    self.clean_text(message.get_content(self.user, type='txt')),
+                    self.clean_html(message.get_content(self.user, type='html'))
                 )
 
             print(text)

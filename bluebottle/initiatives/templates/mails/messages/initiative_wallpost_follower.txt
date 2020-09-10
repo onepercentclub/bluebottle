@@ -5,7 +5,7 @@
 {% blocktrans with recipient_name=to.first_name author_name=obj.author.first_name text=obj.text|truncatechars:250 context 'email' %}
 Hi {{ recipient_name }},
 
-{{ author_name }} posted an update to {{ title }}:
+{{ author_name }} posted an update to "{{ title }}":
 
 '{{ text }}'
 {% endblocktrans %}

@@ -97,10 +97,9 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
     model = Payout
     readonly_fields = [
-        'payout_link', 'total_amount', 'provider', 'currency',
+        'payout_link', 'total_amount', 'status', 'provider', 'currency',
         'date_approved', 'date_started', 'date_completed'
     ]
-
     fields = readonly_fields
     extra = 0
     can_delete = False
@@ -110,7 +109,7 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
     def payout_link(self, obj):
         url = reverse('admin:funding_payout_change', args=(obj.id, ))
-        return format_html('<a href="{}">{}</a>', url, obj)
+        return format_html(u'<a href="{}">{}</a>', url, obj)
 
 
 class FundingAdminForm(StateMachineModelForm):

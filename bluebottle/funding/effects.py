@@ -171,7 +171,7 @@ class DeleteDocumentEffect(Effect):
 
 
 class SubmitPayoutEffect(Effect):
-    post_save = True
+    post_save = False
     conditions = []
     title = _('Trigger payout')
     template = 'admin/submit_payout_effect.html'

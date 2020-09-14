@@ -543,7 +543,10 @@ class PayoutStateMachine(ModelStateMachine):
         scheduled,
         name=_('Schedule'),
         description=_("Schedule payout. Triggered by payout app."),
-        automatic=True
+        automatic=True,
+        effects=[
+            ClearPayoutDatesEffect
+        ]
     )
 
     start = Transition(
@@ -578,6 +581,15 @@ class PayoutStateMachine(ModelStateMachine):
         effects=[
             SetDateEffect('date_completed')
         ]
+    )
+
+    fail = Transition(
+        AllStates(),
+        failed,
+        name=_('Fail'),
+        description=_("Payout was not successful. "
+                      "Contact support to resolve the issue."),
+        automatic=True,
     )
 
 

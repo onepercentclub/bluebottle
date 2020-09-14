@@ -5,7 +5,6 @@ from django.utils.timezone import get_current_timezone
 from django.utils.translation import ugettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.funding.models import Payout
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.wallposts.models import SystemWallpost
 
@@ -17,6 +16,7 @@ class GeneratePayoutsEffect(Effect):
     template = 'admin/generate_payout_effect.html'
 
     def execute(self, **kwargs):
+        from bluebottle.funding.models import Payout
         Payout.generate(self.instance)
 
     def __unicode__(self):

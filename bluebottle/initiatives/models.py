@@ -271,4 +271,3 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
 
 from bluebottle.initiatives.wallposts import *  # noqa
-from bluebottle.initiatives.states import *  # noqa

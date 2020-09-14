@@ -322,6 +322,7 @@ TENANT_APPS = (
     # FB Auth
     'bluebottle.auth',
 
+    'bluebottle.fsm',
     'django.contrib.admin',
     'django.contrib.sites',
     'django.contrib.admindocs',
@@ -332,7 +333,6 @@ TENANT_APPS = (
     'rest_framework.authtoken',
     'django_elasticsearch_dsl',
 
-    'bluebottle.fsm',
     'bluebottle.looker',
     'bluebottle.exports',
 
@@ -344,8 +344,8 @@ TENANT_APPS = (
     'bluebottle.transitions',
     'bluebottle.files',
     'bluebottle.follow',
-    'bluebottle.initiatives',
     'bluebottle.activities',
+    'bluebottle.initiatives',
     'bluebottle.events',
     'bluebottle.assignments',
     'bluebottle.funding',

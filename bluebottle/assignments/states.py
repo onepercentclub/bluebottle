@@ -1,6 +1,7 @@
 from django.utils import timezone
 
 from bluebottle.assignments.effects import SetTimeSpent, ClearTimeSpent
+from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.messages import (
     AssignmentExpiredMessage, AssignmentApplicationMessage,
     ApplicantAcceptedMessage, ApplicantRejectedMessage, AssignmentCompletedMessage,
@@ -11,13 +12,12 @@ from bluebottle.notifications.effects import NotificationEffect
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
-from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
-from bluebottle.fsm.state import State, Transition, EmptyState
+from bluebottle.fsm.state import State, Transition, EmptyState, register
 
 
+@register(Assignment)
 class AssignmentStateMachine(ActivityStateMachine):
-    model = Assignment
 
     running = State(
         _('running'),
@@ -247,8 +247,8 @@ class AssignmentStateMachine(ActivityStateMachine):
     )
 
 
+@register(Applicant)
 class ApplicantStateMachine(ContributionStateMachine):
-    model = Applicant
 
     accepted = State(
         _('accepted'),

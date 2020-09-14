@@ -215,6 +215,4 @@ class Participant(Contribution):
         return self.user.full_name
 
 
-from bluebottle.events.states import *  # noqa
-from bluebottle.events.triggers import *  # noqa
 from bluebottle.events.periodic_tasks import *  # noqa

@@ -4,12 +4,12 @@ from bluebottle.fsm.effects import Effect
 
 
 class BaseNotificationEffect(Effect):
-    post_save = True
     title = _('Send email')
     template = 'admin/notification_effect.html'
 
-    def execute(self, send_messages=True, **kwargs):
-        if send_messages and self.is_valid:
+    def post_save(self, **kwargs):
+        if self.options.get('send_messages', True) and self.is_valid:
+
             self.message(
                 self.instance,
                 custom_message=self.options.get('message')
@@ -43,7 +43,7 @@ class BaseNotificationEffect(Effect):
     @property
     def is_valid(self):
         return (
-            all([condition(self.instance) for condition in self.conditions]) and
+            all([condition(self) for condition in self.conditions]) and
             self.message(self.instance).get_recipients()
         )
 

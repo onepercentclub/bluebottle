@@ -10,6 +10,7 @@ from django.template.response import TemplateResponse
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.notifications.effects import BaseNotificationEffect
 from bluebottle.utils.forms import TransitionConfirmationForm
@@ -54,18 +55,30 @@ class StateMachineAdminMixin(object):
 
             new_obj = self.save_form(request, form, change=True)
 
-            effects = get_effects(new_obj.all_effects)
-            cancel_link = reverse(
-                'admin:{}_{}_change'.format(
-                    self.model._meta.app_label, self.model._meta.model_name
-                ),
-                args=(object_id, )
-            )
-            action_text = ' and '.join(
-                unicode(trigger.title) for trigger in obj.current_triggers
-            )
+            send_messages = request.POST.get('enable_messages') == 'on'
+            effects = new_obj.execute_triggers(user=request.user, send_messages=send_messages)
+
+            formsets, inline_instances = self._create_formsets(request, new_obj, change=True)
+
+            for formset in formsets:
+                for form in formset:
+                    if isinstance(form.instance, TriggerMixin):
+                        self.save_form(request, form, change=True)
+                        effects += form.instance.execute_triggers(user=request.user, send_messages=send_messages)
 
             if effects:
+                rendered_effects = get_effects(effects)
+
+                cancel_link = reverse(
+                    'admin:{}_{}_change'.format(
+                        self.model._meta.app_label, self.model._meta.model_name
+                    ),
+                    args=(object_id, )
+                )
+                action_text = ' and '.join(
+                    unicode(trigger.title) for trigger in obj._triggers
+                ) or _('perform changes')
+
                 context = dict(
                     obj=obj,
                     title=_('Are you sure'),
@@ -76,9 +89,9 @@ class StateMachineAdminMixin(object):
                     media=self.media,
                     has_notifications=any(
                         isinstance(effect, BaseNotificationEffect)
-                        for effect in new_obj.all_effects
+                        for effect in effects
                     ),
-                    effects=effects
+                    effects=rendered_effects
                 )
 
                 return TemplateResponse(
@@ -91,8 +104,20 @@ class StateMachineAdminMixin(object):
         """
         Given a model instance save it to the database.
         """
-        send_messages = request.POST.get('enable_messages') == 'on'
-        obj.save(send_messages=send_messages)
+        send_messages = request.POST.get('send_messages') == 'on'
+        obj.execute_triggers(user=request.user, send_messages=send_messages)
+        obj.save()
+
+    def save_formset(self, request, form, formset, change):
+        """
+        Given an inline formset save it to the database.
+        """
+        send_messages = request.POST.get('send_messages') == 'on'
+        for form in formset.forms:
+            if isinstance(form.instance, TriggerMixin):
+                form.instance.execute_triggers(user=request.user, send_messages=send_messages)
+
+        formset.save()
 
     def get_transition(self, instance, name, field_name):
         transitions = getattr(instance, field_name).all_transitions
@@ -130,10 +155,11 @@ class StateMachineAdminMixin(object):
             if form.is_valid():
                 send_messages = form.cleaned_data['send_messages']
                 getattr(state_machine, transition_name)(
-                    user=request.user,
+                    user=request.user
                 )
                 try:
-                    instance.save(send_messages=send_messages)
+                    instance.execute_triggers(user=request.user, send_messages=send_messages)
+                    instance.save()
                 except TransitionNotPossible as e:
                     messages.warning(request, 'Effect failed: {}'.format(e))
 
@@ -146,7 +172,8 @@ class StateMachineAdminMixin(object):
                 return HttpResponseRedirect(link)
 
         getattr(state_machine, transition_name)()
-        effects = get_effects(instance._effects)
+        effects = instance.execute_triggers(user=request.user)
+        rendered_effects = get_effects(effects)
         cancel_link = reverse(
             'admin:{}_{}_change'.format(
                 self.model._meta.app_label, self.model._meta.model_name
@@ -168,10 +195,10 @@ class StateMachineAdminMixin(object):
             form=form,
             has_notifications=any(
                 isinstance(effect, BaseNotificationEffect)
-                for effect in instance._effects
+                for effect in effects
             ),
             source=instance.status,
-            effects=effects,
+            effects=rendered_effects,
             target=transition.target.name,
         )
 

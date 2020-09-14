@@ -1,38 +1,41 @@
+
+from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 
 
-class ModelTrigger(object):
+from bluebottle.fsm.state import pre_state_transition
+
+
+class Trigger(object):
     def __init__(self, instance):
         self.instance = instance
 
-    @property
-    def is_valid(self):
-        return False
+    def execute(self, effects, **options):
+        for effect_cls in self.effects:
+            effect = effect_cls(self.instance, **options)
 
-    @property
-    def current_effects(self):
-        for effect_class in self.effects:
-            effect = effect_class(self.instance)
+            if effect.is_valid and effect not in effects:
+                effect.pre_save(effects=effects)
+                if effect.post_save:
+                    self.instance._postponed_effects.insert(0, effect)
+                effects.append(effect)
 
-            if effect.is_valid:
-                yield effect
+        return effects
 
     def __unicode__(self):
         return unicode(_("Model has been changed"))
 
 
-class ModelChangedTrigger(ModelTrigger):
+class ModelChangedTrigger(Trigger):
     field = None
 
-    @property
+    @ property
     def title(self):
         return 'change the {}'.format(self.field)
 
-    @property
-    def is_valid(self):
-        if not self.field:
-            return True
-        return self.instance.field_is_changed(self.field)
+    @ property
+    def changed(self):
+        return self.instance._initial_values.get(self.field) != getattr(self.instance, self.field)
 
     def __unicode__(self):
         if self.field:
@@ -41,25 +44,55 @@ class ModelChangedTrigger(ModelTrigger):
         return unicode(_("Object has been changed"))
 
 
-class ModelDeletedTrigger(ModelTrigger):
+class ModelDeletedTrigger(Trigger):
     def __init__(self, instance):
         self.instance = instance
-
-    @property
-    def is_valid(self):
-        pass
 
     def __unicode__(self):
         return unicode(_("Model has been deleted"))
 
 
+class TransitionTrigger(Trigger):
+    def __init__(self, instance):
+        self.instance = instance
+
+    def __unicode__(self):
+        return unicode(_("Model has changed status"))
+
+    @property
+    def title(self):
+        import ipdb
+        ipdb.set_trace()
+
+
+@ receiver(pre_state_transition)
+def transition_trigger(sender, instance, transition, **kwargs):
+    if issubclass(sender, TriggerMixin) and hasattr(instance, 'triggers'):
+        for trigger in instance.triggers:
+            if issubclass(trigger, TransitionTrigger) and trigger.transition == transition:
+                instance._triggers.append(trigger(instance))
+
+
+def register(model_cls):
+    def _register(trigger):
+        if not hasattr(model_cls, 'triggers'):
+            model_cls.triggers = []
+
+        model_cls.triggers.append(trigger)
+
+        return trigger
+
+    return _register
+
+
 class TriggerMixin(object):
-    triggers = []
     periodic_tasks = []
 
     def __init__(self, *args, **kwargs):
         super(TriggerMixin, self).__init__(*args, **kwargs)
-        self._effects = []
+        self._triggers = []
+        self._postponed_effects = []
+        self._transitions = []
 
         if hasattr(self, '_state_machines'):
             for name, machine_class in self._state_machines.items():
@@ -73,64 +106,54 @@ class TriggerMixin(object):
             if not field.is_relation
         )
 
-    @classmethod
+    @ classmethod
     def get_periodic_tasks(cls):
         result = []
         for task in cls.periodic_tasks:
             result.append(task(cls))
         return result
 
-    @property
-    def current_triggers(self):
-        for trigger in self.triggers:
-            if trigger(self).is_valid:
-                yield trigger(self)
-
-    @property
-    def current_effects(self):
-        for trigger in self.current_triggers:
-            for effect in trigger.current_effects:
-                yield effect
-
-    @property
-    def all_effects(self):
-        result = []
-        for current_effect in self.current_effects:
-            for effect in current_effect.all_effects():
-                if effect not in result:
-                    result.append(effect)
-        return result
-
-    @classmethod
+    @ classmethod
     def from_db(cls, db, field_names, values):
         instance = super(TriggerMixin, cls).from_db(db, field_names, values)
         instance._initial_values = dict(zip(field_names, values))
 
         return instance
 
-    def field_is_changed(self, field):
-        return self._initial_values.get(field) != getattr(self, field)
+    def _check_model_changed_triggers(self):
+        if hasattr(self, 'triggers'):
+            for trigger_cls in self.triggers:
+                if issubclass(trigger_cls, ModelChangedTrigger):
+                    trigger = trigger_cls(self)
+                    if trigger.changed:
+                        self._triggers.append(trigger)
 
-    def save(self, send_messages=True, perform_effects=True, *args, **kwargs):
-        if perform_effects and hasattr(self, '_state_machines'):
+    def execute_triggers(self, effects=None, **options):
+        if hasattr(self, '_state_machines'):
             for machine_name in self._state_machines:
                 machine = getattr(self, machine_name)
                 if not machine.state and machine.initial_transition:
                     machine.initial_transition.execute(machine)
 
-            effects = self._effects + self.all_effects
-        else:
+        self._check_model_changed_triggers()
+
+        if not effects:
             effects = []
 
-        for effect in effects:
-            effect.do(post_save=False, send_messages=send_messages)
+        while self._triggers:
+            trigger = self._triggers.pop()
+            trigger.execute(effects, **options)
+
+        return effects
+
+    def save(self, *args, **kwargs):
+        self.execute_triggers()
 
         super(TriggerMixin, self).save(*args, **kwargs)
 
-        for effect in effects:
-            effect.do(post_save=True, send_messages=send_messages)
-
-        self._effects = []
+        while self._postponed_effects:
+            effect = self._postponed_effects.pop()
+            effect.post_save()
 
     def delete(self, *args, **kwargs):
         for trigger in self.triggers:

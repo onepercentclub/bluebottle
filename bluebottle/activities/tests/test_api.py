@@ -60,6 +60,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         open = EventFactory.create(status='open')
         EventFactory.create(status='submitted')
         EventFactory.create(status='closed')
+        EventFactory.create(status='cancelled')
 
         response = self.client.get(self.url, user=self.owner)
         data = json.loads(response.content)

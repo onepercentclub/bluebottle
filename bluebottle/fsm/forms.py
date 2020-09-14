@@ -17,6 +17,7 @@ class StateWidget(forms.TextInput):
 class StateMachineModelFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
         if 'Meta' in attrs:
+
             for field, machine in attrs['Meta'].model._state_machines.items():
                 attrs[field] = forms.ChoiceField(
                     required=False,

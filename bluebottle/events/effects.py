@@ -5,12 +5,11 @@ from bluebottle.fsm.effects import Effect
 
 class SetTimeSpent(Effect):
     """Set time spent on participants"""
-    post_save = False
     title = _('Reset time spent')
 
     template = 'admin/set_time_spent_effect.html'
 
-    def execute(self, **kwargs):
+    def post_save(self, **kwargs):
         if not self.instance.time_spent:
             self.instance.time_spent = self.instance.activity.duration
 
@@ -30,12 +29,11 @@ class SetTimeSpent(Effect):
 
 class ResetTimeSpent(Effect):
     """Set time spent to 0 if it was not overridden"""
-    post_save = False
     title = _('Reset time spent')
 
     template = 'admin/reset_time_spent_effect.html'
 
-    def execute(self, **kwargs):
+    def post_save(self, **kwargs):
         if self.instance.time_spent == self.instance.activity.duration:
             self.instance.time_spent = 0
 

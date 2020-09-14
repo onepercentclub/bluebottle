@@ -7,10 +7,9 @@ from bluebottle.follow.models import follow, unfollow
 class FollowActivityEffect(Effect):
     "Follow the activity"
 
-    post_save = True
     template = 'admin/follow_effect.html'
 
-    def execute(self, **kwargs):
+    def post_save(self, **kwargs):
         if self.instance.user:
             follow(self.instance.user, self.instance.activity)
 
@@ -27,10 +26,9 @@ class FollowActivityEffect(Effect):
 class UnFollowActivityEffect(Effect):
     "Unfollow the activity"
 
-    post_save = True
     template = 'admin/unfollow_effect.html'
 
-    def execute(self, **kwargs):
+    def post_save(self, **kwargs):
         if self.instance.user:
             unfollow(self.instance.user, self.instance.activity)
 

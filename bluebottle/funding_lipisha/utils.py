@@ -4,7 +4,7 @@ from lipisha import Lipisha, lipisha
 from moneyed import Money
 
 from bluebottle.clients import properties
-from bluebottle.fsm import TransitionNotPossible
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donation
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayment, LipishaBankAccount

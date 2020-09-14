@@ -1,22 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.models import Organizer
-from bluebottle.fsm.effects import Effect, TransitionEffect, RelatedTransitionEffect
-from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition
-
-
-class CreateOrganizer(Effect):
-    "Create an organizer for the activity"
-    post_save = True
-
-    def execute(self, **kwargs):
-        Organizer.objects.get_or_create(
-            activity=self.instance,
-            defaults={'user': self.instance.owner}
-        )
-
-    def __unicode__(self):
-        return unicode(_('Create organizer'))
+from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition, register
 
 
 class ActivityStateMachine(ModelStateMachine):
@@ -105,7 +90,6 @@ class ActivityStateMachine(ModelStateMachine):
         draft,
         name=_('Start'),
         description=_('The acivity will be created.'),
-        effects=[CreateOrganizer]
     )
 
     auto_submit = Transition(
@@ -130,9 +114,6 @@ class ActivityStateMachine(ModelStateMachine):
         automatic=False,
         name=_('Submit'),
         conditions=[is_complete, is_valid, initiative_is_submitted],
-        effects=[
-            TransitionEffect('auto_approve', conditions=[initiative_is_approved])
-        ]
     )
 
     reject = Transition(
@@ -151,9 +132,6 @@ class ActivityStateMachine(ModelStateMachine):
         ),
         automatic=False,
         permission=is_staff,
-        effects=[
-            RelatedTransitionEffect('organizer', 'fail')
-        ]
     )
 
     cancel = Transition(
@@ -165,9 +143,6 @@ class ActivityStateMachine(ModelStateMachine):
         name=_('Cancel'),
         description=_('Cancel the activity.'),
         automatic=False,
-        effects=[
-            RelatedTransitionEffect('organizer', 'fail')
-        ]
     )
 
     restore = Transition(
@@ -184,9 +159,6 @@ class ActivityStateMachine(ModelStateMachine):
         ),
         automatic=False,
         permission=is_staff,
-        effects=[
-            RelatedTransitionEffect('organizer', 'reset')
-        ]
     )
 
     delete = Transition(
@@ -200,9 +172,6 @@ class ActivityStateMachine(ModelStateMachine):
             'Delete the activity if you don\'t want it to appear in your reporting. '
             'The activity will still be available in the back office.'
         ),
-        effects=[
-            RelatedTransitionEffect('organizer', 'fail')
-        ]
     )
 
     succeed = Transition(
@@ -247,9 +216,8 @@ class ContributionStateMachine(ModelStateMachine):
     )
 
 
+@register(Organizer)
 class OrganizerStateMachine(ContributionStateMachine):
-    model = Organizer
-
     succeed = Transition(
         [
             ContributionStateMachine.new,

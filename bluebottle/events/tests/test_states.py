@@ -163,9 +163,10 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         self.event.capacity = self.event.capacity - 1
 
-        effects = list(self.event.current_effects)
+        effects = self.event.execute_triggers()
+
         self.assertEqual(len(effects), 1)
-        self.assertEqual(effects[0].name, 'lock')
+        self.assertEqual(effects[0].transition, self.event.states.transitions['lock'])
 
         self.event.save()
         self.assertEqual(self.event.status, EventStateMachine.full.value)
@@ -176,9 +177,10 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         self.event.capacity = self.event.capacity + 1
 
-        effects = list(self.event.current_effects)
+        effects = self.event.execute_triggers()
+
         self.assertEqual(len(effects), 1)
-        self.assertEqual(effects[0].name, 'reopen')
+        self.assertEqual(effects[0].transition, self.event.states.transitions['reopen'])
 
         self.event.save()
         self.assertEqual(self.event.status, EventStateMachine.open.value)
@@ -262,7 +264,8 @@ class ActivityStateMachineTests(BluebottleTestCase):
     def test_mark_absent(self):
         self.passed_event.states.submit(save=True)
         participant = ParticipantFactory.create(activity=self.passed_event)
-        participant.states.mark_absent(user=self.passed_event.owner, save=True)
+        participant.states.mark_absent(user=self.passed_event.owner)
+        participant.save()
 
         self.assertEqual(participant.status, ParticipantStateMachine.no_show.value)
         self.passed_event.refresh_from_db()
@@ -323,7 +326,8 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
     def test_succeed_when_passed(self):
         self.passed_event.states.submit(save=True)
-        ParticipantFactory.create(activity=self.passed_event)
+
+        participant = ParticipantFactory.create(activity=self.passed_event)
         self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
 
         for participant in self.passed_event.contributions.instance_of(Participant):
@@ -462,7 +466,6 @@ class ParticipantStateMachineTests(BluebottleTestCase):
         self.assertTrue(
             self.event.followers.filter(user=self.participant.user).exists()
         )
-        print [m.subject for m in self.messages(self.participant.user)]
         self.assertEqual(
             len(self.messages(self.participant.user)), 2
         )

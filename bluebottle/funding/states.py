@@ -580,6 +580,15 @@ class PayoutStateMachine(ModelStateMachine):
         ]
     )
 
+    fail = Transition(
+        AllStates(),
+        failed,
+        name=_('Fail'),
+        description=_("Payout was not successful. "
+                      "Contact support to resolve the issue."),
+        automatic=True,
+    )
+
 
 class PayoutAccountStateMachine(ModelStateMachine):
     new = State(

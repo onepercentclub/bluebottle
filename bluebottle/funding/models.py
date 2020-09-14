@@ -21,7 +21,6 @@ from tenant_schemas.postgresql_backend.base import FakeTenant
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
 from bluebottle.files.fields import ImageField, PrivateDocumentField
-from bluebottle.fsm import FSMField
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
@@ -423,9 +422,7 @@ class Payout(TriggerMixin, models.Model):
     provider = models.CharField(max_length=100)
     currency = models.CharField(max_length=5)
 
-    status = FSMField(
-        default='new',
-    )
+    status = models.CharField(max_length=40)
 
     date_approved = models.DateTimeField(_('approved'), null=True, blank=True)
     date_started = models.DateTimeField(_('started'), null=True, blank=True)
@@ -473,7 +470,7 @@ class Payout(TriggerMixin, models.Model):
         verbose_name_plural = _('payouts')
 
     def __unicode__(self):
-        return '{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
+        return u'{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
 
 
 class Donation(Contribution):

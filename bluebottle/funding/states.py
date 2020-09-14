@@ -543,7 +543,10 @@ class PayoutStateMachine(ModelStateMachine):
         scheduled,
         name=_('Schedule'),
         description=_("Schedule payout. Triggered by payout app."),
-        automatic=True
+        automatic=True,
+        effects=[
+            ClearPayoutDatesEffect
+        ]
     )
 
     start = Transition(

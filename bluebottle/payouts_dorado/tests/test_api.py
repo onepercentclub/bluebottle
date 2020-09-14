@@ -170,7 +170,7 @@ class TestPayoutApi(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.payout.refresh_from_db()
         self.assertEqual(self.payout.status, 'scheduled')
-        self.assertIsNone(self.payout.campaign_paid_out)
+        self.assertIsNone(self.payout.date_completed)
 
 
 MERCHANT_ACCOUNTS = [

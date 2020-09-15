@@ -238,7 +238,6 @@ def get_public_properties(request):
             'siteLinks': get_user_site_links(request.user),
             'platform': {
                 'content': get_platform_settings('cms.SitePlatformSettings'),
-                'projects': get_platform_settings('projects.ProjectPlatformSettings'),
                 'initiatives': get_platform_settings('initiatives.InitiativePlatformSettings'),
                 'funding': get_platform_settings('funding.FundingPlatformSettings'),
                 'notifications': get_platform_settings('notifications.NotificationPlatformSettings'),

@@ -213,7 +213,7 @@ class BaseContributionSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
-    permissions = ResourcePermissionField('project_detail', view_args=('pk',))
+    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
 
     included_serializers = {

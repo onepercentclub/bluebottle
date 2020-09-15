@@ -14,51 +14,6 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
-class ProjectPlatformSettingsTestCase(BluebottleTestCase):
-    """
-    Integration tests for the ProjectPlatformSettings API.
-    """
-    def test_member_platform_settings(self):
-        MemberPlatformSettings.objects.create(
-            require_consent=True,
-            consent_link='http://example.com',
-            login_methods=['sso'],
-            closed=True,
-            confirm_signup=True,
-            email_domain='example.com'
-        )
-
-        response = self.client.get(reverse('settings'))
-        self.assertEqual(response.data['platform']['members']['require_consent'], True)
-        self.assertEqual(
-            response.data['platform']['members']['consent_link'],
-            'http://example.com'
-        )
-        self.assertEqual(
-            response.data['platform']['members']['require_consent'], True
-        )
-        self.assertEqual(
-            response.data['platform']['members']['closed'], True
-        )
-        self.assertEqual(
-            response.data['platform']['members']['confirm_signup'], True
-        )
-        self.assertEqual(
-            response.data['platform']['members']['email_domain'], 'example.com'
-        )
-        self.assertEqual(
-            response.data['platform']['members']['login_methods'], ['sso']
-        )
-
-    def test_member_platform_settings_default(self):
-        response = self.client.get(reverse('settings'))
-        self.assertEqual(response.data['platform']['members']['require_consent'], False)
-        self.assertEqual(
-            response.data['platform']['members']['consent_link'],
-            '/pages/terms-and-conditions'
-        )
-
-
 class LoginTestCase(BluebottleTestCase):
     """
     Integration tests for the SignUp token api endpoint.

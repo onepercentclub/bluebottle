@@ -136,8 +136,8 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertTrue('Hi Bill,' in mail.outbox[1].body)
 
         # Donation amount should appear in both emails
-        self.assertTrue(u'€ 50' in mail.outbox[0].body)
-        self.assertTrue(u'€ 50' in mail.outbox[1].body)
+        self.assertTrue(u'50.00 €' in mail.outbox[0].body)
+        self.assertTrue(u'50.00 €' in mail.outbox[1].body)
 
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()

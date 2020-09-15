@@ -15,7 +15,6 @@ from bluebottle.events.models import Event, Participant
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.funding.models import Donation, Funding
 from bluebottle.funding_pledge.models import PledgePayment
-from bluebottle.votes.models import Vote
 
 
 class Statistics(object):
@@ -196,11 +195,6 @@ class Statistics(object):
         ).aggregate(total_time_spent=Sum('time_spent'))['total_time_spent'] or 0
 
         return participants + applicants
-
-    @property
-    @memoize(timeout=timeout)
-    def votes_cast(self):
-        return len(Vote.objects.filter(self.date_filter()))
 
     @property
     @memoize(timeout=timeout)

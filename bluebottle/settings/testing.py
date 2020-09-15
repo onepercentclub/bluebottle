@@ -3,7 +3,6 @@
 SECRET_KEY = '1, 2, this is just a test!'
 
 from .base import *
-from bluebottle.payments_docdata.settings import *
 
 import warnings
 import logging
@@ -69,9 +68,38 @@ TENANT_APPS += (
     'bluebottle.payments_mock',
 )
 
-from bluebottle.payments_mock.settings import MOCK_PAYMENT_METHODS
+PAYMENT_METHODS = (
+    {
+        'provider': 'mock',
+        'id': 'mock-paypal',
+        'profile': 'paypal',
+        'name': 'MockPal',
+        'currencies': {
+            'EUR': {'min_amount': 5, 'max_amount': 100}
+        }
+    },
+    {
+        'provider': 'mock',
+        'id': 'mock-ideal',
+        'profile': 'ideal',
+        'name': 'MockDeal',
+        'restricted_countries': ('NL',),
+        'currencies': {
+            'EUR': {'min_amount': 5},
+            'USD': {'min_amount': 5},
+        }
+    },
+    {
+        'provider': 'mock',
+        'id': 'mock-creditcard',
+        'profile': 'creditcard',
+        'name': 'MockCard',
+        'currencies': {
+            'USD': {'min_amount': 5},
+        }
+    }
+)
 
-PAYMENT_METHODS = MOCK_PAYMENT_METHODS
 MINIMAL_PAYOUT_AMOUNT = 10
 DOCDATA_FEES = {
     'transaction': 0.15,

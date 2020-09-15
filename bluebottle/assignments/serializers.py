@@ -49,7 +49,7 @@ class AssignmentListSerializer(BaseActivityListSerializer):
     included_serializers = dict(
         BaseActivityListSerializer.included_serializers,
         **{
-            'expertise': 'bluebottle.tasks.serializers.SkillSerializer',
+            'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )
@@ -100,7 +100,7 @@ class AssignmentSerializer(BaseActivitySerializer):
     included_serializers = dict(
         BaseActivitySerializer.included_serializers,
         **{
-            'expertise': 'bluebottle.tasks.serializers.SkillSerializer',
+            'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'contributions': 'bluebottle.assignments.serializers.ApplicantSerializer',
         }

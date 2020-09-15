@@ -175,14 +175,12 @@ class UserPermissionsSerializer(serializers.Serializer):
     def get_attribute(self, obj):
         return obj
 
-    project_list = PermissionField('project_list')
-    project_manage_list = PermissionField('project_manage_list')
+    project_list = PermissionField('initiative-list')
     homepage = PermissionField('homepage', view_args=('primary_language', ))
 
     class Meta:
         fields = [
             'project_list',
-            'project_manage_list',
             'homepage'
         ]
 

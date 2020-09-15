@@ -497,10 +497,6 @@ LOGGING = {
             'level': 'INFO',
             'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
         },
-        'payment_logs': {
-            'level': 'INFO',
-            'class': 'bluebottle.payments_logger.handlers.PaymentLogHandler',
-        },
         'json': {
             'level': 'INFO',
             'class': 'logging.handlers.TimedRotatingFileHandler',

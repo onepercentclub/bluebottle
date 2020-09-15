@@ -8,11 +8,9 @@ from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ContentTextField, PhotoSerializer)
 from bluebottle.events.models import Event
 from bluebottle.funding.models import Funding, Donation
-from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.projects.models import Project
-from bluebottle.tasks.models import Task
 from bluebottle.utils.serializers import MoneySerializer
 
 from .models import Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, Reaction
@@ -42,12 +40,8 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
         return ContentType.objects
 
     def to_internal_value(self, data):
-        if data == 'task':
-            data = ContentType.objects.get_for_model(Task)
         if data == 'project':
             data = ContentType.objects.get_for_model(Project)
-        if data == 'fundraiser':
-            data = ContentType.objects.get_for_model(Fundraiser)
         if data == 'initiative':
             data = ContentType.objects.get_for_model(Initiative)
         if data == 'event':

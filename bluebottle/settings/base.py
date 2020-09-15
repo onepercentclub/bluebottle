@@ -2,7 +2,6 @@ import datetime
 import os
 from collections import OrderedDict
 
-from .payments import *  # noqa
 from .admin_dashboard import *  # noqa
 from django.utils.translation import ugettext_lazy as _
 
@@ -403,7 +402,6 @@ TENANT_APPS = (
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
     'bluebottle.bb_projects',
-    'bluebottle.bb_tasks',
     'bluebottle.bb_fundraisers',
     'bluebottle.bb_orders',
     'bluebottle.bb_payouts',

@@ -30,7 +30,6 @@ from bluebottle.bb_projects.models import (
 from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.funding.models import PaymentProvider
-from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import LegacyMoneyField as MoneyField
 from bluebottle.utils.managers import UpdateSignalsQuerySet
@@ -427,22 +426,6 @@ class Project(BaseProject, PreviousStatusMixin):
         return self.vote_set.count()
 
     @property
-    def task_count(self):
-        return self.task_set.exclude(status=Task.TaskStatuses.closed).count()
-
-    @property
-    def realized_task_count(self):
-        return self.task_set.filter(status=Task.TaskStatuses.realized).count()
-
-    @property
-    def open_task_count(self):
-        return self.task_set.filter(status=Task.TaskStatuses.open).count()
-
-    @property
-    def full_task_count(self):
-        return self.task_set.filter(status=Task.TaskStatuses.full).count()
-
-    @property
     def from_suggestion(self):
         return len(self.suggestions.all()) > 0
 
@@ -506,12 +489,6 @@ class Project(BaseProject, PreviousStatusMixin):
             filter(anonymous=False). \
             filter(order__user__isnull=False). \
             order_by('order__user', 'name', '-created').distinct('order__user', 'name')[:limit]
-
-    @property
-    def task_members(self, limit=20):
-        return TaskMember.objects. \
-            filter(task__project=self, status__in=['accepted', 'realized']). \
-            order_by('member', '-created').distinct('member')[:limit]
 
     @property
     def posters(self, limit=20):
@@ -592,11 +569,6 @@ class Project(BaseProject, PreviousStatusMixin):
                                                                    'closed'):
             bb_track("Project Completed", data)
 
-    def check_task_status(self):
-        if (not self.is_funding and all([task.status == Task.TaskStatuses.realized for task in self.task_set.all()])):
-            self.status = ProjectPhase.objects.get(slug='done-complete')
-            self.save()
-
     def update_payout_approval(self):
         if self.is_funding \
                 and self.status.slug in ["done-complete", "done-incomplete"] \
@@ -607,25 +579,6 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.status.slug not in ["done-complete", "done-incomplete"] \
                 and self.payout_status == 'needs_approval':
             self.payout_status = None
-
-    def update_status_after_deadline(self):
-        if self.status.slug == 'campaign':
-            if self.is_funding:
-                if self.amount_donated + self.amount_extra >= self.amount_asked:
-                    self.status = ProjectPhase.objects.get(slug="done-complete")
-                elif self.amount_donated.amount <= 20 or not self.campaign_started:
-                    self.status = ProjectPhase.objects.get(slug="closed")
-                else:
-                    self.status = ProjectPhase.objects.get(slug="done-incomplete")
-                self.update_payout_approval()
-            else:
-                if self.task_set.filter(
-                        status__in=[Task.TaskStatuses.in_progress,
-                                    Task.TaskStatuses.open,
-                                    Task.TaskStatuses.closed]).count() > 0:
-                    self.status = ProjectPhase.objects.get(slug="done-incomplete")
-                else:
-                    self.status = ProjectPhase.objects.get(slug="done-complete")
 
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."

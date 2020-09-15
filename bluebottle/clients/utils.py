@@ -20,7 +20,6 @@ from bluebottle.clients import properties
 from bluebottle.funding.utils import get_currency_settings
 from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
 from bluebottle.funding_stripe.utils import get_stripe_settings
-from bluebottle.payouts.utils import get_payout_settings
 
 logger = logging.getLogger(__name__)
 
@@ -238,7 +237,6 @@ def get_public_properties(request):
             'languageCode': get_language(),
             'siteLinks': get_user_site_links(request.user),
             'platform': {
-                'payouts': get_payout_settings(),
                 'content': get_platform_settings('cms.SitePlatformSettings'),
                 'projects': get_platform_settings('projects.ProjectPlatformSettings'),
                 'initiatives': get_platform_settings('initiatives.InitiativePlatformSettings'),

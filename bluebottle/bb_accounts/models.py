@@ -20,11 +20,8 @@ from rest_framework_jwt.settings import api_settings
 from bluebottle.bb_accounts.utils import valid_email
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.clients import properties
-from bluebottle.donations.models import Donation
 from bluebottle.members.tokens import login_token_generator
-from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.utils import StatusDefinition
 
 
 # TODO: Make this generic for all user file uploads.
@@ -313,33 +310,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         if not self.disable_token:
             self.reset_disable_token()
         return self.disable_token
-
-    @property
-    def task_count(self):
-        """
-        Returns the number of tasks a user is the author of  and / or is a
-        task member in
-        """
-        task_count = Task.objects.filter(author=self).count()
-        taskmember_count = TaskMember.objects.filter(member=self).count()
-
-        return task_count + taskmember_count
-
-    @property
-    def tasks_performed(self):
-        """ Returns the number of tasks that the user participated in."""
-        return TaskMember.objects.filter(
-            member=self, status='realized').count()
-
-    def get_donations_qs(self):
-        qs = Donation.objects.filter(order__user=self)
-        return qs.filter(order__status__in=[StatusDefinition.PENDING,
-                                            StatusDefinition.SUCCESS])
-
-    @property
-    def donation_count(self):
-        """ Returns the number of donations a user has made """
-        return self.get_donations_qs().count()
 
     @cached_property
     def funding(self):

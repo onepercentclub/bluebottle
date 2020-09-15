@@ -9,8 +9,6 @@ from parler.models import TranslatableModel, TranslatedFields
 from bluebottle.activities.models import Activity
 from bluebottle.geo.models import Location
 from bluebottle.projects.models import Project
-from bluebottle.surveys.models import Survey
-from bluebottle.tasks.models import Task
 from bluebottle.utils.fields import ImageField
 from bluebottle.categories.models import Category
 from bluebottle.utils.models import BasePlatformSettings
@@ -30,8 +28,6 @@ class ResultPage(TranslatableModel):
         'ActivitiesBlockPlugin',
         'ShareResultsBlockPlugin',
         'StatsBlockPlugin',
-        'SurveyBlockPlugin',
-        'TasksBlockPlugin',
         'SupporterTotalBlockPlugin',
     ])
 
@@ -238,18 +234,6 @@ class HomepageStatisticsContent(TitledContent):
         return unicode(self.title)
 
 
-class SurveyContent(TitledContent):
-    type = 'survey'
-    preview_template = 'admin/cms/preview/results.html'
-    survey = models.ForeignKey(Survey, null=True)
-
-    class Meta:
-        verbose_name = _('Platform Results')
-
-    def __unicode__(self):
-        return unicode(self.survey)
-
-
 class ActivitiesContent(TitledContent):
     type = 'activities'
     action_text = models.CharField(max_length=80,
@@ -328,21 +312,6 @@ class ShareResultsContent(TitledContent):
 
     def __unicode__(self):
         return 'Share results block'
-
-
-class TasksContent(TitledContent):
-    type = 'tasks'
-    preview_template = 'admin/cms/preview/tasks.html'
-    action_text = models.CharField(max_length=40, blank=True, null=True)
-    action_link = models.CharField(max_length=100, blank=True, null=True)
-
-    tasks = models.ManyToManyField(Task, db_table='cms_taskscontent_tasks')
-
-    class Meta:
-        verbose_name = _('Tasks')
-
-    def __unicode__(self):
-        return 'Tasks'
 
 
 class ProjectsMapContent(TitledContent):

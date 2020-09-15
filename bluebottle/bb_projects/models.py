@@ -10,7 +10,6 @@ from bluebottle.utils.fields import LegacyMoneyField as MoneyField
 from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 
-from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.models import SortableTranslatableModel
 from bluebottle.utils.utils import StatusDefinition
 
@@ -285,14 +284,6 @@ class BaseProject(models.Model):
                                StatusDefinition.PENDING,
                                StatusDefinition.SUCCESS]
         ).distinct('order__user').count()
-
-    @cached_property
-    def sourcing(self):
-        taskmembers = TaskMember.objects.filter(
-            task__project=self,
-            status__in=['applied', 'accepted', 'realized']
-        ).distinct('member')
-        return taskmembers.count()
 
     @property
     def supporters(self):

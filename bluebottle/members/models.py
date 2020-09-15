@@ -4,7 +4,6 @@ from django.db.models import Sum
 from django.contrib.contenttypes.fields import GenericRelation
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
-from django.utils.functional import cached_property
 from django.core.exceptions import ObjectDoesNotExist
 
 from multiselectfield import MultiSelectField
@@ -12,8 +11,6 @@ from multiselectfield import MultiSelectField
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.geo.models import Place
 from bluebottle.projects.models import Project
-from bluebottle.fundraisers.models import Fundraiser
-from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import StatusDefinition
 
@@ -172,10 +169,6 @@ class Member(BlueBottleBaseUser):
             else:
                 return obj.updated
 
-    def get_tasks_qs(self):
-        return TaskMember.objects.filter(
-            member=self, status__in=['applied', 'accepted', 'realized'])
-
     @property
     def time_spent(self):
         """ Returns the number of donations a user has made """
@@ -185,14 +178,6 @@ class Member(BlueBottleBaseUser):
     @property
     def is_volunteer(self):
         return self.time_spent > 0
-
-    @cached_property
-    def sourcing(self):
-        return self.get_tasks_qs().distinct('task__project').count()
-
-    @property
-    def fundraiser_count(self):
-        return Fundraiser.objects.filter(owner=self).count()
 
     @property
     def project_count(self):

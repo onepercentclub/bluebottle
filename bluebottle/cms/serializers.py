@@ -1,6 +1,5 @@
 from bluebottle.activities.models import Activity
 from bluebottle.activities.serializers import ActivityListSerializer
-from bluebottle.tasks.serializers import TaskPreviewSerializer
 from django.db import connection
 from django.db.models import Sum
 
@@ -23,9 +22,9 @@ from rest_framework import serializers
 
 from bluebottle.categories.serializers import CategorySerializer
 from bluebottle.cms.models import (
-    Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
+    Stat, StatsContent, ResultPage, HomePage, QuotesContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
+    SupporterTotalContent, CategoriesContent, StepsContent, LocationsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, WelcomeContent, HomepageStatisticsContent,
     ActivitiesContent)
@@ -33,7 +32,6 @@ from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.slides.models import Slide
 from bluebottle.statistics.models import BaseStatistic
-from bluebottle.surveys.serializers import QuestionSerializer
 from bluebottle.utils.fields import SafeField
 
 
@@ -180,19 +178,6 @@ class QuotesContentSerializer(serializers.ModelSerializer):
         fields = ('id', 'quotes', 'type', 'title', 'sub_title')
 
 
-class SurveyContentSerializer(serializers.ModelSerializer):
-    answers = QuestionSerializer(many=True, source='survey.visible_questions')
-    response_count = serializers.SerializerMethodField()
-
-    def get_response_count(self, obj):
-        return obj.survey.response_set.count()
-
-    class Meta:
-        model = SurveyContent
-        fields = ('id', 'type', 'response_count',
-                  'answers', 'title', 'sub_title')
-
-
 class ProjectImageSerializer(serializers.ModelSerializer):
     photo = ImageSerializer(source='image')
 
@@ -229,7 +214,7 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
 
 class ProjectsMapContentSerializer(serializers.ModelSerializer):
     def __repr__(self):
-        if 'start_date' in self.context and 'end_date'in self.context:
+        if 'start_date' in self.context and 'end_date' in self.context:
             start = self.context['start_date'].strftime(
                 '%s') if self.context['start_date'] else 'none'
             end = self.context['end_date'].strftime(
@@ -286,15 +271,6 @@ class ActivitiesContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivitiesContent
         fields = ('id', 'type', 'title', 'sub_title', 'activities',
-                  'action_text', 'action_link')
-
-
-class TasksContentSerializer(serializers.ModelSerializer):
-    tasks = TaskPreviewSerializer(many=True)
-
-    class Meta:
-        model = TasksContent
-        fields = ('id', 'type', 'title', 'sub_title', 'tasks',
                   'action_text', 'action_link')
 
 
@@ -537,8 +513,6 @@ class BlockSerializer(serializers.Serializer):
             serializer = QuotesContentSerializer
         elif isinstance(obj, ProjectImagesContent):
             serializer = ProjectImagesContentSerializer
-        elif isinstance(obj, SurveyContent):
-            serializer = SurveyContentSerializer
         elif isinstance(obj, ProjectsContent):
             serializer = ProjectsContentSerializer
         elif isinstance(obj, ShareResultsContent):
@@ -547,8 +521,6 @@ class BlockSerializer(serializers.Serializer):
             serializer = ProjectsMapContentSerializer
         elif isinstance(obj, SupporterTotalContent):
             serializer = SupporterTotalContentSerializer
-        elif isinstance(obj, TasksContent):
-            serializer = TasksContentSerializer
         elif isinstance(obj, CategoriesContent):
             serializer = CategoriesContentSerializer
         elif isinstance(obj, SlidesContent):

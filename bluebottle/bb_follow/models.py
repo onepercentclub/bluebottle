@@ -9,12 +9,9 @@ from django.utils import translation
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_projects.models import BaseProject
-from bluebottle.bb_fundraisers.models import BaseFundraiser
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
-from bluebottle.orders.models import Order
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.votes.models import Vote
 
 
@@ -74,76 +71,7 @@ def create_follow(sender, instance, created, **kwargs):
             Users do not follow their own project or task.
 
     """
-
-    # A user does a donation
-    if isinstance(instance, Order):
-        # Create a Follow to the specific Project or Task if a donation was
-        # made
-        if instance.status not in ['success', 'pending']:
-            return
-
-        user = instance.user
-
-        if not instance.donations.first():
-            return
-
-        followed_object = instance.donations.first().fundraiser or instance.donations.first().project
-
-        if not user or not followed_object:
-            return
-
-        # A Follow object should link the project to the user, not the
-        # donation and the user
-        if user != followed_object.owner:
-            _create_follow_object(followed_object, user)
-
-    # A user applies for a task
-    elif isinstance(instance, TaskMember):
-        # Create a Follow to the specific Task if a user applies for the task
-        if instance.status not in ['accepted', 'realized']:
-            return
-
-        user = instance.member
-        followed_object = instance.task
-
-        if not user or not followed_object:
-            return
-
-        if user != followed_object.author:
-            _create_follow_object(followed_object, user)
-
-        # Also follow the project
-        followed_object = followed_object.project
-
-        if user != followed_object.owner:
-            _create_follow_object(followed_object, user)
-
-    # A user creates a task for a project
-    elif isinstance(instance, Task):
-        # Create a Follow to the specific Task if a task author is not the
-        # owner of the task
-        user = instance.author
-        followed_object = instance.project
-
-        if not user or not followed_object:
-            return
-
-        if user not in [followed_object.owner, followed_object.task_manager]:
-            _create_follow_object(followed_object, user)
-
-    # A user creates a fundraiser for a project
-    elif isinstance(instance, BaseFundraiser):
-        # Create a Follow to the specific project
-        user = instance.owner
-        followed_object = instance.project
-
-        if not user or not followed_object:
-            return
-
-        if user != followed_object.owner:
-            _create_follow_object(followed_object, user)
-
-    elif isinstance(instance, Vote):
+    if isinstance(instance, Vote):
         user = instance.voter
         followed_object = instance.project
 
@@ -190,28 +118,6 @@ def email_followers(sender, instance, created, **kwargs):
                 [mailers.add(follower.user) for follower in followers]
                 follow_object = _('project')
                 link = '/projects/{0}'.format(instance.content_object.slug)
-
-            if isinstance(instance.content_object, Task):
-                # Send update to all task members and to people who posted to
-                # the wall --> Follower
-                followers = Follow.objects.filter(
-                    content_type=content_type,
-                    object_id=instance.content_object.id).distinct().exclude(
-                    user=instance.author)
-                [mailers.add(follower.user) for follower in followers]
-                follow_object = _('task')
-                link = '/tasks/{0}'.format(instance.content_object.id)
-
-            if isinstance(instance.content_object, BaseFundraiser):
-                # Send update to all people who donated or posted to the wall
-                # --> Followers
-                followers = Follow.objects.filter(
-                    content_type=content_type,
-                    object_id=instance.content_object.id).distinct().exclude(
-                    user=instance.author)
-                [mailers.add(follower.user) for follower in followers]
-                follow_object = _('fundraiser')
-                link = '/fundraisers/{0}'.format(instance.content_object.id)
 
             wallpost_text = instance.text
 

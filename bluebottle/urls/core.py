@@ -18,8 +18,6 @@ urlpatterns = [
         include('bluebottle.redirects.urls.api')),
     url(r'^api/users/',
         include('bluebottle.bb_accounts.urls.api')),
-    url(r'^api/bb_projects/',
-        include('bluebottle.bb_projects.urls.api')),
     url(r'^api/categories/',
         include('bluebottle.categories.urls.api')),
     url(r'^api/geo/',
@@ -78,12 +76,6 @@ urlpatterns = [
     url(r'^api/files/',
         include('bluebottle.files.urls.api')),
 
-    url(r'^api/suggestions/',
-        include('bluebottle.suggestions.urls.api')),
-
-    url(r'^api/votes/',
-        include('bluebottle.votes.urls.api')),
-
     url(r'^api/organizations',
         include('bluebottle.organizations.urls.api')),
 
@@ -106,8 +98,6 @@ urlpatterns = [
 
     url(r'^login-with/(?P<user_id>[0-9]+)/(?P<token>[0-9A-Za-z:\-_]{1,200})',
         LoginWithView.as_view(), name='login-with'),
-
-    url(r'^downloads/', include('bluebottle.projects.urls.media')),
 ]
 
 

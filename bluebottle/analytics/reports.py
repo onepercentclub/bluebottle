@@ -1,16 +1,14 @@
-import time
-import xlsxwriter
+import StringIO
 import calendar
 import datetime
-import StringIO
-import operator
 import logging
+import operator
+import time
 
+import xlsxwriter
 from django.db import connection
-from django.utils import timezone
 
 from bluebottle.analytics.models import get_report_model, get_raw_report_model
-from bluebottle.projects.models import Project
 
 logger = logging.getLogger(__name__)
 
@@ -554,13 +552,6 @@ Note
         self.define_styles()
         self.add_definition_sheet()
 
-        genesis = Project.objects.order_by('created')[0].created.year
-        year = timezone.now().year
-
-        while year >= genesis:
-            self.add_year_totals_sheet(year)
-            self.add_year_totals_sheet(year, cumulative=True)
-            year -= 1
         self.add_project_sheet()
         self.add_task_sheet()
         self.add_taskmember_sheet()

@@ -1,37 +1,31 @@
-from bluebottle.activities.models import Activity
-from bluebottle.activities.serializers import ActivityListSerializer
 from django.db import connection
 from django.db.models import Sum
-
+from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
-from fluent_contents.plugins.oembeditem.models import OEmbedItem
+from rest_framework import serializers
 
+from bluebottle.activities.models import Activity
+from bluebottle.activities.serializers import ActivityListSerializer
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField
 )
+from bluebottle.categories.serializers import CategorySerializer
+from bluebottle.cms.models import (
+    Stat, StatsContent, ResultPage, HomePage, QuotesContent, Quote,
+    ShareResultsContent, SupporterTotalContent, CategoriesContent, StepsContent, LocationsContent,
+    SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
+    SitePlatformSettings, WelcomeContent, HomepageStatisticsContent,
+    ActivitiesContent)
 from bluebottle.contentplugins.models import PictureItem
+from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.news.models import NewsItem
 from bluebottle.pages.models import Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem, ImageTextRoundItem
-from bluebottle.projects.models import Project
-from bluebottle.statistics.statistics import Statistics
-
-from rest_framework import serializers
-
-from bluebottle.categories.serializers import CategorySerializer
-from bluebottle.cms.models import (
-    Stat, StatsContent, ResultPage, HomePage, QuotesContent, Quote,
-    ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent, CategoriesContent, StepsContent, LocationsContent,
-    SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
-    SitePlatformSettings, WelcomeContent, HomepageStatisticsContent,
-    ActivitiesContent)
-from bluebottle.geo.serializers import LocationSerializer
-from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.slides.models import Slide
 from bluebottle.statistics.models import BaseStatistic
+from bluebottle.statistics.statistics import Statistics
 from bluebottle.utils.fields import SafeField
 
 
@@ -176,76 +170,6 @@ class QuotesContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuotesContent
         fields = ('id', 'quotes', 'type', 'title', 'sub_title')
-
-
-class ProjectImageSerializer(serializers.ModelSerializer):
-    photo = ImageSerializer(source='image')
-
-    class Meta:
-        model = Project
-        fields = ('id', 'photo', 'title', 'slug')
-
-
-class ProjectImagesContentSerializer(serializers.ModelSerializer):
-    images = serializers.SerializerMethodField()
-
-    def get_images(self, obj):
-        projects = Project.objects.filter(
-            status__slug__in=['done-complete', 'done-incomplete']
-        ).order_by('?')
-
-        if 'start_date' in self.context:
-            projects = projects.filter(
-                campaign_ended__gte=self.context['start_date']
-            )
-
-        if 'end_date' in self.context:
-            projects = projects.filter(
-                campaign_ended__lte=self.context['end_date']
-            )
-
-            return ProjectImageSerializer(projects, many=True).to_representation(projects[:8])
-
-    class Meta:
-        model = ProjectImagesContent
-        fields = ('id', 'type', 'images', 'title', 'sub_title', 'description',
-                  'action_text', 'action_link')
-
-
-class ProjectsMapContentSerializer(serializers.ModelSerializer):
-    def __repr__(self):
-        if 'start_date' in self.context and 'end_date' in self.context:
-            start = self.context['start_date'].strftime(
-                '%s') if self.context['start_date'] else 'none'
-            end = self.context['end_date'].strftime(
-                '%s') if self.context['end_date'] else 'none'
-            return 'MapsContent({},{})'.format(start, end)
-        return 'MapsContent'
-
-    class Meta:
-        model = ProjectImagesContent
-        fields = ('id', 'type', 'title', 'sub_title')
-
-
-class ProjectsContentSerializer(serializers.ModelSerializer):
-    projects = serializers.SerializerMethodField()
-
-    def get_projects(self, obj):
-        if obj.from_homepage:
-            projects = Project.objects.filter(
-                is_campaign=True, status__viewable=True
-            ).order_by('?')[0:4]
-        else:
-            projects = obj.projects
-
-        return ProjectPreviewSerializer(
-            projects, many=True, context=self.context
-        ).to_representation(projects)
-
-    class Meta:
-        model = ProjectsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'projects',
-                  'action_text', 'action_link')
 
 
 class ActivitiesContentSerializer(serializers.ModelSerializer):
@@ -511,14 +435,8 @@ class BlockSerializer(serializers.Serializer):
             serializer = HomepageStatisticsContentSerializer
         elif isinstance(obj, QuotesContent):
             serializer = QuotesContentSerializer
-        elif isinstance(obj, ProjectImagesContent):
-            serializer = ProjectImagesContentSerializer
-        elif isinstance(obj, ProjectsContent):
-            serializer = ProjectsContentSerializer
         elif isinstance(obj, ShareResultsContent):
             serializer = ShareResultsContentSerializer
-        elif isinstance(obj, ProjectsMapContent):
-            serializer = ProjectsMapContentSerializer
         elif isinstance(obj, SupporterTotalContent):
             serializer = SupporterTotalContentSerializer
         elif isinstance(obj, CategoriesContent):

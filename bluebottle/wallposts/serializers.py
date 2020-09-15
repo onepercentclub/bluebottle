@@ -10,7 +10,6 @@ from bluebottle.events.models import Event
 from bluebottle.funding.models import Funding, Donation
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import UserPreviewSerializer
-from bluebottle.projects.models import Project
 from bluebottle.utils.serializers import MoneySerializer
 
 from .models import Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, Reaction
@@ -40,8 +39,6 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
         return ContentType.objects
 
     def to_internal_value(self, data):
-        if data == 'project':
-            data = ContentType.objects.get_for_model(Project)
         if data == 'initiative':
             data = ContentType.objects.get_for_model(Initiative)
         if data == 'event':
@@ -51,23 +48,6 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
         if data == 'funding':
             data = ContentType.objects.get_for_model(Funding)
         return data
-
-
-class WallpostParentIdField(serializers.IntegerField):
-    """
-    Field to save object_id on wall-posts.
-    """
-
-    # Make an exception for project slugs.
-    def to_internal_value(self, value):
-        if not isinstance(value, int) and not value.isdigit():
-            # Assume a project slug here
-            try:
-                project = Project.objects.get(slug=value)
-            except Project.DoesNotExist:
-                raise ValidationError("Project not found: {}".format(value))
-            value = project.id
-        return value
 
 
 class WallpostDonationSerializer(serializers.ModelSerializer):
@@ -109,7 +89,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
     author = UserPreviewSerializer(read_only=True)
     parent_type = WallpostContentTypeField(slug_field='model',
                                            source='content_type')
-    parent_id = WallpostParentIdField(source='object_id')
+    parent_id = serializers.IntegerField(source='object_id')
     reactions = ReactionSerializer(many=True, read_only=True, required=False)
 
     donation = serializers.PrimaryKeyRelatedField(queryset=Donation.objects, required=False, allow_null=True)

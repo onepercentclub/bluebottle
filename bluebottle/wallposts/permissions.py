@@ -1,4 +1,4 @@
-from bluebottle.projects.permissions import RelatedResourceOwnerPermission, BasePermission
+from bluebottle.utils.permissions import RelatedResourceOwnerPermission, BasePermission
 
 
 class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):

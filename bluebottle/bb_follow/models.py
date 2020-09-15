@@ -1,17 +1,9 @@
+from django.contrib.contenttypes import fields
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import post_save
-from django.contrib.contenttypes import fields
 from django.dispatch import receiver
-from django.contrib.contenttypes.models import ContentType
-from django.utils.translation import ugettext_lazy as _
-from django.utils import translation
 
-from tenant_extras.utils import TenantLanguage
-
-from bluebottle.bb_projects.models import BaseProject
-from bluebottle.clients import properties
-from bluebottle.clients.utils import tenant_url
-from bluebottle.utils.email_backend import send_mail
 from bluebottle.votes.models import Vote
 
 
@@ -80,73 +72,3 @@ def create_follow(sender, instance, created, **kwargs):
 
         if user != followed_object.owner:
             _create_follow_object(followed_object, user)
-
-
-@receiver(post_save)
-def email_followers(sender, instance, created, **kwargs):
-    """
-    When a Wallpost is created, project owners, task owners and fundraiser
-    owners can check a box wether to email their followers. This signal
-    handler looksup the appropriate followers depending on the type of page
-    (project, task, fundraiser). It then sends out an email
-    to those followers if they have campaign notifications enabled.
-    """
-    from bluebottle.wallposts.models import Wallpost, SystemWallpost
-
-    if not created:
-        return
-
-    if isinstance(instance, Wallpost) and not isinstance(instance, SystemWallpost):
-        if instance.email_followers:
-            content_type = ContentType.objects.get_for_model(
-                instance.content_object)  # content_type references project
-
-            # Determine if this wallpost is on a Project page, Task page, or
-            # Fundraiser page. Required because of different Follow object
-            # lookup
-            mailers = set()  # Contains unique user objects
-            link = None
-
-            if isinstance(instance.content_object, BaseProject):
-                # Send update to all task owners, all fundraisers, all people
-                # who donated and all people who are following (i.e. posted to
-                # the wall)
-                followers = Follow.objects.filter(
-                    content_type=content_type,
-                    object_id=instance.content_object.id).distinct().exclude(
-                    user=instance.author)
-                [mailers.add(follower.user) for follower in followers]
-                follow_object = _('project')
-                link = '/projects/{0}'.format(instance.content_object.slug)
-
-            wallpost_text = instance.text
-
-            for mailee in mailers:
-                if mailee.campaign_notifications:
-
-                    cur_language = translation.get_language()
-
-                    if mailee.primary_language:
-                        translation.activate(mailee.primary_language)
-                    else:
-                        translation.activate(properties.LANGUAGE_CODE)
-
-                    with TenantLanguage(mailee.primary_language):
-                        subject = _("New wallpost on %(name)s") % {
-                            'name': instance.content_object.title}
-
-                    translation.activate(cur_language)
-
-                    send_mail(
-                        template_name='bb_follow/mails/wallpost_mail.mail',
-                        subject=subject,
-                        site=tenant_url(),
-                        wallpost_text=wallpost_text[:250],
-                        to=mailee,
-                        title=instance.content_object.title,
-                        link=link,
-                        unsubscribe_link='/member/profile',
-                        follow_object=follow_object,
-                        first_name=mailee.first_name,
-                        author=instance.author.first_name
-                    )

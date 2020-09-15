@@ -8,7 +8,6 @@ from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.activities.models import Activity
 from bluebottle.geo.models import Location
-from bluebottle.projects.models import Project
 from bluebottle.utils.fields import ImageField
 from bluebottle.categories.models import Category
 from bluebottle.utils.models import BasePlatformSettings
@@ -21,9 +20,6 @@ class ResultPage(TranslatableModel):
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     content = PlaceholderField('content', plugins=[
-        'ProjectImagesBlockPlugin',
-        'ProjectMapBlockPlugin',
-        'ProjectsBlockPlugin',
         'QuotesBlockPlugin',
         'ActivitiesBlockPlugin',
         'ShareResultsBlockPlugin',
@@ -264,9 +260,6 @@ class ProjectsContent(TitledContent):
     action_link = models.CharField(max_length=100, default="/start-project",
                                    blank=True, null=True)
 
-    projects = models.ManyToManyField(
-        Project, blank=True, db_table='cms_projectscontent_projects'
-    )
     from_homepage = models.BooleanField(default=False)
 
     preview_template = 'admin/cms/preview/projects.html'
@@ -276,24 +269,6 @@ class ProjectsContent(TitledContent):
 
     def __unicode__(self):
         return unicode(self.title)
-
-
-class ProjectImagesContent(TitledContent):
-    type = 'project_images'
-    preview_template = 'admin/cms/preview/project_images.html'
-
-    description = models.TextField(max_length=70, blank=True, null=True)
-    action_text = models.CharField(max_length=40,
-                                   default=_('Check out our projects'),
-                                   blank=True, null=True)
-    action_link = models.CharField(max_length=100, default="/projects?status=campaign%2Cvoting ",
-                                   blank=True, null=True)
-
-    class Meta:
-        verbose_name = _('Project Images')
-
-    def __unicode__(self):
-        return 'Project images block'
 
 
 class ShareResultsContent(TitledContent):

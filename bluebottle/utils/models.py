@@ -11,7 +11,6 @@ from operator import attrgetter
 from parler.models import TranslatableModel, TranslatedFields
 
 import bluebottle.utils.monkey_patch_corsheaders  # noqa
-import bluebottle.utils.monkey_patch_dj_money_rates  # noqa
 import bluebottle.utils.monkey_patch_django_elasticsearch_dsl  # noqa
 import bluebottle.utils.monkey_patch_migration  # noqa
 import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa

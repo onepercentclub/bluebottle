@@ -3,9 +3,9 @@ from django.db import models
 from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+from djmoney.contrib.exchange.models import convert_money
 from moneyed import Money
 
-from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import ImageField, MoneyField
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.wallposts.models import Wallpost
@@ -52,7 +52,7 @@ class BaseFundraiser(models.Model):
             donations.values('amount_currency').annotate(Sum('amount')).order_by()
         ]
 
-        totals = [convert(amount, self.amount.currency) for amount in totals]
+        totals = [convert_money(amount, self.amount.currency) for amount in totals]
 
         return sum(totals) or Money(0, self.amount.currency)
 

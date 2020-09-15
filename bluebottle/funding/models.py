@@ -3,6 +3,8 @@ import random
 import string
 
 from babel.numbers import get_currency_name
+from djmoney.contrib.exchange.models import convert_money
+
 from bluebottle.fsm.triggers import TriggerMixin
 
 from django.db.models import Count
@@ -21,7 +23,6 @@ from tenant_schemas.postgresql_backend.base import FakeTenant
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
 from bluebottle.files.fields import ImageField, PrivateDocumentField
-from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
 
@@ -199,7 +200,7 @@ class Funding(Activity):
                 total=Sum('donation__amount')
             )
             amounts = [Money(tot['total'], tot['donation__amount_currency']) for tot in totals]
-            amounts = [convert(amount, self.target.currency) for amount in amounts]
+            amounts = [convert_money(amount, self.target.currency) for amount in amounts]
             if self.target:
                 total = sum(amounts) or Money(0, self.target.currency)
             else:
@@ -228,7 +229,7 @@ class Funding(Activity):
                 total=Sum('donation__amount')
             )
             amounts = [Money(tot['total'], tot['donation__amount_currency']) for tot in totals]
-            amounts = [convert(amount, self.target.currency) for amount in amounts]
+            amounts = [convert_money(amount, self.target.currency) for amount in amounts]
 
             total = sum(amounts) or Money(0, self.target.currency)
             cache.set(cache_key, total)
@@ -252,7 +253,7 @@ class Funding(Activity):
             total=Sum('donation__amount')
         )
         amounts = [Money(total['total'], total['donation__amount_currency']) for total in totals]
-        amounts = [convert(amount, self.target.currency) for amount in amounts]
+        amounts = [convert_money(amount, self.target.currency) for amount in amounts]
 
         return sum(amounts) or Money(0, self.target.currency)
 
@@ -267,7 +268,7 @@ class Funding(Activity):
             currency = 'EUR'
         total = self.amount_donated
         if self.amount_matching:
-            total += convert(
+            total += convert_money(
                 self.amount_matching,
                 currency
             )
@@ -404,7 +405,7 @@ class Fundraiser(AnonymizationMixin, models.Model):
             donations.values('amount_currency').annotate(Sum('amount')).order_by()
         ]
 
-        totals = [convert(amount, self.amount.currency) for amount in totals]
+        totals = [convert_money(amount, self.amount.currency) for amount in totals]
 
         return sum(totals) or Money(0, self.amount.currency)
 

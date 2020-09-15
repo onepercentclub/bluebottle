@@ -328,8 +328,8 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['funding.change_paymentprovider']
             },
             {
-                'name': 'djmoney_rates.ratesource',
-                'permissions': ['djmoney_rates.change_ratesource']
+                'name': 'exchange.exchangebackend',
+                'permissions': ['exchange.change_exchangebackend']
             },
             {
                 'label': _('Manage Reporting'),

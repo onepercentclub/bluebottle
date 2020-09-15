@@ -17,6 +17,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 
 from django_summernote.models import AbstractAttachment
+from djmoney.contrib.exchange.models import convert_money
 
 from moneyed.classes import Money
 from polymorphic.models import PolymorphicModel
@@ -31,7 +32,6 @@ from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.funding.models import PaymentProvider
 from bluebottle.tasks.models import Task, TaskMember
-from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import LegacyMoneyField as MoneyField
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.models import BasePlatformSettings
@@ -350,7 +350,7 @@ class Project(BaseProject, PreviousStatusMixin):
         totals = donations.values('amount_currency').annotate(total=Sum('amount'))
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
 
-        amounts = [convert(amount, self.amount_asked.currency) for amount in amounts]
+        amounts = [convert_money(amount, self.amount_asked.currency) for amount in amounts]
 
         return sum(amounts) or Money(0, self.amount_asked.currency)
 

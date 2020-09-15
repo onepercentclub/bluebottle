@@ -43,10 +43,11 @@ class PaymentFactory(factory.DjangoModelFactory):
 
 
 class RewardFactory(factory.DjangoModelFactory):
+    activity = factory.SubFactory(FundingFactory)
+    amount = Money(35, 'EUR')
+
     class Meta(object):
         model = Reward
-
-    activity = factory.SubFactory(FundingFactory)
 
 
 class FundraiserFactory(factory.DjangoModelFactory):
@@ -59,10 +60,11 @@ class FundraiserFactory(factory.DjangoModelFactory):
 
 
 class BudgetLineFactory(factory.DjangoModelFactory):
+    amount = Money(35, 'EUR')
+    activity = factory.SubFactory(FundingFactory)
+
     class Meta(object):
         model = BudgetLine
-
-    activity = factory.SubFactory(FundingFactory)
 
 
 class PlainPayoutAccountFactory(factory.DjangoModelFactory):

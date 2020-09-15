@@ -285,7 +285,6 @@ SHARED_APPS = (
     'tenant_extras',
     'localflavor',
     'corsheaders',
-    'djmoney_rates',
     'parler',
     'daterange_filter',
     'adminsortable',
@@ -427,9 +426,8 @@ TENANT_APPS = (
 
     'bluebottle.cms',
 
-    # Note: Fixes the incorrect formatting of money values in the back-office
-    # https://github.com/django-money/django-money/issues/232
     'djmoney',
+    'djmoney.contrib.exchange',
     'django_singleton_admin',
     'nested_inline',
     'permissions_widget',
@@ -931,12 +929,11 @@ GEOPOSITION_GOOGLE_MAPS_API_KEY = ''
 STATIC_MAPS_API_KEY = ''
 STATIC_MAPS_API_SECRET = ''
 
-DJANGO_MONEY_RATES = {
-    'DEFAULT_BACKEND': 'djmoney_rates.backends.OpenExchangeBackend',
-    'OPENEXCHANGE_URL': 'http://openexchangerates.org/api/latest.json',
-    'OPENEXCHANGE_APP_ID': '3e53678e72c140b4857dc5bb1deb59dc',
-    'OPENEXCHANGE_BASE_CURRENCY': 'USD',
-}
+# django money settings
+OPEN_EXCHANGE_RATES_URL = 'http://openexchangerates.org/api/latest.json'
+OPEN_EXCHANGE_RATES_APP_ID = '3e53678e72c140b4857dc5bb1deb59dc'
+RATES_CACHE_TIMEOUT = 60 * 60 * 24
+
 AUTO_CONVERT_MONEY = False
 
 LOCKDOWN_URL_EXCEPTIONS = [

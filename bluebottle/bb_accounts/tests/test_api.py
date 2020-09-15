@@ -74,9 +74,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         # Fields taken from the serializer
         serializer_fields = ['id', 'url', 'full_name', 'short_name', 'picture',
                              'primary_language', 'about_me', 'location',
-                             'project_count', 'donation_count', 'date_joined',
-                             'fundraiser_count', 'task_count', 'time_spent',
-                             'website', 'twitter', 'facebook', 'skypename']
+                             'date_joined', 'website', 'twitter', 'facebook', 'skypename']
 
         for field in serializer_fields:
             self.assertTrue(field in response.data, "Missing field {}".format(field))
@@ -155,9 +153,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         # Fields taken from the serializer
         serializer_fields = ['id', 'url', 'full_name', 'short_name', 'picture',
-                             'primary_language', 'about_me', 'location',
-                             'project_count', 'donation_count', 'date_joined',
-                             'fundraiser_count', 'task_count', 'time_spent',
+                             'primary_language', 'about_me', 'location', 'date_joined',
                              'website', 'twitter', 'facebook', 'skypename',
                              'email', 'phone_number',
                              'newsletter', 'campaign_notifications',

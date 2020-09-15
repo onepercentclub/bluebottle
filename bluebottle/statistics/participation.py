@@ -323,30 +323,6 @@ class Statistics(object):
                 count += 1
         return count
 
-    @property
-    @memoize(timeout=60 * 60)
-    def unconfirmed_task_members_task_count(self):
-        """ Total number of task belonging to unconfirmed task members """
-        now = pendulum.now()
-        if self.end <= now.subtract(days=10):
-            logs = TaskMemberStatusLog.objects \
-                .filter(self.end_date_filter('start'), task_member__task__deadline__lte=self.end.subtract(days=10)) \
-                .distinct('task_member__id') \
-                .order_by('-task_member__id', '-start')
-        else:
-            logs = TaskMemberStatusLog.objects \
-                .filter(start__lte=now, task_member__task__deadline__lte=now.subtract(days=10)) \
-                .distinct('task_member__id') \
-                .order_by('-task_member__id', '-start')
-
-        task_ids = set()
-
-        for log in logs:
-            if log.status == 'accepted':
-                task_ids.add(log.task_member.task.id)
-
-        return len(task_ids)
-
     def __repr__(self):
         start = self.start.strftime('%s') if self.start else 'none'
         end = self.end.strftime('%s') if self.end else 'none'

@@ -206,8 +206,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
         model = BB_USER_MODEL
         fields = UserPreviewSerializer.Meta.fields + (
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
-            'last_login', 'date_joined', 'task_count', 'project_count',
-            'has_projects', 'donation_count', 'fundraiser_count', 'location',
+            'last_login', 'date_joined', 'location',
             'verified', 'permissions', 'matching_options_set',
             'organization'
         )
@@ -250,12 +249,6 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     favourite_theme_ids = serializers.PrimaryKeyRelatedField(
         many=True, source='favourite_themes', queryset=ProjectTheme.objects)
 
-    project_count = serializers.ReadOnlyField()
-    donation_count = serializers.ReadOnlyField()
-    fundraiser_count = serializers.ReadOnlyField()
-    task_count = serializers.ReadOnlyField()
-    time_spent = serializers.ReadOnlyField()
-    tasks_performed = serializers.ReadOnlyField()
     is_active = serializers.BooleanField(read_only=True)
 
     segments = OldSegmentSerializer(many=True, read_only=True)
@@ -264,10 +257,8 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
         model = BB_USER_MODEL
         fields = (
             'id', 'url', 'full_name', 'short_name', 'initials', 'picture',
-            'primary_language', 'about_me', 'location', 'avatar',
-            'project_count', 'donation_count', 'date_joined',
-            'fundraiser_count', 'task_count', 'time_spent', 'is_active',
-            'tasks_performed', 'website', 'twitter', 'facebook',
+            'primary_language', 'about_me', 'location', 'avatar', 'date_joined',
+            'is_active', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
             'subscribed', 'segments'
         )
@@ -397,10 +388,7 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
             )
 
         if len(BB_USER_MODEL.objects.filter(email=email, is_active=True)):
-            raise serializers.ValidationError(
-                ('member with this email address already exists.').format(
-                    settings.email_domain)
-            )
+            raise serializers.ValidationError('member with this email address already exists.')
 
         return email
 

@@ -131,28 +131,6 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                                     token=self.other_token)
         self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_filtering_on_wallpost_list(self):
-        authenticated = Group.objects.get(name='Authenticated')
-        authenticated.permissions.remove(
-            Permission.objects.get(codename='api_read_mediawallpost')
-        )
-        authenticated.permissions.add(
-            Permission.objects.get(codename='api_read_own_mediawallpost')
-        )
-
-        MediaWallpostFactory.create(content_object=self.assignment)
-        MediaWallpostFactory.create(content_object=self.initiative)
-        MediaWallpostFactory.create(content_object=self.event)
-        MediaWallpostFactory.create(content_object=InitiativeFactory(owner=self.other_user))
-
-        response = self.client.get(
-            self.media_wallpost_url, token=self.owner_token)
-        self.assertEqual(response.data['count'], 3)
-
-        response = self.client.get(
-            self.media_wallpost_url, token=self.other_token)
-        self.assertEqual(response.data['count'], 1)
-
     def test_filter_on_assignment_wallpost_list(self):
         """
         Tests that initiative initiator can post and view assignment wallposts

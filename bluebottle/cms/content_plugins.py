@@ -8,8 +8,9 @@ from bluebottle.cms.admin import (
     GreetingInline
 )
 from bluebottle.cms.models import (
-    QuotesContent, StatsContent, ShareResultsContent, SupporterTotalContent, StepsContent, SlidesContent,
-    CategoriesContent, LocationsContent, LogosContent,
+    QuotesContent, StatsContent, ShareResultsContent, SupporterTotalContent,
+    StepsContent, SlidesContent,
+    CategoriesContent, LocationsContent, LogosContent, ProjectsMapContent,
     LinksContent, WelcomeContent, HomepageStatisticsContent,
     ActivitiesContent)
 
@@ -70,6 +71,12 @@ class ActivitiesBlockPlugin(CMSContentPlugin):
 class ShareResultsBlockPlugin(CMSContentPlugin):
     model = ShareResultsContent
     category = _('Results')
+
+
+@plugin_pool.register
+class ProjectMapBlockPlugin(CMSContentPlugin):
+    model = ProjectsMapContent
+    category = _('Projects')
 
 
 @plugin_pool.register

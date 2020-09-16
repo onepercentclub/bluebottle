@@ -21,7 +21,6 @@ from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
-from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
@@ -951,62 +950,6 @@ class InitiativeRedirectTest(TestCase):
 
         self.assertEqual(
             response.json()['data']['attributes']['target-params'], [funding.pk, funding.slug]
-        )
-
-    def test_event(self):
-        event = EventFactory.create()
-        task = TaskFactory.create(type='event', activity_id=event.pk)
-
-        data = {
-            'data': {
-                'type': 'initiative-redirects',
-                'attributes': {
-                    'route': 'task',
-                    'params': {'task_id': task.pk}
-                },
-            }
-        }
-        response = self.client.post(
-            self.url,
-            json.dumps(data)
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        self.assertEqual(
-            response.json()['data']['attributes']['target-route'], 'initiatives.activities.details.event'
-        )
-
-        self.assertEqual(
-            response.json()['data']['attributes']['target-params'], [event.pk, event.slug]
-        )
-
-    def test_assignment(self):
-        assignment = AssignmentFactory.create()
-        task = TaskFactory.create(activity_id=assignment.pk)
-
-        data = {
-            'data': {
-                'type': 'initiative-redirects',
-                'attributes': {
-                    'route': 'task',
-                    'params': {'task_id': task.pk}
-                },
-            }
-        }
-        response = self.client.post(
-            self.url,
-            json.dumps(data)
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        self.assertEqual(
-            response.json()['data']['attributes']['target-route'], 'initiatives.activities.details.assignment'
-        )
-
-        self.assertEqual(
-            response.json()['data']['attributes']['target-params'], [assignment.pk, assignment.slug]
         )
 
     def test_does_not_exist(self):

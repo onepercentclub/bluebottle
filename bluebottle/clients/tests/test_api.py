@@ -13,7 +13,6 @@ from bluebottle.clients import properties
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.notifications.models import NotificationPlatformSettings
-from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -175,48 +174,6 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         super(TestPlatformSettingsApi, self).setUp()
         self.init_projects()
         self.settings_url = reverse('settings')
-
-    def test_project_platform_settings(self):
-        # Create some project settings and confirm they end up correctly in settings api
-        project_settings = ProjectPlatformSettings.objects.create(
-            create_types=['sourcing', 'funding'],
-            contact_types=['organization'],
-            create_flow='choice',
-            contact_method='email'
-        )
-        ProjectSearchFilter.objects.create(
-            project_settings=project_settings,
-            name='location'
-        )
-        ProjectSearchFilter.objects.create(
-            project_settings=project_settings,
-            name='theme'
-        )
-        ProjectSearchFilter.objects.create(
-            project_settings=project_settings,
-            name='status',
-            default='campaign,voting'
-        )
-        ProjectSearchFilter.objects.create(
-            project_settings=project_settings,
-            name='type',
-            values='volunteering,funding'
-        )
-        filters = [
-            {'name': 'location', 'default': None, 'values': None, 'sequence': 1},
-            {'name': 'theme', 'default': None, 'values': None, 'sequence': 2},
-            {'name': 'status', 'default': 'campaign,voting', 'values': None, 'sequence': 3},
-            {'name': 'type', 'default': None, 'values': 'volunteering,funding', 'sequence': 4},
-        ]
-
-        response = self.client.get(self.settings_url)
-        self.assertEqual(
-            set(response.data['platform']['projects']['create_types']),
-            set(['funding', 'sourcing'])
-        )
-        self.assertEqual(response.data['platform']['projects']['contact_types'], ['organization'])
-        self.assertEqual(response.data['platform']['projects']['contact_method'], 'email')
-        self.assertEqual(response.data['platform']['projects']['filters'], filters)
 
     def test_site_platform_settings(self):
         # Create site platform settings and confirm they end up correctly in settings api

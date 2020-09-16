@@ -20,6 +20,7 @@ class ResultPage(TranslatableModel):
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     content = PlaceholderField('content', plugins=[
+        'ProjectMapBlockPlugin',
         'QuotesBlockPlugin',
         'ActivitiesBlockPlugin',
         'ShareResultsBlockPlugin',

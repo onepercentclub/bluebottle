@@ -63,26 +63,7 @@ class FilterQSParams(object):
         return qs
 
 
-class WallpostOwnerFilterMixin(object):
-    def get_queryset(self):
-        qs = super(WallpostOwnerFilterMixin, self).get_queryset()
-        permission = '{}.api_read_{}'.format(
-            self.model._meta.app_label, self.model._meta.model_name
-        )
-
-        if not self.request.user.has_perm(permission):
-            user = self.request.user if self.request.user.is_authenticated else None
-            qs = qs.filter(
-                Q(project_wallposts__owner=user) |
-                Q(task_wallposts__author=user) |
-                Q(task_wallposts__project__owner=user) |
-                Q(task_wallposts__project__promoter=user) |
-                Q(fundraiser_wallposts__owner=user)
-            )
-        return qs
-
-
-class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
+class WallpostList(ListAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     pagination_class = BluebottlePagination
@@ -113,7 +94,7 @@ class WallpostPagination(BluebottlePagination):
     page_size = 5
 
 
-class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIView, FilterQSParams):
+class TextWallpostList(SetAuthorMixin, ListCreateAPIView, FilterQSParams):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter

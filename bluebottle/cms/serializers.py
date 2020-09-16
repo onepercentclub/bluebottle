@@ -13,7 +13,7 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.categories.serializers import CategorySerializer
 from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, HomePage, QuotesContent, Quote,
-    ShareResultsContent, SupporterTotalContent, CategoriesContent, StepsContent, LocationsContent,
+    ShareResultsContent, ProjectsMapContent, SupporterTotalContent, CategoriesContent, StepsContent, LocationsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, WelcomeContent, HomepageStatisticsContent,
     ActivitiesContent)
@@ -172,6 +172,21 @@ class QuotesContentSerializer(serializers.ModelSerializer):
         fields = ('id', 'quotes', 'type', 'title', 'sub_title')
 
 
+class ProjectsMapContentSerializer(serializers.ModelSerializer):
+    def __repr__(self):
+        if 'start_date' in self.context and 'end_date' in self.context:
+            start = self.context['start_date'].strftime(
+                '%s') if self.context['start_date'] else 'none'
+            end = self.context['end_date'].strftime(
+                '%s') if self.context['end_date'] else 'none'
+            return 'MapsContent({},{})'.format(start, end)
+        return 'MapsContent'
+
+    class Meta:
+        model = ProjectsMapContent
+        fields = ('id', 'type', 'title', 'sub_title')
+
+
 class ActivitiesContentSerializer(serializers.ModelSerializer):
     activities = serializers.SerializerMethodField()
 
@@ -182,7 +197,7 @@ class ActivitiesContentSerializer(serializers.ModelSerializer):
             ).exclude(
                 status__in=[
                     'draft', 'needs_work', 'submitted',
-                    'deleted', 'closed'
+                    'deleted', 'closed', 'rejected'
                 ]
             ).order_by('?')[0:4]
         else:
@@ -437,6 +452,8 @@ class BlockSerializer(serializers.Serializer):
             serializer = QuotesContentSerializer
         elif isinstance(obj, ShareResultsContent):
             serializer = ShareResultsContentSerializer
+        elif isinstance(obj, ProjectsMapContent):
+            serializer = ProjectsMapContentSerializer
         elif isinstance(obj, SupporterTotalContent):
             serializer = SupporterTotalContentSerializer
         elif isinstance(obj, CategoriesContent):

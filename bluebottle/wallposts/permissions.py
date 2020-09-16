@@ -8,7 +8,7 @@ class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
     or Fundraiser.owner
     """
     def has_parent_permission(self, action, user, parent, model=None):
-
+        print parent
         return user in [
             getattr(parent, 'owner', None),
             getattr(parent, 'task_manager', None),

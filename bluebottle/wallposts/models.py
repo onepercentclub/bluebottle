@@ -1,12 +1,11 @@
-from django.db import models
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import fields
-from django_extensions.db.fields import (ModificationDateTimeField,
-                                         CreationDateTimeField)
+from django.contrib.contenttypes.models import ContentType
+from django.db import models
 from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
-
+from django_extensions.db.fields import (ModificationDateTimeField,
+                                         CreationDateTimeField)
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.utils.models import AnonymizationMixin

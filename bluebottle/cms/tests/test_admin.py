@@ -2,7 +2,7 @@ from django.urls.base import reverse
 
 from fluent_contents.models import Placeholder
 
-from bluebottle.cms.models import StatsContent, TasksContent
+from bluebottle.cms.models import StatsContent, ActivitiesContent
 from bluebottle.test.factory_models.cms import ResultPageFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 
@@ -22,9 +22,9 @@ class TestResultPageAdmin(BluebottleAdminTestCase):
         result_page = ResultPageFactory.create()
         self.placeholder = Placeholder.objects.create_for_object(result_page, slot='content')
         StatsContent.objects.create_for_placeholder(self.placeholder, title='Look at us!')
-        TasksContent.objects.create_for_placeholder(self.placeholder, title='Tasks r us!')
+        ActivitiesContent.objects.create_for_placeholder(self.placeholder, title='Activities r us!')
         result_page_url = reverse('admin:cms_resultpage_change', args=(result_page.id, ))
         response = self.client.get(result_page_url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Stats')
-        self.assertContains(response, 'Tasks')
+        self.assertContains(response, 'Activities')

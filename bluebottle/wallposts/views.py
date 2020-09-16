@@ -1,24 +1,22 @@
+import django_filters
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
-
-import django_filters
 from rest_framework.generics import RetrieveDestroyAPIView
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
+from bluebottle.utils.permissions import (
+    OneOf, ResourcePermission, RelatedResourceOwnerPermission, ResourceOwnerPermission
+)
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, OwnerListViewMixin,
     CreateAPIView)
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, RelatedResourceOwnerPermission, ResourceOwnerPermission
-)
 from bluebottle.wallposts.permissions import RelatedManagementOrReadOnlyPermission
-
 from .models import TextWallpost, MediaWallpost, MediaWallpostPhoto, Wallpost, Reaction
+from .permissions import DonationOwnerPermission
 from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
                           MediaWallpostPhotoSerializer, ReactionSerializer,
                           WallpostSerializer)
-from .permissions import DonationOwnerPermission
 
 
 class WallpostFilter(django_filters.FilterSet):
@@ -114,6 +112,13 @@ class TextWallpostList(SetAuthorMixin, ListCreateAPIView, FilterQSParams):
         queryset = queryset.order_by('-created')
         return queryset
 
+    def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(author=self.request.user, **serializer.validated_data)
+        )
+        return super(TextWallpostList, self).perform_create(serializer)
+
 
 class TextWallpostDetail(RetrieveUpdateDestroyAPIView, SetAuthorMixin):
     queryset = TextWallpost.objects.all()
@@ -135,7 +140,7 @@ class MediaWallpostList(TextWallpostList, SetAuthorMixin):
     def perform_create(self, serializer):
         self.check_object_permissions(
             self.request,
-            serializer.Meta.model(**serializer.validated_data)
+            serializer.Meta.model(author=self.request.user, **serializer.validated_data)
         )
         return super(MediaWallpostList, self).perform_create(serializer)
 

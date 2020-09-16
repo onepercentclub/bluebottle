@@ -2,13 +2,7 @@ from bluebottle.utils.permissions import RelatedResourceOwnerPermission, BasePer
 
 
 class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
-    """
-    Is the current user either Project.owner, Project.task_management, Project.promoter
-    or Task.project.owner, Task.project.task_management, Task.project.promoter
-    or Fundraiser.owner
-    """
     def has_parent_permission(self, action, user, parent, model=None):
-        print parent
         return user in [
             getattr(parent, 'owner', None),
             getattr(parent, 'task_manager', None),
@@ -23,7 +17,6 @@ class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
             obj.email_followers
         ]):
             return True
-
         return self.has_parent_permission(action, user, obj.parent)
 
     def has_action_permission(self, action, user, model):

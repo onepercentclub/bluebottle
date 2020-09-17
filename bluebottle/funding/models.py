@@ -3,6 +3,8 @@ import random
 import string
 
 from babel.numbers import get_currency_name
+from bluebottle.clients import properties
+
 from bluebottle.fsm.triggers import TriggerMixin
 
 from django.db.models import Count
@@ -185,25 +187,20 @@ class Funding(Activity):
         The sum of all contributions (donations) converted to the targets currency
         """
         from states import DonationStateMachine
+        from bluebottle.funding.utils import calculate_total
         cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
-            totals = self.donations.filter(
+            donations = self.donations.filter(
                 status__in=(
                     DonationStateMachine.succeeded.value,
                     DonationStateMachine.activity_refunded.value,
                 )
-            ).values(
-                'donation__amount_currency'
-            ).annotate(
-                total=Sum('donation__amount')
             )
-            amounts = [Money(tot['total'], tot['donation__amount_currency']) for tot in totals]
-            amounts = [convert(amount, self.target.currency) for amount in amounts]
-            if self.target:
-                total = sum(amounts) or Money(0, self.target.currency)
+            if self.target and self.target.currency:
+                total = calculate_total(donations, self.target.currency)
             else:
-                total = Money(0, 'EUR')
+                total = calculate_total(donations, properties.DEFAULT_CURRENCY)
             cache.set(cache_key, total)
         return total
 
@@ -213,24 +210,21 @@ class Funding(Activity):
         The sum of all contributions (donations) without pledges converted to the targets currency
         """
         from states import DonationStateMachine
+        from bluebottle.funding.utils import calculate_total
         cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
-            totals = self.donations.filter(
+            donations = self.donations.filter(
                 status__in=(
                     DonationStateMachine.succeeded.value,
                     DonationStateMachine.activity_refunded.value,
                 ),
                 donation__payment__pledgepayment__isnull=True
-            ).values(
-                'donation__amount_currency'
-            ).annotate(
-                total=Sum('donation__amount')
             )
-            amounts = [Money(tot['total'], tot['donation__amount_currency']) for tot in totals]
-            amounts = [convert(amount, self.target.currency) for amount in amounts]
-
-            total = sum(amounts) or Money(0, self.target.currency)
+            if self.target and self.target.currency:
+                total = calculate_total(donations, self.target.currency)
+            else:
+                total = calculate_total(donations, properties.DEFAULT_CURRENCY)
             cache.set(cache_key, total)
         return total
 
@@ -240,21 +234,20 @@ class Funding(Activity):
         The sum of all contributions (donations) converted to the targets currency
         """
         from states import DonationStateMachine
-        totals = self.donations.filter(
+        from bluebottle.funding.utils import calculate_total
+        donations = self.donations.filter(
             status__in=(
                 DonationStateMachine.succeeded.value,
                 DonationStateMachine.activity_refunded.value,
             ),
             donation__payment__pledgepayment__isnull=False
-        ).values(
-            'donation__amount_currency'
-        ).annotate(
-            total=Sum('donation__amount')
         )
-        amounts = [Money(total['total'], total['donation__amount_currency']) for total in totals]
-        amounts = [convert(amount, self.target.currency) for amount in amounts]
+        if self.target and self.target.currency:
+            total = calculate_total(donations, self.target.currency)
+        else:
+            total = calculate_total(donations, properties.DEFAULT_CURRENCY)
 
-        return sum(amounts) or Money(0, self.target.currency)
+        return total
 
     @property
     def amount_raised(self):

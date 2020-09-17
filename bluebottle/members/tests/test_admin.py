@@ -1,6 +1,13 @@
 # coding=utf-8
 import os
 
+from djmoney.money import Money
+
+from bluebottle.funding.tests.factories import DonationFactory
+
+from bluebottle.assignments.tests.factories import ApplicantFactory
+
+from bluebottle.events.tests.factories import ParticipantFactory
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import Group
 from django.core import mail
@@ -319,7 +326,6 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.request_factory = RequestFactory()
         self.request = self.request_factory.post('/')
         self.request.user = MockUser()
-        self.init_projects()
         self.member_admin = MemberAdmin(Member, AdminSite())
 
     def test_member_export(self):
@@ -328,20 +334,32 @@ class MemberAdminExportTest(BluebottleTestCase):
         field = CustomMemberFieldSettings.objects.create(name='How are you')
         CustomMemberField.objects.create(member=member, value='Fine', field=field)
 
+        ParticipantFactory.create(time_spent=5, user=member, status='succeeded')
+        ParticipantFactory.create(time_spent=12, user=member, status='succeeded')
+        ApplicantFactory.create_batch(3, time_spent=10, user=member, status='succeeded')
+        DonationFactory.create_batch(7, amount=Money(5, 'EUR'), user=member, status='succeeded')
+
         export_action = self.member_admin.actions[0]
         response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
         data = response.content.split("\r\n")
         headers = data[0].split(",")
-        data = data[1].split(",")
+        user_data = []
+        for row in data:
+            if row.startswith('malle-eppie'):
+                user_data = row.split(',')
 
         # Test basic info and extra field are in the csv export
-        self.assertEqual(headers[0], 'username')
-        self.assertEqual(headers[12], 'Extra Info')
-        self.assertEqual(headers[13], 'How are you')
-        self.assertEqual(data[0], 'malle-eppie')
-        self.assertEqual(data[12], '')
-        self.assertEqual(data[13], 'Fine')
+        self.assertEqual(headers, [
+            'username', 'email', 'remote_id', 'first_name', 'last name',
+            'date joined', 'is initiator', 'is supporter', 'is volunteer',
+            'amount donated', 'time spent', 'subscribed to matching projects', 'Extra Info', 'How are you'])
+        self.assertEqual(user_data[0], 'malle-eppie')
+        self.assertEqual(user_data[7], 'True')
+        self.assertEqual(user_data[8], 'True')
+        self.assertEqual(user_data[9], '35.00 \xe2\x82\xac')
+        self.assertEqual(user_data[10], '47.0')
+        self.assertEqual(user_data[13], 'Fine')
 
     def test_member_unicode_export(self):
         member = BlueBottleUserFactory.create(username='stimpy')

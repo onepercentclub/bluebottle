@@ -331,10 +331,11 @@ class MemberAdmin(UserAdmin):
         ('first_name', 'first_name'),
         ('last_name', 'last name'),
         ('date_joined', 'date joined'),
+
         ('is_initiator', 'is initiator'),
         ('is_supporter', 'is supporter'),
-        ('amount_donated', 'amount donated'),
         ('is_volunteer', 'is volunteer'),
+        ('amount_donated', 'amount donated'),
         ('time_spent', 'time spent'),
         ('subscribed', 'subscribed to matching projects'),
     )

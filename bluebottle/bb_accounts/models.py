@@ -3,15 +3,14 @@ import random
 import string
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import (
     AbstractBaseUser, PermissionsMixin, BaseUserManager
 )
-from django.conf import settings
 from django.core.mail.message import EmailMessage
 from django.db import models
 from django.utils import timezone
-from django.utils.functional import cached_property
-from django.utils.functional import lazy
+from django.utils.functional import lazy, cached_property
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -24,7 +23,6 @@ from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.fields import ImageField
 
 
-# TODO: Make this generic for all user file uploads.
 def generate_picture_filename(instance, filename):
     """
     Creates a random directory and file name for uploaded pictures.
@@ -299,6 +297,48 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def short_name(self):
         return self.get_short_name()
 
+    @cached_property
+    def is_initiator(self):
+        return bool(self.own_initiatives.count())
+
+    @cached_property
+    def is_supporter(self):
+        from bluebottle.funding.states import DonationStateMachine
+        from bluebottle.funding.models import Donation
+        return bool(self.contribution_set.instance_of(Donation).
+                    filter(status=DonationStateMachine.succeeded.value).count())
+
+    @cached_property
+    def is_volunteer(self):
+        from bluebottle.assignments.models import Applicant
+        from bluebottle.events.models import Participant
+        from bluebottle.activities.states import ActivityStateMachine
+        return bool(self.contribution_set.instance_of(Applicant, Participant).
+                    filter(status=ActivityStateMachine.succeeded.value).count())
+
+    @cached_property
+    def amount_donated(self):
+        from bluebottle.funding.states import DonationStateMachine
+        from bluebottle.funding.models import Donation
+        from bluebottle.funding.utils import calculate_total
+        donations = self.contribution_set.instance_of(Donation).filter(
+            status=DonationStateMachine.succeeded.value
+        )
+        return calculate_total(donations)
+
+    @cached_property
+    def time_spent(self):
+        from bluebottle.assignments.models import Applicant
+        from bluebottle.events.models import Participant
+        from bluebottle.activities.states import ActivityStateMachine
+        contributions = self.contribution_set.instance_of(Applicant, Participant).\
+            filter(status=ActivityStateMachine.succeeded.value).all()
+        return sum([c.time_spent for c in contributions])
+
+    @cached_property
+    def subscribed(self):
+        return self.campaign_notifications
+
     def reset_disable_token(self):
         # Generates a random UUID and converts it to a 32-character
         # hexidecimal string
@@ -310,15 +350,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         if not self.disable_token:
             self.reset_disable_token()
         return self.disable_token
-
-    @cached_property
-    def funding(self):
-        """ Returns the number of projects a user has donated to """
-        return self.get_donations_qs().distinct('project').count()
-
-    @property
-    def projects_supported(self):
-        return self.funding + self.sourcing
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
@@ -332,7 +363,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         if name.startswith('extra_'):
             name = name.replace('extra_', '')
             return self.extra.get(field__name=name).value
-        return super(BlueBottleBaseUser, self).__getattr__(name)
+        return super(BlueBottleBaseUser, self).__getattribute__(name)
 
 
 from django.db.models.signals import post_save

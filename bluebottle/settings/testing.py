@@ -29,8 +29,6 @@ MERCHANT_ACCOUNTS = [
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 COMPRESS_ENABLED = False
 
-INSTALLED_APPS += ('bluebottle.payments_mock',)
-
 # Yes, activate the South migrations. Otherwise, we'll never notice if our
 # code screwed up the database synchronization
 SOUTH_TESTS_MIGRATE = False
@@ -62,10 +60,6 @@ CREATE_DB_EXTENSIONS = True
 
 DATABASE_ROUTERS = (
     'tenant_schemas.routers.TenantSyncRouter',
-)
-
-TENANT_APPS += (
-    'bluebottle.payments_mock',
 )
 
 PAYMENT_METHODS = (

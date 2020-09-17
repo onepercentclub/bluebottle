@@ -199,11 +199,7 @@ JWT_AUTH = {
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
 # List of paths to ignore for locale redirects
-LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
-                          '/payments_mock', '/payments_interswitch',
-                          '/payments_vitepay', '/payments_flutterwave',
-                          '/payments_lipisha', '/payments_beyonic',
-                          '/payments_stripe', '/payouts_stripe',
+LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api',
                           '/media', '/downloads', '/login-with',
                           '/surveys', '/token', '/jet')
 
@@ -531,11 +527,6 @@ LOGGING = {
             'handlers': ['mail_admins'],
             'propagate': True,
             'level': 'ERROR',
-        },
-        'payments.payment': {
-            'handlers': ['mail_admins', 'payment_logs', 'sentry'],
-            'propagate': False,
-            'level': 'INFO',
         },
     }
 }

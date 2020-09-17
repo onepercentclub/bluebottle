@@ -1,8 +1,17 @@
+from bluebottle.activities.models import Activity
+
 from bluebottle.utils.permissions import RelatedResourceOwnerPermission, BasePermission
 
 
 class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
     def has_parent_permission(self, action, user, parent, model=None):
+        if isinstance(parent, Activity):
+            return user in [
+                getattr(parent, 'owner', None),
+                getattr(parent.initiative, 'owner', None),
+                getattr(parent.initiative, 'task_manager', None),
+                getattr(parent.initiative, 'promoter', None)
+            ]
         return user in [
             getattr(parent, 'owner', None),
             getattr(parent, 'task_manager', None),

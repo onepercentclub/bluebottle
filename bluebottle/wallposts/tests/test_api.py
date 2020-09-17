@@ -93,9 +93,18 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.assignment.initiative.promoter = BlueBottleUserFactory.create()
         self.assignment.initiative.save()
-        promoter_token = "JWT {0}".format(self.assignment.initiative.promoter.get_jwt_token())
+
+        # Assignment owner can share a post
+        owner_token = "JWT {0}".format(self.assignment.owner.get_jwt_token())
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=owner_token)
+
+        self.assertEqual(wallpost.status_code,
+                         status.HTTP_201_CREATED)
 
         # Promoters users can share a post
+        promoter_token = "JWT {0}".format(self.assignment.initiative.promoter.get_jwt_token())
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
                                     token=promoter_token)
@@ -153,9 +162,11 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         MediaWallpostFactory.create_batch(3, content_object=self.assignment)
 
-        response = self.client.get(self.wallpost_url,
-                                   {'parent_id': str(self.assignment.id), 'parent_type': 'assignment'},
-                                   token=self.owner_token)
+        response = self.client.get(
+            self.wallpost_url,
+            {'parent_id': str(self.assignment.id), 'parent_type': 'assignment'},
+            token=self.owner_token
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 3)
@@ -387,7 +398,7 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
         )
 
         response = self.client.get(self.wallpost_url,
-                                   {'parent_id': self.some_initiative.slug,
+                                   {'parent_id': self.some_initiative.id,
                                     'parent_type': 'initiative'})
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -397,7 +408,7 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
             should still be closed """
         MemberPlatformSettings.objects.update(closed=True)
         response = self.client.get(self.wallpost_url,
-                                   {'parent_id': self.some_initiative.slug,
+                                   {'parent_id': self.some_initiative.id,
                                     'parent_type': 'initiative'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -406,7 +417,7 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
             should still be closed """
         MemberPlatformSettings.objects.update(closed=False)
         response = self.client.get(self.wallpost_url,
-                                   {'parent_id': self.some_initiative.slug,
+                                   {'parent_id': self.some_initiative.id,
                                     'parent_type': 'initiative'},
                                    token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -518,7 +529,7 @@ class TestPinnedWallpost(BluebottleTestCase):
         MediaWallpostFactory.create_batch(3, author=self.user, content_object=self.initiative)
 
         response = self.client.get(self.wallpost_url,
-                                   {'parent_id': self.initiative.slug, 'parent_type': 'initiative'},
+                                   {'parent_id': self.initiative.id, 'parent_type': 'initiative'},
                                    token=self.user_token)
 
         # There should be 6 wallposts

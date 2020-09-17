@@ -126,7 +126,7 @@ class TextWallpostDetail(RetrieveUpdateDestroyAPIView, SetAuthorMixin):
     permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission), )
 
 
-class MediaWallpostList(TextWallpostList, SetAuthorMixin):
+class MediaWallpostList(TextWallpostList):
     queryset = MediaWallpost.objects.all()
     serializer_class = MediaWallpostSerializer
     filter_class = WallpostFilter

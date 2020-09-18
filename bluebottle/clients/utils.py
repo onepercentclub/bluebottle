@@ -107,7 +107,7 @@ def get_currencies():
         if currency['code'] in min_amounts:
             currency['minAmount'] = min_amounts[currency['code']]
         try:
-            currency['rate'] = get_rate(currency['code'], properties.DEFAULT_CURRENCY)
+            currency['rate'] = get_rate(properties.DEFAULT_CURRENCY, currency['code'])
         except (MissingRate, ProgrammingError):
             currency['rate'] = 1
 

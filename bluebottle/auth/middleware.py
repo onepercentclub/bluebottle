@@ -1,3 +1,4 @@
+from builtins import object
 import json
 import logging
 from calendar import timegm
@@ -32,7 +33,7 @@ def isAdminRequest(request):
     return request.path.startswith('/downloads') or base_path in ['jet', 'admin']
 
 
-class UserJwtTokenMiddleware:
+class UserJwtTokenMiddleware(object):
     """
     Custom middleware to set the User on the request when using
     Jwt Token authentication.
@@ -64,7 +65,7 @@ class UserJwtTokenMiddleware:
             return
 
 
-class SlidingJwtTokenMiddleware:
+class SlidingJwtTokenMiddleware(object):
     """
     Custom middleware to set a sliding window for the jwt auth token expiration.
     """
@@ -280,7 +281,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
 authorization_logger = logging.getLogger(__name__)
 
 
-class LogAuthFailureMiddleWare:
+class LogAuthFailureMiddleWare(object):
     def process_request(self, request):
         # TODO: Handle this more cleanly. The exception is raised when using IE11.
         #       Possibly related to the following issue:

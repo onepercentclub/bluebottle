@@ -1,3 +1,4 @@
+from builtins import str
 from django.contrib.postgres.fields import ArrayField
 from django.template.defaultfilters import slugify
 from django.db import models
@@ -25,7 +26,7 @@ class SegmentType(models.Model):
         super(SegmentType, self).save(**kwargs)
 
     def __unicode__(self):
-        return unicode(self.name)
+        return str(self.name)
 
 
 class Segment(models.Model):

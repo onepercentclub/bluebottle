@@ -1,3 +1,4 @@
+from builtins import object
 import factory.fuzzy
 from moneyed import Money
 from pytz import UTC

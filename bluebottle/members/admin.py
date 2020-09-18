@@ -1,3 +1,4 @@
+from builtins import object
 import functools
 
 import six
@@ -71,7 +72,7 @@ class MemberForm(forms.ModelForm):
             initial=Group.objects.filter(name='Authenticated')
         )
 
-    class Meta:
+    class Meta(object):
         model = Member
         # Mind you these fields are also set in MemberAdmin.add_fieldsets
         fields = '__all__'
@@ -146,7 +147,7 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm))
     email = forms.EmailField(label=_("email address"), max_length=254,
                              help_text=_("A valid, unique email address."))
 
-    class Meta:
+    class Meta(object):
         model = Member
         exclude = ()
 
@@ -556,12 +557,12 @@ class GroupsAdmin(GroupAdmin):
     list_display = ["name", ]
     form = NewGroupChangeForm
 
-    class Media:
+    class Media(object):
         css = {
             'all': ('css/admin/permissions-table.css',)
         }
 
-    class Meta:
+    class Meta(object):
         model = Group
 
 

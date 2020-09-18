@@ -1,7 +1,9 @@
+from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.utils.models import BasePlatformSettings
+from future.utils import with_metaclass
 
 
 # get_report_model returns a Django model for accessing the report views
@@ -23,18 +25,7 @@ def get_report_model(db_table):
             model._meta.managed = False
             return model
 
-    class ReportClass(models.Model):
-        __metaclass__ = ReportMetaClass
-
-        #  Column  |           Type         |
-        # ---------+------------------------+
-        # year     | double precision       |
-        # quarter  | double precision       |
-        # month    | double precision       |
-        # location | character varying(255) |
-        # type     | character varying      |
-        # value    | bigint                 |
-
+    class ReportClass(with_metaclass(ReportMetaClass, models.Model)):
         year = models.PositiveSmallIntegerField(_('year'))
         quarter = models.PositiveSmallIntegerField(_('quarter'))
         month = models.PositiveSmallIntegerField(_('month'), primary_key=True)
@@ -63,36 +54,7 @@ def get_raw_report_model(db_table):
             model._meta.managed = False
             return model
 
-    class RawReportClass(models.Model):
-        __metaclass__ = RawReportMetaClass
-
-        #          Column          |            Type             |
-        # -------------------------+-----------------------------+
-        # tenant                   | name                        |
-        # type                     | character varying           |
-        # type_id                  | integer                     |
-        # description              | character varying(255)      |
-        # parent_id                | integer                     |
-        # parent_description       | character varying           |
-        # grand_parent_id          | integer                     |
-        # grand_parent_description | character varying           |
-        # timestamp                | timestamp without time zone |
-        # status                   | character varying(20)       |
-        # status_friendly          | character varying(80)       |
-        # event_timestamp          | timestamp without time zone |
-        # event_status             | character varying(20)       |
-        # user_id                  | integer                     |
-        # user_email               | character varying(254)      |
-        # user_remote_id           | character varying(75)       |
-        # year                     | double precision            |
-        # quarter                  | double precision            |
-        # month                    | double precision            |
-        # week                     | double precision            |
-        # location                 | character varying(255)      |
-        # location_group           | character varying(255)      |
-        # value                    | integer                     |
-        # value_alt                | integer                     |
-
+    class RawReportClass(with_metaclass(RawReportMetaClass, models.Model)):
         tenant = models.CharField(_('tenant'), max_length=255, primary_key=True)
         type = models.CharField(_('type'), max_length=255)
         type_id = models.PositiveIntegerField(_('type_id'))
@@ -130,6 +92,6 @@ class AnalyticsAdapter(models.Model):
 class AnalyticsPlatformSettings(BasePlatformSettings):
     fiscal_month_offset = models.PositiveIntegerField(_('Fiscal year offset'), default=0)
 
-    class Meta:
+    class Meta(object):
         verbose_name_plural = _('analytics platform settings')
         verbose_name = _('analytics platform settings')

@@ -1,5 +1,8 @@
-from urllib import quote_plus
-from urlparse import urlparse
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from urllib.parse import quote_plus
+from urllib.parse import urlparse
 
 from django.contrib.auth.models import Permission
 from django.test.client import RequestFactory

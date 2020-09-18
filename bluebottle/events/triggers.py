@@ -1,3 +1,4 @@
+from builtins import str
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -91,7 +92,7 @@ class ParticipantDeletedTrigger(ModelDeletedTrigger):
     ]
 
     def __unicode__(self):
-        return unicode(_("Participant has been deleted"))
+        return str(_("Participant has been deleted"))
 
 
 Participant.triggers = [ParticipantDeletedTrigger]

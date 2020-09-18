@@ -1,3 +1,4 @@
+from builtins import object
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.functional import lazy
@@ -46,7 +47,7 @@ class DocumentItem(ContentItem):
     def __str__(self):
         return Truncator(strip_tags(self.text)).words(20)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Document')
         verbose_name_plural = _('Document')
 
@@ -59,7 +60,7 @@ class ActionItem(ContentItem):
     def __str__(self):
         return Truncator(strip_tags(self.title)).words(20)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Call to action')
         verbose_name_plural = _('Call to actions')
 
@@ -75,7 +76,7 @@ class ColumnsItem(ContentItem):
 
     objects = ContentItemManager()
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Text in columns')
         verbose_name_plural = _('Text in columns')
 
@@ -129,7 +130,7 @@ class ImageTextItem(ContentItem):
     def image_width(self):
         return 12 - self.text_width
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Picture + Text')
         verbose_name_plural = _('Picture + Text')
 
@@ -154,7 +155,7 @@ class ImageTextRoundItem(ContentItem):
 
     objects = ContentItemManager()
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Text + Round Image')
         verbose_name_plural = _('Text + Round Image')
 
@@ -209,7 +210,7 @@ class Page(PublishableModel):
     def content(self):
         return self.body
 
-    class Meta:
+    class Meta(object):
         ordering = ('language', 'slug')
         unique_together = ('language', 'slug')
 

@@ -1,3 +1,4 @@
+from builtins import object
 import factory.fuzzy
 import bunch
 import mock

@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import uuid
 
 from bluebottle.fsm.state import TransitionNotPossible
@@ -54,8 +56,8 @@ class TransitionSerializer(serializers.Serializer):
 
         transition.execute(states, save=True, user=user, send_messages=True, message=message)
 
-    class Meta:
+    class Meta(object):
         fields = ('id', 'transition', 'message', 'resource')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'transitions'

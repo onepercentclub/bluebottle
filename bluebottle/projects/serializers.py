@@ -1,3 +1,4 @@
+from builtins import object
 from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import (
@@ -12,6 +13,6 @@ class ProjectImageSerializer(serializers.ModelSerializer):
     """
     image = ImageSerializer(source='file')
 
-    class Meta:
+    class Meta(object):
         model = ProjectImage
         fields = ('id', 'image')

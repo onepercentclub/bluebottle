@@ -1,3 +1,4 @@
+from builtins import object
 import json
 import logging
 import os
@@ -57,7 +58,7 @@ def to_influx_json(measurement, timestamp, tags, fields):
     ]
 
 
-class InfluxExporter:
+class InfluxExporter(object):
     def __init__(self, conf):
         self.measurement = conf['measurement']
         self.host = conf['host']
@@ -83,7 +84,7 @@ class InfluxExporter:
                              exc_info=1)
 
 
-class FileExporter:
+class FileExporter(object):
     def __init__(self, conf):
         self.base_dir = conf['base_dir']
         self.measurement = conf['measurement']
@@ -100,6 +101,6 @@ class FileExporter:
         try:
             with open(logname, 'ab') as log:
                 log.write(json.dumps(json_body) + '\n')
-        except StandardError as err:
+        except Exception as err:
             logger.exception('Failed to write to InfluxDB log: %s', err.message,
                              exc_info=1)

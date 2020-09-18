@@ -1,3 +1,4 @@
+from builtins import object
 from django.contrib import admin
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
@@ -15,7 +16,7 @@ from bluebottle.wallposts.admin import WallpostInline
 
 
 class AssignmentAdminForm(StateMachineModelForm):
-    class Meta:
+    class Meta(object):
         model = Assignment
         fields = '__all__'
         widgets = {
@@ -31,7 +32,7 @@ class ApplicantInline(ContributionInline):
 
 
 class ApplicantAdminForm(StateMachineModelForm):
-    class Meta:
+    class Meta(object):
         model = Applicant
         exclude = ('transition_date', )
 

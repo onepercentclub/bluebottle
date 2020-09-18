@@ -1,3 +1,4 @@
+from builtins import object
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.functional import lazy
@@ -50,7 +51,7 @@ class NewsItem(AnonymizationMixin, PublishableModel):
         s.feed(mark_safe(render_placeholder(request, self.contents).html))
         return truncatechars(s.get_data(), 250)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("news item")
         verbose_name_plural = _("news items")
 

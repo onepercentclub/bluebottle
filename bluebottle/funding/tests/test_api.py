@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import range
 import json
 from datetime import timedelta
 import mock
@@ -253,7 +255,7 @@ class RewardListTestCase(BluebottleTestCase):
             len(funding_data['data']['relationships']['rewards']['data']), 1
         )
         self.assertEqual(
-            funding_data['data']['relationships']['rewards']['data'][0]['id'], unicode(data['data']['id'])
+            funding_data['data']['relationships']['rewards']['data'][0]['id'], str(data['data']['id'])
         )
 
     def test_create_wrong_currency(self):
@@ -504,7 +506,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         bank_account = response.json()['data']['relationships']['bank-account']['data']
         self.assertEqual(
-            bank_account['id'], unicode(self.funding.bank_account.pk)
+            bank_account['id'], str(self.funding.bank_account.pk)
         )
 
     def test_other_user(self):
@@ -587,7 +589,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         bank_account = response.json()['data']['relationships']['bank-account']['data']
         self.assertEqual(
-            bank_account['id'], unicode(external_account.pk)
+            bank_account['id'], str(external_account.pk)
         )
         self.assertEqual(
             bank_account['type'], 'payout-accounts/stripe-external-accounts'
@@ -678,7 +680,7 @@ class FundraiserListTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['data']['relationships']['owner']['data']['id'],
-            unicode(self.user.pk)
+            str(self.user.pk)
         )
 
         response = self.client.get(self.funding_url)
@@ -702,7 +704,7 @@ class FundraiserListTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_deadline_to_long(self):
-        self.data['data']['attributes']['deadline'] = unicode(self.funding.deadline + timedelta(days=1))
+        self.data['data']['attributes']['deadline'] = str(self.funding.deadline + timedelta(days=1))
         response = self.client.post(
             self.create_url,
             data=json.dumps(self.data),
@@ -812,8 +814,8 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
-        self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
-        self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertEqual(data['data']['relationships']['activity']['data']['id'], str(self.funding.pk))
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
         self.assertIsNone(data['data']['attributes']['client-secret'])
 
     def test_donate(self):
@@ -828,7 +830,7 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.get(self.funding_url, user=self.user)
 
         donation = get_included(response, 'contributions/donations')
-        self.assertEqual(donation['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertEqual(donation['relationships']['user']['data']['id'], str(self.user.pk))
 
         self.assertTrue(response.json()['data']['attributes']['is-follower'])
 
@@ -996,7 +998,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
         self.assertEqual(len(data['data']['attributes']['client-secret']), 32)
-        self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
+        self.assertEqual(data['data']['relationships']['activity']['data']['id'], str(self.funding.pk))
         self.assertEqual(data['data']['relationships']['user']['data'], None)
 
     def test_claim(self):
@@ -1032,7 +1034,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
-        self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
         self.assertTrue('client-secret' not in data['data']['attributes'])
 
         patch_data = {
@@ -1146,7 +1148,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 200, 'currency': 'EUR'})
-        self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
 
     def test_update_no_user_wrong_token(self):
         response = self.client.post(self.create_url, json.dumps(self.data))
@@ -1186,7 +1188,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['relationships']['fundraiser']['data']['id'], unicode(fundraiser.pk))
+        self.assertEqual(data['data']['relationships']['fundraiser']['data']['id'], str(fundraiser.pk))
 
     def test_create_fundraiser_unrelated(self):
         fundraiser = FundraiserFactory.create()
@@ -1209,7 +1211,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['relationships']['reward']['data']['id'], unicode(reward.pk))
+        self.assertEqual(data['data']['relationships']['reward']['data']['id'], str(reward.pk))
 
     def test_create_reward_higher_amount(self):
         reward = RewardFactory.create(amount=Money(50, 'EUR'), activity=self.funding)
@@ -1222,7 +1224,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['relationships']['reward']['data']['id'], unicode(reward.pk))
+        self.assertEqual(data['data']['relationships']['reward']['data']['id'], str(reward.pk))
 
     def test_create_reward_lower_amount(self):
         reward = RewardFactory.create(amount=Money(150, 'EUR'), activity=self.funding)

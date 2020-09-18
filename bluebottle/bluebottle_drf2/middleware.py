@@ -1,3 +1,4 @@
+from builtins import object
 METHOD_OVERRIDE_HEADER = 'HTTP_X_HTTP_METHOD_OVERRIDE'
 
 

@@ -1,3 +1,4 @@
+from builtins import object
 from adminsortable.admin import SortableMixin
 from django.conf import settings
 from django.db import models
@@ -41,7 +42,7 @@ class Category(TranslatableModel):
         description=models.TextField(_("description"))
     )
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("category")
         verbose_name_plural = _("categories")
         # ordering = ['title']
@@ -106,7 +107,7 @@ class CategoryContent(SortableMixin, TranslatableModel):
                                             "are accepted. Max: %(chars)s characters.") % {'chars': 100})
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("content block")
         verbose_name_plural = _("content blocks")
         ordering = ['sequence']

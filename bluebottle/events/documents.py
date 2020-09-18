@@ -1,3 +1,4 @@
+from builtins import object
 from bluebottle.activities.documents import ActivityDocument, activity
 
 from bluebottle.events.models import Event, Participant
@@ -14,7 +15,7 @@ SCORE_MAP = {
 
 @activity.doc_type
 class EventDocument(ActivityDocument):
-    class Meta:
+    class Meta(object):
         model = Event
         related_models = (Initiative, Member, Participant)
 

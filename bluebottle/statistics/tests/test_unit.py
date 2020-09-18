@@ -1,4 +1,5 @@
 
+from builtins import range
 import datetime
 from django.test.utils import override_settings
 from django.utils import timezone

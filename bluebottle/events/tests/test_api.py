@@ -1,7 +1,10 @@
 # coding=utf-8
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import json
 from datetime import timedelta
-import urlparse
+import urllib.parse
 
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -343,8 +346,8 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         links = response.data['links']
-        google_link = urlparse.urlparse(links['google'])
-        google_query = urlparse.parse_qs(google_link.query)
+        google_link = urllib.parse.urlparse(links['google'])
+        google_query = urllib.parse.parse_qs(google_link.query)
 
         self.assertEqual(google_link.netloc, 'calendar.google.com')
         self.assertEqual(google_link.path, '/calendar/render')
@@ -365,8 +368,8 @@ class EventDetailTestCase(BluebottleTestCase):
             )
         )
 
-        outlook_link = urlparse.urlparse(links['outlook'])
-        outlook_query = urlparse.parse_qs(outlook_link.query)
+        outlook_link = urllib.parse.urlparse(links['outlook'])
+        outlook_query = urllib.parse.parse_qs(outlook_link.query)
 
         self.assertEqual(outlook_link.netloc, 'outlook.live.com')
         self.assertEqual(outlook_link.path, '/owa/')
@@ -378,10 +381,10 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(outlook_query['body'][0], details)
         self.assertEqual(
             outlook_query['startdt'][0],
-            unicode(self.event.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
+            str(self.event.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
         )
         self.assertEqual(
-            outlook_query['enddt'][0], unicode(self.event.end.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
+            outlook_query['enddt'][0], str(self.event.end.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
         )
 
         self.assertTrue(

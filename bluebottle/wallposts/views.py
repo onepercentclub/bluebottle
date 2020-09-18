@@ -1,3 +1,4 @@
+from builtins import object
 import django_filters
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
@@ -23,7 +24,7 @@ class WallpostFilter(django_filters.FilterSet):
     parent_type = django_filters.CharFilter(name="content_type__name")
     parent_id = django_filters.NumberFilter(name="object_id")
 
-    class Meta:
+    class Meta(object):
         model = Wallpost
         fields = ['parent_type', 'parent_id']
 

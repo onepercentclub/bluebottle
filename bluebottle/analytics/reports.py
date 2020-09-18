@@ -1,4 +1,8 @@
-import StringIO
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import object
+import io
 import calendar
 import datetime
 import logging
@@ -306,7 +310,7 @@ Note
 
     def add_year_totals_sheet(self, year, cumulative=False):
 
-        last_type = max(self.type_index.iteritems(), key=operator.itemgetter(1))[0]
+        last_type = max(iter(self.type_index.items()), key=operator.itemgetter(1))[0]
         border_bottom = self.formats['border_bottom']
         border_right = self.formats['border_right']
         border_bottom_right = self.formats['border_corner']
@@ -321,7 +325,7 @@ Note
         # Number of columns in period section
         period_width = 6
         # number of types
-        num_types = len(self.type_index.keys())
+        num_types = len(list(self.type_index.keys()))
 
         locations, location_index = self.locations_by_year(year)
 
@@ -543,7 +547,7 @@ Note
     def to_output(self):
         start_time = time.time()
 
-        output = StringIO.StringIO()
+        output = io.StringIO()
         self.workbook = xlsxwriter.Workbook(output, {
             'in_memory': True,
             'default_date_format': 'dd/mm/yy',

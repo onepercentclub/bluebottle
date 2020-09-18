@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import logging
 
 from django.conf import settings
@@ -138,12 +140,12 @@ def get_export_models(admin_only=False):
         if admin_only:
             if admin.site._registry == {}:
                 admin.autodiscover()
-            return admin.site._registry.keys()
+            return list(admin.site._registry.keys())
         return get_models()
     else:
         models = []
         not_installed = []
-        for model, _ in export_conf.items():
+        for model, _ in list(export_conf.items()):
             app_label, model_class_name = model.split('.')
             model_class = get_model(app_label, model_class_name)
             if model_class is not None:

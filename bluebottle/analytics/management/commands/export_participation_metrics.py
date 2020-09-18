@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import range
 import logging
 from collections import namedtuple, OrderedDict, defaultdict
 
@@ -179,18 +181,18 @@ class Command(BaseCommand):
 
     @staticmethod
     def get_column_for_metric(row_data, metric_name):
-        return row_data.keys().index(metric_name)
+        return list(row_data.keys()).index(metric_name)
 
     @staticmethod
     def create_monthly_charts(workbook, chart_data):
-        for title, multi_year_data in chart_data.iteritems():
+        for title, multi_year_data in chart_data.items():
             chartsheet = workbook.add_chartsheet('{}'.format(title))
             chart = workbook.add_chart({'type': 'line'})
             chart.set_title({'name': '{}'.format(title)})
             chart.set_x_axis({'name': 'Month'})
             chart.set_y_axis({'name': 'Total'})
             chart.set_style(10)
-            for year, yearly_data in multi_year_data.iteritems():
+            for year, yearly_data in multi_year_data.items():
                 chart.add_series({
                     'name': yearly_data['name_coords'],
                     'categories': yearly_data['categories_coords'],
@@ -224,7 +226,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def write_headers(worksheet, row_data):
-        for column, data in enumerate(row_data.iteritems()):
+        for column, data in enumerate(row_data.items()):
             worksheet.write(0, column, data[0])
             worksheet.write_comment(0, column, data[1].definition)
             if data[1].hide_column:
@@ -232,7 +234,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def write_row(worksheet, row, row_data):
-        for column, data in enumerate(row_data.iteritems()):
+        for column, data in enumerate(row_data.items()):
             metric_value = data[1].metric
             is_formula = data[1].is_formula
             if is_formula:
@@ -250,7 +252,7 @@ class Command(BaseCommand):
                                         is_formula=False,
                                         hide_column=False,
                                         definition='The year associated with the end date.')
-        column_year = row_data.keys().index('Year')
+        column_year = list(row_data.keys()).index('Year')
 
         row_data['Quarter'] = self.RowData(
             metric=self.get_yearly_quarter(end_date) if statistic_type in ['weekly', 'monthly'] else '',
@@ -262,7 +264,7 @@ class Command(BaseCommand):
                                          is_formula=False,
                                          hide_column=False,
                                          definition='The calendar month associated with the end date.')
-        column_month = row_data.keys().index('Month')
+        column_month = list(row_data.keys()).index('Month')
 
         row_data['Week'] = self.RowData(metric=end_date.week_of_year if statistic_type == 'weekly' else '',
                                         is_formula=False,
@@ -275,7 +277,7 @@ class Command(BaseCommand):
                                             definition='The end date for the current statistic period.')
 
         # Freeze panes after this column for easy viewing
-        worksheet.freeze_panes(1, row_data.keys().index('End Date') + 1)
+        worksheet.freeze_panes(1, list(row_data.keys()).index('End Date') + 1)
 
         return column_year, column_month
 
@@ -296,7 +298,7 @@ class Command(BaseCommand):
                                                            'initiators. If a member is one of the three (e.g. a '
                                                            'project initiator or a task member or a task initiator), '
                                                            'they are counted as one participant.')
-        column_participants = row_data.keys().index('Participants')
+        column_participants = list(row_data.keys()).index('Participants')
 
         row_data['Participants Total Growth'] = self.RowData(
             metric=self.get_growth_formula(row, column_participants),
@@ -314,7 +316,7 @@ class Command(BaseCommand):
                        'If a member is one of the three (e.g. a project initiator or a '
                        'task member or a task initiator), they are counted as one '
                        'participant.')
-        column_participants_task_member = row_data.keys().index('Participants With Task Member Status Realized')
+        column_participants_task_member = list(row_data.keys()).index('Participants With Task Member Status Realized')
 
         row_data['Participants With Task Member Status Realized Growth'] = self.RowData(
             metric=self.get_growth_formula(row, column_participants_task_member),
@@ -328,7 +330,7 @@ class Command(BaseCommand):
             is_formula=False,
             hide_column=False,
             definition='Total count of projects in all known statuses which were created before the end date.')
-        column_projects_total = row_data.keys().index('Projects Total')
+        column_projects_total = list(row_data.keys()).index('Projects Total')
 
         row_data['Projects Total Growth'] = self.RowData(
             metric=self.get_growth_formula(row, column_projects_total),
@@ -389,7 +391,7 @@ class Command(BaseCommand):
             is_formula=False,
             hide_column=False,
             definition='Total count of task in all statuses which were created before the end date.')
-        column_task_total = row_data.keys().index('Tasks Total')
+        column_task_total = list(row_data.keys()).index('Tasks Total')
 
         row_data['Tasks Total Growth'] = self.RowData(
             metric=self.get_growth_formula(row, column_task_total),
@@ -404,7 +406,7 @@ class Command(BaseCommand):
                 hide_column=False,
                 definition='Total count of task with the status, {}, '
                            'which were created before the end date.'.format(label))
-            column_task_status = row_data.keys().index('Task Status - {}'.format(label))
+            column_task_status = list(row_data.keys()).index('Task Status - {}'.format(label))
 
             row_data['Tasks Status - {} Growth'.format(label)] = self.RowData(
                 metric=self.get_growth_formula(row, column_task_status),
@@ -418,7 +420,7 @@ class Command(BaseCommand):
             is_formula=False,
             hide_column=False,
             definition='Total count of task members in all statuses which were created before the end date.')
-        column_task_member_total = row_data.keys().index('Task Members Total')
+        column_task_member_total = list(row_data.keys()).index('Task Members Total')
 
         row_data['Task Members Total Growth'] = self.RowData(
             metric=self.get_growth_formula(row, column_task_member_total),
@@ -433,7 +435,7 @@ class Command(BaseCommand):
                 hide_column=False,
                 definition='Total count of task members with the status, {}, '
                            'which were created before the end date.'.format(label))
-            column_task_member_status = row_data.keys().index('Task Member Status - {}'.format(label))
+            column_task_member_status = list(row_data.keys()).index('Task Member Status - {}'.format(label))
 
             row_data['Task Member Status - {} Growth'.format(label)] = self.RowData(
                 metric=self.get_growth_formula(row, column_task_member_status),

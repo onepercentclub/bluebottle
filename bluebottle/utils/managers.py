@@ -1,3 +1,4 @@
+from builtins import object
 from django.db import models, transaction
 from django.db.models import Case, When, fields
 from django.db.models.query_utils import Q
@@ -44,16 +45,16 @@ class UpdateSignalsQuerySet(QuerySet):
     def update(self, **kwargs):
         for instance in self:
             pre_save.send(sender=instance.__class__, instance=instance, raw=False,
-                          using=self.db, update_fields=kwargs.keys())
+                          using=self.db, update_fields=list(kwargs.keys()))
 
         result = super(UpdateSignalsQuerySet, self.all()).update(**kwargs)
         for instance in self:
-            for key, value in kwargs.items():
+            for key, value in list(kwargs.items()):
                 # Fake setting off values from kwargs
                 setattr(instance, key, value)
 
             post_save.send(sender=instance.__class__, instance=instance, created=False,
-                           raw=False, using=self.db, update_fields=kwargs.keys())
+                           raw=False, using=self.db, update_fields=list(kwargs.keys()))
         return result
 
     update.alters_data = True

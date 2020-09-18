@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from builtins import str
 from django.contrib.admin.sites import AdminSite
 from django.contrib.messages import get_messages
 from django.core import mail

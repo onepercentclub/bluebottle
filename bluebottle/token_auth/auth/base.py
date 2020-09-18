@@ -1,3 +1,4 @@
+from builtins import object
 import logging
 
 from django.contrib.auth import get_user_model
@@ -45,7 +46,7 @@ class BaseTokenAuthentication(object):
         on the user.
         """
         user_model = get_user_model()()
-        return dict([(key, value) for key, value in data.items() if hasattr(user_model, key)])
+        return dict([(key, value) for key, value in list(data.items()) if hasattr(user_model, key)])
 
     def set_location(self, user, data):
         if 'location.slug' in data:
@@ -58,7 +59,7 @@ class BaseTokenAuthentication(object):
     def set_segments(self, user, data):
         segments = [
             (field, value)
-            for field, value in data.items()
+            for field, value in list(data.items())
             if field.startswith('segment.')
         ]
 
@@ -103,7 +104,7 @@ class BaseTokenAuthentication(object):
         """
         Set custom user data
         """
-        for key, value in data.items():
+        for key, value in list(data.items()):
             if key.startswith('custom'):
 
                 name = key.replace('custom.', '')

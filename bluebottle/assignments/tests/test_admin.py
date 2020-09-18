@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from builtins import str
 from django.contrib.admin.sites import AdminSite
 from django.urls.base import reverse
 from rest_framework import status

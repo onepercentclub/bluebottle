@@ -1,3 +1,7 @@
+from builtins import str
+from builtins import zip
+from builtins import range
+from builtins import object
 import mimetypes
 import xml.etree.cElementTree as et
 
@@ -90,7 +94,7 @@ class DutchBankAccountFieldValidator(RegexValidator):
                 value = "0" + value
 
             eleven_test_sum = sum(
-                [int(a) * b for a, b in zip(value, range(1, 11))])
+                [int(a) * b for a, b in zip(value, list(range(1, 11)))])
             if eleven_test_sum % 11 != 0:
                 raise ValidationError(_("Invalid Dutch bank account number."))
 
@@ -172,7 +176,7 @@ class SafeField(serializers.CharField):
         """
         data = data.replace("&lt;;", "<").replace("&gt;;", ">")
         data = data.replace("&lt;", "<").replace("&gt;", ">")
-        return unicode(clean_html(data))
+        return str(clean_html(data))
 
 
 class PrivateFileField(models.FileField):

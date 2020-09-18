@@ -1,3 +1,4 @@
+from builtins import object
 import factory
 from django.core.files.uploadedfile import SimpleUploadedFile
 

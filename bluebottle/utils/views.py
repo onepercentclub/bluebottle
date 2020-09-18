@@ -1,3 +1,4 @@
+from builtins import object
 import mimetypes
 import os
 
@@ -121,7 +122,7 @@ class RelatedPermissionMixin(object):
         Check if the request should be permitted for a given related object.
         Raises an appropriate exception if the request is not permitted.
         """
-        for related, permissions in self.related_permission_classes.items():
+        for related, permissions in list(self.related_permission_classes.items()):
             related_obj = getattr(obj, related)
             for permission in permissions:
                 if not permission().has_object_permission(request, None, related_obj):

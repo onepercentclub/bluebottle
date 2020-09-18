@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from builtins import str
 import json
 
 from datetime import timedelta
@@ -245,7 +246,7 @@ class AssignmentDetailAPITestCase(BluebottleTestCase):
             if resource['type'] == 'activities/impact-goals'
         ]
         for goal in goals:
-            self.assertTrue(unicode(goal.pk) in included_goals)
+            self.assertTrue(str(goal.pk) in included_goals)
 
 
 class AssignmentDetailApplicantsAPITestCase(BluebottleTestCase):

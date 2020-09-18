@@ -1,3 +1,4 @@
+from builtins import str
 from bluebottle.assignments.tests.factories import AssignmentFactory
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse

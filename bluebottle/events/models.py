@@ -1,5 +1,9 @@
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import datetime
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 
 from django.db import models, connection
 from django.db.models import Count, Sum
@@ -50,7 +54,7 @@ class Event(Activity):
 
     @property
     def stats(self):
-        from states import ParticipantStateMachine
+        from .states import ParticipantStateMachine
         contributions = self.contributions.instance_of(Participant)
 
         stats = contributions.filter(
@@ -82,7 +86,7 @@ class Event(Activity):
     def contribution_date(self):
         return self.start
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("Event")
         verbose_name_plural = _("Events")
         permissions = (
@@ -97,7 +101,7 @@ class Event(Activity):
             ('api_delete_own_event', 'Can delete own event through the API'),
         )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'activities/events'
 
     @property
@@ -112,7 +116,7 @@ class Event(Activity):
 
     @property
     def participants(self):
-        from states import ParticipantStateMachine
+        from .states import ParticipantStateMachine
         return self.contributions.filter(
             status__in=[
                 ParticipantStateMachine.new.value,
@@ -186,7 +190,7 @@ class Event(Activity):
 class Participant(Contribution):
     time_spent = models.FloatField(default=0)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("Participant")
         verbose_name_plural = _("Participants")
 
@@ -202,7 +206,7 @@ class Participant(Contribution):
             ('api_delete_own_participant', 'Can delete own participant through the API'),
         )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'contributions/participants'
 
     def save(self, *args, **kwargs):

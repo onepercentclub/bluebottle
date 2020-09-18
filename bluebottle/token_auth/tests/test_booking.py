@@ -1,3 +1,4 @@
+from builtins import chr
 import base64
 import hashlib
 import hmac

@@ -11,7 +11,7 @@ def get_settings():
 
     try:
         properties = import_string(properties_path)
-    except ImportError, e:
+    except ImportError as e:
         raise ImproperlyConfigured(e)
 
     try:

@@ -1,3 +1,6 @@
+from builtins import str
+from builtins import range
+from builtins import object
 import os
 import random
 import string
@@ -181,7 +184,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     objects = BlueBottleUserManager()
 
-    class Meta:
+    class Meta(object):
         abstract = True
         verbose_name = _('member')
         verbose_name_plural = _('members')

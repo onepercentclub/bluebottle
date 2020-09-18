@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import Max
@@ -112,7 +114,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("Initiative")
         verbose_name_plural = _("Initiatives")
         permissions = (
@@ -128,7 +130,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'initiatives'
 
     def __unicode__(self):
@@ -265,7 +267,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
     enable_impact = models.BooleanField(default=False)
 
-    class Meta:
+    class Meta(object):
         verbose_name_plural = _('initiative settings')
         verbose_name = _('initiative settings')
 

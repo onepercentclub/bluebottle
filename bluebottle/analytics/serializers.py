@@ -1,3 +1,4 @@
+from builtins import object
 from bluebottle.analytics.models import AnalyticsPlatformSettings, AnalyticsAdapter
 
 from rest_framework import serializers
@@ -5,7 +6,7 @@ from rest_framework import serializers
 
 class AnalyticsAdapterSerializer(serializers.ModelSerializer):
 
-    class Meta:
+    class Meta(object):
         fields = (
             'code',
             'type'
@@ -17,7 +18,7 @@ class AnalyticsPlatformSettingsSerializer(serializers.ModelSerializer):
 
     adapters = AnalyticsAdapterSerializer(many=True)
 
-    class Meta:
+    class Meta(object):
         model = AnalyticsPlatformSettings
         fields = (
             'adapters',

@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import str
 from django.core.exceptions import FieldDoesNotExist
 from django.core.management.base import BaseCommand
 from django.utils.module_loading import import_string
@@ -12,7 +14,7 @@ from bluebottle.members.models import Member
 def get_doc(element):
     if element.__doc__:
         return element.__doc__
-    return "{} (documentation missing)".format(unicode(element)).replace('<', '').replace('>', '')
+    return "{} (documentation missing)".format(str(element)).replace('<', '').replace('>', '')
 
 
 class Command(BaseCommand):
@@ -101,7 +103,7 @@ class Command(BaseCommand):
 
         text += u"<table data-layout=\"default\"><tr><th>State Name</th><th>Description</th></tr>"
 
-        for state in machine.states.values():
+        for state in list(machine.states.values()):
             text += u"<tr><td>{}</td><td>{}</td></tr>".format(state.name.capitalize(), state.description)
 
         text += u"</table>"
@@ -113,7 +115,7 @@ class Command(BaseCommand):
         text += u"<table data-layout=\"full-width\"><tr><th>Name</th><th>Description</th><th>From</th><th>To</th>" \
                 u"<th>Manual</th><th>Conditions</th><th>Side Effects</th></tr>"
 
-        for transition in machine.transitions.values():
+        for transition in list(machine.transitions.values()):
             str = u"<tr><td>{}</td><td>{}</td><td><ul>{}</ul></td>" \
                   u"<td>{}</td><td>{}</td><td><ul>{}</ul></td><td><ul>{}</ul></td></tr>"
 
@@ -147,7 +149,7 @@ class Command(BaseCommand):
 
             for trigger in model.triggers:
                 text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
-                    unicode(trigger(instance)),
+                    str(trigger(instance)),
                     "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in trigger(instance).effects])
                 )
             text += u"</table>"
@@ -163,7 +165,7 @@ class Command(BaseCommand):
 
             for task in model.periodic_tasks:
                 text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
-                    unicode(task(instance)),
+                    str(task(instance)),
                     "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in task(instance).effects])
                 )
             text += u"</table>"

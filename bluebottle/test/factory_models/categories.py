@@ -1,3 +1,4 @@
+from builtins import object
 from django.core.files.uploadedfile import SimpleUploadedFile
 from bluebottle.categories.models import Category, CategoryContent
 import factory

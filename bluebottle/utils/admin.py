@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import csv
 
 from adminfilters.multiselect import UnionFieldListFilter
@@ -54,14 +56,14 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
     attr = getattr(obj, field)
 
-    if isinstance(attr, (FieldFile,)):
+    if isinstance(attr, FieldFile):
         attr = request.build_absolute_uri(attr.url)
 
     output = attr() if callable(attr) else attr
 
     if isinstance(output, (list, tuple, QuerySet)):
         output = manyToManySep.join([str(item) for item in output])
-    return unicode(output).encode('utf-8') if output else ""
+    return str(output).encode('utf-8') if output else ""
 
 
 def escape_csv_formulas(item):
@@ -96,7 +98,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
-            unicode(opts).replace('.', '_')
+            str(opts).replace('.', '_')
         )
 
         writer = csv.writer(response)
@@ -154,7 +156,7 @@ class TotalAmountAdminChangeList(ChangeList):
 
 class LatLongMapPickerMixin(object):
 
-    class Media:
+    class Media(object):
         if hasattr(settings, 'MAPS_API_KEY') and settings.MAPS_API_KEY:
             css = {
                 'all': ('css/admin/location_picker.css',),
@@ -184,7 +186,7 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
         user_id=user.id,
         content_type_id=ContentType.objects.get_for_model(obj).pk,
         object_id=obj.pk,
-        object_repr=unicode(obj),
+        object_repr=str(obj),
         action_flag=action_flag,
         change_message=change_message
     )

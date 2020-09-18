@@ -1,3 +1,4 @@
+from builtins import object
 class temp_disconnect_signal(object):
     """
     Temporarily disconnect a model from a signal

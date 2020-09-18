@@ -1,3 +1,4 @@
+from builtins import object
 from django.conf import settings
 from django.db import models
 
@@ -10,7 +11,7 @@ class CheckedToken(models.Model):
     timestamp = models.DateTimeField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
 
-    class Meta:
+    class Meta(object):
         ordering = ('-timestamp', 'user__username')
 
     def __unicode__(self):

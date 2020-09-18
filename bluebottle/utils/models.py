@@ -1,3 +1,4 @@
+from builtins import object
 from datetime import timedelta
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -31,7 +32,7 @@ class Language(models.Model):
     language_name = models.CharField(max_length=100, blank=False)
     native_name = models.CharField(max_length=100, blank=False)
 
-    class Meta:
+    class Meta(object):
         ordering = ['language_name']
 
     def __unicode__(self):
@@ -49,7 +50,7 @@ class Address(models.Model):
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     postal_code = models.CharField(max_length=20, blank=True)
 
-    class Meta:
+    class Meta(object):
         abstract = True
 
     def __unicode__(self):
@@ -70,7 +71,7 @@ class BasePlatformSettings(models.Model):
 
     update = models.DateTimeField(auto_now=True)
 
-    class Meta:
+    class Meta(object):
         abstract = True
 
     def save(self, *args, **kwargs):
@@ -89,7 +90,7 @@ class BasePlatformSettings(models.Model):
 
 
 class SortableTranslatableModel(TranslatableModel):
-    class Meta:
+    class Meta(object):
         abstract = True
 
     objects = SortableTranslatableManager()
@@ -123,7 +124,7 @@ class PublishableModel(models.Model):
 
     objects = PublishedManager()
 
-    class Meta:
+    class Meta(object):
         abstract = True
 
 
@@ -154,7 +155,7 @@ class ValidatedModelMixin(object):
         for validator in self.validators:
             try:
                 validator(self)()
-            except ValidatorError, e:
+            except ValidatorError as e:
                 yield e
 
     @property
@@ -200,6 +201,6 @@ class TranslationPlatformSettings(TranslatableModel, BasePlatformSettings):
 
     )
 
-    class Meta:
+    class Meta(object):
         verbose_name_plural = _('translation settings')
         verbose_name = _('translation settings')

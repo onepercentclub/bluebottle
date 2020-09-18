@@ -1,3 +1,4 @@
+from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatedFields
@@ -19,7 +20,7 @@ class Skill(SortableTranslatableModel):
     def __unicode__(self):
         return self.name
 
-    class Meta:
+    class Meta(object):
         ordering = ['translations__name']
         permissions = (
             ('api_read_skill', 'Can view skills through the API'),

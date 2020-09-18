@@ -1,4 +1,5 @@
 # coding=utf-8
+from builtins import object
 import os
 
 from djmoney.money import Money
@@ -28,11 +29,11 @@ from bluebottle.utils.models import Language
 factory = RequestFactory()
 
 
-class MockRequest:
+class MockRequest(object):
     pass
 
 
-class MockUser:
+class MockUser(object):
     def __init__(self, perms=None, is_staff=True, is_superuser=False, groups=None):
         self.perms = perms or []
         self.is_superuser = is_superuser

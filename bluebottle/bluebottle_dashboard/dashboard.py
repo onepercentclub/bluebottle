@@ -1,3 +1,4 @@
+from builtins import object
 import importlib
 
 import rules
@@ -19,7 +20,7 @@ from bluebottle.members.dashboard import RecentMembersDashboard
 class CustomIndexDashboard(Dashboard):
     columns = 2
 
-    class Media:
+    class Media(object):
         css = ('css/admin/dashboard.css', )
 
     def init_with_context(self, context):

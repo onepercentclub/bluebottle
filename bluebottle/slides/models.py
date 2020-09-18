@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from django.conf import settings
 from django.db import models
 from django.utils.functional import lazy
@@ -81,5 +83,5 @@ class Slide(PublishableModel):
     def __unicode__(self):
         return self.title
 
-    class Meta:
+    class Meta(object):
         ordering = ('language', 'sequence')

@@ -1,3 +1,4 @@
+from builtins import object
 import factory
 from djmoney.contrib.exchange.models import Rate, ExchangeBackend
 

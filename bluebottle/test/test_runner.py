@@ -1,3 +1,4 @@
+from builtins import range
 import locale
 
 from django.db import connection, IntegrityError

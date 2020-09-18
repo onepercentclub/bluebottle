@@ -1,3 +1,4 @@
+from builtins import object
 from django.db import models
 from django.conf import settings
 from django.utils.timezone import now
@@ -20,7 +21,7 @@ class Terms(models.Model):
     def __unicode__(self):
         return 'Terms {0} - {1}'.format(self.version, self.date.date())
 
-    class Meta:
+    class Meta(object):
         ordering = ('-date',)
         verbose_name_plural = _('Terms')
         verbose_name = _('Term')
@@ -50,7 +51,7 @@ class TermsAgreement(models.Model):
                 return queryset.all()[0]
         return None
 
-    class Meta:
+    class Meta(object):
         ordering = ('-created',)
         verbose_name_plural = _('Terms agreement')
         verbose_name = _('Term agreements')

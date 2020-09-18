@@ -1,3 +1,4 @@
+from builtins import object
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -66,7 +67,7 @@ class NotificationPlatformSettings(BasePlatformSettings):
         max_length=100, choices=MATCH_OPTIONS, blank=True
     )
 
-    class Meta:
+    class Meta(object):
         verbose_name_plural = _('notification settings')
         verbose_name = _('notification settings')
 

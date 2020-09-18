@@ -1,3 +1,4 @@
+from builtins import object
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
@@ -29,7 +30,7 @@ class ProjectTheme(SortableTranslatableModel):
 
         super(ProjectTheme, self).save(**kwargs)
 
-    class Meta:
+    class Meta(object):
         ordering = ['translations__name']
         verbose_name = _('project theme')
         verbose_name_plural = _('project themes')

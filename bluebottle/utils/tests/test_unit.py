@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import dkim
 import mock
 import unittest

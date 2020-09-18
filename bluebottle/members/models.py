@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from builtins import object
 from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ObjectDoesNotExist
@@ -25,7 +27,7 @@ class CustomMemberFieldSettings(SortableMixin):
     def slug(self):
         return slugify(self.name)
 
-    class Meta:
+    class Meta(object):
         ordering = ['sequence']
 
 
@@ -81,7 +83,7 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_("The number of days after which user data should be anonymised. 0 for no anonymisation")
     )
 
-    class Meta:
+    class Meta(object):
         verbose_name_plural = _('member platform settings')
         verbose_name = _('member platform settings')
 
@@ -134,7 +136,7 @@ class Member(BlueBottleBaseUser):
         except Place.DoesNotExist:
             return None
 
-    class Analytics:
+    class Analytics(object):
         type = 'member'
         tags = {}
         fields = {
@@ -185,10 +187,10 @@ class UserActivity(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     path = models.CharField(max_length=200, null=True, blank=True)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('User activity')
         verbose_name_plural = _('User activities')
         ordering = ['-created']
 
 
-import signals  # noqa
+from . import signals  # noqa

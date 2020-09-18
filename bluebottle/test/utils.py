@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from bunch import bunchify
 
 from django.db import connection
@@ -50,7 +52,7 @@ def css_dict(style):
         return dict([(k.strip(), v.strip()) for k, v in
                      [prop.split(':') for prop in
                       style.rstrip(';').split(';')]])
-    except ValueError, e:
+    except ValueError as e:
         raise ValueError('Could not parse CSS: %s (%s)' % (style, e))
 
 
@@ -236,7 +238,7 @@ class FsmTestMixin(object):
                              instance.status))
 
 
-class override_properties():
+class override_properties(object):
     def __init__(self, **kwargs):
         self.properties = kwargs
 

@@ -1,3 +1,4 @@
+from builtins import str
 import uuid
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point

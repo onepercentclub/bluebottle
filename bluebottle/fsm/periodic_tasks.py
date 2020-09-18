@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -21,4 +23,4 @@ class ModelPeriodicTask(object):
                     instance.save()
 
     def __unicode__(self):
-        return unicode(_("Periodic task") + ": " + self.__class__.__name__)
+        return str(_("Periodic task") + ": " + self.__class__.__name__)

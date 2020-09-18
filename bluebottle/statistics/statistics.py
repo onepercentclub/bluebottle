@@ -1,3 +1,4 @@
+from builtins import object
 from django.db.models import Q
 from django.db.models.aggregates import Sum
 from djmoney.contrib.exchange.models import convert_money

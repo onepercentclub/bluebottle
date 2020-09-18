@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import os
 import uuid
 
@@ -34,20 +36,20 @@ class File(AnonymizationMixin, models.Model):
     def __unicode__(self):
         return str(self.id)
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'files'
 
-    class Meta:
+    class Meta(object):
         abstract = True
 
 
 class Image(File):
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'images'
 
 
 class Document(File):
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'documents'
 
 
@@ -64,7 +66,7 @@ class PrivateDocument(File):
 
     file = models.FileField(_('file'), upload_to=get_private_path)
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'private-documents'
 
 

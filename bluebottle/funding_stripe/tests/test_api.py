@@ -1,3 +1,4 @@
+from builtins import str
 import json
 import mock
 
@@ -373,7 +374,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
 
         self.assertEqual(
             data['data']['relationships']['owner']['data']['id'],
-            unicode(self.user.pk)
+            str(self.user.pk)
         )
 
     def test_create_no_user(self):
@@ -423,7 +424,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
 
         self.assertEqual(
             data['data']['relationships']['owner']['data']['id'],
-            unicode(self.user.pk)
+            str(self.user.pk)
         )
 
     def test_get_verification_error(self):

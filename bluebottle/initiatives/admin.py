@@ -1,3 +1,4 @@
+from builtins import object
 from django.contrib import admin
 from django.utils import translation
 from django.utils.html import format_html
@@ -17,7 +18,7 @@ from bluebottle.wallposts.admin import WallpostInline
 
 class InitiativeAdminForm(StateMachineModelForm):
 
-    class Meta:
+    class Meta(object):
         model = Initiative
         fields = '__all__'
         widgets = {
@@ -173,7 +174,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     valid.short_description = _('Steps to complete initiative')
 
-    class Media:
+    class Media(object):
         js = ('admin/js/inline-activities-add.js',)
 
 

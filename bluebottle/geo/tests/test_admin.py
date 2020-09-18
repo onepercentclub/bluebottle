@@ -1,3 +1,4 @@
+from builtins import str
 from django.contrib.admin.sites import AdminSite
 from django.contrib.gis.geos import Point
 from django.contrib.messages import get_messages

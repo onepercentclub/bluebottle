@@ -1,3 +1,4 @@
+from builtins import object
 from bluebottle.clients.utils import tenant_url
 
 
@@ -27,7 +28,7 @@ class ReactionObserver(object):
         pass
 
 
-class ObserversContainer:
+class ObserversContainer(object):
     wallpost_observer_list = []
     reaction_observer_list = []
 

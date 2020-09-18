@@ -1,3 +1,4 @@
+from builtins import str
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -28,7 +29,7 @@ class FundingFinishedTask(ModelPeriodicTask):
     ]
 
     def __unicode__(self):
-        return unicode(_("Campaign deadline has passed."))
+        return str(_("Campaign deadline has passed."))
 
 
 Funding.periodic_tasks = [FundingFinishedTask]

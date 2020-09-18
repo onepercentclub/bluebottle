@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from adminsortable.models import SortableMixin
 from django.db import models
 from django.db.models import Sum
@@ -39,7 +41,7 @@ class BaseStatistic(PolymorphicModel, SortableMixin):
                 pass
         return u"Stat #{}".format(self.id)
 
-    class Meta:
+    class Meta(object):
         ordering = ['sequence']
         verbose_name = _('Statistic')
         verbose_name_plural = _('Statistics')
@@ -60,13 +62,13 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
     def get_value(self, start=None, end=None):
         return self.value
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'statistics/manual-statistics'
 
     def __unicode__(self):
-        return unicode(self.translations.name)
+        return str(self.translations.name)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Custom statistic')
         verbose_name_plural = _('Custom statistics')
 
@@ -142,10 +144,10 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
     def get_value(self, start=None, end=None):
         return getattr(Statistics(), self.query)
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'statistics/database-statistics'
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Engagement statistic')
         verbose_name_plural = _('Engagement statistics')
 
@@ -170,10 +172,10 @@ class ImpactStatistic(BaseStatistic):
     def name(self):
         return self.impact_type
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'statistics/impact-statistics'
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Impact statistic')
         verbose_name_plural = _('Impact statistics')
 
@@ -238,5 +240,5 @@ class Statistic(models.Model):
 
         return getattr(self.statistics, self.type, 0)
 
-    class Meta:
+    class Meta(object):
         ordering = ('sequence', )

@@ -1,4 +1,5 @@
 
+from builtins import object
 class BaseMessageAdapter(object):
 
     def __init__(self, message):

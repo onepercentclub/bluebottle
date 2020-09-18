@@ -1,6 +1,7 @@
 """
 ContentItem models for custom django-fluent-contents plugins.
 """
+from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
@@ -22,7 +23,7 @@ class PictureItem(ContentItem):
     align = models.CharField(_("Align"), max_length=50,
                              choices=PictureAlignment.choices)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("Picture")
         verbose_name_plural = _("Pictures")
 

@@ -1,3 +1,4 @@
+from builtins import object
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -40,7 +41,7 @@ class GeoBaseModel(SortableTranslatableModel):
 
         super(GeoBaseModel, self).save(*args, **kwargs)
 
-    class Meta:
+    class Meta(object):
         abstract = True
 
 
@@ -189,7 +190,7 @@ class Geolocation(models.Model):
 
     anonymized = False
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'locations'
 
     def __unicode__(self):

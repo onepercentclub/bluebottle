@@ -1,5 +1,7 @@
+from future import standard_library
+standard_library.install_aliases()
 import json
-from StringIO import StringIO
+from io import StringIO
 
 
 from django.db import connection

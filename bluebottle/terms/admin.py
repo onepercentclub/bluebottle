@@ -1,3 +1,4 @@
+from builtins import object
 from bluebottle.terms.models import Terms, TermsAgreement
 from django.contrib import admin
 from django import forms
@@ -7,7 +8,7 @@ from tinymce.widgets import TinyMCE
 class TermsForm(forms.ModelForm):
     contents = forms.CharField(widget=TinyMCE(attrs={'cols': 80, 'rows': 40}))
 
-    class Meta:
+    class Meta(object):
         model = Terms
         exclude = ()
 

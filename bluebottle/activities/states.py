@@ -1,3 +1,4 @@
+from builtins import str
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.models import Organizer
@@ -16,7 +17,7 @@ class CreateOrganizer(Effect):
         )
 
     def __unicode__(self):
-        return unicode(_('Create organizer'))
+        return str(_('Create organizer'))
 
 
 class ActivityStateMachine(ModelStateMachine):

@@ -1,3 +1,4 @@
+from builtins import object
 import factory.fuzzy
 
 from bluebottle.tasks.models import Skill

@@ -1,3 +1,4 @@
+from builtins import object
 import factory
 
 from django.contrib.auth.models import Group

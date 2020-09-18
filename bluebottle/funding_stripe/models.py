@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
+from builtins import object
 import re
 import json
 from operator import attrgetter
@@ -63,7 +67,7 @@ class PaymentIntent(models.Model):
             "activity_title": self.donation.activity.title,
         }
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'payments/stripe-payment-intents'
 
     def __unicode__(self):
@@ -144,9 +148,9 @@ class StripeSourcePayment(Payment):
     def update(self):
         try:
             # Update donation amount if it differs
-            if self.source.amount / 100 != self.donation.amount.amount \
+            if old_div(self.source.amount, 100) != self.donation.amount.amount \
                     or self.source.currency != self.donation.amount.currency:
-                self.donation.amount = Money(self.source.amount / 100, self.source.currency)
+                self.donation.amount = Money(old_div(self.source.amount, 100), self.source.currency)
                 self.donation.save()
             if not self.charge_token and self.source.status == 'chargeable':
                 self.do_charge()
@@ -258,7 +262,7 @@ class StripePaymentProvider(PaymentProvider):
                         methods.append(method)
         return methods
 
-    class Meta:
+    class Meta(object):
         verbose_name = 'Stripe payment provider'
 
 
@@ -536,11 +540,11 @@ class StripePayoutAccount(PayoutAccount):
             "member_id": self.owner.pk,
         }
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('stripe payout account')
         verbose_name_plural = _('stripe payout accounts')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripes'
 
 
@@ -587,10 +591,10 @@ class ExternalAccount(BankAccount):
             "tenant_domain": connection.tenant.domain_url,
         }
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripe-external-accounts'
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Stripe external account')
         verbose_name_plural = _('Stripe exterrnal account')
 
@@ -598,4 +602,4 @@ class ExternalAccount(BankAccount):
         return "Stripe external account {}".format(self.account_id)
 
 
-from states import *  # noqa
+from .states import *  # noqa

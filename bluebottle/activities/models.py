@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
@@ -75,7 +77,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     def stats(self):
         return {}
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("Activity")
         verbose_name_plural = _("Activities")
         permissions = (
@@ -150,16 +152,16 @@ class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
         super(Contribution, self).save(*args, **kwargs)
 
-    class Meta:
+    class Meta(object):
         ordering = ('-created',)
 
 
 class Organizer(Contribution):
-    class Meta:
+    class Meta(object):
         verbose_name = _("Activity owner")
         verbose_name_plural = _("Activity owners")
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'contributions/organizers'
 
     def save(self, *args, **kwargs):

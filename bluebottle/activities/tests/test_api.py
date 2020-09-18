@@ -729,7 +729,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_limits(self):
         initiative = InitiativeFactory.create()
         EventFactory.create_batch(
-            105,
+            7,
             status='open',
             initiative=initiative,
         )
@@ -737,13 +737,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             self.url + '?page[size]=150',
             user=self.owner
         )
-        self.assertEqual(len(response.json()['data']), 105)
+        self.assertEqual(len(response.json()['data']), 7)
 
         response = self.client.get(
-            self.url + '?page[size]=10',
+            self.url + '?page[size]=3',
             user=self.owner
         )
-        self.assertEqual(len(response.json()['data']), 10)
+        self.assertEqual(len(response.json()['data']), 3)
 
 
 class ActivityRelatedImageAPITestCase(BluebottleTestCase):

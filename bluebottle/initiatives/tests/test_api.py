@@ -526,8 +526,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
 
-    def test_many_results(self):
-        InitiativeFactory.create_batch(39, owner=self.owner, status='approved')
+    def test_more_results(self):
+        InitiativeFactory.create_batch(19, owner=self.owner, status='approved')
         InitiativeFactory.create(status="approved")
 
         response = self.client.get(
@@ -536,7 +536,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
         data = json.loads(response.content)
 
-        self.assertEqual(data['meta']['pagination']['count'], 40)
+        self.assertEqual(data['meta']['pagination']['count'], 20)
         self.assertEqual(len(data['data']), 8)
 
     def test_only_owner_permission(self):

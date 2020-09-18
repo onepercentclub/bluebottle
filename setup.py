@@ -134,7 +134,7 @@ tests_requires = [
     'django-setuptest==0.2.1',
     'django-slowtests==0.5.1',
     'django-webtest==1.9.2',
-    'factory-boy==2.8.1',
+    'factory-boy==2.12.0',
     'httmock==1.2.6',
     'mock==2.0.0',
     'nose==1.3.7',

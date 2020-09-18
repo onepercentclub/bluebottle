@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 11.4
--- Dumped by pg_dump version 11.4
+-- Dumped from database version 12.2
+-- Dumped by pg_dump version 12.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -38,7 +38,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner: -
+-- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner: 
 --
 
 COMMENT ON EXTENSION pg_trgm IS 'text similarity measurement and index searching based on trigrams';
@@ -52,15 +52,37 @@ CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION unaccent; Type: COMMENT; Schema: -; Owner: -
+-- Name: EXTENSION unaccent; Type: COMMENT; Schema: -; Owner: 
 --
 
 COMMENT ON EXTENSION unaccent IS 'text search dictionary that removes accents';
 
 
+--
+-- Name: refresh_union_view(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.refresh_union_view(table_name text) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+        DECLARE
+          schema TEXT;
+          sql TEXT := '';
+        BEGIN
+          FOR schema IN SELECT schema_name FROM clients_client
+          LOOP
+            sql := sql || format('SELECT ''%I'' AS tenant, * FROM %I.%I UNION ALL ', schema, schema, table_name);
+          END LOOP;
+
+          EXECUTE
+            format('CREATE OR REPLACE VIEW %I AS ', table_name) || left(sql, -11);
+        END
+        $$;
+
+
 SET default_tablespace = '';
 
-SET default_with_oids = false;
+SET default_table_access_method = heap;
 
 --
 -- Name: celery_taskmeta; Type: TABLE; Schema: public; Owner: -
@@ -516,7 +538,9 @@ CREATE TABLE test.activities_activity (
     polymorphic_ctype_id integer,
     highlight boolean NOT NULL,
     review_status character varying(20) NOT NULL,
-    transition_date timestamp with time zone
+    transition_date timestamp with time zone,
+    image_id uuid,
+    video_url character varying(100)
 );
 
 
@@ -541,6 +565,37 @@ ALTER SEQUENCE test.activities_activity_id_seq OWNED BY test.activities_activity
 
 
 --
+-- Name: activities_activity_segments; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.activities_activity_segments (
+    id integer NOT NULL,
+    activity_id integer NOT NULL,
+    segment_id integer NOT NULL
+);
+
+
+--
+-- Name: activities_activity_segments_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.activities_activity_segments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: activities_activity_segments_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.activities_activity_segments_id_seq OWNED BY test.activities_activity_segments.id;
+
+
+--
 -- Name: activities_contribution; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -552,7 +607,8 @@ CREATE TABLE test.activities_contribution (
     activity_id integer NOT NULL,
     polymorphic_ctype_id integer,
     user_id integer,
-    transition_date timestamp with time zone
+    transition_date timestamp with time zone,
+    contribution_date timestamp with time zone NOT NULL
 );
 
 
@@ -574,6 +630,15 @@ CREATE SEQUENCE test.activities_contribution_id_seq
 --
 
 ALTER SEQUENCE test.activities_contribution_id_seq OWNED BY test.activities_contribution.id;
+
+
+--
+-- Name: activities_organizer; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.activities_organizer (
+    contribution_ptr_id integer NOT NULL
+);
 
 
 --
@@ -666,6 +731,9 @@ CREATE TABLE test.assignments_assignment (
     location_id integer,
     is_online boolean,
     end_date_type character varying(50),
+    preparation double precision,
+    start_time time without time zone,
+    date timestamp with time zone,
     CONSTRAINT assignments_assignment_capacity_check CHECK ((capacity >= 0))
 );
 
@@ -772,6 +840,82 @@ CREATE TABLE test.authtoken_token (
     created timestamp with time zone NOT NULL,
     user_id integer NOT NULL
 );
+
+
+--
+-- Name: axes_accessattempt; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.axes_accessattempt (
+    id integer NOT NULL,
+    user_agent character varying(255) NOT NULL,
+    ip_address inet,
+    username character varying(255),
+    http_accept character varying(1025) NOT NULL,
+    path_info character varying(255) NOT NULL,
+    attempt_time timestamp with time zone NOT NULL,
+    get_data text NOT NULL,
+    post_data text NOT NULL,
+    failures_since_start integer NOT NULL,
+    CONSTRAINT axes_accessattempt_failures_since_start_check CHECK ((failures_since_start >= 0))
+);
+
+
+--
+-- Name: axes_accessattempt_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.axes_accessattempt_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: axes_accessattempt_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.axes_accessattempt_id_seq OWNED BY test.axes_accessattempt.id;
+
+
+--
+-- Name: axes_accesslog; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.axes_accesslog (
+    id integer NOT NULL,
+    user_agent character varying(255) NOT NULL,
+    ip_address inet,
+    username character varying(255),
+    trusted boolean NOT NULL,
+    http_accept character varying(1025) NOT NULL,
+    path_info character varying(255) NOT NULL,
+    attempt_time timestamp with time zone NOT NULL,
+    logout_time timestamp with time zone
+);
+
+
+--
+-- Name: axes_accesslog_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.axes_accesslog_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: axes_accesslog_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.axes_accesslog_id_seq OWNED BY test.axes_accesslog.id;
 
 
 --
@@ -945,11 +1089,10 @@ ALTER SEQUENCE test.bb_projects_projecttheme_translation_id_seq OWNED BY test.bb
 
 CREATE TABLE test.categories_category (
     id integer NOT NULL,
-    title character varying(255) NOT NULL,
     slug character varying(100) NOT NULL,
-    description text NOT NULL,
     image character varying(255),
-    image_logo character varying(255)
+    image_logo character varying(255),
+    video character varying(255)
 );
 
 
@@ -974,17 +1117,46 @@ ALTER SEQUENCE test.categories_category_id_seq OWNED BY test.categories_category
 
 
 --
+-- Name: categories_category_translation; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.categories_category_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    title character varying(255) NOT NULL,
+    description text NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: categories_category_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.categories_category_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: categories_category_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.categories_category_translation_id_seq OWNED BY test.categories_category_translation.id;
+
+
+--
 -- Name: categories_categorycontent; Type: TABLE; Schema: test; Owner: -
 --
 
 CREATE TABLE test.categories_categorycontent (
     id integer NOT NULL,
-    title character varying(60) NOT NULL,
-    description text NOT NULL,
     image character varying(255),
     video_url character varying(100) NOT NULL,
-    link_text character varying(60) NOT NULL,
-    link_url character varying(200) NOT NULL,
     category_id integer NOT NULL,
     sequence integer NOT NULL,
     CONSTRAINT categories_categorycontent_sequence_check CHECK ((sequence >= 0))
@@ -1009,6 +1181,41 @@ CREATE SEQUENCE test.categories_categorycontent_id_seq
 --
 
 ALTER SEQUENCE test.categories_categorycontent_id_seq OWNED BY test.categories_categorycontent.id;
+
+
+--
+-- Name: categories_categorycontent_translation; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.categories_categorycontent_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    title character varying(60) NOT NULL,
+    description text NOT NULL,
+    link_text character varying(60) NOT NULL,
+    link_url character varying(300) NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: categories_categorycontent_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.categories_categorycontent_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: categories_categorycontent_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.categories_categorycontent_translation_id_seq OWNED BY test.categories_categorycontent_translation.id;
 
 
 --
@@ -1597,6 +1804,41 @@ ALTER SEQUENCE test.cms_siteplatformsettings_id_seq OWNED BY test.cms_siteplatfo
 
 
 --
+-- Name: cms_siteplatformsettings_translation; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.cms_siteplatformsettings_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    metadata_title character varying(100),
+    metadata_description text,
+    metadata_keywords character varying(300),
+    master_id integer,
+    start_page character varying(100)
+);
+
+
+--
+-- Name: cms_siteplatformsettings_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.cms_siteplatformsettings_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: cms_siteplatformsettings_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.cms_siteplatformsettings_translation_id_seq OWNED BY test.cms_siteplatformsettings_translation.id;
+
+
+--
 -- Name: cms_slide; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -1792,6 +2034,17 @@ CREATE TABLE test.contentitem_cms_activitiescontent (
 --
 
 CREATE TABLE test.contentitem_cms_categoriescontent (
+    contentitem_ptr_id integer NOT NULL,
+    title character varying(50),
+    sub_title character varying(400)
+);
+
+
+--
+-- Name: contentitem_cms_homepagestatisticscontent; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.contentitem_cms_homepagestatisticscontent (
     contentitem_ptr_id integer NOT NULL,
     title character varying(50),
     sub_title character varying(400)
@@ -2067,6 +2320,18 @@ CREATE TABLE test.contentitem_pages_imagetextitem (
 
 
 --
+-- Name: contentitem_pages_imagetextrounditem; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.contentitem_pages_imagetextrounditem (
+    contentitem_ptr_id integer NOT NULL,
+    text text NOT NULL,
+    text_final text,
+    image character varying(100) NOT NULL
+);
+
+
+--
 -- Name: contentitem_rawhtml_rawhtmlitem; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -2085,6 +2350,71 @@ CREATE TABLE test.contentitem_text_textitem (
     text text NOT NULL,
     text_final text
 );
+
+
+--
+-- Name: django_content_type; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.django_content_type (
+    id integer NOT NULL,
+    app_label character varying(100) NOT NULL,
+    model character varying(100) NOT NULL
+);
+
+
+--
+-- Name: events_participant; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.events_participant (
+    contribution_ptr_id integer NOT NULL,
+    time_spent double precision NOT NULL
+);
+
+
+--
+-- Name: funding_donation; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.funding_donation (
+    contribution_ptr_id integer NOT NULL,
+    amount_currency character varying(3) NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    fundraiser_id integer,
+    reward_id integer,
+    client_secret character varying(32),
+    name character varying(200),
+    anonymous boolean NOT NULL,
+    payout_id integer,
+    payout_amount numeric(12,2) NOT NULL,
+    payout_amount_currency character varying(3) NOT NULL
+);
+
+
+--
+-- Name: contributions; Type: VIEW; Schema: test; Owner: -
+--
+
+CREATE VIEW test.contributions AS
+ SELECT replace(replace(replace((ct.model)::text, 'participant'::text, 'event'::text), 'donation'::text, 'fundraiser'::text), 'applicant'::text, 'task'::text) AS activity_type,
+    (COALESCE(p.time_spent, (0)::double precision) + COALESCE(a.time_spent, (0)::double precision)) AS time_spent,
+    d.amount,
+    d.amount_currency,
+    d.name,
+    c.user_id,
+    c.activity_id,
+    c.id,
+    c.status,
+    c.created,
+    c.updated,
+    c.contribution_date,
+    c.transition_date
+   FROM ((((test.activities_contribution c
+     JOIN test.django_content_type ct ON ((c.polymorphic_ctype_id = ct.id)))
+     LEFT JOIN test.events_participant p ON ((p.contribution_ptr_id = c.id)))
+     LEFT JOIN test.assignments_applicant a ON ((a.contribution_ptr_id = c.id)))
+     LEFT JOIN test.funding_donation d ON ((d.contribution_ptr_id = c.id)));
 
 
 --
@@ -2162,17 +2492,6 @@ CREATE SEQUENCE test.django_admin_log_id_seq
 --
 
 ALTER SEQUENCE test.django_admin_log_id_seq OWNED BY test.django_admin_log.id;
-
-
---
--- Name: django_content_type; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.django_content_type (
-    id integer NOT NULL,
-    app_label character varying(100) NOT NULL,
-    model character varying(100) NOT NULL
-);
 
 
 --
@@ -2351,17 +2670,8 @@ CREATE TABLE test.events_event (
     start_date date,
     duration double precision,
     "end" timestamp with time zone,
+    start timestamp with time zone,
     CONSTRAINT events_event_capacity_check CHECK ((capacity >= 0))
-);
-
-
---
--- Name: events_participant; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.events_participant (
-    contribution_ptr_id integer NOT NULL,
-    time_spent double precision NOT NULL
 );
 
 
@@ -2383,6 +2693,19 @@ CREATE TABLE test.files_document (
 --
 
 CREATE TABLE test.files_image (
+    id uuid NOT NULL,
+    created date NOT NULL,
+    file character varying(100) NOT NULL,
+    used boolean NOT NULL,
+    owner_id integer NOT NULL
+);
+
+
+--
+-- Name: files_privatedocument; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.files_privatedocument (
     id uuid NOT NULL,
     created date NOT NULL,
     file character varying(100) NOT NULL,
@@ -2597,25 +2920,6 @@ ALTER SEQUENCE test.funding_budgetline_id_seq OWNED BY test.funding_budgetline.i
 
 
 --
--- Name: funding_donation; Type: TABLE; Schema: test; Owner: -
---
-
-CREATE TABLE test.funding_donation (
-    contribution_ptr_id integer NOT NULL,
-    amount_currency character varying(3) NOT NULL,
-    amount numeric(12,2) NOT NULL,
-    fundraiser_id integer,
-    reward_id integer,
-    client_secret character varying(32),
-    name character varying(200),
-    anonymous boolean NOT NULL,
-    payout_id integer,
-    payout_amount numeric(12,2) NOT NULL,
-    payout_amount_currency character varying(3) NOT NULL
-);
-
-
---
 -- Name: funding_flutterwave_flutterwavebankaccount; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -2665,6 +2969,7 @@ CREATE TABLE test.funding_funding (
     amount_matching numeric(12,2),
     amount_matching_currency character varying(3) NOT NULL,
     bank_account_id integer,
+    started timestamp with time zone,
     CONSTRAINT funding_funding_duration_check CHECK ((duration >= 0))
 );
 
@@ -2804,8 +3109,7 @@ CREATE TABLE test.funding_payment (
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
     donation_id integer NOT NULL,
-    polymorphic_ctype_id integer,
-    payment_method character varying(100)
+    polymorphic_ctype_id integer
 );
 
 
@@ -2975,8 +3279,8 @@ ALTER SEQUENCE test.funding_payoutaccount_id_seq OWNED BY test.funding_payoutacc
 
 CREATE TABLE test.funding_plainpayoutaccount (
     payoutaccount_ptr_id integer NOT NULL,
-    document_id uuid,
-    ip_address inet
+    ip_address inet,
+    document_id uuid
 );
 
 
@@ -3125,7 +3429,8 @@ CREATE TABLE test.funding_stripe_stripepayoutaccount (
     payoutaccount_ptr_id integer NOT NULL,
     account_id character varying(40) NOT NULL,
     country character varying(2) NOT NULL,
-    document_type character varying(20) NOT NULL
+    document_type character varying(20) NOT NULL,
+    eventually_due text
 );
 
 
@@ -3137,6 +3442,50 @@ CREATE TABLE test.funding_stripe_stripesourcepayment (
     payment_ptr_id integer NOT NULL,
     source_token character varying(30) NOT NULL,
     charge_token character varying(30)
+);
+
+
+--
+-- Name: funding_telesom_telesombankaccount; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.funding_telesom_telesombankaccount (
+    bankaccount_ptr_id integer NOT NULL,
+    account_name character varying(200),
+    mobile_number character varying(40)
+);
+
+
+--
+-- Name: funding_telesom_telesompayment; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.funding_telesom_telesompayment (
+    payment_ptr_id integer NOT NULL,
+    account_number character varying(30),
+    account_name character varying(30),
+    unique_id character varying(30) NOT NULL,
+    reference_id character varying(100) NOT NULL,
+    transaction_id character varying(100) NOT NULL,
+    transaction_amount character varying(100) NOT NULL,
+    issuer_transaction_id character varying(100) NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    currency character varying(3) NOT NULL,
+    response text NOT NULL
+);
+
+
+--
+-- Name: funding_telesom_telesompaymentprovider; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.funding_telesom_telesompaymentprovider (
+    paymentprovider_ptr_id integer NOT NULL,
+    merchant_uid character varying(100) NOT NULL,
+    api_user_id character varying(100) NOT NULL,
+    api_key character varying(100) NOT NULL,
+    api_url character varying(100) NOT NULL,
+    prefix character varying(10) NOT NULL
 );
 
 
@@ -3370,7 +3719,8 @@ CREATE TABLE test.geo_location (
     description text NOT NULL,
     image character varying(255),
     country_id integer,
-    group_id integer
+    group_id integer,
+    slug character varying(255)
 );
 
 
@@ -3591,6 +3941,107 @@ ALTER SEQUENCE test.geo_subregion_translation_id_seq OWNED BY test.geo_subregion
 
 
 --
+-- Name: impact_impactgoal; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.impact_impactgoal (
+    id integer NOT NULL,
+    target double precision,
+    realized double precision,
+    type_id integer NOT NULL,
+    activity_id integer NOT NULL
+);
+
+
+--
+-- Name: impact_impactgoal_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.impact_impactgoal_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: impact_impactgoal_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.impact_impactgoal_id_seq OWNED BY test.impact_impactgoal.id;
+
+
+--
+-- Name: impact_impacttype; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.impact_impacttype (
+    id integer NOT NULL,
+    slug character varying(100) NOT NULL,
+    active boolean NOT NULL,
+    icon character varying(20)
+);
+
+
+--
+-- Name: impact_impacttype_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.impact_impacttype_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: impact_impacttype_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.impact_impacttype_id_seq OWNED BY test.impact_impacttype.id;
+
+
+--
+-- Name: impact_impacttype_translation; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.impact_impacttype_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    master_id integer,
+    text character varying(100) NOT NULL,
+    text_passed character varying(100) NOT NULL,
+    text_with_target character varying(100) NOT NULL,
+    unit character varying(100),
+    name character varying(100) NOT NULL
+);
+
+
+--
+-- Name: impact_impacttype_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.impact_impacttype_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: impact_impacttype_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.impact_impacttype_translation_id_seq OWNED BY test.impact_impacttype_translation.id;
+
+
+--
 -- Name: initiatives_initiative; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -3680,7 +4131,8 @@ CREATE TABLE test.initiatives_initiativeplatformsettings (
     require_organization boolean NOT NULL,
     contact_method character varying(100) NOT NULL,
     activity_search_filters character varying(1000) NOT NULL,
-    initiative_search_filters character varying(1000) NOT NULL
+    initiative_search_filters character varying(1000) NOT NULL,
+    enable_impact boolean NOT NULL
 );
 
 
@@ -4033,6 +4485,37 @@ ALTER SEQUENCE test.members_member_id_seq OWNED BY test.members_member.id;
 
 
 --
+-- Name: members_member_segments; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.members_member_segments (
+    id integer NOT NULL,
+    member_id integer NOT NULL,
+    segment_id integer NOT NULL
+);
+
+
+--
+-- Name: members_member_segments_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.members_member_segments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: members_member_segments_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.members_member_segments_id_seq OWNED BY test.members_member_segments.id;
+
+
+--
 -- Name: members_member_skills; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -4107,7 +4590,10 @@ CREATE TABLE test.members_memberplatformsettings (
     confirm_signup boolean NOT NULL,
     email_domain character varying(256),
     login_methods character varying(100) NOT NULL,
-    background character varying(100)
+    background character varying(100),
+    anonymization_age integer NOT NULL,
+    enable_segments boolean NOT NULL,
+    create_segments boolean NOT NULL
 );
 
 
@@ -5746,6 +6232,71 @@ ALTER SEQUENCE test.scim_scimplatformsettings_id_seq OWNED BY test.scim_scimplat
 
 
 --
+-- Name: segments_segment; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.segments_segment (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    alternate_names character varying(200)[] NOT NULL,
+    type_id integer NOT NULL
+);
+
+
+--
+-- Name: segments_segment_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.segments_segment_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: segments_segment_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.segments_segment_id_seq OWNED BY test.segments_segment.id;
+
+
+--
+-- Name: segments_segmenttype; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.segments_segmenttype (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    slug character varying(100) NOT NULL,
+    is_active boolean NOT NULL,
+    enable_search boolean NOT NULL
+);
+
+
+--
+-- Name: segments_segmenttype_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.segments_segmenttype_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: segments_segmenttype_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.segments_segmenttype_id_seq OWNED BY test.segments_segmenttype.id;
+
+
+--
 -- Name: slides_slide; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -5768,7 +6319,8 @@ CREATE TABLE test.slides_slide (
     sequence integer NOT NULL,
     creation_date timestamp with time zone NOT NULL,
     modification_date timestamp with time zone NOT NULL,
-    author_id integer
+    author_id integer,
+    video character varying(255)
 );
 
 
@@ -5958,6 +6510,165 @@ CREATE SEQUENCE test.social_auth_usersocialauth_id_seq
 --
 
 ALTER SEQUENCE test.social_auth_usersocialauth_id_seq OWNED BY test.social_auth_usersocialauth.id;
+
+
+--
+-- Name: statistics_basestatistic; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.statistics_basestatistic (
+    id integer NOT NULL,
+    active boolean NOT NULL,
+    polymorphic_ctype_id integer,
+    sequence integer NOT NULL,
+    CONSTRAINT statistics_basestatistic_sequence_check CHECK ((sequence >= 0))
+);
+
+
+--
+-- Name: statistics_basestatistic_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.statistics_basestatistic_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: statistics_basestatistic_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.statistics_basestatistic_id_seq OWNED BY test.statistics_basestatistic.id;
+
+
+--
+-- Name: statistics_databasestatistic; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.statistics_databasestatistic (
+    basestatistic_ptr_id integer NOT NULL,
+    query character varying(30) NOT NULL
+);
+
+
+--
+-- Name: statistics_databasestatistic_translation; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.statistics_databasestatistic_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    name character varying(100) NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: statistics_databasestatistic_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.statistics_databasestatistic_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: statistics_databasestatistic_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.statistics_databasestatistic_translation_id_seq OWNED BY test.statistics_databasestatistic_translation.id;
+
+
+--
+-- Name: statistics_impactstatistic; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.statistics_impactstatistic (
+    basestatistic_ptr_id integer NOT NULL,
+    impact_type_id integer NOT NULL
+);
+
+
+--
+-- Name: statistics_impactstatistic_translation; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.statistics_impactstatistic_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: statistics_impactstatistic_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.statistics_impactstatistic_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: statistics_impactstatistic_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.statistics_impactstatistic_translation_id_seq OWNED BY test.statistics_impactstatistic_translation.id;
+
+
+--
+-- Name: statistics_manualstatistic; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.statistics_manualstatistic (
+    basestatistic_ptr_id integer NOT NULL,
+    value integer NOT NULL,
+    icon character varying(20)
+);
+
+
+--
+-- Name: statistics_manualstatistic_translation; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.statistics_manualstatistic_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    name character varying(100) NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: statistics_manualstatistic_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.statistics_manualstatistic_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: statistics_manualstatistic_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.statistics_manualstatistic_translation_id_seq OWNED BY test.statistics_manualstatistic_translation.id;
 
 
 --
@@ -6755,20 +7466,20 @@ ALTER SEQUENCE test.utils_maillog_id_seq OWNED BY test.utils_maillog.id;
 
 
 --
--- Name: utils_metadatamodel; Type: TABLE; Schema: test; Owner: -
+-- Name: utils_translationplatformsettings; Type: TABLE; Schema: test; Owner: -
 --
 
-CREATE TABLE test.utils_metadatamodel (
+CREATE TABLE test.utils_translationplatformsettings (
     id integer NOT NULL,
-    title character varying(50) NOT NULL
+    update timestamp with time zone NOT NULL
 );
 
 
 --
--- Name: utils_metadatamodel_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+-- Name: utils_translationplatformsettings_id_seq; Type: SEQUENCE; Schema: test; Owner: -
 --
 
-CREATE SEQUENCE test.utils_metadatamodel_id_seq
+CREATE SEQUENCE test.utils_translationplatformsettings_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -6778,10 +7489,45 @@ CREATE SEQUENCE test.utils_metadatamodel_id_seq
 
 
 --
--- Name: utils_metadatamodel_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+-- Name: utils_translationplatformsettings_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
 --
 
-ALTER SEQUENCE test.utils_metadatamodel_id_seq OWNED BY test.utils_metadatamodel.id;
+ALTER SEQUENCE test.utils_translationplatformsettings_id_seq OWNED BY test.utils_translationplatformsettings.id;
+
+
+--
+-- Name: utils_translationplatformsettings_translation; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.utils_translationplatformsettings_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    master_id integer,
+    office character varying(100),
+    office_location character varying(100),
+    select_an_office_location character varying(100),
+    whats_the_location_of_your_office character varying(100)
+);
+
+
+--
+-- Name: utils_translationplatformsettings_translation_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.utils_translationplatformsettings_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: utils_translationplatformsettings_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.utils_translationplatformsettings_translation_id_seq OWNED BY test.utils_translationplatformsettings_translation.id;
 
 
 --
@@ -8289,7 +9035,9 @@ CREATE TABLE test2.activities_activity (
     polymorphic_ctype_id integer,
     highlight boolean NOT NULL,
     review_status character varying(20) NOT NULL,
-    transition_date timestamp with time zone
+    transition_date timestamp with time zone,
+    image_id uuid,
+    video_url character varying(100)
 );
 
 
@@ -8314,6 +9062,37 @@ ALTER SEQUENCE test2.activities_activity_id_seq OWNED BY test2.activities_activi
 
 
 --
+-- Name: activities_activity_segments; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.activities_activity_segments (
+    id integer NOT NULL,
+    activity_id integer NOT NULL,
+    segment_id integer NOT NULL
+);
+
+
+--
+-- Name: activities_activity_segments_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.activities_activity_segments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: activities_activity_segments_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.activities_activity_segments_id_seq OWNED BY test2.activities_activity_segments.id;
+
+
+--
 -- Name: activities_contribution; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -8325,7 +9104,8 @@ CREATE TABLE test2.activities_contribution (
     activity_id integer NOT NULL,
     polymorphic_ctype_id integer,
     user_id integer,
-    transition_date timestamp with time zone
+    transition_date timestamp with time zone,
+    contribution_date timestamp with time zone NOT NULL
 );
 
 
@@ -8347,6 +9127,15 @@ CREATE SEQUENCE test2.activities_contribution_id_seq
 --
 
 ALTER SEQUENCE test2.activities_contribution_id_seq OWNED BY test2.activities_contribution.id;
+
+
+--
+-- Name: activities_organizer; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.activities_organizer (
+    contribution_ptr_id integer NOT NULL
+);
 
 
 --
@@ -8439,6 +9228,9 @@ CREATE TABLE test2.assignments_assignment (
     location_id integer,
     is_online boolean,
     end_date_type character varying(50),
+    preparation double precision,
+    start_time time without time zone,
+    date timestamp with time zone,
     CONSTRAINT assignments_assignment_capacity_check CHECK ((capacity >= 0))
 );
 
@@ -8545,6 +9337,82 @@ CREATE TABLE test2.authtoken_token (
     created timestamp with time zone NOT NULL,
     user_id integer NOT NULL
 );
+
+
+--
+-- Name: axes_accessattempt; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.axes_accessattempt (
+    id integer NOT NULL,
+    user_agent character varying(255) NOT NULL,
+    ip_address inet,
+    username character varying(255),
+    http_accept character varying(1025) NOT NULL,
+    path_info character varying(255) NOT NULL,
+    attempt_time timestamp with time zone NOT NULL,
+    get_data text NOT NULL,
+    post_data text NOT NULL,
+    failures_since_start integer NOT NULL,
+    CONSTRAINT axes_accessattempt_failures_since_start_check CHECK ((failures_since_start >= 0))
+);
+
+
+--
+-- Name: axes_accessattempt_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.axes_accessattempt_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: axes_accessattempt_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.axes_accessattempt_id_seq OWNED BY test2.axes_accessattempt.id;
+
+
+--
+-- Name: axes_accesslog; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.axes_accesslog (
+    id integer NOT NULL,
+    user_agent character varying(255) NOT NULL,
+    ip_address inet,
+    username character varying(255),
+    trusted boolean NOT NULL,
+    http_accept character varying(1025) NOT NULL,
+    path_info character varying(255) NOT NULL,
+    attempt_time timestamp with time zone NOT NULL,
+    logout_time timestamp with time zone
+);
+
+
+--
+-- Name: axes_accesslog_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.axes_accesslog_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: axes_accesslog_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.axes_accesslog_id_seq OWNED BY test2.axes_accesslog.id;
 
 
 --
@@ -8718,11 +9586,10 @@ ALTER SEQUENCE test2.bb_projects_projecttheme_translation_id_seq OWNED BY test2.
 
 CREATE TABLE test2.categories_category (
     id integer NOT NULL,
-    title character varying(255) NOT NULL,
     slug character varying(100) NOT NULL,
-    description text NOT NULL,
     image character varying(255),
-    image_logo character varying(255)
+    image_logo character varying(255),
+    video character varying(255)
 );
 
 
@@ -8747,17 +9614,46 @@ ALTER SEQUENCE test2.categories_category_id_seq OWNED BY test2.categories_catego
 
 
 --
+-- Name: categories_category_translation; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.categories_category_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    title character varying(255) NOT NULL,
+    description text NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: categories_category_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.categories_category_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: categories_category_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.categories_category_translation_id_seq OWNED BY test2.categories_category_translation.id;
+
+
+--
 -- Name: categories_categorycontent; Type: TABLE; Schema: test2; Owner: -
 --
 
 CREATE TABLE test2.categories_categorycontent (
     id integer NOT NULL,
-    title character varying(60) NOT NULL,
-    description text NOT NULL,
     image character varying(255),
     video_url character varying(100) NOT NULL,
-    link_text character varying(60) NOT NULL,
-    link_url character varying(200) NOT NULL,
     category_id integer NOT NULL,
     sequence integer NOT NULL,
     CONSTRAINT categories_categorycontent_sequence_check CHECK ((sequence >= 0))
@@ -8782,6 +9678,41 @@ CREATE SEQUENCE test2.categories_categorycontent_id_seq
 --
 
 ALTER SEQUENCE test2.categories_categorycontent_id_seq OWNED BY test2.categories_categorycontent.id;
+
+
+--
+-- Name: categories_categorycontent_translation; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.categories_categorycontent_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    title character varying(60) NOT NULL,
+    description text NOT NULL,
+    link_text character varying(60) NOT NULL,
+    link_url character varying(300) NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: categories_categorycontent_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.categories_categorycontent_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: categories_categorycontent_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.categories_categorycontent_translation_id_seq OWNED BY test2.categories_categorycontent_translation.id;
 
 
 --
@@ -9370,6 +10301,41 @@ ALTER SEQUENCE test2.cms_siteplatformsettings_id_seq OWNED BY test2.cms_siteplat
 
 
 --
+-- Name: cms_siteplatformsettings_translation; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.cms_siteplatformsettings_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    metadata_title character varying(100),
+    metadata_description text,
+    metadata_keywords character varying(300),
+    master_id integer,
+    start_page character varying(100)
+);
+
+
+--
+-- Name: cms_siteplatformsettings_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.cms_siteplatformsettings_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: cms_siteplatformsettings_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.cms_siteplatformsettings_translation_id_seq OWNED BY test2.cms_siteplatformsettings_translation.id;
+
+
+--
 -- Name: cms_slide; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -9565,6 +10531,17 @@ CREATE TABLE test2.contentitem_cms_activitiescontent (
 --
 
 CREATE TABLE test2.contentitem_cms_categoriescontent (
+    contentitem_ptr_id integer NOT NULL,
+    title character varying(50),
+    sub_title character varying(400)
+);
+
+
+--
+-- Name: contentitem_cms_homepagestatisticscontent; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.contentitem_cms_homepagestatisticscontent (
     contentitem_ptr_id integer NOT NULL,
     title character varying(50),
     sub_title character varying(400)
@@ -9840,6 +10817,18 @@ CREATE TABLE test2.contentitem_pages_imagetextitem (
 
 
 --
+-- Name: contentitem_pages_imagetextrounditem; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.contentitem_pages_imagetextrounditem (
+    contentitem_ptr_id integer NOT NULL,
+    text text NOT NULL,
+    text_final text,
+    image character varying(100) NOT NULL
+);
+
+
+--
 -- Name: contentitem_rawhtml_rawhtmlitem; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -9858,6 +10847,71 @@ CREATE TABLE test2.contentitem_text_textitem (
     text text NOT NULL,
     text_final text
 );
+
+
+--
+-- Name: django_content_type; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.django_content_type (
+    id integer NOT NULL,
+    app_label character varying(100) NOT NULL,
+    model character varying(100) NOT NULL
+);
+
+
+--
+-- Name: events_participant; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.events_participant (
+    contribution_ptr_id integer NOT NULL,
+    time_spent double precision NOT NULL
+);
+
+
+--
+-- Name: funding_donation; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.funding_donation (
+    contribution_ptr_id integer NOT NULL,
+    amount_currency character varying(3) NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    fundraiser_id integer,
+    reward_id integer,
+    client_secret character varying(32),
+    name character varying(200),
+    anonymous boolean NOT NULL,
+    payout_id integer,
+    payout_amount numeric(12,2) NOT NULL,
+    payout_amount_currency character varying(3) NOT NULL
+);
+
+
+--
+-- Name: contributions; Type: VIEW; Schema: test2; Owner: -
+--
+
+CREATE VIEW test2.contributions AS
+ SELECT replace(replace(replace((ct.model)::text, 'participant'::text, 'event'::text), 'donation'::text, 'fundraiser'::text), 'applicant'::text, 'task'::text) AS activity_type,
+    (COALESCE(p.time_spent, (0)::double precision) + COALESCE(a.time_spent, (0)::double precision)) AS time_spent,
+    d.amount,
+    d.amount_currency,
+    d.name,
+    c.user_id,
+    c.activity_id,
+    c.id,
+    c.status,
+    c.created,
+    c.updated,
+    c.contribution_date,
+    c.transition_date
+   FROM ((((test2.activities_contribution c
+     JOIN test2.django_content_type ct ON ((c.polymorphic_ctype_id = ct.id)))
+     LEFT JOIN test2.events_participant p ON ((p.contribution_ptr_id = c.id)))
+     LEFT JOIN test2.assignments_applicant a ON ((a.contribution_ptr_id = c.id)))
+     LEFT JOIN test2.funding_donation d ON ((d.contribution_ptr_id = c.id)));
 
 
 --
@@ -9935,17 +10989,6 @@ CREATE SEQUENCE test2.django_admin_log_id_seq
 --
 
 ALTER SEQUENCE test2.django_admin_log_id_seq OWNED BY test2.django_admin_log.id;
-
-
---
--- Name: django_content_type; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.django_content_type (
-    id integer NOT NULL,
-    app_label character varying(100) NOT NULL,
-    model character varying(100) NOT NULL
-);
 
 
 --
@@ -10124,17 +11167,8 @@ CREATE TABLE test2.events_event (
     start_date date,
     duration double precision,
     "end" timestamp with time zone,
+    start timestamp with time zone,
     CONSTRAINT events_event_capacity_check CHECK ((capacity >= 0))
-);
-
-
---
--- Name: events_participant; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.events_participant (
-    contribution_ptr_id integer NOT NULL,
-    time_spent double precision NOT NULL
 );
 
 
@@ -10156,6 +11190,19 @@ CREATE TABLE test2.files_document (
 --
 
 CREATE TABLE test2.files_image (
+    id uuid NOT NULL,
+    created date NOT NULL,
+    file character varying(100) NOT NULL,
+    used boolean NOT NULL,
+    owner_id integer NOT NULL
+);
+
+
+--
+-- Name: files_privatedocument; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.files_privatedocument (
     id uuid NOT NULL,
     created date NOT NULL,
     file character varying(100) NOT NULL,
@@ -10370,25 +11417,6 @@ ALTER SEQUENCE test2.funding_budgetline_id_seq OWNED BY test2.funding_budgetline
 
 
 --
--- Name: funding_donation; Type: TABLE; Schema: test2; Owner: -
---
-
-CREATE TABLE test2.funding_donation (
-    contribution_ptr_id integer NOT NULL,
-    amount_currency character varying(3) NOT NULL,
-    amount numeric(12,2) NOT NULL,
-    fundraiser_id integer,
-    reward_id integer,
-    client_secret character varying(32),
-    name character varying(200),
-    anonymous boolean NOT NULL,
-    payout_id integer,
-    payout_amount numeric(12,2) NOT NULL,
-    payout_amount_currency character varying(3) NOT NULL
-);
-
-
---
 -- Name: funding_flutterwave_flutterwavebankaccount; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -10438,6 +11466,7 @@ CREATE TABLE test2.funding_funding (
     amount_matching numeric(12,2),
     amount_matching_currency character varying(3) NOT NULL,
     bank_account_id integer,
+    started timestamp with time zone,
     CONSTRAINT funding_funding_duration_check CHECK ((duration >= 0))
 );
 
@@ -10577,8 +11606,7 @@ CREATE TABLE test2.funding_payment (
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
     donation_id integer NOT NULL,
-    polymorphic_ctype_id integer,
-    payment_method character varying(100)
+    polymorphic_ctype_id integer
 );
 
 
@@ -10748,8 +11776,8 @@ ALTER SEQUENCE test2.funding_payoutaccount_id_seq OWNED BY test2.funding_payouta
 
 CREATE TABLE test2.funding_plainpayoutaccount (
     payoutaccount_ptr_id integer NOT NULL,
-    document_id uuid,
-    ip_address inet
+    ip_address inet,
+    document_id uuid
 );
 
 
@@ -10898,7 +11926,8 @@ CREATE TABLE test2.funding_stripe_stripepayoutaccount (
     payoutaccount_ptr_id integer NOT NULL,
     account_id character varying(40) NOT NULL,
     country character varying(2) NOT NULL,
-    document_type character varying(20) NOT NULL
+    document_type character varying(20) NOT NULL,
+    eventually_due text
 );
 
 
@@ -10910,6 +11939,50 @@ CREATE TABLE test2.funding_stripe_stripesourcepayment (
     payment_ptr_id integer NOT NULL,
     source_token character varying(30) NOT NULL,
     charge_token character varying(30)
+);
+
+
+--
+-- Name: funding_telesom_telesombankaccount; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.funding_telesom_telesombankaccount (
+    bankaccount_ptr_id integer NOT NULL,
+    account_name character varying(200),
+    mobile_number character varying(40)
+);
+
+
+--
+-- Name: funding_telesom_telesompayment; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.funding_telesom_telesompayment (
+    payment_ptr_id integer NOT NULL,
+    account_number character varying(30),
+    account_name character varying(30),
+    unique_id character varying(30) NOT NULL,
+    reference_id character varying(100) NOT NULL,
+    transaction_id character varying(100) NOT NULL,
+    transaction_amount character varying(100) NOT NULL,
+    issuer_transaction_id character varying(100) NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    currency character varying(3) NOT NULL,
+    response text NOT NULL
+);
+
+
+--
+-- Name: funding_telesom_telesompaymentprovider; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.funding_telesom_telesompaymentprovider (
+    paymentprovider_ptr_id integer NOT NULL,
+    merchant_uid character varying(100) NOT NULL,
+    api_user_id character varying(100) NOT NULL,
+    api_key character varying(100) NOT NULL,
+    api_url character varying(100) NOT NULL,
+    prefix character varying(10) NOT NULL
 );
 
 
@@ -11143,7 +12216,8 @@ CREATE TABLE test2.geo_location (
     description text NOT NULL,
     image character varying(255),
     country_id integer,
-    group_id integer
+    group_id integer,
+    slug character varying(255)
 );
 
 
@@ -11364,6 +12438,107 @@ ALTER SEQUENCE test2.geo_subregion_translation_id_seq OWNED BY test2.geo_subregi
 
 
 --
+-- Name: impact_impactgoal; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.impact_impactgoal (
+    id integer NOT NULL,
+    target double precision,
+    realized double precision,
+    type_id integer NOT NULL,
+    activity_id integer NOT NULL
+);
+
+
+--
+-- Name: impact_impactgoal_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.impact_impactgoal_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: impact_impactgoal_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.impact_impactgoal_id_seq OWNED BY test2.impact_impactgoal.id;
+
+
+--
+-- Name: impact_impacttype; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.impact_impacttype (
+    id integer NOT NULL,
+    slug character varying(100) NOT NULL,
+    active boolean NOT NULL,
+    icon character varying(20)
+);
+
+
+--
+-- Name: impact_impacttype_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.impact_impacttype_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: impact_impacttype_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.impact_impacttype_id_seq OWNED BY test2.impact_impacttype.id;
+
+
+--
+-- Name: impact_impacttype_translation; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.impact_impacttype_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    master_id integer,
+    text character varying(100) NOT NULL,
+    text_passed character varying(100) NOT NULL,
+    text_with_target character varying(100) NOT NULL,
+    unit character varying(100),
+    name character varying(100) NOT NULL
+);
+
+
+--
+-- Name: impact_impacttype_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.impact_impacttype_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: impact_impacttype_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.impact_impacttype_translation_id_seq OWNED BY test2.impact_impacttype_translation.id;
+
+
+--
 -- Name: initiatives_initiative; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -11453,7 +12628,8 @@ CREATE TABLE test2.initiatives_initiativeplatformsettings (
     require_organization boolean NOT NULL,
     contact_method character varying(100) NOT NULL,
     activity_search_filters character varying(1000) NOT NULL,
-    initiative_search_filters character varying(1000) NOT NULL
+    initiative_search_filters character varying(1000) NOT NULL,
+    enable_impact boolean NOT NULL
 );
 
 
@@ -11806,6 +12982,37 @@ ALTER SEQUENCE test2.members_member_id_seq OWNED BY test2.members_member.id;
 
 
 --
+-- Name: members_member_segments; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.members_member_segments (
+    id integer NOT NULL,
+    member_id integer NOT NULL,
+    segment_id integer NOT NULL
+);
+
+
+--
+-- Name: members_member_segments_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.members_member_segments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: members_member_segments_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.members_member_segments_id_seq OWNED BY test2.members_member_segments.id;
+
+
+--
 -- Name: members_member_skills; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -11880,7 +13087,10 @@ CREATE TABLE test2.members_memberplatformsettings (
     confirm_signup boolean NOT NULL,
     email_domain character varying(256),
     login_methods character varying(100) NOT NULL,
-    background character varying(100)
+    background character varying(100),
+    anonymization_age integer NOT NULL,
+    enable_segments boolean NOT NULL,
+    create_segments boolean NOT NULL
 );
 
 
@@ -13519,6 +14729,71 @@ ALTER SEQUENCE test2.scim_scimplatformsettings_id_seq OWNED BY test2.scim_scimpl
 
 
 --
+-- Name: segments_segment; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.segments_segment (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    alternate_names character varying(200)[] NOT NULL,
+    type_id integer NOT NULL
+);
+
+
+--
+-- Name: segments_segment_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.segments_segment_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: segments_segment_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.segments_segment_id_seq OWNED BY test2.segments_segment.id;
+
+
+--
+-- Name: segments_segmenttype; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.segments_segmenttype (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    slug character varying(100) NOT NULL,
+    is_active boolean NOT NULL,
+    enable_search boolean NOT NULL
+);
+
+
+--
+-- Name: segments_segmenttype_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.segments_segmenttype_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: segments_segmenttype_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.segments_segmenttype_id_seq OWNED BY test2.segments_segmenttype.id;
+
+
+--
 -- Name: slides_slide; Type: TABLE; Schema: test2; Owner: -
 --
 
@@ -13541,7 +14816,8 @@ CREATE TABLE test2.slides_slide (
     sequence integer NOT NULL,
     creation_date timestamp with time zone NOT NULL,
     modification_date timestamp with time zone NOT NULL,
-    author_id integer
+    author_id integer,
+    video character varying(255)
 );
 
 
@@ -13731,6 +15007,165 @@ CREATE SEQUENCE test2.social_auth_usersocialauth_id_seq
 --
 
 ALTER SEQUENCE test2.social_auth_usersocialauth_id_seq OWNED BY test2.social_auth_usersocialauth.id;
+
+
+--
+-- Name: statistics_basestatistic; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.statistics_basestatistic (
+    id integer NOT NULL,
+    active boolean NOT NULL,
+    polymorphic_ctype_id integer,
+    sequence integer NOT NULL,
+    CONSTRAINT statistics_basestatistic_sequence_check CHECK ((sequence >= 0))
+);
+
+
+--
+-- Name: statistics_basestatistic_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.statistics_basestatistic_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: statistics_basestatistic_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.statistics_basestatistic_id_seq OWNED BY test2.statistics_basestatistic.id;
+
+
+--
+-- Name: statistics_databasestatistic; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.statistics_databasestatistic (
+    basestatistic_ptr_id integer NOT NULL,
+    query character varying(30) NOT NULL
+);
+
+
+--
+-- Name: statistics_databasestatistic_translation; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.statistics_databasestatistic_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    name character varying(100) NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: statistics_databasestatistic_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.statistics_databasestatistic_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: statistics_databasestatistic_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.statistics_databasestatistic_translation_id_seq OWNED BY test2.statistics_databasestatistic_translation.id;
+
+
+--
+-- Name: statistics_impactstatistic; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.statistics_impactstatistic (
+    basestatistic_ptr_id integer NOT NULL,
+    impact_type_id integer NOT NULL
+);
+
+
+--
+-- Name: statistics_impactstatistic_translation; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.statistics_impactstatistic_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: statistics_impactstatistic_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.statistics_impactstatistic_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: statistics_impactstatistic_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.statistics_impactstatistic_translation_id_seq OWNED BY test2.statistics_impactstatistic_translation.id;
+
+
+--
+-- Name: statistics_manualstatistic; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.statistics_manualstatistic (
+    basestatistic_ptr_id integer NOT NULL,
+    value integer NOT NULL,
+    icon character varying(20)
+);
+
+
+--
+-- Name: statistics_manualstatistic_translation; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.statistics_manualstatistic_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    name character varying(100) NOT NULL,
+    master_id integer
+);
+
+
+--
+-- Name: statistics_manualstatistic_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.statistics_manualstatistic_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: statistics_manualstatistic_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.statistics_manualstatistic_translation_id_seq OWNED BY test2.statistics_manualstatistic_translation.id;
 
 
 --
@@ -14528,20 +15963,20 @@ ALTER SEQUENCE test2.utils_maillog_id_seq OWNED BY test2.utils_maillog.id;
 
 
 --
--- Name: utils_metadatamodel; Type: TABLE; Schema: test2; Owner: -
+-- Name: utils_translationplatformsettings; Type: TABLE; Schema: test2; Owner: -
 --
 
-CREATE TABLE test2.utils_metadatamodel (
+CREATE TABLE test2.utils_translationplatformsettings (
     id integer NOT NULL,
-    title character varying(50) NOT NULL
+    update timestamp with time zone NOT NULL
 );
 
 
 --
--- Name: utils_metadatamodel_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+-- Name: utils_translationplatformsettings_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
 --
 
-CREATE SEQUENCE test2.utils_metadatamodel_id_seq
+CREATE SEQUENCE test2.utils_translationplatformsettings_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -14551,10 +15986,45 @@ CREATE SEQUENCE test2.utils_metadatamodel_id_seq
 
 
 --
--- Name: utils_metadatamodel_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+-- Name: utils_translationplatformsettings_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
 --
 
-ALTER SEQUENCE test2.utils_metadatamodel_id_seq OWNED BY test2.utils_metadatamodel.id;
+ALTER SEQUENCE test2.utils_translationplatformsettings_id_seq OWNED BY test2.utils_translationplatformsettings.id;
+
+
+--
+-- Name: utils_translationplatformsettings_translation; Type: TABLE; Schema: test2; Owner: -
+--
+
+CREATE TABLE test2.utils_translationplatformsettings_translation (
+    id integer NOT NULL,
+    language_code character varying(15) NOT NULL,
+    master_id integer,
+    office character varying(100),
+    office_location character varying(100),
+    select_an_office_location character varying(100),
+    whats_the_location_of_your_office character varying(100)
+);
+
+
+--
+-- Name: utils_translationplatformsettings_translation_id_seq; Type: SEQUENCE; Schema: test2; Owner: -
+--
+
+CREATE SEQUENCE test2.utils_translationplatformsettings_translation_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: utils_translationplatformsettings_translation_id_seq; Type: SEQUENCE OWNED BY; Schema: test2; Owner: -
+--
+
+ALTER SEQUENCE test2.utils_translationplatformsettings_translation_id_seq OWNED BY test2.utils_translationplatformsettings_translation.id;
 
 
 --
@@ -16137,6 +17607,13 @@ ALTER TABLE ONLY test.activities_activity ALTER COLUMN id SET DEFAULT nextval('t
 
 
 --
+-- Name: activities_activity_segments id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_activity_segments ALTER COLUMN id SET DEFAULT nextval('test.activities_activity_segments_id_seq'::regclass);
+
+
+--
 -- Name: activities_contribution id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -16176,6 +17653,20 @@ ALTER TABLE ONLY test.auth_group_permissions ALTER COLUMN id SET DEFAULT nextval
 --
 
 ALTER TABLE ONLY test.auth_permission ALTER COLUMN id SET DEFAULT nextval('test.auth_permission_id_seq'::regclass);
+
+
+--
+-- Name: axes_accessattempt id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.axes_accessattempt ALTER COLUMN id SET DEFAULT nextval('test.axes_accessattempt_id_seq'::regclass);
+
+
+--
+-- Name: axes_accesslog id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.axes_accesslog ALTER COLUMN id SET DEFAULT nextval('test.axes_accesslog_id_seq'::regclass);
 
 
 --
@@ -16221,10 +17712,24 @@ ALTER TABLE ONLY test.categories_category ALTER COLUMN id SET DEFAULT nextval('t
 
 
 --
+-- Name: categories_category_translation id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.categories_category_translation ALTER COLUMN id SET DEFAULT nextval('test.categories_category_translation_id_seq'::regclass);
+
+
+--
 -- Name: categories_categorycontent id; Type: DEFAULT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.categories_categorycontent ALTER COLUMN id SET DEFAULT nextval('test.categories_categorycontent_id_seq'::regclass);
+
+
+--
+-- Name: categories_categorycontent_translation id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.categories_categorycontent_translation ALTER COLUMN id SET DEFAULT nextval('test.categories_categorycontent_translation_id_seq'::regclass);
 
 
 --
@@ -16351,6 +17856,13 @@ ALTER TABLE ONLY test.cms_sitelinks ALTER COLUMN id SET DEFAULT nextval('test.cm
 --
 
 ALTER TABLE ONLY test.cms_siteplatformsettings ALTER COLUMN id SET DEFAULT nextval('test.cms_siteplatformsettings_id_seq'::regclass);
+
+
+--
+-- Name: cms_siteplatformsettings_translation id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.cms_siteplatformsettings_translation ALTER COLUMN id SET DEFAULT nextval('test.cms_siteplatformsettings_translation_id_seq'::regclass);
 
 
 --
@@ -16627,6 +18139,27 @@ ALTER TABLE ONLY test.geo_subregion_translation ALTER COLUMN id SET DEFAULT next
 
 
 --
+-- Name: impact_impactgoal id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.impact_impactgoal ALTER COLUMN id SET DEFAULT nextval('test.impact_impactgoal_id_seq'::regclass);
+
+
+--
+-- Name: impact_impacttype id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.impact_impacttype ALTER COLUMN id SET DEFAULT nextval('test.impact_impacttype_id_seq'::regclass);
+
+
+--
+-- Name: impact_impacttype_translation id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.impact_impacttype_translation ALTER COLUMN id SET DEFAULT nextval('test.impact_impacttype_translation_id_seq'::regclass);
+
+
+--
 -- Name: initiatives_initiative id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -16708,6 +18241,13 @@ ALTER TABLE ONLY test.members_member_favourite_themes ALTER COLUMN id SET DEFAUL
 --
 
 ALTER TABLE ONLY test.members_member_groups ALTER COLUMN id SET DEFAULT nextval('test.members_member_groups_id_seq'::regclass);
+
+
+--
+-- Name: members_member_segments id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.members_member_segments ALTER COLUMN id SET DEFAULT nextval('test.members_member_segments_id_seq'::regclass);
 
 
 --
@@ -16970,6 +18510,20 @@ ALTER TABLE ONLY test.scim_scimplatformsettings ALTER COLUMN id SET DEFAULT next
 
 
 --
+-- Name: segments_segment id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.segments_segment ALTER COLUMN id SET DEFAULT nextval('test.segments_segment_id_seq'::regclass);
+
+
+--
+-- Name: segments_segmenttype id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.segments_segmenttype ALTER COLUMN id SET DEFAULT nextval('test.segments_segmenttype_id_seq'::regclass);
+
+
+--
 -- Name: slides_slide id; Type: DEFAULT; Schema: test; Owner: -
 --
 
@@ -17009,6 +18563,34 @@ ALTER TABLE ONLY test.social_auth_partial ALTER COLUMN id SET DEFAULT nextval('t
 --
 
 ALTER TABLE ONLY test.social_auth_usersocialauth ALTER COLUMN id SET DEFAULT nextval('test.social_auth_usersocialauth_id_seq'::regclass);
+
+
+--
+-- Name: statistics_basestatistic id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_basestatistic ALTER COLUMN id SET DEFAULT nextval('test.statistics_basestatistic_id_seq'::regclass);
+
+
+--
+-- Name: statistics_databasestatistic_translation id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_databasestatistic_translation ALTER COLUMN id SET DEFAULT nextval('test.statistics_databasestatistic_translation_id_seq'::regclass);
+
+
+--
+-- Name: statistics_impactstatistic_translation id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_impactstatistic_translation ALTER COLUMN id SET DEFAULT nextval('test.statistics_impactstatistic_translation_id_seq'::regclass);
+
+
+--
+-- Name: statistics_manualstatistic_translation id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_manualstatistic_translation ALTER COLUMN id SET DEFAULT nextval('test.statistics_manualstatistic_translation_id_seq'::regclass);
 
 
 --
@@ -17166,10 +18748,17 @@ ALTER TABLE ONLY test.utils_maillog ALTER COLUMN id SET DEFAULT nextval('test.ut
 
 
 --
--- Name: utils_metadatamodel id; Type: DEFAULT; Schema: test; Owner: -
+-- Name: utils_translationplatformsettings id; Type: DEFAULT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.utils_metadatamodel ALTER COLUMN id SET DEFAULT nextval('test.utils_metadatamodel_id_seq'::regclass);
+ALTER TABLE ONLY test.utils_translationplatformsettings ALTER COLUMN id SET DEFAULT nextval('test.utils_translationplatformsettings_id_seq'::regclass);
+
+
+--
+-- Name: utils_translationplatformsettings_translation id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.utils_translationplatformsettings_translation ALTER COLUMN id SET DEFAULT nextval('test.utils_translationplatformsettings_translation_id_seq'::regclass);
 
 
 --
@@ -17205,6 +18794,13 @@ ALTER TABLE ONLY test.wallposts_wallpost ALTER COLUMN id SET DEFAULT nextval('te
 --
 
 ALTER TABLE ONLY test2.activities_activity ALTER COLUMN id SET DEFAULT nextval('test2.activities_activity_id_seq'::regclass);
+
+
+--
+-- Name: activities_activity_segments id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_activity_segments ALTER COLUMN id SET DEFAULT nextval('test2.activities_activity_segments_id_seq'::regclass);
 
 
 --
@@ -17250,6 +18846,20 @@ ALTER TABLE ONLY test2.auth_permission ALTER COLUMN id SET DEFAULT nextval('test
 
 
 --
+-- Name: axes_accessattempt id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.axes_accessattempt ALTER COLUMN id SET DEFAULT nextval('test2.axes_accessattempt_id_seq'::regclass);
+
+
+--
+-- Name: axes_accesslog id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.axes_accesslog ALTER COLUMN id SET DEFAULT nextval('test2.axes_accesslog_id_seq'::regclass);
+
+
+--
 -- Name: bb_follow_follow id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -17292,10 +18902,24 @@ ALTER TABLE ONLY test2.categories_category ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
+-- Name: categories_category_translation id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.categories_category_translation ALTER COLUMN id SET DEFAULT nextval('test2.categories_category_translation_id_seq'::regclass);
+
+
+--
 -- Name: categories_categorycontent id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.categories_categorycontent ALTER COLUMN id SET DEFAULT nextval('test2.categories_categorycontent_id_seq'::regclass);
+
+
+--
+-- Name: categories_categorycontent_translation id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.categories_categorycontent_translation ALTER COLUMN id SET DEFAULT nextval('test2.categories_categorycontent_translation_id_seq'::regclass);
 
 
 --
@@ -17422,6 +19046,13 @@ ALTER TABLE ONLY test2.cms_sitelinks ALTER COLUMN id SET DEFAULT nextval('test2.
 --
 
 ALTER TABLE ONLY test2.cms_siteplatformsettings ALTER COLUMN id SET DEFAULT nextval('test2.cms_siteplatformsettings_id_seq'::regclass);
+
+
+--
+-- Name: cms_siteplatformsettings_translation id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.cms_siteplatformsettings_translation ALTER COLUMN id SET DEFAULT nextval('test2.cms_siteplatformsettings_translation_id_seq'::regclass);
 
 
 --
@@ -17698,6 +19329,27 @@ ALTER TABLE ONLY test2.geo_subregion_translation ALTER COLUMN id SET DEFAULT nex
 
 
 --
+-- Name: impact_impactgoal id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.impact_impactgoal ALTER COLUMN id SET DEFAULT nextval('test2.impact_impactgoal_id_seq'::regclass);
+
+
+--
+-- Name: impact_impacttype id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.impact_impacttype ALTER COLUMN id SET DEFAULT nextval('test2.impact_impacttype_id_seq'::regclass);
+
+
+--
+-- Name: impact_impacttype_translation id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.impact_impacttype_translation ALTER COLUMN id SET DEFAULT nextval('test2.impact_impacttype_translation_id_seq'::regclass);
+
+
+--
 -- Name: initiatives_initiative id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -17779,6 +19431,13 @@ ALTER TABLE ONLY test2.members_member_favourite_themes ALTER COLUMN id SET DEFAU
 --
 
 ALTER TABLE ONLY test2.members_member_groups ALTER COLUMN id SET DEFAULT nextval('test2.members_member_groups_id_seq'::regclass);
+
+
+--
+-- Name: members_member_segments id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.members_member_segments ALTER COLUMN id SET DEFAULT nextval('test2.members_member_segments_id_seq'::regclass);
 
 
 --
@@ -18041,6 +19700,20 @@ ALTER TABLE ONLY test2.scim_scimplatformsettings ALTER COLUMN id SET DEFAULT nex
 
 
 --
+-- Name: segments_segment id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.segments_segment ALTER COLUMN id SET DEFAULT nextval('test2.segments_segment_id_seq'::regclass);
+
+
+--
+-- Name: segments_segmenttype id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.segments_segmenttype ALTER COLUMN id SET DEFAULT nextval('test2.segments_segmenttype_id_seq'::regclass);
+
+
+--
 -- Name: slides_slide id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
@@ -18080,6 +19753,34 @@ ALTER TABLE ONLY test2.social_auth_partial ALTER COLUMN id SET DEFAULT nextval('
 --
 
 ALTER TABLE ONLY test2.social_auth_usersocialauth ALTER COLUMN id SET DEFAULT nextval('test2.social_auth_usersocialauth_id_seq'::regclass);
+
+
+--
+-- Name: statistics_basestatistic id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_basestatistic ALTER COLUMN id SET DEFAULT nextval('test2.statistics_basestatistic_id_seq'::regclass);
+
+
+--
+-- Name: statistics_databasestatistic_translation id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_databasestatistic_translation ALTER COLUMN id SET DEFAULT nextval('test2.statistics_databasestatistic_translation_id_seq'::regclass);
+
+
+--
+-- Name: statistics_impactstatistic_translation id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_impactstatistic_translation ALTER COLUMN id SET DEFAULT nextval('test2.statistics_impactstatistic_translation_id_seq'::regclass);
+
+
+--
+-- Name: statistics_manualstatistic_translation id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_manualstatistic_translation ALTER COLUMN id SET DEFAULT nextval('test2.statistics_manualstatistic_translation_id_seq'::regclass);
 
 
 --
@@ -18237,10 +19938,17 @@ ALTER TABLE ONLY test2.utils_maillog ALTER COLUMN id SET DEFAULT nextval('test2.
 
 
 --
--- Name: utils_metadatamodel id; Type: DEFAULT; Schema: test2; Owner: -
+-- Name: utils_translationplatformsettings id; Type: DEFAULT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.utils_metadatamodel ALTER COLUMN id SET DEFAULT nextval('test2.utils_metadatamodel_id_seq'::regclass);
+ALTER TABLE ONLY test2.utils_translationplatformsettings ALTER COLUMN id SET DEFAULT nextval('test2.utils_translationplatformsettings_id_seq'::regclass);
+
+
+--
+-- Name: utils_translationplatformsettings_translation id; Type: DEFAULT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.utils_translationplatformsettings_translation ALTER COLUMN id SET DEFAULT nextval('test2.utils_translationplatformsettings_translation_id_seq'::regclass);
 
 
 --
@@ -18292,8 +20000,8 @@ COPY public.celery_tasksetmeta (id, taskset_id, result, date_done, hidden) FROM 
 --
 
 COPY public.clients_client (id, domain_url, schema_name, name, client_name, created, updated) FROM stdin;
-3	testserver	test	Test	test	2019-12-30 13:01:49.836882+01	2019-12-30 13:01:49.836914+01
-2	testserver2	test2	Test Too	test2	2019-12-30 12:58:27.011085+01	2019-12-30 12:58:27.011116+01
+1	testserver2	test2	Test Too	test2	2020-09-18 14:07:02.460568+02	2020-09-18 14:07:02.460591+02
+2	testserver	test	Test	test	2020-09-18 14:10:16.331249+02	2020-09-18 14:10:16.33127+02
 \.
 
 
@@ -18302,854 +20010,946 @@ COPY public.clients_client (id, domain_url, schema_name, name, client_name, crea
 --
 
 COPY public.django_migrations (id, app, name, applied) FROM stdin;
-1	geo	0001_initial	2019-12-30 12:55:08.897923+01
-2	bb_projects	0001_initial	2019-12-30 12:55:08.920011+01
-3	contenttypes	0001_initial	2019-12-30 12:55:08.941984+01
-4	contenttypes	0002_remove_content_type_name	2019-12-30 12:55:08.979261+01
-5	auth	0001_initial	2019-12-30 12:55:09.02044+01
-6	auth	0002_alter_permission_name_max_length	2019-12-30 12:55:09.038553+01
-7	auth	0003_alter_user_email_max_length	2019-12-30 12:55:09.056216+01
-8	auth	0004_alter_user_username_opts	2019-12-30 12:55:09.072348+01
-9	auth	0005_alter_user_last_login_null	2019-12-30 12:55:09.089934+01
-10	auth	0006_require_contenttypes_0002	2019-12-30 12:55:09.091325+01
-11	auth	0007_alter_validators_add_error_messages	2019-12-30 12:55:09.106626+01
-12	members	0001_initial	2019-12-30 12:55:09.133453+01
-13	activities	0001_initial	2019-12-30 12:55:09.176558+01
-14	funding	0001_initial	2019-12-30 12:55:09.467964+01
-15	files	0001_initial	2019-12-30 12:55:09.531577+01
-16	categories	0001_initial	2019-12-30 12:55:09.546847+01
-17	categories	0002_auto_20160531_1651	2019-12-30 12:55:09.561256+01
-18	categories	0003_categorycontent	2019-12-30 12:55:09.577215+01
-19	categories	0004_auto_20170731_1327	2019-12-30 12:55:09.685291+01
-20	categories	0005_auto_20180117_0924	2019-12-30 12:55:09.695951+01
-21	categories	0006_auto_20180907_1131	2019-12-30 12:55:09.710852+01
-22	categories	0007_auto_20180907_1131	2019-12-30 12:55:09.722066+01
-23	categories	0008_authenticated-permissions	2019-12-30 12:55:09.73272+01
-24	clients	0001_initial	2019-12-30 12:55:09.753913+01
-25	bb_projects	0002_remove_projecttheme_name_nl	2019-12-30 12:55:09.772128+01
-26	bb_projects	0003_auto_20160815_1658	2019-12-30 12:55:09.783535+01
-27	bb_projects	0004_add_project_continued_phase	2019-12-30 12:55:09.785527+01
-28	bb_projects	0005_add_api_permissions	2019-12-30 12:55:09.816085+01
-29	bb_projects	0006_add_group_permissions	2019-12-30 12:55:09.827274+01
-30	bb_projects	0007_translate_themes	2019-12-30 12:55:09.859664+01
-31	bb_projects	0008_migrate_theme_translations	2019-12-30 12:55:09.875537+01
-32	bb_projects	0009_remove_translated_fields	2019-12-30 12:55:10.054003+01
-33	bb_projects	0010_translate_phases	2019-12-30 12:55:10.088984+01
-34	bb_projects	0011_migrate_phase_translations	2019-12-30 12:55:10.102096+01
-35	bb_projects	0012_remove_translated_fields	2019-12-30 12:55:10.140531+01
-36	bb_projects	0007_auto_20180323_1602	2019-12-30 12:55:10.153375+01
-37	bb_projects	0013_merge_20180406_1536	2019-12-30 12:55:10.155027+01
-38	bb_projects	0007_auto_20180319_1536	2019-12-30 12:55:10.156541+01
-39	bb_projects	0008_merge_20180404_1500	2019-12-30 12:55:10.157987+01
-40	bb_projects	0008_merge_20180328_1504	2019-12-30 12:55:10.159464+01
-41	bb_projects	0009_merge_20180404_1638	2019-12-30 12:55:10.160911+01
-42	bb_projects	0014_merge_20180412_1421	2019-12-30 12:55:10.162441+01
-43	bb_projects	0015_auto_20190329_1101	2019-12-30 12:55:10.240649+01
-44	initiatives	0001_initial	2019-12-30 12:55:10.282627+01
-45	activities	0002_auto_20190524_1041	2019-12-30 12:55:10.409612+01
-46	activities	0003_add_permissions	2019-12-30 12:55:10.423837+01
-47	activities	0004_auto_20190524_1514	2019-12-30 12:55:10.535777+01
-48	activities	0005_auto_20190528_1022	2019-12-30 12:55:10.573594+01
-49	activities	0006_auto_20190605_1453	2019-12-30 12:55:10.673947+01
-50	activities	0007_auto_20190710_0851	2019-12-30 12:55:10.711226+01
-51	activities	0008_auto_20190814_1541	2019-12-30 12:55:11.058731+01
-52	activities	0009_auto_20191007_1506	2019-12-30 12:55:11.160167+01
-53	activities	0010_activity_transition_date	2019-12-30 12:55:11.207002+01
-54	activities	0011_auto_20191028_1156	2019-12-30 12:55:11.24823+01
-55	activities	0012_auto_20191108_1317	2019-12-30 12:55:11.264312+01
-56	activities	0013_auto_20191120_0920	2019-12-30 12:55:11.27647+01
-57	activities	0014_add_permissions	2019-12-30 12:55:11.288809+01
-58	admin	0001_initial	2019-12-30 12:55:11.326129+01
-59	admin	0002_logentry_remove_auto_add	2019-12-30 12:55:11.36162+01
-60	taggit	0001_initial	2019-12-30 12:55:11.408741+01
-61	taggit	0002_auto_20150616_2121	2019-12-30 12:55:11.431685+01
-62	utils	0001_initial	2019-12-30 12:55:11.457434+01
-63	organizations	0001_initial	2019-12-30 12:55:11.539075+01
-64	projects	0001_initial	2019-12-30 12:55:11.757426+01
-65	tasks	0001_initial	2019-12-30 12:55:12.087114+01
-66	tasks	0002_auto_20160614_1354	2019-12-30 12:55:12.182778+01
-67	tasks	0003_auto_20160621_1707	2019-12-30 12:55:12.198754+01
-68	tasks	0004_auto_20160705_0917	2019-12-30 12:55:12.232676+01
-69	tasks	0005_auto_20160706_1423	2019-12-30 12:55:12.453813+01
-70	tasks	0006_auto_20160720_1058	2019-12-30 12:55:12.470654+01
-71	tasks	0007_auto_20160720_1139	2019-12-30 12:55:12.523407+01
-72	tasks	0008_auto_20160802_1025	2019-12-30 12:55:12.708628+01
-73	tasks	0009_fix_deadline_timestamp	2019-12-30 12:55:12.722819+01
-74	tasks	0010_auto_20160829_2337	2019-12-30 12:55:12.736351+01
-75	tasks	0011_auto_20160920_1019	2019-12-30 12:55:12.974113+01
-76	tasks	0011_auto_20160919_1508	2019-12-30 12:55:13.079192+01
-77	tasks	0012_merge	2019-12-30 12:55:13.082836+01
-78	tasks	0008_auto_20160802_1441	2019-12-30 12:55:13.141068+01
-79	tasks	0006_auto_20160718_1811	2019-12-30 12:55:13.199591+01
-80	tasks	0010_merge	2019-12-30 12:55:13.203526+01
-81	tasks	0011_merge	2019-12-30 12:55:13.205103+01
-82	tasks	0013_merge	2019-12-30 12:55:13.207086+01
-83	tasks	0013_auto_20161006_1813	2019-12-30 12:55:13.269341+01
-84	tasks	0014_merge	2019-12-30 12:55:13.273573+01
-85	tasks	0014_auto_20161006_1144	2019-12-30 12:55:13.335987+01
-86	tasks	0015_merge	2019-12-30 12:55:13.338133+01
-87	tasks	0016_auto_20161208_1159	2019-12-30 12:55:13.391381+01
-88	tasks	0017_task_deadline_to_apply	2019-12-30 12:55:13.602695+01
-89	tasks	0018_auto_20170503_1405	2019-12-30 12:55:13.665787+01
-90	tasks	0019_remove_task_deadline_to_apply	2019-12-30 12:55:13.729022+01
-91	tasks	0020_task_deadline_to_apply	2019-12-30 12:55:13.789236+01
-92	tasks	0021_auto_20170503_1435	2019-12-30 12:55:13.883768+01
-93	tasks	0022_task_accepting	2019-12-30 12:55:13.944332+01
-94	tasks	0023_taskmember_resume	2019-12-30 12:55:13.995251+01
-95	tasks	0018_skill_expertise	2019-12-30 12:55:14.032309+01
-96	tasks	0023_merge_20170519_1012	2019-12-30 12:55:14.034005+01
-97	tasks	0024_merge_20170529_1436	2019-12-30 12:55:14.03591+01
-98	tasks	0025_auto_20170601_1540	2019-12-30 12:55:14.194801+01
-99	tasks	0024_auto_20170602_2304	2019-12-30 12:55:14.212826+01
-100	tasks	0026_merge_20170628_0905	2019-12-30 12:55:14.21435+01
-101	tasks	0027_delete_tasks_date_status_changed	2019-12-30 12:55:14.272409+01
-102	tasks	0028_add_api_permissions	2019-12-30 12:55:14.671491+01
-103	tasks	0029_add_group_permissions	2019-12-30 12:55:14.68696+01
-104	tasks	0030_auto_20170822_1104	2019-12-30 12:55:14.842848+01
-105	tasks	0031_set_owner_permissions	2019-12-30 12:55:14.859536+01
-106	tasks	0032_add_skill_permission	2019-12-30 12:55:14.871595+01
-107	tasks	0028_auto_20170817_1546	2019-12-30 12:55:14.885214+01
-108	tasks	0033_merge_20170830_1106	2019-12-30 12:55:14.886631+01
-109	tasks	0034_more_owner_permissions	2019-12-30 12:55:14.899535+01
-110	projects	0002_remove_project_tags	2019-12-30 12:55:14.958583+01
-111	projects	0003_auto_20160610_1554	2019-12-30 12:55:15.011853+01
-112	projects	0004_projectdocument_ip_address	2019-12-30 12:55:15.067055+01
-113	projects	0005_auto_20160720_1140	2019-12-30 12:55:15.345181+01
-114	projects	0006_project_celebrate_results	2019-12-30 12:55:15.398508+01
-115	projects	0007_auto_20160929_0817	2019-12-30 12:55:15.454454+01
-116	projects	0005_auto_20160721_1546	2019-12-30 12:55:16.179722+01
-117	projects	0006_merge	2019-12-30 12:55:16.181509+01
-118	projects	0008_merge	2019-12-30 12:55:16.183029+01
-119	projects	0008_fix_project_type	2019-12-30 12:55:16.198364+01
-120	projects	0009_merge	2019-12-30 12:55:16.199885+01
-121	projects	0007_remove_projectbudgetline_currency	2019-12-30 12:55:16.238104+01
-122	projects	0007_project_currencies	2019-12-30 12:55:16.281561+01
-123	projects	0010_merge	2019-12-30 12:55:16.285121+01
-124	projects	0011_auto_20161006_1149	2019-12-30 12:55:16.327049+01
-125	projects	0010_auto_20161019_1403	2019-12-30 12:55:16.342637+01
-126	projects	0012_merge	2019-12-30 12:55:16.344059+01
-127	projects	0011_auto_20161028_0946	2019-12-30 12:55:16.540806+01
-128	projects	0013_merge	2019-12-30 12:55:16.542502+01
-129	projects	0014_auto_20161109_1041	2019-12-30 12:55:16.591319+01
-130	projects	0015_project_payout_status	2019-12-30 12:55:16.640946+01
-131	projects	0016_project_campaign_payed_out	2019-12-30 12:55:16.687996+01
-132	projects	0017_auto_20161121_1053	2019-12-30 12:55:16.732187+01
-133	projects	0014_auto_20161115_1601	2019-12-30 12:55:16.779296+01
-134	projects	0015_auto_20161207_0900	2019-12-30 12:55:16.827041+01
-135	members	0002_auto_20160523_1525	2019-12-30 12:55:17.131619+01
-136	members	0003_alter_last_login	2019-12-30 12:55:17.181343+01
-137	members	0004_member_verified	2019-12-30 12:55:17.229967+01
-138	members	0005_auto_20160830_0902	2019-12-30 12:55:17.246631+01
-139	members	0006_member_last_seen	2019-12-30 12:55:17.29804+01
-140	members	0007_auto_20161115_1601	2019-12-30 12:55:17.350018+01
-141	members	0007_auto_20161109_1024	2019-12-30 12:55:17.402703+01
-142	members	0008_merge_20170106_1627	2019-12-30 12:55:17.406482+01
-143	projects	0018_merge_20170106_1627	2019-12-30 12:55:17.407837+01
-144	projects	0019_auto_20170106_1657	2019-12-30 12:55:17.52665+01
-145	projects	0020_merge_20170124_1338	2019-12-30 12:55:17.530301+01
-146	projects	0018_merge_20170118_1533	2019-12-30 12:55:17.532049+01
-147	authtoken	0001_initial	2019-12-30 12:55:17.591512+01
-148	projects	0019_auto_20170118_1537	2019-12-30 12:55:17.608426+01
-149	projects	0021_merge_20170202_1154	2019-12-30 12:55:17.609861+01
-150	projects	0022_project_reviewer	2019-12-30 12:55:17.669899+01
-151	projects	0023_auto_20170323_1227	2019-12-30 12:55:18.073414+01
-152	projects	0024_auto_20170404_1130	2019-12-30 12:55:18.241555+01
-153	projects	0025_auto_20170404_1130	2019-12-30 12:55:18.299874+01
-154	payouts	0001_initial	2019-12-30 12:55:18.336091+01
-155	projects	0026_auto_20170424_1653	2019-12-30 12:55:18.350669+01
-156	projects	0027_auto_20170602_2240	2019-12-30 12:55:18.365845+01
-157	projects	0028_auto_20170619_1555	2019-12-30 12:55:18.379864+01
-158	tasks	0029_fix_migration_statuslog_creation_20170721_1329	2019-12-30 12:55:18.392714+01
-159	tasks	0035_merge_20170831_1449	2019-12-30 12:55:18.394576+01
-160	projects	0027_auto_20170523_1422	2019-12-30 12:55:18.448674+01
-161	projects	0028_auto_20170523_1422	2019-12-30 12:55:18.462685+01
-162	projects	0029_merge_20170628_0905	2019-12-30 12:55:18.464382+01
-163	projects	0030_rename_account_bic_20170705_1221	2019-12-30 12:55:18.57129+01
-164	projects	0031_add_project_roles	2019-12-30 12:55:18.733286+01
-165	projects	0032_default_task_manager	2019-12-30 12:55:18.749946+01
-166	projects	0031_add_api_permissions	2019-12-30 12:55:19.099446+01
-167	projects	0032_add_group_permissions	2019-12-30 12:55:19.113119+01
-168	projects	0033_merge_20170818_1333	2019-12-30 12:55:19.114749+01
-169	projects	0034_auto_20170822_1303	2019-12-30 12:55:19.218831+01
-170	projects	0035_set_owner_permissions	2019-12-30 12:55:19.236472+01
-171	members	0008_merge_20170118_1533	2019-12-30 12:55:19.238065+01
-172	members	0009_merge_20170124_1338	2019-12-30 12:55:19.239508+01
-173	members	0010_fix_export_permissions_migration	2019-12-30 12:55:19.252647+01
-174	projects	0031_fix_migration_projectstatuslog_creation_20170721_1637	2019-12-30 12:55:19.266283+01
-175	projects	0036_merge_20170831_1449	2019-12-30 12:55:19.267693+01
-176	projects	0037_auto_20170915_1350	2019-12-30 12:55:19.377551+01
-177	projects	0038_auto_20170915_1358	2019-12-30 12:55:19.469845+01
-178	projects	0039_add_project_image_group_permissions	2019-12-30 12:55:19.484323+01
-179	projects	0040_auto_20170918_1200	2019-12-30 12:55:19.764624+01
-180	projects	0041_auto_20170918_1201	2019-12-30 12:55:20.159787+01
-181	projects	0037_longer_place_20170914_1129	2019-12-30 12:55:20.208161+01
-182	projects	0038_longer_account_details_20170914_1134	2019-12-30 12:55:20.301958+01
-183	projects	0039_auto_20170914_1503	2019-12-30 12:55:20.38618+01
-184	projects	0042_merge_20170920_1332	2019-12-30 12:55:20.388055+01
-185	projects	0043_remove_payout_status_sourcing_projects	2019-12-30 12:55:20.403586+01
-186	projects	0044_auto_20171110_1549	2019-12-30 12:55:20.417003+01
-187	geo	0002_auto_20160920_1425	2019-12-30 12:55:20.486678+01
-188	geo	0003_fill_location_group	2019-12-30 12:55:20.543357+01
-189	geo	0004_auto_20160929_0817	2019-12-30 12:55:20.600724+01
-190	analytics	0001_initial	2019-12-30 12:55:20.649823+01
-191	analytics	0002_auto_20171031_1209	2019-12-30 12:55:20.665055+01
-192	analytics	0003_auto_20180210_1615	2019-12-30 12:55:20.678155+01
-193	analytics	0004_auto_20180404_1035	2019-12-30 12:55:20.692697+01
-194	analytics	0005_auto_20180424_1205	2019-12-30 12:55:20.722525+01
-195	geo	0005_translate_geo	2019-12-30 12:55:20.938414+01
-196	geo	0006_migrate_geo_translations	2019-12-30 12:55:20.957659+01
-197	geo	0007_remove_translated_fields	2019-12-30 12:55:21.295716+01
-198	geo	0008_auto_20181129_1451	2019-12-30 12:55:21.346002+01
-199	geo	0008_auto_20180918_1037	2019-12-30 12:55:21.509202+01
-200	geo	0009_merge_20190121_1425	2019-12-30 12:55:21.512947+01
-201	geo	0010_initiativeplace	2019-12-30 12:55:21.570298+01
-202	geo	0011_activityplace	2019-12-30 12:55:21.629111+01
-203	geo	0012_auto_20190522_1341	2019-12-30 12:55:21.664026+01
-204	geo	0013_auto_20190524_0958	2019-12-30 12:55:21.710681+01
-205	tasks	0036_auto_20171005_1646	2019-12-30 12:55:21.757866+01
-206	tasks	0037_auto_20171010_1554	2019-12-30 12:55:21.807296+01
-207	tasks	0036_auto_20171114_1056	2019-12-30 12:55:21.854752+01
-208	tasks	0038_merge_20171115_1702	2019-12-30 12:55:21.857977+01
-209	tasks	0039_translate_skill	2019-12-30 12:55:21.96401+01
-210	tasks	0040_migrate_skill_translations	2019-12-30 12:55:21.976933+01
-211	tasks	0041_remove_untranslated_fields	2019-12-30 12:55:22.245699+01
-212	assignments	0001_initial	2019-12-30 12:55:22.365365+01
-213	assignments	0002_auto_20190529_0858	2019-12-30 12:55:22.402648+01
-214	assignments	0003_auto_20190909_1355	2019-12-30 12:55:22.686445+01
-215	assignments	0004_assignment_is_online	2019-12-30 12:55:22.726277+01
-216	assignments	0005_auto_20190909_1514	2019-12-30 12:55:22.754181+01
-217	assignments	0006_auto_20190909_1515	2019-12-30 12:55:22.770669+01
-218	assignments	0007_auto_20190909_1519	2019-12-30 12:55:22.806043+01
-219	assignments	0008_auto_20190909_1545	2019-12-30 12:55:22.881638+01
-220	assignments	0009_auto_20190909_1557	2019-12-30 12:55:23.029655+01
-221	assignments	0010_auto_20190911_1605	2019-12-30 12:55:23.433931+01
-222	assignments	0011_applicant_document	2019-12-30 12:55:23.511715+01
-223	assignments	0012_auto_20190913_1547	2019-12-30 12:55:23.595373+01
-224	auth	0008_alter_user_username_max_length	2019-12-30 12:55:23.632987+01
-225	authtoken	0002_auto_20160226_1747	2019-12-30 12:55:23.806295+01
-226	bb_accounts	0001_initial	2019-12-30 12:55:23.888287+01
-227	bb_accounts	0002_useraddress_user	2019-12-30 12:55:23.970357+01
-228	bb_accounts	0003_useraddress_position	2019-12-30 12:55:24.040123+01
-229	rewards	0001_initial	2019-12-30 12:55:24.126752+01
-230	orders	0001_initial	2019-12-30 12:55:24.212352+01
-231	fundraisers	0001_initial	2019-12-30 12:55:24.528954+01
-232	donations	0001_initial	2019-12-30 12:55:24.547259+01
-233	donations	0002_donation_fundraiser	2019-12-30 12:55:24.621344+01
-234	donations	0003_donation_order	2019-12-30 12:55:24.69401+01
-235	donations	0004_auto_20160523_1525	2019-12-30 12:55:24.841308+01
-236	donations	0005_auto_20160718_1811	2019-12-30 12:55:24.937365+01
-237	donations	0006_auto_20170803_1730	2019-12-30 12:55:24.953996+01
-238	donations	0007_donation_name	2019-12-30 12:55:25.001407+01
-239	donations	0008_auto_20170927_1021	2019-12-30 12:55:25.117097+01
-240	bb_follow	0001_initial	2019-12-30 12:55:25.185024+01
-241	bb_follow	0002_follow_user	2019-12-30 12:55:25.257908+01
-242	bb_follow	0003_auto_20180530_1621	2019-12-30 12:55:25.275683+01
-243	projects	0043_auto_20171023_1958	2019-12-30 12:55:25.529945+01
-244	projects	0044_auto_20171023_2008	2019-12-30 12:55:25.571755+01
-245	projects	0045_auto_20171023_2013	2019-12-30 12:55:25.633307+01
-246	projects	0046_auto_20171023_2047	2019-12-30 12:55:25.722554+01
-247	projects	0047_auto_20171024_1016	2019-12-30 12:55:25.744609+01
-248	projects	0048_auto_20171024_1052	2019-12-30 12:55:25.763554+01
-249	projects	0049_auto_20171024_1018	2019-12-30 12:55:25.778881+01
-250	projects	0050_merge_20171110_1633	2019-12-30 12:55:25.780507+01
-251	projects	0045_auto_20171114_1058	2019-12-30 12:55:25.942132+01
-252	projects	0051_merge_20171115_1702	2019-12-30 12:55:25.945279+01
-253	projects	0051_auto_20171113_1637	2019-12-30 12:55:25.980559+01
-254	projects	0052_merge_20171122_1000	2019-12-30 12:55:25.982228+01
-255	projects	0052_merge_20171121_1335	2019-12-30 12:55:25.983606+01
-256	projects	0053_merge_20171122_1001	2019-12-30 12:55:25.98494+01
-257	projects	0050_merge_20171124_0022	2019-12-30 12:55:25.986263+01
-258	projects	0054_merge_20171128_1142	2019-12-30 12:55:25.987485+01
-259	projects	0043_auto_20171025_1253	2019-12-30 12:55:26.118163+01
-260	projects	0050_merge_20171113_1230	2019-12-30 12:55:26.122477+01
-261	projects	0051_merge_20171124_0021	2019-12-30 12:55:26.124048+01
-262	projects	0052_merge_20171127_1329	2019-12-30 12:55:26.12585+01
-263	projects	0055_merge_20171205_0847	2019-12-30 12:55:26.127697+01
-264	projects	0056_auto_20171205_0847	2019-12-30 12:55:26.279289+01
-265	projects	0055_merge_20171201_1608	2019-12-30 12:55:26.281162+01
-266	projects	0057_merge_20171205_1236	2019-12-30 12:55:26.282791+01
-267	projects	0054_auto_20171122_1415	2019-12-30 12:55:26.373782+01
-268	projects	0055_project_campaign_edited	2019-12-30 12:55:26.454836+01
-269	projects	0058_merge_20171220_1342	2019-12-30 12:55:26.458052+01
-270	organizations	0002_auto_20160610_1554	2019-12-30 12:55:26.500109+01
-271	organizations	0003_auto_20170314_0900	2019-12-30 12:55:26.830879+01
-272	organizations	0004_organizationcontact	2019-12-30 12:55:26.904509+01
-273	organizations	0003_auto_20170303_1057	2019-12-30 12:55:26.919792+01
-274	organizations	0005_merge_20170321_1630	2019-12-30 12:55:26.921251+01
-275	organizations	0006_auto_20170328_1138	2019-12-30 12:55:26.991321+01
-276	organizations	0007_auto_20170803_1730	2019-12-30 12:55:27.011498+01
-277	organizations	0008_organization_logo	2019-12-30 12:55:27.046534+01
-278	organizations	0009_organization_description	2019-12-30 12:55:27.086408+01
-279	organizations	0010_auto_20171114_1035	2019-12-30 12:55:27.156391+01
-280	organizations	0011_auto_20180118_1100	2019-12-30 12:55:27.215947+01
-281	projects	0059_auto_20180118_1100	2019-12-30 12:55:27.379268+01
-282	projects	0060_auto_20180118_1217	2019-12-30 12:55:27.45303+01
-283	projects	0061_auto_20180118_1510	2019-12-30 12:55:27.526538+01
-284	projects	0062_auto_20180119_1231	2019-12-30 12:55:27.667743+01
-285	projects	0063_auto_20180119_1456	2019-12-30 12:55:28.226778+01
-286	projects	0064_auto_20180119_1625	2019-12-30 12:55:28.33008+01
-287	projects	0065_auto_20180121_1952	2019-12-30 12:55:28.4518+01
-288	projects	0066_auto_20180121_2002	2019-12-30 12:55:28.486427+01
-289	projects	0067_auto_20180123_0914	2019-12-30 12:55:28.546513+01
-290	projects	0068_auto_20180306_1614	2019-12-30 12:55:28.649528+01
-291	projects	0069_auto_20180316_1553	2019-12-30 12:55:28.925505+01
-292	projects	0070_auto_20180411_1013	2019-12-30 12:55:29.199992+01
-293	projects	0070_auto_20180328_1401	2019-12-30 12:55:29.217416+01
-294	projects	0071_merge_20180412_1133	2019-12-30 12:55:29.219217+01
-295	projects	0072_auto_20180416_1115	2019-12-30 12:55:29.268862+01
-296	projects	0073_auto_20180416_1115	2019-12-30 12:55:29.286898+01
-297	projects	0074_auto_20180416_1204	2019-12-30 12:55:29.311597+01
-298	projects	0075_auto_20180515_1556	2019-12-30 12:55:29.848366+01
-299	projects	0076_auto_20180516_0954	2019-12-30 12:55:30.053439+01
-300	projects	0077_auto_20180518_1050	2019-12-30 12:55:30.072757+01
-301	projects	0078_auto_20180528_1414	2019-12-30 12:55:30.101146+01
-302	projects	0079_auto_20180626_1225	2019-12-30 12:55:30.444928+01
-303	projects	0080_auto_20180828_1522	2019-12-30 12:55:30.507564+01
-304	projects	0080_auto_20180810_1405	2019-12-30 12:55:30.569017+01
-305	projects	0081_merge_20181012_1209	2019-12-30 12:55:30.570911+01
-306	payouts	0002_auto_20160523_1525	2019-12-30 12:55:30.671403+01
-307	payouts	0003_auto_20160719_1315	2019-12-30 12:55:31.776493+01
-308	payouts	0004_projectpayout_currency	2019-12-30 12:55:31.837664+01
-309	payouts	0005_auto_20160721_1114	2019-12-30 12:55:31.858663+01
-310	payouts	0006_rename_account_bic_20170705_1426	2019-12-30 12:55:31.971303+01
-311	payouts	0007_auto_20181123_1057	2019-12-30 12:55:32.202991+01
-312	payouts	0008_auto_20181129_1451	2019-12-30 12:55:32.928057+01
-313	projects	0082_auto_20181129_1506	2019-12-30 12:55:33.459313+01
-314	payouts	0009_payoutdocument	2019-12-30 12:55:33.525682+01
-315	projects	0083_auto_20181129_1506	2019-12-30 12:55:33.546054+01
-316	payouts	0010_auto_20181203_1145	2019-12-30 12:55:33.69215+01
-317	payouts	0011_auto_20181205_1509	2019-12-30 12:55:34.048184+01
-318	payouts	0012_auto_20181205_1509	2019-12-30 12:55:34.065858+01
-319	payouts	0013_auto_20181207_1340	2019-12-30 12:55:34.157593+01
-320	payouts	0014_auto_20181211_0938	2019-12-30 12:55:34.172861+01
-321	payouts	0015_auto_20181212_1152	2019-12-30 12:55:34.357683+01
-322	payouts	0016_auto_20181215_2016	2019-12-30 12:55:34.485623+01
-323	payouts	0017_delete_in_review_accounts	2019-12-30 12:55:34.501695+01
-324	payouts	0018_auto_20190108_0858	2019-12-30 12:55:34.541603+01
-325	bb_payouts	0001_initial	2019-12-30 12:55:34.578282+01
-326	bb_payouts	0002_auto_20160523_1525	2019-12-30 12:55:34.687966+01
-327	bb_payouts	0003_auto_20190110_1155	2019-12-30 12:55:34.825093+01
-328	bluebottle_dashboard	0001_initial	2019-12-30 12:55:34.871806+01
-329	dashboard	0001_initial	2019-12-30 12:55:34.893139+01
-330	bluebottle_dashboard	0002_auto_20191107_0853	2019-12-30 12:55:34.910798+01
-331	wallposts	0001_initial	2019-12-30 12:55:36.241594+01
-332	wallposts	0002_auto_20161115_1601	2019-12-30 12:55:36.835793+01
-333	wallposts	0003_mediawallpostphoto_results_page	2019-12-30 12:55:36.892107+01
-334	wallposts	0002_auto_20161109_1024	2019-12-30 12:55:37.217554+01
-335	wallposts	0004_merge_20170118_1533	2019-12-30 12:55:37.221119+01
-336	wallposts	0004_merge_20170106_1627	2019-12-30 12:55:37.222568+01
-337	wallposts	0005_merge_20170124_1338	2019-12-30 12:55:37.223903+01
-338	wallposts	0006_remove_duplicate_donation_wallposts	2019-12-30 12:55:37.244189+01
-339	wallposts	0007_auto_20170821_1459	2019-12-30 12:55:37.2819+01
-340	wallposts	0008_add_group_permissions	2019-12-30 12:55:37.29838+01
-341	wallposts	0009_auto_20170821_2001	2019-12-30 12:55:37.357819+01
-342	wallposts	0010_auto_20170821_2001	2019-12-30 12:55:37.378669+01
-343	wallposts	0011_auto_20170821_2018	2019-12-30 12:55:37.434656+01
-344	wallposts	0012_auto_20170821_2018	2019-12-30 12:55:37.454745+01
-345	wallposts	0013_auto_20170822_1105	2019-12-30 12:55:37.594338+01
-346	wallposts	0014_set_owner_permissions	2019-12-30 12:55:37.612637+01
-347	wallposts	0015_auto_20171114_1035	2019-12-30 12:55:37.708365+01
-348	wallposts	0016_auto_20180508_1512	2019-12-30 12:55:38.239766+01
-349	wallposts	0017_wallpost_pinned	2019-12-30 12:55:38.294076+01
-350	wallposts	0018_auto_20190115_0853	2019-12-30 12:55:38.314559+01
-351	payouts	0019_auto_20190123_1216	2019-12-30 12:55:38.349487+01
-352	payouts	0020_auto_20190123_1731	2019-12-30 12:55:38.368384+01
-353	payouts_dorado	0001_initial	2019-12-30 12:55:38.385593+01
-354	payouts	0019_auto_20190110_1155	2019-12-30 12:55:38.509471+01
-355	payouts	0021_merge_20190124_1320	2019-12-30 12:55:38.5129+01
-356	payouts	0022_auto_20190211_1452	2019-12-30 12:55:38.59828+01
-357	funding	0002_auto_20190604_1458	2019-12-30 12:55:38.883088+01
-358	funding	0003_auto_20190604_1459	2019-12-30 12:55:39.020212+01
-359	funding	0004_auto_20190604_1501	2019-12-30 12:55:39.424203+01
-360	funding	0005_auto_20190604_1501	2019-12-30 12:55:39.556884+01
-361	funding	0006_auto_20190604_1615	2019-12-30 12:55:39.785637+01
-362	funding	0007_auto_20190605_1639	2019-12-30 12:55:39.953186+01
-363	funding	0008_auto_20190612_0941	2019-12-30 12:55:40.765694+01
-364	funding	0009_auto_20190612_1319	2019-12-30 12:55:41.044193+01
-365	funding	0010_auto_20190612_1359	2019-12-30 12:55:41.176051+01
-366	funding	0011_auto_20190617_1251	2019-12-30 12:55:41.297707+01
-367	funding	0012_auto_20190708_0731	2019-12-30 12:55:41.418463+01
-368	funding	0013_auto_20190711_0927	2019-12-30 12:55:41.536973+01
-369	funding	0014_auto_20190714_1440	2019-12-30 12:55:41.904959+01
-370	funding	0015_auto_20190728_0920	2019-12-30 12:55:42.091047+01
-371	funding	0016_auto_20190728_0930	2019-12-30 12:55:42.168645+01
-372	funding	0017_auto_20190728_1319	2019-12-30 12:55:42.350607+01
-373	funding	0013_auto_20190710_1455	2019-12-30 12:55:42.466776+01
-374	funding	0014_auto_20190716_1636	2019-12-30 12:55:43.122139+01
-375	funding	0015_merge_20190717_1651	2019-12-30 12:55:43.125459+01
-376	funding	0018_merge_20190729_1449	2019-12-30 12:55:43.126854+01
-377	funding	0019_auto_20190729_1609	2019-12-30 12:55:43.260794+01
-378	funding	0020_donation_name	2019-12-30 12:55:43.303628+01
-379	funding	0021_auto_20190803_1106	2019-12-30 12:55:43.359251+01
-380	funding	0022_auto_20190804_1022	2019-12-30 12:55:43.41723+01
-381	funding	0023_bankpayoutaccount	2019-12-30 12:55:43.48794+01
-382	funding	0024_bankpaymentprovider	2019-12-30 12:55:43.567817+01
-383	funding	0025_auto_20190904_1154	2019-12-30 12:55:43.735518+01
-384	funding	0026_auto_20190904_1200	2019-12-30 12:55:43.737194+01
-385	funding	0023_add_permissions	2019-12-30 12:55:43.755457+01
-386	funding	0027_merge_20190912_1324	2019-12-30 12:55:43.757412+01
-387	funding	0024_donation_anonymous	2019-12-30 12:55:43.798228+01
-388	funding	0028_merge_20190912_1354	2019-12-30 12:55:43.802119+01
-389	funding	0029_auto_20190913_1458	2019-12-30 12:55:44.502195+01
-390	funding	0030_auto_20190918_1607	2019-12-30 12:55:44.960828+01
-391	funding	0031_plainpayoutaccount	2019-12-30 12:55:45.042456+01
-392	funding	0032_paymentcurrency	2019-12-30 12:55:45.127079+01
-393	funding	0033_auto_20191002_0903	2019-12-30 12:55:45.807873+01
-394	funding	0034_auto_20191002_1150	2019-12-30 12:55:45.918972+01
-395	funding	0035_auto_20191002_1415	2019-12-30 12:55:45.998908+01
-396	funding	0036_auto_20191004_1336	2019-12-30 12:55:46.100646+01
-397	wallposts	0019_auto_20191017_2204	2019-12-30 12:55:46.215721+01
-398	rewards	0002_auto_20160720_2245	2019-12-30 12:55:46.322142+01
-399	rewards	0003_add_api_permissions	2019-12-30 12:55:46.375575+01
-400	rewards	0004_add_group_permissions	2019-12-30 12:55:46.393583+01
-401	rewards	0005_auto_20170823_1131	2019-12-30 12:55:46.446144+01
-402	rewards	0006_set_owner_permissions	2019-12-30 12:55:46.465525+01
-403	rewards	0007_auto_20170914_2004	2019-12-30 12:55:46.795978+01
-404	rewards	0008_auto_20170914_2029	2019-12-30 12:55:46.851236+01
-405	rewards	0009_auto_20191104_1230	2019-12-30 12:55:46.906088+01
-406	projects	0084_auto_20181207_1435	2019-12-30 12:55:46.987775+01
-407	projects	0085_auto_20181207_1552	2019-12-30 12:55:47.008573+01
-408	projects	0080_auto_20180828_1049	2019-12-30 12:55:47.171725+01
-409	projects	0081_merge_20180919_1152	2019-12-30 12:55:47.175553+01
-410	projects	0082_merge_20181127_1044	2019-12-30 12:55:47.17699+01
-411	projects	0081_auto_20180918_1335	2019-12-30 12:55:47.202996+01
-412	projects	0086_merge_20190121_1425	2019-12-30 12:55:47.204856+01
-413	projects	0086_auto_20190117_1007	2019-12-30 12:55:47.924977+01
-414	projects	0087_merge_20190130_1355	2019-12-30 12:55:47.92839+01
-415	projects	0080_auto_20180904_1532	2019-12-30 12:55:48.060749+01
-416	projects	0081_merge_20180911_1659	2019-12-30 12:55:48.064373+01
-417	projects	0088_merge_20190215_1425	2019-12-30 12:55:48.065739+01
-418	projects	0087_merge_20190206_1714	2019-12-30 12:55:48.067094+01
-419	projects	0088_merge_20190208_1523	2019-12-30 12:55:48.06842+01
-420	projects	0089_merge_20190215_1438	2019-12-30 12:55:48.069749+01
-421	projects	0086_merge_20190204_1005	2019-12-30 12:55:48.070919+01
-422	projects	0088_merge_20190213_1448	2019-12-30 12:55:48.072364+01
-423	projects	0090_merge_20190222_1101	2019-12-30 12:55:48.073714+01
-424	organizations	0012_auto_20190416_1101	2019-12-30 12:55:49.383275+01
-425	initiatives	0002_copy_permissions	2019-12-30 12:55:49.402193+01
-426	initiatives	0003_auto_20190403_1619	2019-12-30 12:55:49.514797+01
-427	initiatives	0004_auto_20190416_1101	2019-12-30 12:55:49.935773+01
-428	initiatives	0005_initiative_hasorganization	2019-12-30 12:55:50.014842+01
-429	initiatives	0006_auto_20190416_1553	2019-12-30 12:55:50.358182+01
-430	initiatives	0004_auto_20190418_1643	2019-12-30 12:55:50.517544+01
-431	initiatives	0007_merge_20190501_0922	2019-12-30 12:55:50.520755+01
-432	initiatives	0008_auto_20190513_1518	2019-12-30 12:55:50.595127+01
-433	initiatives	0009_auto_20190520_1436	2019-12-30 12:55:51.039533+01
-434	initiatives	0010_auto_20190521_0954	2019-12-30 12:55:51.117754+01
-435	initiatives	0011_auto_20190522_0931	2019-12-30 12:55:51.158701+01
-436	initiatives	0009_auto_20190524_1144	2019-12-30 12:55:51.503686+01
-437	initiatives	0012_merge_20190524_1208	2019-12-30 12:55:51.546826+01
-438	initiatives	0013_auto_20190527_1131	2019-12-30 12:55:51.771965+01
-439	initiatives	0014_auto_20190628_1656	2019-12-30 12:55:51.970088+01
-440	funding_vitepay	0001_initial	2019-12-30 12:55:52.099306+01
-441	funding_vitepay	0002_vitepaypayment_payment_url	2019-12-30 12:55:52.12904+01
-442	funding_vitepay	0003_vitepaypaymentprovider_prefix	2019-12-30 12:55:52.152694+01
-443	funding_vitepay	0004_auto_20190715_0739	2019-12-30 12:55:52.181088+01
-444	funding_vitepay	0005_vitepaypayoutaccount	2019-12-30 12:55:52.286391+01
-445	funding_vitepay	0006_auto_20190918_1632	2019-12-30 12:55:52.779813+01
-446	funding_vitepay	0007_auto_20191002_0903	2019-12-30 12:55:52.805194+01
-447	funding_stripe	0001_initial	2019-12-30 12:55:53.386216+01
-448	geo	0014_auto_20191022_1105	2019-12-30 12:55:53.443259+01
-449	funding_pledge	0001_initial	2019-12-30 12:55:53.602263+01
-450	funding_pledge	0002_pledgepaymentprovider	2019-12-30 12:55:53.631998+01
-451	funding_pledge	0003_auto_20191002_0903	2019-12-30 12:55:53.659548+01
-452	funding	0037_payout	2019-12-30 12:55:54.027159+01
-453	funding	0038_auto_20191014_1316	2019-12-30 12:55:54.262764+01
-454	funding	0039_auto_20191022_1105	2019-12-30 12:55:54.385468+01
-455	funding_pledge	0004_pledgebankaccount	2019-12-30 12:55:54.507996+01
-456	funding_lipisha	0001_initial	2019-12-30 12:55:54.657542+01
-457	funding_lipisha	0002_auto_20190717_1637	2019-12-30 12:55:54.75087+01
-458	funding_lipisha	0003_lipishapayoutaccount	2019-12-30 12:55:54.876225+01
-459	funding_lipisha	0004_auto_20190918_1632	2019-12-30 12:55:55.387148+01
-460	funding_lipisha	0005_auto_20191001_2246	2019-12-30 12:55:55.633976+01
-461	funding_lipisha	0006_auto_20191001_2251	2019-12-30 12:55:55.699073+01
-462	funding_flutterwave	0001_initial	2019-12-30 12:55:55.8489+01
-463	funding_flutterwave	0002_flutterwavepaymentprovider_prefix	2019-12-30 12:55:55.88332+01
-464	funding_flutterwave	0003_flutterwavepayoutaccount	2019-12-30 12:55:56.009775+01
-465	funding_flutterwave	0004_auto_20190918_1633	2019-12-30 12:55:56.537723+01
-466	funding_flutterwave	0005_auto_20191002_0903	2019-12-30 12:55:56.602786+01
-467	funding	0040_auto_20191029_1309	2019-12-30 12:55:57.100479+01
-468	funding	0041_payout_currency	2019-12-30 12:55:57.149001+01
-469	funding	0042_auto_20191104_1154	2019-12-30 12:55:57.650125+01
-470	projects	0091_project_to_initiatives	2019-12-30 12:55:57.738468+01
-471	utils	0002_maillog	2019-12-30 12:55:57.824163+01
-472	pages	0001_initial	2019-12-30 12:55:57.968812+01
-473	pages	0002_auto_20161115_1601	2019-12-30 12:55:58.03549+01
-474	pages	0002_auto_20161109_1024	2019-12-30 12:55:58.099789+01
-475	pages	0003_merge_20170118_1533	2019-12-30 12:55:58.103633+01
-476	pages	0003_merge_20170106_1627	2019-12-30 12:55:58.105051+01
-477	pages	0004_merge_20170124_1338	2019-12-30 12:55:58.106697+01
-478	pages	0005_auto_20170803_1729	2019-12-30 12:55:58.124374+01
-479	pages	0006_auto_20171114_1035	2019-12-30 12:55:58.187065+01
-480	fluent_contents	0001_initial	2019-12-30 12:55:58.842587+01
-481	pages	0007_imagetextitem	2019-12-30 12:55:58.937905+01
-482	pages	0008_auto_20180326_0821	2019-12-30 12:55:59.146995+01
-483	pages	0009_auto_20180709_1706	2019-12-30 12:55:59.238291+01
-484	news	0001_initial	2019-12-30 12:55:59.327213+01
-485	news	0002_auto_20160531_1651	2019-12-30 12:55:59.399291+01
-486	news	0003_auto_20161115_1601	2019-12-30 12:55:59.468555+01
-487	news	0003_auto_20161109_1024	2019-12-30 12:55:59.5426+01
-488	news	0004_merge_20170118_1533	2019-12-30 12:55:59.545915+01
-489	news	0004_merge_20170106_1627	2019-12-30 12:55:59.547296+01
-490	news	0005_merge_20170124_1338	2019-12-30 12:55:59.548608+01
-491	news	0006_auto_20170803_1729	2019-12-30 12:55:59.566531+01
-492	news	0007_auto_20180709_1706	2019-12-30 12:55:59.712805+01
-493	surveys	0001_initial	2019-12-30 12:55:59.775147+01
-494	surveys	0002_survey_link	2019-12-30 12:55:59.801043+01
-495	surveys	0003_survey_specification	2019-12-30 12:56:00.101769+01
-496	surveys	0004_auto_20160919_1552	2019-12-30 12:56:00.183518+01
-497	surveys	0005_auto_20160919_1556	2019-12-30 12:56:00.239896+01
-498	surveys	0006_auto_20160919_1609	2019-12-30 12:56:00.318055+01
-499	surveys	0007_question_title	2019-12-30 12:56:00.348498+01
-500	surveys	0008_question_properties	2019-12-30 12:56:00.37581+01
-501	surveys	0009_answer_value	2019-12-30 12:56:00.407313+01
-502	surveys	0010_auto_20160920_0854	2019-12-30 12:56:00.665385+01
-503	surveys	0011_auto_20160920_1126	2019-12-30 12:56:00.853613+01
-504	surveys	0012_auto_20160920_1153	2019-12-30 12:56:00.909111+01
-505	surveys	0013_auto_20160921_1410	2019-12-30 12:56:00.991079+01
-506	surveys	0014_auto_20160921_1444	2019-12-30 12:56:01.094139+01
-507	surveys	0015_auto_20160922_1057	2019-12-30 12:56:01.604424+01
-508	surveys	0016_auto_20160922_1104	2019-12-30 12:56:01.663115+01
-509	surveys	0017_auto_20160922_1210	2019-12-30 12:56:01.790539+01
-510	surveys	0018_auto_20160922_1610	2019-12-30 12:56:01.874372+01
-511	surveys	0019_auto_20160922_1618	2019-12-30 12:56:02.010564+01
-512	surveys	0020_answer_options	2019-12-30 12:56:02.051883+01
-513	surveys	0021_response_params	2019-12-30 12:56:02.106497+01
-514	surveys	0022_auto_20160926_0912	2019-12-30 12:56:02.27638+01
-515	surveys	0023_aggregateanswer_aggregation_type	2019-12-30 12:56:02.335364+01
-516	surveys	0024_auto_20160926_1958	2019-12-30 12:56:02.392871+01
-517	surveys	0025_auto_20160927_1102	2019-12-30 12:56:02.505342+01
-518	surveys	0021_survey_last_synced	2019-12-30 12:56:02.81316+01
-519	surveys	0026_merge	2019-12-30 12:56:02.817065+01
-520	surveys	0027_auto_20160929_0817	2019-12-30 12:56:02.871529+01
-521	surveys	0028_auto_20160929_0849	2019-12-30 12:56:02.95416+01
-522	surveys	0029_auto_20160929_0932	2019-12-30 12:56:02.977921+01
-523	surveys	0030_auto_20161115_1601	2019-12-30 12:56:03.115452+01
-524	surveys	0031_question_display_theme	2019-12-30 12:56:03.143541+01
-525	cms	0001_initial	2019-12-30 12:56:04.252108+01
-526	cms	0002_shareresultscontent	2019-12-30 12:56:04.351481+01
-527	cms	0002_auto_20161207_0918	2019-12-30 12:56:04.494295+01
-528	cms	0003_merge_20161207_1037	2019-12-30 12:56:04.496001+01
-529	cms	0004_resultpage_image	2019-12-30 12:56:04.520815+01
-530	cms	0005_auto_20161207_1512	2019-12-30 12:56:04.685542+01
-531	cms	0006_auto_20161207_1642	2019-12-30 12:56:04.878636+01
-532	cms	0007_auto_20161207_1709	2019-12-30 12:56:05.168687+01
-533	cms	0005_auto_20161208_1124	2019-12-30 12:56:05.229799+01
-534	cms	0006_auto_20161208_1159	2019-12-30 12:56:05.717461+01
-535	cms	0008_merge_20161212_1459	2019-12-30 12:56:05.760534+01
-536	cms	0004_projectsmapcontent	2019-12-30 12:56:05.938688+01
-537	cms	0007_merge_20161212_1501	2019-12-30 12:56:05.94208+01
-538	cms	0009_merge_20161213_1047	2019-12-30 12:56:05.94355+01
-539	cms	0010_auto_20161214_1429	2019-12-30 12:56:06.081008+01
-540	cms	0011_auto_20161214_1531	2019-12-30 12:56:06.173546+01
-541	cms	0012_auto_20161214_1618	2019-12-30 12:56:06.246769+01
-542	cms	0010_auto_20161214_1524	2019-12-30 12:56:06.314365+01
-543	cms	0013_merge_20161214_1637	2019-12-30 12:56:06.318166+01
-544	cms	0014_auto_20161216_1424	2019-12-30 12:56:07.501243+01
-545	cms	0014_auto_20161216_1359	2019-12-30 12:56:07.523404+01
-546	cms	0015_merge_20161219_0946	2019-12-30 12:56:07.525239+01
-547	cms	0016_auto_20161228_1420	2019-12-30 12:56:07.713151+01
-548	cms	0017_add_api_permissions	2019-12-30 12:56:07.745894+01
-549	cms	0018_add_group_permissions	2019-12-30 12:56:07.764742+01
-550	cms	0019_auto_20170829_1005	2019-12-30 12:56:07.791369+01
-551	cms	0020_add_group_permissions	2019-12-30 12:56:07.810506+01
-552	cms	0021_auto_20171005_1646	2019-12-30 12:56:08.179442+01
-553	cms	0022_migrate_quotes_1	2019-12-30 12:56:08.797238+01
-554	cms	0023_migrate_quotes_2	2019-12-30 12:56:08.904084+01
-555	cms	0024_migrate_quotes_3	2019-12-30 12:56:09.246467+01
-556	cms	0025_migrate_stats_1	2019-12-30 12:56:09.466455+01
-557	cms	0026_migrate_stats_2	2019-12-30 12:56:09.536076+01
-558	cms	0027_migrate_stats_3	2019-12-30 12:56:09.868699+01
-559	cms	0021_homepage	2019-12-30 12:56:09.892202+01
-560	cms	0022_auto_20171006_1155	2019-12-30 12:56:09.946601+01
-561	cms	0023_auto_20171006_1208	2019-12-30 12:56:09.968324+01
-562	cms	0028_merge_20171006_1622	2019-12-30 12:56:09.970272+01
-563	cms	0029_auto_20171010_0931	2019-12-30 12:56:11.446801+01
-564	cms	0030_migrate_projects_1	2019-12-30 12:56:11.570995+01
-565	cms	0031_migrate_projects_2	2019-12-30 12:56:11.999636+01
-566	cms	0032_migrate_projects_3	2019-12-30 12:56:12.293877+01
-567	cms	0033_auto_20171017_1353	2019-12-30 12:56:12.395172+01
-568	cms	0034_auto_20171017_1549	2019-12-30 12:56:12.710658+01
-569	cms	0035_auto_20171017_1611	2019-12-30 12:56:12.855603+01
-570	cms	0036_auto_20171017_1622	2019-12-30 12:56:12.920846+01
-571	cms	0037_auto_20171017_1645	2019-12-30 12:56:12.95156+01
-572	cms	0038_auto_20171017_1645	2019-12-30 12:56:12.975563+01
-573	cms	0039_auto_20171017_1708	2019-12-30 12:56:13.389166+01
-574	cms	0040_auto_20171018_1413	2019-12-30 12:56:13.47917+01
-575	cms	0041_auto_20171018_1437	2019-12-30 12:56:13.541884+01
-576	cms	0042_auto_20171018_1437	2019-12-30 12:56:13.564965+01
-577	cms	0043_auto_20171018_1442	2019-12-30 12:56:13.705937+01
-578	cms	0044_auto_20171018_1457	2019-12-30 12:56:13.73782+01
-579	cms	0045_auto_20171018_1505	2019-12-30 12:56:13.806949+01
-580	cms	0046_auto_20171018_1637	2019-12-30 12:56:13.838756+01
-581	cms	0047_auto_20171018_1709	2019-12-30 12:56:13.904016+01
-582	cms	0048_auto_20171024_1554	2019-12-30 12:56:14.135376+01
-583	cms	0049_auto_20171024_1601	2019-12-30 12:56:15.181734+01
-584	cms	0050_auto_20171024_1623	2019-12-30 12:56:16.882347+01
-585	cms	0051_auto_20171024_1631	2019-12-30 12:56:17.710813+01
-586	cms	0052_auto_20171027_1419	2019-12-30 12:56:17.734222+01
-587	cms	0053_auto_20171030_1645	2019-12-30 12:56:17.735918+01
-588	cms	0054_auto_20171031_1428	2019-12-30 12:56:20.859003+01
-589	cms	0021_auto_20171017_2015	2019-12-30 12:56:20.860672+01
-590	cms	0022_auto_20171019_1725	2019-12-30 12:56:20.861934+01
-591	cms	0023_auto_20171019_2042	2019-12-30 12:56:20.863189+01
-592	cms	0024_siteplatformsettings	2019-12-30 12:56:20.864589+01
-593	cms	0025_auto_20171024_1600	2019-12-30 12:56:20.865908+01
-594	cms	0055_merge_20171031_1713	2019-12-30 12:56:20.867415+01
-595	cms	0056_auto_20171102_1527	2019-12-30 12:56:20.86898+01
-596	cms	0057_auto_20171103_1438	2019-12-30 12:56:20.870376+01
-597	cms	0058_auto_20171110_1230	2019-12-30 12:56:20.871901+01
-598	cms	0059_auto_20171121_1022	2019-12-30 12:56:20.873331+01
-599	cms	0059_auto_20171121_0959	2019-12-30 12:56:20.87482+01
-600	cms	0060_merge_20171121_1334	2019-12-30 12:56:20.876529+01
-601	cms	0061_auto_20171128_1135	2019-12-30 12:56:20.87814+01
-602	cms	0062_auto_20171128_1355	2019-12-30 12:56:20.879738+01
-603	cms	0063_auto_20171204_1049	2019-12-30 12:56:20.881366+01
-604	cms	0064_auto_20171220_1145	2019-12-30 12:56:20.882886+01
-605	cms	0065_auto_20180313_1401	2019-12-30 12:56:20.884519+01
-606	cms	0066_auto_20180709_1657	2019-12-30 12:56:20.88601+01
-607	cms	0067_auto_20190710_0938	2019-12-30 12:56:20.887557+01
-608	cms	0068_migrate_start_project	2019-12-30 12:56:20.889117+01
-609	cms	0055_migrate_statistics	2019-12-30 12:56:20.913259+01
-610	cms	0056_auto_20191106_1041	2019-12-30 12:56:20.933946+01
-611	contact	0001_initial	2019-12-30 12:56:20.958902+01
-612	contact	0002_contactmessage_author	2019-12-30 12:56:21.078342+01
-613	text	0001_initial	2019-12-30 12:56:21.201533+01
-614	rawhtml	0001_initial	2019-12-30 12:56:21.324556+01
-615	oembeditem	0001_initial	2019-12-30 12:56:21.453782+01
-616	contentplugins	0001_initial	2019-12-30 12:56:21.580974+01
-617	contentplugins	0002_auto_20161115_1601	2019-12-30 12:56:21.643172+01
-618	contentplugins	0002_auto_20161109_1024	2019-12-30 12:56:21.706076+01
-619	contentplugins	0003_merge_20170118_1533	2019-12-30 12:56:21.707824+01
-620	contentplugins	0003_merge_20170106_1627	2019-12-30 12:56:21.709333+01
-621	contentplugins	0004_merge_20170124_1338	2019-12-30 12:56:21.710915+01
-622	contentplugins	0005_auto_20170818_1441	2019-12-30 12:56:21.732179+01
-623	django_summernote	0001_initial	2019-12-30 12:56:21.760902+01
-624	django_summernote	0002_auto_20190218_1224	2019-12-30 12:56:21.81566+01
-625	djcelery	0001_initial	2019-12-30 12:56:22.519082+01
-626	djmoney_rates	0001_initial	2019-12-30 12:56:22.644714+01
-627	donations	0009_auto_20190130_1140	2019-12-30 12:56:22.780506+01
-628	donations	0010_auto_20190130_1141	2019-12-30 12:56:22.804723+01
-629	donations	0011_auto_20191101_1046	2019-12-30 12:56:22.934896+01
-630	events	0001_initial	2019-12-30 12:56:23.201246+01
-631	events	0002_add_permissions	2019-12-30 12:56:23.223903+01
-632	events	0003_auto_20190522_1329	2019-12-30 12:56:23.265311+01
-633	events	0004_add_permissions	2019-12-30 12:56:23.28719+01
-634	events	0005_auto_20190527_1431	2019-12-30 12:56:23.430785+01
-635	events	0006_event_is_online	2019-12-30 12:56:23.484541+01
-636	events	0007_auto_20190605_1434	2019-12-30 12:56:23.64896+01
-637	events	0008_auto_20190812_1612	2019-12-30 12:56:24.193512+01
-638	events	0009_event_duration	2019-12-30 12:56:24.24621+01
-639	events	0010_auto_20190816_1327	2019-12-30 12:56:24.345542+01
-640	files	0002_relatedimage	2019-12-30 12:56:24.471703+01
-641	files	0003_auto_20191111_1533	2019-12-30 12:56:24.495181+01
-642	follow	0001_initial	2019-12-30 12:56:24.620958+01
-643	funding	0043_auto_20191108_0819	2019-12-30 12:56:24.646537+01
-644	funding	0044_auto_20191108_1008	2019-12-30 12:56:24.673195+01
-645	funding	0043_auto_20191106_1149	2019-12-30 12:56:24.698608+01
-646	funding	0045_merge_20191108_1853	2019-12-30 12:56:24.700611+01
-647	funding	0045_auto_20191111_1329	2019-12-30 12:56:24.725423+01
-648	funding	0046_merge_20191112_1256	2019-12-30 12:56:24.726981+01
-649	funding	0047_auto_20191116_1540	2019-12-30 12:56:24.750959+01
-650	funding	0048_add_permissions	2019-12-30 12:56:24.776126+01
-651	funding	0049_auto_20191218_1538	2019-12-30 12:56:24.832076+01
-652	funding	0050_auto_20191218_1625	2019-12-30 12:56:24.855735+01
-653	funding_flutterwave	0006_auto_20191111_1332	2019-12-30 12:56:24.879501+01
-654	funding_lipisha	0007_auto_20191008_1011	2019-12-30 12:56:24.946818+01
-655	funding_lipisha	0008_lipishabankaccount_mpesa_code	2019-12-30 12:56:24.984509+01
-656	funding_pledge	0005_auto_20191111_1331	2019-12-30 12:56:25.008046+01
-657	funding_stripe	0002_auto_20191111_1330	2019-12-30 12:56:25.029952+01
-658	funding_vitepay	0008_auto_20191008_1034	2019-12-30 12:56:25.099562+01
-659	funding_vitepay	0009_auto_20191111_1330	2019-12-30 12:56:25.124829+01
-660	fundraisers	0002_fundraiser_owner	2019-12-30 12:56:25.263464+01
-661	fundraisers	0003_fundraiser_project	2019-12-30 12:56:25.759672+01
-662	fundraisers	0004_auto_20160718_1811	2019-12-30 12:56:26.038404+01
-663	fundraisers	0005_auto_20160720_1726	2019-12-30 12:56:26.310271+01
-664	fundraisers	0004_auto_20160720_1140	2019-12-30 12:56:26.594525+01
-665	fundraisers	0006_merge	2019-12-30 12:56:26.596614+01
-666	fundraisers	0007_auto_20170803_1730	2019-12-30 12:56:26.619431+01
-667	geo	0015_add_permissions	2019-12-30 12:56:26.643106+01
-668	homepage	0001_initial	2019-12-30 12:56:26.668424+01
-669	initiatives	0015_auto_20190708_1417	2019-12-30 12:56:26.816705+01
-670	initiatives	0016_auto_20190726_0915	2019-12-30 12:56:26.840777+01
-671	initiatives	0017_auto_20191031_1439	2019-12-30 12:56:26.873642+01
-672	initiatives	0018_auto_20191108_1222	2019-12-30 12:56:26.897899+01
-673	initiatives	0018_auto_20191106_0928	2019-12-30 12:56:27.837092+01
-674	initiatives	0019_merge_20191108_1853	2019-12-30 12:56:27.838935+01
-675	initiatives	0020_auto_20191129_1131	2019-12-30 12:56:27.896894+01
-676	initiatives	0021_auto_20191129_1132	2019-12-30 12:56:27.920661+01
-677	initiatives	0022_remove_initiativeplatformsettings_search_filters	2019-12-30 12:56:27.947971+01
-678	jet	0001_initial	2019-12-30 12:56:28.022484+01
-679	jet	0002_delete_userdashboardmodule	2019-12-30 12:56:28.049237+01
-680	default	0001_initial	2019-12-30 12:56:28.414082+01
-681	social_auth	0001_initial	2019-12-30 12:56:28.417424+01
-682	default	0002_add_related_name	2019-12-30 12:56:28.550618+01
-683	social_auth	0002_add_related_name	2019-12-30 12:56:28.554113+01
-684	looker	0001_initial	2019-12-30 12:56:28.578801+01
-685	looker	0002_auto_20180328_1054	2019-12-30 12:56:28.612567+01
-686	looker	0003_init_looker_embeds	2019-12-30 12:56:28.637046+01
-687	mails	0001_initial	2019-12-30 12:56:28.663629+01
-688	mails	0002_auto_20171211_1117	2019-12-30 12:56:28.665366+01
-689	mails	0003_auto_20180727_1122	2019-12-30 12:56:28.689306+01
-690	orders	0002_auto_20160718_2010	2019-12-30 12:56:28.838764+01
-691	orders	0003_auto_20170823_1533	2019-12-30 12:56:29.272252+01
-692	orders	0004_add_group_permissions	2019-12-30 12:56:29.295563+01
-693	members	0011_permission_groups	2019-12-30 12:56:29.320843+01
-694	members	0012_auto_20170807_1454	2019-12-30 12:56:29.344896+01
-695	members	0012_auto_20170803_1730	2019-12-30 12:56:29.3694+01
-696	members	0013_merge_20170811_1500	2019-12-30 12:56:29.370992+01
-697	members	0014_auto_20170816_1614	2019-12-30 12:56:29.444088+01
-698	members	0015_auto_20170816_1614	2019-12-30 12:56:29.469909+01
-699	members	0016_auto_20170822_1104	2019-12-30 12:56:29.541789+01
-700	members	0017_closed_site_permissions	2019-12-30 12:56:29.567297+01
-701	members	0018_auto_20170824_1521	2019-12-30 12:56:29.699925+01
-702	members	0019_auto_20170824_1812	2019-12-30 12:56:29.777822+01
-703	members	0020_auto_20171031_1048	2019-12-30 12:56:29.805177+01
-704	members	0021_auto_20171114_1035	2019-12-30 12:56:29.937319+01
-705	members	0022_auto_20171207_0856	2019-12-30 12:56:30.202917+01
-706	members	0023_memberplatformsettings_require_consent	2019-12-30 12:56:30.237624+01
-707	members	0024_create_empty_settings	2019-12-30 12:56:30.259482+01
-708	members	0025_memberplatformsettings_consent_link	2019-12-30 12:56:30.293465+01
-709	members	0026_auto_20190129_1050	2019-12-30 12:56:30.374574+01
-710	members	0027_auto_20190208_1119	2019-12-30 12:56:30.462505+01
-711	members	0026_auto_20180919_1434	2019-12-30 12:56:30.551747+01
-712	members	0028_merge_20190215_1441	2019-12-30 12:56:30.55571+01
-713	members	0028_auto_20190219_1024	2019-12-30 12:56:30.644105+01
-714	members	0029_merge_20190222_0930	2019-12-30 12:56:30.647457+01
-715	members	0030_auto_20190225_1215	2019-12-30 12:56:31.387359+01
-716	members	0027_auto_20190206_1018	2019-12-30 12:56:31.697363+01
-717	members	0031_merge_20190226_1449	2019-12-30 12:56:31.700651+01
-718	notifications	0001_initial	2019-12-30 12:56:31.839434+01
-719	notifications	0002_message_custom_message	2019-12-30 12:56:31.928205+01
-720	notifications	0003_notificationplatformsettings	2019-12-30 12:56:31.956821+01
-721	payments	0001_initial	2019-12-30 12:56:32.966285+01
-722	payments	0002_auto_20160718_2345	2019-12-30 12:56:33.135899+01
-723	payments	0003_auto_20161025_1221	2019-12-30 12:56:33.218373+01
-724	payments	0004_auto_20170919_1621	2019-12-30 12:56:33.304006+01
-725	payments	0005_auto_20170919_1621	2019-12-30 12:56:33.307666+01
-726	orders	0005_auto_20171003_1112	2019-12-30 12:56:33.334369+01
-727	orders	0006_auto_20180509_1436	2019-12-30 12:56:33.413355+01
-728	orders	0007_auto_20180509_1437	2019-12-30 12:56:33.43968+01
-729	orders	0008_auto_20190904_0838	2019-12-30 12:56:33.461763+01
-730	organizations	0013_remove_organizationcontact_organization	2019-12-30 12:56:33.572599+01
-731	organizations	0014_auto_20190708_1418	2019-12-30 12:56:33.825761+01
-732	organizations	0015_auto_20191209_2128	2019-12-30 12:56:33.953694+01
-733	pages	0010_auto_20180717_1017	2019-12-30 12:56:34.041198+01
-734	payments	0006_auto_20181115_1321	2019-12-30 12:56:34.694669+01
-735	payments_beyonic	0001_initial	2019-12-30 12:56:34.807177+01
-736	payments_docdata	0001_initial	2019-12-30 12:56:35.162702+01
-737	payments_docdata	0002_auto_20161115_1601	2019-12-30 12:56:35.203182+01
-738	payments_docdata	0002_auto_20161109_1024	2019-12-30 12:56:35.238025+01
-739	payments_docdata	0003_merge_20170118_1533	2019-12-30 12:56:35.23955+01
-740	payments_docdata	0003_merge_20170106_1627	2019-12-30 12:56:35.240875+01
-741	payments_docdata	0004_merge_20170124_1338	2019-12-30 12:56:35.242212+01
-742	payments_external	0001_initial	2019-12-30 12:56:35.362751+01
-743	payments_flutterwave	0001_initial	2019-12-30 12:56:35.488714+01
-744	payments_flutterwave	0002_auto_20170202_2054	2019-12-30 12:56:35.57246+01
-745	payments_flutterwave	0003_auto_20170206_1235	2019-12-30 12:56:35.736431+01
-746	payments_flutterwave	0004_auto_20170207_1532	2019-12-30 12:56:35.819099+01
-747	payments_flutterwave	0005_auto_20170210_1058	2019-12-30 12:56:35.907506+01
-748	payments_flutterwave	0006_auto_20170323_1227	2019-12-30 12:56:36.505148+01
-749	payments_flutterwave	0007_flutterwavempesapayment	2019-12-30 12:56:36.625227+01
-750	payments_flutterwave	0008_flutterwavempesapayment_transaction_amount	2019-12-30 12:56:36.671573+01
-751	payments_interswitch	0001_initial	2019-12-30 12:56:36.786088+01
-752	payments_interswitch	0002_auto_20161006_1144	2019-12-30 12:56:37.138697+01
-753	payments_interswitch	0003_interswitchpaymentstatusupdate	2019-12-30 12:56:37.274335+01
-754	payments_lipisha	0001_initial	2019-12-30 12:56:37.409376+01
-755	payments_lipisha	0002_lipishaproject_organisationnumber	2019-12-30 12:56:37.529795+01
-756	payments_logger	0001_initial	2019-12-30 12:56:37.677514+01
-757	payments_mock	0001_initial	2019-12-30 12:56:37.820307+01
-758	payments_pledge	0001_initial	2019-12-30 12:56:38.37868+01
-759	payments_stripe	0001_initial	2019-12-30 12:56:38.508176+01
-760	payments_stripe	0002_stripepayment_currency	2019-12-30 12:56:38.563392+01
-761	payments_stripe	0003_auto_20190130_1231	2019-12-30 12:56:38.667922+01
-762	payments_telesom	0001_initial	2019-12-30 12:56:38.79587+01
-763	payments_vitepay	0001_initial	2019-12-30 12:56:38.928506+01
-764	payments_voucher	0001_initial	2019-12-30 12:56:39.207987+01
-765	payouts	0023_auto_20190705_0906	2019-12-30 12:56:39.412829+01
-766	projects	0092_auto_20191031_0901	2019-12-30 12:56:39.441862+01
-767	projects	0093_auto_20191106_1206	2019-12-30 12:56:39.467712+01
-768	projects	0093_auto_20191106_0928	2019-12-30 12:56:39.492783+01
-769	projects	0094_merge_20191107_0943	2019-12-30 12:56:39.494596+01
-770	quotes	0001_initial	2019-12-30 12:56:39.607258+01
-771	quotes	0002_auto_20161115_1601	2019-12-30 12:56:39.68675+01
-772	quotes	0002_auto_20161109_1024	2019-12-30 12:56:40.188054+01
-773	quotes	0003_merge_20170118_1533	2019-12-30 12:56:40.191545+01
-774	quotes	0003_merge_20170106_1627	2019-12-30 12:56:40.192858+01
-775	quotes	0004_merge_20170124_1338	2019-12-30 12:56:40.194521+01
-776	redirects	0001_initial	2019-12-30 12:56:40.223498+01
-777	scim	0001_initial	2019-12-30 12:56:40.254897+01
-778	scim	0002_auto_20190118_1625	2019-12-30 12:56:40.28471+01
-779	sessions	0001_initial	2019-12-30 12:56:40.320121+01
-780	sites	0001_initial	2019-12-30 12:56:40.350564+01
-781	sites	0002_alter_domain_unique	2019-12-30 12:56:40.430611+01
-782	slides	0001_initial	2019-12-30 12:56:40.541017+01
-783	slides	0002_auto_20161115_1601	2019-12-30 12:56:40.660514+01
-784	slides	0002_auto_20161109_1024	2019-12-30 12:56:40.740622+01
-785	slides	0003_merge_20170118_1533	2019-12-30 12:56:40.744382+01
-786	slides	0003_merge_20170106_1627	2019-12-30 12:56:40.746409+01
-787	slides	0004_merge_20170124_1338	2019-12-30 12:56:40.74827+01
-788	slides	0005_auto_20170803_1730	2019-12-30 12:56:40.776978+01
-789	slides	0006_auto_20180717_1017	2019-12-30 12:56:40.854671+01
-790	default	0003_alter_email_max_length	2019-12-30 12:56:40.896121+01
-791	social_auth	0003_alter_email_max_length	2019-12-30 12:56:40.897652+01
-792	default	0004_auto_20160423_0400	2019-12-30 12:56:40.975094+01
-793	social_auth	0004_auto_20160423_0400	2019-12-30 12:56:40.979183+01
-794	social_auth	0005_auto_20160727_2333	2019-12-30 12:56:41.01538+01
-795	social_django	0006_partial	2019-12-30 12:56:41.046837+01
-796	social_django	0007_code_timestamp	2019-12-30 12:56:41.082742+01
-797	social_django	0008_partial_timestamp	2019-12-30 12:56:41.119208+01
-798	statistics	0001_initial	2019-12-30 12:56:41.152241+01
-799	statistics	0002_auto_20161115_1601	2019-12-30 12:56:41.186695+01
-800	statistics	0003_auto_20161214_1524	2019-12-30 12:56:41.224944+01
-801	statistics	0002_auto_20161109_1024	2019-12-30 12:56:41.262921+01
-802	statistics	0004_merge_20170118_1533	2019-12-30 12:56:41.264634+01
-803	statistics	0004_merge_20170106_1627	2019-12-30 12:56:41.266002+01
-804	statistics	0005_merge_20170124_1338	2019-12-30 12:56:41.267346+01
-805	statistics	0006_auto_20170323_1227	2019-12-30 12:56:41.303268+01
-806	statistics	0007_auto_20171114_1035	2019-12-30 12:56:41.342916+01
-807	suggestions	0001_initial	2019-12-30 12:56:41.462402+01
-808	suggestions	0002_suggestion_language	2019-12-30 12:56:41.533098+01
-809	suggestions	0003_auto_20160720_1140	2019-12-30 12:56:41.605289+01
-810	suggestions	0003_auto_20160718_1811	2019-12-30 12:56:41.678748+01
-811	suggestions	0004_merge	2019-12-30 12:56:41.680673+01
-812	surveys	0030_auto_20161109_1024	2019-12-30 12:56:42.27867+01
-813	surveys	0032_merge_20170118_1533	2019-12-30 12:56:42.320894+01
-814	surveys	0032_merge_20170106_1627	2019-12-30 12:56:42.364535+01
-815	surveys	0033_merge_20170124_1338	2019-12-30 12:56:42.407742+01
-816	surveys	0034_survey_active	2019-12-30 12:56:42.450316+01
-817	tasks	0042_migrate_tasks_to_activities	2019-12-30 12:56:42.543007+01
-818	terms	0001_initial	2019-12-30 12:56:42.801983+01
-819	terms	0002_auto_20180907_1132	2019-12-30 12:56:42.956392+01
-820	terms	0003_auto_20180907_1132	2019-12-30 12:56:42.989163+01
-821	text	0002_textitem_text_final	2019-12-30 12:56:43.036345+01
-822	thumbnail	0001_initial	2019-12-30 12:56:43.070683+01
-823	token_auth	0001_initial	2019-12-30 12:56:43.188763+01
-824	votes	0001_initial	2019-12-30 12:56:43.387608+01
-825	votes	0002_auto_20161004_1342	2019-12-30 12:56:43.47997+01
-826	wallposts	0020_auto_20191017_2208	2019-12-30 12:56:43.78421+01
-827	social_django	0003_alter_email_max_length	2019-12-30 12:56:43.790228+01
-828	social_django	0004_auto_20160423_0400	2019-12-30 12:56:43.791621+01
-829	social_django	0002_add_related_name	2019-12-30 12:56:43.793128+01
-830	social_django	0005_auto_20160727_2333	2019-12-30 12:56:43.794606+01
-831	cms	0054_auto_20171031_1428_squashed_0068_migrate_start_project	2019-12-30 12:56:43.796011+01
-832	social_django	0001_initial	2019-12-30 12:56:43.797319+01
-833	members	0032_auto_20191223_1456	2020-01-03 09:32:57.704172+01
-834	funding_flutterwave	0007_auto_20200106_0839	2020-01-06 10:42:32.915565+01
-835	funding_flutterwave	0008_auto_20200106_1029	2020-01-06 10:42:33.124312+01
-836	pages	0011_auto_20200106_1620	2020-01-09 08:51:56.864885+01
-837	pages	0012_columnsitem	2020-01-09 08:51:57.294077+01
-838	files	0004_auto_20200106_1644	2020-01-21 08:48:03.847365+01
-839	organizations	0016_auto_20200106_1636	2020-01-21 08:48:03.880522+01
-840	pages	0011_auto_20200106_1647	2020-01-21 08:48:03.908841+01
-841	pages	0013_merge_20200120_1128	2020-01-21 08:48:03.910862+01
-842	funding	0049_auto_20200124_1032	2020-01-27 08:47:07.885844+01
-843	funding	0050_auto_20200124_1230	2020-01-27 08:47:07.944363+01
-844	members	0033_auto_20200114_1050	2020-01-27 08:47:08.664106+01
-845	members	0034_auto_20200114_1050	2020-01-27 08:47:08.719324+01
-846	members	0035_memberplatformsettings_background	2020-01-27 08:47:09.058501+01
-847	notifications	0004_auto_20200123_1344	2020-01-27 08:47:09.426934+01
-848	notifications	0005_auto_20200124_1505	2020-01-27 08:47:09.736003+01
+1	geo	0001_initial	2020-09-18 14:05:29.210946+02
+2	bb_projects	0001_initial	2020-09-18 14:05:29.240531+02
+3	contenttypes	0001_initial	2020-09-18 14:05:29.264342+02
+4	contenttypes	0002_remove_content_type_name	2020-09-18 14:05:29.317798+02
+5	auth	0001_initial	2020-09-18 14:05:29.363494+02
+6	auth	0002_alter_permission_name_max_length	2020-09-18 14:05:29.37776+02
+7	auth	0003_alter_user_email_max_length	2020-09-18 14:05:29.391893+02
+8	auth	0004_alter_user_username_opts	2020-09-18 14:05:29.405471+02
+9	auth	0005_alter_user_last_login_null	2020-09-18 14:05:29.420078+02
+10	auth	0006_require_contenttypes_0002	2020-09-18 14:05:29.421377+02
+11	auth	0007_alter_validators_add_error_messages	2020-09-18 14:05:29.434857+02
+12	members	0001_initial	2020-09-18 14:05:29.456886+02
+13	activities	0001_initial	2020-09-18 14:05:29.494069+02
+14	funding	0001_initial	2020-09-18 14:05:29.631224+02
+15	files	0001_initial	2020-09-18 14:05:29.69308+02
+16	categories	0001_initial	2020-09-18 14:05:29.704824+02
+17	categories	0002_auto_20160531_1651	2020-09-18 14:05:29.716953+02
+18	categories	0003_categorycontent	2020-09-18 14:05:29.736758+02
+19	categories	0004_auto_20170731_1327	2020-09-18 14:05:29.837867+02
+20	categories	0005_auto_20180117_0924	2020-09-18 14:05:29.849385+02
+21	categories	0006_auto_20180907_1131	2020-09-18 14:05:29.862506+02
+22	categories	0007_auto_20180907_1131	2020-09-18 14:05:29.872528+02
+23	categories	0008_authenticated-permissions	2020-09-18 14:05:29.882485+02
+24	clients	0001_initial	2020-09-18 14:05:29.899598+02
+25	bb_projects	0002_remove_projecttheme_name_nl	2020-09-18 14:05:29.916809+02
+26	bb_projects	0003_auto_20160815_1658	2020-09-18 14:05:29.926879+02
+27	bb_projects	0004_add_project_continued_phase	2020-09-18 14:05:29.928141+02
+28	bb_projects	0005_add_api_permissions	2020-09-18 14:05:29.956907+02
+29	bb_projects	0006_add_group_permissions	2020-09-18 14:05:29.968244+02
+30	bb_projects	0007_translate_themes	2020-09-18 14:05:29.997375+02
+31	bb_projects	0008_migrate_theme_translations	2020-09-18 14:05:30.010899+02
+32	bb_projects	0009_remove_translated_fields	2020-09-18 14:05:30.098737+02
+33	bb_projects	0010_translate_phases	2020-09-18 14:05:30.143219+02
+34	bb_projects	0011_migrate_phase_translations	2020-09-18 14:05:30.16577+02
+35	bb_projects	0012_remove_translated_fields	2020-09-18 14:05:30.206245+02
+36	bb_projects	0007_auto_20180323_1602	2020-09-18 14:05:30.217165+02
+37	bb_projects	0013_merge_20180406_1536	2020-09-18 14:05:30.218454+02
+38	bb_projects	0007_auto_20180319_1536	2020-09-18 14:05:30.219747+02
+39	bb_projects	0008_merge_20180404_1500	2020-09-18 14:05:30.220841+02
+40	bb_projects	0008_merge_20180328_1504	2020-09-18 14:05:30.221838+02
+41	bb_projects	0009_merge_20180404_1638	2020-09-18 14:05:30.222863+02
+42	bb_projects	0014_merge_20180412_1421	2020-09-18 14:05:30.223882+02
+43	bb_projects	0015_auto_20190329_1101	2020-09-18 14:05:30.287874+02
+44	initiatives	0001_initial	2020-09-18 14:05:30.330836+02
+45	activities	0002_auto_20190524_1041	2020-09-18 14:05:30.452173+02
+46	activities	0003_add_permissions	2020-09-18 14:05:30.465145+02
+47	activities	0004_auto_20190524_1514	2020-09-18 14:05:30.674931+02
+48	activities	0005_auto_20190528_1022	2020-09-18 14:05:30.716781+02
+49	activities	0006_auto_20190605_1453	2020-09-18 14:05:30.91497+02
+50	activities	0007_auto_20190710_0851	2020-09-18 14:05:30.971781+02
+51	activities	0008_auto_20190814_1541	2020-09-18 14:05:31.41786+02
+52	activities	0009_auto_20191007_1506	2020-09-18 14:05:31.619607+02
+53	activities	0010_activity_transition_date	2020-09-18 14:05:31.675871+02
+54	activities	0011_auto_20191028_1156	2020-09-18 14:05:31.682195+02
+55	activities	0012_auto_20191108_1317	2020-09-18 14:05:31.698803+02
+56	activities	0013_auto_20191120_0920	2020-09-18 14:05:31.753312+02
+57	activities	0014_add_permissions	2020-09-18 14:05:31.795756+02
+58	activities	0015_auto_20200128_1045	2020-09-18 14:05:31.959815+02
+59	activities	0016_organizer	2020-09-18 14:05:31.995575+02
+60	activities	0017_auto_20200205_1054	2020-09-18 14:05:32.117468+02
+61	activities	0018_auto_20200212_1025	2020-09-18 14:05:32.129066+02
+62	geo	0002_auto_20160920_1425	2020-09-18 14:05:32.174721+02
+63	geo	0003_fill_location_group	2020-09-18 14:05:32.185778+02
+64	geo	0004_auto_20160929_0817	2020-09-18 14:05:32.226858+02
+65	geo	0005_translate_geo	2020-09-18 14:05:32.369796+02
+66	geo	0006_migrate_geo_translations	2020-09-18 14:05:32.382635+02
+67	geo	0007_remove_translated_fields	2020-09-18 14:05:32.49956+02
+68	geo	0008_auto_20181129_1451	2020-09-18 14:05:32.530503+02
+69	geo	0008_auto_20180918_1037	2020-09-18 14:05:32.627817+02
+70	geo	0009_merge_20190121_1425	2020-09-18 14:05:32.629117+02
+71	geo	0010_initiativeplace	2020-09-18 14:05:32.663583+02
+72	geo	0011_activityplace	2020-09-18 14:05:32.695844+02
+73	geo	0012_auto_20190522_1341	2020-09-18 14:05:32.711581+02
+74	geo	0013_auto_20190524_0958	2020-09-18 14:05:32.736189+02
+75	utils	0001_initial	2020-09-18 14:05:32.769256+02
+76	taggit	0001_initial	2020-09-18 14:05:32.824264+02
+77	taggit	0002_auto_20150616_2121	2020-09-18 14:05:32.842229+02
+78	organizations	0001_initial	2020-09-18 14:05:33.037029+02
+79	projects	0001_initial	2020-09-18 14:05:33.228943+02
+80	projects	0002_remove_project_tags	2020-09-18 14:05:33.278715+02
+81	projects	0003_auto_20160610_1554	2020-09-18 14:05:33.323282+02
+82	projects	0004_projectdocument_ip_address	2020-09-18 14:05:33.359041+02
+83	projects	0005_auto_20160720_1140	2020-09-18 14:05:33.447892+02
+84	projects	0006_project_celebrate_results	2020-09-18 14:05:33.607237+02
+85	projects	0007_auto_20160929_0817	2020-09-18 14:05:33.669656+02
+86	projects	0005_auto_20160721_1546	2020-09-18 14:05:34.116566+02
+87	projects	0006_merge	2020-09-18 14:05:34.118182+02
+88	projects	0008_merge	2020-09-18 14:05:34.119316+02
+89	tasks	0001_initial	2020-09-18 14:05:34.426883+02
+90	tasks	0002_auto_20160614_1354	2020-09-18 14:05:34.504833+02
+91	tasks	0003_auto_20160621_1707	2020-09-18 14:05:34.519193+02
+92	tasks	0004_auto_20160705_0917	2020-09-18 14:05:34.550831+02
+93	tasks	0005_auto_20160706_1423	2020-09-18 14:05:34.734215+02
+94	tasks	0006_auto_20160720_1058	2020-09-18 14:05:34.748464+02
+95	tasks	0007_auto_20160720_1139	2020-09-18 14:05:34.804447+02
+96	tasks	0008_auto_20160802_1025	2020-09-18 14:05:34.849783+02
+97	tasks	0009_fix_deadline_timestamp	2020-09-18 14:05:34.861856+02
+98	tasks	0010_auto_20160829_2337	2020-09-18 14:05:34.87508+02
+99	tasks	0011_auto_20160920_1019	2020-09-18 14:05:35.287766+02
+100	tasks	0011_auto_20160919_1508	2020-09-18 14:05:35.372275+02
+101	tasks	0012_merge	2020-09-18 14:05:35.3739+02
+102	tasks	0008_auto_20160802_1441	2020-09-18 14:05:35.415414+02
+103	tasks	0006_auto_20160718_1811	2020-09-18 14:05:35.460841+02
+104	tasks	0010_merge	2020-09-18 14:05:35.462204+02
+105	tasks	0011_merge	2020-09-18 14:05:35.463555+02
+106	tasks	0013_merge	2020-09-18 14:05:35.464692+02
+107	tasks	0013_auto_20161006_1813	2020-09-18 14:05:35.504202+02
+108	tasks	0014_merge	2020-09-18 14:05:35.505807+02
+109	tasks	0014_auto_20161006_1144	2020-09-18 14:05:35.549192+02
+110	tasks	0015_merge	2020-09-18 14:05:35.550541+02
+111	projects	0008_fix_project_type	2020-09-18 14:05:35.562174+02
+112	projects	0009_merge	2020-09-18 14:05:35.563469+02
+113	projects	0007_remove_projectbudgetline_currency	2020-09-18 14:05:35.599982+02
+114	projects	0007_project_currencies	2020-09-18 14:05:35.637465+02
+115	projects	0010_merge	2020-09-18 14:05:35.639112+02
+116	projects	0011_auto_20161006_1149	2020-09-18 14:05:35.677605+02
+117	projects	0010_auto_20161019_1403	2020-09-18 14:05:35.689395+02
+118	projects	0012_merge	2020-09-18 14:05:35.690667+02
+119	projects	0011_auto_20161028_0946	2020-09-18 14:05:35.837187+02
+120	projects	0013_merge	2020-09-18 14:05:35.838734+02
+121	projects	0014_auto_20161109_1041	2020-09-18 14:05:35.875298+02
+122	projects	0015_project_payout_status	2020-09-18 14:05:35.917682+02
+123	projects	0016_project_campaign_payed_out	2020-09-18 14:05:35.95522+02
+124	projects	0017_auto_20161121_1053	2020-09-18 14:05:36.140802+02
+125	projects	0014_auto_20161115_1601	2020-09-18 14:05:36.179929+02
+126	projects	0015_auto_20161207_0900	2020-09-18 14:05:36.21792+02
+127	members	0002_auto_20160523_1525	2020-09-18 14:05:36.312115+02
+128	members	0003_alter_last_login	2020-09-18 14:05:36.352098+02
+129	members	0004_member_verified	2020-09-18 14:05:36.387576+02
+130	members	0005_auto_20160830_0902	2020-09-18 14:05:36.400544+02
+131	members	0006_member_last_seen	2020-09-18 14:05:36.440642+02
+132	members	0007_auto_20161115_1601	2020-09-18 14:05:36.480599+02
+133	members	0007_auto_20161109_1024	2020-09-18 14:05:36.519313+02
+134	members	0008_merge_20170106_1627	2020-09-18 14:05:36.521716+02
+135	projects	0018_merge_20170106_1627	2020-09-18 14:05:36.528763+02
+136	projects	0019_auto_20170106_1657	2020-09-18 14:05:36.619008+02
+137	projects	0020_merge_20170124_1338	2020-09-18 14:05:36.620409+02
+138	projects	0018_merge_20170118_1533	2020-09-18 14:05:36.621685+02
+139	authtoken	0001_initial	2020-09-18 14:05:36.669773+02
+140	projects	0019_auto_20170118_1537	2020-09-18 14:05:36.683085+02
+141	projects	0021_merge_20170202_1154	2020-09-18 14:05:36.684328+02
+142	projects	0022_project_reviewer	2020-09-18 14:05:36.73608+02
+143	projects	0023_auto_20170323_1227	2020-09-18 14:05:37.09334+02
+144	projects	0024_auto_20170404_1130	2020-09-18 14:05:37.239817+02
+145	projects	0025_auto_20170404_1130	2020-09-18 14:05:37.302936+02
+146	payouts	0001_initial	2020-09-18 14:05:37.330355+02
+147	projects	0026_auto_20170424_1653	2020-09-18 14:05:37.343113+02
+148	projects	0027_auto_20170602_2240	2020-09-18 14:05:37.353231+02
+149	projects	0028_auto_20170619_1555	2020-09-18 14:05:37.363377+02
+150	projects	0027_auto_20170523_1422	2020-09-18 14:05:37.411228+02
+151	projects	0028_auto_20170523_1422	2020-09-18 14:05:37.423544+02
+152	projects	0029_merge_20170628_0905	2020-09-18 14:05:37.424868+02
+153	projects	0030_rename_account_bic_20170705_1221	2020-09-18 14:05:37.525362+02
+154	projects	0031_add_project_roles	2020-09-18 14:05:37.638525+02
+155	projects	0032_default_task_manager	2020-09-18 14:05:37.652057+02
+156	projects	0031_add_api_permissions	2020-09-18 14:05:37.954096+02
+157	projects	0032_add_group_permissions	2020-09-18 14:05:37.966477+02
+158	projects	0033_merge_20170818_1333	2020-09-18 14:05:37.967713+02
+159	projects	0034_auto_20170822_1303	2020-09-18 14:05:38.07752+02
+160	projects	0035_set_owner_permissions	2020-09-18 14:05:38.090765+02
+161	members	0008_merge_20170118_1533	2020-09-18 14:05:38.092087+02
+162	members	0009_merge_20170124_1338	2020-09-18 14:05:38.093173+02
+163	members	0010_fix_export_permissions_migration	2020-09-18 14:05:38.107174+02
+164	projects	0031_fix_migration_projectstatuslog_creation_20170721_1637	2020-09-18 14:05:38.119504+02
+165	projects	0036_merge_20170831_1449	2020-09-18 14:05:38.120926+02
+166	projects	0037_auto_20170915_1350	2020-09-18 14:05:38.211456+02
+167	projects	0038_auto_20170915_1358	2020-09-18 14:05:38.282741+02
+168	projects	0039_add_project_image_group_permissions	2020-09-18 14:05:38.29819+02
+169	projects	0040_auto_20170918_1200	2020-09-18 14:05:38.519566+02
+170	projects	0041_auto_20170918_1201	2020-09-18 14:05:38.672655+02
+171	projects	0037_longer_place_20170914_1129	2020-09-18 14:05:38.893104+02
+172	projects	0038_longer_account_details_20170914_1134	2020-09-18 14:05:38.940287+02
+173	projects	0039_auto_20170914_1503	2020-09-18 14:05:38.984513+02
+174	projects	0042_merge_20170920_1332	2020-09-18 14:05:38.985801+02
+175	projects	0043_auto_20171023_1958	2020-09-18 14:05:39.029281+02
+176	projects	0044_auto_20171023_2008	2020-09-18 14:05:39.061028+02
+177	projects	0045_auto_20171023_2013	2020-09-18 14:05:39.106716+02
+178	projects	0046_auto_20171023_2047	2020-09-18 14:05:39.177027+02
+179	projects	0047_auto_20171024_1016	2020-09-18 14:05:39.192005+02
+180	projects	0048_auto_20171024_1052	2020-09-18 14:05:39.207028+02
+181	projects	0049_auto_20171024_1018	2020-09-18 14:05:39.217728+02
+182	projects	0043_remove_payout_status_sourcing_projects	2020-09-18 14:05:39.228104+02
+183	projects	0050_merge_20171110_1633	2020-09-18 14:05:39.229227+02
+184	projects	0044_auto_20171110_1549	2020-09-18 14:05:39.238898+02
+185	projects	0045_auto_20171114_1058	2020-09-18 14:05:39.367505+02
+186	projects	0051_merge_20171115_1702	2020-09-18 14:05:39.368994+02
+187	projects	0051_auto_20171113_1637	2020-09-18 14:05:39.399204+02
+188	projects	0052_merge_20171122_1000	2020-09-18 14:05:39.400413+02
+189	projects	0052_merge_20171121_1335	2020-09-18 14:05:39.40139+02
+190	projects	0053_merge_20171122_1001	2020-09-18 14:05:39.402302+02
+191	projects	0050_merge_20171124_0022	2020-09-18 14:05:39.40321+02
+192	projects	0054_merge_20171128_1142	2020-09-18 14:05:39.404204+02
+193	projects	0043_auto_20171025_1253	2020-09-18 14:05:39.507088+02
+194	projects	0050_merge_20171113_1230	2020-09-18 14:05:39.50865+02
+195	projects	0051_merge_20171124_0021	2020-09-18 14:05:39.509652+02
+196	projects	0052_merge_20171127_1329	2020-09-18 14:05:39.510673+02
+197	projects	0055_merge_20171205_0847	2020-09-18 14:05:39.511695+02
+198	projects	0056_auto_20171205_0847	2020-09-18 14:05:39.635674+02
+199	projects	0055_merge_20171201_1608	2020-09-18 14:05:39.637876+02
+200	projects	0057_merge_20171205_1236	2020-09-18 14:05:39.639507+02
+201	projects	0054_auto_20171122_1415	2020-09-18 14:05:39.880616+02
+202	projects	0055_project_campaign_edited	2020-09-18 14:05:39.932358+02
+203	projects	0058_merge_20171220_1342	2020-09-18 14:05:39.936232+02
+204	organizations	0002_auto_20160610_1554	2020-09-18 14:05:39.96109+02
+205	organizations	0003_auto_20170314_0900	2020-09-18 14:05:40.031306+02
+206	organizations	0004_organizationcontact	2020-09-18 14:05:40.083705+02
+207	organizations	0003_auto_20170303_1057	2020-09-18 14:05:40.097212+02
+208	organizations	0005_merge_20170321_1630	2020-09-18 14:05:40.098258+02
+209	organizations	0006_auto_20170328_1138	2020-09-18 14:05:40.14538+02
+210	organizations	0007_auto_20170803_1730	2020-09-18 14:05:40.155511+02
+211	organizations	0008_organization_logo	2020-09-18 14:05:40.182932+02
+212	organizations	0009_organization_description	2020-09-18 14:05:40.212164+02
+213	organizations	0010_auto_20171114_1035	2020-09-18 14:05:40.268486+02
+214	organizations	0011_auto_20180118_1100	2020-09-18 14:05:40.315487+02
+215	projects	0059_auto_20180118_1100	2020-09-18 14:05:40.4332+02
+216	projects	0060_auto_20180118_1217	2020-09-18 14:05:40.493094+02
+217	projects	0061_auto_20180118_1510	2020-09-18 14:05:40.553212+02
+218	projects	0062_auto_20180119_1231	2020-09-18 14:05:40.669128+02
+219	projects	0063_auto_20180119_1456	2020-09-18 14:05:41.105926+02
+220	projects	0064_auto_20180119_1625	2020-09-18 14:05:41.184193+02
+221	projects	0065_auto_20180121_1952	2020-09-18 14:05:41.256396+02
+222	projects	0066_auto_20180121_2002	2020-09-18 14:05:41.275582+02
+223	projects	0067_auto_20180123_0914	2020-09-18 14:05:41.312043+02
+224	projects	0068_auto_20180306_1614	2020-09-18 14:05:41.378856+02
+225	projects	0069_auto_20180316_1553	2020-09-18 14:05:41.544807+02
+226	projects	0070_auto_20180411_1013	2020-09-18 14:05:41.581226+02
+227	projects	0070_auto_20180328_1401	2020-09-18 14:05:41.605286+02
+228	projects	0071_merge_20180412_1133	2020-09-18 14:05:41.617231+02
+229	projects	0072_auto_20180416_1115	2020-09-18 14:05:41.649359+02
+230	projects	0073_auto_20180416_1115	2020-09-18 14:05:41.662405+02
+231	projects	0074_auto_20180416_1204	2020-09-18 14:05:41.684439+02
+232	projects	0075_auto_20180515_1556	2020-09-18 14:05:42.32574+02
+233	projects	0076_auto_20180516_0954	2020-09-18 14:05:42.453271+02
+234	projects	0077_auto_20180518_1050	2020-09-18 14:05:42.46727+02
+235	projects	0078_auto_20180528_1414	2020-09-18 14:05:42.490038+02
+236	projects	0079_auto_20180626_1225	2020-09-18 14:05:42.57977+02
+237	projects	0080_auto_20180828_1522	2020-09-18 14:05:42.631918+02
+238	projects	0080_auto_20180810_1405	2020-09-18 14:05:42.69046+02
+239	projects	0081_merge_20181012_1209	2020-09-18 14:05:42.692222+02
+240	payouts	0002_auto_20160523_1525	2020-09-18 14:05:42.778453+02
+241	payouts	0003_auto_20160719_1315	2020-09-18 14:05:43.720421+02
+242	payouts	0004_projectpayout_currency	2020-09-18 14:05:43.763343+02
+243	payouts	0005_auto_20160721_1114	2020-09-18 14:05:43.778105+02
+244	payouts	0006_rename_account_bic_20170705_1426	2020-09-18 14:05:43.868834+02
+245	payouts	0007_auto_20181123_1057	2020-09-18 14:05:44.036608+02
+246	payouts	0008_auto_20181129_1451	2020-09-18 14:05:44.57782+02
+247	projects	0082_auto_20181129_1506	2020-09-18 14:05:45.037023+02
+248	payouts	0009_payoutdocument	2020-09-18 14:05:45.312892+02
+249	projects	0083_auto_20181129_1506	2020-09-18 14:05:45.328886+02
+250	payouts	0010_auto_20181203_1145	2020-09-18 14:05:45.457108+02
+251	payouts	0011_auto_20181205_1509	2020-09-18 14:05:45.562533+02
+252	payouts	0012_auto_20181205_1509	2020-09-18 14:05:45.57758+02
+253	payouts	0013_auto_20181207_1340	2020-09-18 14:05:45.660791+02
+254	payouts	0014_auto_20181211_0938	2020-09-18 14:05:45.676183+02
+255	payouts	0015_auto_20181212_1152	2020-09-18 14:05:45.864119+02
+256	payouts	0016_auto_20181215_2016	2020-09-18 14:05:45.999606+02
+257	payouts	0017_delete_in_review_accounts	2020-09-18 14:05:46.019205+02
+258	payouts	0018_auto_20190108_0858	2020-09-18 14:05:46.060325+02
+259	payouts	0019_auto_20190123_1216	2020-09-18 14:05:46.103577+02
+260	payouts	0020_auto_20190123_1731	2020-09-18 14:05:46.1198+02
+261	payouts_dorado	0001_initial	2020-09-18 14:05:46.137821+02
+262	bb_payouts	0001_initial	2020-09-18 14:05:46.171255+02
+263	bb_payouts	0002_auto_20160523_1525	2020-09-18 14:05:46.271246+02
+264	bb_payouts	0003_auto_20190110_1155	2020-09-18 14:05:46.615328+02
+265	payouts	0019_auto_20190110_1155	2020-09-18 14:05:46.724694+02
+266	payouts	0021_merge_20190124_1320	2020-09-18 14:05:46.726626+02
+267	payouts	0022_auto_20190211_1452	2020-09-18 14:05:46.805081+02
+268	funding	0002_auto_20190604_1458	2020-09-18 14:05:47.083207+02
+269	funding	0003_auto_20190604_1459	2020-09-18 14:05:47.23298+02
+270	funding	0004_auto_20190604_1501	2020-09-18 14:05:47.366546+02
+271	funding	0005_auto_20190604_1501	2020-09-18 14:05:47.493501+02
+272	funding	0006_auto_20190604_1615	2020-09-18 14:05:47.932386+02
+273	funding	0007_auto_20190605_1639	2020-09-18 14:05:48.078509+02
+274	funding	0008_auto_20190612_0941	2020-09-18 14:05:48.521804+02
+275	funding	0009_auto_20190612_1319	2020-09-18 14:05:48.896988+02
+276	funding	0010_auto_20190612_1359	2020-09-18 14:05:48.993803+02
+277	funding	0011_auto_20190617_1251	2020-09-18 14:05:49.075409+02
+278	funding	0012_auto_20190708_0731	2020-09-18 14:05:49.157693+02
+279	funding	0013_auto_20190711_0927	2020-09-18 14:05:49.240142+02
+280	funding	0014_auto_20190714_1440	2020-09-18 14:05:49.34013+02
+281	funding	0015_auto_20190728_0920	2020-09-18 14:05:49.509672+02
+282	funding	0016_auto_20190728_0930	2020-09-18 14:05:49.579914+02
+283	funding	0017_auto_20190728_1319	2020-09-18 14:05:49.955739+02
+284	funding	0013_auto_20190710_1455	2020-09-18 14:05:50.064818+02
+285	funding	0014_auto_20190716_1636	2020-09-18 14:05:50.385559+02
+286	funding	0015_merge_20190717_1651	2020-09-18 14:05:50.387558+02
+287	funding	0018_merge_20190729_1449	2020-09-18 14:05:50.389116+02
+288	funding	0019_auto_20190729_1609	2020-09-18 14:05:50.514104+02
+289	funding	0020_donation_name	2020-09-18 14:05:50.553051+02
+290	funding	0021_auto_20190803_1106	2020-09-18 14:05:50.604308+02
+291	funding	0022_auto_20190804_1022	2020-09-18 14:05:50.65493+02
+292	funding	0023_bankpayoutaccount	2020-09-18 14:05:50.718642+02
+293	funding	0024_bankpaymentprovider	2020-09-18 14:05:50.785485+02
+294	funding	0025_auto_20190904_1154	2020-09-18 14:05:51.109762+02
+295	funding	0026_auto_20190904_1200	2020-09-18 14:05:51.111329+02
+296	funding	0023_add_permissions	2020-09-18 14:05:51.122667+02
+297	funding	0027_merge_20190912_1324	2020-09-18 14:05:51.123827+02
+298	funding	0024_donation_anonymous	2020-09-18 14:05:51.156275+02
+299	funding	0028_merge_20190912_1354	2020-09-18 14:05:51.157479+02
+300	funding	0029_auto_20190913_1458	2020-09-18 14:05:51.471446+02
+301	funding	0030_auto_20190918_1607	2020-09-18 14:05:51.941709+02
+302	funding	0031_plainpayoutaccount	2020-09-18 14:05:51.99985+02
+303	funding	0032_paymentcurrency	2020-09-18 14:05:52.069904+02
+304	funding	0033_auto_20191002_0903	2020-09-18 14:05:52.40453+02
+305	funding	0034_auto_20191002_1150	2020-09-18 14:05:52.4844+02
+306	funding	0035_auto_20191002_1415	2020-09-18 14:05:52.540446+02
+307	funding	0036_auto_20191004_1336	2020-09-18 14:05:52.612314+02
+308	funding	0037_payout	2020-09-18 14:05:52.690178+02
+309	funding	0038_auto_20191014_1316	2020-09-18 14:05:53.038008+02
+310	funding	0039_auto_20191022_1105	2020-09-18 14:05:53.107214+02
+311	funding	0040_auto_20191029_1309	2020-09-18 14:05:53.445256+02
+312	funding	0041_payout_currency	2020-09-18 14:05:53.475019+02
+313	funding	0042_auto_20191104_1154	2020-09-18 14:05:53.659714+02
+314	funding	0043_auto_20191108_0819	2020-09-18 14:05:53.674022+02
+315	funding	0044_auto_20191108_1008	2020-09-18 14:05:53.688513+02
+316	funding	0043_auto_20191106_1149	2020-09-18 14:05:53.703782+02
+317	funding	0045_merge_20191108_1853	2020-09-18 14:05:53.705354+02
+318	funding	0045_auto_20191111_1329	2020-09-18 14:05:53.718952+02
+319	funding	0046_merge_20191112_1256	2020-09-18 14:05:53.720301+02
+320	funding	0047_auto_20191116_1540	2020-09-18 14:05:53.735724+02
+321	funding	0048_add_permissions	2020-09-18 14:05:53.748965+02
+322	funding	0049_auto_20200124_1032	2020-09-18 14:05:54.458387+02
+323	funding	0050_auto_20200124_1230	2020-09-18 14:05:54.473828+02
+324	funding	0051_funding_update_contribution_date	2020-09-18 14:05:54.489147+02
+325	funding	0052_auto_20200205_1710	2020-09-18 14:05:54.505689+02
+326	events	0001_initial	2020-09-18 14:05:54.689434+02
+327	events	0002_add_permissions	2020-09-18 14:05:54.704482+02
+328	events	0003_auto_20190522_1329	2020-09-18 14:05:54.73633+02
+329	events	0004_add_permissions	2020-09-18 14:05:54.751605+02
+330	events	0005_auto_20190527_1431	2020-09-18 14:05:54.854931+02
+331	events	0006_event_is_online	2020-09-18 14:05:54.894145+02
+332	events	0007_auto_20190605_1434	2020-09-18 14:05:54.990855+02
+333	events	0008_auto_20190812_1612	2020-09-18 14:05:55.313193+02
+334	events	0009_event_duration	2020-09-18 14:05:55.341903+02
+335	events	0010_auto_20190816_1327	2020-09-18 14:05:55.396535+02
+336	events	0011_event_update_contribution_date	2020-09-18 14:05:55.409587+02
+337	tasks	0016_auto_20161208_1159	2020-09-18 14:05:55.450345+02
+338	tasks	0017_task_deadline_to_apply	2020-09-18 14:05:55.498596+02
+339	tasks	0018_auto_20170503_1405	2020-09-18 14:05:55.548925+02
+340	tasks	0019_remove_task_deadline_to_apply	2020-09-18 14:05:55.598716+02
+341	tasks	0020_task_deadline_to_apply	2020-09-18 14:05:55.646178+02
+342	tasks	0021_auto_20170503_1435	2020-09-18 14:05:55.729956+02
+343	tasks	0022_task_accepting	2020-09-18 14:05:55.779104+02
+344	tasks	0023_taskmember_resume	2020-09-18 14:05:55.823562+02
+345	tasks	0018_skill_expertise	2020-09-18 14:05:55.860941+02
+346	tasks	0023_merge_20170519_1012	2020-09-18 14:05:55.862297+02
+347	tasks	0024_merge_20170529_1436	2020-09-18 14:05:55.863391+02
+348	tasks	0025_auto_20170601_1540	2020-09-18 14:05:55.967932+02
+349	tasks	0024_auto_20170602_2304	2020-09-18 14:05:55.980658+02
+350	tasks	0026_merge_20170628_0905	2020-09-18 14:05:55.981998+02
+351	tasks	0027_delete_tasks_date_status_changed	2020-09-18 14:05:56.024076+02
+352	tasks	0028_add_api_permissions	2020-09-18 14:05:56.379878+02
+353	tasks	0029_add_group_permissions	2020-09-18 14:05:56.391696+02
+354	tasks	0030_auto_20170822_1104	2020-09-18 14:05:56.531145+02
+355	tasks	0031_set_owner_permissions	2020-09-18 14:05:56.545317+02
+356	tasks	0032_add_skill_permission	2020-09-18 14:05:56.562896+02
+357	tasks	0028_auto_20170817_1546	2020-09-18 14:05:56.578488+02
+358	tasks	0033_merge_20170830_1106	2020-09-18 14:05:56.579794+02
+359	tasks	0034_more_owner_permissions	2020-09-18 14:05:56.592989+02
+360	tasks	0029_fix_migration_statuslog_creation_20170721_1329	2020-09-18 14:05:56.606727+02
+361	tasks	0035_merge_20170831_1449	2020-09-18 14:05:56.607993+02
+362	tasks	0036_auto_20171005_1646	2020-09-18 14:05:56.645474+02
+363	tasks	0037_auto_20171010_1554	2020-09-18 14:05:56.681338+02
+364	tasks	0036_auto_20171114_1056	2020-09-18 14:05:56.718847+02
+365	tasks	0038_merge_20171115_1702	2020-09-18 14:05:56.720232+02
+366	tasks	0039_translate_skill	2020-09-18 14:05:56.830773+02
+367	tasks	0040_migrate_skill_translations	2020-09-18 14:05:56.84557+02
+368	tasks	0041_remove_untranslated_fields	2020-09-18 14:05:56.917538+02
+369	assignments	0001_initial	2020-09-18 14:05:57.041762+02
+370	assignments	0002_auto_20190529_0858	2020-09-18 14:05:57.073765+02
+371	assignments	0003_auto_20190909_1355	2020-09-18 14:05:57.606467+02
+372	assignments	0004_assignment_is_online	2020-09-18 14:05:57.643912+02
+373	assignments	0005_auto_20190909_1514	2020-09-18 14:05:57.670003+02
+374	assignments	0006_auto_20190909_1515	2020-09-18 14:05:57.684233+02
+375	assignments	0007_auto_20190909_1519	2020-09-18 14:05:57.718263+02
+376	assignments	0008_auto_20190909_1545	2020-09-18 14:05:57.779276+02
+377	assignments	0009_auto_20190909_1557	2020-09-18 14:05:57.920611+02
+378	assignments	0010_auto_20190911_1605	2020-09-18 14:05:58.083517+02
+379	assignments	0011_applicant_document	2020-09-18 14:05:58.153885+02
+380	assignments	0012_auto_20190913_1547	2020-09-18 14:05:58.226596+02
+381	assignments	0013_assignment_update_contribution_date	2020-09-18 14:05:58.239431+02
+382	activities	0016_auto_20200205_1139	2020-09-18 14:05:58.250896+02
+383	activities	0019_merge_20200213_1038	2020-09-18 14:05:58.252027+02
+384	activities	0020_auto_20200224_1005	2020-09-18 14:05:58.264351+02
+385	activities	0021_merge_review_status_20200501_1249	2020-09-18 14:05:58.275906+02
+386	files	0002_relatedimage	2020-09-18 14:05:58.352461+02
+387	files	0003_auto_20191111_1533	2020-09-18 14:05:58.364869+02
+388	files	0004_auto_20200106_1644	2020-09-18 14:05:58.607208+02
+389	files	0005_privatedocument	2020-09-18 14:05:58.691426+02
+390	files	0006_auto_20200401_1223	2020-09-18 14:05:58.735634+02
+391	activities	0021_auto_20200415_1501	2020-09-18 14:05:58.899106+02
+392	activities	0022_merge_20200513_1730	2020-09-18 14:05:58.900769+02
+393	activities	0022_activity_video_url	2020-09-18 14:05:58.96067+02
+394	activities	0023_merge_20200527_0830	2020-09-18 14:05:58.962236+02
+395	activities	0024_fix_statuses_20200630_0845	2020-09-18 14:05:58.975225+02
+396	segments	0001_initial	2020-09-18 14:05:58.991264+02
+397	segments	0002_auto_20200706_1557	2020-09-18 14:05:59.038813+02
+398	segments	0003_auto_20200706_1630	2020-09-18 14:05:59.071952+02
+399	activities	0023_activity_segments	2020-09-18 14:05:59.147488+02
+400	activities	0025_merge_20200819_1654	2020-09-18 14:05:59.149141+02
+401	admin	0001_initial	2020-09-18 14:05:59.221705+02
+402	admin	0002_logentry_remove_auto_add	2020-09-18 14:05:59.271258+02
+403	analytics	0001_initial	2020-09-18 14:05:59.314634+02
+404	analytics	0002_auto_20171031_1209	2020-09-18 14:05:59.32844+02
+405	analytics	0003_auto_20180210_1615	2020-09-18 14:05:59.343307+02
+406	analytics	0004_auto_20180404_1035	2020-09-18 14:05:59.356814+02
+407	analytics	0005_auto_20180424_1205	2020-09-18 14:05:59.389997+02
+408	assignments	0014_auto_20200206_1649	2020-09-18 14:06:00.014294+02
+409	assignments	0015_auto_20200217_1344	2020-09-18 14:06:00.096783+02
+410	assignments	0016_auto_20200217_1344	2020-09-18 14:06:00.111764+02
+411	assignments	0017_applicant_private_document	2020-09-18 14:06:00.201908+02
+412	assignments	0018_auto_20200401_1107	2020-09-18 14:06:00.217356+02
+413	assignments	0019_remove_applicant_document	2020-09-18 14:06:00.302889+02
+414	assignments	0020_auto_20200401_1223	2020-09-18 14:06:00.383612+02
+415	auth	0008_alter_user_username_max_length	2020-09-18 14:06:00.407069+02
+416	authtoken	0002_auto_20160226_1747	2020-09-18 14:06:00.575193+02
+417	axes	0001_initial	2020-09-18 14:06:00.608605+02
+418	axes	0002_auto_20151217_2044	2020-09-18 14:06:00.962886+02
+419	axes	0003_auto_20160322_0929	2020-09-18 14:06:01.1056+02
+420	axes	0004_auto_20181024_1538	2020-09-18 14:06:01.226941+02
+421	axes	0005_remove_accessattempt_trusted	2020-09-18 14:06:01.244947+02
+422	bb_accounts	0001_initial	2020-09-18 14:06:01.317697+02
+423	bb_accounts	0002_useraddress_user	2020-09-18 14:06:01.400549+02
+424	bb_accounts	0003_useraddress_position	2020-09-18 14:06:01.454026+02
+425	rewards	0001_initial	2020-09-18 14:06:01.525806+02
+426	orders	0001_initial	2020-09-18 14:06:01.614179+02
+427	fundraisers	0001_initial	2020-09-18 14:06:01.688541+02
+428	donations	0001_initial	2020-09-18 14:06:01.702728+02
+429	donations	0002_donation_fundraiser	2020-09-18 14:06:01.994165+02
+430	donations	0003_donation_order	2020-09-18 14:06:02.081914+02
+431	donations	0004_auto_20160523_1525	2020-09-18 14:06:02.232012+02
+432	donations	0005_auto_20160718_1811	2020-09-18 14:06:02.308423+02
+433	donations	0006_auto_20170803_1730	2020-09-18 14:06:02.321207+02
+434	donations	0007_donation_name	2020-09-18 14:06:02.359736+02
+435	donations	0008_auto_20170927_1021	2020-09-18 14:06:02.463044+02
+436	bb_follow	0001_initial	2020-09-18 14:06:02.528487+02
+437	bb_follow	0002_follow_user	2020-09-18 14:06:02.611615+02
+438	bb_follow	0003_auto_20180530_1621	2020-09-18 14:06:02.626546+02
+439	bluebottle_dashboard	0001_initial	2020-09-18 14:06:02.664842+02
+440	dashboard	0001_initial	2020-09-18 14:06:02.680641+02
+441	bluebottle_dashboard	0002_auto_20191107_0853	2020-09-18 14:06:02.69488+02
+442	categories	0009_translate_content_blocks	2020-09-18 14:06:03.330379+02
+443	categories	0010_migrate_content_blocks	2020-09-18 14:06:03.345038+02
+444	categories	0011_auto_20200422_0821	2020-09-18 14:06:03.452439+02
+445	categories	0012_category_video	2020-09-18 14:06:03.473534+02
+446	clients	0002_auto_20200205_1316	2020-09-18 14:06:03.616695+02
+447	statistics	0001_initial	2020-09-18 14:06:03.634765+02
+448	statistics	0002_auto_20161115_1601	2020-09-18 14:06:03.653633+02
+449	statistics	0003_auto_20161214_1524	2020-09-18 14:06:03.673171+02
+450	statistics	0002_auto_20161109_1024	2020-09-18 14:06:03.691684+02
+451	statistics	0004_merge_20170118_1533	2020-09-18 14:06:03.692971+02
+452	statistics	0004_merge_20170106_1627	2020-09-18 14:06:03.694212+02
+453	statistics	0005_merge_20170124_1338	2020-09-18 14:06:03.695368+02
+454	statistics	0006_auto_20170323_1227	2020-09-18 14:06:03.713829+02
+455	statistics	0007_auto_20171114_1035	2020-09-18 14:06:03.734085+02
+456	impact	0001_initial	2020-09-18 14:06:03.823705+02
+457	impact	0002_impactgoal_activity	2020-09-18 14:06:03.905511+02
+458	impact	0003_auto_20200624_1157	2020-09-18 14:06:03.925456+02
+459	impact	0004_auto_20200624_1157	2020-09-18 14:06:03.947122+02
+460	impact	0005_auto_20200710_1103	2020-09-18 14:06:04.038677+02
+461	impact	0006_auto_20200710_1104	2020-09-18 14:06:04.379489+02
+462	impact	0007_auto_20200714_1647	2020-09-18 14:06:04.471311+02
+463	impact	0008_impacttype_icon	2020-09-18 14:06:04.491939+02
+464	statistics	0008_auto_20200717_1136	2020-09-18 14:06:05.123603+02
+465	statistics	0009_auto_20200717_1201	2020-09-18 14:06:05.146211+02
+466	fluent_contents	0001_initial	2020-09-18 14:06:05.478975+02
+467	wallposts	0001_initial	2020-09-18 14:06:06.745545+02
+468	wallposts	0002_auto_20161115_1601	2020-09-18 14:06:07.03532+02
+469	wallposts	0003_mediawallpostphoto_results_page	2020-09-18 14:06:07.084551+02
+470	wallposts	0002_auto_20161109_1024	2020-09-18 14:06:07.33605+02
+471	wallposts	0004_merge_20170118_1533	2020-09-18 14:06:07.337689+02
+472	wallposts	0004_merge_20170106_1627	2020-09-18 14:06:07.338659+02
+473	wallposts	0005_merge_20170124_1338	2020-09-18 14:06:07.339728+02
+474	wallposts	0006_remove_duplicate_donation_wallposts	2020-09-18 14:06:07.354526+02
+475	wallposts	0007_auto_20170821_1459	2020-09-18 14:06:07.382146+02
+476	wallposts	0008_add_group_permissions	2020-09-18 14:06:07.396852+02
+477	wallposts	0009_auto_20170821_2001	2020-09-18 14:06:07.439216+02
+478	wallposts	0010_auto_20170821_2001	2020-09-18 14:06:07.451828+02
+479	wallposts	0011_auto_20170821_2018	2020-09-18 14:06:07.723062+02
+480	wallposts	0012_auto_20170821_2018	2020-09-18 14:06:07.741607+02
+481	wallposts	0013_auto_20170822_1105	2020-09-18 14:06:07.857902+02
+482	wallposts	0014_set_owner_permissions	2020-09-18 14:06:07.875776+02
+483	wallposts	0015_auto_20171114_1035	2020-09-18 14:06:07.957097+02
+484	wallposts	0016_auto_20180508_1512	2020-09-18 14:06:08.135741+02
+485	wallposts	0017_wallpost_pinned	2020-09-18 14:06:08.176521+02
+486	wallposts	0018_auto_20190115_0853	2020-09-18 14:06:08.189183+02
+487	wallposts	0019_auto_20191017_2204	2020-09-18 14:06:08.275055+02
+488	rewards	0002_auto_20160720_2245	2020-09-18 14:06:08.3583+02
+489	rewards	0003_add_api_permissions	2020-09-18 14:06:08.405451+02
+490	rewards	0004_add_group_permissions	2020-09-18 14:06:08.422084+02
+491	rewards	0005_auto_20170823_1131	2020-09-18 14:06:08.470321+02
+492	rewards	0006_set_owner_permissions	2020-09-18 14:06:08.4873+02
+493	rewards	0007_auto_20170914_2004	2020-09-18 14:06:08.538121+02
+494	rewards	0008_auto_20170914_2029	2020-09-18 14:06:08.586595+02
+495	rewards	0009_auto_20191104_1230	2020-09-18 14:06:08.635188+02
+496	projects	0084_auto_20181207_1435	2020-09-18 14:06:08.978667+02
+497	projects	0085_auto_20181207_1552	2020-09-18 14:06:08.998975+02
+498	projects	0080_auto_20180828_1049	2020-09-18 14:06:09.151382+02
+499	projects	0081_merge_20180919_1152	2020-09-18 14:06:09.153605+02
+500	projects	0082_merge_20181127_1044	2020-09-18 14:06:09.154756+02
+501	projects	0081_auto_20180918_1335	2020-09-18 14:06:09.177342+02
+502	projects	0086_merge_20190121_1425	2020-09-18 14:06:09.178599+02
+503	projects	0086_auto_20190117_1007	2020-09-18 14:06:09.549344+02
+504	projects	0087_merge_20190130_1355	2020-09-18 14:06:09.551313+02
+505	projects	0080_auto_20180904_1532	2020-09-18 14:06:09.678241+02
+506	projects	0081_merge_20180911_1659	2020-09-18 14:06:09.679635+02
+507	projects	0088_merge_20190215_1425	2020-09-18 14:06:09.6807+02
+508	projects	0087_merge_20190206_1714	2020-09-18 14:06:09.681816+02
+509	projects	0088_merge_20190208_1523	2020-09-18 14:06:09.682835+02
+510	projects	0089_merge_20190215_1438	2020-09-18 14:06:09.683857+02
+511	projects	0086_merge_20190204_1005	2020-09-18 14:06:09.684797+02
+512	projects	0088_merge_20190213_1448	2020-09-18 14:06:09.685745+02
+513	projects	0090_merge_20190222_1101	2020-09-18 14:06:09.686773+02
+514	organizations	0012_auto_20190416_1101	2020-09-18 14:06:10.781158+02
+515	initiatives	0002_copy_permissions	2020-09-18 14:06:10.796192+02
+516	initiatives	0003_auto_20190403_1619	2020-09-18 14:06:10.882996+02
+517	initiatives	0004_auto_20190416_1101	2020-09-18 14:06:11.430358+02
+518	initiatives	0005_initiative_hasorganization	2020-09-18 14:06:11.486769+02
+519	initiatives	0006_auto_20190416_1553	2020-09-18 14:06:11.538543+02
+520	initiatives	0004_auto_20190418_1643	2020-09-18 14:06:11.65986+02
+521	initiatives	0007_merge_20190501_0922	2020-09-18 14:06:11.661608+02
+522	initiatives	0008_auto_20190513_1518	2020-09-18 14:06:11.718594+02
+523	initiatives	0009_auto_20190520_1436	2020-09-18 14:06:12.07635+02
+524	initiatives	0010_auto_20190521_0954	2020-09-18 14:06:12.136949+02
+525	initiatives	0011_auto_20190522_0931	2020-09-18 14:06:12.173987+02
+526	initiatives	0009_auto_20190524_1144	2020-09-18 14:06:12.497112+02
+527	initiatives	0012_merge_20190524_1208	2020-09-18 14:06:12.498691+02
+528	initiatives	0013_auto_20190527_1131	2020-09-18 14:06:12.647764+02
+529	initiatives	0014_auto_20190628_1656	2020-09-18 14:06:12.775508+02
+530	funding_vitepay	0001_initial	2020-09-18 14:06:12.86707+02
+531	funding_vitepay	0002_vitepaypayment_payment_url	2020-09-18 14:06:12.890922+02
+532	funding_vitepay	0003_vitepaypaymentprovider_prefix	2020-09-18 14:06:12.912008+02
+533	funding_vitepay	0004_auto_20190715_0739	2020-09-18 14:06:12.936326+02
+534	funding_vitepay	0005_vitepaypayoutaccount	2020-09-18 14:06:13.018763+02
+535	funding_vitepay	0006_auto_20190918_1632	2020-09-18 14:06:13.206819+02
+536	funding_vitepay	0007_auto_20191002_0903	2020-09-18 14:06:13.230988+02
+537	funding_stripe	0001_initial	2020-09-18 14:06:13.9365+02
+538	geo	0014_auto_20191022_1105	2020-09-18 14:06:13.980226+02
+539	funding_pledge	0001_initial	2020-09-18 14:06:14.059558+02
+540	funding_pledge	0002_pledgepaymentprovider	2020-09-18 14:06:14.080665+02
+541	funding_pledge	0003_auto_20191002_0903	2020-09-18 14:06:14.100012+02
+542	funding_pledge	0004_pledgebankaccount	2020-09-18 14:06:14.178518+02
+543	funding_lipisha	0001_initial	2020-09-18 14:06:14.300223+02
+544	funding_lipisha	0002_auto_20190717_1637	2020-09-18 14:06:14.380673+02
+545	funding_lipisha	0003_lipishapayoutaccount	2020-09-18 14:06:14.482613+02
+546	funding_lipisha	0004_auto_20190918_1632	2020-09-18 14:06:14.912069+02
+547	funding_lipisha	0005_auto_20191001_2246	2020-09-18 14:06:15.135898+02
+548	funding_lipisha	0006_auto_20191001_2251	2020-09-18 14:06:15.208863+02
+549	funding_flutterwave	0001_initial	2020-09-18 14:06:15.340065+02
+550	funding_flutterwave	0002_flutterwavepaymentprovider_prefix	2020-09-18 14:06:15.369754+02
+551	funding_flutterwave	0003_flutterwavepayoutaccount	2020-09-18 14:06:15.478316+02
+552	funding_flutterwave	0004_auto_20190918_1633	2020-09-18 14:06:15.680019+02
+553	funding_flutterwave	0005_auto_20191002_0903	2020-09-18 14:06:15.730398+02
+554	projects	0091_project_to_initiatives	2020-09-18 14:06:16.050146+02
+555	utils	0002_maillog	2020-09-18 14:06:16.134705+02
+556	pages	0001_initial	2020-09-18 14:06:16.276635+02
+557	pages	0002_auto_20161115_1601	2020-09-18 14:06:16.335935+02
+558	pages	0002_auto_20161109_1024	2020-09-18 14:06:16.398249+02
+559	pages	0003_merge_20170118_1533	2020-09-18 14:06:16.400251+02
+560	pages	0003_merge_20170106_1627	2020-09-18 14:06:16.401602+02
+561	pages	0004_merge_20170124_1338	2020-09-18 14:06:16.402711+02
+562	pages	0005_auto_20170803_1729	2020-09-18 14:06:16.419121+02
+563	pages	0006_auto_20171114_1035	2020-09-18 14:06:16.479466+02
+564	pages	0007_imagetextitem	2020-09-18 14:06:16.507536+02
+565	pages	0008_auto_20180326_0821	2020-09-18 14:06:16.641166+02
+566	pages	0009_auto_20180709_1706	2020-09-18 14:06:16.721675+02
+567	news	0001_initial	2020-09-18 14:06:16.807493+02
+568	news	0002_auto_20160531_1651	2020-09-18 14:06:16.871178+02
+569	news	0003_auto_20161115_1601	2020-09-18 14:06:17.140103+02
+570	news	0003_auto_20161109_1024	2020-09-18 14:06:17.207712+02
+571	news	0004_merge_20170118_1533	2020-09-18 14:06:17.20891+02
+572	news	0004_merge_20170106_1627	2020-09-18 14:06:17.209946+02
+573	news	0005_merge_20170124_1338	2020-09-18 14:06:17.210975+02
+574	news	0006_auto_20170803_1729	2020-09-18 14:06:17.227998+02
+575	news	0007_auto_20180709_1706	2020-09-18 14:06:17.351514+02
+576	surveys	0001_initial	2020-09-18 14:06:17.411197+02
+577	surveys	0002_survey_link	2020-09-18 14:06:17.433912+02
+578	surveys	0003_survey_specification	2020-09-18 14:06:17.454901+02
+579	surveys	0004_auto_20160919_1552	2020-09-18 14:06:17.517794+02
+580	surveys	0005_auto_20160919_1556	2020-09-18 14:06:17.564202+02
+581	surveys	0006_auto_20160919_1609	2020-09-18 14:06:17.635284+02
+582	surveys	0007_question_title	2020-09-18 14:06:17.660669+02
+583	surveys	0008_question_properties	2020-09-18 14:06:17.68432+02
+584	surveys	0009_answer_value	2020-09-18 14:06:17.709628+02
+585	surveys	0010_auto_20160920_0854	2020-09-18 14:06:17.947389+02
+586	surveys	0011_auto_20160920_1126	2020-09-18 14:06:18.133173+02
+587	surveys	0012_auto_20160920_1153	2020-09-18 14:06:18.183696+02
+588	surveys	0013_auto_20160921_1410	2020-09-18 14:06:18.513164+02
+589	surveys	0014_auto_20160921_1444	2020-09-18 14:06:18.632925+02
+590	surveys	0015_auto_20160922_1057	2020-09-18 14:06:18.895629+02
+591	surveys	0016_auto_20160922_1104	2020-09-18 14:06:18.953242+02
+592	surveys	0017_auto_20160922_1210	2020-09-18 14:06:19.044138+02
+593	surveys	0018_auto_20160922_1610	2020-09-18 14:06:19.132298+02
+594	surveys	0019_auto_20160922_1618	2020-09-18 14:06:19.288159+02
+595	surveys	0020_answer_options	2020-09-18 14:06:19.329736+02
+596	surveys	0021_response_params	2020-09-18 14:06:19.388253+02
+597	surveys	0022_auto_20160926_0912	2020-09-18 14:06:19.578143+02
+598	surveys	0023_aggregateanswer_aggregation_type	2020-09-18 14:06:19.63924+02
+599	surveys	0024_auto_20160926_1958	2020-09-18 14:06:19.698165+02
+600	surveys	0025_auto_20160927_1102	2020-09-18 14:06:20.105863+02
+601	surveys	0021_survey_last_synced	2020-09-18 14:06:20.140172+02
+602	surveys	0026_merge	2020-09-18 14:06:20.141755+02
+603	surveys	0027_auto_20160929_0817	2020-09-18 14:06:20.201909+02
+604	surveys	0028_auto_20160929_0849	2020-09-18 14:06:20.283161+02
+605	surveys	0029_auto_20160929_0932	2020-09-18 14:06:20.303383+02
+606	surveys	0030_auto_20161115_1601	2020-09-18 14:06:20.454519+02
+607	surveys	0031_question_display_theme	2020-09-18 14:06:20.488077+02
+608	cms	0001_initial	2020-09-18 14:06:21.767458+02
+609	cms	0002_shareresultscontent	2020-09-18 14:06:21.875595+02
+610	cms	0002_auto_20161207_0918	2020-09-18 14:06:22.008876+02
+611	cms	0003_merge_20161207_1037	2020-09-18 14:06:22.010519+02
+612	cms	0004_resultpage_image	2020-09-18 14:06:22.039853+02
+613	cms	0005_auto_20161207_1512	2020-09-18 14:06:22.232993+02
+614	cms	0006_auto_20161207_1642	2020-09-18 14:06:22.442773+02
+615	cms	0007_auto_20161207_1709	2020-09-18 14:06:22.801103+02
+616	cms	0005_auto_20161208_1124	2020-09-18 14:06:22.867528+02
+617	cms	0006_auto_20161208_1159	2020-09-18 14:06:23.042032+02
+618	cms	0008_merge_20161212_1459	2020-09-18 14:06:23.044193+02
+619	cms	0004_projectsmapcontent	2020-09-18 14:06:23.497332+02
+620	cms	0007_merge_20161212_1501	2020-09-18 14:06:23.499533+02
+621	cms	0009_merge_20161213_1047	2020-09-18 14:06:23.500984+02
+622	cms	0010_auto_20161214_1429	2020-09-18 14:06:23.657879+02
+623	cms	0011_auto_20161214_1531	2020-09-18 14:06:23.756016+02
+624	cms	0012_auto_20161214_1618	2020-09-18 14:06:23.826327+02
+625	cms	0010_auto_20161214_1524	2020-09-18 14:06:23.894147+02
+626	cms	0013_merge_20161214_1637	2020-09-18 14:06:23.895719+02
+627	cms	0014_auto_20161216_1424	2020-09-18 14:06:24.941105+02
+628	cms	0014_auto_20161216_1359	2020-09-18 14:06:24.960587+02
+629	cms	0015_merge_20161219_0946	2020-09-18 14:06:24.961935+02
+630	cms	0016_auto_20161228_1420	2020-09-18 14:06:25.13609+02
+631	cms	0017_add_api_permissions	2020-09-18 14:06:25.162312+02
+632	cms	0018_add_group_permissions	2020-09-18 14:06:25.179627+02
+633	cms	0019_auto_20170829_1005	2020-09-18 14:06:25.203842+02
+634	cms	0020_add_group_permissions	2020-09-18 14:06:25.222372+02
+635	cms	0021_auto_20171005_1646	2020-09-18 14:06:25.578763+02
+636	cms	0022_migrate_quotes_1	2020-09-18 14:06:25.907252+02
+637	cms	0023_migrate_quotes_2	2020-09-18 14:06:25.968509+02
+638	cms	0024_migrate_quotes_3	2020-09-18 14:06:26.558676+02
+639	cms	0025_migrate_stats_1	2020-09-18 14:06:26.731587+02
+640	cms	0026_migrate_stats_2	2020-09-18 14:06:26.779707+02
+641	cms	0027_migrate_stats_3	2020-09-18 14:06:27.056567+02
+642	cms	0021_homepage	2020-09-18 14:06:27.081124+02
+643	cms	0022_auto_20171006_1155	2020-09-18 14:06:27.131675+02
+644	cms	0023_auto_20171006_1208	2020-09-18 14:06:27.151877+02
+645	cms	0028_merge_20171006_1622	2020-09-18 14:06:27.15324+02
+646	cms	0029_auto_20171010_0931	2020-09-18 14:06:28.488682+02
+647	cms	0030_migrate_projects_1	2020-09-18 14:06:28.590465+02
+648	cms	0031_migrate_projects_2	2020-09-18 14:06:28.679139+02
+649	cms	0032_migrate_projects_3	2020-09-18 14:06:29.250092+02
+650	cms	0033_auto_20171017_1353	2020-09-18 14:06:29.341449+02
+651	cms	0034_auto_20171017_1549	2020-09-18 14:06:29.638977+02
+652	cms	0035_auto_20171017_1611	2020-09-18 14:06:29.751819+02
+653	cms	0036_auto_20171017_1622	2020-09-18 14:06:29.798101+02
+654	cms	0037_auto_20171017_1645	2020-09-18 14:06:29.820241+02
+655	cms	0038_auto_20171017_1645	2020-09-18 14:06:29.839923+02
+656	cms	0039_auto_20171017_1708	2020-09-18 14:06:29.922544+02
+657	cms	0040_auto_20171018_1413	2020-09-18 14:06:29.991726+02
+658	cms	0041_auto_20171018_1437	2020-09-18 14:06:30.042269+02
+659	cms	0042_auto_20171018_1437	2020-09-18 14:06:30.059686+02
+660	cms	0043_auto_20171018_1442	2020-09-18 14:06:30.171429+02
+661	cms	0044_auto_20171018_1457	2020-09-18 14:06:30.195917+02
+662	cms	0045_auto_20171018_1505	2020-09-18 14:06:30.536857+02
+663	cms	0046_auto_20171018_1637	2020-09-18 14:06:30.567214+02
+664	cms	0047_auto_20171018_1709	2020-09-18 14:06:30.620538+02
+665	cms	0048_auto_20171024_1554	2020-09-18 14:06:30.761219+02
+666	cms	0049_auto_20171024_1601	2020-09-18 14:06:31.285809+02
+667	cms	0050_auto_20171024_1623	2020-09-18 14:06:32.717307+02
+668	cms	0051_auto_20171024_1631	2020-09-18 14:06:33.728384+02
+669	cms	0052_auto_20171027_1419	2020-09-18 14:06:33.747758+02
+670	cms	0053_auto_20171030_1645	2020-09-18 14:06:33.749115+02
+671	cms	0054_auto_20171031_1428	2020-09-18 14:06:36.143907+02
+672	cms	0021_auto_20171017_2015	2020-09-18 14:06:36.145538+02
+673	cms	0022_auto_20171019_1725	2020-09-18 14:06:36.146537+02
+674	cms	0023_auto_20171019_2042	2020-09-18 14:06:36.147558+02
+675	cms	0024_siteplatformsettings	2020-09-18 14:06:36.148557+02
+676	cms	0025_auto_20171024_1600	2020-09-18 14:06:36.149599+02
+677	cms	0055_merge_20171031_1713	2020-09-18 14:06:36.150729+02
+678	cms	0056_auto_20171102_1527	2020-09-18 14:06:36.151759+02
+679	cms	0057_auto_20171103_1438	2020-09-18 14:06:36.1528+02
+680	cms	0058_auto_20171110_1230	2020-09-18 14:06:36.153894+02
+681	cms	0059_auto_20171121_1022	2020-09-18 14:06:36.155183+02
+682	cms	0059_auto_20171121_0959	2020-09-18 14:06:36.156332+02
+683	cms	0060_merge_20171121_1334	2020-09-18 14:06:36.157374+02
+684	cms	0061_auto_20171128_1135	2020-09-18 14:06:36.158436+02
+685	cms	0062_auto_20171128_1355	2020-09-18 14:06:36.159604+02
+686	cms	0063_auto_20171204_1049	2020-09-18 14:06:36.160588+02
+687	cms	0064_auto_20171220_1145	2020-09-18 14:06:36.161522+02
+688	cms	0065_auto_20180313_1401	2020-09-18 14:06:36.162435+02
+689	cms	0066_auto_20180709_1657	2020-09-18 14:06:36.163335+02
+690	cms	0067_auto_20190710_0938	2020-09-18 14:06:36.164294+02
+691	cms	0068_migrate_start_project	2020-09-18 14:06:36.165239+02
+692	cms	0055_migrate_statistics	2020-09-18 14:06:36.185067+02
+693	cms	0056_auto_20191106_1041	2020-09-18 14:06:36.20378+02
+694	cms	0057_auto_20200129_0906	2020-09-18 14:06:36.800908+02
+695	cms	0058_siteplatformsettingstranslation_start_page	2020-09-18 14:06:36.832615+02
+696	cms	0059_homepagestatisticscontent	2020-09-18 14:06:36.864585+02
+697	cms	0060_auto_20200717_1037	2020-09-18 14:06:36.889002+02
+698	cms	0061_auto_20200812_1030	2020-09-18 14:06:36.90991+02
+699	cms	0062_auto_20200812_1514	2020-09-18 14:06:36.932975+02
+700	contact	0001_initial	2020-09-18 14:06:36.955859+02
+701	contact	0002_contactmessage_author	2020-09-18 14:06:37.066802+02
+702	text	0001_initial	2020-09-18 14:06:37.177672+02
+703	rawhtml	0001_initial	2020-09-18 14:06:37.273467+02
+704	oembeditem	0001_initial	2020-09-18 14:06:37.370567+02
+705	contentplugins	0001_initial	2020-09-18 14:06:37.468901+02
+706	contentplugins	0002_auto_20161115_1601	2020-09-18 14:06:37.522403+02
+707	contentplugins	0002_auto_20161109_1024	2020-09-18 14:06:37.577822+02
+708	contentplugins	0003_merge_20170118_1533	2020-09-18 14:06:37.579314+02
+709	contentplugins	0003_merge_20170106_1627	2020-09-18 14:06:37.580297+02
+710	contentplugins	0004_merge_20170124_1338	2020-09-18 14:06:37.581231+02
+711	contentplugins	0005_auto_20170818_1441	2020-09-18 14:06:37.603154+02
+712	django_summernote	0001_initial	2020-09-18 14:06:37.62876+02
+713	djcelery	0001_initial	2020-09-18 14:06:37.88755+02
+714	djmoney_rates	0001_initial	2020-09-18 14:06:38.337348+02
+715	donations	0009_auto_20190130_1140	2020-09-18 14:06:38.453817+02
+716	donations	0010_auto_20190130_1141	2020-09-18 14:06:38.474129+02
+717	donations	0011_auto_20191101_1046	2020-09-18 14:06:38.584769+02
+718	events	0012_auto_20200217_1106	2020-09-18 14:06:38.805888+02
+719	events	0013_event_start	2020-09-18 14:06:38.852105+02
+720	events	0014_auto_20200217_1107	2020-09-18 14:06:38.871218+02
+721	events	0015_auto_20200226_0838	2020-09-18 14:06:38.890172+02
+722	follow	0001_initial	2020-09-18 14:06:38.987385+02
+723	funding	0053_auto_20200320_1457	2020-09-18 14:06:39.161079+02
+724	funding	0054_auto_20200610_1215	2020-09-18 14:06:39.73041+02
+725	funding_flutterwave	0006_auto_20191111_1332	2020-09-18 14:06:39.756494+02
+726	funding_flutterwave	0007_auto_20200106_0839	2020-09-18 14:06:39.777999+02
+727	funding_flutterwave	0008_auto_20200106_1029	2020-09-18 14:06:39.851546+02
+728	funding_lipisha	0007_auto_20191008_1011	2020-09-18 14:06:39.924046+02
+729	funding_lipisha	0008_lipishabankaccount_mpesa_code	2020-09-18 14:06:39.962991+02
+730	funding_pledge	0005_auto_20191111_1331	2020-09-18 14:06:39.985842+02
+731	funding_stripe	0002_auto_20191111_1330	2020-09-18 14:06:40.00728+02
+732	funding_stripe	0003_auto_20200317_1601	2020-09-18 14:06:40.115447+02
+733	funding_stripe	0004_auto_20200318_1504	2020-09-18 14:06:40.137131+02
+734	funding_telesom	0001_initial	2020-09-18 14:06:40.441213+02
+735	funding_telesom	0002_auto_20200707_0856	2020-09-18 14:06:40.511266+02
+736	funding_telesom	0003_telesompayment_response	2020-09-18 14:06:40.546198+02
+737	funding_telesom	0004_auto_20200707_0929	2020-09-18 14:06:40.578599+02
+738	funding_vitepay	0008_auto_20191008_1034	2020-09-18 14:06:40.645654+02
+739	funding_vitepay	0009_auto_20191111_1330	2020-09-18 14:06:40.665907+02
+740	fundraisers	0002_fundraiser_owner	2020-09-18 14:06:40.794107+02
+741	fundraisers	0003_fundraiser_project	2020-09-18 14:06:40.921735+02
+742	fundraisers	0004_auto_20160718_1811	2020-09-18 14:06:41.496005+02
+743	fundraisers	0005_auto_20160720_1726	2020-09-18 14:06:41.733063+02
+744	fundraisers	0004_auto_20160720_1140	2020-09-18 14:06:41.972704+02
+745	fundraisers	0006_merge	2020-09-18 14:06:41.974433+02
+746	fundraisers	0007_auto_20170803_1730	2020-09-18 14:06:41.993506+02
+747	geo	0015_add_permissions	2020-09-18 14:06:42.012599+02
+748	geo	0016_location_slug	2020-09-18 14:06:42.063949+02
+749	homepage	0001_initial	2020-09-18 14:06:42.087214+02
+750	impact	0009_auto_20200810_1347	2020-09-18 14:06:42.665863+02
+751	impact	0010_impacttypetranslation_unit	2020-09-18 14:06:42.69604+02
+752	impact	0011_auto_20200812_1038	2020-09-18 14:06:42.71498+02
+753	impact	0012_auto_20200817_1608	2020-09-18 14:06:42.939606+02
+754	impact	0013_remove_impacttypetranslation_name	2020-09-18 14:06:42.967519+02
+755	impact	0013_auto_20200818_1105	2020-09-18 14:06:42.987306+02
+756	impact	0014_merge_20200819_0916	2020-09-18 14:06:42.988603+02
+757	impact	0015_impacttypetranslation_name	2020-09-18 14:06:43.016705+02
+758	impact	0016_auto_20200820_1717	2020-09-18 14:06:43.035946+02
+759	initiatives	0015_auto_20190708_1417	2020-09-18 14:06:43.16969+02
+760	initiatives	0016_auto_20190726_0915	2020-09-18 14:06:43.189362+02
+761	initiatives	0017_auto_20191031_1439	2020-09-18 14:06:43.211751+02
+762	initiatives	0018_auto_20191108_1222	2020-09-18 14:06:43.22974+02
+763	initiatives	0018_auto_20191106_0928	2020-09-18 14:06:43.70159+02
+764	initiatives	0019_merge_20191108_1853	2020-09-18 14:06:43.703011+02
+765	initiatives	0020_auto_20191129_1131	2020-09-18 14:06:44.069422+02
+766	initiatives	0021_auto_20191129_1132	2020-09-18 14:06:44.092721+02
+767	initiatives	0022_remove_initiativeplatformsettings_search_filters	2020-09-18 14:06:44.118574+02
+768	initiatives	0023_auto_20200707_1306	2020-09-18 14:06:44.29766+02
+769	initiatives	0023_auto_20200624_1209	2020-09-18 14:06:44.494299+02
+770	initiatives	0024_merge_20200806_1510	2020-09-18 14:06:44.496498+02
+771	jet	0001_initial	2020-09-18 14:06:44.559216+02
+772	jet	0002_delete_userdashboardmodule	2020-09-18 14:06:44.580599+02
+773	default	0001_initial	2020-09-18 14:06:44.871662+02
+774	social_auth	0001_initial	2020-09-18 14:06:44.873374+02
+775	default	0002_add_related_name	2020-09-18 14:06:44.999904+02
+776	social_auth	0002_add_related_name	2020-09-18 14:06:45.001255+02
+777	looker	0001_initial	2020-09-18 14:06:45.02027+02
+778	looker	0002_auto_20180328_1054	2020-09-18 14:06:45.045014+02
+779	looker	0003_init_looker_embeds	2020-09-18 14:06:45.064742+02
+780	mails	0001_initial	2020-09-18 14:06:45.083712+02
+781	mails	0002_auto_20171211_1117	2020-09-18 14:06:45.084964+02
+782	mails	0003_auto_20180727_1122	2020-09-18 14:06:45.107595+02
+783	orders	0002_auto_20160718_2010	2020-09-18 14:06:45.5507+02
+784	orders	0003_auto_20170823_1533	2020-09-18 14:06:45.622702+02
+785	orders	0004_add_group_permissions	2020-09-18 14:06:45.643002+02
+786	members	0011_permission_groups	2020-09-18 14:06:45.662872+02
+787	members	0012_auto_20170807_1454	2020-09-18 14:06:45.681125+02
+788	members	0012_auto_20170803_1730	2020-09-18 14:06:45.697232+02
+789	members	0013_merge_20170811_1500	2020-09-18 14:06:45.69828+02
+790	members	0014_auto_20170816_1614	2020-09-18 14:06:45.759185+02
+791	members	0015_auto_20170816_1614	2020-09-18 14:06:45.779931+02
+792	members	0016_auto_20170822_1104	2020-09-18 14:06:45.842647+02
+793	members	0017_closed_site_permissions	2020-09-18 14:06:45.86595+02
+794	members	0018_auto_20170824_1521	2020-09-18 14:06:45.993626+02
+795	members	0019_auto_20170824_1812	2020-09-18 14:06:46.070946+02
+796	members	0020_auto_20171031_1048	2020-09-18 14:06:46.091193+02
+797	members	0021_auto_20171114_1035	2020-09-18 14:06:46.22338+02
+798	members	0022_auto_20171207_0856	2020-09-18 14:06:46.460009+02
+799	members	0023_memberplatformsettings_require_consent	2020-09-18 14:06:46.487274+02
+800	members	0024_create_empty_settings	2020-09-18 14:06:46.506644+02
+801	members	0025_memberplatformsettings_consent_link	2020-09-18 14:06:46.533784+02
+802	members	0026_auto_20190129_1050	2020-09-18 14:06:46.9223+02
+803	members	0027_auto_20190208_1119	2020-09-18 14:06:46.998508+02
+804	members	0026_auto_20180919_1434	2020-09-18 14:06:47.067479+02
+805	members	0028_merge_20190215_1441	2020-09-18 14:06:47.068888+02
+806	members	0028_auto_20190219_1024	2020-09-18 14:06:47.141843+02
+807	members	0029_merge_20190222_0930	2020-09-18 14:06:47.148034+02
+808	members	0030_auto_20190225_1215	2020-09-18 14:06:47.482797+02
+809	members	0027_auto_20190206_1018	2020-09-18 14:06:47.767288+02
+810	members	0031_merge_20190226_1449	2020-09-18 14:06:47.769413+02
+811	members	0032_auto_20191223_1456	2020-09-18 14:06:47.944049+02
+812	members	0033_auto_20200114_1050	2020-09-18 14:06:48.579928+02
+813	members	0034_auto_20200114_1050	2020-09-18 14:06:48.600609+02
+814	members	0035_memberplatformsettings_background	2020-09-18 14:06:48.627956+02
+815	members	0036_auto_20200406_1127	2020-09-18 14:06:48.656669+02
+816	members	0037_auto_20200706_1637	2020-09-18 14:06:48.814976+02
+817	members	0038_auto_20200801_2114	2020-09-18 14:06:49.038876+02
+818	members	0039_auto_20200804_0750	2020-09-18 14:06:49.088728+02
+819	notifications	0001_initial	2020-09-18 14:06:49.229522+02
+820	notifications	0002_message_custom_message	2020-09-18 14:06:49.327494+02
+821	notifications	0003_notificationplatformsettings	2020-09-18 14:06:49.353745+02
+822	notifications	0004_auto_20200123_1344	2020-09-18 14:06:49.479424+02
+823	notifications	0005_auto_20200124_1505	2020-09-18 14:06:49.650216+02
+824	payments	0001_initial	2020-09-18 14:06:50.545459+02
+825	payments	0002_auto_20160718_2345	2020-09-18 14:06:50.692262+02
+826	payments	0003_auto_20161025_1221	2020-09-18 14:06:50.770063+02
+827	payments	0004_auto_20170919_1621	2020-09-18 14:06:50.849465+02
+828	payments	0005_auto_20170919_1621	2020-09-18 14:06:50.85111+02
+829	orders	0005_auto_20171003_1112	2020-09-18 14:06:50.872444+02
+830	orders	0006_auto_20180509_1436	2020-09-18 14:06:50.944401+02
+831	orders	0007_auto_20180509_1437	2020-09-18 14:06:50.969846+02
+832	orders	0008_auto_20190904_0838	2020-09-18 14:06:50.989502+02
+833	organizations	0013_remove_organizationcontact_organization	2020-09-18 14:06:51.106367+02
+834	organizations	0014_auto_20190708_1418	2020-09-18 14:06:51.673195+02
+835	organizations	0015_auto_20191209_2128	2020-09-18 14:06:51.780466+02
+836	organizations	0016_auto_20200106_1636	2020-09-18 14:06:51.799738+02
+837	pages	0010_auto_20180717_1017	2020-09-18 14:06:51.874264+02
+838	pages	0011_auto_20200106_1620	2020-09-18 14:06:52.118558+02
+839	pages	0012_columnsitem	2020-09-18 14:06:52.243853+02
+840	pages	0011_auto_20200106_1647	2020-09-18 14:06:52.264711+02
+841	pages	0013_merge_20200120_1128	2020-09-18 14:06:52.266016+02
+842	pages	0014_imagetextrounditem	2020-09-18 14:06:52.384186+02
+843	payments	0006_auto_20181115_1321	2020-09-18 14:06:52.620058+02
+844	payments_beyonic	0001_initial	2020-09-18 14:06:53.082309+02
+845	payments_docdata	0001_initial	2020-09-18 14:06:53.389995+02
+846	payments_docdata	0002_auto_20161115_1601	2020-09-18 14:06:53.420915+02
+847	payments_docdata	0002_auto_20161109_1024	2020-09-18 14:06:53.4503+02
+848	payments_docdata	0003_merge_20170118_1533	2020-09-18 14:06:53.451578+02
+849	payments_docdata	0003_merge_20170106_1627	2020-09-18 14:06:53.452803+02
+850	payments_docdata	0004_merge_20170124_1338	2020-09-18 14:06:53.453915+02
+851	payments_external	0001_initial	2020-09-18 14:06:53.553941+02
+852	payments_flutterwave	0001_initial	2020-09-18 14:06:53.670208+02
+853	payments_flutterwave	0002_auto_20170202_2054	2020-09-18 14:06:53.73201+02
+854	payments_flutterwave	0003_auto_20170206_1235	2020-09-18 14:06:53.867876+02
+855	payments_flutterwave	0004_auto_20170207_1532	2020-09-18 14:06:53.936692+02
+856	payments_flutterwave	0005_auto_20170210_1058	2020-09-18 14:06:54.003472+02
+857	payments_flutterwave	0006_auto_20170323_1227	2020-09-18 14:06:54.172108+02
+858	payments_flutterwave	0007_flutterwavempesapayment	2020-09-18 14:06:54.281633+02
+859	payments_flutterwave	0008_flutterwavempesapayment_transaction_amount	2020-09-18 14:06:54.31756+02
+860	payments_interswitch	0001_initial	2020-09-18 14:06:54.802402+02
+861	payments_interswitch	0002_auto_20161006_1144	2020-09-18 14:06:55.081733+02
+862	payments_interswitch	0003_interswitchpaymentstatusupdate	2020-09-18 14:06:55.193077+02
+863	payments_lipisha	0001_initial	2020-09-18 14:06:55.3031+02
+864	payments_lipisha	0002_lipishaproject_organisationnumber	2020-09-18 14:06:55.402446+02
+865	payments_logger	0001_initial	2020-09-18 14:06:55.515163+02
+866	payments_mock	0001_initial	2020-09-18 14:06:55.634042+02
+867	payments_pledge	0001_initial	2020-09-18 14:06:55.751429+02
+868	payments_stripe	0001_initial	2020-09-18 14:06:55.874304+02
+869	payments_stripe	0002_stripepayment_currency	2020-09-18 14:06:55.919742+02
+870	payments_stripe	0003_auto_20190130_1231	2020-09-18 14:06:56.0108+02
+871	payments_telesom	0001_initial	2020-09-18 14:06:56.134863+02
+872	payments_vitepay	0001_initial	2020-09-18 14:06:56.665909+02
+873	payments_voucher	0001_initial	2020-09-18 14:06:56.898845+02
+874	payouts	0023_auto_20190705_0906	2020-09-18 14:06:57.064073+02
+875	projects	0092_auto_20191031_0901	2020-09-18 14:06:57.088083+02
+876	projects	0093_auto_20191106_1206	2020-09-18 14:06:57.122488+02
+877	projects	0093_auto_20191106_0928	2020-09-18 14:06:57.147413+02
+878	projects	0094_merge_20191107_0943	2020-09-18 14:06:57.148551+02
+879	quotes	0001_initial	2020-09-18 14:06:57.251697+02
+880	quotes	0002_auto_20161115_1601	2020-09-18 14:06:57.322624+02
+881	quotes	0002_auto_20161109_1024	2020-09-18 14:06:57.390135+02
+882	quotes	0003_merge_20170118_1533	2020-09-18 14:06:57.39159+02
+883	quotes	0003_merge_20170106_1627	2020-09-18 14:06:57.392598+02
+884	quotes	0004_merge_20170124_1338	2020-09-18 14:06:57.393491+02
+885	redirects	0001_initial	2020-09-18 14:06:57.41648+02
+886	scim	0001_initial	2020-09-18 14:06:57.44269+02
+887	scim	0002_auto_20190118_1625	2020-09-18 14:06:57.463231+02
+888	segments	0004_auto_20200708_1404	2020-09-18 14:06:57.51746+02
+889	sessions	0001_initial	2020-09-18 14:06:57.547452+02
+890	sites	0001_initial	2020-09-18 14:06:57.574573+02
+891	sites	0002_alter_domain_unique	2020-09-18 14:06:57.607591+02
+892	slides	0001_initial	2020-09-18 14:06:57.709538+02
+893	slides	0002_auto_20161115_1601	2020-09-18 14:06:57.779744+02
+894	slides	0002_auto_20161109_1024	2020-09-18 14:06:57.850932+02
+895	slides	0003_merge_20170118_1533	2020-09-18 14:06:57.852236+02
+896	slides	0003_merge_20170106_1627	2020-09-18 14:06:57.853305+02
+897	slides	0004_merge_20170124_1338	2020-09-18 14:06:57.854509+02
+898	slides	0005_auto_20170803_1730	2020-09-18 14:06:57.876432+02
+899	slides	0006_auto_20180717_1017	2020-09-18 14:06:57.939277+02
+900	slides	0007_auto_20200903_1117	2020-09-18 14:06:58.607024+02
+901	default	0003_alter_email_max_length	2020-09-18 14:06:58.640582+02
+902	social_auth	0003_alter_email_max_length	2020-09-18 14:06:58.641926+02
+903	default	0004_auto_20160423_0400	2020-09-18 14:06:58.710855+02
+904	social_auth	0004_auto_20160423_0400	2020-09-18 14:06:58.712544+02
+905	social_auth	0005_auto_20160727_2333	2020-09-18 14:06:58.745816+02
+906	social_django	0006_partial	2020-09-18 14:06:58.770553+02
+907	social_django	0007_code_timestamp	2020-09-18 14:06:58.802696+02
+908	social_django	0008_partial_timestamp	2020-09-18 14:06:58.832305+02
+909	statistics	0010_auto_20200717_1337	2020-09-18 14:06:58.867901+02
+910	statistics	0011_auto_20200722_0810	2020-09-18 14:06:58.995032+02
+911	statistics	0012_auto_20200812_1024	2020-09-18 14:06:59.020289+02
+912	suggestions	0001_initial	2020-09-18 14:06:59.122478+02
+913	suggestions	0002_suggestion_language	2020-09-18 14:06:59.177489+02
+914	suggestions	0003_auto_20160720_1140	2020-09-18 14:06:59.235267+02
+915	suggestions	0003_auto_20160718_1811	2020-09-18 14:06:59.298043+02
+916	suggestions	0004_merge	2020-09-18 14:06:59.29995+02
+917	surveys	0030_auto_20161109_1024	2020-09-18 14:06:59.451757+02
+918	surveys	0032_merge_20170118_1533	2020-09-18 14:06:59.453863+02
+919	surveys	0032_merge_20170106_1627	2020-09-18 14:06:59.455288+02
+920	surveys	0033_merge_20170124_1338	2020-09-18 14:06:59.456544+02
+921	surveys	0034_survey_active	2020-09-18 14:06:59.489653+02
+922	tasks	0042_migrate_tasks_to_activities	2020-09-18 14:06:59.573015+02
+923	terms	0001_initial	2020-09-18 14:07:00.157372+02
+924	terms	0002_auto_20180907_1132	2020-09-18 14:07:00.29061+02
+925	terms	0003_auto_20180907_1132	2020-09-18 14:07:00.314821+02
+926	text	0002_textitem_text_final	2020-09-18 14:07:00.351817+02
+927	thumbnail	0001_initial	2020-09-18 14:07:00.380949+02
+928	token_auth	0001_initial	2020-09-18 14:07:00.482327+02
+929	utils	0003_auto_20200626_1047	2020-09-18 14:07:00.597447+02
+930	utils	0004_auto_20200626_1053	2020-09-18 14:07:00.630524+02
+931	utils	0005_auto_20200626_1145	2020-09-18 14:07:00.908132+02
+932	votes	0001_initial	2020-09-18 14:07:01.074984+02
+933	votes	0002_auto_20161004_1342	2020-09-18 14:07:01.148376+02
+934	wallposts	0020_auto_20191017_2208	2020-09-18 14:07:01.416237+02
+935	social_django	0003_alter_email_max_length	2020-09-18 14:07:01.421176+02
+936	social_django	0004_auto_20160423_0400	2020-09-18 14:07:01.422254+02
+937	social_django	0002_add_related_name	2020-09-18 14:07:01.423279+02
+938	social_django	0005_auto_20160727_2333	2020-09-18 14:07:01.42428+02
+939	cms	0054_auto_20171031_1428_squashed_0068_migrate_start_project	2020-09-18 14:07:01.425092+02
+940	social_django	0001_initial	2020-09-18 14:07:01.425872+02
 \.
 
 
@@ -19236,7 +21036,7 @@ COPY public.djmoney_rates_rate (id, currency, value, source_id) FROM stdin;
 --
 
 COPY public.djmoney_rates_ratesource (id, name, last_update, base_currency) FROM stdin;
-1	openexchange.org	2019-12-30 13:05:05.994072+01	USD
+1	openexchange.org	2020-09-18 14:13:31.700915+02	USD
 \.
 
 
@@ -19244,7 +21044,15 @@ COPY public.djmoney_rates_ratesource (id, name, last_update, base_currency) FROM
 -- Data for Name: activities_activity; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.activities_activity (id, created, updated, status, title, slug, description, initiative_id, owner_id, polymorphic_ctype_id, highlight, review_status, transition_date) FROM stdin;
+COPY test.activities_activity (id, created, updated, status, title, slug, description, initiative_id, owner_id, polymorphic_ctype_id, highlight, review_status, transition_date, image_id, video_url) FROM stdin;
+\.
+
+
+--
+-- Data for Name: activities_activity_segments; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.activities_activity_segments (id, activity_id, segment_id) FROM stdin;
 \.
 
 
@@ -19252,7 +21060,15 @@ COPY test.activities_activity (id, created, updated, status, title, slug, descri
 -- Data for Name: activities_contribution; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.activities_contribution (id, status, created, updated, activity_id, polymorphic_ctype_id, user_id, transition_date) FROM stdin;
+COPY test.activities_contribution (id, status, created, updated, activity_id, polymorphic_ctype_id, user_id, transition_date, contribution_date) FROM stdin;
+\.
+
+
+--
+-- Data for Name: activities_organizer; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.activities_organizer (contribution_ptr_id) FROM stdin;
 \.
 
 
@@ -19269,7 +21085,7 @@ COPY test.analytics_analyticsadapter (id, type, code, analytics_settings_id) FRO
 --
 
 COPY test.analytics_analyticsplatformsettings (id, update, fiscal_month_offset) FROM stdin;
-1	2019-12-30 13:02:11.089042+01	0
+1	2020-09-18 14:11:04.562192+02	0
 \.
 
 
@@ -19285,7 +21101,7 @@ COPY test.assignments_applicant (contribution_ptr_id, motivation, time_spent, do
 -- Data for Name: assignments_assignment; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.assignments_assignment (activity_ptr_id, registration_deadline, end_date, capacity, expertise_id, duration, location_id, is_online, end_date_type) FROM stdin;
+COPY test.assignments_assignment (activity_ptr_id, registration_deadline, end_date, capacity, expertise_id, duration, location_id, is_online, end_date_type, preparation, start_time, date) FROM stdin;
 \.
 
 
@@ -19294,9 +21110,9 @@ COPY test.assignments_assignment (activity_ptr_id, registration_deadline, end_da
 --
 
 COPY test.auth_group (id, name) FROM stdin;
-1	Staff
 4	Financial
 3	Authenticated
+1	Staff
 2	Anonymous
 \.
 
@@ -19326,331 +21142,355 @@ COPY test.auth_group_permissions (id, group_id, permission_id) FROM stdin;
 18	1	2
 19	1	1
 20	1	3
-21	3	155
-24	3	168
-28	2	155
-29	1	152
-30	1	153
-31	1	154
-32	1	165
-33	1	166
-34	1	167
-35	1	149
-36	1	150
-37	1	151
-38	1	159
-39	1	160
-40	1	161
-41	3	179
-42	3	180
-43	3	184
-44	3	185
-45	3	186
-46	3	188
-47	3	182
-48	2	182
-49	1	187
-50	3	181
-51	3	169
-52	3	183
-53	3	199
-54	3	200
-57	3	204
-59	3	207
-60	3	208
-63	2	199
-64	1	134
-66	1	136
-67	1	137
-68	1	138
-69	1	139
-70	1	131
-71	1	132
-72	1	133
-73	3	213
-74	3	212
-75	3	211
-76	3	216
-77	3	215
-78	3	217
-79	3	220
-80	3	219
-81	3	221
-82	3	222
-83	1	203
-84	1	223
-85	3	227
-86	3	232
-87	3	233
-88	3	234
-89	2	227
-90	3	218
-91	3	255
-92	3	260
-93	3	261
-94	3	262
-95	3	244
-96	3	245
-97	3	250
-98	2	255
-99	1	252
-100	1	253
-101	1	254
-102	1	241
-103	1	242
-104	1	243
-105	1	278
-106	1	279
-107	1	280
-108	1	125
-109	1	126
-110	1	127
-111	1	313
-112	4	193
-113	3	327
-114	3	326
-115	3	328
-116	3	329
-117	1	322
-118	1	336
-119	1	337
-120	1	338
-121	1	330
-122	1	331
-123	1	332
-124	1	333
-125	1	334
-126	1	335
-127	3	364
-128	3	365
-131	3	360
-132	3	361
-134	3	368
-135	3	369
-137	2	364
-138	1	342
-139	1	343
-140	1	344
-141	1	348
-142	1	349
-143	1	350
-144	1	357
-145	1	358
-146	1	359
-147	1	354
-148	1	355
-149	1	356
-150	1	351
-151	1	352
-152	1	353
-153	1	345
-154	1	346
-155	1	347
-156	3	372
-158	3	373
-160	2	372
-161	2	374
-162	2	373
-163	2	375
-164	3	376
-165	3	377
-168	2	376
-169	2	377
-170	2	378
-171	2	379
-172	3	390
-173	3	391
-174	3	392
-175	3	387
-176	3	388
-177	3	389
-178	3	393
-179	3	394
-180	3	395
-181	3	380
-182	3	382
-183	3	383
-184	3	384
-185	3	385
-186	3	386
-187	3	78
-188	3	83
-189	3	84
-190	3	85
-191	2	78
-192	1	75
-193	1	76
-194	1	77
-195	3	437
-199	2	437
-200	1	287
-201	1	288
-202	1	289
-203	3	442
-204	3	443
-205	3	444
-206	3	115
-207	3	111
-208	3	116
-209	3	114
-210	3	110
-211	2	110
-212	1	107
-213	1	108
-214	1	109
-215	1	505
-216	1	506
-217	1	507
-218	1	517
-219	1	518
-220	1	519
-221	1	548
-222	1	549
-223	1	550
-224	1	536
-225	1	537
-226	1	538
-227	1	566
-228	1	567
-229	1	568
-230	1	542
-231	1	543
-232	1	544
-233	1	557
-234	1	558
-235	1	559
-236	1	560
-237	1	561
-238	1	562
-239	1	533
-240	1	534
-241	1	535
-242	1	551
-243	1	552
-244	1	553
-245	1	545
-246	1	546
-247	1	547
-248	1	539
-249	1	540
-250	1	541
-251	1	530
-252	1	531
-253	1	532
-254	1	563
-255	1	564
-256	1	565
-257	1	554
-258	1	555
-259	1	556
-260	3	594
-261	2	594
-262	3	607
-263	2	607
+21	3	159
+22	3	160
+25	3	164
+27	3	167
+28	3	168
+31	2	159
+32	1	155
+34	1	157
+35	1	171
+36	1	172
+37	1	173
+38	1	152
+39	1	153
+40	1	154
+41	3	206
+42	3	205
+43	3	204
+44	3	209
+45	3	208
+46	3	210
+47	3	213
+48	3	212
+49	3	214
+50	3	215
+51	1	163
+52	1	216
+53	3	220
+54	3	225
+55	3	226
+56	3	227
+57	2	220
+58	3	211
+59	1	140
+60	1	141
+61	1	142
+62	1	248
+63	4	144
+64	3	262
+65	3	261
+66	3	263
+67	3	264
+68	1	257
+69	1	271
+70	1	272
+71	1	273
+72	1	265
+73	1	266
+74	1	267
+75	1	268
+76	1	269
+77	1	270
+78	3	78
+79	3	83
+80	3	84
+81	3	85
+82	2	78
+83	1	75
+84	1	76
+85	1	77
+86	1	278
+87	1	277
+88	1	279
+89	1	73
+90	1	309
+91	1	308
+92	1	281
+93	1	303
+94	1	315
+95	1	275
+96	1	274
+97	1	276
+98	3	320
+99	3	325
+100	3	326
+101	3	327
+102	2	320
+103	1	317
+104	1	318
+105	1	319
+106	3	331
+107	3	332
+108	3	337
+109	1	328
+110	1	329
+111	1	330
+112	3	339
+115	3	343
+119	2	339
+120	1	186
+121	1	187
+122	1	188
+123	1	192
+124	1	193
+125	1	194
+126	1	183
+127	1	184
+128	1	185
+129	1	195
+130	1	196
+131	1	197
+132	3	348
+133	3	349
+134	3	353
+135	3	354
+136	3	355
+137	3	357
+138	3	351
+139	2	351
+140	1	356
+141	3	350
+142	3	344
+143	3	352
+144	3	372
+145	3	377
+146	3	378
+147	3	379
+148	3	361
+149	3	362
+150	3	367
+151	2	372
+152	1	369
+153	1	370
+154	1	371
+155	1	358
+156	1	359
+157	1	360
+158	1	120
+159	1	119
+160	1	121
+161	1	69
+162	1	70
+163	1	71
+164	1	66
+165	1	67
+166	1	68
+167	1	380
+168	1	381
+169	1	382
+170	1	401
+171	1	402
+172	1	403
+173	3	474
+174	3	475
+177	3	470
+178	3	471
+180	3	478
+181	3	479
+183	2	474
+184	1	455
+185	1	456
+186	1	457
+187	1	461
+188	1	462
+189	1	463
+190	1	467
+191	1	468
+192	1	469
+193	1	482
+194	1	483
+195	1	484
+196	1	464
+197	1	465
+198	1	466
+199	1	458
+200	1	459
+201	1	460
+202	3	485
+204	3	486
+206	2	485
+207	2	487
+208	2	486
+209	2	488
+210	3	489
+211	3	490
+214	2	489
+215	2	490
+216	2	491
+217	2	492
+218	3	503
+219	3	504
+220	3	505
+221	3	500
+222	3	501
+223	3	502
+224	3	506
+225	3	507
+226	3	508
+227	3	493
+228	3	495
+229	3	496
+230	3	497
+231	3	498
+232	3	499
+233	3	509
+237	2	509
+238	1	413
+239	1	414
+240	1	415
+241	3	518
+242	3	519
+243	3	520
+244	3	115
+245	3	111
+246	3	116
+247	3	114
+248	3	110
+249	2	110
+250	1	107
+251	1	108
+252	1	109
+253	1	578
+254	1	579
+255	1	580
+256	1	584
+257	1	585
+258	1	586
+259	1	615
+260	1	616
+261	1	617
+262	1	603
+263	1	604
 264	1	605
-265	3	523
-266	2	523
-267	3	572
-268	2	572
-269	1	63
-270	1	64
-271	1	65
-272	1	674
-273	1	675
-274	1	676
-275	1	677
-276	1	678
-277	1	679
-278	1	680
-279	1	681
-280	1	682
-281	1	514
-282	1	515
-283	1	516
-284	1	511
-285	1	512
-286	1	513
-287	1	671
-288	1	672
-289	1	673
-290	3	719
-291	3	724
-292	3	725
-293	3	726
-294	2	719
-295	1	716
-296	1	717
-297	1	718
-298	3	730
-299	3	731
-300	3	736
-301	1	727
-302	1	728
-303	1	729
-304	1	69
-305	1	70
-306	1	71
-307	1	66
-308	1	67
-309	1	68
-310	1	400
-311	1	399
-312	1	401
-313	1	73
-314	1	429
-315	1	428
-316	1	409
-317	1	446
-318	1	435
-319	1	406
-320	1	405
-321	1	407
-322	1	451
-323	1	452
-324	1	467
-325	1	468
-326	1	475
-327	1	476
-328	1	488
-329	1	493
-330	1	494
-331	1	281
-332	1	282
-333	1	283
-334	1	267
-335	1	266
-336	1	268
-337	3	747
-338	2	747
-339	3	762
-340	3	765
-341	3	767
-342	2	762
-343	1	98
-344	1	99
-345	1	100
-346	3	781
-347	3	782
-348	3	783
-349	3	784
-350	2	781
-351	2	782
-352	1	892
-353	1	893
-354	1	894
-355	2	911
-356	1	738
-357	1	739
-358	1	740
-359	1	293
-360	1	294
-361	1	295
-362	1	527
-363	1	528
-364	1	529
-365	1	520
-366	1	521
-367	1	522
+265	1	633
+266	1	634
+267	1	635
+268	1	609
+269	1	610
+270	1	611
+271	1	624
+272	1	625
+273	1	626
+274	1	627
+275	1	628
+276	1	629
+277	1	600
+278	1	601
+279	1	602
+280	1	618
+281	1	619
+282	1	620
+283	1	612
+284	1	613
+285	1	614
+286	1	606
+287	1	607
+288	1	608
+289	1	597
+290	1	598
+291	1	599
+292	1	630
+293	1	631
+294	1	632
+295	1	621
+296	1	622
+297	1	623
+298	3	661
+299	2	661
+300	3	674
+301	2	674
+302	1	672
+303	3	590
+304	2	590
+305	3	639
+306	2	639
+307	1	735
+308	1	736
+309	1	737
+310	1	63
+311	1	64
+312	1	65
+313	1	744
+314	1	745
+315	1	746
+316	1	747
+317	1	748
+318	1	749
+319	1	750
+320	1	751
+321	1	752
+322	1	431
+323	1	432
+324	1	433
+325	1	428
+326	1	429
+327	1	430
+328	1	741
+329	1	742
+330	1	743
+331	1	524
+332	1	525
+333	1	540
+334	1	541
+335	1	548
+336	1	549
+337	1	561
+338	1	566
+339	1	567
+340	1	407
+341	1	408
+342	1	409
+343	1	132
+344	1	131
+345	1	133
+346	3	798
+347	2	798
+348	1	437
+349	1	438
+350	1	439
+351	1	434
+352	1	435
+353	1	436
+354	3	813
+355	3	816
+356	3	818
+357	2	813
+358	1	98
+359	1	99
+360	1	100
+361	3	832
+362	3	833
+363	3	834
+364	3	835
+365	2	832
+366	2	833
+367	1	234
+368	1	235
+369	1	236
+370	1	594
+371	1	595
+372	1	596
+373	1	587
+374	1	588
+375	1	589
+376	1	958
+377	1	959
+378	1	960
+379	1	440
+380	1	441
+381	1	442
+382	1	446
+383	1	447
+384	1	448
+385	1	452
+386	1	453
+387	1	454
+388	1	449
+389	1	450
+390	1	451
+391	2	974
 \.
 
 
@@ -19750,6 +21590,7 @@ COPY test.auth_permission (id, name, content_type_id, codename) FROM stdin;
 89	Can add country	27	add_country
 90	Can change country	27	change_country
 91	Can delete country	27	delete_country
+724	Can change link	199	change_link
 92	Can add location	28	add_location
 93	Can change location	28	change_location
 94	Can delete location	28	delete_location
@@ -19777,820 +21618,873 @@ COPY test.auth_permission (id, name, content_type_id, codename) FROM stdin;
 116	Can change own initiative through the API	34	api_change_own_initiative
 117	Can change own initiative through the API	34	api_change_own_running_initiative
 118	Can delete own initiative through the API	34	api_delete_own_initiative
-119	Can add log entry	35	add_logentry
-120	Can change log entry	35	change_logentry
-121	Can delete log entry	35	delete_logentry
-122	Can add organization member	36	add_organizationmember
-123	Can change organization member	36	change_organizationmember
-124	Can delete organization member	36	delete_organizationmember
-125	Can add organization	37	add_organization
-126	Can change organization	37	change_organization
-127	Can delete organization	37	delete_organization
-128	Can add project phase log	38	add_projectphaselog
-129	Can change project phase log	38	change_projectphaselog
-130	Can delete project phase log	38	delete_projectphaselog
-131	Can add budget line	39	add_projectbudgetline
-132	Can change budget line	39	change_projectbudgetline
-133	Can delete budget line	39	delete_projectbudgetline
-134	Can add campaign	40	add_project
-135	Can change campaign	40	change_project
-136	Can delete campaign	40	delete_project
-137	Can add project document	41	add_projectdocument
-138	Can change project document	41	change_projectdocument
-139	Can delete project document	41	delete_projectdocument
-140	Can add Tagged Item	42	add_taggeditem
-141	Can change Tagged Item	42	change_taggeditem
-142	Can delete Tagged Item	42	delete_taggeditem
-143	Can add Tag	43	add_tag
-144	Can change Tag	43	change_tag
-145	Can delete Tag	43	delete_tag
-146	Can add task status log	44	add_taskstatuslog
-147	Can change task status log	44	change_taskstatuslog
-148	Can delete task status log	44	delete_taskstatuslog
-149	Can add task file	45	add_taskfile
-150	Can change task file	45	change_taskfile
-151	Can delete task file	45	delete_taskfile
-152	Can add task	46	add_task
-153	Can change task	46	change_task
-154	Can delete task	46	delete_task
-155	Can view tasks through the API	46	api_read_task
-156	Can add tasks through the API	46	api_add_task
-157	Can change tasks through the API	46	api_change_task
-158	Can delete tasks through the API	46	api_delete_task
-159	Can add skill	47	add_skill
-160	Can change skill	47	change_skill
-161	Can delete skill	47	delete_skill
-162	Can add task member status log	48	add_taskmemberstatuslog
-163	Can change task member status log	48	change_taskmemberstatuslog
-164	Can delete task member status log	48	delete_taskmemberstatuslog
-165	Can add task member	49	add_taskmember
-166	Can change task member	49	change_taskmember
-167	Can delete task member	49	delete_taskmember
-168	Can view taskmembers through the API	49	api_read_taskmember
-169	Can add taskmembers through the API	49	api_add_taskmember
-170	Can change taskmembers through the API	49	api_change_taskmember
-171	Can delete taskmembers through the API	49	api_delete_taskmember
-172	Can add meta data model	50	add_metadatamodel
-173	Can change meta data model	50	change_metadatamodel
-174	Can delete meta data model	50	delete_metadatamodel
-175	Can add language	51	add_language
-176	Can change language	51	change_language
-177	Can delete language	51	delete_language
-178	Can view own tasks through the API	46	api_read_own_task
-179	Can add own tasks through the API	46	api_add_own_task
-180	Can change own tasks through the API	46	api_change_own_task
-181	Can delete own tasks through the API	46	api_delete_own_task
-182	Can view skills through the API	47	api_read_skill
-183	Can view own taskmembers through the API	49	api_read_own_taskmember
-184	Can add own taskmembers through the API	49	api_add_own_taskmember
-185	Can change own taskmembers through the API	49	api_change_own_taskmember
-186	Can delete own taskmembers through the API	49	api_delete_own_taskmember
-187	Can read taskmembers resumes through the API	49	api_read_taskmember_resume
-188	Can read own taskmembers resumes through the API	49	api_read_own_taskmember_resume
-189	Can add token	52	add_token
-190	Can change token	52	change_token
-191	Can delete token	52	delete_token
-192	Can add project payout	53	add_projectpayout
-193	Can change project payout	53	change_projectpayout
-194	Can delete project payout	53	delete_projectpayout
-195	Can add organization payout	54	add_organizationpayout
-196	Can change organization payout	54	change_organizationpayout
-197	Can delete organization payout	54	delete_organizationpayout
-198	Can approve payouts for projects	40	approve_payout
-199	Can view projects through the API	40	api_read_project
-200	Can add projects through the API	40	api_add_project
-201	Can change projects through the API	40	api_change_project
-202	Can delete projects through the API	40	api_delete_project
-203	Can view project documents through the API	40	api_read_projectdocument
-204	Can add project documents through the API	40	api_add_projectdocument
-205	Can change project documents through the API	40	api_change_projectdocument
-206	Can delete project documents through the API	40	api_delete_projectdocument
-207	Can view project budget lines through the API	40	api_read_projectbudgetline
-208	Can add project budget lines through the API	40	api_add_projectbudgetline
-209	Can change project budget lines through the API	40	api_change_projectbudgetline
-210	Can delete project budget lines through the API	40	api_delete_projectbudgetline
-211	Can view own projects through the API	40	api_read_own_project
-212	Can add own projects through the API	40	api_add_own_project
-213	Can change own projects through the API	40	api_change_own_project
-214	Can delete own projects through the API	40	api_delete_own_project
-215	Can view project own documents through the API	40	api_read_own_projectdocument
-216	Can add own project documents through the API	40	api_add_own_projectdocument
-217	Can change own project documents through the API	40	api_change_own_projectdocument
-218	Can delete own project documents through the API	40	api_delete_own_projectdocument
-219	Can view own project budget lines through the API	40	api_read_own_projectbudgetline
-220	Can add own project budget lines through the API	40	api_add_own_projectbudgetline
-221	Can change own project budget lines through the API	40	api_change_own_projectbudgetline
-222	Can delete own project budget lines through the API	40	api_delete_own_projectbudgetline
-223	Can export platform data	55	export
-224	Can add project image	56	add_projectimage
-225	Can change project image	56	change_projectimage
-226	Can delete project image	56	delete_projectimage
-227	Can view project images through the API	56	api_read_projectimage
-228	Can add project images through the API	56	api_add_projectimage
-229	Can change project images through the API	56	api_change_projectimage
-230	Can delete project images through the API	56	api_delete_projectimage
-231	Can view own project images through the API	56	api_read_own_projectimage
-232	Can add own project images through the API	56	api_add_own_projectimage
-233	Can change own project images through the API	56	api_change_own_projectimage
-234	Can delete own project images through the API	56	api_delete_own_projectimage
-235	Can add analytics adapter	57	add_analyticsadapter
-236	Can change analytics adapter	57	change_analyticsadapter
-237	Can delete analytics adapter	57	delete_analyticsadapter
-238	Can add analytics platform settings	58	add_analyticsplatformsettings
-239	Can change analytics platform settings	58	change_analyticsplatformsettings
-240	Can delete analytics platform settings	58	delete_analyticsplatformsettings
-241	Can add Applicant	59	add_applicant
-242	Can change Applicant	59	change_applicant
-243	Can delete Applicant	59	delete_applicant
-244	Can view applicant through the API	59	api_read_applicant
-245	Can add applicant through the API	59	api_add_applicant
-246	Can change applicant through the API	59	api_change_applicant
-247	Can delete applicant through the API	59	api_delete_applicant
-248	Can view own applicant through the API	59	api_read_own_applicant
-249	Can add own applicant through the API	59	api_add_own_applicant
-250	Can change own applicant through the API	59	api_change_own_applicant
-251	Can delete own applicant through the API	59	api_delete_own_applicant
-252	Can add Assignment	60	add_assignment
-253	Can change Assignment	60	change_assignment
-254	Can delete Assignment	60	delete_assignment
-255	Can view assignment through the API	60	api_read_assignment
-256	Can add assignment through the API	60	api_add_assignment
-257	Can change assignment through the API	60	api_change_assignment
-258	Can delete assignment through the API	60	api_delete_assignment
-259	Can view own assignment through the API	60	api_read_own_assignment
-260	Can add own assignment through the API	60	api_add_own_assignment
-261	Can change own assignment through the API	60	api_change_own_assignment
-262	Can delete own assignment through the API	60	api_delete_own_assignment
-263	Can add initiative place	62	add_initiativeplace
-264	Can change initiative place	62	change_initiativeplace
-265	Can delete initiative place	62	delete_initiativeplace
-266	Can add geolocation	63	add_geolocation
-267	Can change geolocation	63	change_geolocation
-268	Can delete geolocation	63	delete_geolocation
-269	Can add location group	64	add_locationgroup
-270	Can change location group	64	change_locationgroup
-271	Can delete location group	64	delete_locationgroup
-272	Can add place	67	add_place
-273	Can change place	67	change_place
-274	Can delete place	67	delete_place
-275	Can add user address	69	add_useraddress
-276	Can change user address	69	change_useraddress
-277	Can delete user address	69	delete_useraddress
-278	Can add donation	70	add_donation
-279	Can change donation	70	change_donation
-280	Can delete donation	70	delete_donation
-281	Can add fundraiser	71	add_fundraiser
-282	Can change fundraiser	71	change_fundraiser
-283	Can delete fundraiser	71	delete_fundraiser
-284	Can add order	72	add_order
-285	Can change order	72	change_order
-286	Can delete order	72	delete_order
-287	Can add Gift	73	add_reward
-288	Can change Gift	73	change_reward
-289	Can delete Gift	73	delete_reward
-290	Can add follow	74	add_follow
-291	Can change follow	74	change_follow
-292	Can delete follow	74	delete_follow
-293	Can add organization contact	75	add_organizationcontact
-294	Can change organization contact	75	change_organizationcontact
-295	Can delete organization contact	75	delete_organizationcontact
-296	Can add custom project field	76	add_customprojectfield
-297	Can change custom project field	76	change_customprojectfield
-298	Can delete custom project field	76	delete_customprojectfield
-299	Can add project platform settings	77	add_projectplatformsettings
-300	Can change project platform settings	77	change_projectplatformsettings
-301	Can delete project platform settings	77	delete_projectplatformsettings
-302	Can add custom project field settings	78	add_customprojectfieldsettings
-303	Can change custom project field settings	78	change_customprojectfieldsettings
-304	Can delete custom project field settings	78	delete_customprojectfieldsettings
-305	Can change own running projects through the API	40	api_change_own_running_project
-306	Can add project search filter	79	add_projectsearchfilter
-307	Can change project search filter	79	change_projectsearchfilter
-308	Can delete project search filter	79	delete_projectsearchfilter
-309	Can add project add on	80	add_projectaddon
-310	Can change project add on	80	change_projectaddon
-311	Can delete project add on	80	delete_projectaddon
-312	Can add project location	81	add_projectlocation
-313	Can change project location	81	change_projectlocation
-314	Can delete project location	81	delete_projectlocation
-315	Can export supporters for projects	40	export_supporters
-316	Can add project create template	82	add_projectcreatetemplate
-317	Can change project create template	82	change_projectcreatetemplate
-318	Can delete project create template	82	delete_projectcreatetemplate
-319	Can add payout account	84	add_payoutaccount
-320	Can change payout account	84	change_payoutaccount
-321	Can delete payout account	84	delete_payoutaccount
-322	Can view payout documents through the API	84	api_read_payoutdocument
-323	Can add payout documents through the API	84	api_add_payoutdocument
-324	Can change payout documents through the API	84	api_change_payoutdocument
-325	Can delete payout documents through the API	84	api_delete_payoutdocument
-326	Can view payout own documents through the API	84	api_read_own_payoutdocument
-327	Can add own payout documents through the API	84	api_add_own_payoutdocument
-328	Can change own payout documents through the API	84	api_change_own_payoutdocument
-329	Can delete own payout documents through the API	84	api_delete_own_payoutdocument
-330	Can add plain payout account	83	add_plainpayoutaccount
-331	Can change plain payout account	83	change_plainpayoutaccount
-332	Can delete plain payout account	83	delete_plainpayoutaccount
-333	Can add payout document	85	add_payoutdocument
-334	Can change payout document	85	change_payoutdocument
-335	Can delete payout document	85	delete_payoutdocument
-336	Can add stripe payout account	86	add_stripepayoutaccount
-337	Can change stripe payout account	86	change_stripepayoutaccount
-338	Can delete stripe payout account	86	delete_stripepayoutaccount
-339	Can add user dashboard module	87	add_userdashboardmodule
-340	Can change user dashboard module	87	change_userdashboardmodule
-341	Can delete user dashboard module	87	delete_userdashboardmodule
-342	Can add Reaction	88	add_reaction
-343	Can change Reaction	88	change_reaction
-344	Can delete Reaction	88	delete_reaction
-345	Can add media wallpost photo	89	add_mediawallpostphoto
-346	Can change media wallpost photo	89	change_mediawallpostphoto
-347	Can delete media wallpost photo	89	delete_mediawallpostphoto
-348	Can add wallpost	90	add_wallpost
-349	Can change wallpost	90	change_wallpost
-350	Can delete wallpost	90	delete_wallpost
-351	Can add system wallpost	91	add_systemwallpost
-352	Can change system wallpost	91	change_systemwallpost
-353	Can delete system wallpost	91	delete_systemwallpost
-354	Can add text wallpost	92	add_textwallpost
-355	Can change text wallpost	92	change_textwallpost
-356	Can delete text wallpost	92	delete_textwallpost
-357	Can add media wallpost	93	add_mediawallpost
-358	Can change media wallpost	93	change_mediawallpost
-359	Can delete media wallpost	93	delete_mediawallpost
-360	Can view text wallposts through the API	93	api_read_textwallpost
-361	Can add text wallposts through the API	93	api_add_textwallpost
-362	Can change text wallposts through the API	93	api_change_textwallpost
-363	Can delete text wallposts through the API	93	api_delete_textwallpost
-364	Can view media wallposts through the API	93	api_read_mediawallpost
-365	Can add media wallposts through the API	93	api_add_mediawallpost
-366	Can change media wallposts through the API	93	api_change_mediawallpost
-367	Can delete media wallposts through the API	93	api_delete_mediawallpost
-368	Can view media wallpost photos through the API	93	api_read_mediawallpostphoto
-369	Can add media wallpost photos through the API	93	api_add_mediawallpostphoto
-370	Can change media wallpost photos through the API	93	api_change_mediawallpostphoto
-371	Can delete media wallpost photos through the API	93	api_delete_mediawallpostphoto
-372	Can view wallposts through the API	90	api_read_wallpost
-373	Can add wallposts through the API	90	api_add_wallpost
-374	Can wallposts documents through the API	90	api_change_wallpost
-375	Can wallposts documents through the API	90	api_delete_wallpost
-376	Can view reactions through the API	88	api_read_reaction
-377	Can add reactions through the API	88	api_add_reaction
-378	Can reactions documents through the API	88	api_change_reaction
-379	Can reactions documents through the API	88	api_delete_reaction
-380	Can view own reactions through the API	88	api_read_own_reaction
-381	Can add own reactions through the API	88	api_add_own_reaction
-382	Can change own reactions documents through the API	88	api_change_own_reaction
-383	Can delete own reactions documents through the API	88	api_delete_own_reaction
-384	Can view own wallposts through the API	90	api_read_own_wallpost
-385	Can own wallposts documents through the API	90	api_change_own_wallpost
-386	Can own wallposts documents through the API	90	api_delete_own_wallpost
-387	Can view own text wallposts through the API	93	api_read_own_textwallpost
-388	Can change text wallposts through the API	93	api_change_own_textwallpost
-389	Can delete own text wallposts through the API	93	api_delete_own_textwallpost
-390	Can view own media wallposts through the API	93	api_read_own_mediawallpost
-391	Can change own media wallposts through the API	93	api_change_own_mediawallpost
-392	Can delete own media wallposts through the API	93	api_delete_own_mediawallpost
-393	Can view own media wallpost photos through the API	93	api_read_own_mediawallpostphoto
-394	Can change own media wallpost photos through the API	93	api_change_own_mediawallpostphoto
-395	Can delete own media wallpost photos through the API	93	api_delete_own_mediawallpostphoto
-396	Can add fundraiser	94	add_fundraiser
-397	Can change fundraiser	94	change_fundraiser
-398	Can delete fundraiser	94	delete_fundraiser
-399	Can add budget line	95	add_budgetline
-400	Can change budget line	95	change_budgetline
-401	Can delete budget line	95	delete_budgetline
-402	Can add payment provider	96	add_paymentprovider
-403	Can change payment provider	96	change_paymentprovider
-404	Can delete payment provider	96	delete_paymentprovider
-405	Can add Gift	97	add_reward
-406	Can change Gift	97	change_reward
-407	Can delete Gift	97	delete_reward
-408	Can add payout account	98	add_payoutaccount
-409	Can change payout account	98	change_payoutaccount
-410	Can delete payout account	98	delete_payoutaccount
-411	Can add payment	99	add_payment
-412	Can change payment	99	change_payment
-413	Can delete payment	99	delete_payment
-414	Can refund payments	99	refund_payment
-415	Can add bank payment provider	100	add_bankpaymentprovider
-416	Can change bank payment provider	100	change_bankpaymentprovider
-417	Can delete bank payment provider	100	delete_bankpaymentprovider
-418	Can add bank payout account	101	add_bankpayoutaccount
-419	Can change bank payout account	101	change_bankpayoutaccount
-420	Can delete bank payout account	101	delete_bankpayoutaccount
-421	Can add legacy payment	102	add_legacypayment
-422	Can change legacy payment	102	change_legacypayment
-423	Can delete legacy payment	102	delete_legacypayment
-424	Can add own wallposts through the API	90	api_add_own_wallpost
-425	Can add own text wallposts through the API	93	api_add_own_textwallpost
-426	Can add own media wallposts through the API	93	api_add_own_mediawallpost
-427	Can add own media wallpost photos through the API	93	api_add_own_mediawallpostphoto
-428	Can add bank account	103	add_bankaccount
-429	Can change bank account	103	change_bankaccount
-430	Can delete bank account	103	delete_bankaccount
-431	Can add Payment currency	104	add_paymentcurrency
-432	Can change Payment currency	104	change_paymentcurrency
-433	Can delete Payment currency	104	delete_paymentcurrency
-434	Can add plain payout account	105	add_plainpayoutaccount
-435	Can change plain payout account	105	change_plainpayoutaccount
-436	Can delete plain payout account	105	delete_plainpayoutaccount
-437	Can view reward through the API	73	api_read_reward
-438	Can add reward through the API	73	api_add_reward
-439	Can change reward through the API	73	api_change_reward
-440	Can delete reward through the API	73	api_delete_reward
-441	Can view own reward through the API	73	api_read_own_reward
-442	Can add own reward through the API	73	api_add_own_reward
-443	Can change own reward through the API	73	api_change_own_reward
-444	Can delete own reward through the API	73	api_delete_own_reward
-445	Can add payout	116	add_payout
-446	Can change payout	116	change_payout
-447	Can delete payout	116	delete_payout
-448	Can add Flutterwave payment provider	107	add_flutterwavepaymentprovider
-449	Can change Flutterwave payment provider	107	change_flutterwavepaymentprovider
-450	Can delete Flutterwave payment provider	107	delete_flutterwavepaymentprovider
-451	Can add Flutterwave bank account	112	add_flutterwavebankaccount
-452	Can change Flutterwave bank account	112	change_flutterwavebankaccount
-453	Can delete Flutterwave bank account	112	delete_flutterwavebankaccount
-454	Can add flutterwave payment	117	add_flutterwavepayment
-455	Can change flutterwave payment	117	change_flutterwavepayment
-456	Can delete flutterwave payment	117	delete_flutterwavepayment
-457	Can add Lipisha payment provider	108	add_lipishapaymentprovider
-458	Can change Lipisha payment provider	108	change_lipishapaymentprovider
-459	Can delete Lipisha payment provider	108	delete_lipishapaymentprovider
-460	Can add lipisha bank account	113	add_lipishabankaccount
-461	Can change lipisha bank account	113	change_lipishabankaccount
-462	Can delete lipisha bank account	113	delete_lipishabankaccount
-463	Can add lipisha payment	118	add_lipishapayment
-464	Can change lipisha payment	118	change_lipishapayment
-465	Can delete lipisha payment	118	delete_lipishapayment
-466	Can add Pledge bank account	115	add_pledgebankaccount
-467	Can change Pledge bank account	115	change_pledgebankaccount
-468	Can delete Pledge bank account	115	delete_pledgebankaccount
-469	Can add Pledge payment provider	119	add_pledgepaymentprovider
-470	Can change Pledge payment provider	119	change_pledgepaymentprovider
-471	Can delete Pledge payment provider	119	delete_pledgepaymentprovider
-472	Can add pledge payment	120	add_pledgepayment
-473	Can change pledge payment	120	change_pledgepayment
-474	Can delete pledge payment	120	delete_pledgepayment
-475	Can add Stripe external account	110	add_externalaccount
-476	Can change Stripe external account	110	change_externalaccount
-477	Can delete Stripe external account	110	delete_externalaccount
-478	Can add payment intent	121	add_paymentintent
-479	Can change payment intent	121	change_paymentintent
-480	Can delete payment intent	121	delete_paymentintent
-481	Can add Stripe payment provider	109	add_stripepaymentprovider
-482	Can change Stripe payment provider	109	change_stripepaymentprovider
-483	Can delete Stripe payment provider	109	delete_stripepaymentprovider
-484	Can add stripe payment	122	add_stripepayment
-485	Can change stripe payment	122	change_stripepayment
-486	Can delete stripe payment	122	delete_stripepayment
-487	Can add stripe payout account	111	add_stripepayoutaccount
-488	Can change stripe payout account	111	change_stripepayoutaccount
-489	Can delete stripe payout account	111	delete_stripepayoutaccount
-490	Can add stripe source payment	123	add_stripesourcepayment
-491	Can change stripe source payment	123	change_stripesourcepayment
-492	Can delete stripe source payment	123	delete_stripesourcepayment
-493	Can add vitepay bank account	114	add_vitepaybankaccount
-494	Can change vitepay bank account	114	change_vitepaybankaccount
-495	Can delete vitepay bank account	114	delete_vitepaybankaccount
-496	Can add Vitepay payment provider	106	add_vitepaypaymentprovider
-497	Can change Vitepay payment provider	106	change_vitepaypaymentprovider
-498	Can delete Vitepay payment provider	106	delete_vitepaypaymentprovider
-499	Can add vitepay payment	124	add_vitepaypayment
-500	Can change vitepay payment	124	change_vitepaypayment
-501	Can delete vitepay payment	124	delete_vitepaypayment
-502	Can add initiative platform settings	125	add_initiativeplatformsettings
-503	Can change initiative platform settings	125	change_initiativeplatformsettings
-504	Can delete initiative platform settings	125	delete_initiativeplatformsettings
-505	Can add page	126	add_page
-506	Can change page	126	change_page
-507	Can delete page	126	delete_page
-508	Can add mail log	127	add_maillog
-509	Can change mail log	127	change_maillog
-510	Can delete mail log	127	delete_maillog
-511	Can add Contentitem link	128	add_contentitem
-512	Can change Contentitem link	128	change_contentitem
-513	Can delete Contentitem link	128	delete_contentitem
-514	Can add Placeholder	129	add_placeholder
-515	Can change Placeholder	129	change_placeholder
-516	Can delete Placeholder	129	delete_placeholder
-517	Can add news item	130	add_newsitem
-518	Can change news item	130	change_newsitem
-519	Can delete news item	130	delete_newsitem
-520	Can add Document	131	add_documentitem
-521	Can change Document	131	change_documentitem
-522	Can delete Document	131	delete_documentitem
-523	Can view pages through the API	126	api_read_page
-524	Can add pages through the API	126	api_add_page
-525	Can change pages through the API	126	api_change_page
-526	Can delete pages through the API	126	api_delete_page
-527	Can add Picture + Text	132	add_imagetextitem
-528	Can change Picture + Text	132	change_imagetextitem
-529	Can delete Picture + Text	132	delete_imagetextitem
-530	Can add Project Images	139	add_projectimagescontent
-531	Can change Project Images	139	change_projectimagescontent
-532	Can delete Project Images	139	delete_projectimagescontent
-533	Can add Quotes	141	add_quotescontent
-534	Can change Quotes	141	change_quotescontent
-535	Can delete Quotes	141	delete_quotescontent
-536	Can add stats	144	add_stats
-537	Can change stats	144	change_stats
-538	Can delete stats	144	delete_stats
-539	Can add Share Results	135	add_shareresultscontent
-540	Can change Share Results	135	change_shareresultscontent
-541	Can delete Share Results	135	delete_shareresultscontent
-542	Can add stat	145	add_stat
-543	Can change stat	145	change_stat
-544	Can delete stat	145	delete_stat
-545	Can add Projects	136	add_projectscontent
-546	Can change Projects	136	change_projectscontent
-547	Can delete Projects	136	delete_projectscontent
-548	Can add result page	133	add_resultpage
-549	Can change result page	133	change_resultpage
-550	Can delete result page	133	delete_resultpage
-551	Can add projects	146	add_projects
-552	Can change projects	146	change_projects
-553	Can delete projects	146	delete_projects
-554	Can add Supporter total	134	add_supportertotalcontent
-555	Can change Supporter total	134	change_supportertotalcontent
-556	Can delete Supporter total	134	delete_supportertotalcontent
-557	Can add quotes	147	add_quotes
-558	Can change quotes	147	change_quotes
-559	Can delete quotes	147	delete_quotes
-560	Can add quote	148	add_quote
-561	Can change quote	148	change_quote
-562	Can delete quote	148	delete_quote
-563	Can add Projects Map	137	add_projectsmapcontent
-564	Can change Projects Map	137	change_projectsmapcontent
-565	Can delete Projects Map	137	delete_projectsmapcontent
-566	Can add Platform Statistics	138	add_statscontent
-567	Can change Platform Statistics	138	change_statscontent
-568	Can delete Platform Statistics	138	delete_statscontent
-569	Can add Platform Results	149	add_surveycontent
-570	Can change Platform Results	149	change_surveycontent
-571	Can delete Platform Results	149	delete_surveycontent
-572	Can view news items through the API	130	api_read_newsitem
-573	Can add news items through the API	130	api_add_newsitem
-574	Can change news items through the API	130	api_change_newsitem
-575	Can delete news items through the API	130	api_delete_newsitem
-576	Can add aggregate answer	150	add_aggregateanswer
-577	Can change aggregate answer	150	change_aggregateanswer
-578	Can delete aggregate answer	150	delete_aggregateanswer
-579	Can add response	151	add_response
-580	Can change response	151	change_response
-581	Can delete response	151	delete_response
-582	Can add answer	152	add_answer
-583	Can change answer	152	change_answer
-584	Can delete answer	152	delete_answer
-585	Can add sub question	153	add_subquestion
-586	Can change sub question	153	change_subquestion
-587	Can delete sub question	153	delete_subquestion
-588	Can add question	154	add_question
-589	Can change question	154	change_question
-590	Can delete question	154	delete_question
-591	Can add survey	155	add_survey
-592	Can change survey	155	change_survey
-593	Can delete survey	155	delete_survey
-594	Can view result pages through the API	133	api_read_resultpage
-595	Can add result pages through the API	133	api_add_resultpage
-596	Can change result pages through the API	133	api_change_resultpage
-597	Can delete result pages through the API	133	api_delete_resultpage
-598	Can add Tasks	156	add_taskscontent
-599	Can change Tasks	156	change_taskscontent
-600	Can delete Tasks	156	delete_taskscontent
-601	Can add metric	157	add_metric
-602	Can change metric	157	change_metric
-603	Can delete metric	157	delete_metric
-604	Can add home page	159	add_homepage
-605	Can change home page	159	change_homepage
-606	Can delete home page	159	delete_homepage
-607	Can view homepages through the API	159	api_read_homepage
-608	Can add homepages through the API	159	api_add_homepage
-609	Can change homepages through the API	159	api_change_homepage
-610	Can delete homepages through the API	159	api_delete_homepage
-611	Can add Metrics	160	add_metricscontent
-612	Can change Metrics	160	change_metricscontent
-613	Can delete Metrics	160	delete_metricscontent
-614	Can add step	162	add_step
-615	Can change step	162	change_step
-616	Can delete step	162	delete_step
-617	Can add Links	163	add_linkscontent
-618	Can change Links	163	change_linkscontent
-619	Can delete Links	163	delete_linkscontent
-620	Can add link group	164	add_linkgroup
-621	Can change link group	164	change_linkgroup
-622	Can delete link group	164	delete_linkgroup
-623	Can add content link	165	add_contentlink
-624	Can change content link	165	change_contentlink
-625	Can delete content link	165	delete_contentlink
-626	Can add link permission	166	add_linkpermission
-627	Can change link permission	166	change_linkpermission
-628	Can delete link permission	166	delete_linkpermission
-629	Can add Logos	167	add_logoscontent
-630	Can change Logos	167	change_logoscontent
-631	Can delete Logos	167	delete_logoscontent
-632	Can add site links	168	add_sitelinks
-633	Can change site links	168	change_sitelinks
-634	Can delete site links	168	delete_sitelinks
-635	Can add Categories	169	add_categoriescontent
-636	Can change Categories	169	change_categoriescontent
-637	Can delete Categories	169	delete_categoriescontent
-638	Can add Slides	170	add_slidescontent
-639	Can change Slides	170	change_slidescontent
-640	Can delete Slides	170	delete_slidescontent
-641	Can add Welcome	171	add_welcomecontent
-642	Can change Welcome	171	change_welcomecontent
-643	Can delete Welcome	171	delete_welcomecontent
-644	Can add slide	172	add_slide
-645	Can change slide	172	change_slide
-646	Can delete slide	172	delete_slide
-647	Can add Steps	173	add_stepscontent
-648	Can change Steps	173	change_stepscontent
-649	Can delete Steps	173	delete_stepscontent
-650	Can add Locations	174	add_locationscontent
-651	Can change Locations	174	change_locationscontent
-652	Can delete Locations	174	delete_locationscontent
-653	Can add logo	175	add_logo
-654	Can change logo	175	change_logo
-655	Can delete logo	175	delete_logo
-656	Can add site platform settings	176	add_siteplatformsettings
-657	Can change site platform settings	176	change_siteplatformsettings
-658	Can delete site platform settings	176	delete_siteplatformsettings
-659	Can add greeting	177	add_greeting
-660	Can change greeting	177	change_greeting
-661	Can delete greeting	177	delete_greeting
-662	Can add link	178	add_link
-663	Can change link	178	change_link
-664	Can delete link	178	delete_link
-665	Can add Activities	179	add_activitiescontent
-666	Can change Activities	179	change_activitiescontent
-667	Can delete Activities	179	delete_activitiescontent
-668	Can add contact message	180	add_contactmessage
-669	Can change contact message	180	change_contactmessage
-670	Can delete contact message	180	delete_contactmessage
-671	Can add Picture	181	add_pictureitem
-672	Can change Picture	181	change_pictureitem
-673	Can delete Picture	181	delete_pictureitem
-674	Can add Online media	182	add_oembeditem
-675	Can change Online media	182	change_oembeditem
-676	Can delete Online media	182	delete_oembeditem
-677	Can add HTML code	183	add_rawhtmlitem
-678	Can change HTML code	183	change_rawhtmlitem
-679	Can delete HTML code	183	delete_rawhtmlitem
-680	Can add Text	184	add_textitem
-681	Can change Text	184	change_textitem
-682	Can delete Text	184	delete_textitem
-683	Can add attachment	185	add_attachment
-684	Can change attachment	185	change_attachment
-685	Can delete attachment	185	delete_attachment
-686	Can add saved group result	186	add_tasksetmeta
-687	Can change saved group result	186	change_tasksetmeta
-688	Can delete saved group result	186	delete_tasksetmeta
-689	Can add interval	187	add_intervalschedule
-690	Can change interval	187	change_intervalschedule
-691	Can delete interval	187	delete_intervalschedule
-692	Can add task	188	add_taskstate
-693	Can change task	188	change_taskstate
-694	Can delete task	188	delete_taskstate
-695	Can add task state	189	add_taskmeta
-696	Can change task state	189	change_taskmeta
-697	Can delete task state	189	delete_taskmeta
-698	Can add periodic tasks	190	add_periodictasks
-699	Can change periodic tasks	190	change_periodictasks
-700	Can delete periodic tasks	190	delete_periodictasks
-701	Can add crontab	191	add_crontabschedule
-702	Can change crontab	191	change_crontabschedule
-703	Can delete crontab	191	delete_crontabschedule
-704	Can add worker	192	add_workerstate
-705	Can change worker	192	change_workerstate
-706	Can delete worker	192	delete_workerstate
-707	Can add periodic task	193	add_periodictask
-708	Can change periodic task	193	change_periodictask
-709	Can delete periodic task	193	delete_periodictask
-710	Can add rate	194	add_rate
-711	Can change rate	194	change_rate
-712	Can delete rate	194	delete_rate
-713	Can add rate source	195	add_ratesource
-714	Can change rate source	195	change_ratesource
-715	Can delete rate source	195	delete_ratesource
-716	Can add Event	196	add_event
-717	Can change Event	196	change_event
-718	Can delete Event	196	delete_event
-719	Can view event through the API	196	api_read_event
-720	Can add event through the API	196	api_add_event
-721	Can change event through the API	196	api_change_event
-722	Can delete event through the API	196	api_delete_event
-723	Can view own event through the API	196	api_read_own_event
-724	Can add own event through the API	196	api_add_own_event
-725	Can change own event through the API	196	api_change_own_event
-726	Can delete own event through the API	196	api_delete_own_event
-727	Can add participant	197	add_participant
-728	Can change participant	197	change_participant
-729	Can delete participant	197	delete_participant
-730	Can view participant through the API	197	api_read_participant
-731	Can add participant through the API	197	api_add_participant
-732	Can change participant through the API	197	api_change_participant
-733	Can delete participant through the API	197	api_delete_participant
-734	Can view own participant through the API	197	api_read_own_participant
-735	Can add own participant through the API	197	api_add_own_participant
-736	Can change own participant through the API	197	api_change_own_participant
-737	Can delete own participant through the API	197	api_delete_own_participant
-738	Can add related image	198	add_relatedimage
-739	Can change related image	198	change_relatedimage
-740	Can delete related image	198	delete_relatedimage
-741	Can add follow	199	add_follow
-742	Can change follow	199	change_follow
-743	Can delete follow	199	delete_follow
-744	Can add funding settings	200	add_fundingplatformsettings
-745	Can change funding settings	200	change_fundingplatformsettings
-746	Can delete funding settings	200	delete_fundingplatformsettings
-747	Can read homepage through the API	201	api_read_homepage
-748	Can add pinned application	202	add_pinnedapplication
-749	Can change pinned application	202	change_pinnedapplication
-750	Can delete pinned application	202	delete_pinnedapplication
-751	Can add bookmark	203	add_bookmark
-752	Can change bookmark	203	change_bookmark
-753	Can delete bookmark	203	delete_bookmark
-754	Can add looker embed	204	add_lookerembed
-755	Can change looker embed	204	change_lookerembed
-756	Can delete looker embed	204	delete_lookerembed
-757	Can access looker embeds	204	access_looker_embeds
-758	Can add mail platform settings	205	add_mailplatformsettings
-759	Can change mail platform settings	205	change_mailplatformsettings
-760	Can delete mail platform settings	205	delete_mailplatformsettings
-761	Can view order through the API	72	api_read_order
-762	Can add order through the API	72	api_add_order
-763	Can change order through the API	72	api_change_order
-764	Can delete order through the API	72	api_delete_order
-765	Can view own order through the API	72	api_read_own_order
-766	Can add own order through the API	72	api_add_own_order
-767	Can change own order through the API	72	api_change_own_order
-768	Can delete own order through the API	72	api_delete_own_order
-769	Can add code	206	add_code
-770	Can change code	206	change_code
-771	Can delete code	206	delete_code
-772	Can add nonce	207	add_nonce
-773	Can change nonce	207	change_nonce
-774	Can delete nonce	207	delete_nonce
-775	Can add user social auth	208	add_usersocialauth
-776	Can change user social auth	208	change_usersocialauth
-777	Can delete user social auth	208	delete_usersocialauth
-778	Can add association	209	add_association
-779	Can change association	209	change_association
-780	Can delete association	209	delete_association
-781	Can view members through the API	30	api_read_member
-783	Can add members through the API	30	api_add_member
-784	Can change members through the API	30	api_change_member
-785	Can delete members through the API	30	api_delete_member
-782	Can view full members through the API	30	api_read_full_member
-786	Can add custom member field settings	210	add_custommemberfieldsettings
-787	Can change custom member field settings	210	change_custommemberfieldsettings
-788	Can delete custom member field settings	210	delete_custommemberfieldsettings
-789	Can add member platform settings	211	add_memberplatformsettings
-790	Can change member platform settings	211	change_memberplatformsettings
-791	Can delete member platform settings	211	delete_memberplatformsettings
-792	Can add custom member field	212	add_custommemberfield
-793	Can change custom member field	212	change_custommemberfield
-794	Can delete custom member field	212	delete_custommemberfield
-795	Can view own members through the API	30	api_read_own_member
-796	Can change own members through the API	30	api_change_own_member
-797	Can delete own members through the API	30	api_delete_own_member
-798	Can add message	213	add_message
-799	Can change message	213	change_message
-800	Can delete message	213	delete_message
-801	Can add notification/matching settings	214	add_notificationplatformsettings
-802	Can change notification/matching settings	214	change_notificationplatformsettings
-803	Can delete notification/matching settings	214	delete_notificationplatformsettings
-804	Can add order payment	215	add_orderpayment
-805	Can change order payment	215	change_orderpayment
-806	Can delete order payment	215	delete_orderpayment
-807	Can refund order payments	215	refund_orderpayment
-808	Can add payment	216	add_payment
-809	Can change payment	216	change_payment
-810	Can delete payment	216	delete_payment
-811	Can add order payment action	217	add_orderpaymentaction
-812	Can change order payment action	217	change_orderpaymentaction
-813	Can delete order payment action	217	delete_orderpaymentaction
-814	Can add transaction	218	add_transaction
-815	Can change transaction	218	change_transaction
-816	Can delete transaction	218	delete_transaction
-817	Can add Beyonic Payment	219	add_beyonicpayment
-818	Can change Beyonic Payment	219	change_beyonicpayment
-819	Can delete Beyonic Payment	219	delete_beyonicpayment
-820	Can add Docdata Payment	220	add_docdatapayment
-821	Can change Docdata Payment	220	change_docdatapayment
-822	Can delete Docdata Payment	220	delete_docdatapayment
-823	Can add docdata transaction	221	add_docdatatransaction
-824	Can change docdata transaction	221	change_docdatatransaction
-825	Can delete docdata transaction	221	delete_docdatatransaction
-826	Can add Docdata Direct Debit Payment	222	add_docdatadirectdebitpayment
-827	Can change Docdata Direct Debit Payment	222	change_docdatadirectdebitpayment
-828	Can delete Docdata Direct Debit Payment	222	delete_docdatadirectdebitpayment
-829	Can add external payment	223	add_externalpayment
-830	Can change external payment	223	change_externalpayment
-831	Can delete external payment	223	delete_externalpayment
-832	Can add Flutterwave Mpesa Payment	224	add_flutterwavempesapayment
-833	Can change Flutterwave Mpesa Payment	224	change_flutterwavempesapayment
-834	Can delete Flutterwave Mpesa Payment	224	delete_flutterwavempesapayment
-835	Can add Flutterwave Payment	225	add_flutterwavepayment
-836	Can change Flutterwave Payment	225	change_flutterwavepayment
-837	Can delete Flutterwave Payment	225	delete_flutterwavepayment
-838	Can add interswitch payment status update	226	add_interswitchpaymentstatusupdate
-839	Can change interswitch payment status update	226	change_interswitchpaymentstatusupdate
-840	Can delete interswitch payment status update	226	delete_interswitchpaymentstatusupdate
-841	Can add Interswitch Payment	227	add_interswitchpayment
-842	Can change Interswitch Payment	227	change_interswitchpayment
-843	Can delete Interswitch Payment	227	delete_interswitchpayment
-844	Can add Lipisha Payment	228	add_lipishapayment
-845	Can change Lipisha Payment	228	change_lipishapayment
-846	Can delete Lipisha Payment	228	delete_lipishapayment
-847	Can add lipisha project	229	add_lipishaproject
-848	Can change lipisha project	229	change_lipishaproject
-849	Can delete lipisha project	229	delete_lipishaproject
-850	Can add Payment Log	230	add_paymentlogentry
-851	Can change Payment Log	230	change_paymentlogentry
-852	Can delete Payment Log	230	delete_paymentlogentry
-853	Can add Mock Payment	231	add_mockpayment
-854	Can change Mock Payment	231	change_mockpayment
-855	Can delete Mock Payment	231	delete_mockpayment
-856	Can add pledge standard payment	232	add_pledgestandardpayment
-857	Can change pledge standard payment	232	change_pledgestandardpayment
-858	Can delete pledge standard payment	232	delete_pledgestandardpayment
-859	Can add stripe payment	233	add_stripepayment
-860	Can change stripe payment	233	change_stripepayment
-861	Can delete stripe payment	233	delete_stripepayment
-862	Can add Telesom/Zaad Payment	234	add_telesompayment
-863	Can change Telesom/Zaad Payment	234	change_telesompayment
-864	Can delete Telesom/Zaad Payment	234	delete_telesompayment
-865	Can add Vitepay Payment	235	add_vitepaypayment
-866	Can change Vitepay Payment	235	change_vitepaypayment
-867	Can delete Vitepay Payment	235	delete_vitepaypayment
-868	Can add Voucher Payment	236	add_voucherpayment
-869	Can change Voucher Payment	236	change_voucherpayment
-870	Can delete Voucher Payment	236	delete_voucherpayment
-871	Can add voucher	237	add_voucher
-872	Can change voucher	237	change_voucher
-873	Can delete voucher	237	delete_voucher
-874	Can add flutterwave payout account	238	add_flutterwavepayoutaccount
-875	Can change flutterwave payout account	238	change_flutterwavepayoutaccount
-876	Can delete flutterwave payout account	238	delete_flutterwavepayoutaccount
-877	Can add quote	239	add_quote
-878	Can change quote	239	change_quote
-879	Can delete quote	239	delete_quote
-880	Can add redirect	240	add_redirect
-881	Can change redirect	240	change_redirect
-882	Can delete redirect	240	delete_redirect
-883	Can add scim platform settings	241	add_scimplatformsettings
-884	Can change scim platform settings	241	change_scimplatformsettings
-885	Can delete scim platform settings	241	delete_scimplatformsettings
-886	Can add session	242	add_session
-887	Can change session	242	change_session
-888	Can delete session	242	delete_session
-889	Can add site	55	add_site
-890	Can change site	55	change_site
-891	Can delete site	55	delete_site
-892	Can add slide	243	add_slide
-893	Can change slide	243	change_slide
-894	Can delete slide	243	delete_slide
-895	Can add partial	244	add_partial
-896	Can change partial	244	change_partial
-897	Can delete partial	244	delete_partial
-898	Can add statistic	245	add_statistic
-899	Can change statistic	245	change_statistic
-900	Can delete statistic	245	delete_statistic
-901	Can add suggestion	246	add_suggestion
-902	Can change suggestion	246	change_suggestion
-903	Can delete suggestion	246	delete_suggestion
-904	Can add Term agreements	247	add_termsagreement
-905	Can change Term agreements	247	change_termsagreement
-906	Can delete Term agreements	247	delete_termsagreement
-907	Can view terms agreements through API	247	api_read_termsagreement
-908	Can add Term	248	add_terms
-909	Can change Term	248	change_terms
-910	Can delete Term	248	delete_terms
-911	Can view terms through API	248	api_read_terms
-912	Can add checked token	249	add_checkedtoken
-913	Can change checked token	249	change_checkedtoken
-914	Can delete checked token	249	delete_checkedtoken
-915	Can add kv store	250	add_kvstore
-916	Can change kv store	250	change_kvstore
-917	Can delete kv store	250	delete_kvstore
-918	Can add vote	251	add_vote
-919	Can change vote	251	change_vote
-920	Can delete vote	251	delete_vote
-921	Can add user activity	252	add_useractivity
-922	Can change user activity	252	change_useractivity
-923	Can delete user activity	252	delete_useractivity
-924	Can add Call to action	253	add_actionitem
-925	Can change Call to action	253	change_actionitem
-926	Can delete Call to action	253	delete_actionitem
-927	Can add Text in columns	254	add_columnsitem
-928	Can change Text in columns	254	change_columnsitem
-929	Can delete Text in columns	254	delete_columnsitem
-930	Can add message template	255	add_messagetemplate
-931	Can change message template	255	change_messagetemplate
-932	Can delete message template	255	delete_messagetemplate
+119	Can add organizer	35	add_organizer
+120	Can change organizer	35	change_organizer
+121	Can delete organizer	35	delete_organizer
+122	Can add token	36	add_token
+123	Can change token	36	change_token
+124	Can delete token	36	delete_token
+125	Can add initiative place	37	add_initiativeplace
+126	Can change initiative place	37	change_initiativeplace
+127	Can delete initiative place	37	delete_initiativeplace
+128	Can add place	39	add_place
+129	Can change place	39	change_place
+130	Can delete place	39	delete_place
+131	Can add geolocation	40	add_geolocation
+132	Can change geolocation	40	change_geolocation
+133	Can delete geolocation	40	delete_geolocation
+134	Can add location group	41	add_locationgroup
+135	Can change location group	41	change_locationgroup
+136	Can delete location group	41	delete_locationgroup
+137	Can add organization member	44	add_organizationmember
+138	Can change organization member	44	change_organizationmember
+139	Can delete organization member	44	delete_organizationmember
+140	Can add organization	45	add_organization
+141	Can change organization	45	change_organization
+142	Can delete organization	45	delete_organization
+143	Can add project payout	46	add_projectpayout
+144	Can change project payout	46	change_projectpayout
+145	Can delete project payout	46	delete_projectpayout
+146	Can add organization payout	47	add_organizationpayout
+147	Can change organization payout	47	change_organizationpayout
+148	Can delete organization payout	47	delete_organizationpayout
+149	Can add project phase log	48	add_projectphaselog
+150	Can change project phase log	48	change_projectphaselog
+151	Can delete project phase log	48	delete_projectphaselog
+152	Can add budget line	49	add_projectbudgetline
+153	Can change budget line	49	change_projectbudgetline
+154	Can delete budget line	49	delete_projectbudgetline
+155	Can add project	50	add_project
+156	Can change project	50	change_project
+157	Can delete project	50	delete_project
+158	Can approve payouts for projects	50	approve_payout
+159	Can view projects through the API	50	api_read_project
+160	Can add projects through the API	50	api_add_project
+161	Can change projects through the API	50	api_change_project
+162	Can delete projects through the API	50	api_delete_project
+163	Can view project documents through the API	50	api_read_projectdocument
+164	Can add project documents through the API	50	api_add_projectdocument
+165	Can change project documents through the API	50	api_change_projectdocument
+166	Can delete project documents through the API	50	api_delete_projectdocument
+167	Can view project budget lines through the API	50	api_read_projectbudgetline
+168	Can add project budget lines through the API	50	api_add_projectbudgetline
+169	Can change project budget lines through the API	50	api_change_projectbudgetline
+170	Can delete project budget lines through the API	50	api_delete_projectbudgetline
+171	Can add project document	51	add_projectdocument
+172	Can change project document	51	change_projectdocument
+173	Can delete project document	51	delete_projectdocument
+174	Can add Tagged Item	52	add_taggeditem
+175	Can change Tagged Item	52	change_taggeditem
+176	Can delete Tagged Item	52	delete_taggeditem
+177	Can add Tag	53	add_tag
+178	Can change Tag	53	change_tag
+179	Can delete Tag	53	delete_tag
+180	Can add task status log	54	add_taskstatuslog
+181	Can change task status log	54	change_taskstatuslog
+182	Can delete task status log	54	delete_taskstatuslog
+183	Can add task file	55	add_taskfile
+184	Can change task file	55	change_taskfile
+185	Can delete task file	55	delete_taskfile
+186	Can add task	56	add_task
+187	Can change task	56	change_task
+188	Can delete task	56	delete_task
+189	Can add task member status log	57	add_taskmemberstatuslog
+190	Can change task member status log	57	change_taskmemberstatuslog
+191	Can delete task member status log	57	delete_taskmemberstatuslog
+192	Can add task member	58	add_taskmember
+193	Can change task member	58	change_taskmember
+194	Can delete task member	58	delete_taskmember
+195	Can add skill	59	add_skill
+196	Can change skill	59	change_skill
+197	Can delete skill	59	delete_skill
+198	Can add meta data model	60	add_metadatamodel
+199	Can change meta data model	60	change_metadatamodel
+200	Can delete meta data model	60	delete_metadatamodel
+201	Can add language	61	add_language
+202	Can change language	61	change_language
+203	Can delete language	61	delete_language
+204	Can view own projects through the API	50	api_read_own_project
+205	Can add own projects through the API	50	api_add_own_project
+206	Can change own projects through the API	50	api_change_own_project
+207	Can delete own projects through the API	50	api_delete_own_project
+208	Can view project own documents through the API	50	api_read_own_projectdocument
+209	Can add own project documents through the API	50	api_add_own_projectdocument
+210	Can change own project documents through the API	50	api_change_own_projectdocument
+211	Can delete own project documents through the API	50	api_delete_own_projectdocument
+212	Can view own project budget lines through the API	50	api_read_own_projectbudgetline
+213	Can add own project budget lines through the API	50	api_add_own_projectbudgetline
+214	Can change own project budget lines through the API	50	api_change_own_projectbudgetline
+215	Can delete own project budget lines through the API	50	api_delete_own_projectbudgetline
+216	Can export platform data	62	export
+217	Can add project image	63	add_projectimage
+218	Can change project image	63	change_projectimage
+219	Can delete project image	63	delete_projectimage
+220	Can view project images through the API	63	api_read_projectimage
+221	Can add project images through the API	63	api_add_projectimage
+222	Can change project images through the API	63	api_change_projectimage
+223	Can delete project images through the API	63	api_delete_projectimage
+224	Can view own project images through the API	63	api_read_own_projectimage
+225	Can add own project images through the API	63	api_add_own_projectimage
+226	Can change own project images through the API	63	api_change_own_projectimage
+227	Can delete own project images through the API	63	api_delete_own_projectimage
+228	Can add Project Settings	64	add_projectplatformsettings
+229	Can change Project Settings	64	change_projectplatformsettings
+230	Can delete Project Settings	64	delete_projectplatformsettings
+231	Can add project search filter	65	add_projectsearchfilter
+232	Can change project search filter	65	change_projectsearchfilter
+233	Can delete project search filter	65	delete_projectsearchfilter
+234	Can add organization contact	66	add_organizationcontact
+235	Can change organization contact	66	change_organizationcontact
+236	Can delete organization contact	66	delete_organizationcontact
+237	Can add custom project field	67	add_customprojectfield
+238	Can change custom project field	67	change_customprojectfield
+239	Can delete custom project field	67	delete_customprojectfield
+240	Can add custom project field settings	68	add_customprojectfieldsettings
+241	Can change custom project field settings	68	change_customprojectfieldsettings
+242	Can delete custom project field settings	68	delete_customprojectfieldsettings
+243	Can change own running projects through the API	50	api_change_own_running_project
+244	Can add project add on	69	add_projectaddon
+245	Can change project add on	69	change_projectaddon
+246	Can delete project add on	69	delete_projectaddon
+247	Can add project location	70	add_projectlocation
+248	Can change project location	70	change_projectlocation
+249	Can delete project location	70	delete_projectlocation
+250	Can export supporters for projects	50	export_supporters
+251	Can add project create template	71	add_projectcreatetemplate
+252	Can change project create template	71	change_projectcreatetemplate
+253	Can delete project create template	71	delete_projectcreatetemplate
+254	Can add payout account	73	add_payoutaccount
+255	Can change payout account	73	change_payoutaccount
+256	Can delete payout account	73	delete_payoutaccount
+257	Can view payout documents through the API	73	api_read_payoutdocument
+258	Can add payout documents through the API	73	api_add_payoutdocument
+259	Can change payout documents through the API	73	api_change_payoutdocument
+260	Can delete payout documents through the API	73	api_delete_payoutdocument
+261	Can view payout own documents through the API	73	api_read_own_payoutdocument
+262	Can add own payout documents through the API	73	api_add_own_payoutdocument
+263	Can change own payout documents through the API	73	api_change_own_payoutdocument
+264	Can delete own payout documents through the API	73	api_delete_own_payoutdocument
+265	Can add plain payout account	72	add_plainpayoutaccount
+266	Can change plain payout account	72	change_plainpayoutaccount
+267	Can delete plain payout account	72	delete_plainpayoutaccount
+268	Can add payout document	74	add_payoutdocument
+269	Can change payout document	74	change_payoutdocument
+270	Can delete payout document	74	delete_payoutdocument
+271	Can add stripe payout account	75	add_stripepayoutaccount
+272	Can change stripe payout account	75	change_stripepayoutaccount
+273	Can delete stripe payout account	75	delete_stripepayoutaccount
+274	Can add Gift	76	add_reward
+275	Can change Gift	76	change_reward
+276	Can delete Gift	76	delete_reward
+277	Can add budget line	77	add_budgetline
+278	Can change budget line	77	change_budgetline
+279	Can delete budget line	77	delete_budgetline
+280	Can add payout account	78	add_payoutaccount
+281	Can change payout account	78	change_payoutaccount
+282	Can delete payout account	78	delete_payoutaccount
+283	Can add payment	79	add_payment
+284	Can change payment	79	change_payment
+285	Can delete payment	79	delete_payment
+286	Can refund payments	79	refund_payment
+287	Can add fundraiser	80	add_fundraiser
+288	Can change fundraiser	80	change_fundraiser
+289	Can delete fundraiser	80	delete_fundraiser
+290	Can add legacy payment	81	add_legacypayment
+291	Can change legacy payment	81	change_legacypayment
+292	Can delete legacy payment	81	delete_legacypayment
+293	Can add payment provider	82	add_paymentprovider
+294	Can change payment provider	82	change_paymentprovider
+295	Can delete payment provider	82	delete_paymentprovider
+296	Can add bank payout account	83	add_bankpayoutaccount
+297	Can change bank payout account	83	change_bankpayoutaccount
+298	Can delete bank payout account	83	delete_bankpayoutaccount
+299	Can add bank payment provider	84	add_bankpaymentprovider
+300	Can change bank payment provider	84	change_bankpaymentprovider
+301	Can delete bank payment provider	84	delete_bankpaymentprovider
+302	Can add payout	85	add_payout
+303	Can change payout	85	change_payout
+304	Can delete payout	85	delete_payout
+305	Can add funding settings	86	add_fundingplatformsettings
+306	Can change funding settings	86	change_fundingplatformsettings
+307	Can delete funding settings	86	delete_fundingplatformsettings
+308	Can add bank account	87	add_bankaccount
+309	Can change bank account	87	change_bankaccount
+310	Can delete bank account	87	delete_bankaccount
+311	Can add Payment currency	88	add_paymentcurrency
+312	Can change Payment currency	88	change_paymentcurrency
+313	Can delete Payment currency	88	delete_paymentcurrency
+314	Can add plain payout account	89	add_plainpayoutaccount
+315	Can change plain payout account	89	change_plainpayoutaccount
+316	Can delete plain payout account	89	delete_plainpayoutaccount
+317	Can add Event	90	add_event
+318	Can change Event	90	change_event
+319	Can delete Event	90	delete_event
+320	Can view event through the API	90	api_read_event
+321	Can add event through the API	90	api_add_event
+322	Can change event through the API	90	api_change_event
+323	Can delete event through the API	90	api_delete_event
+324	Can view own event through the API	90	api_read_own_event
+325	Can add own event through the API	90	api_add_own_event
+326	Can change own event through the API	90	api_change_own_event
+327	Can delete own event through the API	90	api_delete_own_event
+328	Can add participant	91	add_participant
+329	Can change participant	91	change_participant
+330	Can delete participant	91	delete_participant
+331	Can view participant through the API	91	api_read_participant
+332	Can add participant through the API	91	api_add_participant
+333	Can change participant through the API	91	api_change_participant
+334	Can delete participant through the API	91	api_delete_participant
+335	Can view own participant through the API	91	api_read_own_participant
+336	Can add own participant through the API	91	api_add_own_participant
+337	Can change own participant through the API	91	api_change_own_participant
+338	Can delete own participant through the API	91	api_delete_own_participant
+339	Can view tasks through the API	56	api_read_task
+340	Can add tasks through the API	56	api_add_task
+341	Can change tasks through the API	56	api_change_task
+342	Can delete tasks through the API	56	api_delete_task
+343	Can view taskmembers through the API	58	api_read_taskmember
+344	Can add taskmembers through the API	58	api_add_taskmember
+345	Can change taskmembers through the API	58	api_change_taskmember
+346	Can delete taskmembers through the API	58	api_delete_taskmember
+347	Can view own tasks through the API	56	api_read_own_task
+348	Can add own tasks through the API	56	api_add_own_task
+349	Can change own tasks through the API	56	api_change_own_task
+350	Can delete own tasks through the API	56	api_delete_own_task
+351	Can view skills through the API	59	api_read_skill
+352	Can view own taskmembers through the API	58	api_read_own_taskmember
+353	Can add own taskmembers through the API	58	api_add_own_taskmember
+354	Can change own taskmembers through the API	58	api_change_own_taskmember
+355	Can delete own taskmembers through the API	58	api_delete_own_taskmember
+356	Can read taskmembers resumes through the API	58	api_read_taskmember_resume
+357	Can read own taskmembers resumes through the API	58	api_read_own_taskmember_resume
+358	Can add Applicant	92	add_applicant
+359	Can change Applicant	92	change_applicant
+360	Can delete Applicant	92	delete_applicant
+361	Can view applicant through the API	92	api_read_applicant
+362	Can add applicant through the API	92	api_add_applicant
+363	Can change applicant through the API	92	api_change_applicant
+364	Can delete applicant through the API	92	api_delete_applicant
+365	Can view own applicant through the API	92	api_read_own_applicant
+366	Can add own applicant through the API	92	api_add_own_applicant
+367	Can change own applicant through the API	92	api_change_own_applicant
+368	Can delete own applicant through the API	92	api_delete_own_applicant
+369	Can add Assignment	93	add_assignment
+370	Can change Assignment	93	change_assignment
+371	Can delete Assignment	93	delete_assignment
+372	Can view assignment through the API	93	api_read_assignment
+373	Can add assignment through the API	93	api_add_assignment
+374	Can change assignment through the API	93	api_change_assignment
+375	Can delete assignment through the API	93	api_delete_assignment
+376	Can view own assignment through the API	93	api_read_own_assignment
+377	Can add own assignment through the API	93	api_add_own_assignment
+378	Can change own assignment through the API	93	api_change_own_assignment
+379	Can delete own assignment through the API	93	api_delete_own_assignment
+380	Can add related image	95	add_relatedimage
+381	Can change related image	95	change_relatedimage
+382	Can delete related image	95	delete_relatedimage
+383	Can add log entry	96	add_logentry
+384	Can change log entry	96	change_logentry
+385	Can delete log entry	96	delete_logentry
+386	Can add analytics platform settings	97	add_analyticsplatformsettings
+387	Can change analytics platform settings	97	change_analyticsplatformsettings
+388	Can delete analytics platform settings	97	delete_analyticsplatformsettings
+389	Can add analytics adapter	98	add_analyticsadapter
+390	Can change analytics adapter	98	change_analyticsadapter
+391	Can delete analytics adapter	98	delete_analyticsadapter
+392	Can add access attempt	99	add_accessattempt
+393	Can change access attempt	99	change_accessattempt
+394	Can delete access attempt	99	delete_accessattempt
+395	Can add access log	100	add_accesslog
+396	Can change access log	100	change_accesslog
+397	Can delete access log	100	delete_accesslog
+398	Can add user address	101	add_useraddress
+399	Can change user address	101	change_useraddress
+400	Can delete user address	101	delete_useraddress
+401	Can add donation	102	add_donation
+402	Can change donation	102	change_donation
+403	Can delete donation	102	delete_donation
+404	Can add private document	103	add_privatedocument
+405	Can change private document	103	change_privatedocument
+406	Can delete private document	103	delete_privatedocument
+407	Can add fundraiser	104	add_fundraiser
+408	Can change fundraiser	104	change_fundraiser
+409	Can delete fundraiser	104	delete_fundraiser
+410	Can add order	105	add_order
+411	Can change order	105	change_order
+412	Can delete order	105	delete_order
+413	Can add Gift	106	add_reward
+414	Can change Gift	106	change_reward
+415	Can delete Gift	106	delete_reward
+416	Can add segment type	107	add_segmenttype
+417	Can change segment type	107	change_segmenttype
+418	Can delete segment type	107	delete_segmenttype
+419	Can add segment	108	add_segment
+420	Can change segment	108	change_segment
+421	Can delete segment	108	delete_segment
+422	Can add follow	109	add_follow
+423	Can change follow	109	change_follow
+424	Can delete follow	109	delete_follow
+425	Can add user dashboard module	112	add_userdashboardmodule
+426	Can change user dashboard module	112	change_userdashboardmodule
+427	Can delete user dashboard module	112	delete_userdashboardmodule
+428	Can add Contentitem link	113	add_contentitem
+429	Can change Contentitem link	113	change_contentitem
+430	Can delete Contentitem link	113	delete_contentitem
+431	Can add Placeholder	114	add_placeholder
+432	Can change Placeholder	114	change_placeholder
+433	Can delete Placeholder	114	delete_placeholder
+434	Can add impact goal	115	add_impactgoal
+435	Can change impact goal	115	change_impactgoal
+436	Can delete impact goal	115	delete_impactgoal
+437	Can add impact type	117	add_impacttype
+438	Can change impact type	117	change_impacttype
+439	Can delete impact type	117	delete_impacttype
+440	Can add base statistic	119	add_basestatistic
+441	Can change base statistic	119	change_basestatistic
+442	Can delete base statistic	119	delete_basestatistic
+443	Can add statistic	122	add_statistic
+444	Can change statistic	122	change_statistic
+445	Can delete statistic	122	delete_statistic
+446	Can add database statistic	123	add_databasestatistic
+447	Can change database statistic	123	change_databasestatistic
+448	Can delete database statistic	123	delete_databasestatistic
+449	Can add impact statistic	124	add_impactstatistic
+450	Can change impact statistic	124	change_impactstatistic
+451	Can delete impact statistic	124	delete_impactstatistic
+452	Can add manual statistic	125	add_manualstatistic
+453	Can change manual statistic	125	change_manualstatistic
+454	Can delete manual statistic	125	delete_manualstatistic
+455	Can add Reaction	126	add_reaction
+456	Can change Reaction	126	change_reaction
+457	Can delete Reaction	126	delete_reaction
+458	Can add media wallpost photo	127	add_mediawallpostphoto
+459	Can change media wallpost photo	127	change_mediawallpostphoto
+460	Can delete media wallpost photo	127	delete_mediawallpostphoto
+461	Can add wallpost	128	add_wallpost
+462	Can change wallpost	128	change_wallpost
+463	Can delete wallpost	128	delete_wallpost
+464	Can add system wallpost	129	add_systemwallpost
+465	Can change system wallpost	129	change_systemwallpost
+466	Can delete system wallpost	129	delete_systemwallpost
+467	Can add media wallpost	130	add_mediawallpost
+468	Can change media wallpost	130	change_mediawallpost
+469	Can delete media wallpost	130	delete_mediawallpost
+470	Can view text wallposts through the API	130	api_read_textwallpost
+471	Can add text wallposts through the API	130	api_add_textwallpost
+472	Can change text wallposts through the API	130	api_change_textwallpost
+473	Can delete text wallposts through the API	130	api_delete_textwallpost
+474	Can view media wallposts through the API	130	api_read_mediawallpost
+475	Can add media wallposts through the API	130	api_add_mediawallpost
+476	Can change media wallposts through the API	130	api_change_mediawallpost
+477	Can delete media wallposts through the API	130	api_delete_mediawallpost
+478	Can view media wallpost photos through the API	130	api_read_mediawallpostphoto
+479	Can add media wallpost photos through the API	130	api_add_mediawallpostphoto
+480	Can change media wallpost photos through the API	130	api_change_mediawallpostphoto
+481	Can delete media wallpost photos through the API	130	api_delete_mediawallpostphoto
+482	Can add text wallpost	131	add_textwallpost
+483	Can change text wallpost	131	change_textwallpost
+484	Can delete text wallpost	131	delete_textwallpost
+485	Can view wallposts through the API	128	api_read_wallpost
+486	Can add wallposts through the API	128	api_add_wallpost
+487	Can wallposts documents through the API	128	api_change_wallpost
+488	Can wallposts documents through the API	128	api_delete_wallpost
+489	Can view reactions through the API	126	api_read_reaction
+490	Can add reactions through the API	126	api_add_reaction
+491	Can reactions documents through the API	126	api_change_reaction
+492	Can reactions documents through the API	126	api_delete_reaction
+493	Can view own reactions through the API	126	api_read_own_reaction
+494	Can add own reactions through the API	126	api_add_own_reaction
+495	Can change own reactions documents through the API	126	api_change_own_reaction
+496	Can delete own reactions documents through the API	126	api_delete_own_reaction
+497	Can view own wallposts through the API	128	api_read_own_wallpost
+498	Can own wallposts documents through the API	128	api_change_own_wallpost
+499	Can own wallposts documents through the API	128	api_delete_own_wallpost
+500	Can view own text wallposts through the API	130	api_read_own_textwallpost
+501	Can change text wallposts through the API	130	api_change_own_textwallpost
+502	Can delete own text wallposts through the API	130	api_delete_own_textwallpost
+503	Can view own media wallposts through the API	130	api_read_own_mediawallpost
+504	Can change own media wallposts through the API	130	api_change_own_mediawallpost
+505	Can delete own media wallposts through the API	130	api_delete_own_mediawallpost
+506	Can view own media wallpost photos through the API	130	api_read_own_mediawallpostphoto
+507	Can change own media wallpost photos through the API	130	api_change_own_mediawallpostphoto
+508	Can delete own media wallpost photos through the API	130	api_delete_own_mediawallpostphoto
+509	Can view reward through the API	106	api_read_reward
+510	Can add reward through the API	106	api_add_reward
+511	Can change reward through the API	106	api_change_reward
+512	Can delete reward through the API	106	api_delete_reward
+513	Can add own wallposts through the API	128	api_add_own_wallpost
+514	Can add own text wallposts through the API	130	api_add_own_textwallpost
+515	Can add own media wallposts through the API	130	api_add_own_mediawallpost
+516	Can add own media wallpost photos through the API	130	api_add_own_mediawallpostphoto
+517	Can view own reward through the API	106	api_read_own_reward
+518	Can add own reward through the API	106	api_add_own_reward
+519	Can change own reward through the API	106	api_change_own_reward
+520	Can delete own reward through the API	106	api_delete_own_reward
+521	Can add Flutterwave payment provider	133	add_flutterwavepaymentprovider
+522	Can change Flutterwave payment provider	133	change_flutterwavepaymentprovider
+523	Can delete Flutterwave payment provider	133	delete_flutterwavepaymentprovider
+524	Can add Flutterwave bank account	138	add_flutterwavebankaccount
+525	Can change Flutterwave bank account	138	change_flutterwavebankaccount
+526	Can delete Flutterwave bank account	138	delete_flutterwavebankaccount
+527	Can add flutterwave payment	142	add_flutterwavepayment
+528	Can change flutterwave payment	142	change_flutterwavepayment
+529	Can delete flutterwave payment	142	delete_flutterwavepayment
+530	Can add Lipisha payment provider	134	add_lipishapaymentprovider
+531	Can change Lipisha payment provider	134	change_lipishapaymentprovider
+532	Can delete Lipisha payment provider	134	delete_lipishapaymentprovider
+533	Can add lipisha bank account	139	add_lipishabankaccount
+534	Can change lipisha bank account	139	change_lipishabankaccount
+535	Can delete lipisha bank account	139	delete_lipishabankaccount
+536	Can add lipisha payment	143	add_lipishapayment
+537	Can change lipisha payment	143	change_lipishapayment
+538	Can delete lipisha payment	143	delete_lipishapayment
+539	Can add Pledge bank account	141	add_pledgebankaccount
+540	Can change Pledge bank account	141	change_pledgebankaccount
+541	Can delete Pledge bank account	141	delete_pledgebankaccount
+542	Can add Pledge payment provider	144	add_pledgepaymentprovider
+543	Can change Pledge payment provider	144	change_pledgepaymentprovider
+544	Can delete Pledge payment provider	144	delete_pledgepaymentprovider
+545	Can add pledge payment	145	add_pledgepayment
+546	Can change pledge payment	145	change_pledgepayment
+547	Can delete pledge payment	145	delete_pledgepayment
+548	Can add Stripe external account	136	add_externalaccount
+549	Can change Stripe external account	136	change_externalaccount
+550	Can delete Stripe external account	136	delete_externalaccount
+551	Can add payment intent	146	add_paymentintent
+552	Can change payment intent	146	change_paymentintent
+553	Can delete payment intent	146	delete_paymentintent
+554	Can add Stripe payment provider	135	add_stripepaymentprovider
+555	Can change Stripe payment provider	135	change_stripepaymentprovider
+556	Can delete Stripe payment provider	135	delete_stripepaymentprovider
+557	Can add stripe payment	147	add_stripepayment
+558	Can change stripe payment	147	change_stripepayment
+559	Can delete stripe payment	147	delete_stripepayment
+560	Can add stripe payout account	137	add_stripepayoutaccount
+561	Can change stripe payout account	137	change_stripepayoutaccount
+562	Can delete stripe payout account	137	delete_stripepayoutaccount
+563	Can add stripe source payment	148	add_stripesourcepayment
+564	Can change stripe source payment	148	change_stripesourcepayment
+565	Can delete stripe source payment	148	delete_stripesourcepayment
+566	Can add vitepay bank account	140	add_vitepaybankaccount
+567	Can change vitepay bank account	140	change_vitepaybankaccount
+568	Can delete vitepay bank account	140	delete_vitepaybankaccount
+569	Can add Vitepay payment provider	132	add_vitepaypaymentprovider
+570	Can change Vitepay payment provider	132	change_vitepaypaymentprovider
+571	Can delete Vitepay payment provider	132	delete_vitepaypaymentprovider
+572	Can add vitepay payment	149	add_vitepaypayment
+573	Can change vitepay payment	149	change_vitepaypayment
+574	Can delete vitepay payment	149	delete_vitepaypayment
+575	Can add initiative platform settings	150	add_initiativeplatformsettings
+576	Can change initiative platform settings	150	change_initiativeplatformsettings
+577	Can delete initiative platform settings	150	delete_initiativeplatformsettings
+578	Can add page	151	add_page
+579	Can change page	151	change_page
+580	Can delete page	151	delete_page
+581	Can add mail log	152	add_maillog
+582	Can change mail log	152	change_maillog
+583	Can delete mail log	152	delete_maillog
+584	Can add news item	153	add_newsitem
+585	Can change news item	153	change_newsitem
+586	Can delete news item	153	delete_newsitem
+587	Can add Document	154	add_documentitem
+588	Can change Document	154	change_documentitem
+589	Can delete Document	154	delete_documentitem
+590	Can view pages through the API	151	api_read_page
+591	Can add pages through the API	151	api_add_page
+592	Can change pages through the API	151	api_change_page
+593	Can delete pages through the API	151	api_delete_page
+594	Can add Picture + Text	155	add_imagetextitem
+595	Can change Picture + Text	155	change_imagetextitem
+596	Can delete Picture + Text	155	delete_imagetextitem
+597	Can add Project Images	160	add_projectimagescontent
+598	Can change Project Images	160	change_projectimagescontent
+599	Can delete Project Images	160	delete_projectimagescontent
+600	Can add Quotes	164	add_quotescontent
+601	Can change Quotes	164	change_quotescontent
+602	Can delete Quotes	164	delete_quotescontent
+603	Can add stats	167	add_stats
+604	Can change stats	167	change_stats
+605	Can delete stats	167	delete_stats
+606	Can add Share Results	162	add_shareresultscontent
+607	Can change Share Results	162	change_shareresultscontent
+608	Can delete Share Results	162	delete_shareresultscontent
+609	Can add stat	168	add_stat
+610	Can change stat	168	change_stat
+611	Can delete stat	168	delete_stat
+612	Can add Projects	161	add_projectscontent
+613	Can change Projects	161	change_projectscontent
+614	Can delete Projects	161	delete_projectscontent
+615	Can add result page	156	add_resultpage
+616	Can change result page	156	change_resultpage
+617	Can delete result page	156	delete_resultpage
+618	Can add projects	169	add_projects
+619	Can change projects	169	change_projects
+620	Can delete projects	169	delete_projects
+621	Can add Supporter total	159	add_supportertotalcontent
+622	Can change Supporter total	159	change_supportertotalcontent
+623	Can delete Supporter total	159	delete_supportertotalcontent
+624	Can add quotes	170	add_quotes
+625	Can change quotes	170	change_quotes
+626	Can delete quotes	170	delete_quotes
+627	Can add quote	171	add_quote
+628	Can change quote	171	change_quote
+629	Can delete quote	171	delete_quote
+630	Can add Projects Map	157	add_projectsmapcontent
+631	Can change Projects Map	157	change_projectsmapcontent
+632	Can delete Projects Map	157	delete_projectsmapcontent
+633	Can add Platform Statistics	158	add_statscontent
+634	Can change Platform Statistics	158	change_statscontent
+635	Can delete Platform Statistics	158	delete_statscontent
+636	Can add Platform Results	172	add_surveycontent
+637	Can change Platform Results	172	change_surveycontent
+638	Can delete Platform Results	172	delete_surveycontent
+639	Can view news items through the API	153	api_read_newsitem
+640	Can add news items through the API	153	api_add_newsitem
+641	Can change news items through the API	153	api_change_newsitem
+642	Can delete news items through the API	153	api_delete_newsitem
+643	Can add aggregate answer	173	add_aggregateanswer
+644	Can change aggregate answer	173	change_aggregateanswer
+645	Can delete aggregate answer	173	delete_aggregateanswer
+646	Can add response	174	add_response
+647	Can change response	174	change_response
+648	Can delete response	174	delete_response
+649	Can add answer	175	add_answer
+650	Can change answer	175	change_answer
+651	Can delete answer	175	delete_answer
+652	Can add sub question	176	add_subquestion
+653	Can change sub question	176	change_subquestion
+654	Can delete sub question	176	delete_subquestion
+655	Can add question	177	add_question
+656	Can change question	177	change_question
+657	Can delete question	177	delete_question
+658	Can add survey	178	add_survey
+659	Can change survey	178	change_survey
+660	Can delete survey	178	delete_survey
+661	Can view result pages through the API	156	api_read_resultpage
+662	Can add result pages through the API	156	api_add_resultpage
+663	Can change result pages through the API	156	api_change_resultpage
+664	Can delete result pages through the API	156	api_delete_resultpage
+665	Can add Tasks	179	add_taskscontent
+666	Can change Tasks	179	change_taskscontent
+667	Can delete Tasks	179	delete_taskscontent
+668	Can add metric	180	add_metric
+669	Can change metric	180	change_metric
+670	Can delete metric	180	delete_metric
+671	Can add home page	182	add_homepage
+672	Can change home page	182	change_homepage
+673	Can delete home page	182	delete_homepage
+674	Can view homepages through the API	182	api_read_homepage
+675	Can add homepages through the API	182	api_add_homepage
+676	Can change homepages through the API	182	api_change_homepage
+677	Can delete homepages through the API	182	api_delete_homepage
+678	Can add Metrics	183	add_metricscontent
+679	Can change Metrics	183	change_metricscontent
+680	Can delete Metrics	183	delete_metricscontent
+681	Can add step	185	add_step
+682	Can change step	185	change_step
+683	Can delete step	185	delete_step
+684	Can add link group	186	add_linkgroup
+685	Can change link group	186	change_linkgroup
+686	Can delete link group	186	delete_linkgroup
+687	Can add content link	187	add_contentlink
+688	Can change content link	187	change_contentlink
+689	Can delete content link	187	delete_contentlink
+690	Can add link permission	188	add_linkpermission
+691	Can change link permission	188	change_linkpermission
+692	Can delete link permission	188	delete_linkpermission
+693	Can add Logos	189	add_logoscontent
+694	Can change Logos	189	change_logoscontent
+695	Can delete Logos	189	delete_logoscontent
+696	Can add site links	190	add_sitelinks
+697	Can change site links	190	change_sitelinks
+698	Can delete site links	190	delete_sitelinks
+699	Can add Categories	191	add_categoriescontent
+700	Can change Categories	191	change_categoriescontent
+701	Can delete Categories	191	delete_categoriescontent
+702	Can add Slides	192	add_slidescontent
+703	Can change Slides	192	change_slidescontent
+704	Can delete Slides	192	delete_slidescontent
+705	Can add Welcome	193	add_welcomecontent
+706	Can change Welcome	193	change_welcomecontent
+707	Can delete Welcome	193	delete_welcomecontent
+708	Can add slide	194	add_slide
+709	Can change slide	194	change_slide
+710	Can delete slide	194	delete_slide
+711	Can add Locations	195	add_locationscontent
+712	Can change Locations	195	change_locationscontent
+713	Can delete Locations	195	delete_locationscontent
+714	Can add logo	196	add_logo
+715	Can change logo	196	change_logo
+716	Can delete logo	196	delete_logo
+717	Can add site platform settings	197	add_siteplatformsettings
+718	Can change site platform settings	197	change_siteplatformsettings
+719	Can delete site platform settings	197	delete_siteplatformsettings
+720	Can add Steps	198	add_stepscontent
+721	Can change Steps	198	change_stepscontent
+722	Can delete Steps	198	delete_stepscontent
+723	Can add link	199	add_link
+725	Can delete link	199	delete_link
+726	Can add greeting	200	add_greeting
+727	Can change greeting	200	change_greeting
+728	Can delete greeting	200	delete_greeting
+729	Can add Links	201	add_linkscontent
+730	Can change Links	201	change_linkscontent
+731	Can delete Links	201	delete_linkscontent
+732	Can add Activities	202	add_activitiescontent
+733	Can change Activities	202	change_activitiescontent
+734	Can delete Activities	202	delete_activitiescontent
+735	Can add Platform Statistics	204	add_homepagestatisticscontent
+736	Can change Platform Statistics	204	change_homepagestatisticscontent
+737	Can delete Platform Statistics	204	delete_homepagestatisticscontent
+738	Can add contact message	205	add_contactmessage
+739	Can change contact message	205	change_contactmessage
+740	Can delete contact message	205	delete_contactmessage
+741	Can add Picture	206	add_pictureitem
+742	Can change Picture	206	change_pictureitem
+743	Can delete Picture	206	delete_pictureitem
+744	Can add Online media	207	add_oembeditem
+745	Can change Online media	207	change_oembeditem
+746	Can delete Online media	207	delete_oembeditem
+747	Can add HTML code	208	add_rawhtmlitem
+748	Can change HTML code	208	change_rawhtmlitem
+749	Can delete HTML code	208	delete_rawhtmlitem
+750	Can add Text	209	add_textitem
+751	Can change Text	209	change_textitem
+752	Can delete Text	209	delete_textitem
+753	Can add attachment	210	add_attachment
+754	Can change attachment	210	change_attachment
+755	Can delete attachment	210	delete_attachment
+756	Can add saved group result	211	add_tasksetmeta
+757	Can change saved group result	211	change_tasksetmeta
+758	Can delete saved group result	211	delete_tasksetmeta
+759	Can add interval	212	add_intervalschedule
+760	Can change interval	212	change_intervalschedule
+761	Can delete interval	212	delete_intervalschedule
+762	Can add task	213	add_taskstate
+763	Can change task	213	change_taskstate
+764	Can delete task	213	delete_taskstate
+765	Can add task state	214	add_taskmeta
+766	Can change task state	214	change_taskmeta
+767	Can delete task state	214	delete_taskmeta
+768	Can add periodic tasks	215	add_periodictasks
+769	Can change periodic tasks	215	change_periodictasks
+770	Can delete periodic tasks	215	delete_periodictasks
+771	Can add crontab	216	add_crontabschedule
+772	Can change crontab	216	change_crontabschedule
+773	Can delete crontab	216	delete_crontabschedule
+774	Can add worker	217	add_workerstate
+775	Can change worker	217	change_workerstate
+776	Can delete worker	217	delete_workerstate
+777	Can add periodic task	218	add_periodictask
+778	Can change periodic task	218	change_periodictask
+779	Can delete periodic task	218	delete_periodictask
+780	Can add rate	219	add_rate
+781	Can change rate	219	change_rate
+782	Can delete rate	219	delete_rate
+783	Can add rate source	220	add_ratesource
+784	Can change rate source	220	change_ratesource
+785	Can delete rate source	220	delete_ratesource
+786	Can add follow	221	add_follow
+787	Can change follow	221	change_follow
+788	Can delete follow	221	delete_follow
+789	Can add Telesom bank account	222	add_telesombankaccount
+790	Can change Telesom bank account	222	change_telesombankaccount
+791	Can delete Telesom bank account	222	delete_telesombankaccount
+792	Can add telesom payment	223	add_telesompayment
+793	Can change telesom payment	223	change_telesompayment
+794	Can delete telesom payment	223	delete_telesompayment
+795	Can add Telesom payment provider	224	add_telesompaymentprovider
+796	Can change Telesom payment provider	224	change_telesompaymentprovider
+797	Can delete Telesom payment provider	224	delete_telesompaymentprovider
+798	Can read homepage through the API	225	api_read_homepage
+799	Can add pinned application	226	add_pinnedapplication
+800	Can change pinned application	226	change_pinnedapplication
+801	Can delete pinned application	226	delete_pinnedapplication
+802	Can add bookmark	227	add_bookmark
+803	Can change bookmark	227	change_bookmark
+804	Can delete bookmark	227	delete_bookmark
+805	Can add looker embed	228	add_lookerembed
+806	Can change looker embed	228	change_lookerembed
+807	Can delete looker embed	228	delete_lookerembed
+808	Can access looker embeds	228	access_looker_embeds
+809	Can add mail platform settings	229	add_mailplatformsettings
+810	Can change mail platform settings	229	change_mailplatformsettings
+811	Can delete mail platform settings	229	delete_mailplatformsettings
+812	Can view order through the API	105	api_read_order
+813	Can add order through the API	105	api_add_order
+814	Can change order through the API	105	api_change_order
+815	Can delete order through the API	105	api_delete_order
+816	Can view own order through the API	105	api_read_own_order
+817	Can add own order through the API	105	api_add_own_order
+818	Can change own order through the API	105	api_change_own_order
+819	Can delete own order through the API	105	api_delete_own_order
+820	Can add code	230	add_code
+821	Can change code	230	change_code
+822	Can delete code	230	delete_code
+823	Can add association	231	add_association
+824	Can change association	231	change_association
+825	Can delete association	231	delete_association
+826	Can add nonce	232	add_nonce
+827	Can change nonce	232	change_nonce
+828	Can delete nonce	232	delete_nonce
+829	Can add user social auth	233	add_usersocialauth
+830	Can change user social auth	233	change_usersocialauth
+831	Can delete user social auth	233	delete_usersocialauth
+832	Can view members through the API	30	api_read_member
+834	Can add members through the API	30	api_add_member
+835	Can change members through the API	30	api_change_member
+836	Can delete members through the API	30	api_delete_member
+833	Can view full members through the API	30	api_read_full_member
+837	Can add custom member field settings	234	add_custommemberfieldsettings
+838	Can change custom member field settings	234	change_custommemberfieldsettings
+839	Can delete custom member field settings	234	delete_custommemberfieldsettings
+840	Can add member platform settings	235	add_memberplatformsettings
+841	Can change member platform settings	235	change_memberplatformsettings
+842	Can delete member platform settings	235	delete_memberplatformsettings
+843	Can add custom member field	236	add_custommemberfield
+844	Can change custom member field	236	change_custommemberfield
+845	Can delete custom member field	236	delete_custommemberfield
+846	Can add User activity	237	add_useractivity
+847	Can change User activity	237	change_useractivity
+848	Can delete User activity	237	delete_useractivity
+849	Can view own members through the API	30	api_read_own_member
+850	Can change own members through the API	30	api_change_own_member
+851	Can delete own members through the API	30	api_delete_own_member
+852	Can add message template	238	add_messagetemplate
+853	Can change message template	238	change_messagetemplate
+854	Can delete message template	238	delete_messagetemplate
+855	Can add notification settings	239	add_notificationplatformsettings
+856	Can change notification settings	239	change_notificationplatformsettings
+857	Can delete notification settings	239	delete_notificationplatformsettings
+858	Can add message	241	add_message
+859	Can change message	241	change_message
+860	Can delete message	241	delete_message
+861	Can add order payment	242	add_orderpayment
+862	Can change order payment	242	change_orderpayment
+863	Can delete order payment	242	delete_orderpayment
+864	Can refund order payments	242	refund_orderpayment
+865	Can add payment	243	add_payment
+866	Can change payment	243	change_payment
+867	Can delete payment	243	delete_payment
+868	Can add order payment action	244	add_orderpaymentaction
+869	Can change order payment action	244	change_orderpaymentaction
+870	Can delete order payment action	244	delete_orderpaymentaction
+871	Can add transaction	245	add_transaction
+872	Can change transaction	245	change_transaction
+873	Can delete transaction	245	delete_transaction
+874	Can add Call to action	246	add_actionitem
+875	Can change Call to action	246	change_actionitem
+876	Can delete Call to action	246	delete_actionitem
+877	Can add Text in columns	247	add_columnsitem
+878	Can change Text in columns	247	change_columnsitem
+879	Can delete Text in columns	247	delete_columnsitem
+880	Can add Text + Round Image	248	add_imagetextrounditem
+881	Can change Text + Round Image	248	change_imagetextrounditem
+882	Can delete Text + Round Image	248	delete_imagetextrounditem
+883	Can add Beyonic Payment	249	add_beyonicpayment
+884	Can change Beyonic Payment	249	change_beyonicpayment
+885	Can delete Beyonic Payment	249	delete_beyonicpayment
+886	Can add Docdata Payment	250	add_docdatapayment
+887	Can change Docdata Payment	250	change_docdatapayment
+888	Can delete Docdata Payment	250	delete_docdatapayment
+889	Can add docdata transaction	251	add_docdatatransaction
+890	Can change docdata transaction	251	change_docdatatransaction
+891	Can delete docdata transaction	251	delete_docdatatransaction
+892	Can add Docdata Direct Debit Payment	252	add_docdatadirectdebitpayment
+893	Can change Docdata Direct Debit Payment	252	change_docdatadirectdebitpayment
+894	Can delete Docdata Direct Debit Payment	252	delete_docdatadirectdebitpayment
+895	Can add external payment	253	add_externalpayment
+896	Can change external payment	253	change_externalpayment
+897	Can delete external payment	253	delete_externalpayment
+898	Can add Flutterwave Mpesa Payment	254	add_flutterwavempesapayment
+899	Can change Flutterwave Mpesa Payment	254	change_flutterwavempesapayment
+900	Can delete Flutterwave Mpesa Payment	254	delete_flutterwavempesapayment
+901	Can add Flutterwave Payment	255	add_flutterwavepayment
+902	Can change Flutterwave Payment	255	change_flutterwavepayment
+903	Can delete Flutterwave Payment	255	delete_flutterwavepayment
+904	Can add interswitch payment status update	256	add_interswitchpaymentstatusupdate
+905	Can change interswitch payment status update	256	change_interswitchpaymentstatusupdate
+906	Can delete interswitch payment status update	256	delete_interswitchpaymentstatusupdate
+907	Can add Interswitch Payment	257	add_interswitchpayment
+908	Can change Interswitch Payment	257	change_interswitchpayment
+909	Can delete Interswitch Payment	257	delete_interswitchpayment
+910	Can add Lipisha Payment	258	add_lipishapayment
+911	Can change Lipisha Payment	258	change_lipishapayment
+912	Can delete Lipisha Payment	258	delete_lipishapayment
+913	Can add lipisha project	259	add_lipishaproject
+914	Can change lipisha project	259	change_lipishaproject
+915	Can delete lipisha project	259	delete_lipishaproject
+916	Can add Payment Log	260	add_paymentlogentry
+917	Can change Payment Log	260	change_paymentlogentry
+918	Can delete Payment Log	260	delete_paymentlogentry
+919	Can add Mock Payment	261	add_mockpayment
+920	Can change Mock Payment	261	change_mockpayment
+921	Can delete Mock Payment	261	delete_mockpayment
+922	Can add pledge standard payment	262	add_pledgestandardpayment
+923	Can change pledge standard payment	262	change_pledgestandardpayment
+924	Can delete pledge standard payment	262	delete_pledgestandardpayment
+925	Can add stripe payment	263	add_stripepayment
+926	Can change stripe payment	263	change_stripepayment
+927	Can delete stripe payment	263	delete_stripepayment
+928	Can add Telesom/Zaad Payment	264	add_telesompayment
+929	Can change Telesom/Zaad Payment	264	change_telesompayment
+930	Can delete Telesom/Zaad Payment	264	delete_telesompayment
+931	Can add Vitepay Payment	265	add_vitepaypayment
+932	Can change Vitepay Payment	265	change_vitepaypayment
+933	Can delete Vitepay Payment	265	delete_vitepaypayment
+934	Can add Voucher Payment	266	add_voucherpayment
+935	Can change Voucher Payment	266	change_voucherpayment
+936	Can delete Voucher Payment	266	delete_voucherpayment
+937	Can add voucher	267	add_voucher
+938	Can change voucher	267	change_voucher
+939	Can delete voucher	267	delete_voucher
+940	Can add flutterwave payout account	268	add_flutterwavepayoutaccount
+941	Can change flutterwave payout account	268	change_flutterwavepayoutaccount
+942	Can delete flutterwave payout account	268	delete_flutterwavepayoutaccount
+943	Can add quote	269	add_quote
+944	Can change quote	269	change_quote
+945	Can delete quote	269	delete_quote
+946	Can add redirect	270	add_redirect
+947	Can change redirect	270	change_redirect
+948	Can delete redirect	270	delete_redirect
+949	Can add scim platform settings	271	add_scimplatformsettings
+950	Can change scim platform settings	271	change_scimplatformsettings
+951	Can delete scim platform settings	271	delete_scimplatformsettings
+952	Can add session	272	add_session
+953	Can change session	272	change_session
+954	Can delete session	272	delete_session
+955	Can add site	62	add_site
+956	Can change site	62	change_site
+957	Can delete site	62	delete_site
+958	Can add slide	273	add_slide
+959	Can change slide	273	change_slide
+960	Can delete slide	273	delete_slide
+961	Can add partial	274	add_partial
+962	Can change partial	274	change_partial
+963	Can delete partial	274	delete_partial
+964	Can add suggestion	275	add_suggestion
+965	Can change suggestion	275	change_suggestion
+966	Can delete suggestion	275	delete_suggestion
+967	Can add Term agreements	276	add_termsagreement
+968	Can change Term agreements	276	change_termsagreement
+969	Can delete Term agreements	276	delete_termsagreement
+970	Can view terms agreements through API	276	api_read_termsagreement
+971	Can add Term	277	add_terms
+972	Can change Term	277	change_terms
+973	Can delete Term	277	delete_terms
+974	Can view terms through API	277	api_read_terms
+975	Can add checked token	278	add_checkedtoken
+976	Can change checked token	278	change_checkedtoken
+977	Can delete checked token	278	delete_checkedtoken
+978	Can add kv store	279	add_kvstore
+979	Can change kv store	279	change_kvstore
+980	Can delete kv store	279	delete_kvstore
+981	Can add translation settings	280	add_translationplatformsettings
+982	Can change translation settings	280	change_translationplatformsettings
+983	Can delete translation settings	280	delete_translationplatformsettings
+984	Can add vote	282	add_vote
+985	Can change vote	282	change_vote
+986	Can delete vote	282	delete_vote
 \.
 
 
@@ -20599,7 +22493,23 @@ COPY test.auth_permission (id, name, content_type_id, codename) FROM stdin;
 --
 
 COPY test.authtoken_token (key, created, user_id) FROM stdin;
-02b6727129425711efe0ff16c7748d390862c4d3	2019-12-30 13:02:05.235589+01	1
+ff1eed8d606670d3ab2be26fe84f6538e8127bcb	2020-09-18 14:10:28.576255+02	1
+\.
+
+
+--
+-- Data for Name: axes_accessattempt; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.axes_accessattempt (id, user_agent, ip_address, username, http_accept, path_info, attempt_time, get_data, post_data, failures_since_start) FROM stdin;
+\.
+
+
+--
+-- Data for Name: axes_accesslog; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.axes_accesslog (id, user_agent, ip_address, username, trusted, http_accept, path_info, attempt_time, logout_time) FROM stdin;
 \.
 
 
@@ -20730,7 +22640,15 @@ COPY test.bb_projects_projecttheme_translation (id, language_code, name, descrip
 -- Data for Name: categories_category; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.categories_category (id, title, slug, description, image, image_logo) FROM stdin;
+COPY test.categories_category (id, slug, image, image_logo, video) FROM stdin;
+\.
+
+
+--
+-- Data for Name: categories_category_translation; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.categories_category_translation (id, language_code, title, description, master_id) FROM stdin;
 \.
 
 
@@ -20738,7 +22656,15 @@ COPY test.categories_category (id, title, slug, description, image, image_logo) 
 -- Data for Name: categories_categorycontent; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.categories_categorycontent (id, title, description, image, video_url, link_text, link_url, category_id, sequence) FROM stdin;
+COPY test.categories_categorycontent (id, image, video_url, category_id, sequence) FROM stdin;
+\.
+
+
+--
+-- Data for Name: categories_categorycontent_translation; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.categories_categorycontent_translation (id, language_code, title, description, link_text, link_url, master_id) FROM stdin;
 \.
 
 
@@ -20789,7 +22715,8 @@ COPY test.cms_homepage (id) FROM stdin;
 
 COPY test.cms_homepage_translation (id, language_code, master_id) FROM stdin;
 1	nl	1
-2	en	1
+2	fr	1
+3	en	1
 \.
 
 
@@ -20889,7 +22816,15 @@ COPY test.cms_sitelinks (id, has_copyright, language_id) FROM stdin;
 --
 
 COPY test.cms_siteplatformsettings (id, update, contact_email, contact_phone, copyright, powered_by_text, powered_by_link, powered_by_logo, favicon, logo) FROM stdin;
-1	2019-12-30 13:03:32.860728+01	\N	\N	\N	\N	\N		\N	\N
+1	2020-09-18 14:11:56.872983+02	\N	\N	\N	\N	\N		\N	\N
+\.
+
+
+--
+-- Data for Name: cms_siteplatformsettings_translation; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.cms_siteplatformsettings_translation (id, language_code, metadata_title, metadata_description, metadata_keywords, master_id, start_page) FROM stdin;
 \.
 
 
@@ -20906,16 +22841,16 @@ COPY test.cms_slide (id, block_id, background_image, image, link_text, link_url,
 --
 
 COPY test.cms_stat (id, type, value, sequence, block_id, title) FROM stdin;
-6	people_involved	\N	0	10	
-8	activities_succeeded	\N	0	10	
-10	donated_total	\N	0	10	
-12	assignments_succeeded	\N	0	10	
-14	votes_cast	\N	0	10	
-7	people_involved	\N	0	9	Supporters
-9	activities_succeeded	\N	0	9	Projects realised
-11	donated_total	\N	0	9	Crowdfunded
-13	assignments_succeeded	\N	0	9	Tasks
-15	votes_cast	\N	0	9	Votes cast
+6	people_involved	\N	0	3	
+8	activities_succeeded	\N	0	3	
+10	donated_total	\N	0	3	
+12	assignments_succeeded	\N	0	3	
+14	votes_cast	\N	0	3	
+7	people_involved	\N	0	4	Supporters
+9	activities_succeeded	\N	0	4	Project gerealiseerd
+11	donated_total	\N	0	4	Gecrowdfund
+13	assignments_succeeded	\N	0	4	Taken
+15	votes_cast	\N	0	4	Stemmen opgehaald
 \.
 
 
@@ -20962,6 +22897,14 @@ COPY test.contentitem_cms_categoriescontent (contentitem_ptr_id, title, sub_titl
 
 
 --
+-- Data for Name: contentitem_cms_homepagestatisticscontent; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.contentitem_cms_homepagestatisticscontent (contentitem_ptr_id, title, sub_title) FROM stdin;
+\.
+
+
+--
 -- Data for Name: contentitem_cms_linkscontent; Type: TABLE DATA; Schema: test; Owner: -
 --
 
@@ -20990,8 +22933,8 @@ COPY test.contentitem_cms_logoscontent (contentitem_ptr_id, title, sub_title, ac
 --
 
 COPY test.contentitem_cms_projectimagescontent (contentitem_ptr_id, title, sub_title, description, action_text, action_link) FROM stdin;
-11	\N	\N	Join our community and start doing good by supporting a project.	Check out our projects	/projects
-12	\N	\N	Doe mee met onze community en draag zelf ook bij aan een project	Bekijk de projecten|	/projects
+7	\N	\N	Join our community and start doing good by supporting a project.	Check out our projects	/projects
+8	\N	\N	Doe mee met onze community en draag zelf ook bij aan een project	Bekijk de projecten|	/projects
 \.
 
 
@@ -21008,8 +22951,8 @@ COPY test.contentitem_cms_projectscontent (contentitem_ptr_id, title, sub_title,
 --
 
 COPY test.contentitem_cms_projectsmapcontent (contentitem_ptr_id, title, sub_title) FROM stdin;
-7	We worked in these locations	\N
-8	We hebben op al deze locaties gewerkt	\N
+1	We worked in these locations	\N
+2	We hebben op al deze locaties gewerkt	\N
 \.
 
 
@@ -21026,8 +22969,8 @@ COPY test.contentitem_cms_quotescontent (contentitem_ptr_id, title, sub_title) F
 --
 
 COPY test.contentitem_cms_shareresultscontent (contentitem_ptr_id, title, sub_title, share_text, share_title) FROM stdin;
-3	Inspire your network	Share our results	With {people} people, we realised {tasks} tasks	
-4	Inspireer je netwerk	Deel de resultaten	Met {people} people, {tasks} taken voltooid	
+11	Inspire your network	Share our results	With {people} people, we realised {tasks} tasks	
+12	Inspireer je netwerk	Deel de resultaten	Met {people} people, {tasks} taken voltooid	
 \.
 
 
@@ -21044,8 +22987,8 @@ COPY test.contentitem_cms_slidescontent (contentitem_ptr_id, sub_title, title) F
 --
 
 COPY test.contentitem_cms_statscontent (contentitem_ptr_id, title, sub_title) FROM stdin;
-9	\N	\N
-10	\N	\N
+3	\N	\N
+4	\N	\N
 \.
 
 
@@ -21062,8 +23005,8 @@ COPY test.contentitem_cms_stepscontent (contentitem_ptr_id, title, sub_title, ac
 --
 
 COPY test.contentitem_cms_supportertotalcontent (contentitem_ptr_id, title, sub_title, co_financer_title) FROM stdin;
-1	A big thanks to all our supporters	Together we are changing the world!	Special thanks to our co-funders
-2	Dank aan alle deelnemers!	Samen maken we een wereld van verschil	En in het special bedanken we onze co-financiers
+5	A big thanks to all our supporters	Together we are changing the world!	Special thanks to our co-funders
+6	Dank aan alle deelnemers!	Samen maken we een wereld van verschil	En in het special bedanken we onze co-financiers
 \.
 
 
@@ -21140,6 +23083,14 @@ COPY test.contentitem_pages_imagetextitem (contentitem_ptr_id, text, text_final,
 
 
 --
+-- Data for Name: contentitem_pages_imagetextrounditem; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.contentitem_pages_imagetextrounditem (contentitem_ptr_id, text, text_final, image) FROM stdin;
+\.
+
+
+--
 -- Data for Name: contentitem_rawhtml_rawhtmlitem; Type: TABLE DATA; Schema: test; Owner: -
 --
 
@@ -21210,228 +23161,254 @@ COPY test.django_content_type (id, app_label, model) FROM stdin;
 32	bb_projects	projectthemetranslation
 33	bb_projects	projectphasetranslation
 34	initiatives	initiative
-35	admin	logentry
-36	organizations	organizationmember
-37	organizations	organization
-38	projects	projectphaselog
-39	projects	projectbudgetline
-40	projects	project
-41	projects	projectdocument
-42	taggit	taggeditem
-43	taggit	tag
-44	tasks	taskstatuslog
-45	tasks	taskfile
-46	tasks	task
-47	tasks	skill
-48	tasks	taskmemberstatuslog
-49	tasks	taskmember
-50	utils	metadatamodel
-51	utils	language
-52	authtoken	token
-53	payouts	projectpayout
-54	payouts	organizationpayout
-55	sites	site
-56	projects	projectimage
-57	analytics	analyticsadapter
-58	analytics	analyticsplatformsettings
-59	assignments	applicant
-60	assignments	assignment
-61	geo	countrytranslation
-62	geo	initiativeplace
-63	geo	geolocation
-64	geo	locationgroup
-65	geo	subregiontranslation
-66	geo	regiontranslation
-67	geo	place
-68	tasks	skilltranslation
-69	bb_accounts	useraddress
-70	donations	donation
-71	fundraisers	fundraiser
-72	orders	order
-73	rewards	reward
-74	bb_follow	follow
-75	organizations	organizationcontact
-76	projects	customprojectfield
-77	projects	projectplatformsettings
-78	projects	customprojectfieldsettings
-79	projects	projectsearchfilter
-80	projects	projectaddon
-81	projects	projectlocation
-82	projects	projectcreatetemplate
-83	payouts	plainpayoutaccount
-84	payouts	payoutaccount
-85	payouts	payoutdocument
-86	payouts	stripepayoutaccount
-87	dashboard	userdashboardmodule
-88	wallposts	reaction
-89	wallposts	mediawallpostphoto
-90	wallposts	wallpost
-91	wallposts	systemwallpost
-92	wallposts	textwallpost
-93	wallposts	mediawallpost
-94	funding	fundraiser
-95	funding	budgetline
-96	funding	paymentprovider
-97	funding	reward
-98	funding	payoutaccount
-99	funding	payment
-100	funding	bankpaymentprovider
-101	funding	bankpayoutaccount
-102	funding	legacypayment
-103	funding	bankaccount
-104	funding	paymentcurrency
-105	funding	plainpayoutaccount
-106	funding_vitepay	vitepaypaymentprovider
-107	funding_flutterwave	flutterwavepaymentprovider
-108	funding_lipisha	lipishapaymentprovider
-109	funding_stripe	stripepaymentprovider
-110	funding_stripe	externalaccount
-111	funding_stripe	stripepayoutaccount
-112	funding_flutterwave	flutterwavebankaccount
-113	funding_lipisha	lipishabankaccount
-114	funding_vitepay	vitepaybankaccount
-115	funding_pledge	pledgebankaccount
-116	funding	payout
-117	funding_flutterwave	flutterwavepayment
-118	funding_lipisha	lipishapayment
-119	funding_pledge	pledgepaymentprovider
-120	funding_pledge	pledgepayment
-121	funding_stripe	paymentintent
-122	funding_stripe	stripepayment
-123	funding_stripe	stripesourcepayment
-124	funding_vitepay	vitepaypayment
-125	initiatives	initiativeplatformsettings
-126	pages	page
-127	utils	maillog
-128	fluent_contents	contentitem
-129	fluent_contents	placeholder
-130	news	newsitem
-131	pages	documentitem
-132	pages	imagetextitem
-133	cms	resultpage
-134	cms	supportertotalcontent
-135	cms	shareresultscontent
-136	cms	projectscontent
-137	cms	projectsmapcontent
-138	cms	statscontent
-139	cms	projectimagescontent
-140	cms	resultpagetranslation
-141	cms	quotescontent
-142	cms	stattranslation
-143	cms	quotetranslation
-144	cms	stats
-145	cms	stat
-146	cms	projects
-147	cms	quotes
-148	cms	quote
-149	cms	surveycontent
-150	surveys	aggregateanswer
-151	surveys	response
-152	surveys	answer
-153	surveys	subquestion
-154	surveys	question
-155	surveys	survey
-156	cms	taskscontent
-157	cms	metric
-158	cms	homepagetranslation
-159	cms	homepage
-160	cms	metricscontent
-161	cms	metrictranslation
-162	cms	step
-163	cms	linkscontent
-164	cms	linkgroup
-165	cms	contentlink
-166	cms	linkpermission
-167	cms	logoscontent
-168	cms	sitelinks
-169	cms	categoriescontent
-170	cms	slidescontent
-171	cms	welcomecontent
-172	cms	slide
-173	cms	stepscontent
-174	cms	locationscontent
-175	cms	logo
-176	cms	siteplatformsettings
-177	cms	greeting
-178	cms	link
-179	cms	activitiescontent
-180	contact	contactmessage
-181	contentplugins	pictureitem
-182	oembeditem	oembeditem
-183	rawhtml	rawhtmlitem
-184	text	textitem
-185	django_summernote	attachment
-186	djcelery	tasksetmeta
-187	djcelery	intervalschedule
-188	djcelery	taskstate
-189	djcelery	taskmeta
-190	djcelery	periodictasks
-191	djcelery	crontabschedule
-192	djcelery	workerstate
-193	djcelery	periodictask
-194	djmoney_rates	rate
-195	djmoney_rates	ratesource
-196	events	event
-197	events	participant
-198	files	relatedimage
-199	follow	follow
-200	funding	fundingplatformsettings
-201	homepage	homepage
-202	jet	pinnedapplication
-203	jet	bookmark
-204	looker	lookerembed
-205	mails	mailplatformsettings
-206	social_django	code
-207	social_django	nonce
-208	social_django	usersocialauth
-209	social_django	association
-210	members	custommemberfieldsettings
-211	members	memberplatformsettings
-212	members	custommemberfield
-213	notifications	message
-214	notifications	notificationplatformsettings
-215	payments	orderpayment
-216	payments	payment
-217	payments	orderpaymentaction
-218	payments	transaction
-219	payments_beyonic	beyonicpayment
-220	payments_docdata	docdatapayment
-221	payments_docdata	docdatatransaction
-222	payments_docdata	docdatadirectdebitpayment
-223	payments_external	externalpayment
-224	payments_flutterwave	flutterwavempesapayment
-225	payments_flutterwave	flutterwavepayment
-226	payments_interswitch	interswitchpaymentstatusupdate
-227	payments_interswitch	interswitchpayment
-228	payments_lipisha	lipishapayment
-229	payments_lipisha	lipishaproject
-230	payments_logger	paymentlogentry
-231	payments_mock	mockpayment
-232	payments_pledge	pledgestandardpayment
-233	payments_stripe	stripepayment
-234	payments_telesom	telesompayment
-235	payments_vitepay	vitepaypayment
-236	payments_voucher	voucherpayment
-237	payments_voucher	voucher
-238	payouts	flutterwavepayoutaccount
-239	quotes	quote
-240	redirects	redirect
-241	scim	scimplatformsettings
-242	sessions	session
-243	slides	slide
-244	social_django	partial
-245	statistics	statistic
-246	suggestions	suggestion
-247	terms	termsagreement
-248	terms	terms
-249	token_auth	checkedtoken
-250	thumbnail	kvstore
-251	votes	vote
-252	members	useractivity
-253	pages	actionitem
-254	pages	columnsitem
-255	notifications	messagetemplate
-256	notifications	messagetemplatetranslation
+35	activities	organizer
+36	authtoken	token
+37	geo	initiativeplace
+38	geo	countrytranslation
+39	geo	place
+40	geo	geolocation
+41	geo	locationgroup
+42	geo	subregiontranslation
+43	geo	regiontranslation
+44	organizations	organizationmember
+45	organizations	organization
+46	payouts	projectpayout
+47	payouts	organizationpayout
+48	projects	projectphaselog
+49	projects	projectbudgetline
+50	projects	project
+51	projects	projectdocument
+52	taggit	taggeditem
+53	taggit	tag
+54	tasks	taskstatuslog
+55	tasks	taskfile
+56	tasks	task
+57	tasks	taskmemberstatuslog
+58	tasks	taskmember
+59	tasks	skill
+60	utils	metadatamodel
+61	utils	language
+62	sites	site
+63	projects	projectimage
+64	projects	projectplatformsettings
+65	projects	projectsearchfilter
+66	organizations	organizationcontact
+67	projects	customprojectfield
+68	projects	customprojectfieldsettings
+69	projects	projectaddon
+70	projects	projectlocation
+71	projects	projectcreatetemplate
+72	payouts	plainpayoutaccount
+73	payouts	payoutaccount
+74	payouts	payoutdocument
+75	payouts	stripepayoutaccount
+76	funding	reward
+77	funding	budgetline
+78	funding	payoutaccount
+79	funding	payment
+80	funding	fundraiser
+81	funding	legacypayment
+82	funding	paymentprovider
+83	funding	bankpayoutaccount
+84	funding	bankpaymentprovider
+85	funding	payout
+86	funding	fundingplatformsettings
+87	funding	bankaccount
+88	funding	paymentcurrency
+89	funding	plainpayoutaccount
+90	events	event
+91	events	participant
+92	assignments	applicant
+93	assignments	assignment
+94	tasks	skilltranslation
+95	files	relatedimage
+96	admin	logentry
+97	analytics	analyticsplatformsettings
+98	analytics	analyticsadapter
+99	axes	accessattempt
+100	axes	accesslog
+101	bb_accounts	useraddress
+102	donations	donation
+103	files	privatedocument
+104	fundraisers	fundraiser
+105	orders	order
+106	rewards	reward
+107	segments	segmenttype
+108	segments	segment
+109	bb_follow	follow
+110	categories	categorytranslation
+111	categories	categorycontenttranslation
+112	dashboard	userdashboardmodule
+113	fluent_contents	contentitem
+114	fluent_contents	placeholder
+115	impact	impactgoal
+116	impact	impacttypetranslation
+117	impact	impacttype
+118	statistics	databasestatistictranslation
+119	statistics	basestatistic
+120	statistics	impactstatistictranslation
+121	statistics	manualstatistictranslation
+122	statistics	statistic
+123	statistics	databasestatistic
+124	statistics	impactstatistic
+125	statistics	manualstatistic
+126	wallposts	reaction
+127	wallposts	mediawallpostphoto
+128	wallposts	wallpost
+129	wallposts	systemwallpost
+130	wallposts	mediawallpost
+131	wallposts	textwallpost
+132	funding_vitepay	vitepaypaymentprovider
+133	funding_flutterwave	flutterwavepaymentprovider
+134	funding_lipisha	lipishapaymentprovider
+135	funding_stripe	stripepaymentprovider
+136	funding_stripe	externalaccount
+137	funding_stripe	stripepayoutaccount
+138	funding_flutterwave	flutterwavebankaccount
+139	funding_lipisha	lipishabankaccount
+140	funding_vitepay	vitepaybankaccount
+141	funding_pledge	pledgebankaccount
+142	funding_flutterwave	flutterwavepayment
+143	funding_lipisha	lipishapayment
+144	funding_pledge	pledgepaymentprovider
+145	funding_pledge	pledgepayment
+146	funding_stripe	paymentintent
+147	funding_stripe	stripepayment
+148	funding_stripe	stripesourcepayment
+149	funding_vitepay	vitepaypayment
+150	initiatives	initiativeplatformsettings
+151	pages	page
+152	utils	maillog
+153	news	newsitem
+154	pages	documentitem
+155	pages	imagetextitem
+156	cms	resultpage
+157	cms	projectsmapcontent
+158	cms	statscontent
+159	cms	supportertotalcontent
+160	cms	projectimagescontent
+161	cms	projectscontent
+162	cms	shareresultscontent
+163	cms	resultpagetranslation
+164	cms	quotescontent
+165	cms	stattranslation
+166	cms	quotetranslation
+167	cms	stats
+168	cms	stat
+169	cms	projects
+170	cms	quotes
+171	cms	quote
+172	cms	surveycontent
+173	surveys	aggregateanswer
+174	surveys	response
+175	surveys	answer
+176	surveys	subquestion
+177	surveys	question
+178	surveys	survey
+179	cms	taskscontent
+180	cms	metric
+181	cms	homepagetranslation
+182	cms	homepage
+183	cms	metricscontent
+184	cms	metrictranslation
+185	cms	step
+186	cms	linkgroup
+187	cms	contentlink
+188	cms	linkpermission
+189	cms	logoscontent
+190	cms	sitelinks
+191	cms	categoriescontent
+192	cms	slidescontent
+193	cms	welcomecontent
+194	cms	slide
+195	cms	locationscontent
+196	cms	logo
+197	cms	siteplatformsettings
+198	cms	stepscontent
+199	cms	link
+200	cms	greeting
+201	cms	linkscontent
+202	cms	activitiescontent
+203	cms	siteplatformsettingstranslation
+204	cms	homepagestatisticscontent
+205	contact	contactmessage
+206	contentplugins	pictureitem
+207	oembeditem	oembeditem
+208	rawhtml	rawhtmlitem
+209	text	textitem
+210	django_summernote	attachment
+211	djcelery	tasksetmeta
+212	djcelery	intervalschedule
+213	djcelery	taskstate
+214	djcelery	taskmeta
+215	djcelery	periodictasks
+216	djcelery	crontabschedule
+217	djcelery	workerstate
+218	djcelery	periodictask
+219	djmoney_rates	rate
+220	djmoney_rates	ratesource
+221	follow	follow
+222	funding_telesom	telesombankaccount
+223	funding_telesom	telesompayment
+224	funding_telesom	telesompaymentprovider
+225	homepage	homepage
+226	jet	pinnedapplication
+227	jet	bookmark
+228	looker	lookerembed
+229	mails	mailplatformsettings
+230	social_django	code
+231	social_django	association
+232	social_django	nonce
+233	social_django	usersocialauth
+234	members	custommemberfieldsettings
+235	members	memberplatformsettings
+236	members	custommemberfield
+237	members	useractivity
+238	notifications	messagetemplate
+239	notifications	notificationplatformsettings
+240	notifications	messagetemplatetranslation
+241	notifications	message
+242	payments	orderpayment
+243	payments	payment
+244	payments	orderpaymentaction
+245	payments	transaction
+246	pages	actionitem
+247	pages	columnsitem
+248	pages	imagetextrounditem
+249	payments_beyonic	beyonicpayment
+250	payments_docdata	docdatapayment
+251	payments_docdata	docdatatransaction
+252	payments_docdata	docdatadirectdebitpayment
+253	payments_external	externalpayment
+254	payments_flutterwave	flutterwavempesapayment
+255	payments_flutterwave	flutterwavepayment
+256	payments_interswitch	interswitchpaymentstatusupdate
+257	payments_interswitch	interswitchpayment
+258	payments_lipisha	lipishapayment
+259	payments_lipisha	lipishaproject
+260	payments_logger	paymentlogentry
+261	payments_mock	mockpayment
+262	payments_pledge	pledgestandardpayment
+263	payments_stripe	stripepayment
+264	payments_telesom	telesompayment
+265	payments_vitepay	vitepaypayment
+266	payments_voucher	voucherpayment
+267	payments_voucher	voucher
+268	payouts	flutterwavepayoutaccount
+269	quotes	quote
+270	redirects	redirect
+271	scim	scimplatformsettings
+272	sessions	session
+273	slides	slide
+274	social_django	partial
+275	suggestions	suggestion
+276	terms	termsagreement
+277	terms	terms
+278	token_auth	checkedtoken
+279	thumbnail	kvstore
+280	utils	translationplatformsettings
+281	utils	translationplatformsettingstranslation
+282	votes	vote
 \.
 
 
@@ -21440,854 +23417,946 @@ COPY test.django_content_type (id, app_label, model) FROM stdin;
 --
 
 COPY test.django_migrations (id, app, name, applied) FROM stdin;
-1	geo	0001_initial	2019-12-30 13:01:51.498392+01
-2	bb_projects	0001_initial	2019-12-30 13:01:51.542626+01
-3	contenttypes	0001_initial	2019-12-30 13:01:51.569645+01
-4	contenttypes	0002_remove_content_type_name	2019-12-30 13:01:51.655173+01
-5	auth	0001_initial	2019-12-30 13:01:51.71714+01
-6	auth	0002_alter_permission_name_max_length	2019-12-30 13:01:51.734467+01
-7	auth	0003_alter_user_email_max_length	2019-12-30 13:01:51.751045+01
-8	auth	0004_alter_user_username_opts	2019-12-30 13:01:51.768521+01
-9	auth	0005_alter_user_last_login_null	2019-12-30 13:01:51.78487+01
-10	auth	0006_require_contenttypes_0002	2019-12-30 13:01:51.787172+01
-11	auth	0007_alter_validators_add_error_messages	2019-12-30 13:01:51.803466+01
-12	members	0001_initial	2019-12-30 13:01:51.856127+01
-13	activities	0001_initial	2019-12-30 13:01:51.914311+01
-14	funding	0001_initial	2019-12-30 13:01:52.143919+01
-15	files	0001_initial	2019-12-30 13:01:52.224026+01
-16	categories	0001_initial	2019-12-30 13:01:52.244452+01
-17	categories	0002_auto_20160531_1651	2019-12-30 13:01:52.262029+01
-18	categories	0003_categorycontent	2019-12-30 13:01:52.288131+01
-19	categories	0004_auto_20170731_1327	2019-12-30 13:01:52.403989+01
-20	categories	0005_auto_20180117_0924	2019-12-30 13:01:52.68981+01
-21	categories	0006_auto_20180907_1131	2019-12-30 13:01:52.705237+01
-22	categories	0007_auto_20180907_1131	2019-12-30 13:01:52.920156+01
-23	categories	0008_authenticated-permissions	2019-12-30 13:01:53.132473+01
-24	clients	0001_initial	2019-12-30 13:01:53.148123+01
-25	bb_projects	0002_remove_projecttheme_name_nl	2019-12-30 13:01:53.170212+01
-26	bb_projects	0003_auto_20160815_1658	2019-12-30 13:01:53.259792+01
-27	bb_projects	0004_add_project_continued_phase	2019-12-30 13:01:53.262243+01
-28	bb_projects	0005_add_api_permissions	2019-12-30 13:01:53.297045+01
-29	bb_projects	0006_add_group_permissions	2019-12-30 13:01:53.655617+01
-30	bb_projects	0007_translate_themes	2019-12-30 13:01:53.698997+01
-31	bb_projects	0008_migrate_theme_translations	2019-12-30 13:01:53.771385+01
-32	bb_projects	0009_remove_translated_fields	2019-12-30 13:01:53.850244+01
-33	bb_projects	0010_translate_phases	2019-12-30 13:01:53.896421+01
-34	bb_projects	0011_migrate_phase_translations	2019-12-30 13:01:53.972042+01
-35	bb_projects	0012_remove_translated_fields	2019-12-30 13:01:54.023502+01
-36	bb_projects	0007_auto_20180323_1602	2019-12-30 13:01:54.103248+01
-37	bb_projects	0013_merge_20180406_1536	2019-12-30 13:01:54.105946+01
-38	bb_projects	0007_auto_20180319_1536	2019-12-30 13:01:54.108289+01
-39	bb_projects	0008_merge_20180404_1500	2019-12-30 13:01:54.110536+01
-40	bb_projects	0008_merge_20180328_1504	2019-12-30 13:01:54.113306+01
-41	bb_projects	0009_merge_20180404_1638	2019-12-30 13:01:54.115505+01
-42	bb_projects	0014_merge_20180412_1421	2019-12-30 13:01:54.117925+01
-43	bb_projects	0015_auto_20190329_1101	2019-12-30 13:01:54.20795+01
-44	initiatives	0001_initial	2019-12-30 13:01:54.277654+01
-45	activities	0002_auto_20190524_1041	2019-12-30 13:01:54.564591+01
-46	activities	0003_add_permissions	2019-12-30 13:01:54.816361+01
-47	activities	0004_auto_20190524_1514	2019-12-30 13:01:54.956984+01
-48	activities	0005_auto_20190528_1022	2019-12-30 13:01:55.002591+01
-49	activities	0006_auto_20190605_1453	2019-12-30 13:01:55.118838+01
-50	activities	0007_auto_20190710_0851	2019-12-30 13:01:55.160732+01
-51	activities	0008_auto_20190814_1541	2019-12-30 13:01:55.365956+01
-52	activities	0009_auto_20191007_1506	2019-12-30 13:01:55.619108+01
-53	activities	0010_activity_transition_date	2019-12-30 13:01:55.662594+01
-54	activities	0011_auto_20191028_1156	2019-12-30 13:01:55.664979+01
-55	activities	0012_auto_20191108_1317	2019-12-30 13:01:55.743184+01
-56	activities	0013_auto_20191120_0920	2019-12-30 13:01:55.828044+01
-57	activities	0014_add_permissions	2019-12-30 13:01:56.054525+01
-58	admin	0001_initial	2019-12-30 13:01:56.101633+01
-59	admin	0002_logentry_remove_auto_add	2019-12-30 13:01:56.140704+01
-60	taggit	0001_initial	2019-12-30 13:01:56.213232+01
-61	taggit	0002_auto_20150616_2121	2019-12-30 13:01:56.239986+01
-62	utils	0001_initial	2019-12-30 13:01:56.274709+01
-63	organizations	0001_initial	2019-12-30 13:01:56.371895+01
-64	projects	0001_initial	2019-12-30 13:01:56.784036+01
-65	tasks	0001_initial	2019-12-30 13:01:57.019878+01
-66	tasks	0002_auto_20160614_1354	2019-12-30 13:01:57.114117+01
-67	tasks	0003_auto_20160621_1707	2019-12-30 13:01:57.215015+01
-68	tasks	0004_auto_20160705_0917	2019-12-30 13:01:57.254011+01
-69	tasks	0005_auto_20160706_1423	2019-12-30 13:01:57.617538+01
-70	tasks	0006_auto_20160720_1058	2019-12-30 13:01:57.724324+01
-71	tasks	0007_auto_20160720_1139	2019-12-30 13:01:57.785998+01
-72	tasks	0008_auto_20160802_1025	2019-12-30 13:01:57.839463+01
-73	tasks	0009_fix_deadline_timestamp	2019-12-30 13:01:57.857938+01
-74	tasks	0010_auto_20160829_2337	2019-12-30 13:01:57.964111+01
-75	tasks	0011_auto_20160920_1019	2019-12-30 13:01:58.380707+01
-76	tasks	0011_auto_20160919_1508	2019-12-30 13:01:58.485565+01
-77	tasks	0012_merge	2019-12-30 13:01:58.488331+01
-78	tasks	0008_auto_20160802_1441	2019-12-30 13:01:58.54571+01
-79	tasks	0006_auto_20160718_1811	2019-12-30 13:01:58.601935+01
-80	tasks	0010_merge	2019-12-30 13:01:58.604777+01
-81	tasks	0011_merge	2019-12-30 13:01:58.606899+01
-82	tasks	0013_merge	2019-12-30 13:01:58.608875+01
-83	tasks	0013_auto_20161006_1813	2019-12-30 13:01:58.664346+01
-84	tasks	0014_merge	2019-12-30 13:01:58.666723+01
-85	tasks	0014_auto_20161006_1144	2019-12-30 13:01:58.725259+01
-86	tasks	0015_merge	2019-12-30 13:01:58.727952+01
-87	tasks	0016_auto_20161208_1159	2019-12-30 13:01:58.78491+01
-88	tasks	0017_task_deadline_to_apply	2019-12-30 13:01:58.84621+01
-89	tasks	0018_auto_20170503_1405	2019-12-30 13:01:58.90938+01
-90	tasks	0019_remove_task_deadline_to_apply	2019-12-30 13:01:58.967246+01
-91	tasks	0020_task_deadline_to_apply	2019-12-30 13:01:59.200479+01
-92	tasks	0021_auto_20170503_1435	2019-12-30 13:01:59.389137+01
-93	tasks	0022_task_accepting	2019-12-30 13:01:59.443473+01
-94	tasks	0023_taskmember_resume	2019-12-30 13:01:59.49522+01
-95	tasks	0018_skill_expertise	2019-12-30 13:01:59.614385+01
-96	tasks	0023_merge_20170519_1012	2019-12-30 13:01:59.616663+01
-97	tasks	0024_merge_20170529_1436	2019-12-30 13:01:59.618668+01
-98	tasks	0025_auto_20170601_1540	2019-12-30 13:01:59.774612+01
-99	tasks	0024_auto_20170602_2304	2019-12-30 13:02:00.057893+01
-100	tasks	0026_merge_20170628_0905	2019-12-30 13:02:00.06016+01
-101	tasks	0027_delete_tasks_date_status_changed	2019-12-30 13:02:00.113502+01
-102	tasks	0028_add_api_permissions	2019-12-30 13:02:00.305722+01
-103	tasks	0029_add_group_permissions	2019-12-30 13:02:00.684273+01
-104	tasks	0030_auto_20170822_1104	2019-12-30 13:02:00.841093+01
-105	tasks	0031_set_owner_permissions	2019-12-30 13:02:01.151245+01
-106	tasks	0032_add_skill_permission	2019-12-30 13:02:01.581182+01
-107	tasks	0028_auto_20170817_1546	2019-12-30 13:02:01.68346+01
-108	tasks	0033_merge_20170830_1106	2019-12-30 13:02:01.686129+01
-109	tasks	0034_more_owner_permissions	2019-12-30 13:02:01.981614+01
-110	projects	0002_remove_project_tags	2019-12-30 13:02:02.043237+01
-111	projects	0003_auto_20160610_1554	2019-12-30 13:02:02.098368+01
-112	projects	0004_projectdocument_ip_address	2019-12-30 13:02:02.153884+01
-113	projects	0005_auto_20160720_1140	2019-12-30 13:02:02.271973+01
-114	projects	0006_project_celebrate_results	2019-12-30 13:02:02.501041+01
-115	projects	0007_auto_20160929_0817	2019-12-30 13:02:02.55346+01
-116	projects	0005_auto_20160721_1546	2019-12-30 13:02:03.314667+01
-117	projects	0006_merge	2019-12-30 13:02:03.318279+01
-118	projects	0008_merge	2019-12-30 13:02:03.320837+01
-119	projects	0008_fix_project_type	2019-12-30 13:02:03.338574+01
-120	projects	0009_merge	2019-12-30 13:02:03.341249+01
-121	projects	0007_remove_projectbudgetline_currency	2019-12-30 13:02:03.385166+01
-122	projects	0007_project_currencies	2019-12-30 13:02:03.434731+01
-123	projects	0010_merge	2019-12-30 13:02:03.437347+01
-124	projects	0011_auto_20161006_1149	2019-12-30 13:02:03.479271+01
-125	projects	0010_auto_20161019_1403	2019-12-30 13:02:03.584221+01
-126	projects	0012_merge	2019-12-30 13:02:03.586947+01
-127	projects	0011_auto_20161028_0946	2019-12-30 13:02:03.770577+01
-128	projects	0013_merge	2019-12-30 13:02:03.773114+01
-129	projects	0014_auto_20161109_1041	2019-12-30 13:02:03.818152+01
-130	projects	0015_project_payout_status	2019-12-30 13:02:03.867861+01
-131	projects	0016_project_campaign_payed_out	2019-12-30 13:02:03.912191+01
-132	projects	0017_auto_20161121_1053	2019-12-30 13:02:03.956138+01
-133	projects	0014_auto_20161115_1601	2019-12-30 13:02:04.004544+01
-134	projects	0015_auto_20161207_0900	2019-12-30 13:02:04.23651+01
-135	members	0002_auto_20160523_1525	2019-12-30 13:02:04.373356+01
-136	members	0003_alter_last_login	2019-12-30 13:02:04.427788+01
-137	members	0004_member_verified	2019-12-30 13:02:04.484875+01
-138	members	0005_auto_20160830_0902	2019-12-30 13:02:04.598597+01
-139	members	0006_member_last_seen	2019-12-30 13:02:04.649302+01
-140	members	0007_auto_20161115_1601	2019-12-30 13:02:04.702826+01
-141	members	0007_auto_20161109_1024	2019-12-30 13:02:04.755505+01
-142	members	0008_merge_20170106_1627	2019-12-30 13:02:04.757737+01
-143	projects	0018_merge_20170106_1627	2019-12-30 13:02:04.760018+01
-144	projects	0019_auto_20170106_1657	2019-12-30 13:02:04.873438+01
-145	projects	0020_merge_20170124_1338	2019-12-30 13:02:04.876008+01
-146	projects	0018_merge_20170118_1533	2019-12-30 13:02:04.879097+01
-147	authtoken	0001_initial	2019-12-30 13:02:04.942823+01
-148	projects	0019_auto_20170118_1537	2019-12-30 13:02:05.237923+01
-149	projects	0021_merge_20170202_1154	2019-12-30 13:02:05.240393+01
-150	projects	0022_project_reviewer	2019-12-30 13:02:05.308535+01
-151	projects	0023_auto_20170323_1227	2019-12-30 13:02:05.569043+01
-152	projects	0024_auto_20170404_1130	2019-12-30 13:02:05.741979+01
-153	projects	0025_auto_20170404_1130	2019-12-30 13:02:05.799644+01
-154	payouts	0001_initial	2019-12-30 13:02:05.842253+01
-155	projects	0026_auto_20170424_1653	2019-12-30 13:02:06.15847+01
-156	projects	0027_auto_20170602_2240	2019-12-30 13:02:06.28964+01
-157	projects	0028_auto_20170619_1555	2019-12-30 13:02:06.418293+01
-158	tasks	0029_fix_migration_statuslog_creation_20170721_1329	2019-12-30 13:02:06.536702+01
-159	tasks	0035_merge_20170831_1449	2019-12-30 13:02:06.539611+01
-160	projects	0027_auto_20170523_1422	2019-12-30 13:02:06.601164+01
-161	projects	0028_auto_20170523_1422	2019-12-30 13:02:06.717938+01
-162	projects	0029_merge_20170628_0905	2019-12-30 13:02:06.720207+01
-163	projects	0030_rename_account_bic_20170705_1221	2019-12-30 13:02:06.840316+01
-164	projects	0031_add_project_roles	2019-12-30 13:02:07.183589+01
-165	projects	0032_default_task_manager	2019-12-30 13:02:07.296643+01
-166	projects	0031_add_api_permissions	2019-12-30 13:02:07.461914+01
-167	projects	0032_add_group_permissions	2019-12-30 13:02:07.822528+01
-168	projects	0033_merge_20170818_1333	2019-12-30 13:02:07.825247+01
-169	projects	0034_auto_20170822_1303	2019-12-30 13:02:07.934795+01
-170	projects	0035_set_owner_permissions	2019-12-30 13:02:08.27389+01
-171	members	0008_merge_20170118_1533	2019-12-30 13:02:08.276047+01
-172	members	0009_merge_20170124_1338	2019-12-30 13:02:08.278048+01
-173	members	0010_fix_export_permissions_migration	2019-12-30 13:02:08.598317+01
-174	projects	0031_fix_migration_projectstatuslog_creation_20170721_1637	2019-12-30 13:02:08.710502+01
-175	projects	0036_merge_20170831_1449	2019-12-30 13:02:08.712957+01
-176	projects	0037_auto_20170915_1350	2019-12-30 13:02:08.840857+01
-177	projects	0038_auto_20170915_1358	2019-12-30 13:02:08.926652+01
-178	projects	0039_add_project_image_group_permissions	2019-12-30 13:02:09.239749+01
-179	projects	0040_auto_20170918_1200	2019-12-30 13:02:09.706311+01
-180	projects	0041_auto_20170918_1201	2019-12-30 13:02:09.873307+01
-181	projects	0037_longer_place_20170914_1129	2019-12-30 13:02:09.922916+01
-182	projects	0038_longer_account_details_20170914_1134	2019-12-30 13:02:09.974317+01
-183	projects	0039_auto_20170914_1503	2019-12-30 13:02:10.02443+01
-184	projects	0042_merge_20170920_1332	2019-12-30 13:02:10.026723+01
-185	projects	0043_remove_payout_status_sourcing_projects	2019-12-30 13:02:10.140065+01
-186	projects	0044_auto_20171110_1549	2019-12-30 13:02:10.437173+01
-187	geo	0002_auto_20160920_1425	2019-12-30 13:02:10.524729+01
-188	geo	0003_fill_location_group	2019-12-30 13:02:10.844258+01
-189	geo	0004_auto_20160929_0817	2019-12-30 13:02:10.914595+01
-190	analytics	0001_initial	2019-12-30 13:02:10.974717+01
-191	analytics	0002_auto_20171031_1209	2019-12-30 13:02:11.091582+01
-192	analytics	0003_auto_20180210_1615	2019-12-30 13:02:11.167722+01
-193	analytics	0004_auto_20180404_1035	2019-12-30 13:02:11.239702+01
-194	analytics	0005_auto_20180424_1205	2019-12-30 13:02:11.278084+01
-195	geo	0005_translate_geo	2019-12-30 13:02:11.545175+01
-196	geo	0006_migrate_geo_translations	2019-12-30 13:02:11.66808+01
-197	geo	0007_remove_translated_fields	2019-12-30 13:02:11.828566+01
-198	geo	0008_auto_20181129_1451	2019-12-30 13:02:12.097433+01
-199	geo	0008_auto_20180918_1037	2019-12-30 13:02:12.287532+01
-200	geo	0009_merge_20190121_1425	2019-12-30 13:02:12.29061+01
-201	geo	0010_initiativeplace	2019-12-30 13:02:12.36061+01
-202	geo	0011_activityplace	2019-12-30 13:02:12.435934+01
-203	geo	0012_auto_20190522_1341	2019-12-30 13:02:12.47364+01
-204	geo	0013_auto_20190524_0958	2019-12-30 13:02:12.635148+01
-205	tasks	0036_auto_20171005_1646	2019-12-30 13:02:12.686584+01
-206	tasks	0037_auto_20171010_1554	2019-12-30 13:02:12.738436+01
-207	tasks	0036_auto_20171114_1056	2019-12-30 13:02:12.78916+01
-208	tasks	0038_merge_20171115_1702	2019-12-30 13:02:12.791668+01
-209	tasks	0039_translate_skill	2019-12-30 13:02:12.917377+01
-210	tasks	0040_migrate_skill_translations	2019-12-30 13:02:13.259512+01
-211	tasks	0041_remove_untranslated_fields	2019-12-30 13:02:13.346595+01
-212	assignments	0001_initial	2019-12-30 13:02:13.501814+01
-213	assignments	0002_auto_20190529_0858	2019-12-30 13:02:13.543837+01
-214	assignments	0003_auto_20190909_1355	2019-12-30 13:02:13.861772+01
-215	assignments	0004_assignment_is_online	2019-12-30 13:02:13.902428+01
-216	assignments	0005_auto_20190909_1514	2019-12-30 13:02:13.931597+01
-217	assignments	0006_auto_20190909_1515	2019-12-30 13:02:14.536457+01
-218	assignments	0007_auto_20190909_1519	2019-12-30 13:02:14.581403+01
-219	assignments	0008_auto_20190909_1545	2019-12-30 13:02:14.65933+01
-220	assignments	0009_auto_20190909_1557	2019-12-30 13:02:14.808121+01
-221	assignments	0010_auto_20190911_1605	2019-12-30 13:02:14.985974+01
-222	assignments	0011_applicant_document	2019-12-30 13:02:15.060961+01
-223	assignments	0012_auto_20190913_1547	2019-12-30 13:02:15.153018+01
-224	auth	0008_alter_user_username_max_length	2019-12-30 13:02:15.183613+01
-225	authtoken	0002_auto_20160226_1747	2019-12-30 13:02:15.35848+01
-226	bb_accounts	0001_initial	2019-12-30 13:02:15.446041+01
-227	bb_accounts	0002_useraddress_user	2019-12-30 13:02:15.774507+01
-228	bb_accounts	0003_useraddress_position	2019-12-30 13:02:15.848917+01
-229	rewards	0001_initial	2019-12-30 13:02:15.934059+01
-230	orders	0001_initial	2019-12-30 13:02:16.020758+01
-231	fundraisers	0001_initial	2019-12-30 13:02:16.107687+01
-232	donations	0001_initial	2019-12-30 13:02:16.13588+01
-233	donations	0002_donation_fundraiser	2019-12-30 13:02:16.227652+01
-234	donations	0003_donation_order	2019-12-30 13:02:16.315168+01
-235	donations	0004_auto_20160523_1525	2019-12-30 13:02:16.483112+01
-236	donations	0005_auto_20160718_1811	2019-12-30 13:02:16.792407+01
-237	donations	0006_auto_20170803_1730	2019-12-30 13:02:17.160383+01
-238	donations	0007_donation_name	2019-12-30 13:02:17.214546+01
-239	donations	0008_auto_20170927_1021	2019-12-30 13:02:17.346838+01
-240	bb_follow	0001_initial	2019-12-30 13:02:17.434201+01
-241	bb_follow	0002_follow_user	2019-12-30 13:02:17.511826+01
-242	bb_follow	0003_auto_20180530_1621	2019-12-30 13:02:17.653355+01
-243	projects	0043_auto_20171023_1958	2019-12-30 13:02:17.726557+01
-244	projects	0044_auto_20171023_2008	2019-12-30 13:02:17.775153+01
-245	projects	0045_auto_20171023_2013	2019-12-30 13:02:17.842543+01
-246	projects	0046_auto_20171023_2047	2019-12-30 13:02:18.174138+01
-247	projects	0047_auto_20171024_1016	2019-12-30 13:02:18.197744+01
-248	projects	0048_auto_20171024_1052	2019-12-30 13:02:18.222345+01
-249	projects	0049_auto_20171024_1018	2019-12-30 13:02:18.37758+01
-250	projects	0050_merge_20171110_1633	2019-12-30 13:02:18.380141+01
-251	projects	0045_auto_20171114_1058	2019-12-30 13:02:18.570721+01
-252	projects	0051_merge_20171115_1702	2019-12-30 13:02:18.574077+01
-253	projects	0051_auto_20171113_1637	2019-12-30 13:02:18.616805+01
-254	projects	0052_merge_20171122_1000	2019-12-30 13:02:18.619169+01
-255	projects	0052_merge_20171121_1335	2019-12-30 13:02:18.621863+01
-256	projects	0053_merge_20171122_1001	2019-12-30 13:02:18.624084+01
-257	projects	0050_merge_20171124_0022	2019-12-30 13:02:18.62634+01
-258	projects	0054_merge_20171128_1142	2019-12-30 13:02:18.629168+01
-259	projects	0043_auto_20171025_1253	2019-12-30 13:02:18.782127+01
-260	projects	0050_merge_20171113_1230	2019-12-30 13:02:18.784403+01
-261	projects	0051_merge_20171124_0021	2019-12-30 13:02:18.786713+01
-262	projects	0052_merge_20171127_1329	2019-12-30 13:02:18.788925+01
-263	projects	0055_merge_20171205_0847	2019-12-30 13:02:18.791565+01
-264	projects	0056_auto_20171205_0847	2019-12-30 13:02:18.966555+01
-265	projects	0055_merge_20171201_1608	2019-12-30 13:02:18.969303+01
-266	projects	0057_merge_20171205_1236	2019-12-30 13:02:18.971751+01
-267	projects	0054_auto_20171122_1415	2019-12-30 13:02:19.284759+01
-268	projects	0055_project_campaign_edited	2019-12-30 13:02:19.356085+01
-269	projects	0058_merge_20171220_1342	2019-12-30 13:02:19.359205+01
-270	organizations	0002_auto_20160610_1554	2019-12-30 13:02:19.399059+01
-271	organizations	0003_auto_20170314_0900	2019-12-30 13:02:19.42994+01
-272	organizations	0004_organizationcontact	2019-12-30 13:02:19.518356+01
-273	organizations	0003_auto_20170303_1057	2019-12-30 13:02:19.66803+01
-274	organizations	0005_merge_20170321_1630	2019-12-30 13:02:19.671841+01
-275	organizations	0006_auto_20170328_1138	2019-12-30 13:02:19.761094+01
-276	organizations	0007_auto_20170803_1730	2019-12-30 13:02:20.162943+01
-277	organizations	0008_organization_logo	2019-12-30 13:02:20.208767+01
-278	organizations	0009_organization_description	2019-12-30 13:02:20.249095+01
-279	organizations	0010_auto_20171114_1035	2019-12-30 13:02:20.326148+01
-280	organizations	0011_auto_20180118_1100	2019-12-30 13:02:20.390248+01
-281	projects	0059_auto_20180118_1100	2019-12-30 13:02:20.810242+01
-282	projects	0060_auto_20180118_1217	2019-12-30 13:02:20.888721+01
-283	projects	0061_auto_20180118_1510	2019-12-30 13:02:20.962006+01
-284	projects	0062_auto_20180119_1231	2019-12-30 13:02:21.113024+01
-285	projects	0063_auto_20180119_1456	2019-12-30 13:02:21.459003+01
-286	projects	0064_auto_20180119_1625	2019-12-30 13:02:21.578765+01
-287	projects	0065_auto_20180121_1952	2019-12-30 13:02:21.67998+01
-288	projects	0066_auto_20180121_2002	2019-12-30 13:02:21.706012+01
-289	projects	0067_auto_20180123_0914	2019-12-30 13:02:21.758884+01
-290	projects	0068_auto_20180306_1614	2019-12-30 13:02:21.869665+01
-291	projects	0069_auto_20180316_1553	2019-12-30 13:02:22.438437+01
-292	projects	0070_auto_20180411_1013	2019-12-30 13:02:22.524359+01
-293	projects	0070_auto_20180328_1401	2019-12-30 13:02:22.913016+01
-294	projects	0071_merge_20180412_1133	2019-12-30 13:02:22.915323+01
-295	projects	0072_auto_20180416_1115	2019-12-30 13:02:22.968332+01
-296	projects	0073_auto_20180416_1115	2019-12-30 13:02:23.133193+01
-297	projects	0074_auto_20180416_1204	2019-12-30 13:02:23.160669+01
-298	projects	0075_auto_20180515_1556	2019-12-30 13:02:23.985568+01
-299	projects	0076_auto_20180516_0954	2019-12-30 13:02:24.173128+01
-300	projects	0077_auto_20180518_1050	2019-12-30 13:02:24.328586+01
-301	projects	0078_auto_20180528_1414	2019-12-30 13:02:24.354678+01
-302	projects	0079_auto_20180626_1225	2019-12-30 13:02:24.464215+01
-303	projects	0080_auto_20180828_1522	2019-12-30 13:02:24.543123+01
-304	projects	0080_auto_20180810_1405	2019-12-30 13:02:24.606385+01
-305	projects	0081_merge_20181012_1209	2019-12-30 13:02:24.609425+01
-306	payouts	0002_auto_20160523_1525	2019-12-30 13:02:24.981354+01
-307	payouts	0003_auto_20160719_1315	2019-12-30 13:02:25.903319+01
-308	payouts	0004_projectpayout_currency	2019-12-30 13:02:25.971276+01
-309	payouts	0005_auto_20160721_1114	2019-12-30 13:02:26.405756+01
-310	payouts	0006_rename_account_bic_20170705_1426	2019-12-30 13:02:26.531218+01
-311	payouts	0007_auto_20181123_1057	2019-12-30 13:02:26.781181+01
-312	payouts	0008_auto_20181129_1451	2019-12-30 13:02:27.237411+01
-313	projects	0082_auto_20181129_1506	2019-12-30 13:02:28.073386+01
-314	payouts	0009_payoutdocument	2019-12-30 13:02:28.156185+01
-315	projects	0083_auto_20181129_1506	2019-12-30 13:02:28.332595+01
-316	payouts	0010_auto_20181203_1145	2019-12-30 13:02:28.503164+01
-317	payouts	0011_auto_20181205_1509	2019-12-30 13:02:28.615487+01
-318	payouts	0012_auto_20181205_1509	2019-12-30 13:02:29.290396+01
-319	payouts	0013_auto_20181207_1340	2019-12-30 13:02:29.383024+01
-320	payouts	0014_auto_20181211_0938	2019-12-30 13:02:29.80174+01
-321	payouts	0015_auto_20181212_1152	2019-12-30 13:02:30.011035+01
-322	payouts	0016_auto_20181215_2016	2019-12-30 13:02:30.155127+01
-323	payouts	0017_delete_in_review_accounts	2019-12-30 13:02:30.328259+01
-324	payouts	0018_auto_20190108_0858	2019-12-30 13:02:30.369955+01
-325	bb_payouts	0001_initial	2019-12-30 13:02:30.415072+01
-326	bb_payouts	0002_auto_20160523_1525	2019-12-30 13:02:30.545164+01
-327	bb_payouts	0003_auto_20190110_1155	2019-12-30 13:02:30.995576+01
-328	bluebottle_dashboard	0001_initial	2019-12-30 13:02:31.045321+01
-329	dashboard	0001_initial	2019-12-30 13:02:31.071711+01
-330	bluebottle_dashboard	0002_auto_20191107_0853	2019-12-30 13:02:31.229374+01
-331	wallposts	0001_initial	2019-12-30 13:02:32.592297+01
-332	wallposts	0002_auto_20161115_1601	2019-12-30 13:02:32.924424+01
-333	wallposts	0003_mediawallpostphoto_results_page	2019-12-30 13:02:32.980517+01
-334	wallposts	0002_auto_20161109_1024	2019-12-30 13:02:33.282269+01
-335	wallposts	0004_merge_20170118_1533	2019-12-30 13:02:33.284846+01
-336	wallposts	0004_merge_20170106_1627	2019-12-30 13:02:33.287812+01
-337	wallposts	0005_merge_20170124_1338	2019-12-30 13:02:33.290675+01
-338	wallposts	0006_remove_duplicate_donation_wallposts	2019-12-30 13:02:33.727333+01
-339	wallposts	0007_auto_20170821_1459	2019-12-30 13:02:33.764225+01
-340	wallposts	0008_add_group_permissions	2019-12-30 13:02:34.319856+01
-341	wallposts	0009_auto_20170821_2001	2019-12-30 13:02:34.381112+01
-342	wallposts	0010_auto_20170821_2001	2019-12-30 13:02:34.841548+01
-343	wallposts	0011_auto_20170821_2018	2019-12-30 13:02:34.902024+01
-344	wallposts	0012_auto_20170821_2018	2019-12-30 13:02:35.364905+01
-345	wallposts	0013_auto_20170822_1105	2019-12-30 13:02:35.53578+01
-346	wallposts	0014_set_owner_permissions	2019-12-30 13:02:36.380428+01
-347	wallposts	0015_auto_20171114_1035	2019-12-30 13:02:36.480059+01
-348	wallposts	0016_auto_20180508_1512	2019-12-30 13:02:36.689613+01
-349	wallposts	0017_wallpost_pinned	2019-12-30 13:02:36.754933+01
-350	wallposts	0018_auto_20190115_0853	2019-12-30 13:02:36.939818+01
-351	payouts	0019_auto_20190123_1216	2019-12-30 13:02:36.982323+01
-352	payouts	0020_auto_20190123_1731	2019-12-30 13:02:37.164517+01
-353	payouts_dorado	0001_initial	2019-12-30 13:02:37.647601+01
-354	payouts	0019_auto_20190110_1155	2019-12-30 13:02:37.796002+01
-355	payouts	0021_merge_20190124_1320	2019-12-30 13:02:37.798427+01
-356	payouts	0022_auto_20190211_1452	2019-12-30 13:02:37.900369+01
-357	funding	0002_auto_20190604_1458	2019-12-30 13:02:38.214499+01
-358	funding	0003_auto_20190604_1459	2019-12-30 13:02:38.364208+01
-359	funding	0004_auto_20190604_1501	2019-12-30 13:02:38.504666+01
-360	funding	0005_auto_20190604_1501	2019-12-30 13:02:38.650356+01
-361	funding	0006_auto_20190604_1615	2019-12-30 13:02:39.205802+01
-362	funding	0007_auto_20190605_1639	2019-12-30 13:02:39.37003+01
-363	funding	0008_auto_20190612_0941	2019-12-30 13:02:40.008063+01
-364	funding	0009_auto_20190612_1319	2019-12-30 13:02:40.593944+01
-365	funding	0010_auto_20190612_1359	2019-12-30 13:02:40.74776+01
-366	funding	0011_auto_20190617_1251	2019-12-30 13:02:40.883479+01
-367	funding	0012_auto_20190708_0731	2019-12-30 13:02:41.009779+01
-368	funding	0013_auto_20190711_0927	2019-12-30 13:02:41.134098+01
-369	funding	0014_auto_20190714_1440	2019-12-30 13:02:41.259212+01
-370	funding	0015_auto_20190728_0920	2019-12-30 13:02:41.479779+01
-371	funding	0016_auto_20190728_0930	2019-12-30 13:02:41.572337+01
-372	funding	0017_auto_20190728_1319	2019-12-30 13:02:42.056884+01
-373	funding	0013_auto_20190710_1455	2019-12-30 13:02:42.188211+01
-374	funding	0014_auto_20190716_1636	2019-12-30 13:02:42.618684+01
-375	funding	0015_merge_20190717_1651	2019-12-30 13:02:42.621606+01
-376	funding	0018_merge_20190729_1449	2019-12-30 13:02:42.624226+01
-377	funding	0019_auto_20190729_1609	2019-12-30 13:02:42.783976+01
-378	funding	0020_donation_name	2019-12-30 13:02:42.8337+01
-379	funding	0021_auto_20190803_1106	2019-12-30 13:02:42.901816+01
-380	funding	0022_auto_20190804_1022	2019-12-30 13:02:43.252329+01
-381	funding	0023_bankpayoutaccount	2019-12-30 13:02:43.330973+01
-382	funding	0024_bankpaymentprovider	2019-12-30 13:02:43.41812+01
-383	funding	0025_auto_20190904_1154	2019-12-30 13:02:43.602333+01
-384	funding	0026_auto_20190904_1200	2019-12-30 13:02:43.605143+01
-385	funding	0023_add_permissions	2019-12-30 13:02:44.102146+01
-386	funding	0027_merge_20190912_1324	2019-12-30 13:02:44.104651+01
-387	funding	0024_donation_anonymous	2019-12-30 13:02:44.151835+01
-388	funding	0028_merge_20190912_1354	2019-12-30 13:02:44.154855+01
-389	funding	0029_auto_20190913_1458	2019-12-30 13:02:44.653353+01
-390	funding	0030_auto_20190918_1607	2019-12-30 13:02:45.447571+01
-391	funding	0031_plainpayoutaccount	2019-12-30 13:02:45.54101+01
-392	funding	0032_paymentcurrency	2019-12-30 13:02:45.633275+01
-393	funding	0033_auto_20191002_0903	2019-12-30 13:02:46.152232+01
-394	funding	0034_auto_20191002_1150	2019-12-30 13:02:46.565893+01
-395	funding	0035_auto_20191002_1415	2019-12-30 13:02:46.673411+01
-396	funding	0036_auto_20191004_1336	2019-12-30 13:02:46.795594+01
-397	wallposts	0019_auto_20191017_2204	2019-12-30 13:02:46.931165+01
-398	rewards	0002_auto_20160720_2245	2019-12-30 13:02:47.080591+01
-399	rewards	0003_add_api_permissions	2019-12-30 13:02:47.143418+01
-400	rewards	0004_add_group_permissions	2019-12-30 13:02:47.614892+01
-401	rewards	0005_auto_20170823_1131	2019-12-30 13:02:47.678375+01
-402	rewards	0006_set_owner_permissions	2019-12-30 13:02:48.507821+01
-403	rewards	0007_auto_20170914_2004	2019-12-30 13:02:48.567674+01
-404	rewards	0008_auto_20170914_2029	2019-12-30 13:02:48.628371+01
-405	rewards	0009_auto_20191104_1230	2019-12-30 13:02:48.686954+01
-406	projects	0084_auto_20181207_1435	2019-12-30 13:02:48.780847+01
-407	projects	0085_auto_20181207_1552	2019-12-30 13:02:48.802324+01
-408	projects	0080_auto_20180828_1049	2019-12-30 13:02:49.015666+01
-409	projects	0081_merge_20180919_1152	2019-12-30 13:02:49.020401+01
-410	projects	0082_merge_20181127_1044	2019-12-30 13:02:49.02333+01
-411	projects	0081_auto_20180918_1335	2019-12-30 13:02:49.066546+01
-412	projects	0086_merge_20190121_1425	2019-12-30 13:02:49.069303+01
-413	projects	0086_auto_20190117_1007	2019-12-30 13:02:49.635781+01
-414	projects	0087_merge_20190130_1355	2019-12-30 13:02:49.638318+01
-415	projects	0080_auto_20180904_1532	2019-12-30 13:02:50.063846+01
-416	projects	0081_merge_20180911_1659	2019-12-30 13:02:50.066954+01
-417	projects	0088_merge_20190215_1425	2019-12-30 13:02:50.069547+01
-418	projects	0087_merge_20190206_1714	2019-12-30 13:02:50.072384+01
-419	projects	0088_merge_20190208_1523	2019-12-30 13:02:50.075049+01
-420	projects	0089_merge_20190215_1438	2019-12-30 13:02:50.077785+01
-421	projects	0086_merge_20190204_1005	2019-12-30 13:02:50.080543+01
-422	projects	0088_merge_20190213_1448	2019-12-30 13:02:50.083176+01
-423	projects	0090_merge_20190222_1101	2019-12-30 13:02:50.087097+01
-424	organizations	0012_auto_20190416_1101	2019-12-30 13:02:51.538378+01
-425	initiatives	0002_copy_permissions	2019-12-30 13:02:51.994047+01
-426	initiatives	0003_auto_20190403_1619	2019-12-30 13:02:52.122936+01
-427	initiatives	0004_auto_20190416_1101	2019-12-30 13:02:52.852954+01
-428	initiatives	0005_initiative_hasorganization	2019-12-30 13:02:52.938962+01
-429	initiatives	0006_auto_20190416_1553	2019-12-30 13:02:53.024488+01
-430	initiatives	0004_auto_20190418_1643	2019-12-30 13:02:53.210265+01
-431	initiatives	0007_merge_20190501_0922	2019-12-30 13:02:53.213186+01
-432	initiatives	0008_auto_20190513_1518	2019-12-30 13:02:53.295823+01
-433	initiatives	0009_auto_20190520_1436	2019-12-30 13:02:53.818247+01
-434	initiatives	0010_auto_20190521_0954	2019-12-30 13:02:53.903323+01
-435	initiatives	0011_auto_20190522_0931	2019-12-30 13:02:54.216936+01
-436	initiatives	0009_auto_20190524_1144	2019-12-30 13:02:54.345814+01
-437	initiatives	0012_merge_20190524_1208	2019-12-30 13:02:54.348861+01
-438	initiatives	0013_auto_20190527_1131	2019-12-30 13:02:54.552781+01
-439	initiatives	0014_auto_20190628_1656	2019-12-30 13:02:54.768409+01
-440	funding_vitepay	0001_initial	2019-12-30 13:02:54.916142+01
-441	funding_vitepay	0002_vitepaypayment_payment_url	2019-12-30 13:02:54.948488+01
-442	funding_vitepay	0003_vitepaypaymentprovider_prefix	2019-12-30 13:02:54.977733+01
-443	funding_vitepay	0004_auto_20190715_0739	2019-12-30 13:02:55.011942+01
-444	funding_vitepay	0005_vitepaypayoutaccount	2019-12-30 13:02:55.130347+01
-445	funding_vitepay	0006_auto_20190918_1632	2019-12-30 13:02:55.675603+01
-446	funding_vitepay	0007_auto_20191002_0903	2019-12-30 13:02:55.704098+01
-447	funding_stripe	0001_initial	2019-12-30 13:02:56.494452+01
-448	geo	0014_auto_20191022_1105	2019-12-30 13:02:56.550889+01
-449	funding_pledge	0001_initial	2019-12-30 13:02:56.682765+01
-450	funding_pledge	0002_pledgepaymentprovider	2019-12-30 13:02:56.714141+01
-451	funding_pledge	0003_auto_20191002_0903	2019-12-30 13:02:56.75271+01
-452	funding	0037_payout	2019-12-30 13:02:57.1746+01
-453	funding	0038_auto_20191014_1316	2019-12-30 13:02:57.453082+01
-454	funding	0039_auto_20191022_1105	2019-12-30 13:02:57.579273+01
-455	funding_pledge	0004_pledgebankaccount	2019-12-30 13:02:57.716079+01
-456	funding_lipisha	0001_initial	2019-12-30 13:02:57.87533+01
-457	funding_lipisha	0002_auto_20190717_1637	2019-12-30 13:02:57.971761+01
-458	funding_lipisha	0003_lipishapayoutaccount	2019-12-30 13:02:58.099523+01
-459	funding_lipisha	0004_auto_20190918_1632	2019-12-30 13:02:58.708715+01
-460	funding_lipisha	0005_auto_20191001_2246	2019-12-30 13:02:58.993712+01
-461	funding_lipisha	0006_auto_20191001_2251	2019-12-30 13:02:59.069276+01
-462	funding_flutterwave	0001_initial	2019-12-30 13:02:59.282588+01
-463	funding_flutterwave	0002_flutterwavepaymentprovider_prefix	2019-12-30 13:02:59.316+01
-464	funding_flutterwave	0003_flutterwavepayoutaccount	2019-12-30 13:02:59.480534+01
-465	funding_flutterwave	0004_auto_20190918_1633	2019-12-30 13:03:00.040554+01
-466	funding_flutterwave	0005_auto_20191002_0903	2019-12-30 13:03:00.112735+01
-467	funding	0040_auto_20191029_1309	2019-12-30 13:03:00.665446+01
-468	funding	0041_payout_currency	2019-12-30 13:03:00.718986+01
-469	funding	0042_auto_20191104_1154	2019-12-30 13:03:00.970427+01
-470	projects	0091_project_to_initiatives	2019-12-30 13:03:01.565928+01
-471	utils	0002_maillog	2019-12-30 13:03:01.660882+01
-472	pages	0001_initial	2019-12-30 13:03:01.82961+01
-473	pages	0002_auto_20161115_1601	2019-12-30 13:03:01.899529+01
-474	pages	0002_auto_20161109_1024	2019-12-30 13:03:01.968593+01
-475	pages	0003_merge_20170118_1533	2019-12-30 13:03:01.971235+01
-476	pages	0003_merge_20170106_1627	2019-12-30 13:03:01.97385+01
-477	pages	0004_merge_20170124_1338	2019-12-30 13:03:01.976271+01
-478	pages	0005_auto_20170803_1729	2019-12-30 13:03:02.511721+01
-479	pages	0006_auto_20171114_1035	2019-12-30 13:03:02.583571+01
-480	fluent_contents	0001_initial	2019-12-30 13:03:03.281685+01
-481	pages	0007_imagetextitem	2019-12-30 13:03:03.381148+01
-482	pages	0008_auto_20180326_0821	2019-12-30 13:03:03.613057+01
-483	pages	0009_auto_20180709_1706	2019-12-30 13:03:03.704054+01
-484	news	0001_initial	2019-12-30 13:03:03.80873+01
-485	news	0002_auto_20160531_1651	2019-12-30 13:03:03.881269+01
-486	news	0003_auto_20161115_1601	2019-12-30 13:03:03.955077+01
-487	news	0003_auto_20161109_1024	2019-12-30 13:03:04.031193+01
-488	news	0004_merge_20170118_1533	2019-12-30 13:03:04.03382+01
-489	news	0004_merge_20170106_1627	2019-12-30 13:03:04.036323+01
-490	news	0005_merge_20170124_1338	2019-12-30 13:03:04.038759+01
-491	news	0006_auto_20170803_1729	2019-12-30 13:03:04.841621+01
-492	news	0007_auto_20180709_1706	2019-12-30 13:03:05.003597+01
-493	surveys	0001_initial	2019-12-30 13:03:05.08881+01
-494	surveys	0002_survey_link	2019-12-30 13:03:05.117796+01
-495	surveys	0003_survey_specification	2019-12-30 13:03:05.148816+01
-496	surveys	0004_auto_20160919_1552	2019-12-30 13:03:05.249498+01
-497	surveys	0005_auto_20160919_1556	2019-12-30 13:03:05.315963+01
-498	surveys	0006_auto_20160919_1609	2019-12-30 13:03:05.402398+01
-499	surveys	0007_question_title	2019-12-30 13:03:05.431512+01
-500	surveys	0008_question_properties	2019-12-30 13:03:05.468345+01
-501	surveys	0009_answer_value	2019-12-30 13:03:05.500239+01
-502	surveys	0010_auto_20160920_0854	2019-12-30 13:03:05.769078+01
-503	surveys	0011_auto_20160920_1126	2019-12-30 13:03:05.979532+01
-504	surveys	0012_auto_20160920_1153	2019-12-30 13:03:06.036782+01
-505	surveys	0013_auto_20160921_1410	2019-12-30 13:03:06.426736+01
-506	surveys	0014_auto_20160921_1444	2019-12-30 13:03:06.538932+01
-507	surveys	0015_auto_20160922_1057	2019-12-30 13:03:06.811408+01
-508	surveys	0016_auto_20160922_1104	2019-12-30 13:03:06.879625+01
-509	surveys	0017_auto_20160922_1210	2019-12-30 13:03:06.968328+01
-510	surveys	0018_auto_20160922_1610	2019-12-30 13:03:07.061989+01
-511	surveys	0019_auto_20160922_1618	2019-12-30 13:03:07.211118+01
-512	surveys	0020_answer_options	2019-12-30 13:03:07.254878+01
-513	surveys	0021_response_params	2019-12-30 13:03:07.316839+01
-514	surveys	0022_auto_20160926_0912	2019-12-30 13:03:07.50397+01
-515	surveys	0023_aggregateanswer_aggregation_type	2019-12-30 13:03:07.572903+01
-516	surveys	0024_auto_20160926_1958	2019-12-30 13:03:07.948672+01
-517	surveys	0025_auto_20160927_1102	2019-12-30 13:03:08.075497+01
-518	surveys	0021_survey_last_synced	2019-12-30 13:03:08.10891+01
-519	surveys	0026_merge	2019-12-30 13:03:08.111966+01
-520	surveys	0027_auto_20160929_0817	2019-12-30 13:03:08.171004+01
-521	surveys	0028_auto_20160929_0849	2019-12-30 13:03:08.268523+01
-522	surveys	0029_auto_20160929_0932	2019-12-30 13:03:08.498648+01
-523	surveys	0030_auto_20161115_1601	2019-12-30 13:03:08.654737+01
-524	surveys	0031_question_display_theme	2019-12-30 13:03:08.691544+01
-525	cms	0001_initial	2019-12-30 13:03:09.977727+01
-526	cms	0002_shareresultscontent	2019-12-30 13:03:10.094306+01
-527	cms	0002_auto_20161207_0918	2019-12-30 13:03:10.255076+01
-528	cms	0003_merge_20161207_1037	2019-12-30 13:03:10.258754+01
-529	cms	0004_resultpage_image	2019-12-30 13:03:10.289654+01
-530	cms	0005_auto_20161207_1512	2019-12-30 13:03:10.74826+01
-531	cms	0006_auto_20161207_1642	2019-12-30 13:03:11.526221+01
-532	cms	0007_auto_20161207_1709	2019-12-30 13:03:12.121425+01
-533	cms	0005_auto_20161208_1124	2019-12-30 13:03:12.189778+01
-534	cms	0006_auto_20161208_1159	2019-12-30 13:03:12.336243+01
-535	cms	0008_merge_20161212_1459	2019-12-30 13:03:12.339687+01
-536	cms	0004_projectsmapcontent	2019-12-30 13:03:12.453566+01
-537	cms	0007_merge_20161212_1501	2019-12-30 13:03:12.45716+01
-538	cms	0009_merge_20161213_1047	2019-12-30 13:03:12.4609+01
-539	cms	0010_auto_20161214_1429	2019-12-30 13:03:12.952921+01
-540	cms	0011_auto_20161214_1531	2019-12-30 13:03:13.265452+01
-541	cms	0012_auto_20161214_1618	2019-12-30 13:03:13.343128+01
-542	cms	0010_auto_20161214_1524	2019-12-30 13:03:13.413587+01
-543	cms	0013_merge_20161214_1637	2019-12-30 13:03:13.416794+01
-544	cms	0014_auto_20161216_1424	2019-12-30 13:03:14.889449+01
-545	cms	0014_auto_20161216_1359	2019-12-30 13:03:15.193343+01
-546	cms	0015_merge_20161219_0946	2019-12-30 13:03:15.195878+01
-547	cms	0016_auto_20161228_1420	2019-12-30 13:03:15.399088+01
-548	cms	0017_add_api_permissions	2019-12-30 13:03:15.434324+01
-549	cms	0018_add_group_permissions	2019-12-30 13:03:16.135253+01
-550	cms	0019_auto_20170829_1005	2019-12-30 13:03:16.165576+01
-551	cms	0020_add_group_permissions	2019-12-30 13:03:16.749394+01
-552	cms	0021_auto_20171005_1646	2019-12-30 13:03:17.524021+01
-553	cms	0022_migrate_quotes_1	2019-12-30 13:03:17.87232+01
-554	cms	0023_migrate_quotes_2	2019-12-30 13:03:18.162717+01
-555	cms	0024_migrate_quotes_3	2019-12-30 13:03:18.868012+01
-556	cms	0025_migrate_stats_1	2019-12-30 13:03:19.091748+01
-557	cms	0026_migrate_stats_2	2019-12-30 13:03:19.461185+01
-558	cms	0027_migrate_stats_3	2019-12-30 13:03:19.821314+01
-559	cms	0021_homepage	2019-12-30 13:03:19.85094+01
-560	cms	0022_auto_20171006_1155	2019-12-30 13:03:19.918191+01
-561	cms	0023_auto_20171006_1208	2019-12-30 13:03:20.926699+01
-562	cms	0028_merge_20171006_1622	2019-12-30 13:03:20.930005+01
-563	cms	0029_auto_20171010_0931	2019-12-30 13:03:22.200809+01
-564	cms	0030_migrate_projects_1	2019-12-30 13:03:22.333516+01
-565	cms	0031_migrate_projects_2	2019-12-30 13:03:23.068581+01
-566	cms	0032_migrate_projects_3	2019-12-30 13:03:23.401756+01
-567	cms	0033_auto_20171017_1353	2019-12-30 13:03:23.50807+01
-568	cms	0034_auto_20171017_1549	2019-12-30 13:03:23.922705+01
-569	cms	0035_auto_20171017_1611	2019-12-30 13:03:24.106709+01
-570	cms	0036_auto_20171017_1622	2019-12-30 13:03:24.178437+01
-571	cms	0037_auto_20171017_1645	2019-12-30 13:03:24.572254+01
-572	cms	0038_auto_20171017_1645	2019-12-30 13:03:24.877093+01
-573	cms	0039_auto_20171017_1708	2019-12-30 13:03:25.021979+01
-574	cms	0040_auto_20171018_1413	2019-12-30 13:03:25.132773+01
-575	cms	0041_auto_20171018_1437	2019-12-30 13:03:25.204815+01
-576	cms	0042_auto_20171018_1437	2019-12-30 13:03:25.465707+01
-577	cms	0043_auto_20171018_1442	2019-12-30 13:03:25.637501+01
-578	cms	0044_auto_20171018_1457	2019-12-30 13:03:25.674001+01
-579	cms	0045_auto_20171018_1505	2019-12-30 13:03:25.751543+01
-580	cms	0046_auto_20171018_1637	2019-12-30 13:03:25.791381+01
-581	cms	0047_auto_20171018_1709	2019-12-30 13:03:25.867897+01
-582	cms	0048_auto_20171024_1554	2019-12-30 13:03:26.076536+01
-583	cms	0049_auto_20171024_1601	2019-12-30 13:03:27.231432+01
-584	cms	0050_auto_20171024_1623	2019-12-30 13:03:29.090854+01
-585	cms	0051_auto_20171024_1631	2019-12-30 13:03:30.40129+01
-586	cms	0052_auto_20171027_1419	2019-12-30 13:03:30.69308+01
-587	cms	0053_auto_20171030_1645	2019-12-30 13:03:30.69639+01
-588	cms	0054_auto_20171031_1428	2019-12-30 13:03:37.184317+01
-589	cms	0021_auto_20171017_2015	2019-12-30 13:03:37.188028+01
-590	cms	0022_auto_20171019_1725	2019-12-30 13:03:37.191004+01
-591	cms	0023_auto_20171019_2042	2019-12-30 13:03:37.193729+01
-592	cms	0024_siteplatformsettings	2019-12-30 13:03:37.196108+01
-593	cms	0025_auto_20171024_1600	2019-12-30 13:03:37.198663+01
-594	cms	0055_merge_20171031_1713	2019-12-30 13:03:37.201336+01
-595	cms	0056_auto_20171102_1527	2019-12-30 13:03:37.203905+01
-596	cms	0057_auto_20171103_1438	2019-12-30 13:03:37.206386+01
-597	cms	0058_auto_20171110_1230	2019-12-30 13:03:37.209366+01
-598	cms	0059_auto_20171121_1022	2019-12-30 13:03:37.213055+01
-599	cms	0059_auto_20171121_0959	2019-12-30 13:03:37.215546+01
-600	cms	0060_merge_20171121_1334	2019-12-30 13:03:37.217842+01
-601	cms	0061_auto_20171128_1135	2019-12-30 13:03:37.220332+01
-602	cms	0062_auto_20171128_1355	2019-12-30 13:03:37.222787+01
-603	cms	0063_auto_20171204_1049	2019-12-30 13:03:37.225073+01
-604	cms	0064_auto_20171220_1145	2019-12-30 13:03:37.227545+01
-605	cms	0065_auto_20180313_1401	2019-12-30 13:03:37.230703+01
-606	cms	0066_auto_20180709_1657	2019-12-30 13:03:37.233852+01
-607	cms	0067_auto_20190710_0938	2019-12-30 13:03:37.236506+01
-608	cms	0068_migrate_start_project	2019-12-30 13:03:37.238855+01
-609	cms	0055_migrate_statistics	2019-12-30 13:03:37.797434+01
-610	cms	0056_auto_20191106_1041	2019-12-30 13:03:38.410979+01
-611	contact	0001_initial	2019-12-30 13:03:38.441719+01
-612	contact	0002_contactmessage_author	2019-12-30 13:03:38.69919+01
-613	text	0001_initial	2019-12-30 13:03:39.405197+01
-614	rawhtml	0001_initial	2019-12-30 13:03:39.645245+01
-615	oembeditem	0001_initial	2019-12-30 13:03:39.904285+01
-616	contentplugins	0001_initial	2019-12-30 13:03:40.162391+01
-617	contentplugins	0002_auto_20161115_1601	2019-12-30 13:03:40.219553+01
-618	contentplugins	0002_auto_20161109_1024	2019-12-30 13:03:40.285368+01
-619	contentplugins	0003_merge_20170118_1533	2019-12-30 13:03:40.288614+01
-620	contentplugins	0003_merge_20170106_1627	2019-12-30 13:03:40.291247+01
-621	contentplugins	0004_merge_20170124_1338	2019-12-30 13:03:40.293965+01
-622	contentplugins	0005_auto_20170818_1441	2019-12-30 13:03:42.371828+01
-623	django_summernote	0001_initial	2019-12-30 13:03:42.399394+01
-624	django_summernote	0002_auto_20190218_1224	2019-12-30 13:03:42.462345+01
-625	djcelery	0001_initial	2019-12-30 13:03:43.075164+01
-626	djmoney_rates	0001_initial	2019-12-30 13:03:43.205723+01
-627	donations	0009_auto_20190130_1140	2019-12-30 13:03:43.716697+01
-628	donations	0010_auto_20190130_1141	2019-12-30 13:03:44.439098+01
-629	donations	0011_auto_20191101_1046	2019-12-30 13:03:44.921252+01
-630	events	0001_initial	2019-12-30 13:03:45.545378+01
-631	events	0002_add_permissions	2019-12-30 13:03:46.943506+01
-632	events	0003_auto_20190522_1329	2019-12-30 13:03:46.988619+01
-633	events	0004_add_permissions	2019-12-30 13:03:48.037582+01
-634	events	0005_auto_20190527_1431	2019-12-30 13:03:48.194715+01
-635	events	0006_event_is_online	2019-12-30 13:03:48.249731+01
-636	events	0007_auto_20190605_1434	2019-12-30 13:03:48.421701+01
-637	events	0008_auto_20190812_1612	2019-12-30 13:03:48.638917+01
-638	events	0009_event_duration	2019-12-30 13:03:48.690916+01
-639	events	0010_auto_20190816_1327	2019-12-30 13:03:48.793164+01
-640	files	0002_relatedimage	2019-12-30 13:03:49.430702+01
-641	files	0003_auto_20191111_1533	2019-12-30 13:03:50.403722+01
-642	follow	0001_initial	2019-12-30 13:03:50.677082+01
-643	funding	0043_auto_20191108_0819	2019-12-30 13:03:51.28114+01
-644	funding	0044_auto_20191108_1008	2019-12-30 13:03:51.900987+01
-645	funding	0043_auto_20191106_1149	2019-12-30 13:03:51.936427+01
-646	funding	0045_merge_20191108_1853	2019-12-30 13:03:51.939279+01
-647	funding	0045_auto_20191111_1329	2019-12-30 13:03:53.357183+01
-648	funding	0046_merge_20191112_1256	2019-12-30 13:03:53.360466+01
-649	funding	0047_auto_20191116_1540	2019-12-30 13:03:53.955066+01
-650	funding	0048_add_permissions	2019-12-30 13:03:55.101006+01
-651	funding	0049_auto_20191218_1538	2019-12-30 13:03:55.228512+01
-652	funding	0050_auto_20191218_1625	2019-12-30 13:03:55.856847+01
-653	funding_flutterwave	0006_auto_20191111_1332	2019-12-30 13:03:57.358381+01
-654	funding_lipisha	0007_auto_20191008_1011	2019-12-30 13:03:57.510886+01
-655	funding_lipisha	0008_lipishabankaccount_mpesa_code	2019-12-30 13:03:57.595376+01
-656	funding_pledge	0005_auto_20191111_1331	2019-12-30 13:03:58.613512+01
-657	funding_stripe	0002_auto_20191111_1330	2019-12-30 13:03:59.598732+01
-658	funding_vitepay	0008_auto_20191008_1034	2019-12-30 13:03:59.751954+01
-659	funding_vitepay	0009_auto_20191111_1330	2019-12-30 13:04:01.107431+01
-660	fundraisers	0002_fundraiser_owner	2019-12-30 13:04:01.477313+01
-661	fundraisers	0003_fundraiser_project	2019-12-30 13:04:01.836317+01
-662	fundraisers	0004_auto_20160718_1811	2019-12-30 13:04:02.57779+01
-663	fundraisers	0005_auto_20160720_1726	2019-12-30 13:04:03.296579+01
-664	fundraisers	0004_auto_20160720_1140	2019-12-30 13:04:04.088691+01
-665	fundraisers	0006_merge	2019-12-30 13:04:04.091732+01
-666	fundraisers	0007_auto_20170803_1730	2019-12-30 13:04:05.659747+01
-667	geo	0015_add_permissions	2019-12-30 13:04:06.667055+01
-668	homepage	0001_initial	2019-12-30 13:04:07.738797+01
-669	initiatives	0015_auto_20190708_1417	2019-12-30 13:04:08.16059+01
-670	initiatives	0016_auto_20190726_0915	2019-12-30 13:04:09.191549+01
-671	initiatives	0017_auto_20191031_1439	2019-12-30 13:04:09.22658+01
-672	initiatives	0018_auto_20191108_1222	2019-12-30 13:04:09.814144+01
-673	initiatives	0018_auto_20191106_0928	2019-12-30 13:04:11.218329+01
-674	initiatives	0019_merge_20191108_1853	2019-12-30 13:04:11.223299+01
-675	initiatives	0020_auto_20191129_1131	2019-12-30 13:04:11.299185+01
-676	initiatives	0021_auto_20191129_1132	2019-12-30 13:04:12.395369+01
-677	initiatives	0022_remove_initiativeplatformsettings_search_filters	2019-12-30 13:04:12.439149+01
-678	jet	0001_initial	2019-12-30 13:04:12.54011+01
-679	jet	0002_delete_userdashboardmodule	2019-12-30 13:04:12.569869+01
-680	default	0001_initial	2019-12-30 13:04:13.336455+01
-681	social_auth	0001_initial	2019-12-30 13:04:13.33992+01
-682	default	0002_add_related_name	2019-12-30 13:04:13.670878+01
-683	social_auth	0002_add_related_name	2019-12-30 13:04:13.673705+01
-684	looker	0001_initial	2019-12-30 13:04:13.711092+01
-685	looker	0002_auto_20180328_1054	2019-12-30 13:04:13.74658+01
-686	looker	0003_init_looker_embeds	2019-12-30 13:04:14.387326+01
-687	mails	0001_initial	2019-12-30 13:04:14.425304+01
-688	mails	0002_auto_20171211_1117	2019-12-30 13:04:14.428672+01
-689	mails	0003_auto_20180727_1122	2019-12-30 13:04:15.499367+01
-690	orders	0002_auto_20160718_2010	2019-12-30 13:04:15.965331+01
-691	orders	0003_auto_20170823_1533	2019-12-30 13:04:16.210567+01
-692	orders	0004_add_group_permissions	2019-12-30 13:04:17.279716+01
-693	members	0011_permission_groups	2019-12-30 13:04:17.908175+01
-694	members	0012_auto_20170807_1454	2019-12-30 13:04:18.535379+01
-695	members	0012_auto_20170803_1730	2019-12-30 13:04:20.028073+01
-696	members	0013_merge_20170811_1500	2019-12-30 13:04:20.031852+01
-697	members	0014_auto_20170816_1614	2019-12-30 13:04:20.24923+01
-698	members	0015_auto_20170816_1614	2019-12-30 13:04:21.357643+01
-699	members	0016_auto_20170822_1104	2019-12-30 13:04:21.572221+01
-700	members	0017_closed_site_permissions	2019-12-30 13:04:22.290137+01
-701	members	0018_auto_20170824_1521	2019-12-30 13:04:22.704939+01
-702	members	0019_auto_20170824_1812	2019-12-30 13:04:22.915929+01
-703	members	0020_auto_20171031_1048	2019-12-30 13:04:23.93913+01
-704	members	0021_auto_20171114_1035	2019-12-30 13:04:24.306014+01
-705	members	0022_auto_20171207_0856	2019-12-30 13:04:24.834252+01
-706	members	0023_memberplatformsettings_require_consent	2019-12-30 13:04:24.872247+01
-707	members	0024_create_empty_settings	2019-12-30 13:04:25.504185+01
-708	members	0025_memberplatformsettings_consent_link	2019-12-30 13:04:25.538453+01
-709	members	0026_auto_20190129_1050	2019-12-30 13:04:25.75462+01
-710	members	0027_auto_20190208_1119	2019-12-30 13:04:26.372451+01
-711	members	0026_auto_20180919_1434	2019-12-30 13:04:26.587093+01
-712	members	0028_merge_20190215_1441	2019-12-30 13:04:26.592095+01
-713	members	0028_auto_20190219_1024	2019-12-30 13:04:26.80148+01
-714	members	0029_merge_20190222_0930	2019-12-30 13:04:26.805008+01
-715	members	0030_auto_20190225_1215	2019-12-30 13:04:27.801172+01
-716	members	0027_auto_20190206_1018	2019-12-30 13:04:28.625786+01
-717	members	0031_merge_20190226_1449	2019-12-30 13:04:28.62941+01
-718	notifications	0001_initial	2019-12-30 13:04:28.996992+01
-719	notifications	0002_message_custom_message	2019-12-30 13:04:29.228727+01
-720	notifications	0003_notificationplatformsettings	2019-12-30 13:04:29.26196+01
-721	payments	0001_initial	2019-12-30 13:04:31.433013+01
-722	payments	0002_auto_20160718_2345	2019-12-30 13:04:31.928062+01
-723	payments	0003_auto_20161025_1221	2019-12-30 13:04:32.181058+01
-724	payments	0004_auto_20170919_1621	2019-12-30 13:04:32.446482+01
-725	payments	0005_auto_20170919_1621	2019-12-30 13:04:32.452235+01
-726	orders	0005_auto_20171003_1112	2019-12-30 13:04:33.187674+01
-727	orders	0006_auto_20180509_1436	2019-12-30 13:04:33.416351+01
-728	orders	0007_auto_20180509_1437	2019-12-30 13:04:34.503686+01
-729	orders	0008_auto_20190904_0838	2019-12-30 13:04:35.20803+01
-730	organizations	0013_remove_organizationcontact_organization	2019-12-30 13:04:35.59519+01
-731	organizations	0014_auto_20190708_1418	2019-12-30 13:04:36.329501+01
-732	organizations	0015_auto_20191209_2128	2019-12-30 13:04:36.699833+01
-733	pages	0010_auto_20180717_1017	2019-12-30 13:04:36.948856+01
-734	payments	0006_auto_20181115_1321	2019-12-30 13:04:37.949286+01
-735	payments_beyonic	0001_initial	2019-12-30 13:04:38.32119+01
-736	payments_docdata	0001_initial	2019-12-30 13:04:39.4559+01
-737	payments_docdata	0002_auto_20161115_1601	2019-12-30 13:04:39.495034+01
-738	payments_docdata	0002_auto_20161109_1024	2019-12-30 13:04:39.535225+01
-739	payments_docdata	0003_merge_20170118_1533	2019-12-30 13:04:39.540516+01
-740	payments_docdata	0003_merge_20170106_1627	2019-12-30 13:04:39.543497+01
-741	payments_docdata	0004_merge_20170124_1338	2019-12-30 13:04:39.546057+01
-742	payments_external	0001_initial	2019-12-30 13:04:39.907054+01
-743	payments_flutterwave	0001_initial	2019-12-30 13:04:40.298473+01
-744	payments_flutterwave	0002_auto_20170202_2054	2019-12-30 13:04:40.444832+01
-745	payments_flutterwave	0003_auto_20170206_1235	2019-12-30 13:04:40.708006+01
-746	payments_flutterwave	0004_auto_20170207_1532	2019-12-30 13:04:40.831792+01
-747	payments_flutterwave	0005_auto_20170210_1058	2019-12-30 13:04:40.963106+01
-748	payments_flutterwave	0006_auto_20170323_1227	2019-12-30 13:04:41.695509+01
-749	payments_flutterwave	0007_flutterwavempesapayment	2019-12-30 13:04:42.060918+01
-750	payments_flutterwave	0008_flutterwavempesapayment_transaction_amount	2019-12-30 13:04:42.134161+01
-751	payments_interswitch	0001_initial	2019-12-30 13:04:42.518923+01
-752	payments_interswitch	0002_auto_20161006_1144	2019-12-30 13:04:43.087068+01
-753	payments_interswitch	0003_interswitchpaymentstatusupdate	2019-12-30 13:04:43.464282+01
-754	payments_lipisha	0001_initial	2019-12-30 13:04:43.849609+01
-755	payments_lipisha	0002_lipishaproject_organisationnumber	2019-12-30 13:04:44.198258+01
-756	payments_logger	0001_initial	2019-12-30 13:04:44.603432+01
-757	payments_mock	0001_initial	2019-12-30 13:04:45.470897+01
-758	payments_pledge	0001_initial	2019-12-30 13:04:45.843322+01
-759	payments_stripe	0001_initial	2019-12-30 13:04:46.241731+01
-760	payments_stripe	0002_stripepayment_currency	2019-12-30 13:04:46.321931+01
-761	payments_stripe	0003_auto_20190130_1231	2019-12-30 13:04:46.469269+01
-762	payments_telesom	0001_initial	2019-12-30 13:04:46.824946+01
-763	payments_vitepay	0001_initial	2019-12-30 13:04:47.198099+01
-764	payments_voucher	0001_initial	2019-12-30 13:04:47.97959+01
-765	payouts	0023_auto_20190705_0906	2019-12-30 13:04:48.533358+01
-766	projects	0092_auto_20191031_0901	2019-12-30 13:04:49.708592+01
-767	projects	0093_auto_20191106_1206	2019-12-30 13:04:50.434872+01
-768	projects	0093_auto_20191106_0928	2019-12-30 13:04:51.199398+01
-769	projects	0094_merge_20191107_0943	2019-12-30 13:04:51.202338+01
-770	quotes	0001_initial	2019-12-30 13:04:51.552125+01
-771	quotes	0002_auto_20161115_1601	2019-12-30 13:04:51.726015+01
-772	quotes	0002_auto_20161109_1024	2019-12-30 13:04:51.896699+01
-773	quotes	0003_merge_20170118_1533	2019-12-30 13:04:51.899976+01
-774	quotes	0003_merge_20170106_1627	2019-12-30 13:04:51.902936+01
-775	quotes	0004_merge_20170124_1338	2019-12-30 13:04:51.905973+01
-776	redirects	0001_initial	2019-12-30 13:04:52.397355+01
-777	scim	0001_initial	2019-12-30 13:04:52.434023+01
-778	scim	0002_auto_20190118_1625	2019-12-30 13:04:53.17118+01
-779	sessions	0001_initial	2019-12-30 13:04:53.207183+01
-780	sites	0001_initial	2019-12-30 13:04:53.245606+01
-781	sites	0002_alter_domain_unique	2019-12-30 13:04:53.294725+01
-782	slides	0001_initial	2019-12-30 13:04:53.598452+01
-783	slides	0002_auto_20161115_1601	2019-12-30 13:04:53.778679+01
-784	slides	0002_auto_20161109_1024	2019-12-30 13:04:53.965528+01
-785	slides	0003_merge_20170118_1533	2019-12-30 13:04:53.968597+01
-786	slides	0003_merge_20170106_1627	2019-12-30 13:04:53.97363+01
-787	slides	0004_merge_20170124_1338	2019-12-30 13:04:53.978224+01
-788	slides	0005_auto_20170803_1730	2019-12-30 13:04:55.327487+01
-789	slides	0006_auto_20180717_1017	2019-12-30 13:04:55.532951+01
-790	default	0003_alter_email_max_length	2019-12-30 13:04:55.581995+01
-791	social_auth	0003_alter_email_max_length	2019-12-30 13:04:55.585033+01
-792	default	0004_auto_20160423_0400	2019-12-30 13:04:55.775679+01
-793	social_auth	0004_auto_20160423_0400	2019-12-30 13:04:55.778702+01
-794	social_auth	0005_auto_20160727_2333	2019-12-30 13:04:56.269097+01
-795	social_django	0006_partial	2019-12-30 13:04:56.309999+01
-796	social_django	0007_code_timestamp	2019-12-30 13:04:56.353033+01
-797	social_django	0008_partial_timestamp	2019-12-30 13:04:56.397884+01
-798	statistics	0001_initial	2019-12-30 13:04:56.438217+01
-799	statistics	0002_auto_20161115_1601	2019-12-30 13:04:56.480702+01
-800	statistics	0003_auto_20161214_1524	2019-12-30 13:04:56.519435+01
-801	statistics	0002_auto_20161109_1024	2019-12-30 13:04:56.559977+01
-802	statistics	0004_merge_20170118_1533	2019-12-30 13:04:56.563584+01
-803	statistics	0004_merge_20170106_1627	2019-12-30 13:04:56.567206+01
-804	statistics	0005_merge_20170124_1338	2019-12-30 13:04:56.570204+01
-805	statistics	0006_auto_20170323_1227	2019-12-30 13:04:56.614608+01
-806	statistics	0007_auto_20171114_1035	2019-12-30 13:04:56.656435+01
-807	suggestions	0001_initial	2019-12-30 13:04:56.961958+01
-808	suggestions	0002_suggestion_language	2019-12-30 13:04:57.112456+01
-809	suggestions	0003_auto_20160720_1140	2019-12-30 13:04:57.268858+01
-810	suggestions	0003_auto_20160718_1811	2019-12-30 13:04:57.42813+01
-811	suggestions	0004_merge	2019-12-30 13:04:57.43177+01
-812	surveys	0030_auto_20161109_1024	2019-12-30 13:04:57.767619+01
-813	surveys	0032_merge_20170118_1533	2019-12-30 13:04:57.771461+01
-814	surveys	0032_merge_20170106_1627	2019-12-30 13:04:57.775854+01
-815	surveys	0033_merge_20170124_1338	2019-12-30 13:04:57.779315+01
-816	surveys	0034_survey_active	2019-12-30 13:04:57.829131+01
-817	tasks	0042_migrate_tasks_to_activities	2019-12-30 13:04:58.744764+01
-818	terms	0001_initial	2019-12-30 13:04:59.782774+01
-819	terms	0002_auto_20180907_1132	2019-12-30 13:05:00.124257+01
-820	terms	0003_auto_20180907_1132	2019-12-30 13:05:01.415282+01
-821	text	0002_textitem_text_final	2019-12-30 13:05:01.468604+01
-822	thumbnail	0001_initial	2019-12-30 13:05:01.510031+01
-823	token_auth	0001_initial	2019-12-30 13:05:01.799366+01
-824	votes	0001_initial	2019-12-30 13:05:02.269255+01
-825	votes	0002_auto_20161004_1342	2019-12-30 13:05:02.450617+01
-826	wallposts	0020_auto_20191017_2208	2019-12-30 13:05:03.266186+01
-827	social_django	0003_alter_email_max_length	2019-12-30 13:05:03.27563+01
-828	social_django	0004_auto_20160423_0400	2019-12-30 13:05:03.278346+01
-829	social_django	0002_add_related_name	2019-12-30 13:05:03.281108+01
-830	social_django	0005_auto_20160727_2333	2019-12-30 13:05:03.283668+01
-831	cms	0054_auto_20171031_1428_squashed_0068_migrate_start_project	2019-12-30 13:05:03.286275+01
-832	social_django	0001_initial	2019-12-30 13:05:03.289006+01
-833	members	0032_auto_20191223_1456	2020-01-03 09:33:02.938848+01
-834	funding_flutterwave	0007_auto_20200106_0839	2020-01-06 10:42:38.229263+01
-835	funding_flutterwave	0008_auto_20200106_1029	2020-01-06 10:42:38.326861+01
-836	pages	0011_auto_20200106_1620	2020-01-09 08:52:04.378276+01
-837	pages	0012_columnsitem	2020-01-09 08:52:04.832439+01
-838	files	0004_auto_20200106_1644	2020-01-21 08:48:10.13111+01
-839	organizations	0016_auto_20200106_1636	2020-01-21 08:48:10.518034+01
-840	pages	0011_auto_20200106_1647	2020-01-21 08:48:10.875661+01
-841	pages	0013_merge_20200120_1128	2020-01-21 08:48:10.878068+01
-842	funding	0049_auto_20200124_1032	2020-01-27 08:47:28.001814+01
-843	funding	0050_auto_20200124_1230	2020-01-27 08:47:29.004088+01
-844	members	0033_auto_20200114_1050	2020-01-27 08:47:29.80456+01
-845	members	0034_auto_20200114_1050	2020-01-27 08:47:30.873603+01
-846	members	0035_memberplatformsettings_background	2020-01-27 08:47:30.959226+01
-847	notifications	0004_auto_20200123_1344	2020-01-27 08:47:31.328787+01
-848	notifications	0005_auto_20200124_1505	2020-01-27 08:47:31.678833+01
+1	geo	0001_initial	2020-09-18 14:10:18.561003+02
+2	bb_projects	0001_initial	2020-09-18 14:10:18.60409+02
+3	contenttypes	0001_initial	2020-09-18 14:10:18.629874+02
+4	contenttypes	0002_remove_content_type_name	2020-09-18 14:10:18.704847+02
+5	auth	0001_initial	2020-09-18 14:10:18.757259+02
+6	auth	0002_alter_permission_name_max_length	2020-09-18 14:10:18.77446+02
+7	auth	0003_alter_user_email_max_length	2020-09-18 14:10:18.798814+02
+8	auth	0004_alter_user_username_opts	2020-09-18 14:10:18.821041+02
+9	auth	0005_alter_user_last_login_null	2020-09-18 14:10:18.839423+02
+10	auth	0006_require_contenttypes_0002	2020-09-18 14:10:18.841987+02
+11	auth	0007_alter_validators_add_error_messages	2020-09-18 14:10:18.857302+02
+12	members	0001_initial	2020-09-18 14:10:18.898096+02
+13	activities	0001_initial	2020-09-18 14:10:18.95435+02
+14	funding	0001_initial	2020-09-18 14:10:19.017184+02
+15	files	0001_initial	2020-09-18 14:10:19.0882+02
+16	categories	0001_initial	2020-09-18 14:10:19.10597+02
+17	categories	0002_auto_20160531_1651	2020-09-18 14:10:19.122499+02
+18	categories	0003_categorycontent	2020-09-18 14:10:19.143915+02
+19	categories	0004_auto_20170731_1327	2020-09-18 14:10:19.241354+02
+20	categories	0005_auto_20180117_0924	2020-09-18 14:10:19.5152+02
+21	categories	0006_auto_20180907_1131	2020-09-18 14:10:19.529168+02
+22	categories	0007_auto_20180907_1131	2020-09-18 14:10:19.730616+02
+23	categories	0008_authenticated-permissions	2020-09-18 14:10:19.927719+02
+24	clients	0001_initial	2020-09-18 14:10:19.943573+02
+25	bb_projects	0002_remove_projecttheme_name_nl	2020-09-18 14:10:20.112023+02
+26	bb_projects	0003_auto_20160815_1658	2020-09-18 14:10:20.190858+02
+27	bb_projects	0004_add_project_continued_phase	2020-09-18 14:10:20.192639+02
+28	bb_projects	0005_add_api_permissions	2020-09-18 14:10:20.219073+02
+29	bb_projects	0006_add_group_permissions	2020-09-18 14:10:20.394676+02
+30	bb_projects	0007_translate_themes	2020-09-18 14:10:20.426918+02
+31	bb_projects	0008_migrate_theme_translations	2020-09-18 14:10:20.491058+02
+32	bb_projects	0009_remove_translated_fields	2020-09-18 14:10:20.558242+02
+33	bb_projects	0010_translate_phases	2020-09-18 14:10:20.59497+02
+34	bb_projects	0011_migrate_phase_translations	2020-09-18 14:10:20.658964+02
+35	bb_projects	0012_remove_translated_fields	2020-09-18 14:10:20.70067+02
+36	bb_projects	0007_auto_20180323_1602	2020-09-18 14:10:20.763507+02
+37	bb_projects	0013_merge_20180406_1536	2020-09-18 14:10:20.765307+02
+38	bb_projects	0007_auto_20180319_1536	2020-09-18 14:10:20.766882+02
+39	bb_projects	0008_merge_20180404_1500	2020-09-18 14:10:20.768428+02
+40	bb_projects	0008_merge_20180328_1504	2020-09-18 14:10:20.76991+02
+41	bb_projects	0009_merge_20180404_1638	2020-09-18 14:10:20.771442+02
+42	bb_projects	0014_merge_20180412_1421	2020-09-18 14:10:20.772781+02
+43	bb_projects	0015_auto_20190329_1101	2020-09-18 14:10:20.964823+02
+44	initiatives	0001_initial	2020-09-18 14:10:21.036484+02
+45	activities	0002_auto_20190524_1041	2020-09-18 14:10:21.158645+02
+46	activities	0003_add_permissions	2020-09-18 14:10:21.36104+02
+47	activities	0004_auto_20190524_1514	2020-09-18 14:10:21.460502+02
+48	activities	0005_auto_20190528_1022	2020-09-18 14:10:21.489273+02
+49	activities	0006_auto_20190605_1453	2020-09-18 14:10:21.575707+02
+50	activities	0007_auto_20190710_0851	2020-09-18 14:10:21.609032+02
+51	activities	0008_auto_20190814_1541	2020-09-18 14:10:21.86733+02
+52	activities	0009_auto_20191007_1506	2020-09-18 14:10:21.95261+02
+53	activities	0010_activity_transition_date	2020-09-18 14:10:21.982971+02
+54	activities	0011_auto_20191028_1156	2020-09-18 14:10:21.984607+02
+55	activities	0012_auto_20191108_1317	2020-09-18 14:10:22.042671+02
+56	activities	0013_auto_20191120_0920	2020-09-18 14:10:22.112559+02
+57	activities	0014_add_permissions	2020-09-18 14:10:22.302547+02
+58	activities	0015_auto_20200128_1045	2020-09-18 14:10:22.415769+02
+59	activities	0016_organizer	2020-09-18 14:10:22.452979+02
+60	activities	0017_auto_20200205_1054	2020-09-18 14:10:22.647865+02
+61	activities	0018_auto_20200212_1025	2020-09-18 14:10:22.716308+02
+62	geo	0002_auto_20160920_1425	2020-09-18 14:10:22.766069+02
+63	geo	0003_fill_location_group	2020-09-18 14:10:22.833882+02
+64	geo	0004_auto_20160929_0817	2020-09-18 14:10:22.871645+02
+65	geo	0005_translate_geo	2020-09-18 14:10:23.028699+02
+66	geo	0006_migrate_geo_translations	2020-09-18 14:10:23.106323+02
+67	geo	0007_remove_translated_fields	2020-09-18 14:10:23.239278+02
+68	geo	0008_auto_20181129_1451	2020-09-18 14:10:23.27671+02
+69	geo	0008_auto_20180918_1037	2020-09-18 14:10:23.548962+02
+70	geo	0009_merge_20190121_1425	2020-09-18 14:10:23.550736+02
+71	geo	0010_initiativeplace	2020-09-18 14:10:23.593454+02
+72	geo	0011_activityplace	2020-09-18 14:10:23.637375+02
+73	geo	0012_auto_20190522_1341	2020-09-18 14:10:23.65737+02
+74	geo	0013_auto_20190524_0958	2020-09-18 14:10:23.741998+02
+75	utils	0001_initial	2020-09-18 14:10:23.835384+02
+76	taggit	0001_initial	2020-09-18 14:10:23.902908+02
+77	taggit	0002_auto_20150616_2121	2020-09-18 14:10:23.929969+02
+78	organizations	0001_initial	2020-09-18 14:10:24.033375+02
+79	projects	0001_initial	2020-09-18 14:10:24.391523+02
+80	projects	0002_remove_project_tags	2020-09-18 14:10:24.446081+02
+81	projects	0003_auto_20160610_1554	2020-09-18 14:10:24.491755+02
+82	projects	0004_projectdocument_ip_address	2020-09-18 14:10:24.535734+02
+83	projects	0005_auto_20160720_1140	2020-09-18 14:10:24.635719+02
+84	projects	0006_project_celebrate_results	2020-09-18 14:10:24.682705+02
+85	projects	0007_auto_20160929_0817	2020-09-18 14:10:24.726909+02
+86	projects	0005_auto_20160721_1546	2020-09-18 14:10:25.276116+02
+87	projects	0006_merge	2020-09-18 14:10:25.278083+02
+88	projects	0008_merge	2020-09-18 14:10:25.279911+02
+89	tasks	0001_initial	2020-09-18 14:10:25.457908+02
+90	tasks	0002_auto_20160614_1354	2020-09-18 14:10:25.525385+02
+91	tasks	0003_auto_20160621_1707	2020-09-18 14:10:25.757452+02
+92	tasks	0004_auto_20160705_0917	2020-09-18 14:10:25.788028+02
+93	tasks	0005_auto_20160706_1423	2020-09-18 14:10:25.951047+02
+94	tasks	0006_auto_20160720_1058	2020-09-18 14:10:26.033231+02
+95	tasks	0007_auto_20160720_1139	2020-09-18 14:10:26.077166+02
+96	tasks	0008_auto_20160802_1025	2020-09-18 14:10:26.118866+02
+97	tasks	0009_fix_deadline_timestamp	2020-09-18 14:10:26.132282+02
+98	tasks	0010_auto_20160829_2337	2020-09-18 14:10:26.216285+02
+99	tasks	0011_auto_20160920_1019	2020-09-18 14:10:26.562673+02
+100	tasks	0011_auto_20160919_1508	2020-09-18 14:10:26.647629+02
+101	tasks	0012_merge	2020-09-18 14:10:26.649547+02
+102	tasks	0008_auto_20160802_1441	2020-09-18 14:10:26.688351+02
+103	tasks	0006_auto_20160718_1811	2020-09-18 14:10:26.734947+02
+104	tasks	0010_merge	2020-09-18 14:10:26.736834+02
+105	tasks	0011_merge	2020-09-18 14:10:26.738536+02
+106	tasks	0013_merge	2020-09-18 14:10:26.740124+02
+107	tasks	0013_auto_20161006_1813	2020-09-18 14:10:26.782587+02
+108	tasks	0014_merge	2020-09-18 14:10:26.78448+02
+109	tasks	0014_auto_20161006_1144	2020-09-18 14:10:26.833363+02
+110	tasks	0015_merge	2020-09-18 14:10:26.83522+02
+111	projects	0008_fix_project_type	2020-09-18 14:10:26.849766+02
+112	projects	0009_merge	2020-09-18 14:10:26.851523+02
+113	projects	0007_remove_projectbudgetline_currency	2020-09-18 14:10:26.888713+02
+114	projects	0007_project_currencies	2020-09-18 14:10:26.930213+02
+115	projects	0010_merge	2020-09-18 14:10:26.931885+02
+116	projects	0011_auto_20161006_1149	2020-09-18 14:10:26.972239+02
+117	projects	0010_auto_20161019_1403	2020-09-18 14:10:27.068735+02
+118	projects	0012_merge	2020-09-18 14:10:27.070644+02
+119	projects	0011_auto_20161028_0946	2020-09-18 14:10:27.404406+02
+120	projects	0013_merge	2020-09-18 14:10:27.406483+02
+121	projects	0014_auto_20161109_1041	2020-09-18 14:10:27.447318+02
+122	projects	0015_project_payout_status	2020-09-18 14:10:27.491551+02
+123	projects	0016_project_campaign_payed_out	2020-09-18 14:10:27.540329+02
+124	projects	0017_auto_20161121_1053	2020-09-18 14:10:27.591646+02
+125	projects	0014_auto_20161115_1601	2020-09-18 14:10:27.648777+02
+126	projects	0015_auto_20161207_0900	2020-09-18 14:10:27.694767+02
+127	members	0002_auto_20160523_1525	2020-09-18 14:10:27.813759+02
+128	members	0003_alter_last_login	2020-09-18 14:10:27.857771+02
+129	members	0004_member_verified	2020-09-18 14:10:27.90169+02
+130	members	0005_auto_20160830_0902	2020-09-18 14:10:27.998575+02
+131	members	0006_member_last_seen	2020-09-18 14:10:28.042111+02
+132	members	0007_auto_20161115_1601	2020-09-18 14:10:28.086493+02
+133	members	0007_auto_20161109_1024	2020-09-18 14:10:28.130173+02
+134	members	0008_merge_20170106_1627	2020-09-18 14:10:28.132059+02
+135	projects	0018_merge_20170106_1627	2020-09-18 14:10:28.133965+02
+136	projects	0019_auto_20170106_1657	2020-09-18 14:10:28.401276+02
+137	projects	0020_merge_20170124_1338	2020-09-18 14:10:28.403533+02
+138	projects	0018_merge_20170118_1533	2020-09-18 14:10:28.405188+02
+139	authtoken	0001_initial	2020-09-18 14:10:28.472846+02
+140	projects	0019_auto_20170118_1537	2020-09-18 14:10:28.578142+02
+141	projects	0021_merge_20170202_1154	2020-09-18 14:10:28.580403+02
+142	projects	0022_project_reviewer	2020-09-18 14:10:28.683458+02
+143	projects	0023_auto_20170323_1227	2020-09-18 14:10:28.939506+02
+144	projects	0024_auto_20170404_1130	2020-09-18 14:10:29.133856+02
+145	projects	0025_auto_20170404_1130	2020-09-18 14:10:29.412328+02
+146	payouts	0001_initial	2020-09-18 14:10:29.469973+02
+147	projects	0026_auto_20170424_1653	2020-09-18 14:10:29.620088+02
+148	projects	0027_auto_20170602_2240	2020-09-18 14:10:29.740676+02
+149	projects	0028_auto_20170619_1555	2020-09-18 14:10:29.852998+02
+150	projects	0027_auto_20170523_1422	2020-09-18 14:10:29.902607+02
+151	projects	0028_auto_20170523_1422	2020-09-18 14:10:30.011345+02
+152	projects	0029_merge_20170628_0905	2020-09-18 14:10:30.013077+02
+153	projects	0030_rename_account_bic_20170705_1221	2020-09-18 14:10:30.123156+02
+154	projects	0031_add_project_roles	2020-09-18 14:10:30.455638+02
+155	projects	0032_default_task_manager	2020-09-18 14:10:30.565014+02
+156	projects	0031_add_api_permissions	2020-09-18 14:10:30.702132+02
+157	projects	0032_add_group_permissions	2020-09-18 14:10:31.024034+02
+158	projects	0033_merge_20170818_1333	2020-09-18 14:10:31.025553+02
+159	projects	0034_auto_20170822_1303	2020-09-18 14:10:31.122518+02
+160	projects	0035_set_owner_permissions	2020-09-18 14:10:31.419092+02
+161	members	0008_merge_20170118_1533	2020-09-18 14:10:31.421448+02
+162	members	0009_merge_20170124_1338	2020-09-18 14:10:31.423117+02
+163	members	0010_fix_export_permissions_migration	2020-09-18 14:10:31.696802+02
+164	projects	0031_fix_migration_projectstatuslog_creation_20170721_1637	2020-09-18 14:10:31.798171+02
+165	projects	0036_merge_20170831_1449	2020-09-18 14:10:31.800343+02
+166	projects	0037_auto_20170915_1350	2020-09-18 14:10:31.911964+02
+167	projects	0038_auto_20170915_1358	2020-09-18 14:10:31.997858+02
+168	projects	0039_add_project_image_group_permissions	2020-09-18 14:10:32.257869+02
+169	projects	0040_auto_20170918_1200	2020-09-18 14:10:32.463405+02
+170	projects	0041_auto_20170918_1201	2020-09-18 14:10:32.802707+02
+171	projects	0037_longer_place_20170914_1129	2020-09-18 14:10:32.850625+02
+172	projects	0038_longer_account_details_20170914_1134	2020-09-18 14:10:32.897501+02
+173	projects	0039_auto_20170914_1503	2020-09-18 14:10:32.941845+02
+174	projects	0042_merge_20170920_1332	2020-09-18 14:10:32.943806+02
+175	projects	0043_auto_20171023_1958	2020-09-18 14:10:33.002194+02
+176	projects	0044_auto_20171023_2008	2020-09-18 14:10:33.059675+02
+177	projects	0045_auto_20171023_2013	2020-09-18 14:10:33.111107+02
+178	projects	0046_auto_20171023_2047	2020-09-18 14:10:33.200008+02
+179	projects	0047_auto_20171024_1016	2020-09-18 14:10:33.217372+02
+180	projects	0048_auto_20171024_1052	2020-09-18 14:10:33.236767+02
+181	projects	0049_auto_20171024_1018	2020-09-18 14:10:33.359277+02
+182	projects	0043_remove_payout_status_sourcing_projects	2020-09-18 14:10:33.468538+02
+183	projects	0050_merge_20171110_1633	2020-09-18 14:10:33.471067+02
+184	projects	0044_auto_20171110_1549	2020-09-18 14:10:33.925081+02
+185	projects	0045_auto_20171114_1058	2020-09-18 14:10:34.065811+02
+186	projects	0051_merge_20171115_1702	2020-09-18 14:10:34.06758+02
+187	projects	0051_auto_20171113_1637	2020-09-18 14:10:34.100442+02
+188	projects	0052_merge_20171122_1000	2020-09-18 14:10:34.102651+02
+189	projects	0052_merge_20171121_1335	2020-09-18 14:10:34.104631+02
+190	projects	0053_merge_20171122_1001	2020-09-18 14:10:34.106355+02
+191	projects	0050_merge_20171124_0022	2020-09-18 14:10:34.107795+02
+192	projects	0054_merge_20171128_1142	2020-09-18 14:10:34.109198+02
+193	projects	0043_auto_20171025_1253	2020-09-18 14:10:34.221298+02
+194	projects	0050_merge_20171113_1230	2020-09-18 14:10:34.222968+02
+195	projects	0051_merge_20171124_0021	2020-09-18 14:10:34.224373+02
+196	projects	0052_merge_20171127_1329	2020-09-18 14:10:34.225802+02
+197	projects	0055_merge_20171205_0847	2020-09-18 14:10:34.227508+02
+198	projects	0056_auto_20171205_0847	2020-09-18 14:10:34.358683+02
+199	projects	0055_merge_20171201_1608	2020-09-18 14:10:34.360491+02
+200	projects	0057_merge_20171205_1236	2020-09-18 14:10:34.362035+02
+201	projects	0054_auto_20171122_1415	2020-09-18 14:10:34.43334+02
+202	projects	0055_project_campaign_edited	2020-09-18 14:10:34.491987+02
+203	projects	0058_merge_20171220_1342	2020-09-18 14:10:34.49431+02
+204	organizations	0002_auto_20160610_1554	2020-09-18 14:10:34.522317+02
+205	organizations	0003_auto_20170314_0900	2020-09-18 14:10:34.549018+02
+206	organizations	0004_organizationcontact	2020-09-18 14:10:34.613743+02
+207	organizations	0003_auto_20170303_1057	2020-09-18 14:10:34.725391+02
+208	organizations	0005_merge_20170321_1630	2020-09-18 14:10:34.727118+02
+209	organizations	0006_auto_20170328_1138	2020-09-18 14:10:34.790942+02
+210	organizations	0007_auto_20170803_1730	2020-09-18 14:10:35.279916+02
+211	organizations	0008_organization_logo	2020-09-18 14:10:35.30823+02
+212	organizations	0009_organization_description	2020-09-18 14:10:35.338338+02
+213	organizations	0010_auto_20171114_1035	2020-09-18 14:10:35.395395+02
+214	organizations	0011_auto_20180118_1100	2020-09-18 14:10:35.4396+02
+215	projects	0059_auto_20180118_1100	2020-09-18 14:10:35.569472+02
+216	projects	0060_auto_20180118_1217	2020-09-18 14:10:35.632484+02
+217	projects	0061_auto_20180118_1510	2020-09-18 14:10:35.692383+02
+218	projects	0062_auto_20180119_1231	2020-09-18 14:10:35.805089+02
+219	projects	0063_auto_20180119_1456	2020-09-18 14:10:36.071036+02
+220	projects	0064_auto_20180119_1625	2020-09-18 14:10:36.163577+02
+221	projects	0065_auto_20180121_1952	2020-09-18 14:10:36.253657+02
+222	projects	0066_auto_20180121_2002	2020-09-18 14:10:36.277133+02
+223	projects	0067_auto_20180123_0914	2020-09-18 14:10:36.545633+02
+224	projects	0068_auto_20180306_1614	2020-09-18 14:10:36.632742+02
+225	projects	0069_auto_20180316_1553	2020-09-18 14:10:36.817686+02
+226	projects	0070_auto_20180411_1013	2020-09-18 14:10:36.86558+02
+227	projects	0070_auto_20180328_1401	2020-09-18 14:10:37.193736+02
+228	projects	0071_merge_20180412_1133	2020-09-18 14:10:37.195786+02
+229	projects	0072_auto_20180416_1115	2020-09-18 14:10:37.247801+02
+230	projects	0073_auto_20180416_1115	2020-09-18 14:10:37.367361+02
+231	projects	0074_auto_20180416_1204	2020-09-18 14:10:37.388895+02
+232	projects	0075_auto_20180515_1556	2020-09-18 14:10:37.980463+02
+233	projects	0076_auto_20180516_0954	2020-09-18 14:10:38.126517+02
+234	projects	0077_auto_20180518_1050	2020-09-18 14:10:38.231801+02
+235	projects	0078_auto_20180528_1414	2020-09-18 14:10:38.254867+02
+236	projects	0079_auto_20180626_1225	2020-09-18 14:10:38.33368+02
+237	projects	0080_auto_20180828_1522	2020-09-18 14:10:38.396511+02
+238	projects	0080_auto_20180810_1405	2020-09-18 14:10:38.453234+02
+239	projects	0081_merge_20181012_1209	2020-09-18 14:10:38.45555+02
+240	payouts	0002_auto_20160523_1525	2020-09-18 14:10:38.544872+02
+241	payouts	0003_auto_20160719_1315	2020-09-18 14:10:39.394167+02
+242	payouts	0004_projectpayout_currency	2020-09-18 14:10:39.439272+02
+243	payouts	0005_auto_20160721_1114	2020-09-18 14:10:39.560508+02
+244	payouts	0006_rename_account_bic_20170705_1426	2020-09-18 14:10:39.862765+02
+245	payouts	0007_auto_20181123_1057	2020-09-18 14:10:40.066624+02
+246	payouts	0008_auto_20181129_1451	2020-09-18 14:10:40.423608+02
+247	projects	0082_auto_20181129_1506	2020-09-18 14:10:41.145147+02
+248	payouts	0009_payoutdocument	2020-09-18 14:10:41.212548+02
+249	projects	0083_auto_20181129_1506	2020-09-18 14:10:41.340973+02
+250	payouts	0010_auto_20181203_1145	2020-09-18 14:10:41.455163+02
+251	payouts	0011_auto_20181205_1509	2020-09-18 14:10:41.535405+02
+252	payouts	0012_auto_20181205_1509	2020-09-18 14:10:41.855332+02
+253	payouts	0013_auto_20181207_1340	2020-09-18 14:10:41.938509+02
+254	payouts	0014_auto_20181211_0938	2020-09-18 14:10:42.480333+02
+255	payouts	0015_auto_20181212_1152	2020-09-18 14:10:42.641713+02
+256	payouts	0016_auto_20181215_2016	2020-09-18 14:10:42.744784+02
+257	payouts	0017_delete_in_review_accounts	2020-09-18 14:10:42.866214+02
+258	payouts	0018_auto_20190108_0858	2020-09-18 14:10:42.899302+02
+259	payouts	0019_auto_20190123_1216	2020-09-18 14:10:42.937583+02
+260	payouts	0020_auto_20190123_1731	2020-09-18 14:10:43.058612+02
+261	payouts_dorado	0001_initial	2020-09-18 14:10:43.181541+02
+262	bb_payouts	0001_initial	2020-09-18 14:10:43.212954+02
+263	bb_payouts	0002_auto_20160523_1525	2020-09-18 14:10:43.297692+02
+264	bb_payouts	0003_auto_20190110_1155	2020-09-18 14:10:43.642661+02
+265	payouts	0019_auto_20190110_1155	2020-09-18 14:10:43.736556+02
+266	payouts	0021_merge_20190124_1320	2020-09-18 14:10:43.738529+02
+267	payouts	0022_auto_20190211_1452	2020-09-18 14:10:43.806976+02
+268	funding	0002_auto_20190604_1458	2020-09-18 14:10:44.037695+02
+269	funding	0003_auto_20190604_1459	2020-09-18 14:10:44.146859+02
+270	funding	0004_auto_20190604_1501	2020-09-18 14:10:44.258587+02
+271	funding	0005_auto_20190604_1501	2020-09-18 14:10:44.371325+02
+272	funding	0006_auto_20190604_1615	2020-09-18 14:10:44.76936+02
+273	funding	0007_auto_20190605_1639	2020-09-18 14:10:44.916079+02
+274	funding	0008_auto_20190612_0941	2020-09-18 14:10:45.44943+02
+275	funding	0009_auto_20190612_1319	2020-09-18 14:10:45.681728+02
+276	funding	0010_auto_20190612_1359	2020-09-18 14:10:46.012838+02
+277	funding	0011_auto_20190617_1251	2020-09-18 14:10:46.115173+02
+278	funding	0012_auto_20190708_0731	2020-09-18 14:10:46.222162+02
+279	funding	0013_auto_20190711_0927	2020-09-18 14:10:46.32546+02
+280	funding	0014_auto_20190714_1440	2020-09-18 14:10:46.435113+02
+281	funding	0015_auto_20190728_0920	2020-09-18 14:10:46.611514+02
+282	funding	0016_auto_20190728_0930	2020-09-18 14:10:46.683375+02
+283	funding	0017_auto_20190728_1319	2020-09-18 14:10:46.988019+02
+284	funding	0013_auto_20190710_1455	2020-09-18 14:10:47.092228+02
+285	funding	0014_auto_20190716_1636	2020-09-18 14:10:47.417494+02
+286	funding	0015_merge_20190717_1651	2020-09-18 14:10:47.419427+02
+287	funding	0018_merge_20190729_1449	2020-09-18 14:10:47.421309+02
+288	funding	0019_auto_20190729_1609	2020-09-18 14:10:47.554364+02
+289	funding	0020_donation_name	2020-09-18 14:10:47.596298+02
+290	funding	0021_auto_20190803_1106	2020-09-18 14:10:47.653241+02
+291	funding	0022_auto_20190804_1022	2020-09-18 14:10:47.712387+02
+292	funding	0023_bankpayoutaccount	2020-09-18 14:10:47.785896+02
+293	funding	0024_bankpaymentprovider	2020-09-18 14:10:47.857655+02
+294	funding	0025_auto_20190904_1154	2020-09-18 14:10:48.233169+02
+295	funding	0026_auto_20190904_1200	2020-09-18 14:10:48.235382+02
+296	funding	0023_add_permissions	2020-09-18 14:10:48.571244+02
+297	funding	0027_merge_20190912_1324	2020-09-18 14:10:48.572842+02
+298	funding	0024_donation_anonymous	2020-09-18 14:10:48.609004+02
+299	funding	0028_merge_20190912_1354	2020-09-18 14:10:48.611026+02
+300	funding	0029_auto_20190913_1458	2020-09-18 14:10:48.941798+02
+301	funding	0030_auto_20190918_1607	2020-09-18 14:10:49.497607+02
+302	funding	0031_plainpayoutaccount	2020-09-18 14:10:49.567664+02
+303	funding	0032_paymentcurrency	2020-09-18 14:10:49.639931+02
+304	funding	0033_auto_20191002_0903	2020-09-18 14:10:49.964662+02
+305	funding	0034_auto_20191002_1150	2020-09-18 14:10:50.060222+02
+306	funding	0035_auto_20191002_1415	2020-09-18 14:10:50.1316+02
+307	funding	0036_auto_20191004_1336	2020-09-18 14:10:50.213207+02
+308	funding	0037_payout	2020-09-18 14:10:50.29507+02
+309	funding	0038_auto_20191014_1316	2020-09-18 14:10:50.669955+02
+310	funding	0039_auto_20191022_1105	2020-09-18 14:10:50.7583+02
+311	funding	0040_auto_20191029_1309	2020-09-18 14:10:51.11548+02
+312	funding	0041_payout_currency	2020-09-18 14:10:51.15657+02
+313	funding	0042_auto_20191104_1154	2020-09-18 14:10:51.355745+02
+314	funding	0043_auto_20191108_0819	2020-09-18 14:10:51.49313+02
+315	funding	0044_auto_20191108_1008	2020-09-18 14:10:51.813073+02
+316	funding	0043_auto_20191106_1149	2020-09-18 14:10:51.83095+02
+317	funding	0045_merge_20191108_1853	2020-09-18 14:10:51.832903+02
+318	funding	0045_auto_20191111_1329	2020-09-18 14:10:52.181673+02
+319	funding	0046_merge_20191112_1256	2020-09-18 14:10:52.183831+02
+320	funding	0047_auto_20191116_1540	2020-09-18 14:10:52.30448+02
+321	funding	0048_add_permissions	2020-09-18 14:10:52.61871+02
+322	funding	0049_auto_20200124_1032	2020-09-18 14:10:53.223247+02
+323	funding	0050_auto_20200124_1230	2020-09-18 14:10:53.345025+02
+324	funding	0051_funding_update_contribution_date	2020-09-18 14:10:53.466576+02
+325	funding	0052_auto_20200205_1710	2020-09-18 14:10:53.576983+02
+326	events	0001_initial	2020-09-18 14:10:53.734157+02
+327	events	0002_add_permissions	2020-09-18 14:10:54.295731+02
+328	events	0003_auto_20190522_1329	2020-09-18 14:10:54.326139+02
+329	events	0004_add_permissions	2020-09-18 14:10:54.672943+02
+330	events	0005_auto_20190527_1431	2020-09-18 14:10:54.754823+02
+331	events	0006_event_is_online	2020-09-18 14:10:54.787386+02
+332	events	0007_auto_20190605_1434	2020-09-18 14:10:54.878194+02
+333	events	0008_auto_20190812_1612	2020-09-18 14:10:55.01427+02
+334	events	0009_event_duration	2020-09-18 14:10:55.048252+02
+335	events	0010_auto_20190816_1327	2020-09-18 14:10:55.112188+02
+336	events	0011_event_update_contribution_date	2020-09-18 14:10:55.224711+02
+337	tasks	0016_auto_20161208_1159	2020-09-18 14:10:55.274093+02
+338	tasks	0017_task_deadline_to_apply	2020-09-18 14:10:55.318664+02
+339	tasks	0018_auto_20170503_1405	2020-09-18 14:10:55.369573+02
+340	tasks	0019_remove_task_deadline_to_apply	2020-09-18 14:10:55.645785+02
+341	tasks	0020_task_deadline_to_apply	2020-09-18 14:10:55.709995+02
+342	tasks	0021_auto_20170503_1435	2020-09-18 14:10:55.928216+02
+343	tasks	0022_task_accepting	2020-09-18 14:10:55.986218+02
+344	tasks	0023_taskmember_resume	2020-09-18 14:10:56.040479+02
+345	tasks	0018_skill_expertise	2020-09-18 14:10:56.204548+02
+346	tasks	0023_merge_20170519_1012	2020-09-18 14:10:56.206587+02
+347	tasks	0024_merge_20170529_1436	2020-09-18 14:10:56.208532+02
+348	tasks	0025_auto_20170601_1540	2020-09-18 14:10:56.329403+02
+349	tasks	0024_auto_20170602_2304	2020-09-18 14:10:56.44283+02
+350	tasks	0026_merge_20170628_0905	2020-09-18 14:10:56.444838+02
+351	tasks	0027_delete_tasks_date_status_changed	2020-09-18 14:10:56.484879+02
+352	tasks	0028_add_api_permissions	2020-09-18 14:10:56.906138+02
+353	tasks	0029_add_group_permissions	2020-09-18 14:10:57.265709+02
+354	tasks	0030_auto_20170822_1104	2020-09-18 14:10:57.409935+02
+355	tasks	0031_set_owner_permissions	2020-09-18 14:10:57.791608+02
+356	tasks	0032_add_skill_permission	2020-09-18 14:10:58.1599+02
+357	tasks	0028_auto_20170817_1546	2020-09-18 14:10:58.29276+02
+358	tasks	0033_merge_20170830_1106	2020-09-18 14:10:58.294436+02
+359	tasks	0034_more_owner_permissions	2020-09-18 14:10:58.863069+02
+360	tasks	0029_fix_migration_statuslog_creation_20170721_1329	2020-09-18 14:10:59.006189+02
+361	tasks	0035_merge_20170831_1449	2020-09-18 14:10:59.008312+02
+362	tasks	0036_auto_20171005_1646	2020-09-18 14:10:59.054055+02
+363	tasks	0037_auto_20171010_1554	2020-09-18 14:10:59.097238+02
+364	tasks	0036_auto_20171114_1056	2020-09-18 14:10:59.137298+02
+365	tasks	0038_merge_20171115_1702	2020-09-18 14:10:59.139283+02
+366	tasks	0039_translate_skill	2020-09-18 14:10:59.258537+02
+367	tasks	0040_migrate_skill_translations	2020-09-18 14:10:59.378978+02
+368	tasks	0041_remove_untranslated_fields	2020-09-18 14:10:59.455604+02
+369	assignments	0001_initial	2020-09-18 14:10:59.596154+02
+370	assignments	0002_auto_20190529_0858	2020-09-18 14:10:59.6338+02
+371	assignments	0003_auto_20190909_1355	2020-09-18 14:11:00.175765+02
+372	assignments	0004_assignment_is_online	2020-09-18 14:11:00.214086+02
+373	assignments	0005_auto_20190909_1514	2020-09-18 14:11:00.242378+02
+374	assignments	0006_auto_20190909_1515	2020-09-18 14:11:00.593959+02
+375	assignments	0007_auto_20190909_1519	2020-09-18 14:11:00.633022+02
+376	assignments	0008_auto_20190909_1545	2020-09-18 14:11:00.705696+02
+377	assignments	0009_auto_20190909_1557	2020-09-18 14:11:00.840733+02
+378	assignments	0010_auto_20190911_1605	2020-09-18 14:11:01.014308+02
+379	assignments	0011_applicant_document	2020-09-18 14:11:01.097772+02
+380	assignments	0012_auto_20190913_1547	2020-09-18 14:11:01.415099+02
+381	assignments	0013_assignment_update_contribution_date	2020-09-18 14:11:01.537914+02
+382	activities	0016_auto_20200205_1139	2020-09-18 14:11:01.663155+02
+383	activities	0019_merge_20200213_1038	2020-09-18 14:11:01.665237+02
+384	activities	0020_auto_20200224_1005	2020-09-18 14:11:01.965516+02
+385	activities	0021_merge_review_status_20200501_1249	2020-09-18 14:11:02.094963+02
+386	files	0002_relatedimage	2020-09-18 14:11:02.179037+02
+387	files	0003_auto_20191111_1533	2020-09-18 14:11:02.510538+02
+388	files	0004_auto_20200106_1644	2020-09-18 14:11:03.081014+02
+389	files	0005_privatedocument	2020-09-18 14:11:03.173879+02
+390	files	0006_auto_20200401_1223	2020-09-18 14:11:03.231595+02
+391	activities	0021_auto_20200415_1501	2020-09-18 14:11:03.45444+02
+392	activities	0022_merge_20200513_1730	2020-09-18 14:11:03.456599+02
+393	activities	0022_activity_video_url	2020-09-18 14:11:03.524836+02
+394	activities	0023_merge_20200527_0830	2020-09-18 14:11:03.527006+02
+395	activities	0024_fix_statuses_20200630_0845	2020-09-18 14:11:03.70972+02
+396	segments	0001_initial	2020-09-18 14:11:03.729522+02
+397	segments	0002_auto_20200706_1557	2020-09-18 14:11:03.792798+02
+398	segments	0003_auto_20200706_1630	2020-09-18 14:11:03.832085+02
+399	activities	0023_activity_segments	2020-09-18 14:11:03.927+02
+400	activities	0025_merge_20200819_1654	2020-09-18 14:11:03.929133+02
+401	admin	0001_initial	2020-09-18 14:11:04.024589+02
+402	admin	0002_logentry_remove_auto_add	2020-09-18 14:11:04.343972+02
+403	analytics	0001_initial	2020-09-18 14:11:04.410189+02
+404	analytics	0002_auto_20171031_1209	2020-09-18 14:11:04.564173+02
+405	analytics	0003_auto_20180210_1615	2020-09-18 14:11:04.622276+02
+406	analytics	0004_auto_20180404_1035	2020-09-18 14:11:04.692408+02
+407	analytics	0005_auto_20180424_1205	2020-09-18 14:11:04.735141+02
+408	assignments	0014_auto_20200206_1649	2020-09-18 14:11:05.256629+02
+409	assignments	0015_auto_20200217_1344	2020-09-18 14:11:05.354364+02
+410	assignments	0016_auto_20200217_1344	2020-09-18 14:11:05.50527+02
+411	assignments	0017_applicant_private_document	2020-09-18 14:11:05.845136+02
+412	assignments	0018_auto_20200401_1107	2020-09-18 14:11:05.987552+02
+413	assignments	0019_remove_applicant_document	2020-09-18 14:11:06.087268+02
+414	assignments	0020_auto_20200401_1223	2020-09-18 14:11:06.184646+02
+415	auth	0008_alter_user_username_max_length	2020-09-18 14:11:06.213992+02
+416	authtoken	0002_auto_20160226_1747	2020-09-18 14:11:06.384839+02
+417	axes	0001_initial	2020-09-18 14:11:06.425873+02
+418	axes	0002_auto_20151217_2044	2020-09-18 14:11:06.581443+02
+419	axes	0003_auto_20160322_0929	2020-09-18 14:11:06.726938+02
+420	axes	0004_auto_20181024_1538	2020-09-18 14:11:06.882359+02
+421	axes	0005_remove_accessattempt_trusted	2020-09-18 14:11:06.904574+02
+422	bb_accounts	0001_initial	2020-09-18 14:11:07.005954+02
+423	bb_accounts	0002_useraddress_user	2020-09-18 14:11:07.095393+02
+424	bb_accounts	0003_useraddress_position	2020-09-18 14:11:07.42248+02
+425	rewards	0001_initial	2020-09-18 14:11:07.517215+02
+426	orders	0001_initial	2020-09-18 14:11:07.615973+02
+427	fundraisers	0001_initial	2020-09-18 14:11:07.717228+02
+428	donations	0001_initial	2020-09-18 14:11:07.738088+02
+429	donations	0002_donation_fundraiser	2020-09-18 14:11:07.840561+02
+430	donations	0003_donation_order	2020-09-18 14:11:07.939589+02
+431	donations	0004_auto_20160523_1525	2020-09-18 14:11:08.13915+02
+432	donations	0005_auto_20160718_1811	2020-09-18 14:11:08.264391+02
+433	donations	0006_auto_20170803_1730	2020-09-18 14:11:08.966447+02
+434	donations	0007_donation_name	2020-09-18 14:11:09.025774+02
+435	donations	0008_auto_20170927_1021	2020-09-18 14:11:09.197432+02
+436	bb_follow	0001_initial	2020-09-18 14:11:09.314804+02
+437	bb_follow	0002_follow_user	2020-09-18 14:11:09.407782+02
+438	bb_follow	0003_auto_20180530_1621	2020-09-18 14:11:09.560311+02
+439	bluebottle_dashboard	0001_initial	2020-09-18 14:11:09.604529+02
+440	dashboard	0001_initial	2020-09-18 14:11:09.626535+02
+441	bluebottle_dashboard	0002_auto_20191107_0853	2020-09-18 14:11:09.774683+02
+442	categories	0009_translate_content_blocks	2020-09-18 14:11:10.538176+02
+443	categories	0010_migrate_content_blocks	2020-09-18 14:11:10.698071+02
+444	categories	0011_auto_20200422_0821	2020-09-18 14:11:10.830276+02
+445	categories	0012_category_video	2020-09-18 14:11:10.854818+02
+446	clients	0002_auto_20200205_1316	2020-09-18 14:11:10.873014+02
+447	statistics	0001_initial	2020-09-18 14:11:10.898398+02
+448	statistics	0002_auto_20161115_1601	2020-09-18 14:11:10.924063+02
+449	statistics	0003_auto_20161214_1524	2020-09-18 14:11:10.947383+02
+450	statistics	0002_auto_20161109_1024	2020-09-18 14:11:10.970223+02
+451	statistics	0004_merge_20170118_1533	2020-09-18 14:11:10.97232+02
+452	statistics	0004_merge_20170106_1627	2020-09-18 14:11:10.974154+02
+453	statistics	0005_merge_20170124_1338	2020-09-18 14:11:10.976145+02
+454	statistics	0006_auto_20170323_1227	2020-09-18 14:11:10.998937+02
+455	statistics	0007_auto_20171114_1035	2020-09-18 14:11:11.026605+02
+456	impact	0001_initial	2020-09-18 14:11:11.15459+02
+457	impact	0002_impactgoal_activity	2020-09-18 14:11:11.257016+02
+458	impact	0003_auto_20200624_1157	2020-09-18 14:11:11.279942+02
+459	impact	0004_auto_20200624_1157	2020-09-18 14:11:11.310299+02
+460	impact	0005_auto_20200710_1103	2020-09-18 14:11:11.415901+02
+461	impact	0006_auto_20200710_1104	2020-09-18 14:11:11.748042+02
+462	impact	0007_auto_20200714_1647	2020-09-18 14:11:11.881849+02
+463	impact	0008_impacttype_icon	2020-09-18 14:11:11.906665+02
+464	statistics	0008_auto_20200717_1136	2020-09-18 14:11:12.657245+02
+465	statistics	0009_auto_20200717_1201	2020-09-18 14:11:12.683829+02
+466	fluent_contents	0001_initial	2020-09-18 14:11:12.814023+02
+467	wallposts	0001_initial	2020-09-18 14:11:14.468176+02
+468	wallposts	0002_auto_20161115_1601	2020-09-18 14:11:14.793054+02
+469	wallposts	0003_mediawallpostphoto_results_page	2020-09-18 14:11:14.84709+02
+470	wallposts	0002_auto_20161109_1024	2020-09-18 14:11:15.145275+02
+471	wallposts	0004_merge_20170118_1533	2020-09-18 14:11:15.148345+02
+472	wallposts	0004_merge_20170106_1627	2020-09-18 14:11:15.154473+02
+473	wallposts	0005_merge_20170124_1338	2020-09-18 14:11:15.157309+02
+474	wallposts	0006_remove_duplicate_donation_wallposts	2020-09-18 14:11:15.339607+02
+475	wallposts	0007_auto_20170821_1459	2020-09-18 14:11:15.641232+02
+476	wallposts	0008_add_group_permissions	2020-09-18 14:11:16.19419+02
+477	wallposts	0009_auto_20170821_2001	2020-09-18 14:11:16.248923+02
+478	wallposts	0010_auto_20170821_2001	2020-09-18 14:11:16.774543+02
+479	wallposts	0011_auto_20170821_2018	2020-09-18 14:11:16.821237+02
+480	wallposts	0012_auto_20170821_2018	2020-09-18 14:11:17.284834+02
+481	wallposts	0013_auto_20170822_1105	2020-09-18 14:11:17.40776+02
+482	wallposts	0014_set_owner_permissions	2020-09-18 14:11:17.963868+02
+483	wallposts	0015_auto_20171114_1035	2020-09-18 14:11:18.311771+02
+484	wallposts	0016_auto_20180508_1512	2020-09-18 14:11:18.480006+02
+485	wallposts	0017_wallpost_pinned	2020-09-18 14:11:18.52421+02
+486	wallposts	0018_auto_20190115_0853	2020-09-18 14:11:18.70813+02
+487	wallposts	0019_auto_20191017_2204	2020-09-18 14:11:18.815665+02
+488	rewards	0002_auto_20160720_2245	2020-09-18 14:11:18.917922+02
+489	rewards	0003_add_api_permissions	2020-09-18 14:11:18.967837+02
+490	rewards	0004_add_group_permissions	2020-09-18 14:11:19.485797+02
+491	rewards	0005_auto_20170823_1131	2020-09-18 14:11:19.533504+02
+492	rewards	0006_set_owner_permissions	2020-09-18 14:11:20.288707+02
+493	rewards	0007_auto_20170914_2004	2020-09-18 14:11:20.337752+02
+494	rewards	0008_auto_20170914_2029	2020-09-18 14:11:20.390937+02
+495	rewards	0009_auto_20191104_1230	2020-09-18 14:11:20.445337+02
+496	projects	0084_auto_20181207_1435	2020-09-18 14:11:20.533899+02
+497	projects	0085_auto_20181207_1552	2020-09-18 14:11:20.560332+02
+498	projects	0080_auto_20180828_1049	2020-09-18 14:11:20.729471+02
+499	projects	0081_merge_20180919_1152	2020-09-18 14:11:20.73169+02
+500	projects	0082_merge_20181127_1044	2020-09-18 14:11:20.733731+02
+501	projects	0081_auto_20180918_1335	2020-09-18 14:11:20.759229+02
+502	projects	0086_merge_20190121_1425	2020-09-18 14:11:20.761412+02
+503	projects	0086_auto_20190117_1007	2020-09-18 14:11:21.465384+02
+504	projects	0087_merge_20190130_1355	2020-09-18 14:11:21.468075+02
+505	projects	0080_auto_20180904_1532	2020-09-18 14:11:21.62397+02
+506	projects	0081_merge_20180911_1659	2020-09-18 14:11:21.626602+02
+507	projects	0088_merge_20190215_1425	2020-09-18 14:11:21.629171+02
+508	projects	0087_merge_20190206_1714	2020-09-18 14:11:21.631212+02
+509	projects	0088_merge_20190208_1523	2020-09-18 14:11:21.633244+02
+510	projects	0089_merge_20190215_1438	2020-09-18 14:11:21.6351+02
+511	projects	0086_merge_20190204_1005	2020-09-18 14:11:21.636961+02
+512	projects	0088_merge_20190213_1448	2020-09-18 14:11:21.638899+02
+513	projects	0090_merge_20190222_1101	2020-09-18 14:11:21.64071+02
+514	organizations	0012_auto_20190416_1101	2020-09-18 14:11:22.826119+02
+515	initiatives	0002_copy_permissions	2020-09-18 14:11:23.343977+02
+516	initiatives	0003_auto_20190403_1619	2020-09-18 14:11:23.444324+02
+517	initiatives	0004_auto_20190416_1101	2020-09-18 14:11:23.778421+02
+518	initiatives	0005_initiative_hasorganization	2020-09-18 14:11:23.844718+02
+519	initiatives	0006_auto_20190416_1553	2020-09-18 14:11:23.912959+02
+520	initiatives	0004_auto_20190418_1643	2020-09-18 14:11:24.048838+02
+521	initiatives	0007_merge_20190501_0922	2020-09-18 14:11:24.059434+02
+522	initiatives	0008_auto_20190513_1518	2020-09-18 14:11:24.127634+02
+523	initiatives	0009_auto_20190520_1436	2020-09-18 14:11:24.808041+02
+524	initiatives	0010_auto_20190521_0954	2020-09-18 14:11:24.87543+02
+525	initiatives	0011_auto_20190522_0931	2020-09-18 14:11:24.918577+02
+526	initiatives	0009_auto_20190524_1144	2020-09-18 14:11:25.015848+02
+527	initiatives	0012_merge_20190524_1208	2020-09-18 14:11:25.017977+02
+528	initiatives	0013_auto_20190527_1131	2020-09-18 14:11:25.180744+02
+529	initiatives	0014_auto_20190628_1656	2020-09-18 14:11:25.369009+02
+530	funding_vitepay	0001_initial	2020-09-18 14:11:25.750285+02
+531	funding_vitepay	0002_vitepaypayment_payment_url	2020-09-18 14:11:25.789379+02
+532	funding_vitepay	0003_vitepaypaymentprovider_prefix	2020-09-18 14:11:25.815317+02
+533	funding_vitepay	0004_auto_20190715_0739	2020-09-18 14:11:25.8437+02
+534	funding_vitepay	0005_vitepaypayoutaccount	2020-09-18 14:11:25.930837+02
+535	funding_vitepay	0006_auto_20190918_1632	2020-09-18 14:11:26.130623+02
+536	funding_vitepay	0007_auto_20191002_0903	2020-09-18 14:11:26.158929+02
+537	funding_stripe	0001_initial	2020-09-18 14:11:26.619677+02
+538	geo	0014_auto_20191022_1105	2020-09-18 14:11:26.671235+02
+539	funding_pledge	0001_initial	2020-09-18 14:11:26.769892+02
+540	funding_pledge	0002_pledgepaymentprovider	2020-09-18 14:11:26.79729+02
+541	funding_pledge	0003_auto_20191002_0903	2020-09-18 14:11:26.822974+02
+542	funding_pledge	0004_pledgebankaccount	2020-09-18 14:11:27.199223+02
+543	funding_lipisha	0001_initial	2020-09-18 14:11:27.328718+02
+544	funding_lipisha	0002_auto_20190717_1637	2020-09-18 14:11:27.414836+02
+545	funding_lipisha	0003_lipishapayoutaccount	2020-09-18 14:11:27.510706+02
+546	funding_lipisha	0004_auto_20190918_1632	2020-09-18 14:11:27.730271+02
+547	funding_lipisha	0005_auto_20191001_2246	2020-09-18 14:11:27.940187+02
+548	funding_lipisha	0006_auto_20191001_2251	2020-09-18 14:11:28.008325+02
+549	funding_flutterwave	0001_initial	2020-09-18 14:11:28.14506+02
+550	funding_flutterwave	0002_flutterwavepaymentprovider_prefix	2020-09-18 14:11:28.175874+02
+551	funding_flutterwave	0003_flutterwavepayoutaccount	2020-09-18 14:11:28.524143+02
+552	funding_flutterwave	0004_auto_20190918_1633	2020-09-18 14:11:28.760278+02
+553	funding_flutterwave	0005_auto_20191002_0903	2020-09-18 14:11:28.819038+02
+554	projects	0091_project_to_initiatives	2020-09-18 14:11:29.125923+02
+555	utils	0002_maillog	2020-09-18 14:11:29.218386+02
+556	pages	0001_initial	2020-09-18 14:11:29.379634+02
+557	pages	0002_auto_20161115_1601	2020-09-18 14:11:29.691838+02
+558	pages	0002_auto_20161109_1024	2020-09-18 14:11:29.764573+02
+559	pages	0003_merge_20170118_1533	2020-09-18 14:11:29.766745+02
+560	pages	0003_merge_20170106_1627	2020-09-18 14:11:29.768762+02
+561	pages	0004_merge_20170124_1338	2020-09-18 14:11:29.770756+02
+562	pages	0005_auto_20170803_1729	2020-09-18 14:11:30.322386+02
+563	pages	0006_auto_20171114_1035	2020-09-18 14:11:30.387908+02
+564	pages	0007_imagetextitem	2020-09-18 14:11:30.420931+02
+565	pages	0008_auto_20180326_0821	2020-09-18 14:11:30.578207+02
+566	pages	0009_auto_20180709_1706	2020-09-18 14:11:30.66714+02
+567	news	0001_initial	2020-09-18 14:11:30.768579+02
+568	news	0002_auto_20160531_1651	2020-09-18 14:11:30.835264+02
+569	news	0003_auto_20161115_1601	2020-09-18 14:11:30.908196+02
+570	news	0003_auto_20161109_1024	2020-09-18 14:11:30.977957+02
+571	news	0004_merge_20170118_1533	2020-09-18 14:11:30.980284+02
+572	news	0004_merge_20170106_1627	2020-09-18 14:11:30.982359+02
+573	news	0005_merge_20170124_1338	2020-09-18 14:11:30.984404+02
+574	news	0006_auto_20170803_1729	2020-09-18 14:11:31.740549+02
+575	news	0007_auto_20180709_1706	2020-09-18 14:11:31.892415+02
+576	surveys	0001_initial	2020-09-18 14:11:31.961587+02
+577	surveys	0002_survey_link	2020-09-18 14:11:31.986093+02
+578	surveys	0003_survey_specification	2020-09-18 14:11:32.014137+02
+579	surveys	0004_auto_20160919_1552	2020-09-18 14:11:32.107107+02
+580	surveys	0005_auto_20160919_1556	2020-09-18 14:11:32.161995+02
+581	surveys	0006_auto_20160919_1609	2020-09-18 14:11:32.239215+02
+582	surveys	0007_question_title	2020-09-18 14:11:32.265312+02
+583	surveys	0008_question_properties	2020-09-18 14:11:32.293973+02
+584	surveys	0009_answer_value	2020-09-18 14:11:32.321348+02
+585	surveys	0010_auto_20160920_0854	2020-09-18 14:11:32.578844+02
+586	surveys	0011_auto_20160920_1126	2020-09-18 14:11:32.775855+02
+587	surveys	0012_auto_20160920_1153	2020-09-18 14:11:32.835414+02
+588	surveys	0013_auto_20160921_1410	2020-09-18 14:11:32.915224+02
+589	surveys	0014_auto_20160921_1444	2020-09-18 14:11:33.310683+02
+590	surveys	0015_auto_20160922_1057	2020-09-18 14:11:33.563283+02
+591	surveys	0016_auto_20160922_1104	2020-09-18 14:11:33.619129+02
+592	surveys	0017_auto_20160922_1210	2020-09-18 14:11:33.698197+02
+593	surveys	0018_auto_20160922_1610	2020-09-18 14:11:33.775715+02
+594	surveys	0019_auto_20160922_1618	2020-09-18 14:11:33.921544+02
+595	surveys	0020_answer_options	2020-09-18 14:11:33.96511+02
+596	surveys	0021_response_params	2020-09-18 14:11:34.03259+02
+597	surveys	0022_auto_20160926_0912	2020-09-18 14:11:34.29835+02
+598	surveys	0023_aggregateanswer_aggregation_type	2020-09-18 14:11:34.374114+02
+599	surveys	0024_auto_20160926_1958	2020-09-18 14:11:34.444798+02
+600	surveys	0025_auto_20160927_1102	2020-09-18 14:11:34.840561+02
+601	surveys	0021_survey_last_synced	2020-09-18 14:11:34.868213+02
+602	surveys	0026_merge	2020-09-18 14:11:34.870863+02
+603	surveys	0027_auto_20160929_0817	2020-09-18 14:11:34.922259+02
+604	surveys	0028_auto_20160929_0849	2020-09-18 14:11:35.010189+02
+605	surveys	0029_auto_20160929_0932	2020-09-18 14:11:35.217333+02
+606	surveys	0030_auto_20161115_1601	2020-09-18 14:11:35.343852+02
+607	surveys	0031_question_display_theme	2020-09-18 14:11:35.369124+02
+608	cms	0001_initial	2020-09-18 14:11:36.535958+02
+609	cms	0002_shareresultscontent	2020-09-18 14:11:36.664612+02
+610	cms	0002_auto_20161207_0918	2020-09-18 14:11:36.839144+02
+611	cms	0003_merge_20161207_1037	2020-09-18 14:11:36.842058+02
+612	cms	0004_resultpage_image	2020-09-18 14:11:36.87333+02
+613	cms	0005_auto_20161207_1512	2020-09-18 14:11:37.273394+02
+614	cms	0006_auto_20161207_1642	2020-09-18 14:11:37.941492+02
+615	cms	0007_auto_20161207_1709	2020-09-18 14:11:38.447116+02
+616	cms	0005_auto_20161208_1124	2020-09-18 14:11:38.507886+02
+617	cms	0006_auto_20161208_1159	2020-09-18 14:11:38.665637+02
+618	cms	0008_merge_20161212_1459	2020-09-18 14:11:38.668819+02
+619	cms	0004_projectsmapcontent	2020-09-18 14:11:38.787945+02
+620	cms	0007_merge_20161212_1501	2020-09-18 14:11:38.791092+02
+621	cms	0009_merge_20161213_1047	2020-09-18 14:11:38.793938+02
+622	cms	0010_auto_20161214_1429	2020-09-18 14:11:38.963911+02
+623	cms	0011_auto_20161214_1531	2020-09-18 14:11:39.627455+02
+624	cms	0012_auto_20161214_1618	2020-09-18 14:11:39.699551+02
+625	cms	0010_auto_20161214_1524	2020-09-18 14:11:39.772563+02
+626	cms	0013_merge_20161214_1637	2020-09-18 14:11:39.775008+02
+627	cms	0014_auto_20161216_1424	2020-09-18 14:11:40.714217+02
+628	cms	0014_auto_20161216_1359	2020-09-18 14:11:41.286802+02
+629	cms	0015_merge_20161219_0946	2020-09-18 14:11:41.289521+02
+630	cms	0016_auto_20161228_1420	2020-09-18 14:11:41.491727+02
+631	cms	0017_add_api_permissions	2020-09-18 14:11:41.521954+02
+632	cms	0018_add_group_permissions	2020-09-18 14:11:42.3342+02
+633	cms	0019_auto_20170829_1005	2020-09-18 14:11:42.359898+02
+634	cms	0020_add_group_permissions	2020-09-18 14:11:43.000092+02
+635	cms	0021_auto_20171005_1646	2020-09-18 14:11:43.446094+02
+636	cms	0022_migrate_quotes_1	2020-09-18 14:11:44.096881+02
+637	cms	0023_migrate_quotes_2	2020-09-18 14:11:44.362347+02
+638	cms	0024_migrate_quotes_3	2020-09-18 14:11:44.69021+02
+639	cms	0025_migrate_stats_1	2020-09-18 14:11:44.89376+02
+640	cms	0026_migrate_stats_2	2020-09-18 14:11:45.560799+02
+641	cms	0027_migrate_stats_3	2020-09-18 14:11:45.908724+02
+642	cms	0021_homepage	2020-09-18 14:11:45.934379+02
+643	cms	0022_auto_20171006_1155	2020-09-18 14:11:45.992474+02
+644	cms	0023_auto_20171006_1208	2020-09-18 14:11:46.59358+02
+645	cms	0028_merge_20171006_1622	2020-09-18 14:11:46.595916+02
+646	cms	0029_auto_20171010_0931	2020-09-18 14:11:48.11432+02
+647	cms	0030_migrate_projects_1	2020-09-18 14:11:48.246313+02
+648	cms	0031_migrate_projects_2	2020-09-18 14:11:48.557982+02
+649	cms	0032_migrate_projects_3	2020-09-18 14:11:49.17573+02
+650	cms	0033_auto_20171017_1353	2020-09-18 14:11:49.268691+02
+651	cms	0034_auto_20171017_1549	2020-09-18 14:11:49.569828+02
+652	cms	0035_auto_20171017_1611	2020-09-18 14:11:49.730095+02
+653	cms	0036_auto_20171017_1622	2020-09-18 14:11:49.788713+02
+654	cms	0037_auto_20171017_1645	2020-09-18 14:11:49.821641+02
+655	cms	0038_auto_20171017_1645	2020-09-18 14:11:50.070339+02
+656	cms	0039_auto_20171017_1708	2020-09-18 14:11:50.184203+02
+657	cms	0040_auto_20171018_1413	2020-09-18 14:11:50.276322+02
+658	cms	0041_auto_20171018_1437	2020-09-18 14:11:50.338439+02
+659	cms	0042_auto_20171018_1437	2020-09-18 14:11:50.558488+02
+660	cms	0043_auto_20171018_1442	2020-09-18 14:11:51.037455+02
+661	cms	0044_auto_20171018_1457	2020-09-18 14:11:51.068303+02
+662	cms	0045_auto_20171018_1505	2020-09-18 14:11:51.129538+02
+663	cms	0046_auto_20171018_1637	2020-09-18 14:11:51.161021+02
+664	cms	0047_auto_20171018_1709	2020-09-18 14:11:51.225017+02
+665	cms	0048_auto_20171024_1554	2020-09-18 14:11:51.411561+02
+666	cms	0049_auto_20171024_1601	2020-09-18 14:11:52.06199+02
+667	cms	0050_auto_20171024_1623	2020-09-18 14:11:53.59993+02
+668	cms	0051_auto_20171024_1631	2020-09-18 14:11:54.727236+02
+669	cms	0052_auto_20171027_1419	2020-09-18 14:11:54.980453+02
+670	cms	0053_auto_20171030_1645	2020-09-18 14:11:54.982935+02
+671	cms	0054_auto_20171031_1428	2020-09-18 14:12:00.98683+02
+672	cms	0021_auto_20171017_2015	2020-09-18 14:12:00.990109+02
+673	cms	0022_auto_20171019_1725	2020-09-18 14:12:00.992837+02
+674	cms	0023_auto_20171019_2042	2020-09-18 14:12:00.995628+02
+675	cms	0024_siteplatformsettings	2020-09-18 14:12:00.998377+02
+676	cms	0025_auto_20171024_1600	2020-09-18 14:12:01.007698+02
+677	cms	0055_merge_20171031_1713	2020-09-18 14:12:01.010591+02
+678	cms	0056_auto_20171102_1527	2020-09-18 14:12:01.013411+02
+679	cms	0057_auto_20171103_1438	2020-09-18 14:12:01.016011+02
+680	cms	0058_auto_20171110_1230	2020-09-18 14:12:01.018807+02
+681	cms	0059_auto_20171121_1022	2020-09-18 14:12:01.021534+02
+682	cms	0059_auto_20171121_0959	2020-09-18 14:12:01.024379+02
+683	cms	0060_merge_20171121_1334	2020-09-18 14:12:01.027035+02
+684	cms	0061_auto_20171128_1135	2020-09-18 14:12:01.029619+02
+685	cms	0062_auto_20171128_1355	2020-09-18 14:12:01.032331+02
+686	cms	0063_auto_20171204_1049	2020-09-18 14:12:01.034537+02
+687	cms	0064_auto_20171220_1145	2020-09-18 14:12:01.03676+02
+688	cms	0065_auto_20180313_1401	2020-09-18 14:12:01.03915+02
+689	cms	0066_auto_20180709_1657	2020-09-18 14:12:01.041587+02
+690	cms	0067_auto_20190710_0938	2020-09-18 14:12:01.044205+02
+691	cms	0068_migrate_start_project	2020-09-18 14:12:01.046885+02
+692	cms	0055_migrate_statistics	2020-09-18 14:12:01.529954+02
+693	cms	0056_auto_20191106_1041	2020-09-18 14:12:02.07524+02
+694	cms	0057_auto_20200129_0906	2020-09-18 14:12:02.693487+02
+695	cms	0058_siteplatformsettingstranslation_start_page	2020-09-18 14:12:02.722462+02
+696	cms	0059_homepagestatisticscontent	2020-09-18 14:12:02.761903+02
+697	cms	0060_auto_20200717_1037	2020-09-18 14:12:03.278231+02
+698	cms	0061_auto_20200812_1030	2020-09-18 14:12:04.199229+02
+699	cms	0062_auto_20200812_1514	2020-09-18 14:12:04.716919+02
+700	contact	0001_initial	2020-09-18 14:12:04.744067+02
+701	contact	0002_contactmessage_author	2020-09-18 14:12:04.994095+02
+702	text	0001_initial	2020-09-18 14:12:05.539008+02
+703	rawhtml	0001_initial	2020-09-18 14:12:05.769344+02
+704	oembeditem	0001_initial	2020-09-18 14:12:05.98927+02
+705	contentplugins	0001_initial	2020-09-18 14:12:06.226642+02
+706	contentplugins	0002_auto_20161115_1601	2020-09-18 14:12:06.285617+02
+707	contentplugins	0002_auto_20161109_1024	2020-09-18 14:12:06.345615+02
+708	contentplugins	0003_merge_20170118_1533	2020-09-18 14:12:06.34838+02
+709	contentplugins	0003_merge_20170106_1627	2020-09-18 14:12:06.353984+02
+710	contentplugins	0004_merge_20170124_1338	2020-09-18 14:12:06.356475+02
+711	contentplugins	0005_auto_20170818_1441	2020-09-18 14:12:08.196439+02
+712	django_summernote	0001_initial	2020-09-18 14:12:08.220852+02
+713	djcelery	0001_initial	2020-09-18 14:12:08.429164+02
+714	djmoney_rates	0001_initial	2020-09-18 14:12:08.862871+02
+715	donations	0009_auto_20190130_1140	2020-09-18 14:12:09.189587+02
+716	donations	0010_auto_20190130_1141	2020-09-18 14:12:09.674588+02
+717	donations	0011_auto_20191101_1046	2020-09-18 14:12:09.986371+02
+718	events	0012_auto_20200217_1106	2020-09-18 14:12:10.393654+02
+719	events	0013_event_start	2020-09-18 14:12:10.481967+02
+720	events	0014_auto_20200217_1107	2020-09-18 14:12:10.986064+02
+721	events	0015_auto_20200226_0838	2020-09-18 14:12:11.789284+02
+722	follow	0001_initial	2020-09-18 14:12:12.041772+02
+723	funding	0053_auto_20200320_1457	2020-09-18 14:12:12.491966+02
+724	funding	0054_auto_20200610_1215	2020-09-18 14:12:13.126066+02
+725	funding_flutterwave	0006_auto_20191111_1332	2020-09-18 14:12:14.396202+02
+726	funding_flutterwave	0007_auto_20200106_0839	2020-09-18 14:12:14.889482+02
+727	funding_flutterwave	0008_auto_20200106_1029	2020-09-18 14:12:15.057555+02
+728	funding_lipisha	0007_auto_20191008_1011	2020-09-18 14:12:15.206889+02
+729	funding_lipisha	0008_lipishabankaccount_mpesa_code	2020-09-18 14:12:15.279055+02
+730	funding_pledge	0005_auto_20191111_1331	2020-09-18 14:12:16.159041+02
+731	funding_stripe	0002_auto_20191111_1330	2020-09-18 14:12:17.023031+02
+732	funding_stripe	0003_auto_20200317_1601	2020-09-18 14:12:17.156832+02
+733	funding_stripe	0004_auto_20200318_1504	2020-09-18 14:12:17.979518+02
+734	funding_telesom	0001_initial	2020-09-18 14:12:18.629152+02
+735	funding_telesom	0002_auto_20200707_0856	2020-09-18 14:12:18.758936+02
+736	funding_telesom	0003_telesompayment_response	2020-09-18 14:12:18.829051+02
+737	funding_telesom	0004_auto_20200707_0929	2020-09-18 14:12:18.898268+02
+738	funding_vitepay	0008_auto_20191008_1034	2020-09-18 14:12:19.026859+02
+739	funding_vitepay	0009_auto_20191111_1330	2020-09-18 14:12:19.888603+02
+740	fundraisers	0002_fundraiser_owner	2020-09-18 14:12:20.562778+02
+741	fundraisers	0003_fundraiser_project	2020-09-18 14:12:20.898805+02
+742	fundraisers	0004_auto_20160718_1811	2020-09-18 14:12:21.592204+02
+743	fundraisers	0005_auto_20160720_1726	2020-09-18 14:12:22.232143+02
+744	fundraisers	0004_auto_20160720_1140	2020-09-18 14:12:23.012735+02
+745	fundraisers	0006_merge	2020-09-18 14:12:23.015603+02
+746	fundraisers	0007_auto_20170803_1730	2020-09-18 14:12:24.281128+02
+747	geo	0015_add_permissions	2020-09-18 14:12:25.215912+02
+748	geo	0016_location_slug	2020-09-18 14:12:25.382037+02
+749	homepage	0001_initial	2020-09-18 14:12:26.312225+02
+750	impact	0009_auto_20200810_1347	2020-09-18 14:12:26.697014+02
+751	impact	0010_impacttypetranslation_unit	2020-09-18 14:12:26.728841+02
+752	impact	0011_auto_20200812_1038	2020-09-18 14:12:28.005039+02
+753	impact	0012_auto_20200817_1608	2020-09-18 14:12:28.352566+02
+754	impact	0013_remove_impacttypetranslation_name	2020-09-18 14:12:28.385963+02
+755	impact	0013_auto_20200818_1105	2020-09-18 14:12:28.933985+02
+756	impact	0014_merge_20200819_0916	2020-09-18 14:12:28.936121+02
+757	impact	0015_impacttypetranslation_name	2020-09-18 14:12:28.967291+02
+758	impact	0016_auto_20200820_1717	2020-09-18 14:12:29.534325+02
+759	initiatives	0015_auto_20190708_1417	2020-09-18 14:12:30.230161+02
+760	initiatives	0016_auto_20190726_0915	2020-09-18 14:12:30.732466+02
+761	initiatives	0017_auto_20191031_1439	2020-09-18 14:12:30.764429+02
+762	initiatives	0018_auto_20191108_1222	2020-09-18 14:12:31.290948+02
+763	initiatives	0018_auto_20191106_0928	2020-09-18 14:12:32.802027+02
+764	initiatives	0019_merge_20191108_1853	2020-09-18 14:12:32.80457+02
+765	initiatives	0020_auto_20191129_1131	2020-09-18 14:12:32.859833+02
+766	initiatives	0021_auto_20191129_1132	2020-09-18 14:12:33.380701+02
+767	initiatives	0022_remove_initiativeplatformsettings_search_filters	2020-09-18 14:12:33.409371+02
+768	initiatives	0023_auto_20200707_1306	2020-09-18 14:12:33.838978+02
+769	initiatives	0023_auto_20200624_1209	2020-09-18 14:12:34.28855+02
+770	initiatives	0024_merge_20200806_1510	2020-09-18 14:12:34.291133+02
+771	jet	0001_initial	2020-09-18 14:12:34.37313+02
+772	jet	0002_delete_userdashboardmodule	2020-09-18 14:12:34.400966+02
+773	default	0001_initial	2020-09-18 14:12:35.418259+02
+774	social_auth	0001_initial	2020-09-18 14:12:35.421566+02
+775	default	0002_add_related_name	2020-09-18 14:12:35.737058+02
+776	social_auth	0002_add_related_name	2020-09-18 14:12:35.739209+02
+777	looker	0001_initial	2020-09-18 14:12:35.769762+02
+778	looker	0002_auto_20180328_1054	2020-09-18 14:12:35.802239+02
+779	looker	0003_init_looker_embeds	2020-09-18 14:12:36.409404+02
+780	mails	0001_initial	2020-09-18 14:12:36.432882+02
+781	mails	0002_auto_20171211_1117	2020-09-18 14:12:36.435528+02
+782	mails	0003_auto_20180727_1122	2020-09-18 14:12:36.95233+02
+783	orders	0002_auto_20160718_2010	2020-09-18 14:12:37.292908+02
+784	orders	0003_auto_20170823_1533	2020-09-18 14:12:37.470392+02
+785	orders	0004_add_group_permissions	2020-09-18 14:12:38.462923+02
+786	members	0011_permission_groups	2020-09-18 14:12:39.513933+02
+787	members	0012_auto_20170807_1454	2020-09-18 14:12:40.135586+02
+788	members	0012_auto_20170803_1730	2020-09-18 14:12:41.105546+02
+789	members	0013_merge_20170811_1500	2020-09-18 14:12:41.108323+02
+790	members	0014_auto_20170816_1614	2020-09-18 14:12:41.289516+02
+791	members	0015_auto_20170816_1614	2020-09-18 14:12:42.284421+02
+792	members	0016_auto_20170822_1104	2020-09-18 14:12:42.470164+02
+793	members	0017_closed_site_permissions	2020-09-18 14:12:43.474913+02
+794	members	0018_auto_20170824_1521	2020-09-18 14:12:43.814278+02
+795	members	0019_auto_20170824_1812	2020-09-18 14:12:44.010669+02
+796	members	0020_auto_20171031_1048	2020-09-18 14:12:44.591259+02
+797	members	0021_auto_20171114_1035	2020-09-18 14:12:44.940874+02
+798	members	0022_auto_20171207_0856	2020-09-18 14:12:45.454135+02
+799	members	0023_memberplatformsettings_require_consent	2020-09-18 14:12:45.486656+02
+800	members	0024_create_empty_settings	2020-09-18 14:12:46.457777+02
+801	members	0025_memberplatformsettings_consent_link	2020-09-18 14:12:46.488964+02
+802	members	0026_auto_20190129_1050	2020-09-18 14:12:46.668253+02
+803	members	0027_auto_20190208_1119	2020-09-18 14:12:46.864551+02
+804	members	0026_auto_20180919_1434	2020-09-18 14:12:47.072386+02
+805	members	0028_merge_20190215_1441	2020-09-18 14:12:47.075863+02
+806	members	0028_auto_20190219_1024	2020-09-18 14:12:47.30696+02
+807	members	0029_merge_20190222_0930	2020-09-18 14:12:47.309751+02
+808	members	0030_auto_20190225_1215	2020-09-18 14:12:48.324928+02
+809	members	0027_auto_20190206_1018	2020-09-18 14:12:49.085196+02
+810	members	0031_merge_20190226_1449	2020-09-18 14:12:49.087857+02
+811	members	0032_auto_20191223_1456	2020-09-18 14:12:49.901746+02
+812	members	0033_auto_20200114_1050	2020-09-18 14:12:50.559027+02
+813	members	0034_auto_20200114_1050	2020-09-18 14:12:51.151869+02
+814	members	0035_memberplatformsettings_background	2020-09-18 14:12:51.184995+02
+815	members	0036_auto_20200406_1127	2020-09-18 14:12:51.223081+02
+816	members	0037_auto_20200706_1637	2020-09-18 14:12:51.602791+02
+817	members	0038_auto_20200801_2114	2020-09-18 14:12:52.162655+02
+818	members	0039_auto_20200804_0750	2020-09-18 14:12:52.230417+02
+819	notifications	0001_initial	2020-09-18 14:12:53.050846+02
+820	notifications	0002_message_custom_message	2020-09-18 14:12:53.250245+02
+821	notifications	0003_notificationplatformsettings	2020-09-18 14:12:53.29339+02
+822	notifications	0004_auto_20200123_1344	2020-09-18 14:12:53.483455+02
+823	notifications	0005_auto_20200124_1505	2020-09-18 14:12:53.85582+02
+824	payments	0001_initial	2020-09-18 14:12:55.532285+02
+825	payments	0002_auto_20160718_2345	2020-09-18 14:12:56.319371+02
+826	payments	0003_auto_20161025_1221	2020-09-18 14:12:56.516813+02
+827	payments	0004_auto_20170919_1621	2020-09-18 14:12:56.717982+02
+828	payments	0005_auto_20170919_1621	2020-09-18 14:12:56.720328+02
+829	orders	0005_auto_20171003_1112	2020-09-18 14:12:57.363241+02
+830	orders	0006_auto_20180509_1436	2020-09-18 14:12:57.581981+02
+831	orders	0007_auto_20180509_1437	2020-09-18 14:12:58.167776+02
+832	orders	0008_auto_20190904_0838	2020-09-18 14:12:58.798981+02
+833	organizations	0013_remove_organizationcontact_organization	2020-09-18 14:12:59.149463+02
+834	organizations	0014_auto_20190708_1418	2020-09-18 14:13:00.17513+02
+835	organizations	0015_auto_20191209_2128	2020-09-18 14:13:00.489225+02
+836	organizations	0016_auto_20200106_1636	2020-09-18 14:13:01.48318+02
+837	pages	0010_auto_20180717_1017	2020-09-18 14:13:01.65972+02
+838	pages	0011_auto_20200106_1620	2020-09-18 14:13:02.404143+02
+839	pages	0012_columnsitem	2020-09-18 14:13:02.721297+02
+840	pages	0011_auto_20200106_1647	2020-09-18 14:13:04.166685+02
+841	pages	0013_merge_20200120_1128	2020-09-18 14:13:04.169202+02
+842	pages	0014_imagetextrounditem	2020-09-18 14:13:04.502066+02
+843	payments	0006_auto_20181115_1321	2020-09-18 14:13:04.965199+02
+844	payments_beyonic	0001_initial	2020-09-18 14:13:05.305881+02
+845	payments_docdata	0001_initial	2020-09-18 14:13:06.269085+02
+846	payments_docdata	0002_auto_20161115_1601	2020-09-18 14:13:06.306303+02
+847	payments_docdata	0002_auto_20161109_1024	2020-09-18 14:13:06.342244+02
+848	payments_docdata	0003_merge_20170118_1533	2020-09-18 14:13:06.348378+02
+849	payments_docdata	0003_merge_20170106_1627	2020-09-18 14:13:06.351468+02
+850	payments_docdata	0004_merge_20170124_1338	2020-09-18 14:13:06.354301+02
+851	payments_external	0001_initial	2020-09-18 14:13:06.688183+02
+852	payments_flutterwave	0001_initial	2020-09-18 14:13:06.990471+02
+853	payments_flutterwave	0002_auto_20170202_2054	2020-09-18 14:13:07.100108+02
+854	payments_flutterwave	0003_auto_20170206_1235	2020-09-18 14:13:07.730057+02
+855	payments_flutterwave	0004_auto_20170207_1532	2020-09-18 14:13:07.838247+02
+856	payments_flutterwave	0005_auto_20170210_1058	2020-09-18 14:13:07.947902+02
+857	payments_flutterwave	0006_auto_20170323_1227	2020-09-18 14:13:08.227283+02
+858	payments_flutterwave	0007_flutterwavempesapayment	2020-09-18 14:13:08.578988+02
+859	payments_flutterwave	0008_flutterwavempesapayment_transaction_amount	2020-09-18 14:13:08.63805+02
+860	payments_interswitch	0001_initial	2020-09-18 14:13:08.965407+02
+861	payments_interswitch	0002_auto_20161006_1144	2020-09-18 14:13:09.484755+02
+862	payments_interswitch	0003_interswitchpaymentstatusupdate	2020-09-18 14:13:09.852172+02
+863	payments_lipisha	0001_initial	2020-09-18 14:13:10.185326+02
+864	payments_lipisha	0002_lipishaproject_organisationnumber	2020-09-18 14:13:10.835884+02
+865	payments_logger	0001_initial	2020-09-18 14:13:11.183642+02
+866	payments_mock	0001_initial	2020-09-18 14:13:11.491041+02
+867	payments_pledge	0001_initial	2020-09-18 14:13:11.815252+02
+868	payments_stripe	0001_initial	2020-09-18 14:13:12.202017+02
+869	payments_stripe	0002_stripepayment_currency	2020-09-18 14:13:12.275447+02
+870	payments_stripe	0003_auto_20190130_1231	2020-09-18 14:13:12.40522+02
+871	payments_telesom	0001_initial	2020-09-18 14:13:12.738181+02
+872	payments_vitepay	0001_initial	2020-09-18 14:13:13.091035+02
+873	payments_voucher	0001_initial	2020-09-18 14:13:13.789332+02
+874	payouts	0023_auto_20190705_0906	2020-09-18 14:13:14.298156+02
+875	projects	0092_auto_20191031_0901	2020-09-18 14:13:15.403895+02
+876	projects	0093_auto_20191106_1206	2020-09-18 14:13:16.073168+02
+877	projects	0093_auto_20191106_0928	2020-09-18 14:13:16.783875+02
+878	projects	0094_merge_20191107_0943	2020-09-18 14:13:16.787183+02
+879	quotes	0001_initial	2020-09-18 14:13:17.074937+02
+880	quotes	0002_auto_20161115_1601	2020-09-18 14:13:17.23026+02
+881	quotes	0002_auto_20161109_1024	2020-09-18 14:13:17.388664+02
+882	quotes	0003_merge_20170118_1533	2020-09-18 14:13:17.396519+02
+883	quotes	0003_merge_20170106_1627	2020-09-18 14:13:17.399588+02
+884	quotes	0004_merge_20170124_1338	2020-09-18 14:13:17.40249+02
+885	redirects	0001_initial	2020-09-18 14:13:17.451643+02
+886	scim	0001_initial	2020-09-18 14:13:17.48851+02
+887	scim	0002_auto_20190118_1625	2020-09-18 14:13:18.65339+02
+888	segments	0004_auto_20200708_1404	2020-09-18 14:13:18.747942+02
+889	sessions	0001_initial	2020-09-18 14:13:18.781611+02
+890	sites	0001_initial	2020-09-18 14:13:18.818819+02
+891	sites	0002_alter_domain_unique	2020-09-18 14:13:18.865507+02
+892	slides	0001_initial	2020-09-18 14:13:19.15105+02
+893	slides	0002_auto_20161115_1601	2020-09-18 14:13:19.304346+02
+894	slides	0002_auto_20161109_1024	2020-09-18 14:13:19.449293+02
+895	slides	0003_merge_20170118_1533	2020-09-18 14:13:19.452309+02
+896	slides	0003_merge_20170106_1627	2020-09-18 14:13:19.45471+02
+897	slides	0004_merge_20170124_1338	2020-09-18 14:13:19.457155+02
+898	slides	0005_auto_20170803_1730	2020-09-18 14:13:20.592786+02
+899	slides	0006_auto_20180717_1017	2020-09-18 14:13:20.766886+02
+900	slides	0007_auto_20200903_1117	2020-09-18 14:13:21.953533+02
+901	default	0003_alter_email_max_length	2020-09-18 14:13:21.991848+02
+902	social_auth	0003_alter_email_max_length	2020-09-18 14:13:21.994049+02
+903	default	0004_auto_20160423_0400	2020-09-18 14:13:22.143962+02
+904	social_auth	0004_auto_20160423_0400	2020-09-18 14:13:22.146297+02
+905	social_auth	0005_auto_20160727_2333	2020-09-18 14:13:22.182065+02
+906	social_django	0006_partial	2020-09-18 14:13:22.216772+02
+907	social_django	0007_code_timestamp	2020-09-18 14:13:22.255407+02
+908	social_django	0008_partial_timestamp	2020-09-18 14:13:22.292489+02
+909	statistics	0010_auto_20200717_1337	2020-09-18 14:13:22.331411+02
+910	statistics	0011_auto_20200722_0810	2020-09-18 14:13:22.471208+02
+911	statistics	0012_auto_20200812_1024	2020-09-18 14:13:23.553265+02
+912	suggestions	0001_initial	2020-09-18 14:13:23.816591+02
+913	suggestions	0002_suggestion_language	2020-09-18 14:13:23.935417+02
+914	suggestions	0003_auto_20160720_1140	2020-09-18 14:13:24.059767+02
+915	suggestions	0003_auto_20160718_1811	2020-09-18 14:13:24.184113+02
+916	suggestions	0004_merge	2020-09-18 14:13:24.186949+02
+917	surveys	0030_auto_20161109_1024	2020-09-18 14:13:24.451783+02
+918	surveys	0032_merge_20170118_1533	2020-09-18 14:13:24.45459+02
+919	surveys	0032_merge_20170106_1627	2020-09-18 14:13:24.456967+02
+920	surveys	0033_merge_20170124_1338	2020-09-18 14:13:24.459371+02
+921	surveys	0034_survey_active	2020-09-18 14:13:24.499324+02
+922	tasks	0042_migrate_tasks_to_activities	2020-09-18 14:13:25.652621+02
+923	terms	0001_initial	2020-09-18 14:13:26.177886+02
+924	terms	0002_auto_20180907_1132	2020-09-18 14:13:26.43803+02
+925	terms	0003_auto_20180907_1132	2020-09-18 14:13:27.525747+02
+926	text	0002_textitem_text_final	2020-09-18 14:13:27.571047+02
+927	thumbnail	0001_initial	2020-09-18 14:13:27.609895+02
+928	token_auth	0001_initial	2020-09-18 14:13:27.879819+02
+929	utils	0003_auto_20200626_1047	2020-09-18 14:13:28.437894+02
+930	utils	0004_auto_20200626_1053	2020-09-18 14:13:28.472501+02
+931	utils	0005_auto_20200626_1145	2020-09-18 14:13:28.800453+02
+932	votes	0001_initial	2020-09-18 14:13:29.184554+02
+933	votes	0002_auto_20161004_1342	2020-09-18 14:13:29.334224+02
+934	wallposts	0020_auto_20191017_2208	2020-09-18 14:13:30.046929+02
+935	social_django	0003_alter_email_max_length	2020-09-18 14:13:30.05307+02
+936	social_django	0004_auto_20160423_0400	2020-09-18 14:13:30.055087+02
+937	social_django	0002_add_related_name	2020-09-18 14:13:30.057521+02
+938	social_django	0005_auto_20160727_2333	2020-09-18 14:13:30.060619+02
+939	cms	0054_auto_20171031_1428_squashed_0068_migrate_start_project	2020-09-18 14:13:30.063968+02
+940	social_django	0001_initial	2020-09-18 14:13:30.066904+02
 \.
 
 
@@ -22320,7 +24389,7 @@ COPY test.donations_donation (id, amount, created, updated, completed, anonymous
 -- Data for Name: events_event; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.events_event (activity_ptr_id, capacity, automatically_accept, location_hint, start_time, registration_deadline, location_id, is_online, start_date, duration, "end") FROM stdin;
+COPY test.events_event (activity_ptr_id, capacity, automatically_accept, location_hint, start_time, registration_deadline, location_id, is_online, start_date, duration, "end", start) FROM stdin;
 \.
 
 
@@ -22349,6 +24418,14 @@ COPY test.files_image (id, created, file, used, owner_id) FROM stdin;
 
 
 --
+-- Data for Name: files_privatedocument; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.files_privatedocument (id, created, file, used, owner_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: files_relatedimage; Type: TABLE DATA; Schema: test; Owner: -
 --
 
@@ -22361,18 +24438,18 @@ COPY test.files_relatedimage (id, object_id, content_type_id, image_id) FROM std
 --
 
 COPY test.fluent_contents_contentitem (id, parent_id, language_code, sort_order, parent_type_id, placeholder_id, polymorphic_ctype_id) FROM stdin;
-1	1	en	6	133	1	134
-2	1	nl	6	133	1	134
-3	1	en	4	133	1	135
-4	1	nl	4	133	1	135
-7	1	en	5	133	1	137
-8	1	nl	5	133	1	137
-9	1	en	1	133	1	138
-10	1	nl	1	133	1	138
-11	1	en	3	133	1	139
-12	1	nl	3	133	1	139
-13	1	en	2	133	1	179
-14	1	nl	2	133	1	179
+1	1	en	5	156	1	157
+2	1	nl	5	156	1	157
+3	1	en	1	156	1	158
+4	1	nl	1	156	1	158
+5	1	en	6	156	1	159
+6	1	nl	6	156	1	159
+7	1	en	3	156	1	160
+8	1	nl	3	156	1	160
+11	1	en	4	156	1	162
+12	1	nl	4	156	1	162
+13	1	en	2	156	1	202
+14	1	nl	2	156	1	202
 \.
 
 
@@ -22381,8 +24458,8 @@ COPY test.fluent_contents_contentitem (id, parent_id, language_code, sort_order,
 --
 
 COPY test.fluent_contents_placeholder (id, slot, role, parent_id, title, parent_type_id) FROM stdin;
-1	content	m	1		133
-2	content	m	1		159
+1	content	m	1		156
+2	content	m	1		182
 \.
 
 
@@ -22447,7 +24524,7 @@ COPY test.funding_flutterwave_flutterwavepaymentprovider (paymentprovider_ptr_id
 -- Data for Name: funding_funding; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.funding_funding (activity_ptr_id, deadline, duration, target_currency, target, country_id, amount_matching, amount_matching_currency, bank_account_id) FROM stdin;
+COPY test.funding_funding (activity_ptr_id, deadline, duration, target_currency, target, country_id, amount_matching, amount_matching_currency, bank_account_id, started) FROM stdin;
 \.
 
 
@@ -22456,7 +24533,7 @@ COPY test.funding_funding (activity_ptr_id, deadline, duration, target_currency,
 --
 
 COPY test.funding_fundingplatformsettings (id, update, allow_anonymous_rewards) FROM stdin;
-1	2019-12-30 13:04:51.196116+01	t
+1	2020-09-18 14:13:16.780012+02	t
 \.
 
 
@@ -22505,7 +24582,7 @@ COPY test.funding_lipisha_lipishapaymentprovider (paymentprovider_ptr_id, api_ke
 -- Data for Name: funding_payment; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.funding_payment (id, status, created, updated, donation_id, polymorphic_ctype_id, payment_method) FROM stdin;
+COPY test.funding_payment (id, status, created, updated, donation_id, polymorphic_ctype_id) FROM stdin;
 \.
 
 
@@ -22522,10 +24599,10 @@ COPY test.funding_paymentcurrency (id, code, min_amount, max_amount, default1, d
 --
 
 COPY test.funding_paymentprovider (id, polymorphic_ctype_id) FROM stdin;
-1	106
-2	107
-3	108
-4	109
+1	132
+2	133
+3	134
+4	135
 \.
 
 
@@ -22549,7 +24626,7 @@ COPY test.funding_payoutaccount (id, status, owner_id, polymorphic_ctype_id, cre
 -- Data for Name: funding_plainpayoutaccount; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.funding_plainpayoutaccount (payoutaccount_ptr_id, document_id, ip_address) FROM stdin;
+COPY test.funding_plainpayoutaccount (payoutaccount_ptr_id, ip_address, document_id) FROM stdin;
 \.
 
 
@@ -22622,7 +24699,7 @@ COPY test.funding_stripe_stripepaymentprovider (paymentprovider_ptr_id, credit_c
 -- Data for Name: funding_stripe_stripepayoutaccount; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.funding_stripe_stripepayoutaccount (payoutaccount_ptr_id, account_id, country, document_type) FROM stdin;
+COPY test.funding_stripe_stripepayoutaccount (payoutaccount_ptr_id, account_id, country, document_type, eventually_due) FROM stdin;
 \.
 
 
@@ -22631,6 +24708,30 @@ COPY test.funding_stripe_stripepayoutaccount (payoutaccount_ptr_id, account_id, 
 --
 
 COPY test.funding_stripe_stripesourcepayment (payment_ptr_id, source_token, charge_token) FROM stdin;
+\.
+
+
+--
+-- Data for Name: funding_telesom_telesombankaccount; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.funding_telesom_telesombankaccount (bankaccount_ptr_id, account_name, mobile_number) FROM stdin;
+\.
+
+
+--
+-- Data for Name: funding_telesom_telesompayment; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.funding_telesom_telesompayment (payment_ptr_id, account_number, account_name, unique_id, reference_id, transaction_id, transaction_amount, issuer_transaction_id, amount, currency, response) FROM stdin;
+\.
+
+
+--
+-- Data for Name: funding_telesom_telesompaymentprovider; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.funding_telesom_telesompaymentprovider (paymentprovider_ptr_id, merchant_uid, api_user_id, api_key, api_url, prefix) FROM stdin;
 \.
 
 
@@ -22703,7 +24804,7 @@ COPY test.geo_initiativeplace (id, street_number, street, postal_code, locality,
 -- Data for Name: geo_location; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.geo_location (id, name, "position", city, description, image, country_id, group_id) FROM stdin;
+COPY test.geo_location (id, name, "position", city, description, image, country_id, group_id, slug) FROM stdin;
 \.
 
 
@@ -22756,6 +24857,58 @@ COPY test.geo_subregion_translation (id, language_code, name, master_id) FROM st
 
 
 --
+-- Data for Name: impact_impactgoal; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.impact_impactgoal (id, target, realized, type_id, activity_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: impact_impacttype; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.impact_impacttype (id, slug, active, icon) FROM stdin;
+1	co2	f	co2
+2	people	f	people
+3	food	f	
+4	water	f	water
+5	plastic	f	plastic
+6	trees	f	trees
+7	jobs	f	jobs
+\.
+
+
+--
+-- Data for Name: impact_impacttype_translation; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.impact_impacttype_translation (id, language_code, master_id, text, text_passed, text_with_target, unit, name) FROM stdin;
+1	nl	1	CO₂ uitstoot te verminderen	CO₂ uitstoot verminderd	CO₂ uitstoot met {} kg te verminderen	kg	CO₂ uitstoot verminderen
+2	en	1	reduce CO₂ emissions	reduce CO₂ emissions by {} kg	CO₂ emissions reduced	kg	Reduce CO₂ emissions
+15	fr	1	réduire les émissions de CO₂	réduire les émissions de CO₂ de {} kg	Émissions de CO₂ réduites	kg	Réduire les émissions de CO₂
+3	nl	2	mensen te bereiken	mensen bereikt	{} mensen te bereiken		Mensen bereiken
+4	en	2	reach people	people reached	reach {} people		Reach people
+16	fr	2	touchez les gens	personnes touchés	toucher {} personnes		Touchez les gens
+5	nl	3	voedselverspilling te verminderen	voedselverspilling verminderd	voedselverspilling met {} kg te verminderen	kg	Voedselverspilling verminderen
+6	en	3	reduce food waste	food waste reduced	reduce food waste by {} kg	kg	Reduce food waste
+17	fr	3	réduisez le gaspillage alimentaire	gaspillage alimentaire réduit	réduire le gaspillage alimentaire de {} kg	kg	Réduisez le gaspillage alimentaire
+7	nl	4	water te besparen	water bespaard	{} l water te besparen	l	Water besparen
+8	en	4	save water	water saved	save {} l water	l	Save water
+18	fr	4	économiser l'eau	eau économisée	économisez {} l d'eau	l	Économiser l'eau
+9	nl	5	plastic te besparen	plastic bespaard	{} kg plastic te besparen	kg	Plastic besparen
+10	en	5	save plastic	plastic saved	save {} kg plastic	kg	Save plastic
+19	fr	5	économisez du plastique	plastique économisé	économisez {} kg de plastique	kg	Économisez du plastique
+11	nl	6	bomen te planten	bomen geplant	{} bomen te planten		Bomen planten
+12	en	6	plant trees	trees planted	plant {} trees		Plant trees
+20	fr	6	planter des arbres	arbres plantés	planter {} arbres		Planter des arbres
+13	nl	7	banen te creëren	banen gecreëerd	{} banen te creëren		Banen creëren
+14	en	7	create jobs	jobs created	create {} jobs		Create jobs
+21	fr	7	créer des emplois	emplois créés	créer {} emplois		Créer des emplois
+\.
+
+
+--
 -- Data for Name: initiatives_initiative; Type: TABLE DATA; Schema: test; Owner: -
 --
 
@@ -22775,8 +24928,8 @@ COPY test.initiatives_initiative_categories (id, initiative_id, category_id) FRO
 -- Data for Name: initiatives_initiativeplatformsettings; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.initiatives_initiativeplatformsettings (id, update, activity_types, require_organization, contact_method, activity_search_filters, initiative_search_filters) FROM stdin;
-1	2019-12-30 13:04:51.195283+01	event,assignment,funding	f	mail	country,date,skill,type,theme,category,status	country,theme,category
+COPY test.initiatives_initiativeplatformsettings (id, update, activity_types, require_organization, contact_method, activity_search_filters, initiative_search_filters, enable_impact) FROM stdin;
+1	2020-09-18 14:13:16.77931+02	event,assignment,funding	f	mail	country,date,skill,type,theme,category,status	country,theme,category	f
 \.
 
 
@@ -22812,7 +24965,7 @@ COPY test.looker_lookerembed (id, title, type, looker_id) FROM stdin;
 --
 
 COPY test.mails_mailplatformsettings (id, update, email_logo) FROM stdin;
-1	2019-12-30 13:04:15.4948+01	
+1	2020-09-18 14:12:36.94936+02	
 \.
 
 
@@ -22837,7 +24990,7 @@ COPY test.members_custommemberfieldsettings (id, name, description, sequence, me
 --
 
 COPY test.members_member (id, password, last_login, is_superuser, email, username, is_staff, is_active, date_joined, updated, deleted, user_type, first_name, last_name, picture, is_co_financer, can_pledge, about_me, primary_language, share_time_knowledge, share_money, newsletter, phone_number, gender, birthdate, disable_token, campaign_notifications, website, facebook, twitter, skypename, remote_id, location_id, verified, last_seen, partner_organization_id, is_anonymized, welcome_email_is_sent, last_logout, scim_external_id, matching_options_set, subscribed) FROM stdin;
-1		\N	f	devteam+accounting@onepercentclub.com	accounting	f	t	2019-12-30 13:02:05.233013+01	2019-12-30 13:02:37.644685+01	\N	person				f	f		en	f	f	t			\N	\N	t					\N	\N	f	\N	\N	f	f	\N	\N	\N	f
+1		\N	f	devteam+accounting@onepercentclub.com	accounting	f	t	2020-09-18 14:10:28.574329+02	2020-09-18 14:10:43.179721+02	\N	person				f	f		en	f	f	t			\N	\N	t					\N	\N	f	\N	\N	f	f	\N	\N	\N	f
 \.
 
 
@@ -22856,6 +25009,14 @@ COPY test.members_member_favourite_themes (id, member_id, projecttheme_id) FROM 
 COPY test.members_member_groups (id, member_id, group_id) FROM stdin;
 1	1	4
 2	1	3
+\.
+
+
+--
+-- Data for Name: members_member_segments; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.members_member_segments (id, member_id, segment_id) FROM stdin;
 \.
 
 
@@ -22879,8 +25040,8 @@ COPY test.members_member_user_permissions (id, member_id, permission_id) FROM st
 -- Data for Name: members_memberplatformsettings; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.members_memberplatformsettings (id, update, require_consent, consent_link, closed, confirm_signup, email_domain, login_methods, background) FROM stdin;
-1	2020-01-27 08:47:30.866107+01	f	/pages/terms-and-conditions	f	f	\N	password	\N
+COPY test.members_memberplatformsettings (id, update, require_consent, consent_link, closed, confirm_signup, email_domain, login_methods, background, anonymization_age, enable_segments, create_segments) FROM stdin;
+1	2020-09-18 14:12:51.149057+02	f	/pages/terms-and-conditions	f	f	\N	password	\N	0	f	f
 \.
 
 
@@ -22937,7 +25098,7 @@ COPY test.notifications_messagetemplate_translation (id, language_code, subject,
 --
 
 COPY test.notifications_notificationplatformsettings (id, update, share_options, facebook_at_work_url, match_options) FROM stdin;
-1	2019-12-30 13:04:51.194395+01	twitter,facebook	\N	
+1	2020-09-18 14:13:16.778509+02	twitter,facebook	\N	
 \.
 
 
@@ -23282,7 +25443,7 @@ COPY test.projects_projectphaselog (id, start, project_id, status_id) FROM stdin
 --
 
 COPY test.projects_projectplatformsettings (id, update, create_types, create_flow, contact_method, contact_types, allow_anonymous_rewards, facebook_at_work_url, share_options, match_options) FROM stdin;
-1	2019-12-30 13:02:23.130606+01	funding	combined	mail	organization	t	\N	twitter,facebook	
+1	2020-09-18 14:10:37.36556+02	funding	combined	mail	organization	t	\N	twitter,facebook	
 \.
 
 
@@ -23318,7 +25479,23 @@ COPY test.rewards_reward (id, amount, title, description, "limit", created, upda
 --
 
 COPY test.scim_scimplatformsettings (id, update, bearer_token) FROM stdin;
-1	2019-12-30 13:04:53.166873+01	1H5P9cZfqkBHefHzRWwfWymXtdn48pJO
+1	2020-09-18 14:13:18.649383+02	h2KdSfPh2xDCOezcVcwEAYyR9bD5H2Mb
+\.
+
+
+--
+-- Data for Name: segments_segment; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.segments_segment (id, name, alternate_names, type_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: segments_segmenttype; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.segments_segmenttype (id, name, slug, is_active, enable_search) FROM stdin;
 \.
 
 
@@ -23326,7 +25503,7 @@ COPY test.scim_scimplatformsettings (id, update, bearer_token) FROM stdin;
 -- Data for Name: slides_slide; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.slides_slide (id, slug, language, tab_text, title, body, image, background_image, video_url, link_text, link_url, style, status, publication_date, publication_end_date, sequence, creation_date, modification_date, author_id) FROM stdin;
+COPY test.slides_slide (id, slug, language, tab_text, title, body, image, background_image, video_url, link_text, link_url, style, status, publication_date, publication_end_date, sequence, creation_date, modification_date, author_id, video) FROM stdin;
 \.
 
 
@@ -23367,6 +25544,62 @@ COPY test.social_auth_partial (id, token, next_step, backend, data, "timestamp")
 --
 
 COPY test.social_auth_usersocialauth (id, provider, uid, extra_data, user_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_basestatistic; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.statistics_basestatistic (id, active, polymorphic_ctype_id, sequence) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_databasestatistic; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.statistics_databasestatistic (basestatistic_ptr_id, query) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_databasestatistic_translation; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.statistics_databasestatistic_translation (id, language_code, name, master_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_impactstatistic; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.statistics_impactstatistic (basestatistic_ptr_id, impact_type_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_impactstatistic_translation; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.statistics_impactstatistic_translation (id, language_code, master_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_manualstatistic; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.statistics_manualstatistic (basestatistic_ptr_id, value, icon) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_manualstatistic_translation; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.statistics_manualstatistic_translation (id, language_code, name, master_id) FROM stdin;
 \.
 
 
@@ -23633,8 +25866,8 @@ COPY test.token_auth_checkedtoken (id, token, "timestamp", user_id) FROM stdin;
 --
 
 COPY test.utils_language (id, code, language_name, native_name) FROM stdin;
-846	en	English	English
-847	nl	Dutch	Nederlands
+4	en	English	English
+5	nl	Dutch	Nederlands
 \.
 
 
@@ -23647,10 +25880,18 @@ COPY test.utils_maillog (id, object_id, type, created, content_type_id) FROM std
 
 
 --
--- Data for Name: utils_metadatamodel; Type: TABLE DATA; Schema: test; Owner: -
+-- Data for Name: utils_translationplatformsettings; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY test.utils_metadatamodel (id, title) FROM stdin;
+COPY test.utils_translationplatformsettings (id, update) FROM stdin;
+\.
+
+
+--
+-- Data for Name: utils_translationplatformsettings_translation; Type: TABLE DATA; Schema: test; Owner: -
+--
+
+COPY test.utils_translationplatformsettings_translation (id, language_code, master_id, office, office_location, select_an_office_location, whats_the_location_of_your_office) FROM stdin;
 \.
 
 
@@ -23714,7 +25955,15 @@ COPY test.wallposts_wallpost (id, created, updated, deleted, ip_address, object_
 -- Data for Name: activities_activity; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.activities_activity (id, created, updated, status, title, slug, description, initiative_id, owner_id, polymorphic_ctype_id, highlight, review_status, transition_date) FROM stdin;
+COPY test2.activities_activity (id, created, updated, status, title, slug, description, initiative_id, owner_id, polymorphic_ctype_id, highlight, review_status, transition_date, image_id, video_url) FROM stdin;
+\.
+
+
+--
+-- Data for Name: activities_activity_segments; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.activities_activity_segments (id, activity_id, segment_id) FROM stdin;
 \.
 
 
@@ -23722,7 +25971,15 @@ COPY test2.activities_activity (id, created, updated, status, title, slug, descr
 -- Data for Name: activities_contribution; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.activities_contribution (id, status, created, updated, activity_id, polymorphic_ctype_id, user_id, transition_date) FROM stdin;
+COPY test2.activities_contribution (id, status, created, updated, activity_id, polymorphic_ctype_id, user_id, transition_date, contribution_date) FROM stdin;
+\.
+
+
+--
+-- Data for Name: activities_organizer; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.activities_organizer (contribution_ptr_id) FROM stdin;
 \.
 
 
@@ -23739,7 +25996,7 @@ COPY test2.analytics_analyticsadapter (id, type, code, analytics_settings_id) FR
 --
 
 COPY test2.analytics_analyticsplatformsettings (id, update, fiscal_month_offset) FROM stdin;
-1	2019-12-30 12:58:48.036986+01	0
+1	2020-09-18 14:07:49.095078+02	0
 \.
 
 
@@ -23755,7 +26012,7 @@ COPY test2.assignments_applicant (contribution_ptr_id, motivation, time_spent, d
 -- Data for Name: assignments_assignment; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.assignments_assignment (activity_ptr_id, registration_deadline, end_date, capacity, expertise_id, duration, location_id, is_online, end_date_type) FROM stdin;
+COPY test2.assignments_assignment (activity_ptr_id, registration_deadline, end_date, capacity, expertise_id, duration, location_id, is_online, end_date_type, preparation, start_time, date) FROM stdin;
 \.
 
 
@@ -23764,9 +26021,9 @@ COPY test2.assignments_assignment (activity_ptr_id, registration_deadline, end_d
 --
 
 COPY test2.auth_group (id, name) FROM stdin;
-1	Staff
 4	Financial
 3	Authenticated
+1	Staff
 2	Anonymous
 \.
 
@@ -23796,331 +26053,355 @@ COPY test2.auth_group_permissions (id, group_id, permission_id) FROM stdin;
 18	1	2
 19	1	1
 20	1	3
-21	3	155
-24	3	168
-28	2	155
-29	1	152
-30	1	153
-31	1	154
-32	1	165
-33	1	166
-34	1	167
-35	1	149
-36	1	150
-37	1	151
-38	1	159
-39	1	160
-40	1	161
-41	3	179
-42	3	180
-43	3	184
-44	3	185
-45	3	186
-46	3	188
-47	3	182
-48	2	182
-49	1	187
-50	3	181
-51	3	169
-52	3	183
-53	3	199
-54	3	200
-57	3	204
-59	3	207
-60	3	208
-63	2	199
-64	1	134
-66	1	136
-67	1	137
-68	1	138
-69	1	139
-70	1	131
-71	1	132
-72	1	133
-73	3	213
-74	3	212
-75	3	211
-76	3	216
-77	3	215
-78	3	217
-79	3	220
-80	3	219
-81	3	221
-82	3	222
-83	1	203
-84	1	223
-85	3	227
-86	3	232
-87	3	233
-88	3	234
-89	2	227
-90	3	218
-91	3	255
-92	3	260
-93	3	261
-94	3	262
-95	3	244
-96	3	245
-97	3	250
-98	2	255
-99	1	252
-100	1	253
-101	1	254
-102	1	241
-103	1	242
-104	1	243
-105	1	278
-106	1	279
-107	1	280
-108	1	125
-109	1	126
-110	1	127
-111	1	313
-112	4	193
-113	3	327
-114	3	326
-115	3	328
-116	3	329
-117	1	322
-118	1	336
-119	1	337
-120	1	338
-121	1	330
-122	1	331
-123	1	332
-124	1	333
-125	1	334
-126	1	335
-127	3	364
-128	3	365
-131	3	360
-132	3	361
-134	3	368
-135	3	369
-137	2	364
-138	1	342
-139	1	343
-140	1	344
-141	1	348
-142	1	349
-143	1	350
-144	1	357
-145	1	358
-146	1	359
-147	1	354
-148	1	355
-149	1	356
-150	1	351
-151	1	352
-152	1	353
-153	1	345
-154	1	346
-155	1	347
-156	3	372
-158	3	373
-160	2	372
-161	2	374
-162	2	373
-163	2	375
-164	3	376
-165	3	377
-168	2	376
-169	2	377
-170	2	378
-171	2	379
-172	3	390
-173	3	391
-174	3	392
-175	3	387
-176	3	388
-177	3	389
-178	3	393
-179	3	394
-180	3	395
-181	3	380
-182	3	382
-183	3	383
-184	3	384
-185	3	385
-186	3	386
-187	3	78
-188	3	83
-189	3	84
-190	3	85
-191	2	78
-192	1	75
-193	1	76
-194	1	77
-195	3	437
-199	2	437
-200	1	287
-201	1	288
-202	1	289
-203	3	442
-204	3	443
-205	3	444
-206	3	115
-207	3	111
-208	3	116
-209	3	114
-210	3	110
-211	2	110
-212	1	107
-213	1	108
-214	1	109
-215	1	505
-216	1	506
-217	1	507
-218	1	517
-219	1	518
-220	1	519
-221	1	548
-222	1	549
-223	1	550
-224	1	536
-225	1	537
-226	1	538
-227	1	566
-228	1	567
-229	1	568
-230	1	542
-231	1	543
-232	1	544
-233	1	557
-234	1	558
-235	1	559
-236	1	560
-237	1	561
-238	1	562
-239	1	533
-240	1	534
-241	1	535
-242	1	551
-243	1	552
-244	1	553
-245	1	545
-246	1	546
-247	1	547
-248	1	539
-249	1	540
-250	1	541
-251	1	530
-252	1	531
-253	1	532
-254	1	563
-255	1	564
-256	1	565
-257	1	554
-258	1	555
-259	1	556
-260	3	594
-261	2	594
-262	3	607
-263	2	607
+21	3	159
+22	3	160
+25	3	164
+27	3	167
+28	3	168
+31	2	159
+32	1	155
+34	1	157
+35	1	171
+36	1	172
+37	1	173
+38	1	152
+39	1	153
+40	1	154
+41	3	206
+42	3	205
+43	3	204
+44	3	209
+45	3	208
+46	3	210
+47	3	213
+48	3	212
+49	3	214
+50	3	215
+51	1	163
+52	1	216
+53	3	220
+54	3	225
+55	3	226
+56	3	227
+57	2	220
+58	3	211
+59	1	140
+60	1	141
+61	1	142
+62	1	248
+63	4	144
+64	3	262
+65	3	261
+66	3	263
+67	3	264
+68	1	257
+69	1	271
+70	1	272
+71	1	273
+72	1	265
+73	1	266
+74	1	267
+75	1	268
+76	1	269
+77	1	270
+78	3	78
+79	3	83
+80	3	84
+81	3	85
+82	2	78
+83	1	75
+84	1	76
+85	1	77
+86	1	278
+87	1	277
+88	1	279
+89	1	73
+90	1	309
+91	1	308
+92	1	281
+93	1	303
+94	1	315
+95	1	275
+96	1	274
+97	1	276
+98	3	320
+99	3	325
+100	3	326
+101	3	327
+102	2	320
+103	1	317
+104	1	318
+105	1	319
+106	3	331
+107	3	332
+108	3	337
+109	1	328
+110	1	329
+111	1	330
+112	3	339
+115	3	343
+119	2	339
+120	1	186
+121	1	187
+122	1	188
+123	1	192
+124	1	193
+125	1	194
+126	1	183
+127	1	184
+128	1	185
+129	1	195
+130	1	196
+131	1	197
+132	3	348
+133	3	349
+134	3	353
+135	3	354
+136	3	355
+137	3	357
+138	3	351
+139	2	351
+140	1	356
+141	3	350
+142	3	344
+143	3	352
+144	3	372
+145	3	377
+146	3	378
+147	3	379
+148	3	361
+149	3	362
+150	3	367
+151	2	372
+152	1	369
+153	1	370
+154	1	371
+155	1	358
+156	1	359
+157	1	360
+158	1	120
+159	1	119
+160	1	121
+161	1	69
+162	1	70
+163	1	71
+164	1	66
+165	1	67
+166	1	68
+167	1	380
+168	1	381
+169	1	382
+170	1	401
+171	1	402
+172	1	403
+173	3	474
+174	3	475
+177	3	470
+178	3	471
+180	3	478
+181	3	479
+183	2	474
+184	1	455
+185	1	456
+186	1	457
+187	1	461
+188	1	462
+189	1	463
+190	1	467
+191	1	468
+192	1	469
+193	1	482
+194	1	483
+195	1	484
+196	1	464
+197	1	465
+198	1	466
+199	1	458
+200	1	459
+201	1	460
+202	3	485
+204	3	486
+206	2	485
+207	2	487
+208	2	486
+209	2	488
+210	3	489
+211	3	490
+214	2	489
+215	2	490
+216	2	491
+217	2	492
+218	3	503
+219	3	504
+220	3	505
+221	3	500
+222	3	501
+223	3	502
+224	3	506
+225	3	507
+226	3	508
+227	3	493
+228	3	495
+229	3	496
+230	3	497
+231	3	498
+232	3	499
+233	3	509
+237	2	509
+238	1	413
+239	1	414
+240	1	415
+241	3	518
+242	3	519
+243	3	520
+244	3	115
+245	3	111
+246	3	116
+247	3	114
+248	3	110
+249	2	110
+250	1	107
+251	1	108
+252	1	109
+253	1	578
+254	1	579
+255	1	580
+256	1	584
+257	1	585
+258	1	586
+259	1	615
+260	1	616
+261	1	617
+262	1	603
+263	1	604
 264	1	605
-265	3	523
-266	2	523
-267	3	572
-268	2	572
-269	1	63
-270	1	64
-271	1	65
-272	1	674
-273	1	675
-274	1	676
-275	1	677
-276	1	678
-277	1	679
-278	1	680
-279	1	681
-280	1	682
-281	1	514
-282	1	515
-283	1	516
-284	1	511
-285	1	512
-286	1	513
-287	1	671
-288	1	672
-289	1	673
-290	3	719
-291	3	724
-292	3	725
-293	3	726
-294	2	719
-295	1	716
-296	1	717
-297	1	718
-298	3	730
-299	3	731
-300	3	736
-301	1	727
-302	1	728
-303	1	729
-304	1	69
-305	1	70
-306	1	71
-307	1	66
-308	1	67
-309	1	68
-310	1	400
-311	1	399
-312	1	401
-313	1	73
-314	1	429
-315	1	428
-316	1	409
-317	1	446
-318	1	435
-319	1	406
-320	1	405
-321	1	407
-322	1	451
-323	1	452
-324	1	467
-325	1	468
-326	1	475
-327	1	476
-328	1	488
-329	1	493
-330	1	494
-331	1	281
-332	1	282
-333	1	283
-334	1	267
-335	1	266
-336	1	268
-337	3	747
-338	2	747
-339	3	762
-340	3	765
-341	3	767
-342	2	762
-343	1	98
-344	1	99
-345	1	100
-346	3	781
-347	3	782
-348	3	783
-349	3	784
-350	2	781
-351	2	782
-352	1	892
-353	1	893
-354	1	894
-355	2	911
-356	1	738
-357	1	739
-358	1	740
-359	1	293
-360	1	294
-361	1	295
-362	1	527
-363	1	528
-364	1	529
-365	1	520
-366	1	521
-367	1	522
+265	1	633
+266	1	634
+267	1	635
+268	1	609
+269	1	610
+270	1	611
+271	1	624
+272	1	625
+273	1	626
+274	1	627
+275	1	628
+276	1	629
+277	1	600
+278	1	601
+279	1	602
+280	1	618
+281	1	619
+282	1	620
+283	1	612
+284	1	613
+285	1	614
+286	1	606
+287	1	607
+288	1	608
+289	1	597
+290	1	598
+291	1	599
+292	1	630
+293	1	631
+294	1	632
+295	1	621
+296	1	622
+297	1	623
+298	3	661
+299	2	661
+300	3	674
+301	2	674
+302	1	672
+303	3	590
+304	2	590
+305	3	639
+306	2	639
+307	1	735
+308	1	736
+309	1	737
+310	1	63
+311	1	64
+312	1	65
+313	1	744
+314	1	745
+315	1	746
+316	1	747
+317	1	748
+318	1	749
+319	1	750
+320	1	751
+321	1	752
+322	1	431
+323	1	432
+324	1	433
+325	1	428
+326	1	429
+327	1	430
+328	1	741
+329	1	742
+330	1	743
+331	1	524
+332	1	525
+333	1	540
+334	1	541
+335	1	548
+336	1	549
+337	1	561
+338	1	566
+339	1	567
+340	1	407
+341	1	408
+342	1	409
+343	1	132
+344	1	131
+345	1	133
+346	3	798
+347	2	798
+348	1	437
+349	1	438
+350	1	439
+351	1	434
+352	1	435
+353	1	436
+354	3	813
+355	3	816
+356	3	818
+357	2	813
+358	1	98
+359	1	99
+360	1	100
+361	3	832
+362	3	833
+363	3	834
+364	3	835
+365	2	832
+366	2	833
+367	1	234
+368	1	235
+369	1	236
+370	1	594
+371	1	595
+372	1	596
+373	1	587
+374	1	588
+375	1	589
+376	1	958
+377	1	959
+378	1	960
+379	1	440
+380	1	441
+381	1	442
+382	1	446
+383	1	447
+384	1	448
+385	1	452
+386	1	453
+387	1	454
+388	1	449
+389	1	450
+390	1	451
+391	2	974
 \.
 
 
@@ -24220,6 +26501,7 @@ COPY test2.auth_permission (id, name, content_type_id, codename) FROM stdin;
 89	Can add country	27	add_country
 90	Can change country	27	change_country
 91	Can delete country	27	delete_country
+724	Can change link	199	change_link
 92	Can add location	28	add_location
 93	Can change location	28	change_location
 94	Can delete location	28	delete_location
@@ -24247,820 +26529,873 @@ COPY test2.auth_permission (id, name, content_type_id, codename) FROM stdin;
 116	Can change own initiative through the API	34	api_change_own_initiative
 117	Can change own initiative through the API	34	api_change_own_running_initiative
 118	Can delete own initiative through the API	34	api_delete_own_initiative
-119	Can add log entry	35	add_logentry
-120	Can change log entry	35	change_logentry
-121	Can delete log entry	35	delete_logentry
-122	Can add organization member	36	add_organizationmember
-123	Can change organization member	36	change_organizationmember
-124	Can delete organization member	36	delete_organizationmember
-125	Can add organization	37	add_organization
-126	Can change organization	37	change_organization
-127	Can delete organization	37	delete_organization
-128	Can add project phase log	38	add_projectphaselog
-129	Can change project phase log	38	change_projectphaselog
-130	Can delete project phase log	38	delete_projectphaselog
-131	Can add budget line	39	add_projectbudgetline
-132	Can change budget line	39	change_projectbudgetline
-133	Can delete budget line	39	delete_projectbudgetline
-134	Can add campaign	40	add_project
-135	Can change campaign	40	change_project
-136	Can delete campaign	40	delete_project
-137	Can add project document	41	add_projectdocument
-138	Can change project document	41	change_projectdocument
-139	Can delete project document	41	delete_projectdocument
-140	Can add Tagged Item	42	add_taggeditem
-141	Can change Tagged Item	42	change_taggeditem
-142	Can delete Tagged Item	42	delete_taggeditem
-143	Can add Tag	43	add_tag
-144	Can change Tag	43	change_tag
-145	Can delete Tag	43	delete_tag
-146	Can add task status log	44	add_taskstatuslog
-147	Can change task status log	44	change_taskstatuslog
-148	Can delete task status log	44	delete_taskstatuslog
-149	Can add task file	45	add_taskfile
-150	Can change task file	45	change_taskfile
-151	Can delete task file	45	delete_taskfile
-152	Can add task	46	add_task
-153	Can change task	46	change_task
-154	Can delete task	46	delete_task
-155	Can view tasks through the API	46	api_read_task
-156	Can add tasks through the API	46	api_add_task
-157	Can change tasks through the API	46	api_change_task
-158	Can delete tasks through the API	46	api_delete_task
-159	Can add skill	47	add_skill
-160	Can change skill	47	change_skill
-161	Can delete skill	47	delete_skill
-162	Can add task member status log	48	add_taskmemberstatuslog
-163	Can change task member status log	48	change_taskmemberstatuslog
-164	Can delete task member status log	48	delete_taskmemberstatuslog
-165	Can add task member	49	add_taskmember
-166	Can change task member	49	change_taskmember
-167	Can delete task member	49	delete_taskmember
-168	Can view taskmembers through the API	49	api_read_taskmember
-169	Can add taskmembers through the API	49	api_add_taskmember
-170	Can change taskmembers through the API	49	api_change_taskmember
-171	Can delete taskmembers through the API	49	api_delete_taskmember
-172	Can add meta data model	50	add_metadatamodel
-173	Can change meta data model	50	change_metadatamodel
-174	Can delete meta data model	50	delete_metadatamodel
-175	Can add language	51	add_language
-176	Can change language	51	change_language
-177	Can delete language	51	delete_language
-178	Can view own tasks through the API	46	api_read_own_task
-179	Can add own tasks through the API	46	api_add_own_task
-180	Can change own tasks through the API	46	api_change_own_task
-181	Can delete own tasks through the API	46	api_delete_own_task
-182	Can view skills through the API	47	api_read_skill
-183	Can view own taskmembers through the API	49	api_read_own_taskmember
-184	Can add own taskmembers through the API	49	api_add_own_taskmember
-185	Can change own taskmembers through the API	49	api_change_own_taskmember
-186	Can delete own taskmembers through the API	49	api_delete_own_taskmember
-187	Can read taskmembers resumes through the API	49	api_read_taskmember_resume
-188	Can read own taskmembers resumes through the API	49	api_read_own_taskmember_resume
-189	Can add token	52	add_token
-190	Can change token	52	change_token
-191	Can delete token	52	delete_token
-192	Can add project payout	53	add_projectpayout
-193	Can change project payout	53	change_projectpayout
-194	Can delete project payout	53	delete_projectpayout
-195	Can add organization payout	54	add_organizationpayout
-196	Can change organization payout	54	change_organizationpayout
-197	Can delete organization payout	54	delete_organizationpayout
-198	Can approve payouts for projects	40	approve_payout
-199	Can view projects through the API	40	api_read_project
-200	Can add projects through the API	40	api_add_project
-201	Can change projects through the API	40	api_change_project
-202	Can delete projects through the API	40	api_delete_project
-203	Can view project documents through the API	40	api_read_projectdocument
-204	Can add project documents through the API	40	api_add_projectdocument
-205	Can change project documents through the API	40	api_change_projectdocument
-206	Can delete project documents through the API	40	api_delete_projectdocument
-207	Can view project budget lines through the API	40	api_read_projectbudgetline
-208	Can add project budget lines through the API	40	api_add_projectbudgetline
-209	Can change project budget lines through the API	40	api_change_projectbudgetline
-210	Can delete project budget lines through the API	40	api_delete_projectbudgetline
-211	Can view own projects through the API	40	api_read_own_project
-212	Can add own projects through the API	40	api_add_own_project
-213	Can change own projects through the API	40	api_change_own_project
-214	Can delete own projects through the API	40	api_delete_own_project
-215	Can view project own documents through the API	40	api_read_own_projectdocument
-216	Can add own project documents through the API	40	api_add_own_projectdocument
-217	Can change own project documents through the API	40	api_change_own_projectdocument
-218	Can delete own project documents through the API	40	api_delete_own_projectdocument
-219	Can view own project budget lines through the API	40	api_read_own_projectbudgetline
-220	Can add own project budget lines through the API	40	api_add_own_projectbudgetline
-221	Can change own project budget lines through the API	40	api_change_own_projectbudgetline
-222	Can delete own project budget lines through the API	40	api_delete_own_projectbudgetline
-223	Can export platform data	55	export
-224	Can add project image	56	add_projectimage
-225	Can change project image	56	change_projectimage
-226	Can delete project image	56	delete_projectimage
-227	Can view project images through the API	56	api_read_projectimage
-228	Can add project images through the API	56	api_add_projectimage
-229	Can change project images through the API	56	api_change_projectimage
-230	Can delete project images through the API	56	api_delete_projectimage
-231	Can view own project images through the API	56	api_read_own_projectimage
-232	Can add own project images through the API	56	api_add_own_projectimage
-233	Can change own project images through the API	56	api_change_own_projectimage
-234	Can delete own project images through the API	56	api_delete_own_projectimage
-235	Can add analytics adapter	57	add_analyticsadapter
-236	Can change analytics adapter	57	change_analyticsadapter
-237	Can delete analytics adapter	57	delete_analyticsadapter
-238	Can add analytics platform settings	58	add_analyticsplatformsettings
-239	Can change analytics platform settings	58	change_analyticsplatformsettings
-240	Can delete analytics platform settings	58	delete_analyticsplatformsettings
-241	Can add Applicant	59	add_applicant
-242	Can change Applicant	59	change_applicant
-243	Can delete Applicant	59	delete_applicant
-244	Can view applicant through the API	59	api_read_applicant
-245	Can add applicant through the API	59	api_add_applicant
-246	Can change applicant through the API	59	api_change_applicant
-247	Can delete applicant through the API	59	api_delete_applicant
-248	Can view own applicant through the API	59	api_read_own_applicant
-249	Can add own applicant through the API	59	api_add_own_applicant
-250	Can change own applicant through the API	59	api_change_own_applicant
-251	Can delete own applicant through the API	59	api_delete_own_applicant
-252	Can add Assignment	60	add_assignment
-253	Can change Assignment	60	change_assignment
-254	Can delete Assignment	60	delete_assignment
-255	Can view assignment through the API	60	api_read_assignment
-256	Can add assignment through the API	60	api_add_assignment
-257	Can change assignment through the API	60	api_change_assignment
-258	Can delete assignment through the API	60	api_delete_assignment
-259	Can view own assignment through the API	60	api_read_own_assignment
-260	Can add own assignment through the API	60	api_add_own_assignment
-261	Can change own assignment through the API	60	api_change_own_assignment
-262	Can delete own assignment through the API	60	api_delete_own_assignment
-263	Can add initiative place	62	add_initiativeplace
-264	Can change initiative place	62	change_initiativeplace
-265	Can delete initiative place	62	delete_initiativeplace
-266	Can add geolocation	63	add_geolocation
-267	Can change geolocation	63	change_geolocation
-268	Can delete geolocation	63	delete_geolocation
-269	Can add location group	64	add_locationgroup
-270	Can change location group	64	change_locationgroup
-271	Can delete location group	64	delete_locationgroup
-272	Can add place	67	add_place
-273	Can change place	67	change_place
-274	Can delete place	67	delete_place
-275	Can add user address	69	add_useraddress
-276	Can change user address	69	change_useraddress
-277	Can delete user address	69	delete_useraddress
-278	Can add donation	70	add_donation
-279	Can change donation	70	change_donation
-280	Can delete donation	70	delete_donation
-281	Can add fundraiser	71	add_fundraiser
-282	Can change fundraiser	71	change_fundraiser
-283	Can delete fundraiser	71	delete_fundraiser
-284	Can add order	72	add_order
-285	Can change order	72	change_order
-286	Can delete order	72	delete_order
-287	Can add Gift	73	add_reward
-288	Can change Gift	73	change_reward
-289	Can delete Gift	73	delete_reward
-290	Can add follow	74	add_follow
-291	Can change follow	74	change_follow
-292	Can delete follow	74	delete_follow
-293	Can add organization contact	75	add_organizationcontact
-294	Can change organization contact	75	change_organizationcontact
-295	Can delete organization contact	75	delete_organizationcontact
-296	Can add custom project field	76	add_customprojectfield
-297	Can change custom project field	76	change_customprojectfield
-298	Can delete custom project field	76	delete_customprojectfield
-299	Can add project platform settings	77	add_projectplatformsettings
-300	Can change project platform settings	77	change_projectplatformsettings
-301	Can delete project platform settings	77	delete_projectplatformsettings
-302	Can add custom project field settings	78	add_customprojectfieldsettings
-303	Can change custom project field settings	78	change_customprojectfieldsettings
-304	Can delete custom project field settings	78	delete_customprojectfieldsettings
-305	Can change own running projects through the API	40	api_change_own_running_project
-306	Can add project search filter	79	add_projectsearchfilter
-307	Can change project search filter	79	change_projectsearchfilter
-308	Can delete project search filter	79	delete_projectsearchfilter
-309	Can add project add on	80	add_projectaddon
-310	Can change project add on	80	change_projectaddon
-311	Can delete project add on	80	delete_projectaddon
-312	Can add project location	81	add_projectlocation
-313	Can change project location	81	change_projectlocation
-314	Can delete project location	81	delete_projectlocation
-315	Can export supporters for projects	40	export_supporters
-316	Can add project create template	82	add_projectcreatetemplate
-317	Can change project create template	82	change_projectcreatetemplate
-318	Can delete project create template	82	delete_projectcreatetemplate
-319	Can add payout account	84	add_payoutaccount
-320	Can change payout account	84	change_payoutaccount
-321	Can delete payout account	84	delete_payoutaccount
-322	Can view payout documents through the API	84	api_read_payoutdocument
-323	Can add payout documents through the API	84	api_add_payoutdocument
-324	Can change payout documents through the API	84	api_change_payoutdocument
-325	Can delete payout documents through the API	84	api_delete_payoutdocument
-326	Can view payout own documents through the API	84	api_read_own_payoutdocument
-327	Can add own payout documents through the API	84	api_add_own_payoutdocument
-328	Can change own payout documents through the API	84	api_change_own_payoutdocument
-329	Can delete own payout documents through the API	84	api_delete_own_payoutdocument
-330	Can add plain payout account	83	add_plainpayoutaccount
-331	Can change plain payout account	83	change_plainpayoutaccount
-332	Can delete plain payout account	83	delete_plainpayoutaccount
-333	Can add payout document	85	add_payoutdocument
-334	Can change payout document	85	change_payoutdocument
-335	Can delete payout document	85	delete_payoutdocument
-336	Can add stripe payout account	86	add_stripepayoutaccount
-337	Can change stripe payout account	86	change_stripepayoutaccount
-338	Can delete stripe payout account	86	delete_stripepayoutaccount
-339	Can add user dashboard module	87	add_userdashboardmodule
-340	Can change user dashboard module	87	change_userdashboardmodule
-341	Can delete user dashboard module	87	delete_userdashboardmodule
-342	Can add Reaction	88	add_reaction
-343	Can change Reaction	88	change_reaction
-344	Can delete Reaction	88	delete_reaction
-345	Can add media wallpost photo	89	add_mediawallpostphoto
-346	Can change media wallpost photo	89	change_mediawallpostphoto
-347	Can delete media wallpost photo	89	delete_mediawallpostphoto
-348	Can add wallpost	90	add_wallpost
-349	Can change wallpost	90	change_wallpost
-350	Can delete wallpost	90	delete_wallpost
-351	Can add system wallpost	91	add_systemwallpost
-352	Can change system wallpost	91	change_systemwallpost
-353	Can delete system wallpost	91	delete_systemwallpost
-354	Can add text wallpost	92	add_textwallpost
-355	Can change text wallpost	92	change_textwallpost
-356	Can delete text wallpost	92	delete_textwallpost
-357	Can add media wallpost	93	add_mediawallpost
-358	Can change media wallpost	93	change_mediawallpost
-359	Can delete media wallpost	93	delete_mediawallpost
-360	Can view text wallposts through the API	93	api_read_textwallpost
-361	Can add text wallposts through the API	93	api_add_textwallpost
-362	Can change text wallposts through the API	93	api_change_textwallpost
-363	Can delete text wallposts through the API	93	api_delete_textwallpost
-364	Can view media wallposts through the API	93	api_read_mediawallpost
-365	Can add media wallposts through the API	93	api_add_mediawallpost
-366	Can change media wallposts through the API	93	api_change_mediawallpost
-367	Can delete media wallposts through the API	93	api_delete_mediawallpost
-368	Can view media wallpost photos through the API	93	api_read_mediawallpostphoto
-369	Can add media wallpost photos through the API	93	api_add_mediawallpostphoto
-370	Can change media wallpost photos through the API	93	api_change_mediawallpostphoto
-371	Can delete media wallpost photos through the API	93	api_delete_mediawallpostphoto
-372	Can view wallposts through the API	90	api_read_wallpost
-373	Can add wallposts through the API	90	api_add_wallpost
-374	Can wallposts documents through the API	90	api_change_wallpost
-375	Can wallposts documents through the API	90	api_delete_wallpost
-376	Can view reactions through the API	88	api_read_reaction
-377	Can add reactions through the API	88	api_add_reaction
-378	Can reactions documents through the API	88	api_change_reaction
-379	Can reactions documents through the API	88	api_delete_reaction
-380	Can view own reactions through the API	88	api_read_own_reaction
-381	Can add own reactions through the API	88	api_add_own_reaction
-382	Can change own reactions documents through the API	88	api_change_own_reaction
-383	Can delete own reactions documents through the API	88	api_delete_own_reaction
-384	Can view own wallposts through the API	90	api_read_own_wallpost
-385	Can own wallposts documents through the API	90	api_change_own_wallpost
-386	Can own wallposts documents through the API	90	api_delete_own_wallpost
-387	Can view own text wallposts through the API	93	api_read_own_textwallpost
-388	Can change text wallposts through the API	93	api_change_own_textwallpost
-389	Can delete own text wallposts through the API	93	api_delete_own_textwallpost
-390	Can view own media wallposts through the API	93	api_read_own_mediawallpost
-391	Can change own media wallposts through the API	93	api_change_own_mediawallpost
-392	Can delete own media wallposts through the API	93	api_delete_own_mediawallpost
-393	Can view own media wallpost photos through the API	93	api_read_own_mediawallpostphoto
-394	Can change own media wallpost photos through the API	93	api_change_own_mediawallpostphoto
-395	Can delete own media wallpost photos through the API	93	api_delete_own_mediawallpostphoto
-396	Can add fundraiser	94	add_fundraiser
-397	Can change fundraiser	94	change_fundraiser
-398	Can delete fundraiser	94	delete_fundraiser
-399	Can add budget line	95	add_budgetline
-400	Can change budget line	95	change_budgetline
-401	Can delete budget line	95	delete_budgetline
-402	Can add payment provider	96	add_paymentprovider
-403	Can change payment provider	96	change_paymentprovider
-404	Can delete payment provider	96	delete_paymentprovider
-405	Can add Gift	97	add_reward
-406	Can change Gift	97	change_reward
-407	Can delete Gift	97	delete_reward
-408	Can add payout account	98	add_payoutaccount
-409	Can change payout account	98	change_payoutaccount
-410	Can delete payout account	98	delete_payoutaccount
-411	Can add payment	99	add_payment
-412	Can change payment	99	change_payment
-413	Can delete payment	99	delete_payment
-414	Can refund payments	99	refund_payment
-415	Can add bank payment provider	100	add_bankpaymentprovider
-416	Can change bank payment provider	100	change_bankpaymentprovider
-417	Can delete bank payment provider	100	delete_bankpaymentprovider
-418	Can add bank payout account	101	add_bankpayoutaccount
-419	Can change bank payout account	101	change_bankpayoutaccount
-420	Can delete bank payout account	101	delete_bankpayoutaccount
-421	Can add legacy payment	102	add_legacypayment
-422	Can change legacy payment	102	change_legacypayment
-423	Can delete legacy payment	102	delete_legacypayment
-424	Can add own wallposts through the API	90	api_add_own_wallpost
-425	Can add own text wallposts through the API	93	api_add_own_textwallpost
-426	Can add own media wallposts through the API	93	api_add_own_mediawallpost
-427	Can add own media wallpost photos through the API	93	api_add_own_mediawallpostphoto
-428	Can add bank account	103	add_bankaccount
-429	Can change bank account	103	change_bankaccount
-430	Can delete bank account	103	delete_bankaccount
-431	Can add Payment currency	104	add_paymentcurrency
-432	Can change Payment currency	104	change_paymentcurrency
-433	Can delete Payment currency	104	delete_paymentcurrency
-434	Can add plain payout account	105	add_plainpayoutaccount
-435	Can change plain payout account	105	change_plainpayoutaccount
-436	Can delete plain payout account	105	delete_plainpayoutaccount
-437	Can view reward through the API	73	api_read_reward
-438	Can add reward through the API	73	api_add_reward
-439	Can change reward through the API	73	api_change_reward
-440	Can delete reward through the API	73	api_delete_reward
-441	Can view own reward through the API	73	api_read_own_reward
-442	Can add own reward through the API	73	api_add_own_reward
-443	Can change own reward through the API	73	api_change_own_reward
-444	Can delete own reward through the API	73	api_delete_own_reward
-445	Can add payout	116	add_payout
-446	Can change payout	116	change_payout
-447	Can delete payout	116	delete_payout
-448	Can add Flutterwave payment provider	107	add_flutterwavepaymentprovider
-449	Can change Flutterwave payment provider	107	change_flutterwavepaymentprovider
-450	Can delete Flutterwave payment provider	107	delete_flutterwavepaymentprovider
-451	Can add Flutterwave bank account	112	add_flutterwavebankaccount
-452	Can change Flutterwave bank account	112	change_flutterwavebankaccount
-453	Can delete Flutterwave bank account	112	delete_flutterwavebankaccount
-454	Can add flutterwave payment	117	add_flutterwavepayment
-455	Can change flutterwave payment	117	change_flutterwavepayment
-456	Can delete flutterwave payment	117	delete_flutterwavepayment
-457	Can add Lipisha payment provider	108	add_lipishapaymentprovider
-458	Can change Lipisha payment provider	108	change_lipishapaymentprovider
-459	Can delete Lipisha payment provider	108	delete_lipishapaymentprovider
-460	Can add lipisha bank account	113	add_lipishabankaccount
-461	Can change lipisha bank account	113	change_lipishabankaccount
-462	Can delete lipisha bank account	113	delete_lipishabankaccount
-463	Can add lipisha payment	118	add_lipishapayment
-464	Can change lipisha payment	118	change_lipishapayment
-465	Can delete lipisha payment	118	delete_lipishapayment
-466	Can add Pledge bank account	115	add_pledgebankaccount
-467	Can change Pledge bank account	115	change_pledgebankaccount
-468	Can delete Pledge bank account	115	delete_pledgebankaccount
-469	Can add Pledge payment provider	119	add_pledgepaymentprovider
-470	Can change Pledge payment provider	119	change_pledgepaymentprovider
-471	Can delete Pledge payment provider	119	delete_pledgepaymentprovider
-472	Can add pledge payment	120	add_pledgepayment
-473	Can change pledge payment	120	change_pledgepayment
-474	Can delete pledge payment	120	delete_pledgepayment
-475	Can add Stripe external account	110	add_externalaccount
-476	Can change Stripe external account	110	change_externalaccount
-477	Can delete Stripe external account	110	delete_externalaccount
-478	Can add payment intent	121	add_paymentintent
-479	Can change payment intent	121	change_paymentintent
-480	Can delete payment intent	121	delete_paymentintent
-481	Can add Stripe payment provider	109	add_stripepaymentprovider
-482	Can change Stripe payment provider	109	change_stripepaymentprovider
-483	Can delete Stripe payment provider	109	delete_stripepaymentprovider
-484	Can add stripe payment	122	add_stripepayment
-485	Can change stripe payment	122	change_stripepayment
-486	Can delete stripe payment	122	delete_stripepayment
-487	Can add stripe payout account	111	add_stripepayoutaccount
-488	Can change stripe payout account	111	change_stripepayoutaccount
-489	Can delete stripe payout account	111	delete_stripepayoutaccount
-490	Can add stripe source payment	123	add_stripesourcepayment
-491	Can change stripe source payment	123	change_stripesourcepayment
-492	Can delete stripe source payment	123	delete_stripesourcepayment
-493	Can add vitepay bank account	114	add_vitepaybankaccount
-494	Can change vitepay bank account	114	change_vitepaybankaccount
-495	Can delete vitepay bank account	114	delete_vitepaybankaccount
-496	Can add Vitepay payment provider	106	add_vitepaypaymentprovider
-497	Can change Vitepay payment provider	106	change_vitepaypaymentprovider
-498	Can delete Vitepay payment provider	106	delete_vitepaypaymentprovider
-499	Can add vitepay payment	124	add_vitepaypayment
-500	Can change vitepay payment	124	change_vitepaypayment
-501	Can delete vitepay payment	124	delete_vitepaypayment
-502	Can add initiative platform settings	125	add_initiativeplatformsettings
-503	Can change initiative platform settings	125	change_initiativeplatformsettings
-504	Can delete initiative platform settings	125	delete_initiativeplatformsettings
-505	Can add page	126	add_page
-506	Can change page	126	change_page
-507	Can delete page	126	delete_page
-508	Can add mail log	127	add_maillog
-509	Can change mail log	127	change_maillog
-510	Can delete mail log	127	delete_maillog
-511	Can add Contentitem link	128	add_contentitem
-512	Can change Contentitem link	128	change_contentitem
-513	Can delete Contentitem link	128	delete_contentitem
-514	Can add Placeholder	129	add_placeholder
-515	Can change Placeholder	129	change_placeholder
-516	Can delete Placeholder	129	delete_placeholder
-517	Can add news item	130	add_newsitem
-518	Can change news item	130	change_newsitem
-519	Can delete news item	130	delete_newsitem
-520	Can add Document	131	add_documentitem
-521	Can change Document	131	change_documentitem
-522	Can delete Document	131	delete_documentitem
-523	Can view pages through the API	126	api_read_page
-524	Can add pages through the API	126	api_add_page
-525	Can change pages through the API	126	api_change_page
-526	Can delete pages through the API	126	api_delete_page
-527	Can add Picture + Text	132	add_imagetextitem
-528	Can change Picture + Text	132	change_imagetextitem
-529	Can delete Picture + Text	132	delete_imagetextitem
-530	Can add Project Images	136	add_projectimagescontent
-531	Can change Project Images	136	change_projectimagescontent
-532	Can delete Project Images	136	delete_projectimagescontent
-533	Can add Quotes	141	add_quotescontent
-534	Can change Quotes	141	change_quotescontent
-535	Can delete Quotes	141	delete_quotescontent
-536	Can add stats	144	add_stats
-537	Can change stats	144	change_stats
-538	Can delete stats	144	delete_stats
-539	Can add Share Results	134	add_shareresultscontent
-540	Can change Share Results	134	change_shareresultscontent
-541	Can delete Share Results	134	delete_shareresultscontent
-542	Can add stat	145	add_stat
-543	Can change stat	145	change_stat
-544	Can delete stat	145	delete_stat
-545	Can add Projects	138	add_projectscontent
-546	Can change Projects	138	change_projectscontent
-547	Can delete Projects	138	delete_projectscontent
-548	Can add result page	133	add_resultpage
-549	Can change result page	133	change_resultpage
-550	Can delete result page	133	delete_resultpage
-551	Can add projects	146	add_projects
-552	Can change projects	146	change_projects
-553	Can delete projects	146	delete_projects
-554	Can add Supporter total	135	add_supportertotalcontent
-555	Can change Supporter total	135	change_supportertotalcontent
-556	Can delete Supporter total	135	delete_supportertotalcontent
-557	Can add quotes	147	add_quotes
-558	Can change quotes	147	change_quotes
-559	Can delete quotes	147	delete_quotes
-560	Can add quote	148	add_quote
-561	Can change quote	148	change_quote
-562	Can delete quote	148	delete_quote
-563	Can add Projects Map	139	add_projectsmapcontent
-564	Can change Projects Map	139	change_projectsmapcontent
-565	Can delete Projects Map	139	delete_projectsmapcontent
-566	Can add Platform Statistics	137	add_statscontent
-567	Can change Platform Statistics	137	change_statscontent
-568	Can delete Platform Statistics	137	delete_statscontent
-569	Can add Platform Results	149	add_surveycontent
-570	Can change Platform Results	149	change_surveycontent
-571	Can delete Platform Results	149	delete_surveycontent
-572	Can view news items through the API	130	api_read_newsitem
-573	Can add news items through the API	130	api_add_newsitem
-574	Can change news items through the API	130	api_change_newsitem
-575	Can delete news items through the API	130	api_delete_newsitem
-576	Can add aggregate answer	150	add_aggregateanswer
-577	Can change aggregate answer	150	change_aggregateanswer
-578	Can delete aggregate answer	150	delete_aggregateanswer
-579	Can add response	151	add_response
-580	Can change response	151	change_response
-581	Can delete response	151	delete_response
-582	Can add answer	152	add_answer
-583	Can change answer	152	change_answer
-584	Can delete answer	152	delete_answer
-585	Can add sub question	153	add_subquestion
-586	Can change sub question	153	change_subquestion
-587	Can delete sub question	153	delete_subquestion
-588	Can add question	154	add_question
-589	Can change question	154	change_question
-590	Can delete question	154	delete_question
-591	Can add survey	155	add_survey
-592	Can change survey	155	change_survey
-593	Can delete survey	155	delete_survey
-594	Can view result pages through the API	133	api_read_resultpage
-595	Can add result pages through the API	133	api_add_resultpage
-596	Can change result pages through the API	133	api_change_resultpage
-597	Can delete result pages through the API	133	api_delete_resultpage
-598	Can add Tasks	156	add_taskscontent
-599	Can change Tasks	156	change_taskscontent
-600	Can delete Tasks	156	delete_taskscontent
-601	Can add metric	157	add_metric
-602	Can change metric	157	change_metric
-603	Can delete metric	157	delete_metric
-604	Can add home page	159	add_homepage
-605	Can change home page	159	change_homepage
-606	Can delete home page	159	delete_homepage
-607	Can view homepages through the API	159	api_read_homepage
-608	Can add homepages through the API	159	api_add_homepage
-609	Can change homepages through the API	159	api_change_homepage
-610	Can delete homepages through the API	159	api_delete_homepage
-611	Can add Metrics	160	add_metricscontent
-612	Can change Metrics	160	change_metricscontent
-613	Can delete Metrics	160	delete_metricscontent
-614	Can add step	162	add_step
-615	Can change step	162	change_step
-616	Can delete step	162	delete_step
-617	Can add Links	163	add_linkscontent
-618	Can change Links	163	change_linkscontent
-619	Can delete Links	163	delete_linkscontent
-620	Can add link group	164	add_linkgroup
-621	Can change link group	164	change_linkgroup
-622	Can delete link group	164	delete_linkgroup
-623	Can add content link	165	add_contentlink
-624	Can change content link	165	change_contentlink
-625	Can delete content link	165	delete_contentlink
-626	Can add link permission	166	add_linkpermission
-627	Can change link permission	166	change_linkpermission
-628	Can delete link permission	166	delete_linkpermission
-629	Can add Logos	167	add_logoscontent
-630	Can change Logos	167	change_logoscontent
-631	Can delete Logos	167	delete_logoscontent
-632	Can add site links	168	add_sitelinks
-633	Can change site links	168	change_sitelinks
-634	Can delete site links	168	delete_sitelinks
-635	Can add Categories	169	add_categoriescontent
-636	Can change Categories	169	change_categoriescontent
-637	Can delete Categories	169	delete_categoriescontent
-638	Can add Slides	170	add_slidescontent
-639	Can change Slides	170	change_slidescontent
-640	Can delete Slides	170	delete_slidescontent
-641	Can add Welcome	171	add_welcomecontent
-642	Can change Welcome	171	change_welcomecontent
-643	Can delete Welcome	171	delete_welcomecontent
-644	Can add slide	172	add_slide
-645	Can change slide	172	change_slide
-646	Can delete slide	172	delete_slide
-647	Can add Steps	173	add_stepscontent
-648	Can change Steps	173	change_stepscontent
-649	Can delete Steps	173	delete_stepscontent
-650	Can add Locations	174	add_locationscontent
-651	Can change Locations	174	change_locationscontent
-652	Can delete Locations	174	delete_locationscontent
-653	Can add logo	175	add_logo
-654	Can change logo	175	change_logo
-655	Can delete logo	175	delete_logo
-656	Can add site platform settings	176	add_siteplatformsettings
-657	Can change site platform settings	176	change_siteplatformsettings
-658	Can delete site platform settings	176	delete_siteplatformsettings
-659	Can add greeting	177	add_greeting
-660	Can change greeting	177	change_greeting
-661	Can delete greeting	177	delete_greeting
-662	Can add link	178	add_link
-663	Can change link	178	change_link
-664	Can delete link	178	delete_link
-665	Can add Activities	179	add_activitiescontent
-666	Can change Activities	179	change_activitiescontent
-667	Can delete Activities	179	delete_activitiescontent
-668	Can add contact message	180	add_contactmessage
-669	Can change contact message	180	change_contactmessage
-670	Can delete contact message	180	delete_contactmessage
-671	Can add Picture	181	add_pictureitem
-672	Can change Picture	181	change_pictureitem
-673	Can delete Picture	181	delete_pictureitem
-674	Can add Online media	182	add_oembeditem
-675	Can change Online media	182	change_oembeditem
-676	Can delete Online media	182	delete_oembeditem
-677	Can add HTML code	183	add_rawhtmlitem
-678	Can change HTML code	183	change_rawhtmlitem
-679	Can delete HTML code	183	delete_rawhtmlitem
-680	Can add Text	184	add_textitem
-681	Can change Text	184	change_textitem
-682	Can delete Text	184	delete_textitem
-683	Can add attachment	185	add_attachment
-684	Can change attachment	185	change_attachment
-685	Can delete attachment	185	delete_attachment
-686	Can add saved group result	186	add_tasksetmeta
-687	Can change saved group result	186	change_tasksetmeta
-688	Can delete saved group result	186	delete_tasksetmeta
-689	Can add interval	187	add_intervalschedule
-690	Can change interval	187	change_intervalschedule
-691	Can delete interval	187	delete_intervalschedule
-692	Can add task	188	add_taskstate
-693	Can change task	188	change_taskstate
-694	Can delete task	188	delete_taskstate
-695	Can add task state	189	add_taskmeta
-696	Can change task state	189	change_taskmeta
-697	Can delete task state	189	delete_taskmeta
-698	Can add periodic tasks	190	add_periodictasks
-699	Can change periodic tasks	190	change_periodictasks
-700	Can delete periodic tasks	190	delete_periodictasks
-701	Can add crontab	191	add_crontabschedule
-702	Can change crontab	191	change_crontabschedule
-703	Can delete crontab	191	delete_crontabschedule
-704	Can add worker	192	add_workerstate
-705	Can change worker	192	change_workerstate
-706	Can delete worker	192	delete_workerstate
-707	Can add periodic task	193	add_periodictask
-708	Can change periodic task	193	change_periodictask
-709	Can delete periodic task	193	delete_periodictask
-710	Can add rate	194	add_rate
-711	Can change rate	194	change_rate
-712	Can delete rate	194	delete_rate
-713	Can add rate source	195	add_ratesource
-714	Can change rate source	195	change_ratesource
-715	Can delete rate source	195	delete_ratesource
-716	Can add Event	196	add_event
-717	Can change Event	196	change_event
-718	Can delete Event	196	delete_event
-719	Can view event through the API	196	api_read_event
-720	Can add event through the API	196	api_add_event
-721	Can change event through the API	196	api_change_event
-722	Can delete event through the API	196	api_delete_event
-723	Can view own event through the API	196	api_read_own_event
-724	Can add own event through the API	196	api_add_own_event
-725	Can change own event through the API	196	api_change_own_event
-726	Can delete own event through the API	196	api_delete_own_event
-727	Can add participant	197	add_participant
-728	Can change participant	197	change_participant
-729	Can delete participant	197	delete_participant
-730	Can view participant through the API	197	api_read_participant
-731	Can add participant through the API	197	api_add_participant
-732	Can change participant through the API	197	api_change_participant
-733	Can delete participant through the API	197	api_delete_participant
-734	Can view own participant through the API	197	api_read_own_participant
-735	Can add own participant through the API	197	api_add_own_participant
-736	Can change own participant through the API	197	api_change_own_participant
-737	Can delete own participant through the API	197	api_delete_own_participant
-738	Can add related image	198	add_relatedimage
-739	Can change related image	198	change_relatedimage
-740	Can delete related image	198	delete_relatedimage
-741	Can add follow	199	add_follow
-742	Can change follow	199	change_follow
-743	Can delete follow	199	delete_follow
-744	Can add funding settings	200	add_fundingplatformsettings
-745	Can change funding settings	200	change_fundingplatformsettings
-746	Can delete funding settings	200	delete_fundingplatformsettings
-747	Can read homepage through the API	201	api_read_homepage
-748	Can add pinned application	202	add_pinnedapplication
-749	Can change pinned application	202	change_pinnedapplication
-750	Can delete pinned application	202	delete_pinnedapplication
-751	Can add bookmark	203	add_bookmark
-752	Can change bookmark	203	change_bookmark
-753	Can delete bookmark	203	delete_bookmark
-754	Can add looker embed	204	add_lookerembed
-755	Can change looker embed	204	change_lookerembed
-756	Can delete looker embed	204	delete_lookerembed
-757	Can access looker embeds	204	access_looker_embeds
-758	Can add mail platform settings	205	add_mailplatformsettings
-759	Can change mail platform settings	205	change_mailplatformsettings
-760	Can delete mail platform settings	205	delete_mailplatformsettings
-761	Can view order through the API	72	api_read_order
-762	Can add order through the API	72	api_add_order
-763	Can change order through the API	72	api_change_order
-764	Can delete order through the API	72	api_delete_order
-765	Can view own order through the API	72	api_read_own_order
-766	Can add own order through the API	72	api_add_own_order
-767	Can change own order through the API	72	api_change_own_order
-768	Can delete own order through the API	72	api_delete_own_order
-769	Can add code	206	add_code
-770	Can change code	206	change_code
-771	Can delete code	206	delete_code
-772	Can add nonce	207	add_nonce
-773	Can change nonce	207	change_nonce
-774	Can delete nonce	207	delete_nonce
-775	Can add user social auth	208	add_usersocialauth
-776	Can change user social auth	208	change_usersocialauth
-777	Can delete user social auth	208	delete_usersocialauth
-778	Can add association	209	add_association
-779	Can change association	209	change_association
-780	Can delete association	209	delete_association
-781	Can view members through the API	30	api_read_member
-783	Can add members through the API	30	api_add_member
-784	Can change members through the API	30	api_change_member
-785	Can delete members through the API	30	api_delete_member
-782	Can view full members through the API	30	api_read_full_member
-786	Can add custom member field settings	210	add_custommemberfieldsettings
-787	Can change custom member field settings	210	change_custommemberfieldsettings
-788	Can delete custom member field settings	210	delete_custommemberfieldsettings
-789	Can add member platform settings	211	add_memberplatformsettings
-790	Can change member platform settings	211	change_memberplatformsettings
-791	Can delete member platform settings	211	delete_memberplatformsettings
-792	Can add custom member field	212	add_custommemberfield
-793	Can change custom member field	212	change_custommemberfield
-794	Can delete custom member field	212	delete_custommemberfield
-795	Can view own members through the API	30	api_read_own_member
-796	Can change own members through the API	30	api_change_own_member
-797	Can delete own members through the API	30	api_delete_own_member
-798	Can add message	213	add_message
-799	Can change message	213	change_message
-800	Can delete message	213	delete_message
-801	Can add notification/matching settings	214	add_notificationplatformsettings
-802	Can change notification/matching settings	214	change_notificationplatformsettings
-803	Can delete notification/matching settings	214	delete_notificationplatformsettings
-804	Can add order payment	215	add_orderpayment
-805	Can change order payment	215	change_orderpayment
-806	Can delete order payment	215	delete_orderpayment
-807	Can refund order payments	215	refund_orderpayment
-808	Can add payment	216	add_payment
-809	Can change payment	216	change_payment
-810	Can delete payment	216	delete_payment
-811	Can add order payment action	217	add_orderpaymentaction
-812	Can change order payment action	217	change_orderpaymentaction
-813	Can delete order payment action	217	delete_orderpaymentaction
-814	Can add transaction	218	add_transaction
-815	Can change transaction	218	change_transaction
-816	Can delete transaction	218	delete_transaction
-817	Can add Beyonic Payment	219	add_beyonicpayment
-818	Can change Beyonic Payment	219	change_beyonicpayment
-819	Can delete Beyonic Payment	219	delete_beyonicpayment
-820	Can add Docdata Payment	220	add_docdatapayment
-821	Can change Docdata Payment	220	change_docdatapayment
-822	Can delete Docdata Payment	220	delete_docdatapayment
-823	Can add docdata transaction	221	add_docdatatransaction
-824	Can change docdata transaction	221	change_docdatatransaction
-825	Can delete docdata transaction	221	delete_docdatatransaction
-826	Can add Docdata Direct Debit Payment	222	add_docdatadirectdebitpayment
-827	Can change Docdata Direct Debit Payment	222	change_docdatadirectdebitpayment
-828	Can delete Docdata Direct Debit Payment	222	delete_docdatadirectdebitpayment
-829	Can add external payment	223	add_externalpayment
-830	Can change external payment	223	change_externalpayment
-831	Can delete external payment	223	delete_externalpayment
-832	Can add Flutterwave Mpesa Payment	224	add_flutterwavempesapayment
-833	Can change Flutterwave Mpesa Payment	224	change_flutterwavempesapayment
-834	Can delete Flutterwave Mpesa Payment	224	delete_flutterwavempesapayment
-835	Can add Flutterwave Payment	225	add_flutterwavepayment
-836	Can change Flutterwave Payment	225	change_flutterwavepayment
-837	Can delete Flutterwave Payment	225	delete_flutterwavepayment
-838	Can add interswitch payment status update	226	add_interswitchpaymentstatusupdate
-839	Can change interswitch payment status update	226	change_interswitchpaymentstatusupdate
-840	Can delete interswitch payment status update	226	delete_interswitchpaymentstatusupdate
-841	Can add Interswitch Payment	227	add_interswitchpayment
-842	Can change Interswitch Payment	227	change_interswitchpayment
-843	Can delete Interswitch Payment	227	delete_interswitchpayment
-844	Can add Lipisha Payment	228	add_lipishapayment
-845	Can change Lipisha Payment	228	change_lipishapayment
-846	Can delete Lipisha Payment	228	delete_lipishapayment
-847	Can add lipisha project	229	add_lipishaproject
-848	Can change lipisha project	229	change_lipishaproject
-849	Can delete lipisha project	229	delete_lipishaproject
-850	Can add Payment Log	230	add_paymentlogentry
-851	Can change Payment Log	230	change_paymentlogentry
-852	Can delete Payment Log	230	delete_paymentlogentry
-853	Can add Mock Payment	231	add_mockpayment
-854	Can change Mock Payment	231	change_mockpayment
-855	Can delete Mock Payment	231	delete_mockpayment
-856	Can add pledge standard payment	232	add_pledgestandardpayment
-857	Can change pledge standard payment	232	change_pledgestandardpayment
-858	Can delete pledge standard payment	232	delete_pledgestandardpayment
-859	Can add stripe payment	233	add_stripepayment
-860	Can change stripe payment	233	change_stripepayment
-861	Can delete stripe payment	233	delete_stripepayment
-862	Can add Telesom/Zaad Payment	234	add_telesompayment
-863	Can change Telesom/Zaad Payment	234	change_telesompayment
-864	Can delete Telesom/Zaad Payment	234	delete_telesompayment
-865	Can add Vitepay Payment	235	add_vitepaypayment
-866	Can change Vitepay Payment	235	change_vitepaypayment
-867	Can delete Vitepay Payment	235	delete_vitepaypayment
-868	Can add Voucher Payment	236	add_voucherpayment
-869	Can change Voucher Payment	236	change_voucherpayment
-870	Can delete Voucher Payment	236	delete_voucherpayment
-871	Can add voucher	237	add_voucher
-872	Can change voucher	237	change_voucher
-873	Can delete voucher	237	delete_voucher
-874	Can add flutterwave payout account	238	add_flutterwavepayoutaccount
-875	Can change flutterwave payout account	238	change_flutterwavepayoutaccount
-876	Can delete flutterwave payout account	238	delete_flutterwavepayoutaccount
-877	Can add quote	239	add_quote
-878	Can change quote	239	change_quote
-879	Can delete quote	239	delete_quote
-880	Can add redirect	240	add_redirect
-881	Can change redirect	240	change_redirect
-882	Can delete redirect	240	delete_redirect
-883	Can add scim platform settings	241	add_scimplatformsettings
-884	Can change scim platform settings	241	change_scimplatformsettings
-885	Can delete scim platform settings	241	delete_scimplatformsettings
-886	Can add session	242	add_session
-887	Can change session	242	change_session
-888	Can delete session	242	delete_session
-889	Can add site	55	add_site
-890	Can change site	55	change_site
-891	Can delete site	55	delete_site
-892	Can add slide	243	add_slide
-893	Can change slide	243	change_slide
-894	Can delete slide	243	delete_slide
-895	Can add partial	244	add_partial
-896	Can change partial	244	change_partial
-897	Can delete partial	244	delete_partial
-898	Can add statistic	245	add_statistic
-899	Can change statistic	245	change_statistic
-900	Can delete statistic	245	delete_statistic
-901	Can add suggestion	246	add_suggestion
-902	Can change suggestion	246	change_suggestion
-903	Can delete suggestion	246	delete_suggestion
-904	Can add Term agreements	247	add_termsagreement
-905	Can change Term agreements	247	change_termsagreement
-906	Can delete Term agreements	247	delete_termsagreement
-907	Can view terms agreements through API	247	api_read_termsagreement
-908	Can add Term	248	add_terms
-909	Can change Term	248	change_terms
-910	Can delete Term	248	delete_terms
-911	Can view terms through API	248	api_read_terms
-912	Can add checked token	249	add_checkedtoken
-913	Can change checked token	249	change_checkedtoken
-914	Can delete checked token	249	delete_checkedtoken
-915	Can add kv store	250	add_kvstore
-916	Can change kv store	250	change_kvstore
-917	Can delete kv store	250	delete_kvstore
-918	Can add vote	251	add_vote
-919	Can change vote	251	change_vote
-920	Can delete vote	251	delete_vote
-921	Can add user activity	252	add_useractivity
-922	Can change user activity	252	change_useractivity
-923	Can delete user activity	252	delete_useractivity
-924	Can add Call to action	253	add_actionitem
-925	Can change Call to action	253	change_actionitem
-926	Can delete Call to action	253	delete_actionitem
-927	Can add Text in columns	254	add_columnsitem
-928	Can change Text in columns	254	change_columnsitem
-929	Can delete Text in columns	254	delete_columnsitem
-930	Can add message template	255	add_messagetemplate
-931	Can change message template	255	change_messagetemplate
-932	Can delete message template	255	delete_messagetemplate
+119	Can add organizer	35	add_organizer
+120	Can change organizer	35	change_organizer
+121	Can delete organizer	35	delete_organizer
+122	Can add token	36	add_token
+123	Can change token	36	change_token
+124	Can delete token	36	delete_token
+125	Can add initiative place	37	add_initiativeplace
+126	Can change initiative place	37	change_initiativeplace
+127	Can delete initiative place	37	delete_initiativeplace
+128	Can add place	39	add_place
+129	Can change place	39	change_place
+130	Can delete place	39	delete_place
+131	Can add geolocation	40	add_geolocation
+132	Can change geolocation	40	change_geolocation
+133	Can delete geolocation	40	delete_geolocation
+134	Can add location group	41	add_locationgroup
+135	Can change location group	41	change_locationgroup
+136	Can delete location group	41	delete_locationgroup
+137	Can add organization member	44	add_organizationmember
+138	Can change organization member	44	change_organizationmember
+139	Can delete organization member	44	delete_organizationmember
+140	Can add organization	45	add_organization
+141	Can change organization	45	change_organization
+142	Can delete organization	45	delete_organization
+143	Can add project payout	46	add_projectpayout
+144	Can change project payout	46	change_projectpayout
+145	Can delete project payout	46	delete_projectpayout
+146	Can add organization payout	47	add_organizationpayout
+147	Can change organization payout	47	change_organizationpayout
+148	Can delete organization payout	47	delete_organizationpayout
+149	Can add project phase log	48	add_projectphaselog
+150	Can change project phase log	48	change_projectphaselog
+151	Can delete project phase log	48	delete_projectphaselog
+152	Can add budget line	49	add_projectbudgetline
+153	Can change budget line	49	change_projectbudgetline
+154	Can delete budget line	49	delete_projectbudgetline
+155	Can add project	50	add_project
+156	Can change project	50	change_project
+157	Can delete project	50	delete_project
+158	Can approve payouts for projects	50	approve_payout
+159	Can view projects through the API	50	api_read_project
+160	Can add projects through the API	50	api_add_project
+161	Can change projects through the API	50	api_change_project
+162	Can delete projects through the API	50	api_delete_project
+163	Can view project documents through the API	50	api_read_projectdocument
+164	Can add project documents through the API	50	api_add_projectdocument
+165	Can change project documents through the API	50	api_change_projectdocument
+166	Can delete project documents through the API	50	api_delete_projectdocument
+167	Can view project budget lines through the API	50	api_read_projectbudgetline
+168	Can add project budget lines through the API	50	api_add_projectbudgetline
+169	Can change project budget lines through the API	50	api_change_projectbudgetline
+170	Can delete project budget lines through the API	50	api_delete_projectbudgetline
+171	Can add project document	51	add_projectdocument
+172	Can change project document	51	change_projectdocument
+173	Can delete project document	51	delete_projectdocument
+174	Can add Tagged Item	52	add_taggeditem
+175	Can change Tagged Item	52	change_taggeditem
+176	Can delete Tagged Item	52	delete_taggeditem
+177	Can add Tag	53	add_tag
+178	Can change Tag	53	change_tag
+179	Can delete Tag	53	delete_tag
+180	Can add task status log	54	add_taskstatuslog
+181	Can change task status log	54	change_taskstatuslog
+182	Can delete task status log	54	delete_taskstatuslog
+183	Can add task file	55	add_taskfile
+184	Can change task file	55	change_taskfile
+185	Can delete task file	55	delete_taskfile
+186	Can add task	56	add_task
+187	Can change task	56	change_task
+188	Can delete task	56	delete_task
+189	Can add task member status log	57	add_taskmemberstatuslog
+190	Can change task member status log	57	change_taskmemberstatuslog
+191	Can delete task member status log	57	delete_taskmemberstatuslog
+192	Can add task member	58	add_taskmember
+193	Can change task member	58	change_taskmember
+194	Can delete task member	58	delete_taskmember
+195	Can add skill	59	add_skill
+196	Can change skill	59	change_skill
+197	Can delete skill	59	delete_skill
+198	Can add meta data model	60	add_metadatamodel
+199	Can change meta data model	60	change_metadatamodel
+200	Can delete meta data model	60	delete_metadatamodel
+201	Can add language	61	add_language
+202	Can change language	61	change_language
+203	Can delete language	61	delete_language
+204	Can view own projects through the API	50	api_read_own_project
+205	Can add own projects through the API	50	api_add_own_project
+206	Can change own projects through the API	50	api_change_own_project
+207	Can delete own projects through the API	50	api_delete_own_project
+208	Can view project own documents through the API	50	api_read_own_projectdocument
+209	Can add own project documents through the API	50	api_add_own_projectdocument
+210	Can change own project documents through the API	50	api_change_own_projectdocument
+211	Can delete own project documents through the API	50	api_delete_own_projectdocument
+212	Can view own project budget lines through the API	50	api_read_own_projectbudgetline
+213	Can add own project budget lines through the API	50	api_add_own_projectbudgetline
+214	Can change own project budget lines through the API	50	api_change_own_projectbudgetline
+215	Can delete own project budget lines through the API	50	api_delete_own_projectbudgetline
+216	Can export platform data	62	export
+217	Can add project image	63	add_projectimage
+218	Can change project image	63	change_projectimage
+219	Can delete project image	63	delete_projectimage
+220	Can view project images through the API	63	api_read_projectimage
+221	Can add project images through the API	63	api_add_projectimage
+222	Can change project images through the API	63	api_change_projectimage
+223	Can delete project images through the API	63	api_delete_projectimage
+224	Can view own project images through the API	63	api_read_own_projectimage
+225	Can add own project images through the API	63	api_add_own_projectimage
+226	Can change own project images through the API	63	api_change_own_projectimage
+227	Can delete own project images through the API	63	api_delete_own_projectimage
+228	Can add Project Settings	64	add_projectplatformsettings
+229	Can change Project Settings	64	change_projectplatformsettings
+230	Can delete Project Settings	64	delete_projectplatformsettings
+231	Can add project search filter	65	add_projectsearchfilter
+232	Can change project search filter	65	change_projectsearchfilter
+233	Can delete project search filter	65	delete_projectsearchfilter
+234	Can add organization contact	66	add_organizationcontact
+235	Can change organization contact	66	change_organizationcontact
+236	Can delete organization contact	66	delete_organizationcontact
+237	Can add custom project field	67	add_customprojectfield
+238	Can change custom project field	67	change_customprojectfield
+239	Can delete custom project field	67	delete_customprojectfield
+240	Can add custom project field settings	68	add_customprojectfieldsettings
+241	Can change custom project field settings	68	change_customprojectfieldsettings
+242	Can delete custom project field settings	68	delete_customprojectfieldsettings
+243	Can change own running projects through the API	50	api_change_own_running_project
+244	Can add project add on	69	add_projectaddon
+245	Can change project add on	69	change_projectaddon
+246	Can delete project add on	69	delete_projectaddon
+247	Can add project location	70	add_projectlocation
+248	Can change project location	70	change_projectlocation
+249	Can delete project location	70	delete_projectlocation
+250	Can export supporters for projects	50	export_supporters
+251	Can add project create template	71	add_projectcreatetemplate
+252	Can change project create template	71	change_projectcreatetemplate
+253	Can delete project create template	71	delete_projectcreatetemplate
+254	Can add payout account	73	add_payoutaccount
+255	Can change payout account	73	change_payoutaccount
+256	Can delete payout account	73	delete_payoutaccount
+257	Can view payout documents through the API	73	api_read_payoutdocument
+258	Can add payout documents through the API	73	api_add_payoutdocument
+259	Can change payout documents through the API	73	api_change_payoutdocument
+260	Can delete payout documents through the API	73	api_delete_payoutdocument
+261	Can view payout own documents through the API	73	api_read_own_payoutdocument
+262	Can add own payout documents through the API	73	api_add_own_payoutdocument
+263	Can change own payout documents through the API	73	api_change_own_payoutdocument
+264	Can delete own payout documents through the API	73	api_delete_own_payoutdocument
+265	Can add plain payout account	72	add_plainpayoutaccount
+266	Can change plain payout account	72	change_plainpayoutaccount
+267	Can delete plain payout account	72	delete_plainpayoutaccount
+268	Can add payout document	74	add_payoutdocument
+269	Can change payout document	74	change_payoutdocument
+270	Can delete payout document	74	delete_payoutdocument
+271	Can add stripe payout account	75	add_stripepayoutaccount
+272	Can change stripe payout account	75	change_stripepayoutaccount
+273	Can delete stripe payout account	75	delete_stripepayoutaccount
+274	Can add Gift	76	add_reward
+275	Can change Gift	76	change_reward
+276	Can delete Gift	76	delete_reward
+277	Can add budget line	77	add_budgetline
+278	Can change budget line	77	change_budgetline
+279	Can delete budget line	77	delete_budgetline
+280	Can add payout account	78	add_payoutaccount
+281	Can change payout account	78	change_payoutaccount
+282	Can delete payout account	78	delete_payoutaccount
+283	Can add payment	79	add_payment
+284	Can change payment	79	change_payment
+285	Can delete payment	79	delete_payment
+286	Can refund payments	79	refund_payment
+287	Can add fundraiser	80	add_fundraiser
+288	Can change fundraiser	80	change_fundraiser
+289	Can delete fundraiser	80	delete_fundraiser
+290	Can add legacy payment	81	add_legacypayment
+291	Can change legacy payment	81	change_legacypayment
+292	Can delete legacy payment	81	delete_legacypayment
+293	Can add payment provider	82	add_paymentprovider
+294	Can change payment provider	82	change_paymentprovider
+295	Can delete payment provider	82	delete_paymentprovider
+296	Can add bank payout account	83	add_bankpayoutaccount
+297	Can change bank payout account	83	change_bankpayoutaccount
+298	Can delete bank payout account	83	delete_bankpayoutaccount
+299	Can add bank payment provider	84	add_bankpaymentprovider
+300	Can change bank payment provider	84	change_bankpaymentprovider
+301	Can delete bank payment provider	84	delete_bankpaymentprovider
+302	Can add payout	85	add_payout
+303	Can change payout	85	change_payout
+304	Can delete payout	85	delete_payout
+305	Can add funding settings	86	add_fundingplatformsettings
+306	Can change funding settings	86	change_fundingplatformsettings
+307	Can delete funding settings	86	delete_fundingplatformsettings
+308	Can add bank account	87	add_bankaccount
+309	Can change bank account	87	change_bankaccount
+310	Can delete bank account	87	delete_bankaccount
+311	Can add Payment currency	88	add_paymentcurrency
+312	Can change Payment currency	88	change_paymentcurrency
+313	Can delete Payment currency	88	delete_paymentcurrency
+314	Can add plain payout account	89	add_plainpayoutaccount
+315	Can change plain payout account	89	change_plainpayoutaccount
+316	Can delete plain payout account	89	delete_plainpayoutaccount
+317	Can add Event	90	add_event
+318	Can change Event	90	change_event
+319	Can delete Event	90	delete_event
+320	Can view event through the API	90	api_read_event
+321	Can add event through the API	90	api_add_event
+322	Can change event through the API	90	api_change_event
+323	Can delete event through the API	90	api_delete_event
+324	Can view own event through the API	90	api_read_own_event
+325	Can add own event through the API	90	api_add_own_event
+326	Can change own event through the API	90	api_change_own_event
+327	Can delete own event through the API	90	api_delete_own_event
+328	Can add participant	91	add_participant
+329	Can change participant	91	change_participant
+330	Can delete participant	91	delete_participant
+331	Can view participant through the API	91	api_read_participant
+332	Can add participant through the API	91	api_add_participant
+333	Can change participant through the API	91	api_change_participant
+334	Can delete participant through the API	91	api_delete_participant
+335	Can view own participant through the API	91	api_read_own_participant
+336	Can add own participant through the API	91	api_add_own_participant
+337	Can change own participant through the API	91	api_change_own_participant
+338	Can delete own participant through the API	91	api_delete_own_participant
+339	Can view tasks through the API	56	api_read_task
+340	Can add tasks through the API	56	api_add_task
+341	Can change tasks through the API	56	api_change_task
+342	Can delete tasks through the API	56	api_delete_task
+343	Can view taskmembers through the API	58	api_read_taskmember
+344	Can add taskmembers through the API	58	api_add_taskmember
+345	Can change taskmembers through the API	58	api_change_taskmember
+346	Can delete taskmembers through the API	58	api_delete_taskmember
+347	Can view own tasks through the API	56	api_read_own_task
+348	Can add own tasks through the API	56	api_add_own_task
+349	Can change own tasks through the API	56	api_change_own_task
+350	Can delete own tasks through the API	56	api_delete_own_task
+351	Can view skills through the API	59	api_read_skill
+352	Can view own taskmembers through the API	58	api_read_own_taskmember
+353	Can add own taskmembers through the API	58	api_add_own_taskmember
+354	Can change own taskmembers through the API	58	api_change_own_taskmember
+355	Can delete own taskmembers through the API	58	api_delete_own_taskmember
+356	Can read taskmembers resumes through the API	58	api_read_taskmember_resume
+357	Can read own taskmembers resumes through the API	58	api_read_own_taskmember_resume
+358	Can add Applicant	92	add_applicant
+359	Can change Applicant	92	change_applicant
+360	Can delete Applicant	92	delete_applicant
+361	Can view applicant through the API	92	api_read_applicant
+362	Can add applicant through the API	92	api_add_applicant
+363	Can change applicant through the API	92	api_change_applicant
+364	Can delete applicant through the API	92	api_delete_applicant
+365	Can view own applicant through the API	92	api_read_own_applicant
+366	Can add own applicant through the API	92	api_add_own_applicant
+367	Can change own applicant through the API	92	api_change_own_applicant
+368	Can delete own applicant through the API	92	api_delete_own_applicant
+369	Can add Assignment	93	add_assignment
+370	Can change Assignment	93	change_assignment
+371	Can delete Assignment	93	delete_assignment
+372	Can view assignment through the API	93	api_read_assignment
+373	Can add assignment through the API	93	api_add_assignment
+374	Can change assignment through the API	93	api_change_assignment
+375	Can delete assignment through the API	93	api_delete_assignment
+376	Can view own assignment through the API	93	api_read_own_assignment
+377	Can add own assignment through the API	93	api_add_own_assignment
+378	Can change own assignment through the API	93	api_change_own_assignment
+379	Can delete own assignment through the API	93	api_delete_own_assignment
+380	Can add related image	95	add_relatedimage
+381	Can change related image	95	change_relatedimage
+382	Can delete related image	95	delete_relatedimage
+383	Can add log entry	96	add_logentry
+384	Can change log entry	96	change_logentry
+385	Can delete log entry	96	delete_logentry
+386	Can add analytics platform settings	97	add_analyticsplatformsettings
+387	Can change analytics platform settings	97	change_analyticsplatformsettings
+388	Can delete analytics platform settings	97	delete_analyticsplatformsettings
+389	Can add analytics adapter	98	add_analyticsadapter
+390	Can change analytics adapter	98	change_analyticsadapter
+391	Can delete analytics adapter	98	delete_analyticsadapter
+392	Can add access attempt	99	add_accessattempt
+393	Can change access attempt	99	change_accessattempt
+394	Can delete access attempt	99	delete_accessattempt
+395	Can add access log	100	add_accesslog
+396	Can change access log	100	change_accesslog
+397	Can delete access log	100	delete_accesslog
+398	Can add user address	101	add_useraddress
+399	Can change user address	101	change_useraddress
+400	Can delete user address	101	delete_useraddress
+401	Can add donation	102	add_donation
+402	Can change donation	102	change_donation
+403	Can delete donation	102	delete_donation
+404	Can add private document	103	add_privatedocument
+405	Can change private document	103	change_privatedocument
+406	Can delete private document	103	delete_privatedocument
+407	Can add fundraiser	104	add_fundraiser
+408	Can change fundraiser	104	change_fundraiser
+409	Can delete fundraiser	104	delete_fundraiser
+410	Can add order	105	add_order
+411	Can change order	105	change_order
+412	Can delete order	105	delete_order
+413	Can add Gift	106	add_reward
+414	Can change Gift	106	change_reward
+415	Can delete Gift	106	delete_reward
+416	Can add segment type	107	add_segmenttype
+417	Can change segment type	107	change_segmenttype
+418	Can delete segment type	107	delete_segmenttype
+419	Can add segment	108	add_segment
+420	Can change segment	108	change_segment
+421	Can delete segment	108	delete_segment
+422	Can add follow	109	add_follow
+423	Can change follow	109	change_follow
+424	Can delete follow	109	delete_follow
+425	Can add user dashboard module	112	add_userdashboardmodule
+426	Can change user dashboard module	112	change_userdashboardmodule
+427	Can delete user dashboard module	112	delete_userdashboardmodule
+428	Can add Contentitem link	113	add_contentitem
+429	Can change Contentitem link	113	change_contentitem
+430	Can delete Contentitem link	113	delete_contentitem
+431	Can add Placeholder	114	add_placeholder
+432	Can change Placeholder	114	change_placeholder
+433	Can delete Placeholder	114	delete_placeholder
+434	Can add impact goal	115	add_impactgoal
+435	Can change impact goal	115	change_impactgoal
+436	Can delete impact goal	115	delete_impactgoal
+437	Can add impact type	117	add_impacttype
+438	Can change impact type	117	change_impacttype
+439	Can delete impact type	117	delete_impacttype
+440	Can add base statistic	119	add_basestatistic
+441	Can change base statistic	119	change_basestatistic
+442	Can delete base statistic	119	delete_basestatistic
+443	Can add statistic	122	add_statistic
+444	Can change statistic	122	change_statistic
+445	Can delete statistic	122	delete_statistic
+446	Can add database statistic	123	add_databasestatistic
+447	Can change database statistic	123	change_databasestatistic
+448	Can delete database statistic	123	delete_databasestatistic
+449	Can add impact statistic	124	add_impactstatistic
+450	Can change impact statistic	124	change_impactstatistic
+451	Can delete impact statistic	124	delete_impactstatistic
+452	Can add manual statistic	125	add_manualstatistic
+453	Can change manual statistic	125	change_manualstatistic
+454	Can delete manual statistic	125	delete_manualstatistic
+455	Can add Reaction	126	add_reaction
+456	Can change Reaction	126	change_reaction
+457	Can delete Reaction	126	delete_reaction
+458	Can add media wallpost photo	127	add_mediawallpostphoto
+459	Can change media wallpost photo	127	change_mediawallpostphoto
+460	Can delete media wallpost photo	127	delete_mediawallpostphoto
+461	Can add wallpost	128	add_wallpost
+462	Can change wallpost	128	change_wallpost
+463	Can delete wallpost	128	delete_wallpost
+464	Can add system wallpost	129	add_systemwallpost
+465	Can change system wallpost	129	change_systemwallpost
+466	Can delete system wallpost	129	delete_systemwallpost
+467	Can add media wallpost	130	add_mediawallpost
+468	Can change media wallpost	130	change_mediawallpost
+469	Can delete media wallpost	130	delete_mediawallpost
+470	Can view text wallposts through the API	130	api_read_textwallpost
+471	Can add text wallposts through the API	130	api_add_textwallpost
+472	Can change text wallposts through the API	130	api_change_textwallpost
+473	Can delete text wallposts through the API	130	api_delete_textwallpost
+474	Can view media wallposts through the API	130	api_read_mediawallpost
+475	Can add media wallposts through the API	130	api_add_mediawallpost
+476	Can change media wallposts through the API	130	api_change_mediawallpost
+477	Can delete media wallposts through the API	130	api_delete_mediawallpost
+478	Can view media wallpost photos through the API	130	api_read_mediawallpostphoto
+479	Can add media wallpost photos through the API	130	api_add_mediawallpostphoto
+480	Can change media wallpost photos through the API	130	api_change_mediawallpostphoto
+481	Can delete media wallpost photos through the API	130	api_delete_mediawallpostphoto
+482	Can add text wallpost	131	add_textwallpost
+483	Can change text wallpost	131	change_textwallpost
+484	Can delete text wallpost	131	delete_textwallpost
+485	Can view wallposts through the API	128	api_read_wallpost
+486	Can add wallposts through the API	128	api_add_wallpost
+487	Can wallposts documents through the API	128	api_change_wallpost
+488	Can wallposts documents through the API	128	api_delete_wallpost
+489	Can view reactions through the API	126	api_read_reaction
+490	Can add reactions through the API	126	api_add_reaction
+491	Can reactions documents through the API	126	api_change_reaction
+492	Can reactions documents through the API	126	api_delete_reaction
+493	Can view own reactions through the API	126	api_read_own_reaction
+494	Can add own reactions through the API	126	api_add_own_reaction
+495	Can change own reactions documents through the API	126	api_change_own_reaction
+496	Can delete own reactions documents through the API	126	api_delete_own_reaction
+497	Can view own wallposts through the API	128	api_read_own_wallpost
+498	Can own wallposts documents through the API	128	api_change_own_wallpost
+499	Can own wallposts documents through the API	128	api_delete_own_wallpost
+500	Can view own text wallposts through the API	130	api_read_own_textwallpost
+501	Can change text wallposts through the API	130	api_change_own_textwallpost
+502	Can delete own text wallposts through the API	130	api_delete_own_textwallpost
+503	Can view own media wallposts through the API	130	api_read_own_mediawallpost
+504	Can change own media wallposts through the API	130	api_change_own_mediawallpost
+505	Can delete own media wallposts through the API	130	api_delete_own_mediawallpost
+506	Can view own media wallpost photos through the API	130	api_read_own_mediawallpostphoto
+507	Can change own media wallpost photos through the API	130	api_change_own_mediawallpostphoto
+508	Can delete own media wallpost photos through the API	130	api_delete_own_mediawallpostphoto
+509	Can view reward through the API	106	api_read_reward
+510	Can add reward through the API	106	api_add_reward
+511	Can change reward through the API	106	api_change_reward
+512	Can delete reward through the API	106	api_delete_reward
+513	Can add own wallposts through the API	128	api_add_own_wallpost
+514	Can add own text wallposts through the API	130	api_add_own_textwallpost
+515	Can add own media wallposts through the API	130	api_add_own_mediawallpost
+516	Can add own media wallpost photos through the API	130	api_add_own_mediawallpostphoto
+517	Can view own reward through the API	106	api_read_own_reward
+518	Can add own reward through the API	106	api_add_own_reward
+519	Can change own reward through the API	106	api_change_own_reward
+520	Can delete own reward through the API	106	api_delete_own_reward
+521	Can add Flutterwave payment provider	133	add_flutterwavepaymentprovider
+522	Can change Flutterwave payment provider	133	change_flutterwavepaymentprovider
+523	Can delete Flutterwave payment provider	133	delete_flutterwavepaymentprovider
+524	Can add Flutterwave bank account	138	add_flutterwavebankaccount
+525	Can change Flutterwave bank account	138	change_flutterwavebankaccount
+526	Can delete Flutterwave bank account	138	delete_flutterwavebankaccount
+527	Can add flutterwave payment	142	add_flutterwavepayment
+528	Can change flutterwave payment	142	change_flutterwavepayment
+529	Can delete flutterwave payment	142	delete_flutterwavepayment
+530	Can add Lipisha payment provider	134	add_lipishapaymentprovider
+531	Can change Lipisha payment provider	134	change_lipishapaymentprovider
+532	Can delete Lipisha payment provider	134	delete_lipishapaymentprovider
+533	Can add lipisha bank account	139	add_lipishabankaccount
+534	Can change lipisha bank account	139	change_lipishabankaccount
+535	Can delete lipisha bank account	139	delete_lipishabankaccount
+536	Can add lipisha payment	143	add_lipishapayment
+537	Can change lipisha payment	143	change_lipishapayment
+538	Can delete lipisha payment	143	delete_lipishapayment
+539	Can add Pledge bank account	141	add_pledgebankaccount
+540	Can change Pledge bank account	141	change_pledgebankaccount
+541	Can delete Pledge bank account	141	delete_pledgebankaccount
+542	Can add Pledge payment provider	144	add_pledgepaymentprovider
+543	Can change Pledge payment provider	144	change_pledgepaymentprovider
+544	Can delete Pledge payment provider	144	delete_pledgepaymentprovider
+545	Can add pledge payment	145	add_pledgepayment
+546	Can change pledge payment	145	change_pledgepayment
+547	Can delete pledge payment	145	delete_pledgepayment
+548	Can add Stripe external account	136	add_externalaccount
+549	Can change Stripe external account	136	change_externalaccount
+550	Can delete Stripe external account	136	delete_externalaccount
+551	Can add payment intent	146	add_paymentintent
+552	Can change payment intent	146	change_paymentintent
+553	Can delete payment intent	146	delete_paymentintent
+554	Can add Stripe payment provider	135	add_stripepaymentprovider
+555	Can change Stripe payment provider	135	change_stripepaymentprovider
+556	Can delete Stripe payment provider	135	delete_stripepaymentprovider
+557	Can add stripe payment	147	add_stripepayment
+558	Can change stripe payment	147	change_stripepayment
+559	Can delete stripe payment	147	delete_stripepayment
+560	Can add stripe payout account	137	add_stripepayoutaccount
+561	Can change stripe payout account	137	change_stripepayoutaccount
+562	Can delete stripe payout account	137	delete_stripepayoutaccount
+563	Can add stripe source payment	148	add_stripesourcepayment
+564	Can change stripe source payment	148	change_stripesourcepayment
+565	Can delete stripe source payment	148	delete_stripesourcepayment
+566	Can add vitepay bank account	140	add_vitepaybankaccount
+567	Can change vitepay bank account	140	change_vitepaybankaccount
+568	Can delete vitepay bank account	140	delete_vitepaybankaccount
+569	Can add Vitepay payment provider	132	add_vitepaypaymentprovider
+570	Can change Vitepay payment provider	132	change_vitepaypaymentprovider
+571	Can delete Vitepay payment provider	132	delete_vitepaypaymentprovider
+572	Can add vitepay payment	149	add_vitepaypayment
+573	Can change vitepay payment	149	change_vitepaypayment
+574	Can delete vitepay payment	149	delete_vitepaypayment
+575	Can add initiative platform settings	150	add_initiativeplatformsettings
+576	Can change initiative platform settings	150	change_initiativeplatformsettings
+577	Can delete initiative platform settings	150	delete_initiativeplatformsettings
+578	Can add page	151	add_page
+579	Can change page	151	change_page
+580	Can delete page	151	delete_page
+581	Can add mail log	152	add_maillog
+582	Can change mail log	152	change_maillog
+583	Can delete mail log	152	delete_maillog
+584	Can add news item	153	add_newsitem
+585	Can change news item	153	change_newsitem
+586	Can delete news item	153	delete_newsitem
+587	Can add Document	154	add_documentitem
+588	Can change Document	154	change_documentitem
+589	Can delete Document	154	delete_documentitem
+590	Can view pages through the API	151	api_read_page
+591	Can add pages through the API	151	api_add_page
+592	Can change pages through the API	151	api_change_page
+593	Can delete pages through the API	151	api_delete_page
+594	Can add Picture + Text	155	add_imagetextitem
+595	Can change Picture + Text	155	change_imagetextitem
+596	Can delete Picture + Text	155	delete_imagetextitem
+597	Can add Project Images	162	add_projectimagescontent
+598	Can change Project Images	162	change_projectimagescontent
+599	Can delete Project Images	162	delete_projectimagescontent
+600	Can add Quotes	164	add_quotescontent
+601	Can change Quotes	164	change_quotescontent
+602	Can delete Quotes	164	delete_quotescontent
+603	Can add stats	167	add_stats
+604	Can change stats	167	change_stats
+605	Can delete stats	167	delete_stats
+606	Can add Share Results	161	add_shareresultscontent
+607	Can change Share Results	161	change_shareresultscontent
+608	Can delete Share Results	161	delete_shareresultscontent
+609	Can add stat	168	add_stat
+610	Can change stat	168	change_stat
+611	Can delete stat	168	delete_stat
+612	Can add Projects	158	add_projectscontent
+613	Can change Projects	158	change_projectscontent
+614	Can delete Projects	158	delete_projectscontent
+615	Can add result page	156	add_resultpage
+616	Can change result page	156	change_resultpage
+617	Can delete result page	156	delete_resultpage
+618	Can add projects	169	add_projects
+619	Can change projects	169	change_projects
+620	Can delete projects	169	delete_projects
+621	Can add Supporter total	157	add_supportertotalcontent
+622	Can change Supporter total	157	change_supportertotalcontent
+623	Can delete Supporter total	157	delete_supportertotalcontent
+624	Can add quotes	170	add_quotes
+625	Can change quotes	170	change_quotes
+626	Can delete quotes	170	delete_quotes
+627	Can add quote	171	add_quote
+628	Can change quote	171	change_quote
+629	Can delete quote	171	delete_quote
+630	Can add Projects Map	160	add_projectsmapcontent
+631	Can change Projects Map	160	change_projectsmapcontent
+632	Can delete Projects Map	160	delete_projectsmapcontent
+633	Can add Platform Statistics	159	add_statscontent
+634	Can change Platform Statistics	159	change_statscontent
+635	Can delete Platform Statistics	159	delete_statscontent
+636	Can add Platform Results	172	add_surveycontent
+637	Can change Platform Results	172	change_surveycontent
+638	Can delete Platform Results	172	delete_surveycontent
+639	Can view news items through the API	153	api_read_newsitem
+640	Can add news items through the API	153	api_add_newsitem
+641	Can change news items through the API	153	api_change_newsitem
+642	Can delete news items through the API	153	api_delete_newsitem
+643	Can add aggregate answer	173	add_aggregateanswer
+644	Can change aggregate answer	173	change_aggregateanswer
+645	Can delete aggregate answer	173	delete_aggregateanswer
+646	Can add response	174	add_response
+647	Can change response	174	change_response
+648	Can delete response	174	delete_response
+649	Can add answer	175	add_answer
+650	Can change answer	175	change_answer
+651	Can delete answer	175	delete_answer
+652	Can add sub question	176	add_subquestion
+653	Can change sub question	176	change_subquestion
+654	Can delete sub question	176	delete_subquestion
+655	Can add question	177	add_question
+656	Can change question	177	change_question
+657	Can delete question	177	delete_question
+658	Can add survey	178	add_survey
+659	Can change survey	178	change_survey
+660	Can delete survey	178	delete_survey
+661	Can view result pages through the API	156	api_read_resultpage
+662	Can add result pages through the API	156	api_add_resultpage
+663	Can change result pages through the API	156	api_change_resultpage
+664	Can delete result pages through the API	156	api_delete_resultpage
+665	Can add Tasks	179	add_taskscontent
+666	Can change Tasks	179	change_taskscontent
+667	Can delete Tasks	179	delete_taskscontent
+668	Can add metric	180	add_metric
+669	Can change metric	180	change_metric
+670	Can delete metric	180	delete_metric
+671	Can add home page	182	add_homepage
+672	Can change home page	182	change_homepage
+673	Can delete home page	182	delete_homepage
+674	Can view homepages through the API	182	api_read_homepage
+675	Can add homepages through the API	182	api_add_homepage
+676	Can change homepages through the API	182	api_change_homepage
+677	Can delete homepages through the API	182	api_delete_homepage
+678	Can add Metrics	183	add_metricscontent
+679	Can change Metrics	183	change_metricscontent
+680	Can delete Metrics	183	delete_metricscontent
+681	Can add step	185	add_step
+682	Can change step	185	change_step
+683	Can delete step	185	delete_step
+684	Can add link group	186	add_linkgroup
+685	Can change link group	186	change_linkgroup
+686	Can delete link group	186	delete_linkgroup
+687	Can add content link	187	add_contentlink
+688	Can change content link	187	change_contentlink
+689	Can delete content link	187	delete_contentlink
+690	Can add link permission	188	add_linkpermission
+691	Can change link permission	188	change_linkpermission
+692	Can delete link permission	188	delete_linkpermission
+693	Can add Logos	189	add_logoscontent
+694	Can change Logos	189	change_logoscontent
+695	Can delete Logos	189	delete_logoscontent
+696	Can add site links	190	add_sitelinks
+697	Can change site links	190	change_sitelinks
+698	Can delete site links	190	delete_sitelinks
+699	Can add Categories	191	add_categoriescontent
+700	Can change Categories	191	change_categoriescontent
+701	Can delete Categories	191	delete_categoriescontent
+702	Can add Slides	192	add_slidescontent
+703	Can change Slides	192	change_slidescontent
+704	Can delete Slides	192	delete_slidescontent
+705	Can add Welcome	193	add_welcomecontent
+706	Can change Welcome	193	change_welcomecontent
+707	Can delete Welcome	193	delete_welcomecontent
+708	Can add slide	194	add_slide
+709	Can change slide	194	change_slide
+710	Can delete slide	194	delete_slide
+711	Can add Locations	195	add_locationscontent
+712	Can change Locations	195	change_locationscontent
+713	Can delete Locations	195	delete_locationscontent
+714	Can add logo	196	add_logo
+715	Can change logo	196	change_logo
+716	Can delete logo	196	delete_logo
+717	Can add site platform settings	197	add_siteplatformsettings
+718	Can change site platform settings	197	change_siteplatformsettings
+719	Can delete site platform settings	197	delete_siteplatformsettings
+720	Can add Steps	198	add_stepscontent
+721	Can change Steps	198	change_stepscontent
+722	Can delete Steps	198	delete_stepscontent
+723	Can add link	199	add_link
+725	Can delete link	199	delete_link
+726	Can add greeting	200	add_greeting
+727	Can change greeting	200	change_greeting
+728	Can delete greeting	200	delete_greeting
+729	Can add Links	201	add_linkscontent
+730	Can change Links	201	change_linkscontent
+731	Can delete Links	201	delete_linkscontent
+732	Can add Activities	202	add_activitiescontent
+733	Can change Activities	202	change_activitiescontent
+734	Can delete Activities	202	delete_activitiescontent
+735	Can add Platform Statistics	204	add_homepagestatisticscontent
+736	Can change Platform Statistics	204	change_homepagestatisticscontent
+737	Can delete Platform Statistics	204	delete_homepagestatisticscontent
+738	Can add contact message	205	add_contactmessage
+739	Can change contact message	205	change_contactmessage
+740	Can delete contact message	205	delete_contactmessage
+741	Can add Picture	206	add_pictureitem
+742	Can change Picture	206	change_pictureitem
+743	Can delete Picture	206	delete_pictureitem
+744	Can add Online media	207	add_oembeditem
+745	Can change Online media	207	change_oembeditem
+746	Can delete Online media	207	delete_oembeditem
+747	Can add HTML code	208	add_rawhtmlitem
+748	Can change HTML code	208	change_rawhtmlitem
+749	Can delete HTML code	208	delete_rawhtmlitem
+750	Can add Text	209	add_textitem
+751	Can change Text	209	change_textitem
+752	Can delete Text	209	delete_textitem
+753	Can add attachment	210	add_attachment
+754	Can change attachment	210	change_attachment
+755	Can delete attachment	210	delete_attachment
+756	Can add saved group result	211	add_tasksetmeta
+757	Can change saved group result	211	change_tasksetmeta
+758	Can delete saved group result	211	delete_tasksetmeta
+759	Can add interval	212	add_intervalschedule
+760	Can change interval	212	change_intervalschedule
+761	Can delete interval	212	delete_intervalschedule
+762	Can add task	213	add_taskstate
+763	Can change task	213	change_taskstate
+764	Can delete task	213	delete_taskstate
+765	Can add task state	214	add_taskmeta
+766	Can change task state	214	change_taskmeta
+767	Can delete task state	214	delete_taskmeta
+768	Can add periodic tasks	215	add_periodictasks
+769	Can change periodic tasks	215	change_periodictasks
+770	Can delete periodic tasks	215	delete_periodictasks
+771	Can add crontab	216	add_crontabschedule
+772	Can change crontab	216	change_crontabschedule
+773	Can delete crontab	216	delete_crontabschedule
+774	Can add worker	217	add_workerstate
+775	Can change worker	217	change_workerstate
+776	Can delete worker	217	delete_workerstate
+777	Can add periodic task	218	add_periodictask
+778	Can change periodic task	218	change_periodictask
+779	Can delete periodic task	218	delete_periodictask
+780	Can add rate	219	add_rate
+781	Can change rate	219	change_rate
+782	Can delete rate	219	delete_rate
+783	Can add rate source	220	add_ratesource
+784	Can change rate source	220	change_ratesource
+785	Can delete rate source	220	delete_ratesource
+786	Can add follow	221	add_follow
+787	Can change follow	221	change_follow
+788	Can delete follow	221	delete_follow
+789	Can add Telesom bank account	222	add_telesombankaccount
+790	Can change Telesom bank account	222	change_telesombankaccount
+791	Can delete Telesom bank account	222	delete_telesombankaccount
+792	Can add telesom payment	223	add_telesompayment
+793	Can change telesom payment	223	change_telesompayment
+794	Can delete telesom payment	223	delete_telesompayment
+795	Can add Telesom payment provider	224	add_telesompaymentprovider
+796	Can change Telesom payment provider	224	change_telesompaymentprovider
+797	Can delete Telesom payment provider	224	delete_telesompaymentprovider
+798	Can read homepage through the API	225	api_read_homepage
+799	Can add pinned application	226	add_pinnedapplication
+800	Can change pinned application	226	change_pinnedapplication
+801	Can delete pinned application	226	delete_pinnedapplication
+802	Can add bookmark	227	add_bookmark
+803	Can change bookmark	227	change_bookmark
+804	Can delete bookmark	227	delete_bookmark
+805	Can add looker embed	228	add_lookerembed
+806	Can change looker embed	228	change_lookerembed
+807	Can delete looker embed	228	delete_lookerembed
+808	Can access looker embeds	228	access_looker_embeds
+809	Can add mail platform settings	229	add_mailplatformsettings
+810	Can change mail platform settings	229	change_mailplatformsettings
+811	Can delete mail platform settings	229	delete_mailplatformsettings
+812	Can view order through the API	105	api_read_order
+813	Can add order through the API	105	api_add_order
+814	Can change order through the API	105	api_change_order
+815	Can delete order through the API	105	api_delete_order
+816	Can view own order through the API	105	api_read_own_order
+817	Can add own order through the API	105	api_add_own_order
+818	Can change own order through the API	105	api_change_own_order
+819	Can delete own order through the API	105	api_delete_own_order
+820	Can add code	230	add_code
+821	Can change code	230	change_code
+822	Can delete code	230	delete_code
+823	Can add association	231	add_association
+824	Can change association	231	change_association
+825	Can delete association	231	delete_association
+826	Can add nonce	232	add_nonce
+827	Can change nonce	232	change_nonce
+828	Can delete nonce	232	delete_nonce
+829	Can add user social auth	233	add_usersocialauth
+830	Can change user social auth	233	change_usersocialauth
+831	Can delete user social auth	233	delete_usersocialauth
+832	Can view members through the API	30	api_read_member
+834	Can add members through the API	30	api_add_member
+835	Can change members through the API	30	api_change_member
+836	Can delete members through the API	30	api_delete_member
+833	Can view full members through the API	30	api_read_full_member
+837	Can add custom member field settings	234	add_custommemberfieldsettings
+838	Can change custom member field settings	234	change_custommemberfieldsettings
+839	Can delete custom member field settings	234	delete_custommemberfieldsettings
+840	Can add member platform settings	235	add_memberplatformsettings
+841	Can change member platform settings	235	change_memberplatformsettings
+842	Can delete member platform settings	235	delete_memberplatformsettings
+843	Can add custom member field	236	add_custommemberfield
+844	Can change custom member field	236	change_custommemberfield
+845	Can delete custom member field	236	delete_custommemberfield
+846	Can add User activity	237	add_useractivity
+847	Can change User activity	237	change_useractivity
+848	Can delete User activity	237	delete_useractivity
+849	Can view own members through the API	30	api_read_own_member
+850	Can change own members through the API	30	api_change_own_member
+851	Can delete own members through the API	30	api_delete_own_member
+852	Can add message template	238	add_messagetemplate
+853	Can change message template	238	change_messagetemplate
+854	Can delete message template	238	delete_messagetemplate
+855	Can add notification settings	239	add_notificationplatformsettings
+856	Can change notification settings	239	change_notificationplatformsettings
+857	Can delete notification settings	239	delete_notificationplatformsettings
+858	Can add message	241	add_message
+859	Can change message	241	change_message
+860	Can delete message	241	delete_message
+861	Can add order payment	242	add_orderpayment
+862	Can change order payment	242	change_orderpayment
+863	Can delete order payment	242	delete_orderpayment
+864	Can refund order payments	242	refund_orderpayment
+865	Can add payment	243	add_payment
+866	Can change payment	243	change_payment
+867	Can delete payment	243	delete_payment
+868	Can add order payment action	244	add_orderpaymentaction
+869	Can change order payment action	244	change_orderpaymentaction
+870	Can delete order payment action	244	delete_orderpaymentaction
+871	Can add transaction	245	add_transaction
+872	Can change transaction	245	change_transaction
+873	Can delete transaction	245	delete_transaction
+874	Can add Call to action	246	add_actionitem
+875	Can change Call to action	246	change_actionitem
+876	Can delete Call to action	246	delete_actionitem
+877	Can add Text in columns	247	add_columnsitem
+878	Can change Text in columns	247	change_columnsitem
+879	Can delete Text in columns	247	delete_columnsitem
+880	Can add Text + Round Image	248	add_imagetextrounditem
+881	Can change Text + Round Image	248	change_imagetextrounditem
+882	Can delete Text + Round Image	248	delete_imagetextrounditem
+883	Can add Beyonic Payment	249	add_beyonicpayment
+884	Can change Beyonic Payment	249	change_beyonicpayment
+885	Can delete Beyonic Payment	249	delete_beyonicpayment
+886	Can add Docdata Payment	250	add_docdatapayment
+887	Can change Docdata Payment	250	change_docdatapayment
+888	Can delete Docdata Payment	250	delete_docdatapayment
+889	Can add docdata transaction	251	add_docdatatransaction
+890	Can change docdata transaction	251	change_docdatatransaction
+891	Can delete docdata transaction	251	delete_docdatatransaction
+892	Can add Docdata Direct Debit Payment	252	add_docdatadirectdebitpayment
+893	Can change Docdata Direct Debit Payment	252	change_docdatadirectdebitpayment
+894	Can delete Docdata Direct Debit Payment	252	delete_docdatadirectdebitpayment
+895	Can add external payment	253	add_externalpayment
+896	Can change external payment	253	change_externalpayment
+897	Can delete external payment	253	delete_externalpayment
+898	Can add Flutterwave Mpesa Payment	254	add_flutterwavempesapayment
+899	Can change Flutterwave Mpesa Payment	254	change_flutterwavempesapayment
+900	Can delete Flutterwave Mpesa Payment	254	delete_flutterwavempesapayment
+901	Can add Flutterwave Payment	255	add_flutterwavepayment
+902	Can change Flutterwave Payment	255	change_flutterwavepayment
+903	Can delete Flutterwave Payment	255	delete_flutterwavepayment
+904	Can add interswitch payment status update	256	add_interswitchpaymentstatusupdate
+905	Can change interswitch payment status update	256	change_interswitchpaymentstatusupdate
+906	Can delete interswitch payment status update	256	delete_interswitchpaymentstatusupdate
+907	Can add Interswitch Payment	257	add_interswitchpayment
+908	Can change Interswitch Payment	257	change_interswitchpayment
+909	Can delete Interswitch Payment	257	delete_interswitchpayment
+910	Can add Lipisha Payment	258	add_lipishapayment
+911	Can change Lipisha Payment	258	change_lipishapayment
+912	Can delete Lipisha Payment	258	delete_lipishapayment
+913	Can add lipisha project	259	add_lipishaproject
+914	Can change lipisha project	259	change_lipishaproject
+915	Can delete lipisha project	259	delete_lipishaproject
+916	Can add Payment Log	260	add_paymentlogentry
+917	Can change Payment Log	260	change_paymentlogentry
+918	Can delete Payment Log	260	delete_paymentlogentry
+919	Can add Mock Payment	261	add_mockpayment
+920	Can change Mock Payment	261	change_mockpayment
+921	Can delete Mock Payment	261	delete_mockpayment
+922	Can add pledge standard payment	262	add_pledgestandardpayment
+923	Can change pledge standard payment	262	change_pledgestandardpayment
+924	Can delete pledge standard payment	262	delete_pledgestandardpayment
+925	Can add stripe payment	263	add_stripepayment
+926	Can change stripe payment	263	change_stripepayment
+927	Can delete stripe payment	263	delete_stripepayment
+928	Can add Telesom/Zaad Payment	264	add_telesompayment
+929	Can change Telesom/Zaad Payment	264	change_telesompayment
+930	Can delete Telesom/Zaad Payment	264	delete_telesompayment
+931	Can add Vitepay Payment	265	add_vitepaypayment
+932	Can change Vitepay Payment	265	change_vitepaypayment
+933	Can delete Vitepay Payment	265	delete_vitepaypayment
+934	Can add Voucher Payment	266	add_voucherpayment
+935	Can change Voucher Payment	266	change_voucherpayment
+936	Can delete Voucher Payment	266	delete_voucherpayment
+937	Can add voucher	267	add_voucher
+938	Can change voucher	267	change_voucher
+939	Can delete voucher	267	delete_voucher
+940	Can add flutterwave payout account	268	add_flutterwavepayoutaccount
+941	Can change flutterwave payout account	268	change_flutterwavepayoutaccount
+942	Can delete flutterwave payout account	268	delete_flutterwavepayoutaccount
+943	Can add quote	269	add_quote
+944	Can change quote	269	change_quote
+945	Can delete quote	269	delete_quote
+946	Can add redirect	270	add_redirect
+947	Can change redirect	270	change_redirect
+948	Can delete redirect	270	delete_redirect
+949	Can add scim platform settings	271	add_scimplatformsettings
+950	Can change scim platform settings	271	change_scimplatformsettings
+951	Can delete scim platform settings	271	delete_scimplatformsettings
+952	Can add session	272	add_session
+953	Can change session	272	change_session
+954	Can delete session	272	delete_session
+955	Can add site	62	add_site
+956	Can change site	62	change_site
+957	Can delete site	62	delete_site
+958	Can add slide	273	add_slide
+959	Can change slide	273	change_slide
+960	Can delete slide	273	delete_slide
+961	Can add partial	274	add_partial
+962	Can change partial	274	change_partial
+963	Can delete partial	274	delete_partial
+964	Can add suggestion	275	add_suggestion
+965	Can change suggestion	275	change_suggestion
+966	Can delete suggestion	275	delete_suggestion
+967	Can add Term agreements	276	add_termsagreement
+968	Can change Term agreements	276	change_termsagreement
+969	Can delete Term agreements	276	delete_termsagreement
+970	Can view terms agreements through API	276	api_read_termsagreement
+971	Can add Term	277	add_terms
+972	Can change Term	277	change_terms
+973	Can delete Term	277	delete_terms
+974	Can view terms through API	277	api_read_terms
+975	Can add checked token	278	add_checkedtoken
+976	Can change checked token	278	change_checkedtoken
+977	Can delete checked token	278	delete_checkedtoken
+978	Can add kv store	279	add_kvstore
+979	Can change kv store	279	change_kvstore
+980	Can delete kv store	279	delete_kvstore
+981	Can add translation settings	280	add_translationplatformsettings
+982	Can change translation settings	280	change_translationplatformsettings
+983	Can delete translation settings	280	delete_translationplatformsettings
+984	Can add vote	282	add_vote
+985	Can change vote	282	change_vote
+986	Can delete vote	282	delete_vote
 \.
 
 
@@ -25069,7 +27404,23 @@ COPY test2.auth_permission (id, name, content_type_id, codename) FROM stdin;
 --
 
 COPY test2.authtoken_token (key, created, user_id) FROM stdin;
-9585b7d369bd90621884acf3e32128d4e63232ce	2019-12-30 12:58:41.955042+01	1
+20199349fdc8050682738f200c4abaef835a6ee8	2020-09-18 14:07:13.004481+02	1
+\.
+
+
+--
+-- Data for Name: axes_accessattempt; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.axes_accessattempt (id, user_agent, ip_address, username, http_accept, path_info, attempt_time, get_data, post_data, failures_since_start) FROM stdin;
+\.
+
+
+--
+-- Data for Name: axes_accesslog; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.axes_accesslog (id, user_agent, ip_address, username, trusted, http_accept, path_info, attempt_time, logout_time) FROM stdin;
 \.
 
 
@@ -25200,7 +27551,15 @@ COPY test2.bb_projects_projecttheme_translation (id, language_code, name, descri
 -- Data for Name: categories_category; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.categories_category (id, title, slug, description, image, image_logo) FROM stdin;
+COPY test2.categories_category (id, slug, image, image_logo, video) FROM stdin;
+\.
+
+
+--
+-- Data for Name: categories_category_translation; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.categories_category_translation (id, language_code, title, description, master_id) FROM stdin;
 \.
 
 
@@ -25208,7 +27567,15 @@ COPY test2.categories_category (id, title, slug, description, image, image_logo)
 -- Data for Name: categories_categorycontent; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.categories_categorycontent (id, title, description, image, video_url, link_text, link_url, category_id, sequence) FROM stdin;
+COPY test2.categories_categorycontent (id, image, video_url, category_id, sequence) FROM stdin;
+\.
+
+
+--
+-- Data for Name: categories_categorycontent_translation; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.categories_categorycontent_translation (id, language_code, title, description, link_text, link_url, master_id) FROM stdin;
 \.
 
 
@@ -25259,7 +27626,8 @@ COPY test2.cms_homepage (id) FROM stdin;
 
 COPY test2.cms_homepage_translation (id, language_code, master_id) FROM stdin;
 1	nl	1
-2	en	1
+2	fr	1
+3	en	1
 \.
 
 
@@ -25359,7 +27727,15 @@ COPY test2.cms_sitelinks (id, has_copyright, language_id) FROM stdin;
 --
 
 COPY test2.cms_siteplatformsettings (id, update, contact_email, contact_phone, copyright, powered_by_text, powered_by_link, powered_by_logo, favicon, logo) FROM stdin;
-1	2019-12-30 13:00:07.120288+01	\N	\N	\N	\N	\N		\N	\N
+1	2020-09-18 14:08:39.568047+02	\N	\N	\N	\N	\N		\N	\N
+\.
+
+
+--
+-- Data for Name: cms_siteplatformsettings_translation; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.cms_siteplatformsettings_translation (id, language_code, metadata_title, metadata_description, metadata_keywords, master_id, start_page) FROM stdin;
 \.
 
 
@@ -25376,16 +27752,16 @@ COPY test2.cms_slide (id, block_id, background_image, image, link_text, link_url
 --
 
 COPY test2.cms_stat (id, type, value, sequence, block_id, title) FROM stdin;
-6	people_involved	\N	0	8	
-8	activities_succeeded	\N	0	8	
-10	donated_total	\N	0	8	
-12	assignments_succeeded	\N	0	8	
-14	votes_cast	\N	0	8	
-7	people_involved	\N	0	7	Supporters
-9	activities_succeeded	\N	0	7	Projects realised
-11	donated_total	\N	0	7	Crowdfunded
-13	assignments_succeeded	\N	0	7	Tasks
-15	votes_cast	\N	0	7	Votes cast
+6	people_involved	\N	0	5	
+8	activities_succeeded	\N	0	5	
+10	donated_total	\N	0	5	
+12	assignments_succeeded	\N	0	5	
+14	votes_cast	\N	0	5	
+7	people_involved	\N	0	6	Supporters
+9	activities_succeeded	\N	0	6	Project gerealiseerd
+11	donated_total	\N	0	6	Gecrowdfund
+13	assignments_succeeded	\N	0	6	Taken
+15	votes_cast	\N	0	6	Stemmen opgehaald
 \.
 
 
@@ -25432,6 +27808,14 @@ COPY test2.contentitem_cms_categoriescontent (contentitem_ptr_id, title, sub_tit
 
 
 --
+-- Data for Name: contentitem_cms_homepagestatisticscontent; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.contentitem_cms_homepagestatisticscontent (contentitem_ptr_id, title, sub_title) FROM stdin;
+\.
+
+
+--
 -- Data for Name: contentitem_cms_linkscontent; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
@@ -25460,8 +27844,8 @@ COPY test2.contentitem_cms_logoscontent (contentitem_ptr_id, title, sub_title, a
 --
 
 COPY test2.contentitem_cms_projectimagescontent (contentitem_ptr_id, title, sub_title, description, action_text, action_link) FROM stdin;
-5	\N	\N	Join our community and start doing good by supporting a project.	Check out our projects	/projects
-6	\N	\N	Doe mee met onze community en draag zelf ook bij aan een project	Bekijk de projecten|	/projects
+11	\N	\N	Join our community and start doing good by supporting a project.	Check out our projects	/projects
+12	\N	\N	Doe mee met onze community en draag zelf ook bij aan een project	Bekijk de projecten|	/projects
 \.
 
 
@@ -25478,8 +27862,8 @@ COPY test2.contentitem_cms_projectscontent (contentitem_ptr_id, title, sub_title
 --
 
 COPY test2.contentitem_cms_projectsmapcontent (contentitem_ptr_id, title, sub_title) FROM stdin;
-11	We worked in these locations	\N
-12	We hebben op al deze locaties gewerkt	\N
+7	We worked in these locations	\N
+8	We hebben op al deze locaties gewerkt	\N
 \.
 
 
@@ -25496,8 +27880,8 @@ COPY test2.contentitem_cms_quotescontent (contentitem_ptr_id, title, sub_title) 
 --
 
 COPY test2.contentitem_cms_shareresultscontent (contentitem_ptr_id, title, sub_title, share_text, share_title) FROM stdin;
-1	Inspire your network	Share our results	With {people} people, we realised {tasks} tasks	
-2	Inspireer je netwerk	Deel de resultaten	Met {people} people, {tasks} taken voltooid	
+9	Inspire your network	Share our results	With {people} people, we realised {tasks} tasks	
+10	Inspireer je netwerk	Deel de resultaten	Met {people} people, {tasks} taken voltooid	
 \.
 
 
@@ -25514,8 +27898,8 @@ COPY test2.contentitem_cms_slidescontent (contentitem_ptr_id, sub_title, title) 
 --
 
 COPY test2.contentitem_cms_statscontent (contentitem_ptr_id, title, sub_title) FROM stdin;
-7	\N	\N
-8	\N	\N
+5	\N	\N
+6	\N	\N
 \.
 
 
@@ -25532,8 +27916,8 @@ COPY test2.contentitem_cms_stepscontent (contentitem_ptr_id, title, sub_title, a
 --
 
 COPY test2.contentitem_cms_supportertotalcontent (contentitem_ptr_id, title, sub_title, co_financer_title) FROM stdin;
-3	A big thanks to all our supporters	Together we are changing the world!	Special thanks to our co-funders
-4	Dank aan alle deelnemers!	Samen maken we een wereld van verschil	En in het special bedanken we onze co-financiers
+1	A big thanks to all our supporters	Together we are changing the world!	Special thanks to our co-funders
+2	Dank aan alle deelnemers!	Samen maken we een wereld van verschil	En in het special bedanken we onze co-financiers
 \.
 
 
@@ -25610,6 +27994,14 @@ COPY test2.contentitem_pages_imagetextitem (contentitem_ptr_id, text, text_final
 
 
 --
+-- Data for Name: contentitem_pages_imagetextrounditem; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.contentitem_pages_imagetextrounditem (contentitem_ptr_id, text, text_final, image) FROM stdin;
+\.
+
+
+--
 -- Data for Name: contentitem_rawhtml_rawhtmlitem; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
@@ -25680,228 +28072,254 @@ COPY test2.django_content_type (id, app_label, model) FROM stdin;
 32	bb_projects	projectthemetranslation
 33	bb_projects	projectphasetranslation
 34	initiatives	initiative
-35	admin	logentry
-36	organizations	organizationmember
-37	organizations	organization
-38	projects	projectphaselog
-39	projects	projectbudgetline
-40	projects	project
-41	projects	projectdocument
-42	taggit	taggeditem
-43	taggit	tag
-44	tasks	taskstatuslog
-45	tasks	taskfile
-46	tasks	task
-47	tasks	skill
-48	tasks	taskmemberstatuslog
-49	tasks	taskmember
-50	utils	metadatamodel
-51	utils	language
-52	authtoken	token
-53	payouts	projectpayout
-54	payouts	organizationpayout
-55	sites	site
-56	projects	projectimage
-57	analytics	analyticsadapter
-58	analytics	analyticsplatformsettings
-59	assignments	applicant
-60	assignments	assignment
-61	geo	countrytranslation
-62	geo	initiativeplace
-63	geo	geolocation
-64	geo	locationgroup
-65	geo	subregiontranslation
-66	geo	regiontranslation
-67	geo	place
-68	tasks	skilltranslation
-69	bb_accounts	useraddress
-70	donations	donation
-71	fundraisers	fundraiser
-72	orders	order
-73	rewards	reward
-74	bb_follow	follow
-75	organizations	organizationcontact
-76	projects	customprojectfield
-77	projects	projectplatformsettings
-78	projects	customprojectfieldsettings
-79	projects	projectsearchfilter
-80	projects	projectaddon
-81	projects	projectlocation
-82	projects	projectcreatetemplate
-83	payouts	plainpayoutaccount
-84	payouts	payoutaccount
-85	payouts	payoutdocument
-86	payouts	stripepayoutaccount
-87	dashboard	userdashboardmodule
-88	wallposts	reaction
-89	wallposts	mediawallpostphoto
-90	wallposts	wallpost
-91	wallposts	systemwallpost
-92	wallposts	textwallpost
-93	wallposts	mediawallpost
-94	funding	fundraiser
-95	funding	budgetline
-96	funding	paymentprovider
-97	funding	reward
-98	funding	payoutaccount
-99	funding	payment
-100	funding	bankpaymentprovider
-101	funding	bankpayoutaccount
-102	funding	legacypayment
-103	funding	bankaccount
-104	funding	paymentcurrency
-105	funding	plainpayoutaccount
-106	funding_vitepay	vitepaypaymentprovider
-107	funding_flutterwave	flutterwavepaymentprovider
-108	funding_lipisha	lipishapaymentprovider
-109	funding_stripe	stripepaymentprovider
-110	funding_stripe	externalaccount
-111	funding_stripe	stripepayoutaccount
-112	funding_flutterwave	flutterwavebankaccount
-113	funding_lipisha	lipishabankaccount
-114	funding_vitepay	vitepaybankaccount
-115	funding_pledge	pledgebankaccount
-116	funding	payout
-117	funding_flutterwave	flutterwavepayment
-118	funding_lipisha	lipishapayment
-119	funding_pledge	pledgepaymentprovider
-120	funding_pledge	pledgepayment
-121	funding_stripe	paymentintent
-122	funding_stripe	stripepayment
-123	funding_stripe	stripesourcepayment
-124	funding_vitepay	vitepaypayment
-125	initiatives	initiativeplatformsettings
-126	pages	page
-127	utils	maillog
-128	fluent_contents	contentitem
-129	fluent_contents	placeholder
-130	news	newsitem
-131	pages	documentitem
-132	pages	imagetextitem
-133	cms	resultpage
-134	cms	shareresultscontent
-135	cms	supportertotalcontent
-136	cms	projectimagescontent
-137	cms	statscontent
-138	cms	projectscontent
-139	cms	projectsmapcontent
-140	cms	resultpagetranslation
-141	cms	quotescontent
-142	cms	stattranslation
-143	cms	quotetranslation
-144	cms	stats
-145	cms	stat
-146	cms	projects
-147	cms	quotes
-148	cms	quote
-149	cms	surveycontent
-150	surveys	aggregateanswer
-151	surveys	response
-152	surveys	answer
-153	surveys	subquestion
-154	surveys	question
-155	surveys	survey
-156	cms	taskscontent
-157	cms	metric
-158	cms	homepagetranslation
-159	cms	homepage
-160	cms	metricscontent
-161	cms	metrictranslation
-162	cms	step
-163	cms	linkscontent
-164	cms	linkgroup
-165	cms	contentlink
-166	cms	linkpermission
-167	cms	logoscontent
-168	cms	sitelinks
-169	cms	categoriescontent
-170	cms	slidescontent
-171	cms	welcomecontent
-172	cms	slide
-173	cms	stepscontent
-174	cms	locationscontent
-175	cms	logo
-176	cms	siteplatformsettings
-177	cms	greeting
-178	cms	link
-179	cms	activitiescontent
-180	contact	contactmessage
-181	contentplugins	pictureitem
-182	oembeditem	oembeditem
-183	rawhtml	rawhtmlitem
-184	text	textitem
-185	django_summernote	attachment
-186	djcelery	tasksetmeta
-187	djcelery	intervalschedule
-188	djcelery	taskstate
-189	djcelery	taskmeta
-190	djcelery	periodictasks
-191	djcelery	crontabschedule
-192	djcelery	workerstate
-193	djcelery	periodictask
-194	djmoney_rates	rate
-195	djmoney_rates	ratesource
-196	events	event
-197	events	participant
-198	files	relatedimage
-199	follow	follow
-200	funding	fundingplatformsettings
-201	homepage	homepage
-202	jet	pinnedapplication
-203	jet	bookmark
-204	looker	lookerembed
-205	mails	mailplatformsettings
-206	social_django	code
-207	social_django	nonce
-208	social_django	usersocialauth
-209	social_django	association
-210	members	custommemberfieldsettings
-211	members	memberplatformsettings
-212	members	custommemberfield
-213	notifications	message
-214	notifications	notificationplatformsettings
-215	payments	orderpayment
-216	payments	payment
-217	payments	orderpaymentaction
-218	payments	transaction
-219	payments_beyonic	beyonicpayment
-220	payments_docdata	docdatapayment
-221	payments_docdata	docdatatransaction
-222	payments_docdata	docdatadirectdebitpayment
-223	payments_external	externalpayment
-224	payments_flutterwave	flutterwavempesapayment
-225	payments_flutterwave	flutterwavepayment
-226	payments_interswitch	interswitchpaymentstatusupdate
-227	payments_interswitch	interswitchpayment
-228	payments_lipisha	lipishapayment
-229	payments_lipisha	lipishaproject
-230	payments_logger	paymentlogentry
-231	payments_mock	mockpayment
-232	payments_pledge	pledgestandardpayment
-233	payments_stripe	stripepayment
-234	payments_telesom	telesompayment
-235	payments_vitepay	vitepaypayment
-236	payments_voucher	voucherpayment
-237	payments_voucher	voucher
-238	payouts	flutterwavepayoutaccount
-239	quotes	quote
-240	redirects	redirect
-241	scim	scimplatformsettings
-242	sessions	session
-243	slides	slide
-244	social_django	partial
-245	statistics	statistic
-246	suggestions	suggestion
-247	terms	termsagreement
-248	terms	terms
-249	token_auth	checkedtoken
-250	thumbnail	kvstore
-251	votes	vote
-252	members	useractivity
-253	pages	actionitem
-254	pages	columnsitem
-255	notifications	messagetemplate
-256	notifications	messagetemplatetranslation
+35	activities	organizer
+36	authtoken	token
+37	geo	initiativeplace
+38	geo	countrytranslation
+39	geo	place
+40	geo	geolocation
+41	geo	locationgroup
+42	geo	subregiontranslation
+43	geo	regiontranslation
+44	organizations	organizationmember
+45	organizations	organization
+46	payouts	projectpayout
+47	payouts	organizationpayout
+48	projects	projectphaselog
+49	projects	projectbudgetline
+50	projects	project
+51	projects	projectdocument
+52	taggit	taggeditem
+53	taggit	tag
+54	tasks	taskstatuslog
+55	tasks	taskfile
+56	tasks	task
+57	tasks	taskmemberstatuslog
+58	tasks	taskmember
+59	tasks	skill
+60	utils	metadatamodel
+61	utils	language
+62	sites	site
+63	projects	projectimage
+64	projects	projectplatformsettings
+65	projects	projectsearchfilter
+66	organizations	organizationcontact
+67	projects	customprojectfield
+68	projects	customprojectfieldsettings
+69	projects	projectaddon
+70	projects	projectlocation
+71	projects	projectcreatetemplate
+72	payouts	plainpayoutaccount
+73	payouts	payoutaccount
+74	payouts	payoutdocument
+75	payouts	stripepayoutaccount
+76	funding	reward
+77	funding	budgetline
+78	funding	payoutaccount
+79	funding	payment
+80	funding	fundraiser
+81	funding	legacypayment
+82	funding	paymentprovider
+83	funding	bankpayoutaccount
+84	funding	bankpaymentprovider
+85	funding	payout
+86	funding	fundingplatformsettings
+87	funding	bankaccount
+88	funding	paymentcurrency
+89	funding	plainpayoutaccount
+90	events	event
+91	events	participant
+92	assignments	applicant
+93	assignments	assignment
+94	tasks	skilltranslation
+95	files	relatedimage
+96	admin	logentry
+97	analytics	analyticsplatformsettings
+98	analytics	analyticsadapter
+99	axes	accessattempt
+100	axes	accesslog
+101	bb_accounts	useraddress
+102	donations	donation
+103	files	privatedocument
+104	fundraisers	fundraiser
+105	orders	order
+106	rewards	reward
+107	segments	segmenttype
+108	segments	segment
+109	bb_follow	follow
+110	categories	categorytranslation
+111	categories	categorycontenttranslation
+112	dashboard	userdashboardmodule
+113	fluent_contents	contentitem
+114	fluent_contents	placeholder
+115	impact	impactgoal
+116	impact	impacttypetranslation
+117	impact	impacttype
+118	statistics	databasestatistictranslation
+119	statistics	basestatistic
+120	statistics	impactstatistictranslation
+121	statistics	manualstatistictranslation
+122	statistics	statistic
+123	statistics	databasestatistic
+124	statistics	impactstatistic
+125	statistics	manualstatistic
+126	wallposts	reaction
+127	wallposts	mediawallpostphoto
+128	wallposts	wallpost
+129	wallposts	systemwallpost
+130	wallposts	mediawallpost
+131	wallposts	textwallpost
+132	funding_vitepay	vitepaypaymentprovider
+133	funding_flutterwave	flutterwavepaymentprovider
+134	funding_lipisha	lipishapaymentprovider
+135	funding_stripe	stripepaymentprovider
+136	funding_stripe	externalaccount
+137	funding_stripe	stripepayoutaccount
+138	funding_flutterwave	flutterwavebankaccount
+139	funding_lipisha	lipishabankaccount
+140	funding_vitepay	vitepaybankaccount
+141	funding_pledge	pledgebankaccount
+142	funding_flutterwave	flutterwavepayment
+143	funding_lipisha	lipishapayment
+144	funding_pledge	pledgepaymentprovider
+145	funding_pledge	pledgepayment
+146	funding_stripe	paymentintent
+147	funding_stripe	stripepayment
+148	funding_stripe	stripesourcepayment
+149	funding_vitepay	vitepaypayment
+150	initiatives	initiativeplatformsettings
+151	pages	page
+152	utils	maillog
+153	news	newsitem
+154	pages	documentitem
+155	pages	imagetextitem
+156	cms	resultpage
+157	cms	supportertotalcontent
+158	cms	projectscontent
+159	cms	statscontent
+160	cms	projectsmapcontent
+161	cms	shareresultscontent
+162	cms	projectimagescontent
+163	cms	resultpagetranslation
+164	cms	quotescontent
+165	cms	stattranslation
+166	cms	quotetranslation
+167	cms	stats
+168	cms	stat
+169	cms	projects
+170	cms	quotes
+171	cms	quote
+172	cms	surveycontent
+173	surveys	aggregateanswer
+174	surveys	response
+175	surveys	answer
+176	surveys	subquestion
+177	surveys	question
+178	surveys	survey
+179	cms	taskscontent
+180	cms	metric
+181	cms	homepagetranslation
+182	cms	homepage
+183	cms	metricscontent
+184	cms	metrictranslation
+185	cms	step
+186	cms	linkgroup
+187	cms	contentlink
+188	cms	linkpermission
+189	cms	logoscontent
+190	cms	sitelinks
+191	cms	categoriescontent
+192	cms	slidescontent
+193	cms	welcomecontent
+194	cms	slide
+195	cms	locationscontent
+196	cms	logo
+197	cms	siteplatformsettings
+198	cms	stepscontent
+199	cms	link
+200	cms	greeting
+201	cms	linkscontent
+202	cms	activitiescontent
+203	cms	siteplatformsettingstranslation
+204	cms	homepagestatisticscontent
+205	contact	contactmessage
+206	contentplugins	pictureitem
+207	oembeditem	oembeditem
+208	rawhtml	rawhtmlitem
+209	text	textitem
+210	django_summernote	attachment
+211	djcelery	tasksetmeta
+212	djcelery	intervalschedule
+213	djcelery	taskstate
+214	djcelery	taskmeta
+215	djcelery	periodictasks
+216	djcelery	crontabschedule
+217	djcelery	workerstate
+218	djcelery	periodictask
+219	djmoney_rates	rate
+220	djmoney_rates	ratesource
+221	follow	follow
+222	funding_telesom	telesombankaccount
+223	funding_telesom	telesompayment
+224	funding_telesom	telesompaymentprovider
+225	homepage	homepage
+226	jet	pinnedapplication
+227	jet	bookmark
+228	looker	lookerembed
+229	mails	mailplatformsettings
+230	social_django	code
+231	social_django	association
+232	social_django	nonce
+233	social_django	usersocialauth
+234	members	custommemberfieldsettings
+235	members	memberplatformsettings
+236	members	custommemberfield
+237	members	useractivity
+238	notifications	messagetemplate
+239	notifications	notificationplatformsettings
+240	notifications	messagetemplatetranslation
+241	notifications	message
+242	payments	orderpayment
+243	payments	payment
+244	payments	orderpaymentaction
+245	payments	transaction
+246	pages	actionitem
+247	pages	columnsitem
+248	pages	imagetextrounditem
+249	payments_beyonic	beyonicpayment
+250	payments_docdata	docdatapayment
+251	payments_docdata	docdatatransaction
+252	payments_docdata	docdatadirectdebitpayment
+253	payments_external	externalpayment
+254	payments_flutterwave	flutterwavempesapayment
+255	payments_flutterwave	flutterwavepayment
+256	payments_interswitch	interswitchpaymentstatusupdate
+257	payments_interswitch	interswitchpayment
+258	payments_lipisha	lipishapayment
+259	payments_lipisha	lipishaproject
+260	payments_logger	paymentlogentry
+261	payments_mock	mockpayment
+262	payments_pledge	pledgestandardpayment
+263	payments_stripe	stripepayment
+264	payments_telesom	telesompayment
+265	payments_vitepay	vitepaypayment
+266	payments_voucher	voucherpayment
+267	payments_voucher	voucher
+268	payouts	flutterwavepayoutaccount
+269	quotes	quote
+270	redirects	redirect
+271	scim	scimplatformsettings
+272	sessions	session
+273	slides	slide
+274	social_django	partial
+275	suggestions	suggestion
+276	terms	termsagreement
+277	terms	terms
+278	token_auth	checkedtoken
+279	thumbnail	kvstore
+280	utils	translationplatformsettings
+281	utils	translationplatformsettingstranslation
+282	votes	vote
 \.
 
 
@@ -25910,854 +28328,946 @@ COPY test2.django_content_type (id, app_label, model) FROM stdin;
 --
 
 COPY test2.django_migrations (id, app, name, applied) FROM stdin;
-1	geo	0001_initial	2019-12-30 12:58:28.491287+01
-2	bb_projects	0001_initial	2019-12-30 12:58:28.534982+01
-3	contenttypes	0001_initial	2019-12-30 12:58:28.560021+01
-4	contenttypes	0002_remove_content_type_name	2019-12-30 12:58:28.640799+01
-5	auth	0001_initial	2019-12-30 12:58:28.70376+01
-6	auth	0002_alter_permission_name_max_length	2019-12-30 12:58:28.721122+01
-7	auth	0003_alter_user_email_max_length	2019-12-30 12:58:28.738527+01
-8	auth	0004_alter_user_username_opts	2019-12-30 12:58:28.755232+01
-9	auth	0005_alter_user_last_login_null	2019-12-30 12:58:28.776096+01
-10	auth	0006_require_contenttypes_0002	2019-12-30 12:58:28.778017+01
-11	auth	0007_alter_validators_add_error_messages	2019-12-30 12:58:28.795432+01
-12	members	0001_initial	2019-12-30 12:58:28.848897+01
-13	activities	0001_initial	2019-12-30 12:58:28.912679+01
-14	funding	0001_initial	2019-12-30 12:58:28.981029+01
-15	files	0001_initial	2019-12-30 12:58:29.054206+01
-16	categories	0001_initial	2019-12-30 12:58:29.075001+01
-17	categories	0002_auto_20160531_1651	2019-12-30 12:58:29.203242+01
-18	categories	0003_categorycontent	2019-12-30 12:58:29.225225+01
-19	categories	0004_auto_20170731_1327	2019-12-30 12:58:29.331587+01
-20	categories	0005_auto_20180117_0924	2019-12-30 12:58:29.624204+01
-21	categories	0006_auto_20180907_1131	2019-12-30 12:58:29.639064+01
-22	categories	0007_auto_20180907_1131	2019-12-30 12:58:29.835054+01
-23	categories	0008_authenticated-permissions	2019-12-30 12:58:30.033205+01
-24	clients	0001_initial	2019-12-30 12:58:30.049064+01
-25	bb_projects	0002_remove_projecttheme_name_nl	2019-12-30 12:58:30.067865+01
-26	bb_projects	0003_auto_20160815_1658	2019-12-30 12:58:30.141309+01
-27	bb_projects	0004_add_project_continued_phase	2019-12-30 12:58:30.143679+01
-28	bb_projects	0005_add_api_permissions	2019-12-30 12:58:30.173525+01
-29	bb_projects	0006_add_group_permissions	2019-12-30 12:58:30.39076+01
-30	bb_projects	0007_translate_themes	2019-12-30 12:58:30.560212+01
-31	bb_projects	0008_migrate_theme_translations	2019-12-30 12:58:30.630938+01
-32	bb_projects	0009_remove_translated_fields	2019-12-30 12:58:30.706925+01
-33	bb_projects	0010_translate_phases	2019-12-30 12:58:30.747137+01
-34	bb_projects	0011_migrate_phase_translations	2019-12-30 12:58:30.818439+01
-35	bb_projects	0012_remove_translated_fields	2019-12-30 12:58:30.863285+01
-36	bb_projects	0007_auto_20180323_1602	2019-12-30 12:58:30.934413+01
-37	bb_projects	0013_merge_20180406_1536	2019-12-30 12:58:30.93635+01
-38	bb_projects	0007_auto_20180319_1536	2019-12-30 12:58:30.937944+01
-39	bb_projects	0008_merge_20180404_1500	2019-12-30 12:58:30.939551+01
-40	bb_projects	0008_merge_20180328_1504	2019-12-30 12:58:30.94119+01
-41	bb_projects	0009_merge_20180404_1638	2019-12-30 12:58:30.942558+01
-42	bb_projects	0014_merge_20180412_1421	2019-12-30 12:58:30.943973+01
-43	bb_projects	0015_auto_20190329_1101	2019-12-30 12:58:31.025854+01
-44	initiatives	0001_initial	2019-12-30 12:58:31.090346+01
-45	activities	0002_auto_20190524_1041	2019-12-30 12:58:31.223665+01
-46	activities	0003_add_permissions	2019-12-30 12:58:31.583804+01
-47	activities	0004_auto_20190524_1514	2019-12-30 12:58:31.717227+01
-48	activities	0005_auto_20190528_1022	2019-12-30 12:58:31.75382+01
-49	activities	0006_auto_20190605_1453	2019-12-30 12:58:31.86078+01
-50	activities	0007_auto_20190710_0851	2019-12-30 12:58:31.895336+01
-51	activities	0008_auto_20190814_1541	2019-12-30 12:58:32.068994+01
-52	activities	0009_auto_20191007_1506	2019-12-30 12:58:32.171384+01
-53	activities	0010_activity_transition_date	2019-12-30 12:58:32.207056+01
-54	activities	0011_auto_20191028_1156	2019-12-30 12:58:32.208977+01
-55	activities	0012_auto_20191108_1317	2019-12-30 12:58:32.418259+01
-56	activities	0013_auto_20191120_0920	2019-12-30 12:58:32.495253+01
-57	activities	0014_add_permissions	2019-12-30 12:58:32.72061+01
-58	admin	0001_initial	2019-12-30 12:58:32.770114+01
-59	admin	0002_logentry_remove_auto_add	2019-12-30 12:58:32.808355+01
-60	taggit	0001_initial	2019-12-30 12:58:32.920271+01
-61	taggit	0002_auto_20150616_2121	2019-12-30 12:58:32.944795+01
-62	utils	0001_initial	2019-12-30 12:58:32.979392+01
-63	organizations	0001_initial	2019-12-30 12:58:33.078857+01
-64	projects	0001_initial	2019-12-30 12:58:33.494011+01
-65	tasks	0001_initial	2019-12-30 12:58:33.717554+01
-66	tasks	0002_auto_20160614_1354	2019-12-30 12:58:33.805507+01
-67	tasks	0003_auto_20160621_1707	2019-12-30 12:58:33.902673+01
-68	tasks	0004_auto_20160705_0917	2019-12-30 12:58:33.93756+01
-69	tasks	0005_auto_20160706_1423	2019-12-30 12:58:34.279366+01
-70	tasks	0006_auto_20160720_1058	2019-12-30 12:58:34.377243+01
-71	tasks	0007_auto_20160720_1139	2019-12-30 12:58:34.436019+01
-72	tasks	0008_auto_20160802_1025	2019-12-30 12:58:34.485754+01
-73	tasks	0009_fix_deadline_timestamp	2019-12-30 12:58:34.507001+01
-74	tasks	0010_auto_20160829_2337	2019-12-30 12:58:34.602039+01
-75	tasks	0011_auto_20160920_1019	2019-12-30 12:58:35.013626+01
-76	tasks	0011_auto_20160919_1508	2019-12-30 12:58:35.110622+01
-77	tasks	0012_merge	2019-12-30 12:58:35.113044+01
-78	tasks	0008_auto_20160802_1441	2019-12-30 12:58:35.170234+01
-79	tasks	0006_auto_20160718_1811	2019-12-30 12:58:35.221933+01
-80	tasks	0010_merge	2019-12-30 12:58:35.223964+01
-81	tasks	0011_merge	2019-12-30 12:58:35.22661+01
-82	tasks	0013_merge	2019-12-30 12:58:35.230689+01
-83	tasks	0013_auto_20161006_1813	2019-12-30 12:58:35.282006+01
-84	tasks	0014_merge	2019-12-30 12:58:35.284303+01
-85	tasks	0014_auto_20161006_1144	2019-12-30 12:58:35.341364+01
-86	tasks	0015_merge	2019-12-30 12:58:35.344484+01
-87	tasks	0016_auto_20161208_1159	2019-12-30 12:58:35.397908+01
-88	tasks	0017_task_deadline_to_apply	2019-12-30 12:58:35.454664+01
-89	tasks	0018_auto_20170503_1405	2019-12-30 12:58:35.516281+01
-90	tasks	0019_remove_task_deadline_to_apply	2019-12-30 12:58:35.573784+01
-91	tasks	0020_task_deadline_to_apply	2019-12-30 12:58:35.630583+01
-92	tasks	0021_auto_20170503_1435	2019-12-30 12:58:35.961981+01
-93	tasks	0022_task_accepting	2019-12-30 12:58:36.016364+01
-94	tasks	0023_taskmember_resume	2019-12-30 12:58:36.065381+01
-95	tasks	0018_skill_expertise	2019-12-30 12:58:36.185507+01
-96	tasks	0023_merge_20170519_1012	2019-12-30 12:58:36.187833+01
-97	tasks	0024_merge_20170529_1436	2019-12-30 12:58:36.189911+01
-98	tasks	0025_auto_20170601_1540	2019-12-30 12:58:36.337935+01
-99	tasks	0024_auto_20170602_2304	2019-12-30 12:58:36.445976+01
-100	tasks	0026_merge_20170628_0905	2019-12-30 12:58:36.448157+01
-101	tasks	0027_delete_tasks_date_status_changed	2019-12-30 12:58:36.658074+01
-102	tasks	0028_add_api_permissions	2019-12-30 12:58:36.846198+01
-103	tasks	0029_add_group_permissions	2019-12-30 12:58:37.216195+01
-104	tasks	0030_auto_20170822_1104	2019-12-30 12:58:37.374618+01
-105	tasks	0031_set_owner_permissions	2019-12-30 12:58:37.722249+01
-106	tasks	0032_add_skill_permission	2019-12-30 12:58:38.155813+01
-107	tasks	0028_auto_20170817_1546	2019-12-30 12:58:38.251276+01
-108	tasks	0033_merge_20170830_1106	2019-12-30 12:58:38.253429+01
-109	tasks	0034_more_owner_permissions	2019-12-30 12:58:38.588327+01
-110	projects	0002_remove_project_tags	2019-12-30 12:58:38.649372+01
-111	projects	0003_auto_20160610_1554	2019-12-30 12:58:38.706408+01
-112	projects	0004_projectdocument_ip_address	2019-12-30 12:58:38.766323+01
-113	projects	0005_auto_20160720_1140	2019-12-30 12:58:38.898157+01
-114	projects	0006_project_celebrate_results	2019-12-30 12:58:39.120605+01
-115	projects	0007_auto_20160929_0817	2019-12-30 12:58:39.1756+01
-116	projects	0005_auto_20160721_1546	2019-12-30 12:58:39.80013+01
-117	projects	0006_merge	2019-12-30 12:58:39.803466+01
-118	projects	0008_merge	2019-12-30 12:58:39.806125+01
-119	projects	0008_fix_project_type	2019-12-30 12:58:39.8238+01
-120	projects	0009_merge	2019-12-30 12:58:39.82565+01
-121	projects	0007_remove_projectbudgetline_currency	2019-12-30 12:58:40.04075+01
-122	projects	0007_project_currencies	2019-12-30 12:58:40.087453+01
-123	projects	0010_merge	2019-12-30 12:58:40.08941+01
-124	projects	0011_auto_20161006_1149	2019-12-30 12:58:40.139044+01
-125	projects	0010_auto_20161019_1403	2019-12-30 12:58:40.250278+01
-126	projects	0012_merge	2019-12-30 12:58:40.252266+01
-127	projects	0011_auto_20161028_0946	2019-12-30 12:58:40.449613+01
-128	projects	0013_merge	2019-12-30 12:58:40.452585+01
-129	projects	0014_auto_20161109_1041	2019-12-30 12:58:40.497452+01
-130	projects	0015_project_payout_status	2019-12-30 12:58:40.545589+01
-131	projects	0016_project_campaign_payed_out	2019-12-30 12:58:40.59274+01
-132	projects	0017_auto_20161121_1053	2019-12-30 12:58:40.638537+01
-133	projects	0014_auto_20161115_1601	2019-12-30 12:58:40.689155+01
-134	projects	0015_auto_20161207_0900	2019-12-30 12:58:40.739862+01
-135	members	0002_auto_20160523_1525	2019-12-30 12:58:41.070387+01
-136	members	0003_alter_last_login	2019-12-30 12:58:41.124857+01
-137	members	0004_member_verified	2019-12-30 12:58:41.178816+01
-138	members	0005_auto_20160830_0902	2019-12-30 12:58:41.302248+01
-139	members	0006_member_last_seen	2019-12-30 12:58:41.354027+01
-140	members	0007_auto_20161115_1601	2019-12-30 12:58:41.405851+01
-141	members	0007_auto_20161109_1024	2019-12-30 12:58:41.458164+01
-142	members	0008_merge_20170106_1627	2019-12-30 12:58:41.460085+01
-143	projects	0018_merge_20170106_1627	2019-12-30 12:58:41.462338+01
-144	projects	0019_auto_20170106_1657	2019-12-30 12:58:41.572379+01
-145	projects	0020_merge_20170124_1338	2019-12-30 12:58:41.574486+01
-146	projects	0018_merge_20170118_1533	2019-12-30 12:58:41.576313+01
-147	authtoken	0001_initial	2019-12-30 12:58:41.648526+01
-148	projects	0019_auto_20170118_1537	2019-12-30 12:58:41.956932+01
-149	projects	0021_merge_20170202_1154	2019-12-30 12:58:41.95879+01
-150	projects	0022_project_reviewer	2019-12-30 12:58:42.02734+01
-151	projects	0023_auto_20170323_1227	2019-12-30 12:58:42.283881+01
-152	projects	0024_auto_20170404_1130	2019-12-30 12:58:42.466476+01
-153	projects	0025_auto_20170404_1130	2019-12-30 12:58:42.537033+01
-154	payouts	0001_initial	2019-12-30 12:58:42.586646+01
-155	projects	0026_auto_20170424_1653	2019-12-30 12:58:42.710346+01
-156	projects	0027_auto_20170602_2240	2019-12-30 12:58:43.030908+01
-157	projects	0028_auto_20170619_1555	2019-12-30 12:58:43.149899+01
-158	tasks	0029_fix_migration_statuslog_creation_20170721_1329	2019-12-30 12:58:43.266393+01
-159	tasks	0035_merge_20170831_1449	2019-12-30 12:58:43.268686+01
-160	projects	0027_auto_20170523_1422	2019-12-30 12:58:43.325298+01
-161	projects	0028_auto_20170523_1422	2019-12-30 12:58:43.440617+01
-162	projects	0029_merge_20170628_0905	2019-12-30 12:58:43.442918+01
-163	projects	0030_rename_account_bic_20170705_1221	2019-12-30 12:58:43.55646+01
-164	projects	0031_add_project_roles	2019-12-30 12:58:43.868563+01
-165	projects	0032_default_task_manager	2019-12-30 12:58:43.982921+01
-166	projects	0031_add_api_permissions	2019-12-30 12:58:44.141989+01
-167	projects	0032_add_group_permissions	2019-12-30 12:58:44.519763+01
-168	projects	0033_merge_20170818_1333	2019-12-30 12:58:44.521553+01
-169	projects	0034_auto_20170822_1303	2019-12-30 12:58:44.633766+01
-170	projects	0035_set_owner_permissions	2019-12-30 12:58:45.174449+01
-171	members	0008_merge_20170118_1533	2019-12-30 12:58:45.177233+01
-172	members	0009_merge_20170124_1338	2019-12-30 12:58:45.180329+01
-173	members	0010_fix_export_permissions_migration	2019-12-30 12:58:45.313836+01
-174	projects	0031_fix_migration_projectstatuslog_creation_20170721_1637	2019-12-30 12:58:45.433808+01
-175	projects	0036_merge_20170831_1449	2019-12-30 12:58:45.436077+01
-176	projects	0037_auto_20170915_1350	2019-12-30 12:58:45.63212+01
-177	projects	0038_auto_20170915_1358	2019-12-30 12:58:45.724122+01
-178	projects	0039_add_project_image_group_permissions	2019-12-30 12:58:46.027203+01
-179	projects	0040_auto_20170918_1200	2019-12-30 12:58:46.632893+01
-180	projects	0041_auto_20170918_1201	2019-12-30 12:58:46.803957+01
-181	projects	0037_longer_place_20170914_1129	2019-12-30 12:58:46.852568+01
-182	projects	0038_longer_account_details_20170914_1134	2019-12-30 12:58:46.902516+01
-183	projects	0039_auto_20170914_1503	2019-12-30 12:58:46.953909+01
-184	projects	0042_merge_20170920_1332	2019-12-30 12:58:46.955866+01
-185	projects	0043_remove_payout_status_sourcing_projects	2019-12-30 12:58:47.075842+01
-186	projects	0044_auto_20171110_1549	2019-12-30 12:58:47.367162+01
-187	geo	0002_auto_20160920_1425	2019-12-30 12:58:47.647261+01
-188	geo	0003_fill_location_group	2019-12-30 12:58:47.763607+01
-189	geo	0004_auto_20160929_0817	2019-12-30 12:58:47.830472+01
-190	analytics	0001_initial	2019-12-30 12:58:47.894869+01
-191	analytics	0002_auto_20171031_1209	2019-12-30 12:58:48.039076+01
-192	analytics	0003_auto_20180210_1615	2019-12-30 12:58:48.117904+01
-193	analytics	0004_auto_20180404_1035	2019-12-30 12:58:48.192912+01
-194	analytics	0005_auto_20180424_1205	2019-12-30 12:58:48.230195+01
-195	geo	0005_translate_geo	2019-12-30 12:58:48.501947+01
-196	geo	0006_migrate_geo_translations	2019-12-30 12:58:48.832246+01
-197	geo	0007_remove_translated_fields	2019-12-30 12:58:48.999013+01
-198	geo	0008_auto_20181129_1451	2019-12-30 12:58:49.055891+01
-199	geo	0008_auto_20180918_1037	2019-12-30 12:58:49.245973+01
-200	geo	0009_merge_20190121_1425	2019-12-30 12:58:49.248165+01
-201	geo	0010_initiativeplace	2019-12-30 12:58:49.31562+01
-202	geo	0011_activityplace	2019-12-30 12:58:49.39021+01
-203	geo	0012_auto_20190522_1341	2019-12-30 12:58:49.429355+01
-204	geo	0013_auto_20190524_0958	2019-12-30 12:58:49.602318+01
-205	tasks	0036_auto_20171005_1646	2019-12-30 12:58:49.657759+01
-206	tasks	0037_auto_20171010_1554	2019-12-30 12:58:49.713966+01
-207	tasks	0036_auto_20171114_1056	2019-12-30 12:58:49.989964+01
-208	tasks	0038_merge_20171115_1702	2019-12-30 12:58:49.992071+01
-209	tasks	0039_translate_skill	2019-12-30 12:58:50.122776+01
-210	tasks	0040_migrate_skill_translations	2019-12-30 12:58:50.250646+01
-211	tasks	0041_remove_untranslated_fields	2019-12-30 12:58:50.341695+01
-212	assignments	0001_initial	2019-12-30 12:58:50.496015+01
-213	assignments	0002_auto_20190529_0858	2019-12-30 12:58:50.539123+01
-214	assignments	0003_auto_20190909_1355	2019-12-30 12:58:51.070676+01
-215	assignments	0004_assignment_is_online	2019-12-30 12:58:51.111034+01
-216	assignments	0005_auto_20190909_1514	2019-12-30 12:58:51.141729+01
-217	assignments	0006_auto_20190909_1515	2019-12-30 12:58:51.520276+01
-218	assignments	0007_auto_20190909_1519	2019-12-30 12:58:51.564603+01
-219	assignments	0008_auto_20190909_1545	2019-12-30 12:58:51.640995+01
-220	assignments	0009_auto_20190909_1557	2019-12-30 12:58:51.784154+01
-221	assignments	0010_auto_20190911_1605	2019-12-30 12:58:51.953109+01
-222	assignments	0011_applicant_document	2019-12-30 12:58:52.028106+01
-223	assignments	0012_auto_20190913_1547	2019-12-30 12:58:52.326223+01
-224	auth	0008_alter_user_username_max_length	2019-12-30 12:58:52.356289+01
-225	authtoken	0002_auto_20160226_1747	2019-12-30 12:58:52.518566+01
-226	bb_accounts	0001_initial	2019-12-30 12:58:52.596973+01
-227	bb_accounts	0002_useraddress_user	2019-12-30 12:58:52.677037+01
-228	bb_accounts	0003_useraddress_position	2019-12-30 12:58:52.741849+01
-229	rewards	0001_initial	2019-12-30 12:58:52.82421+01
-230	orders	0001_initial	2019-12-30 12:58:52.909122+01
-231	fundraisers	0001_initial	2019-12-30 12:58:52.9978+01
-232	donations	0001_initial	2019-12-30 12:58:53.021133+01
-233	donations	0002_donation_fundraiser	2019-12-30 12:58:53.110274+01
-234	donations	0003_donation_order	2019-12-30 12:58:53.198754+01
-235	donations	0004_auto_20160523_1525	2019-12-30 12:58:53.628712+01
-236	donations	0005_auto_20160718_1811	2019-12-30 12:58:53.742785+01
-237	donations	0006_auto_20170803_1730	2019-12-30 12:58:54.124791+01
-238	donations	0007_donation_name	2019-12-30 12:58:54.183164+01
-239	donations	0008_auto_20170927_1021	2019-12-30 12:58:54.314671+01
-240	bb_follow	0001_initial	2019-12-30 12:58:54.401011+01
-241	bb_follow	0002_follow_user	2019-12-30 12:58:54.48298+01
-242	bb_follow	0003_auto_20180530_1621	2019-12-30 12:58:54.845154+01
-243	projects	0043_auto_20171023_1958	2019-12-30 12:58:54.918285+01
-244	projects	0044_auto_20171023_2008	2019-12-30 12:58:54.962055+01
-245	projects	0045_auto_20171023_2013	2019-12-30 12:58:55.03132+01
-246	projects	0046_auto_20171023_2047	2019-12-30 12:58:55.143939+01
-247	projects	0047_auto_20171024_1016	2019-12-30 12:58:55.16858+01
-248	projects	0048_auto_20171024_1052	2019-12-30 12:58:55.193294+01
-249	projects	0049_auto_20171024_1018	2019-12-30 12:58:55.350371+01
-250	projects	0050_merge_20171110_1633	2019-12-30 12:58:55.35235+01
-251	projects	0045_auto_20171114_1058	2019-12-30 12:58:55.554277+01
-252	projects	0051_merge_20171115_1702	2019-12-30 12:58:55.557193+01
-253	projects	0051_auto_20171113_1637	2019-12-30 12:58:55.602301+01
-254	projects	0052_merge_20171122_1000	2019-12-30 12:58:55.604194+01
-255	projects	0052_merge_20171121_1335	2019-12-30 12:58:55.606073+01
-256	projects	0053_merge_20171122_1001	2019-12-30 12:58:55.607887+01
-257	projects	0050_merge_20171124_0022	2019-12-30 12:58:55.609696+01
-258	projects	0054_merge_20171128_1142	2019-12-30 12:58:55.611589+01
-259	projects	0043_auto_20171025_1253	2019-12-30 12:58:55.773793+01
-260	projects	0050_merge_20171113_1230	2019-12-30 12:58:55.777601+01
-261	projects	0051_merge_20171124_0021	2019-12-30 12:58:55.780212+01
-262	projects	0052_merge_20171127_1329	2019-12-30 12:58:55.782522+01
-263	projects	0055_merge_20171205_0847	2019-12-30 12:58:55.784767+01
-264	projects	0056_auto_20171205_0847	2019-12-30 12:58:56.188285+01
-265	projects	0055_merge_20171201_1608	2019-12-30 12:58:56.191023+01
-266	projects	0057_merge_20171205_1236	2019-12-30 12:58:56.193428+01
-267	projects	0054_auto_20171122_1415	2019-12-30 12:58:56.288809+01
-268	projects	0055_project_campaign_edited	2019-12-30 12:58:56.364686+01
-269	projects	0058_merge_20171220_1342	2019-12-30 12:58:56.367211+01
-270	organizations	0002_auto_20160610_1554	2019-12-30 12:58:56.406545+01
-271	organizations	0003_auto_20170314_0900	2019-12-30 12:58:56.440535+01
-272	organizations	0004_organizationcontact	2019-12-30 12:58:56.521217+01
-273	organizations	0003_auto_20170303_1057	2019-12-30 12:58:56.67431+01
-274	organizations	0005_merge_20170321_1630	2019-12-30 12:58:56.676491+01
-275	organizations	0006_auto_20170328_1138	2019-12-30 12:58:56.757859+01
-276	organizations	0007_auto_20170803_1730	2019-12-30 12:58:57.15028+01
-277	organizations	0008_organization_logo	2019-12-30 12:58:57.190978+01
-278	organizations	0009_organization_description	2019-12-30 12:58:57.228573+01
-279	organizations	0010_auto_20171114_1035	2019-12-30 12:58:57.308189+01
-280	organizations	0011_auto_20180118_1100	2019-12-30 12:58:57.606626+01
-281	projects	0059_auto_20180118_1100	2019-12-30 12:58:57.781284+01
-282	projects	0060_auto_20180118_1217	2019-12-30 12:58:57.858357+01
-283	projects	0061_auto_20180118_1510	2019-12-30 12:58:57.934154+01
-284	projects	0062_auto_20180119_1231	2019-12-30 12:58:58.088137+01
-285	projects	0063_auto_20180119_1456	2019-12-30 12:58:58.448052+01
-286	projects	0064_auto_20180119_1625	2019-12-30 12:58:58.563003+01
-287	projects	0065_auto_20180121_1952	2019-12-30 12:58:58.922221+01
-288	projects	0066_auto_20180121_2002	2019-12-30 12:58:58.947205+01
-289	projects	0067_auto_20180123_0914	2019-12-30 12:58:59.003739+01
-290	projects	0068_auto_20180306_1614	2019-12-30 12:58:59.113437+01
-291	projects	0069_auto_20180316_1553	2019-12-30 12:58:59.392592+01
-292	projects	0070_auto_20180411_1013	2019-12-30 12:58:59.449758+01
-293	projects	0070_auto_20180328_1401	2019-12-30 12:58:59.828905+01
-294	projects	0071_merge_20180412_1133	2019-12-30 12:58:59.831118+01
-295	projects	0072_auto_20180416_1115	2019-12-30 12:58:59.884446+01
-296	projects	0073_auto_20180416_1115	2019-12-30 12:59:00.041379+01
-297	projects	0074_auto_20180416_1204	2019-12-30 12:59:00.070355+01
-298	projects	0075_auto_20180515_1556	2019-12-30 12:59:00.826049+01
-299	projects	0076_auto_20180516_0954	2019-12-30 12:59:01.005207+01
-300	projects	0077_auto_20180518_1050	2019-12-30 12:59:01.395552+01
-301	projects	0078_auto_20180528_1414	2019-12-30 12:59:01.419994+01
-302	projects	0079_auto_20180626_1225	2019-12-30 12:59:01.524236+01
-303	projects	0080_auto_20180828_1522	2019-12-30 12:59:01.60378+01
-304	projects	0080_auto_20180810_1405	2019-12-30 12:59:01.669399+01
-305	projects	0081_merge_20181012_1209	2019-12-30 12:59:01.671702+01
-306	payouts	0002_auto_20160523_1525	2019-12-30 12:59:01.782782+01
-307	payouts	0003_auto_20160719_1315	2019-12-30 12:59:02.92113+01
-308	payouts	0004_projectpayout_currency	2019-12-30 12:59:02.98307+01
-309	payouts	0005_auto_20160721_1114	2019-12-30 12:59:03.141824+01
-310	payouts	0006_rename_account_bic_20170705_1426	2019-12-30 12:59:03.256608+01
-311	payouts	0007_auto_20181123_1057	2019-12-30 12:59:03.491113+01
-312	payouts	0008_auto_20181129_1451	2019-12-30 12:59:04.193488+01
-313	projects	0082_auto_20181129_1506	2019-12-30 12:59:04.744016+01
-314	payouts	0009_payoutdocument	2019-12-30 12:59:04.824509+01
-315	projects	0083_auto_20181129_1506	2019-12-30 12:59:04.995746+01
-316	payouts	0010_auto_20181203_1145	2019-12-30 12:59:05.390133+01
-317	payouts	0011_auto_20181205_1509	2019-12-30 12:59:05.505031+01
-318	payouts	0012_auto_20181205_1509	2019-12-30 12:59:05.90359+01
-319	payouts	0013_auto_20181207_1340	2019-12-30 12:59:05.997365+01
-320	payouts	0014_auto_20181211_0938	2019-12-30 12:59:06.39226+01
-321	payouts	0015_auto_20181212_1152	2019-12-30 12:59:06.588607+01
-322	payouts	0016_auto_20181215_2016	2019-12-30 12:59:06.97738+01
-323	payouts	0017_delete_in_review_accounts	2019-12-30 12:59:07.129839+01
-324	payouts	0018_auto_20190108_0858	2019-12-30 12:59:07.170714+01
-325	bb_payouts	0001_initial	2019-12-30 12:59:07.214482+01
-326	bb_payouts	0002_auto_20160523_1525	2019-12-30 12:59:07.337087+01
-327	bb_payouts	0003_auto_20190110_1155	2019-12-30 12:59:07.48542+01
-328	bluebottle_dashboard	0001_initial	2019-12-30 12:59:07.532315+01
-329	dashboard	0001_initial	2019-12-30 12:59:07.558257+01
-330	bluebottle_dashboard	0002_auto_20191107_0853	2019-12-30 12:59:07.720293+01
-331	wallposts	0001_initial	2019-12-30 12:59:09.086442+01
-332	wallposts	0002_auto_20161115_1601	2019-12-30 12:59:09.675656+01
-333	wallposts	0003_mediawallpostphoto_results_page	2019-12-30 12:59:09.731026+01
-334	wallposts	0002_auto_20161109_1024	2019-12-30 12:59:10.024498+01
-335	wallposts	0004_merge_20170118_1533	2019-12-30 12:59:10.026794+01
-336	wallposts	0004_merge_20170106_1627	2019-12-30 12:59:10.029181+01
-337	wallposts	0005_merge_20170124_1338	2019-12-30 12:59:10.031473+01
-338	wallposts	0006_remove_duplicate_donation_wallposts	2019-12-30 12:59:10.200552+01
-339	wallposts	0007_auto_20170821_1459	2019-12-30 12:59:10.234599+01
-340	wallposts	0008_add_group_permissions	2019-12-30 12:59:10.751376+01
-341	wallposts	0009_auto_20170821_2001	2019-12-30 12:59:11.065505+01
-342	wallposts	0010_auto_20170821_2001	2019-12-30 12:59:11.473462+01
-343	wallposts	0011_auto_20170821_2018	2019-12-30 12:59:11.526558+01
-344	wallposts	0012_auto_20170821_2018	2019-12-30 12:59:11.94735+01
-345	wallposts	0013_auto_20170822_1105	2019-12-30 12:59:12.077269+01
-346	wallposts	0014_set_owner_permissions	2019-12-30 12:59:12.55766+01
-347	wallposts	0015_auto_20171114_1035	2019-12-30 12:59:12.651815+01
-348	wallposts	0016_auto_20180508_1512	2019-12-30 12:59:13.126464+01
-349	wallposts	0017_wallpost_pinned	2019-12-30 12:59:13.18273+01
-350	wallposts	0018_auto_20190115_0853	2019-12-30 12:59:13.349918+01
-351	payouts	0019_auto_20190123_1216	2019-12-30 12:59:13.387531+01
-352	payouts	0020_auto_20190123_1731	2019-12-30 12:59:13.555734+01
-353	payouts_dorado	0001_initial	2019-12-30 12:59:13.733771+01
-354	payouts	0019_auto_20190110_1155	2019-12-30 12:59:13.871075+01
-355	payouts	0021_merge_20190124_1320	2019-12-30 12:59:13.87398+01
-356	payouts	0022_auto_20190211_1452	2019-12-30 12:59:13.95977+01
-357	funding	0002_auto_20190604_1458	2019-12-30 12:59:14.540444+01
-358	funding	0003_auto_20190604_1459	2019-12-30 12:59:14.679218+01
-359	funding	0004_auto_20190604_1501	2019-12-30 12:59:14.813432+01
-360	funding	0005_auto_20190604_1501	2019-12-30 12:59:14.954995+01
-361	funding	0006_auto_20190604_1615	2019-12-30 12:59:15.186073+01
-362	funding	0007_auto_20190605_1639	2019-12-30 12:59:15.599467+01
-363	funding	0008_auto_20190612_0941	2019-12-30 12:59:16.158945+01
-364	funding	0009_auto_20190612_1319	2019-12-30 12:59:16.42912+01
-365	funding	0010_auto_20190612_1359	2019-12-30 12:59:16.834091+01
-366	funding	0011_auto_20190617_1251	2019-12-30 12:59:16.959332+01
-367	funding	0012_auto_20190708_0731	2019-12-30 12:59:17.078797+01
-368	funding	0013_auto_20190711_0927	2019-12-30 12:59:17.197092+01
-369	funding	0014_auto_20190714_1440	2019-12-30 12:59:17.314721+01
-370	funding	0015_auto_20190728_0920	2019-12-30 12:59:17.518806+01
-371	funding	0016_auto_20190728_0930	2019-12-30 12:59:17.605129+01
-372	funding	0017_auto_20190728_1319	2019-12-30 12:59:17.781779+01
-373	funding	0013_auto_20190710_1455	2019-12-30 12:59:18.162779+01
-374	funding	0014_auto_20190716_1636	2019-12-30 12:59:18.563339+01
-375	funding	0015_merge_20190717_1651	2019-12-30 12:59:18.565616+01
-376	funding	0018_merge_20190729_1449	2019-12-30 12:59:18.567723+01
-377	funding	0019_auto_20190729_1609	2019-12-30 12:59:18.710252+01
-378	funding	0020_donation_name	2019-12-30 12:59:18.752635+01
-379	funding	0021_auto_20190803_1106	2019-12-30 12:59:18.818244+01
-380	funding	0022_auto_20190804_1022	2019-12-30 12:59:18.883571+01
-381	funding	0023_bankpayoutaccount	2019-12-30 12:59:18.964548+01
-382	funding	0024_bankpaymentprovider	2019-12-30 12:59:19.055015+01
-383	funding	0025_auto_20190904_1154	2019-12-30 12:59:19.502703+01
-384	funding	0026_auto_20190904_1200	2019-12-30 12:59:19.506039+01
-385	funding	0023_add_permissions	2019-12-30 12:59:19.956172+01
-386	funding	0027_merge_20190912_1324	2019-12-30 12:59:19.95889+01
-387	funding	0024_donation_anonymous	2019-12-30 12:59:20.001227+01
-388	funding	0028_merge_20190912_1354	2019-12-30 12:59:20.003643+01
-389	funding	0029_auto_20190913_1458	2019-12-30 12:59:20.453436+01
-390	funding	0030_auto_20190918_1607	2019-12-30 12:59:21.152754+01
-391	funding	0031_plainpayoutaccount	2019-12-30 12:59:21.233773+01
-392	funding	0032_paymentcurrency	2019-12-30 12:59:21.322387+01
-393	funding	0033_auto_20191002_0903	2019-12-30 12:59:21.745462+01
-394	funding	0034_auto_20191002_1150	2019-12-30 12:59:21.861393+01
-395	funding	0035_auto_20191002_1415	2019-12-30 12:59:21.955263+01
-396	funding	0036_auto_20191004_1336	2019-12-30 12:59:22.074138+01
-397	wallposts	0019_auto_20191017_2204	2019-12-30 12:59:22.481227+01
-398	rewards	0002_auto_20160720_2245	2019-12-30 12:59:22.593629+01
-399	rewards	0003_add_api_permissions	2019-12-30 12:59:22.648248+01
-400	rewards	0004_add_group_permissions	2019-12-30 12:59:23.087625+01
-401	rewards	0005_auto_20170823_1131	2019-12-30 12:59:23.142883+01
-402	rewards	0006_set_owner_permissions	2019-12-30 12:59:23.574538+01
-403	rewards	0007_auto_20170914_2004	2019-12-30 12:59:23.635868+01
-404	rewards	0008_auto_20170914_2029	2019-12-30 12:59:23.694658+01
-405	rewards	0009_auto_20191104_1230	2019-12-30 12:59:23.755752+01
-406	projects	0084_auto_20181207_1435	2019-12-30 12:59:24.115157+01
-407	projects	0085_auto_20181207_1552	2019-12-30 12:59:24.136412+01
-408	projects	0080_auto_20180828_1049	2019-12-30 12:59:24.313923+01
-409	projects	0081_merge_20180919_1152	2019-12-30 12:59:24.316374+01
-410	projects	0082_merge_20181127_1044	2019-12-30 12:59:24.318498+01
-411	projects	0081_auto_20180918_1335	2019-12-30 12:59:24.345918+01
-412	projects	0086_merge_20190121_1425	2019-12-30 12:59:24.348447+01
-413	projects	0086_auto_20190117_1007	2019-12-30 12:59:24.85441+01
-414	projects	0087_merge_20190130_1355	2019-12-30 12:59:24.857064+01
-415	projects	0080_auto_20180904_1532	2019-12-30 12:59:25.002976+01
-416	projects	0081_merge_20180911_1659	2019-12-30 12:59:25.005192+01
-417	projects	0088_merge_20190215_1425	2019-12-30 12:59:25.007743+01
-418	projects	0087_merge_20190206_1714	2019-12-30 12:59:25.0101+01
-419	projects	0088_merge_20190208_1523	2019-12-30 12:59:25.012388+01
-420	projects	0089_merge_20190215_1438	2019-12-30 12:59:25.014552+01
-421	projects	0086_merge_20190204_1005	2019-12-30 12:59:25.016609+01
-422	projects	0088_merge_20190213_1448	2019-12-30 12:59:25.021259+01
-423	projects	0090_merge_20190222_1101	2019-12-30 12:59:25.023719+01
-424	organizations	0012_auto_20190416_1101	2019-12-30 12:59:26.881441+01
-425	initiatives	0002_copy_permissions	2019-12-30 12:59:27.322244+01
-426	initiatives	0003_auto_20190403_1619	2019-12-30 12:59:27.438858+01
-427	initiatives	0004_auto_20190416_1101	2019-12-30 12:59:27.856101+01
-428	initiatives	0005_initiative_hasorganization	2019-12-30 12:59:27.940857+01
-429	initiatives	0006_auto_20190416_1553	2019-12-30 12:59:28.019829+01
-430	initiatives	0004_auto_20190418_1643	2019-12-30 12:59:28.459204+01
-431	initiatives	0007_merge_20190501_0922	2019-12-30 12:59:28.461799+01
-432	initiatives	0008_auto_20190513_1518	2019-12-30 12:59:28.542982+01
-433	initiatives	0009_auto_20190520_1436	2019-12-30 12:59:29.06315+01
-434	initiatives	0010_auto_20190521_0954	2019-12-30 12:59:29.150172+01
-435	initiatives	0011_auto_20190522_0931	2019-12-30 12:59:29.198338+01
-436	initiatives	0009_auto_20190524_1144	2019-12-30 12:59:29.328891+01
-437	initiatives	0012_merge_20190524_1208	2019-12-30 12:59:29.331924+01
-438	initiatives	0013_auto_20190527_1131	2019-12-30 12:59:29.831166+01
-439	initiatives	0014_auto_20190628_1656	2019-12-30 12:59:30.03698+01
-440	funding_vitepay	0001_initial	2019-12-30 12:59:30.177122+01
-441	funding_vitepay	0002_vitepaypayment_payment_url	2019-12-30 12:59:30.207048+01
-442	funding_vitepay	0003_vitepaypaymentprovider_prefix	2019-12-30 12:59:30.234146+01
-443	funding_vitepay	0004_auto_20190715_0739	2019-12-30 12:59:30.262389+01
-444	funding_vitepay	0005_vitepaypayoutaccount	2019-12-30 12:59:30.380054+01
-445	funding_vitepay	0006_auto_20190918_1632	2019-12-30 12:59:30.63187+01
-446	funding_vitepay	0007_auto_20191002_0903	2019-12-30 12:59:30.657951+01
-447	funding_stripe	0001_initial	2019-12-30 12:59:31.653435+01
-448	geo	0014_auto_20191022_1105	2019-12-30 12:59:31.714383+01
-449	funding_pledge	0001_initial	2019-12-30 12:59:31.845374+01
-450	funding_pledge	0002_pledgepaymentprovider	2019-12-30 12:59:31.876681+01
-451	funding_pledge	0003_auto_20191002_0903	2019-12-30 12:59:31.905605+01
-452	funding	0037_payout	2019-12-30 12:59:32.033239+01
-453	funding	0038_auto_20191014_1316	2019-12-30 12:59:32.305858+01
-454	funding	0039_auto_20191022_1105	2019-12-30 12:59:32.731238+01
-455	funding_pledge	0004_pledgebankaccount	2019-12-30 12:59:32.87446+01
-456	funding_lipisha	0001_initial	2019-12-30 12:59:33.038865+01
-457	funding_lipisha	0002_auto_20190717_1637	2019-12-30 12:59:33.134624+01
-458	funding_lipisha	0003_lipishapayoutaccount	2019-12-30 12:59:33.257528+01
-459	funding_lipisha	0004_auto_20190918_1632	2019-12-30 12:59:33.522436+01
-460	funding_lipisha	0005_auto_20191001_2246	2019-12-30 12:59:34.021454+01
-461	funding_lipisha	0006_auto_20191001_2251	2019-12-30 12:59:34.09208+01
-462	funding_flutterwave	0001_initial	2019-12-30 12:59:34.24919+01
-463	funding_flutterwave	0002_flutterwavepaymentprovider_prefix	2019-12-30 12:59:34.283159+01
-464	funding_flutterwave	0003_flutterwavepayoutaccount	2019-12-30 12:59:34.410593+01
-465	funding_flutterwave	0004_auto_20190918_1633	2019-12-30 12:59:34.682379+01
-466	funding_flutterwave	0005_auto_20191002_0903	2019-12-30 12:59:34.746343+01
-467	funding	0040_auto_20191029_1309	2019-12-30 12:59:35.477195+01
-468	funding	0041_payout_currency	2019-12-30 12:59:35.524736+01
-469	funding	0042_auto_20191104_1154	2019-12-30 12:59:35.767357+01
-470	projects	0091_project_to_initiatives	2019-12-30 12:59:36.076923+01
-471	utils	0002_maillog	2019-12-30 12:59:36.436016+01
-472	pages	0001_initial	2019-12-30 12:59:36.592639+01
-473	pages	0002_auto_20161115_1601	2019-12-30 12:59:36.658794+01
-474	pages	0002_auto_20161109_1024	2019-12-30 12:59:36.724438+01
-475	pages	0003_merge_20170118_1533	2019-12-30 12:59:36.726947+01
-476	pages	0003_merge_20170106_1627	2019-12-30 12:59:36.729167+01
-477	pages	0004_merge_20170124_1338	2019-12-30 12:59:36.731199+01
-478	pages	0005_auto_20170803_1729	2019-12-30 12:59:37.234663+01
-479	pages	0006_auto_20171114_1035	2019-12-30 12:59:37.299795+01
-480	fluent_contents	0001_initial	2019-12-30 12:59:37.699706+01
-481	pages	0007_imagetextitem	2019-12-30 12:59:38.078442+01
-482	pages	0008_auto_20180326_0821	2019-12-30 12:59:38.294544+01
-483	pages	0009_auto_20180709_1706	2019-12-30 12:59:38.38769+01
-484	news	0001_initial	2019-12-30 12:59:38.490051+01
-485	news	0002_auto_20160531_1651	2019-12-30 12:59:38.56122+01
-486	news	0003_auto_20161115_1601	2019-12-30 12:59:38.633746+01
-487	news	0003_auto_20161109_1024	2019-12-30 12:59:38.706711+01
-488	news	0004_merge_20170118_1533	2019-12-30 12:59:38.70917+01
-489	news	0004_merge_20170106_1627	2019-12-30 12:59:38.711347+01
-490	news	0005_merge_20170124_1338	2019-12-30 12:59:38.713591+01
-491	news	0006_auto_20170803_1729	2019-12-30 12:59:39.228995+01
-492	news	0007_auto_20180709_1706	2019-12-30 12:59:39.668708+01
-493	surveys	0001_initial	2019-12-30 12:59:39.747372+01
-494	surveys	0002_survey_link	2019-12-30 12:59:39.774798+01
-495	surveys	0003_survey_specification	2019-12-30 12:59:39.805713+01
-496	surveys	0004_auto_20160919_1552	2019-12-30 12:59:39.949829+01
-497	surveys	0005_auto_20160919_1556	2019-12-30 12:59:40.005071+01
-498	surveys	0006_auto_20160919_1609	2019-12-30 12:59:40.091016+01
-499	surveys	0007_question_title	2019-12-30 12:59:40.117265+01
-500	surveys	0008_question_properties	2019-12-30 12:59:40.15227+01
-501	surveys	0009_answer_value	2019-12-30 12:59:40.182193+01
-502	surveys	0010_auto_20160920_0854	2019-12-30 12:59:40.456353+01
-503	surveys	0011_auto_20160920_1126	2019-12-30 12:59:40.683606+01
-504	surveys	0012_auto_20160920_1153	2019-12-30 12:59:40.764165+01
-505	surveys	0013_auto_20160921_1410	2019-12-30 12:59:40.874169+01
-506	surveys	0014_auto_20160921_1444	2019-12-30 12:59:40.995033+01
-507	surveys	0015_auto_20160922_1057	2019-12-30 12:59:41.577299+01
-508	surveys	0016_auto_20160922_1104	2019-12-30 12:59:41.642589+01
-509	surveys	0017_auto_20160922_1210	2019-12-30 12:59:41.73584+01
-510	surveys	0018_auto_20160922_1610	2019-12-30 12:59:41.83166+01
-511	surveys	0019_auto_20160922_1618	2019-12-30 12:59:42.024243+01
-512	surveys	0020_answer_options	2019-12-30 12:59:42.072725+01
-513	surveys	0021_response_params	2019-12-30 12:59:42.143831+01
-514	surveys	0022_auto_20160926_0912	2019-12-30 12:59:42.346312+01
-515	surveys	0023_aggregateanswer_aggregation_type	2019-12-30 12:59:42.408828+01
-516	surveys	0024_auto_20160926_1958	2019-12-30 12:59:42.473732+01
-517	surveys	0025_auto_20160927_1102	2019-12-30 12:59:42.595167+01
-518	surveys	0021_survey_last_synced	2019-12-30 12:59:42.626077+01
-519	surveys	0026_merge	2019-12-30 12:59:42.628911+01
-520	surveys	0027_auto_20160929_0817	2019-12-30 12:59:42.693943+01
-521	surveys	0028_auto_20160929_0849	2019-12-30 12:59:43.095882+01
-522	surveys	0029_auto_20160929_0932	2019-12-30 12:59:43.310867+01
-523	surveys	0030_auto_20161115_1601	2019-12-30 12:59:43.455466+01
-524	surveys	0031_question_display_theme	2019-12-30 12:59:43.489472+01
-525	cms	0001_initial	2019-12-30 12:59:44.801641+01
-526	cms	0002_shareresultscontent	2019-12-30 12:59:44.921912+01
-527	cms	0002_auto_20161207_0918	2019-12-30 12:59:45.088367+01
-528	cms	0003_merge_20161207_1037	2019-12-30 12:59:45.091064+01
-529	cms	0004_resultpage_image	2019-12-30 12:59:45.121079+01
-530	cms	0005_auto_20161207_1512	2019-12-30 12:59:45.548393+01
-531	cms	0006_auto_20161207_1642	2019-12-30 12:59:46.325755+01
-532	cms	0007_auto_20161207_1709	2019-12-30 12:59:46.84501+01
-533	cms	0005_auto_20161208_1124	2019-12-30 12:59:46.907641+01
-534	cms	0006_auto_20161208_1159	2019-12-30 12:59:47.073772+01
-535	cms	0008_merge_20161212_1459	2019-12-30 12:59:47.076492+01
-536	cms	0004_projectsmapcontent	2019-12-30 12:59:47.193923+01
-537	cms	0007_merge_20161212_1501	2019-12-30 12:59:47.197243+01
-538	cms	0009_merge_20161213_1047	2019-12-30 12:59:47.200784+01
-539	cms	0010_auto_20161214_1429	2019-12-30 12:59:47.357364+01
-540	cms	0011_auto_20161214_1531	2019-12-30 12:59:47.974862+01
-541	cms	0012_auto_20161214_1618	2019-12-30 12:59:48.053079+01
-542	cms	0010_auto_20161214_1524	2019-12-30 12:59:48.125098+01
-543	cms	0013_merge_20161214_1637	2019-12-30 12:59:48.127872+01
-544	cms	0014_auto_20161216_1424	2019-12-30 12:59:49.456998+01
-545	cms	0014_auto_20161216_1359	2019-12-30 12:59:49.773868+01
-546	cms	0015_merge_20161219_0946	2019-12-30 12:59:49.776874+01
-547	cms	0016_auto_20161228_1420	2019-12-30 12:59:49.969932+01
-548	cms	0017_add_api_permissions	2019-12-30 12:59:49.999019+01
-549	cms	0018_add_group_permissions	2019-12-30 12:59:50.735768+01
-550	cms	0019_auto_20170829_1005	2019-12-30 12:59:50.765934+01
-551	cms	0020_add_group_permissions	2019-12-30 12:59:51.340485+01
-552	cms	0021_auto_20171005_1646	2019-12-30 12:59:52.088435+01
-553	cms	0022_migrate_quotes_1	2019-12-30 12:59:52.43265+01
-554	cms	0023_migrate_quotes_2	2019-12-30 12:59:52.721256+01
-555	cms	0024_migrate_quotes_3	2019-12-30 12:59:53.096167+01
-556	cms	0025_migrate_stats_1	2019-12-30 12:59:53.726497+01
-557	cms	0026_migrate_stats_2	2019-12-30 12:59:54.105678+01
-558	cms	0027_migrate_stats_3	2019-12-30 12:59:54.445862+01
-559	cms	0021_homepage	2019-12-30 12:59:54.475006+01
-560	cms	0022_auto_20171006_1155	2019-12-30 12:59:54.540236+01
-561	cms	0023_auto_20171006_1208	2019-12-30 12:59:55.158083+01
-562	cms	0028_merge_20171006_1622	2019-12-30 12:59:55.161227+01
-563	cms	0029_auto_20171010_0931	2019-12-30 12:59:56.742481+01
-564	cms	0030_migrate_projects_1	2019-12-30 12:59:56.879245+01
-565	cms	0031_migrate_projects_2	2019-12-30 12:59:57.615941+01
-566	cms	0032_migrate_projects_3	2019-12-30 12:59:57.924591+01
-567	cms	0033_auto_20171017_1353	2019-12-30 12:59:58.027383+01
-568	cms	0034_auto_20171017_1549	2019-12-30 12:59:58.372996+01
-569	cms	0035_auto_20171017_1611	2019-12-30 12:59:58.545911+01
-570	cms	0036_auto_20171017_1622	2019-12-30 12:59:58.613825+01
-571	cms	0037_auto_20171017_1645	2019-12-30 12:59:58.651625+01
-572	cms	0038_auto_20171017_1645	2019-12-30 12:59:59.299984+01
-573	cms	0039_auto_20171017_1708	2019-12-30 12:59:59.44397+01
-574	cms	0040_auto_20171018_1413	2019-12-30 12:59:59.546369+01
-575	cms	0041_auto_20171018_1437	2019-12-30 12:59:59.608969+01
-576	cms	0042_auto_20171018_1437	2019-12-30 12:59:59.850457+01
-577	cms	0043_auto_20171018_1442	2019-12-30 13:00:00.011796+01
-578	cms	0044_auto_20171018_1457	2019-12-30 13:00:00.046927+01
-579	cms	0045_auto_20171018_1505	2019-12-30 13:00:00.12338+01
-580	cms	0046_auto_20171018_1637	2019-12-30 13:00:00.167772+01
-581	cms	0047_auto_20171018_1709	2019-12-30 13:00:00.249904+01
-582	cms	0048_auto_20171024_1554	2019-12-30 13:00:00.512658+01
-583	cms	0049_auto_20171024_1601	2019-12-30 13:00:01.666883+01
-584	cms	0050_auto_20171024_1623	2019-12-30 13:00:03.402013+01
-585	cms	0051_auto_20171024_1631	2019-12-30 13:00:04.645751+01
-586	cms	0052_auto_20171027_1419	2019-12-30 13:00:04.950095+01
-587	cms	0053_auto_20171030_1645	2019-12-30 13:00:04.952552+01
-588	cms	0054_auto_20171031_1428	2019-12-30 13:00:11.501204+01
-589	cms	0021_auto_20171017_2015	2019-12-30 13:00:11.50354+01
-590	cms	0022_auto_20171019_1725	2019-12-30 13:00:11.505837+01
-591	cms	0023_auto_20171019_2042	2019-12-30 13:00:11.508741+01
-592	cms	0024_siteplatformsettings	2019-12-30 13:00:11.511309+01
-593	cms	0025_auto_20171024_1600	2019-12-30 13:00:11.513463+01
-594	cms	0055_merge_20171031_1713	2019-12-30 13:00:11.515454+01
-595	cms	0056_auto_20171102_1527	2019-12-30 13:00:11.517226+01
-596	cms	0057_auto_20171103_1438	2019-12-30 13:00:11.518908+01
-597	cms	0058_auto_20171110_1230	2019-12-30 13:00:11.520893+01
-598	cms	0059_auto_20171121_1022	2019-12-30 13:00:11.523514+01
-599	cms	0059_auto_20171121_0959	2019-12-30 13:00:11.52585+01
-600	cms	0060_merge_20171121_1334	2019-12-30 13:00:11.527817+01
-601	cms	0061_auto_20171128_1135	2019-12-30 13:00:11.530019+01
-602	cms	0062_auto_20171128_1355	2019-12-30 13:00:11.532217+01
-603	cms	0063_auto_20171204_1049	2019-12-30 13:00:11.534213+01
-604	cms	0064_auto_20171220_1145	2019-12-30 13:00:11.536465+01
-605	cms	0065_auto_20180313_1401	2019-12-30 13:00:11.538696+01
-606	cms	0066_auto_20180709_1657	2019-12-30 13:00:11.540911+01
-607	cms	0067_auto_20190710_0938	2019-12-30 13:00:11.542774+01
-608	cms	0068_migrate_start_project	2019-12-30 13:00:11.544689+01
-609	cms	0055_migrate_statistics	2019-12-30 13:00:12.102442+01
-610	cms	0056_auto_20191106_1041	2019-12-30 13:00:12.69771+01
-611	contact	0001_initial	2019-12-30 13:00:12.73122+01
-612	contact	0002_contactmessage_author	2019-12-30 13:00:13.457821+01
-613	text	0001_initial	2019-12-30 13:00:13.71663+01
-614	rawhtml	0001_initial	2019-12-30 13:00:13.98665+01
-615	oembeditem	0001_initial	2019-12-30 13:00:14.241018+01
-616	contentplugins	0001_initial	2019-12-30 13:00:14.495733+01
-617	contentplugins	0002_auto_20161115_1601	2019-12-30 13:00:14.560106+01
-618	contentplugins	0002_auto_20161109_1024	2019-12-30 13:00:14.62269+01
-619	contentplugins	0003_merge_20170118_1533	2019-12-30 13:00:14.626391+01
-620	contentplugins	0003_merge_20170106_1627	2019-12-30 13:00:14.629176+01
-621	contentplugins	0004_merge_20170124_1338	2019-12-30 13:00:14.631581+01
-622	contentplugins	0005_auto_20170818_1441	2019-12-30 13:00:16.697771+01
-623	django_summernote	0001_initial	2019-12-30 13:00:16.726511+01
-624	django_summernote	0002_auto_20190218_1224	2019-12-30 13:00:16.787359+01
-625	djcelery	0001_initial	2019-12-30 13:00:17.377388+01
-626	djmoney_rates	0001_initial	2019-12-30 13:00:17.487215+01
-627	donations	0009_auto_20190130_1140	2019-12-30 13:00:17.870661+01
-628	donations	0010_auto_20190130_1141	2019-12-30 13:00:18.417403+01
-629	donations	0011_auto_20191101_1046	2019-12-30 13:00:18.810785+01
-630	events	0001_initial	2019-12-30 13:00:19.331338+01
-631	events	0002_add_permissions	2019-12-30 13:00:20.709711+01
-632	events	0003_auto_20190522_1329	2019-12-30 13:00:20.752319+01
-633	events	0004_add_permissions	2019-12-30 13:00:21.761303+01
-634	events	0005_auto_20190527_1431	2019-12-30 13:00:22.00431+01
-635	events	0006_event_is_online	2019-12-30 13:00:22.066991+01
-636	events	0007_auto_20190605_1434	2019-12-30 13:00:22.293353+01
-637	events	0008_auto_20190812_1612	2019-12-30 13:00:22.646365+01
-638	events	0009_event_duration	2019-12-30 13:00:23.215005+01
-639	events	0010_auto_20190816_1327	2019-12-30 13:00:23.326844+01
-640	files	0002_relatedimage	2019-12-30 13:00:23.598855+01
-641	files	0003_auto_20191111_1533	2019-12-30 13:00:24.56573+01
-642	follow	0001_initial	2019-12-30 13:00:24.846588+01
-643	funding	0043_auto_20191108_0819	2019-12-30 13:00:25.480678+01
-644	funding	0044_auto_20191108_1008	2019-12-30 13:00:26.458033+01
-645	funding	0043_auto_20191106_1149	2019-12-30 13:00:26.488644+01
-646	funding	0045_merge_20191108_1853	2019-12-30 13:00:26.491671+01
-647	funding	0045_auto_20191111_1329	2019-12-30 13:00:27.484418+01
-648	funding	0046_merge_20191112_1256	2019-12-30 13:00:27.487274+01
-649	funding	0047_auto_20191116_1540	2019-12-30 13:00:28.126603+01
-650	funding	0048_add_permissions	2019-12-30 13:00:29.27883+01
-651	funding	0049_auto_20191218_1538	2019-12-30 13:00:29.410477+01
-652	funding	0050_auto_20191218_1625	2019-12-30 13:00:30.485026+01
-653	funding_flutterwave	0006_auto_20191111_1332	2019-12-30 13:00:31.762066+01
-654	funding_lipisha	0007_auto_20191008_1011	2019-12-30 13:00:31.935722+01
-655	funding_lipisha	0008_lipishabankaccount_mpesa_code	2019-12-30 13:00:32.086024+01
-656	funding_pledge	0005_auto_20191111_1331	2019-12-30 13:00:33.18623+01
-657	funding_stripe	0002_auto_20191111_1330	2019-12-30 13:00:34.226598+01
-658	funding_vitepay	0008_auto_20191008_1034	2019-12-30 13:00:34.40457+01
-659	funding_vitepay	0009_auto_20191111_1330	2019-12-30 13:00:35.801657+01
-660	fundraisers	0002_fundraiser_owner	2019-12-30 13:00:36.159432+01
-661	fundraisers	0003_fundraiser_project	2019-12-30 13:00:36.568359+01
-662	fundraisers	0004_auto_20160718_1811	2019-12-30 13:00:37.326256+01
-663	fundraisers	0005_auto_20160720_1726	2019-12-30 13:00:38.164974+01
-664	fundraisers	0004_auto_20160720_1140	2019-12-30 13:00:39.476485+01
-665	fundraisers	0006_merge	2019-12-30 13:00:39.481581+01
-666	fundraisers	0007_auto_20170803_1730	2019-12-30 13:00:40.712462+01
-667	geo	0015_add_permissions	2019-12-30 13:00:41.922929+01
-668	homepage	0001_initial	2019-12-30 13:00:43.398139+01
-669	initiatives	0015_auto_20190708_1417	2019-12-30 13:00:43.790787+01
-670	initiatives	0016_auto_20190726_0915	2019-12-30 13:00:44.380927+01
-671	initiatives	0017_auto_20191031_1439	2019-12-30 13:00:44.416277+01
-672	initiatives	0018_auto_20191108_1222	2019-12-30 13:00:45.117271+01
-673	initiatives	0018_auto_20191106_0928	2019-12-30 13:00:46.976017+01
-674	initiatives	0019_merge_20191108_1853	2019-12-30 13:00:46.980778+01
-675	initiatives	0020_auto_20191129_1131	2019-12-30 13:00:47.043128+01
-676	initiatives	0021_auto_20191129_1132	2019-12-30 13:00:47.652145+01
-677	initiatives	0022_remove_initiativeplatformsettings_search_filters	2019-12-30 13:00:47.685159+01
-678	jet	0001_initial	2019-12-30 13:00:47.777751+01
-679	jet	0002_delete_userdashboardmodule	2019-12-30 13:00:47.807994+01
-680	default	0001_initial	2019-12-30 13:00:48.557155+01
-681	social_auth	0001_initial	2019-12-30 13:00:48.559517+01
-682	default	0002_add_related_name	2019-12-30 13:00:48.877743+01
-683	social_auth	0002_add_related_name	2019-12-30 13:00:48.880036+01
-684	looker	0001_initial	2019-12-30 13:00:48.913409+01
-685	looker	0002_auto_20180328_1054	2019-12-30 13:00:48.949157+01
-686	looker	0003_init_looker_embeds	2019-12-30 13:00:50.025154+01
-687	mails	0001_initial	2019-12-30 13:00:50.055017+01
-688	mails	0002_auto_20171211_1117	2019-12-30 13:00:50.057735+01
-689	mails	0003_auto_20180727_1122	2019-12-30 13:00:50.668164+01
-690	orders	0002_auto_20160718_2010	2019-12-30 13:00:51.062849+01
-691	orders	0003_auto_20170823_1533	2019-12-30 13:00:51.279895+01
-692	orders	0004_add_group_permissions	2019-12-30 13:00:52.358292+01
-693	members	0011_permission_groups	2019-12-30 13:00:53.005925+01
-694	members	0012_auto_20170807_1454	2019-12-30 13:00:54.062987+01
-695	members	0012_auto_20170803_1730	2019-12-30 13:00:55.1348+01
-696	members	0013_merge_20170811_1500	2019-12-30 13:00:55.13807+01
-697	members	0014_auto_20170816_1614	2019-12-30 13:00:55.369446+01
-698	members	0015_auto_20170816_1614	2019-12-30 13:00:56.496045+01
-699	members	0016_auto_20170822_1104	2019-12-30 13:00:56.709261+01
-700	members	0017_closed_site_permissions	2019-12-30 13:00:57.374334+01
-701	members	0018_auto_20170824_1521	2019-12-30 13:00:58.161432+01
-702	members	0019_auto_20170824_1812	2019-12-30 13:00:58.393335+01
-703	members	0020_auto_20171031_1048	2019-12-30 13:00:59.039593+01
-704	members	0021_auto_20171114_1035	2019-12-30 13:00:59.404287+01
-705	members	0022_auto_20171207_0856	2019-12-30 13:00:59.922144+01
-706	members	0023_memberplatformsettings_require_consent	2019-12-30 13:00:59.957111+01
-707	members	0024_create_empty_settings	2019-12-30 13:01:00.99352+01
-708	members	0025_memberplatformsettings_consent_link	2019-12-30 13:01:01.034191+01
-709	members	0026_auto_20190129_1050	2019-12-30 13:01:01.254384+01
-710	members	0027_auto_20190208_1119	2019-12-30 13:01:01.47675+01
-711	members	0026_auto_20180919_1434	2019-12-30 13:01:01.698316+01
-712	members	0028_merge_20190215_1441	2019-12-30 13:01:01.702031+01
-713	members	0028_auto_20190219_1024	2019-12-30 13:01:01.929801+01
-714	members	0029_merge_20190222_0930	2019-12-30 13:01:01.932856+01
-715	members	0030_auto_20190225_1215	2019-12-30 13:01:02.947145+01
-716	members	0027_auto_20190206_1018	2019-12-30 13:01:03.758294+01
-717	members	0031_merge_20190226_1449	2019-12-30 13:01:03.76107+01
-718	notifications	0001_initial	2019-12-30 13:01:04.137654+01
-719	notifications	0002_message_custom_message	2019-12-30 13:01:04.756189+01
-720	notifications	0003_notificationplatformsettings	2019-12-30 13:01:04.790706+01
-721	payments	0001_initial	2019-12-30 13:01:06.537952+01
-722	payments	0002_auto_20160718_2345	2019-12-30 13:01:07.012372+01
-723	payments	0003_auto_20161025_1221	2019-12-30 13:01:07.26513+01
-724	payments	0004_auto_20170919_1621	2019-12-30 13:01:07.513103+01
-725	payments	0005_auto_20170919_1621	2019-12-30 13:01:07.516618+01
-726	orders	0005_auto_20171003_1112	2019-12-30 13:01:08.5889+01
-727	orders	0006_auto_20180509_1436	2019-12-30 13:01:08.837703+01
-728	orders	0007_auto_20180509_1437	2019-12-30 13:01:09.558168+01
-729	orders	0008_auto_20190904_0838	2019-12-30 13:01:10.292438+01
-730	organizations	0013_remove_organizationcontact_organization	2019-12-30 13:01:10.693037+01
-731	organizations	0014_auto_20190708_1418	2019-12-30 13:01:11.454763+01
-732	organizations	0015_auto_20191209_2128	2019-12-30 13:01:11.843446+01
-733	pages	0010_auto_20180717_1017	2019-12-30 13:01:12.122798+01
-734	payments	0006_auto_20181115_1321	2019-12-30 13:01:13.223534+01
-735	payments_beyonic	0001_initial	2019-12-30 13:01:13.58138+01
-736	payments_docdata	0001_initial	2019-12-30 13:01:14.752517+01
-737	payments_docdata	0002_auto_20161115_1601	2019-12-30 13:01:14.796565+01
-738	payments_docdata	0002_auto_20161109_1024	2019-12-30 13:01:14.839293+01
-739	payments_docdata	0003_merge_20170118_1533	2019-12-30 13:01:14.843906+01
-740	payments_docdata	0003_merge_20170106_1627	2019-12-30 13:01:14.84798+01
-741	payments_docdata	0004_merge_20170124_1338	2019-12-30 13:01:14.851442+01
-742	payments_external	0001_initial	2019-12-30 13:01:15.22817+01
-743	payments_flutterwave	0001_initial	2019-12-30 13:01:15.61926+01
-744	payments_flutterwave	0002_auto_20170202_2054	2019-12-30 13:01:15.747788+01
-745	payments_flutterwave	0003_auto_20170206_1235	2019-12-30 13:01:16.006123+01
-746	payments_flutterwave	0004_auto_20170207_1532	2019-12-30 13:01:16.142664+01
-747	payments_flutterwave	0005_auto_20170210_1058	2019-12-30 13:01:16.67375+01
-748	payments_flutterwave	0006_auto_20170323_1227	2019-12-30 13:01:16.979346+01
-749	payments_flutterwave	0007_flutterwavempesapayment	2019-12-30 13:01:17.376029+01
-750	payments_flutterwave	0008_flutterwavempesapayment_transaction_amount	2019-12-30 13:01:17.444207+01
-751	payments_interswitch	0001_initial	2019-12-30 13:01:17.818479+01
-752	payments_interswitch	0002_auto_20161006_1144	2019-12-30 13:01:18.397989+01
-753	payments_interswitch	0003_interswitchpaymentstatusupdate	2019-12-30 13:01:18.775399+01
-754	payments_lipisha	0001_initial	2019-12-30 13:01:19.184975+01
-755	payments_lipisha	0002_lipishaproject_organisationnumber	2019-12-30 13:01:19.561262+01
-756	payments_logger	0001_initial	2019-12-30 13:01:19.94919+01
-757	payments_mock	0001_initial	2019-12-30 13:01:20.831239+01
-758	payments_pledge	0001_initial	2019-12-30 13:01:21.197964+01
-759	payments_stripe	0001_initial	2019-12-30 13:01:21.63024+01
-760	payments_stripe	0002_stripepayment_currency	2019-12-30 13:01:21.721712+01
-761	payments_stripe	0003_auto_20190130_1231	2019-12-30 13:01:21.883403+01
-762	payments_telesom	0001_initial	2019-12-30 13:01:22.292983+01
-763	payments_vitepay	0001_initial	2019-12-30 13:01:22.703923+01
-764	payments_voucher	0001_initial	2019-12-30 13:01:23.520367+01
-765	payouts	0023_auto_20190705_0906	2019-12-30 13:01:24.100546+01
-766	projects	0092_auto_20191031_0901	2019-12-30 13:01:25.301314+01
-767	projects	0093_auto_20191106_1206	2019-12-30 13:01:26.069524+01
-768	projects	0093_auto_20191106_0928	2019-12-30 13:01:26.858535+01
-769	projects	0094_merge_20191107_0943	2019-12-30 13:01:26.861335+01
-770	quotes	0001_initial	2019-12-30 13:01:28.33326+01
-771	quotes	0002_auto_20161115_1601	2019-12-30 13:01:28.527713+01
-772	quotes	0002_auto_20161109_1024	2019-12-30 13:01:28.699454+01
-773	quotes	0003_merge_20170118_1533	2019-12-30 13:01:28.702872+01
-774	quotes	0003_merge_20170106_1627	2019-12-30 13:01:28.705692+01
-775	quotes	0004_merge_20170124_1338	2019-12-30 13:01:28.708438+01
-776	redirects	0001_initial	2019-12-30 13:01:29.830581+01
-777	scim	0001_initial	2019-12-30 13:01:30.236066+01
-778	scim	0002_auto_20190118_1625	2019-12-30 13:01:31.016846+01
-779	sessions	0001_initial	2019-12-30 13:01:31.050621+01
-780	sites	0001_initial	2019-12-30 13:01:31.242183+01
-781	sites	0002_alter_domain_unique	2019-12-30 13:01:31.563829+01
-782	slides	0001_initial	2019-12-30 13:01:34.631178+01
-783	slides	0002_auto_20161115_1601	2019-12-30 13:01:34.810274+01
-784	slides	0002_auto_20161109_1024	2019-12-30 13:01:34.988686+01
-785	slides	0003_merge_20170118_1533	2019-12-30 13:01:34.992028+01
-786	slides	0003_merge_20170106_1627	2019-12-30 13:01:34.994641+01
-787	slides	0004_merge_20170124_1338	2019-12-30 13:01:34.997322+01
-788	slides	0005_auto_20170803_1730	2019-12-30 13:01:36.349561+01
-789	slides	0006_auto_20180717_1017	2019-12-30 13:01:36.523687+01
-790	default	0003_alter_email_max_length	2019-12-30 13:01:36.892468+01
-791	social_auth	0003_alter_email_max_length	2019-12-30 13:01:36.895101+01
-792	default	0004_auto_20160423_0400	2019-12-30 13:01:37.084444+01
-793	social_auth	0004_auto_20160423_0400	2019-12-30 13:01:37.0869+01
-794	social_auth	0005_auto_20160727_2333	2019-12-30 13:01:37.497915+01
-795	social_django	0006_partial	2019-12-30 13:01:37.585587+01
-796	social_django	0007_code_timestamp	2019-12-30 13:01:37.628288+01
-797	social_django	0008_partial_timestamp	2019-12-30 13:01:38.139396+01
-798	statistics	0001_initial	2019-12-30 13:01:38.180546+01
-799	statistics	0002_auto_20161115_1601	2019-12-30 13:01:38.223734+01
-800	statistics	0003_auto_20161214_1524	2019-12-30 13:01:38.265805+01
-801	statistics	0002_auto_20161109_1024	2019-12-30 13:01:38.30304+01
-802	statistics	0004_merge_20170118_1533	2019-12-30 13:01:38.305592+01
-803	statistics	0004_merge_20170106_1627	2019-12-30 13:01:38.308559+01
-804	statistics	0005_merge_20170124_1338	2019-12-30 13:01:38.311195+01
-805	statistics	0006_auto_20170323_1227	2019-12-30 13:01:38.353148+01
-806	statistics	0007_auto_20171114_1035	2019-12-30 13:01:38.392524+01
-807	suggestions	0001_initial	2019-12-30 13:01:38.731131+01
-808	suggestions	0002_suggestion_language	2019-12-30 13:01:38.888098+01
-809	suggestions	0003_auto_20160720_1140	2019-12-30 13:01:39.042415+01
-810	suggestions	0003_auto_20160718_1811	2019-12-30 13:01:39.193203+01
-811	suggestions	0004_merge	2019-12-30 13:01:39.197305+01
-812	surveys	0030_auto_20161109_1024	2019-12-30 13:01:39.548502+01
-813	surveys	0032_merge_20170118_1533	2019-12-30 13:01:39.55223+01
-814	surveys	0032_merge_20170106_1627	2019-12-30 13:01:39.555142+01
-815	surveys	0033_merge_20170124_1338	2019-12-30 13:01:39.558046+01
-816	surveys	0034_survey_active	2019-12-30 13:01:39.604915+01
-817	tasks	0042_migrate_tasks_to_activities	2019-12-30 13:01:40.795063+01
-818	terms	0001_initial	2019-12-30 13:01:41.614356+01
-819	terms	0002_auto_20180907_1132	2019-12-30 13:01:42.692668+01
-820	terms	0003_auto_20180907_1132	2019-12-30 13:01:44.209109+01
-821	text	0002_textitem_text_final	2019-12-30 13:01:44.259633+01
-822	thumbnail	0001_initial	2019-12-30 13:01:44.301663+01
-823	token_auth	0001_initial	2019-12-30 13:01:44.674566+01
-824	votes	0001_initial	2019-12-30 13:01:45.522249+01
-825	votes	0002_auto_20161004_1342	2019-12-30 13:01:45.819959+01
-826	wallposts	0020_auto_20191017_2208	2019-12-30 13:01:46.803216+01
-827	social_django	0003_alter_email_max_length	2019-12-30 13:01:46.812075+01
-828	social_django	0004_auto_20160423_0400	2019-12-30 13:01:46.814764+01
-829	social_django	0002_add_related_name	2019-12-30 13:01:46.816707+01
-830	social_django	0005_auto_20160727_2333	2019-12-30 13:01:46.818593+01
-831	cms	0054_auto_20171031_1428_squashed_0068_migrate_start_project	2019-12-30 13:01:46.820422+01
-832	social_django	0001_initial	2019-12-30 13:01:46.822304+01
-833	members	0032_auto_20191223_1456	2020-01-03 09:33:00.047847+01
-834	funding_flutterwave	0007_auto_20200106_0839	2020-01-06 10:42:35.244394+01
-835	funding_flutterwave	0008_auto_20200106_1029	2020-01-06 10:42:35.350601+01
-836	pages	0011_auto_20200106_1620	2020-01-09 08:52:00.301555+01
-837	pages	0012_columnsitem	2020-01-09 08:52:00.608475+01
-838	files	0004_auto_20200106_1644	2020-01-21 08:48:06.234852+01
-839	organizations	0016_auto_20200106_1636	2020-01-21 08:48:06.574507+01
-840	pages	0011_auto_20200106_1647	2020-01-21 08:48:07.008883+01
-841	pages	0013_merge_20200120_1128	2020-01-21 08:48:07.012925+01
-842	funding	0049_auto_20200124_1032	2020-01-27 08:47:16.58303+01
-843	funding	0050_auto_20200124_1230	2020-01-27 08:47:17.229394+01
-844	members	0033_auto_20200114_1050	2020-01-27 08:47:18.236489+01
-845	members	0034_auto_20200114_1050	2020-01-27 08:47:18.87334+01
-846	members	0035_memberplatformsettings_background	2020-01-27 08:47:18.946137+01
-847	notifications	0004_auto_20200123_1344	2020-01-27 08:47:19.753406+01
-848	notifications	0005_auto_20200124_1505	2020-01-27 08:47:20.153255+01
+1	geo	0001_initial	2020-09-18 14:07:03.963512+02
+2	bb_projects	0001_initial	2020-09-18 14:07:03.995944+02
+3	contenttypes	0001_initial	2020-09-18 14:07:04.021151+02
+4	contenttypes	0002_remove_content_type_name	2020-09-18 14:07:04.081089+02
+5	auth	0001_initial	2020-09-18 14:07:04.129427+02
+6	auth	0002_alter_permission_name_max_length	2020-09-18 14:07:04.143065+02
+7	auth	0003_alter_user_email_max_length	2020-09-18 14:07:04.156107+02
+8	auth	0004_alter_user_username_opts	2020-09-18 14:07:04.167163+02
+9	auth	0005_alter_user_last_login_null	2020-09-18 14:07:04.177894+02
+10	auth	0006_require_contenttypes_0002	2020-09-18 14:07:04.179283+02
+11	auth	0007_alter_validators_add_error_messages	2020-09-18 14:07:04.190294+02
+12	members	0001_initial	2020-09-18 14:07:04.23201+02
+13	activities	0001_initial	2020-09-18 14:07:04.276861+02
+14	funding	0001_initial	2020-09-18 14:07:04.327383+02
+15	files	0001_initial	2020-09-18 14:07:04.38285+02
+16	categories	0001_initial	2020-09-18 14:07:04.398401+02
+17	categories	0002_auto_20160531_1651	2020-09-18 14:07:04.411866+02
+18	categories	0003_categorycontent	2020-09-18 14:07:04.430265+02
+19	categories	0004_auto_20170731_1327	2020-09-18 14:07:04.508592+02
+20	categories	0005_auto_20180117_0924	2020-09-18 14:07:04.715631+02
+21	categories	0006_auto_20180907_1131	2020-09-18 14:07:04.728424+02
+22	categories	0007_auto_20180907_1131	2020-09-18 14:07:04.897428+02
+23	categories	0008_authenticated-permissions	2020-09-18 14:07:05.060987+02
+24	clients	0001_initial	2020-09-18 14:07:05.072458+02
+25	bb_projects	0002_remove_projecttheme_name_nl	2020-09-18 14:07:05.088542+02
+26	bb_projects	0003_auto_20160815_1658	2020-09-18 14:07:05.264974+02
+27	bb_projects	0004_add_project_continued_phase	2020-09-18 14:07:05.266882+02
+28	bb_projects	0005_add_api_permissions	2020-09-18 14:07:05.301399+02
+29	bb_projects	0006_add_group_permissions	2020-09-18 14:07:05.504503+02
+30	bb_projects	0007_translate_themes	2020-09-18 14:07:05.537457+02
+31	bb_projects	0008_migrate_theme_translations	2020-09-18 14:07:05.594594+02
+32	bb_projects	0009_remove_translated_fields	2020-09-18 14:07:05.652166+02
+33	bb_projects	0010_translate_phases	2020-09-18 14:07:05.683039+02
+34	bb_projects	0011_migrate_phase_translations	2020-09-18 14:07:05.736817+02
+35	bb_projects	0012_remove_translated_fields	2020-09-18 14:07:05.768682+02
+36	bb_projects	0007_auto_20180323_1602	2020-09-18 14:07:05.821404+02
+37	bb_projects	0013_merge_20180406_1536	2020-09-18 14:07:05.822548+02
+38	bb_projects	0007_auto_20180319_1536	2020-09-18 14:07:05.824096+02
+39	bb_projects	0008_merge_20180404_1500	2020-09-18 14:07:05.825852+02
+40	bb_projects	0008_merge_20180328_1504	2020-09-18 14:07:05.827392+02
+41	bb_projects	0009_merge_20180404_1638	2020-09-18 14:07:05.828949+02
+42	bb_projects	0014_merge_20180412_1421	2020-09-18 14:07:05.830458+02
+43	bb_projects	0015_auto_20190329_1101	2020-09-18 14:07:05.893901+02
+44	initiatives	0001_initial	2020-09-18 14:07:05.942045+02
+45	activities	0002_auto_20190524_1041	2020-09-18 14:07:06.177088+02
+46	activities	0003_add_permissions	2020-09-18 14:07:06.377983+02
+47	activities	0004_auto_20190524_1514	2020-09-18 14:07:06.485357+02
+48	activities	0005_auto_20190528_1022	2020-09-18 14:07:06.511005+02
+49	activities	0006_auto_20190605_1453	2020-09-18 14:07:06.594554+02
+50	activities	0007_auto_20190710_0851	2020-09-18 14:07:06.626047+02
+51	activities	0008_auto_20190814_1541	2020-09-18 14:07:06.752483+02
+52	activities	0009_auto_20191007_1506	2020-09-18 14:07:06.830181+02
+53	activities	0010_activity_transition_date	2020-09-18 14:07:06.857391+02
+54	activities	0011_auto_20191028_1156	2020-09-18 14:07:06.858675+02
+55	activities	0012_auto_20191108_1317	2020-09-18 14:07:07.017673+02
+56	activities	0013_auto_20191120_0920	2020-09-18 14:07:07.075449+02
+57	activities	0014_add_permissions	2020-09-18 14:07:07.257348+02
+58	activities	0015_auto_20200128_1045	2020-09-18 14:07:07.354137+02
+59	activities	0016_organizer	2020-09-18 14:07:07.390474+02
+60	activities	0017_auto_20200205_1054	2020-09-18 14:07:07.450257+02
+61	activities	0018_auto_20200212_1025	2020-09-18 14:07:07.506347+02
+62	geo	0002_auto_20160920_1425	2020-09-18 14:07:07.666668+02
+63	geo	0003_fill_location_group	2020-09-18 14:07:07.734834+02
+64	geo	0004_auto_20160929_0817	2020-09-18 14:07:07.76867+02
+65	geo	0005_translate_geo	2020-09-18 14:07:07.923859+02
+66	geo	0006_migrate_geo_translations	2020-09-18 14:07:07.98453+02
+67	geo	0007_remove_translated_fields	2020-09-18 14:07:08.107977+02
+68	geo	0008_auto_20181129_1451	2020-09-18 14:07:08.1337+02
+69	geo	0008_auto_20180918_1037	2020-09-18 14:07:08.227183+02
+70	geo	0009_merge_20190121_1425	2020-09-18 14:07:08.228402+02
+71	geo	0010_initiativeplace	2020-09-18 14:07:08.271985+02
+72	geo	0011_activityplace	2020-09-18 14:07:08.43221+02
+73	geo	0012_auto_20190522_1341	2020-09-18 14:07:08.455991+02
+74	geo	0013_auto_20190524_0958	2020-09-18 14:07:08.545803+02
+75	utils	0001_initial	2020-09-18 14:07:08.650416+02
+76	taggit	0001_initial	2020-09-18 14:07:08.712205+02
+77	taggit	0002_auto_20150616_2121	2020-09-18 14:07:08.732294+02
+78	organizations	0001_initial	2020-09-18 14:07:08.820787+02
+79	projects	0001_initial	2020-09-18 14:07:09.032842+02
+80	projects	0002_remove_project_tags	2020-09-18 14:07:09.200996+02
+81	projects	0003_auto_20160610_1554	2020-09-18 14:07:09.251039+02
+82	projects	0004_projectdocument_ip_address	2020-09-18 14:07:09.293252+02
+83	projects	0005_auto_20160720_1140	2020-09-18 14:07:09.378154+02
+84	projects	0006_project_celebrate_results	2020-09-18 14:07:09.416034+02
+85	projects	0007_auto_20160929_0817	2020-09-18 14:07:09.453226+02
+86	projects	0005_auto_20160721_1546	2020-09-18 14:07:09.990175+02
+87	projects	0006_merge	2020-09-18 14:07:09.991572+02
+88	projects	0008_merge	2020-09-18 14:07:09.992741+02
+89	tasks	0001_initial	2020-09-18 14:07:10.162098+02
+90	tasks	0002_auto_20160614_1354	2020-09-18 14:07:10.227233+02
+91	tasks	0003_auto_20160621_1707	2020-09-18 14:07:10.311981+02
+92	tasks	0004_auto_20160705_0917	2020-09-18 14:07:10.343334+02
+93	tasks	0005_auto_20160706_1423	2020-09-18 14:07:10.648629+02
+94	tasks	0006_auto_20160720_1058	2020-09-18 14:07:10.72852+02
+95	tasks	0007_auto_20160720_1139	2020-09-18 14:07:10.774194+02
+96	tasks	0008_auto_20160802_1025	2020-09-18 14:07:10.816647+02
+97	tasks	0009_fix_deadline_timestamp	2020-09-18 14:07:10.833495+02
+98	tasks	0010_auto_20160829_2337	2020-09-18 14:07:10.919046+02
+99	tasks	0011_auto_20160920_1019	2020-09-18 14:07:11.109438+02
+100	tasks	0011_auto_20160919_1508	2020-09-18 14:07:11.328851+02
+101	tasks	0012_merge	2020-09-18 14:07:11.33063+02
+102	tasks	0008_auto_20160802_1441	2020-09-18 14:07:11.375921+02
+103	tasks	0006_auto_20160718_1811	2020-09-18 14:07:11.418007+02
+104	tasks	0010_merge	2020-09-18 14:07:11.419584+02
+105	tasks	0011_merge	2020-09-18 14:07:11.421029+02
+106	tasks	0013_merge	2020-09-18 14:07:11.422242+02
+107	tasks	0013_auto_20161006_1813	2020-09-18 14:07:11.455698+02
+108	tasks	0014_merge	2020-09-18 14:07:11.458126+02
+109	tasks	0014_auto_20161006_1144	2020-09-18 14:07:11.497872+02
+110	tasks	0015_merge	2020-09-18 14:07:11.49974+02
+111	projects	0008_fix_project_type	2020-09-18 14:07:11.514386+02
+112	projects	0009_merge	2020-09-18 14:07:11.515738+02
+113	projects	0007_remove_projectbudgetline_currency	2020-09-18 14:07:11.550163+02
+114	projects	0007_project_currencies	2020-09-18 14:07:11.588459+02
+115	projects	0010_merge	2020-09-18 14:07:11.590749+02
+116	projects	0011_auto_20161006_1149	2020-09-18 14:07:11.630016+02
+117	projects	0010_auto_20161019_1403	2020-09-18 14:07:11.717631+02
+118	projects	0012_merge	2020-09-18 14:07:11.71901+02
+119	projects	0011_auto_20161028_0946	2020-09-18 14:07:11.86118+02
+120	projects	0013_merge	2020-09-18 14:07:11.862463+02
+121	projects	0014_auto_20161109_1041	2020-09-18 14:07:11.894283+02
+122	projects	0015_project_payout_status	2020-09-18 14:07:11.929531+02
+123	projects	0016_project_campaign_payed_out	2020-09-18 14:07:11.967664+02
+124	projects	0017_auto_20161121_1053	2020-09-18 14:07:12.155376+02
+125	projects	0014_auto_20161115_1601	2020-09-18 14:07:12.193429+02
+126	projects	0015_auto_20161207_0900	2020-09-18 14:07:12.230976+02
+127	members	0002_auto_20160523_1525	2020-09-18 14:07:12.336528+02
+128	members	0003_alter_last_login	2020-09-18 14:07:12.377522+02
+129	members	0004_member_verified	2020-09-18 14:07:12.413082+02
+130	members	0005_auto_20160830_0902	2020-09-18 14:07:12.493756+02
+131	members	0006_member_last_seen	2020-09-18 14:07:12.530178+02
+132	members	0007_auto_20161115_1601	2020-09-18 14:07:12.570419+02
+133	members	0007_auto_20161109_1024	2020-09-18 14:07:12.612865+02
+134	members	0008_merge_20170106_1627	2020-09-18 14:07:12.614405+02
+135	projects	0018_merge_20170106_1627	2020-09-18 14:07:12.616377+02
+136	projects	0019_auto_20170106_1657	2020-09-18 14:07:12.697912+02
+137	projects	0020_merge_20170124_1338	2020-09-18 14:07:12.699652+02
+138	projects	0018_merge_20170118_1533	2020-09-18 14:07:12.700986+02
+139	authtoken	0001_initial	2020-09-18 14:07:12.751044+02
+140	projects	0019_auto_20170118_1537	2020-09-18 14:07:13.006027+02
+141	projects	0021_merge_20170202_1154	2020-09-18 14:07:13.007308+02
+142	projects	0022_project_reviewer	2020-09-18 14:07:13.057423+02
+143	projects	0023_auto_20170323_1227	2020-09-18 14:07:13.255635+02
+144	projects	0024_auto_20170404_1130	2020-09-18 14:07:13.377447+02
+145	projects	0025_auto_20170404_1130	2020-09-18 14:07:13.418454+02
+146	payouts	0001_initial	2020-09-18 14:07:13.452028+02
+147	projects	0026_auto_20170424_1653	2020-09-18 14:07:13.751362+02
+148	projects	0027_auto_20170602_2240	2020-09-18 14:07:13.863712+02
+149	projects	0028_auto_20170619_1555	2020-09-18 14:07:13.967928+02
+150	projects	0027_auto_20170523_1422	2020-09-18 14:07:14.010604+02
+151	projects	0028_auto_20170523_1422	2020-09-18 14:07:14.110957+02
+152	projects	0029_merge_20170628_0905	2020-09-18 14:07:14.112472+02
+153	projects	0030_rename_account_bic_20170705_1221	2020-09-18 14:07:14.205778+02
+154	projects	0031_add_project_roles	2020-09-18 14:07:14.311305+02
+155	projects	0032_default_task_manager	2020-09-18 14:07:14.416832+02
+156	projects	0031_add_api_permissions	2020-09-18 14:07:14.732044+02
+157	projects	0032_add_group_permissions	2020-09-18 14:07:15.084468+02
+158	projects	0033_merge_20170818_1333	2020-09-18 14:07:15.085968+02
+159	projects	0034_auto_20170822_1303	2020-09-18 14:07:15.180096+02
+160	projects	0035_set_owner_permissions	2020-09-18 14:07:15.449854+02
+161	members	0008_merge_20170118_1533	2020-09-18 14:07:15.45119+02
+162	members	0009_merge_20170124_1338	2020-09-18 14:07:15.452602+02
+163	members	0010_fix_export_permissions_migration	2020-09-18 14:07:15.571397+02
+164	projects	0031_fix_migration_projectstatuslog_creation_20170721_1637	2020-09-18 14:07:15.685569+02
+165	projects	0036_merge_20170831_1449	2020-09-18 14:07:15.687127+02
+166	projects	0037_auto_20170915_1350	2020-09-18 14:07:15.958654+02
+167	projects	0038_auto_20170915_1358	2020-09-18 14:07:16.041292+02
+168	projects	0039_add_project_image_group_permissions	2020-09-18 14:07:16.323397+02
+169	projects	0040_auto_20170918_1200	2020-09-18 14:07:16.540721+02
+170	projects	0041_auto_20170918_1201	2020-09-18 14:07:16.694651+02
+171	projects	0037_longer_place_20170914_1129	2020-09-18 14:07:16.741974+02
+172	projects	0038_longer_account_details_20170914_1134	2020-09-18 14:07:16.96219+02
+173	projects	0039_auto_20170914_1503	2020-09-18 14:07:17.00999+02
+174	projects	0042_merge_20170920_1332	2020-09-18 14:07:17.011737+02
+175	projects	0043_auto_20171023_1958	2020-09-18 14:07:17.068763+02
+176	projects	0044_auto_20171023_2008	2020-09-18 14:07:17.105709+02
+177	projects	0045_auto_20171023_2013	2020-09-18 14:07:17.154864+02
+178	projects	0046_auto_20171023_2047	2020-09-18 14:07:17.243653+02
+179	projects	0047_auto_20171024_1016	2020-09-18 14:07:17.264297+02
+180	projects	0048_auto_20171024_1052	2020-09-18 14:07:17.289122+02
+181	projects	0049_auto_20171024_1018	2020-09-18 14:07:17.412045+02
+182	projects	0043_remove_payout_status_sourcing_projects	2020-09-18 14:07:17.523364+02
+183	projects	0050_merge_20171110_1633	2020-09-18 14:07:17.52514+02
+184	projects	0044_auto_20171110_1549	2020-09-18 14:07:17.797208+02
+185	projects	0045_auto_20171114_1058	2020-09-18 14:07:17.941497+02
+186	projects	0051_merge_20171115_1702	2020-09-18 14:07:17.94305+02
+187	projects	0051_auto_20171113_1637	2020-09-18 14:07:17.97526+02
+188	projects	0052_merge_20171122_1000	2020-09-18 14:07:17.977037+02
+189	projects	0052_merge_20171121_1335	2020-09-18 14:07:17.97877+02
+190	projects	0053_merge_20171122_1001	2020-09-18 14:07:17.980348+02
+191	projects	0050_merge_20171124_0022	2020-09-18 14:07:17.981722+02
+192	projects	0054_merge_20171128_1142	2020-09-18 14:07:17.982943+02
+193	projects	0043_auto_20171025_1253	2020-09-18 14:07:18.272224+02
+194	projects	0050_merge_20171113_1230	2020-09-18 14:07:18.274155+02
+195	projects	0051_merge_20171124_0021	2020-09-18 14:07:18.276549+02
+196	projects	0052_merge_20171127_1329	2020-09-18 14:07:18.278433+02
+197	projects	0055_merge_20171205_0847	2020-09-18 14:07:18.280213+02
+198	projects	0056_auto_20171205_0847	2020-09-18 14:07:18.424946+02
+199	projects	0055_merge_20171201_1608	2020-09-18 14:07:18.426554+02
+200	projects	0057_merge_20171205_1236	2020-09-18 14:07:18.427867+02
+201	projects	0054_auto_20171122_1415	2020-09-18 14:07:18.500494+02
+202	projects	0055_project_campaign_edited	2020-09-18 14:07:18.553518+02
+203	projects	0058_merge_20171220_1342	2020-09-18 14:07:18.555171+02
+204	organizations	0002_auto_20160610_1554	2020-09-18 14:07:18.582648+02
+205	organizations	0003_auto_20170314_0900	2020-09-18 14:07:18.608502+02
+206	organizations	0004_organizationcontact	2020-09-18 14:07:18.676546+02
+207	organizations	0003_auto_20170303_1057	2020-09-18 14:07:18.782484+02
+208	organizations	0005_merge_20170321_1630	2020-09-18 14:07:18.784016+02
+209	organizations	0006_auto_20170328_1138	2020-09-18 14:07:18.83447+02
+210	organizations	0007_auto_20170803_1730	2020-09-18 14:07:19.134576+02
+211	organizations	0008_organization_logo	2020-09-18 14:07:19.16448+02
+212	organizations	0009_organization_description	2020-09-18 14:07:19.194352+02
+213	organizations	0010_auto_20171114_1035	2020-09-18 14:07:19.249255+02
+214	organizations	0011_auto_20180118_1100	2020-09-18 14:07:19.297153+02
+215	projects	0059_auto_20180118_1100	2020-09-18 14:07:19.628754+02
+216	projects	0060_auto_20180118_1217	2020-09-18 14:07:19.695432+02
+217	projects	0061_auto_20180118_1510	2020-09-18 14:07:19.7632+02
+218	projects	0062_auto_20180119_1231	2020-09-18 14:07:19.916178+02
+219	projects	0063_auto_20180119_1456	2020-09-18 14:07:20.156161+02
+220	projects	0064_auto_20180119_1625	2020-09-18 14:07:20.238457+02
+221	projects	0065_auto_20180121_1952	2020-09-18 14:07:20.316936+02
+222	projects	0066_auto_20180121_2002	2020-09-18 14:07:20.338147+02
+223	projects	0067_auto_20180123_0914	2020-09-18 14:07:20.37746+02
+224	projects	0068_auto_20180306_1614	2020-09-18 14:07:20.458098+02
+225	projects	0069_auto_20180316_1553	2020-09-18 14:07:20.850744+02
+226	projects	0070_auto_20180411_1013	2020-09-18 14:07:20.896928+02
+227	projects	0070_auto_20180328_1401	2020-09-18 14:07:21.19397+02
+228	projects	0071_merge_20180412_1133	2020-09-18 14:07:21.195747+02
+229	projects	0072_auto_20180416_1115	2020-09-18 14:07:21.245996+02
+230	projects	0073_auto_20180416_1115	2020-09-18 14:07:21.372042+02
+231	projects	0074_auto_20180416_1204	2020-09-18 14:07:21.393409+02
+232	projects	0075_auto_20180515_1556	2020-09-18 14:07:21.944855+02
+233	projects	0076_auto_20180516_0954	2020-09-18 14:07:22.070191+02
+234	projects	0077_auto_20180518_1050	2020-09-18 14:07:22.18178+02
+235	projects	0078_auto_20180528_1414	2020-09-18 14:07:22.201263+02
+236	projects	0079_auto_20180626_1225	2020-09-18 14:07:22.288059+02
+237	projects	0080_auto_20180828_1522	2020-09-18 14:07:22.351227+02
+238	projects	0080_auto_20180810_1405	2020-09-18 14:07:22.407191+02
+239	projects	0081_merge_20181012_1209	2020-09-18 14:07:22.409051+02
+240	payouts	0002_auto_20160523_1525	2020-09-18 14:07:22.493907+02
+241	payouts	0003_auto_20160719_1315	2020-09-18 14:07:23.412711+02
+242	payouts	0004_projectpayout_currency	2020-09-18 14:07:23.45666+02
+243	payouts	0005_auto_20160721_1114	2020-09-18 14:07:23.578935+02
+244	payouts	0006_rename_account_bic_20170705_1426	2020-09-18 14:07:23.670895+02
+245	payouts	0007_auto_20181123_1057	2020-09-18 14:07:23.854684+02
+246	payouts	0008_auto_20181129_1451	2020-09-18 14:07:24.420895+02
+247	projects	0082_auto_20181129_1506	2020-09-18 14:07:24.893396+02
+248	payouts	0009_payoutdocument	2020-09-18 14:07:24.958685+02
+249	projects	0083_auto_20181129_1506	2020-09-18 14:07:25.101606+02
+250	payouts	0010_auto_20181203_1145	2020-09-18 14:07:25.457791+02
+251	payouts	0011_auto_20181205_1509	2020-09-18 14:07:25.546581+02
+252	payouts	0012_auto_20181205_1509	2020-09-18 14:07:25.840484+02
+253	payouts	0013_auto_20181207_1340	2020-09-18 14:07:25.907761+02
+254	payouts	0014_auto_20181211_0938	2020-09-18 14:07:26.224985+02
+255	payouts	0015_auto_20181212_1152	2020-09-18 14:07:26.369629+02
+256	payouts	0016_auto_20181215_2016	2020-09-18 14:07:26.470946+02
+257	payouts	0017_delete_in_review_accounts	2020-09-18 14:07:26.822132+02
+258	payouts	0018_auto_20190108_0858	2020-09-18 14:07:26.851653+02
+259	payouts	0019_auto_20190123_1216	2020-09-18 14:07:26.882389+02
+260	payouts	0020_auto_20190123_1731	2020-09-18 14:07:26.990036+02
+261	payouts_dorado	0001_initial	2020-09-18 14:07:27.125502+02
+262	bb_payouts	0001_initial	2020-09-18 14:07:27.161306+02
+263	bb_payouts	0002_auto_20160523_1525	2020-09-18 14:07:27.25488+02
+264	bb_payouts	0003_auto_20190110_1155	2020-09-18 14:07:27.373985+02
+265	payouts	0019_auto_20190110_1155	2020-09-18 14:07:27.465471+02
+266	payouts	0021_merge_20190124_1320	2020-09-18 14:07:27.467279+02
+267	payouts	0022_auto_20190211_1452	2020-09-18 14:07:27.538569+02
+268	funding	0002_auto_20190604_1458	2020-09-18 14:07:28.005679+02
+269	funding	0003_auto_20190604_1459	2020-09-18 14:07:28.118309+02
+270	funding	0004_auto_20190604_1501	2020-09-18 14:07:28.22808+02
+271	funding	0005_auto_20190604_1501	2020-09-18 14:07:28.340003+02
+272	funding	0006_auto_20190604_1615	2020-09-18 14:07:28.521991+02
+273	funding	0007_auto_20190605_1639	2020-09-18 14:07:28.652933+02
+274	funding	0008_auto_20190612_0941	2020-09-18 14:07:29.293202+02
+275	funding	0009_auto_20190612_1319	2020-09-18 14:07:29.504656+02
+276	funding	0010_auto_20190612_1359	2020-09-18 14:07:29.63026+02
+277	funding	0011_auto_20190617_1251	2020-09-18 14:07:29.729677+02
+278	funding	0012_auto_20190708_0731	2020-09-18 14:07:30.053555+02
+279	funding	0013_auto_20190711_0927	2020-09-18 14:07:30.164384+02
+280	funding	0014_auto_20190714_1440	2020-09-18 14:07:30.260785+02
+281	funding	0015_auto_20190728_0920	2020-09-18 14:07:30.429233+02
+282	funding	0016_auto_20190728_0930	2020-09-18 14:07:30.499273+02
+283	funding	0017_auto_20190728_1319	2020-09-18 14:07:30.647078+02
+284	funding	0013_auto_20190710_1455	2020-09-18 14:07:30.749642+02
+285	funding	0014_auto_20190716_1636	2020-09-18 14:07:31.331523+02
+286	funding	0015_merge_20190717_1651	2020-09-18 14:07:31.333338+02
+287	funding	0018_merge_20190729_1449	2020-09-18 14:07:31.335056+02
+288	funding	0019_auto_20190729_1609	2020-09-18 14:07:31.449024+02
+289	funding	0020_donation_name	2020-09-18 14:07:31.47804+02
+290	funding	0021_auto_20190803_1106	2020-09-18 14:07:31.528293+02
+291	funding	0022_auto_20190804_1022	2020-09-18 14:07:31.577437+02
+292	funding	0023_bankpayoutaccount	2020-09-18 14:07:31.65028+02
+293	funding	0024_bankpaymentprovider	2020-09-18 14:07:31.724701+02
+294	funding	0025_auto_20190904_1154	2020-09-18 14:07:31.876053+02
+295	funding	0026_auto_20190904_1200	2020-09-18 14:07:31.878199+02
+296	funding	0023_add_permissions	2020-09-18 14:07:32.237056+02
+297	funding	0027_merge_20190912_1324	2020-09-18 14:07:32.238763+02
+298	funding	0024_donation_anonymous	2020-09-18 14:07:32.27462+02
+299	funding	0028_merge_20190912_1354	2020-09-18 14:07:32.276634+02
+300	funding	0029_auto_20190913_1458	2020-09-18 14:07:32.919253+02
+301	funding	0030_auto_20190918_1607	2020-09-18 14:07:33.344741+02
+302	funding	0031_plainpayoutaccount	2020-09-18 14:07:33.42153+02
+303	funding	0032_paymentcurrency	2020-09-18 14:07:33.495483+02
+304	funding	0033_auto_20191002_0903	2020-09-18 14:07:34.073049+02
+305	funding	0034_auto_20191002_1150	2020-09-18 14:07:34.168069+02
+306	funding	0035_auto_20191002_1415	2020-09-18 14:07:34.243946+02
+307	funding	0036_auto_20191004_1336	2020-09-18 14:07:34.325951+02
+308	funding	0037_payout	2020-09-18 14:07:34.406129+02
+309	funding	0038_auto_20191014_1316	2020-09-18 14:07:34.558014+02
+310	funding	0039_auto_20191022_1105	2020-09-18 14:07:34.640226+02
+311	funding	0040_auto_20191029_1309	2020-09-18 14:07:35.221993+02
+312	funding	0041_payout_currency	2020-09-18 14:07:35.255427+02
+313	funding	0042_auto_20191104_1154	2020-09-18 14:07:35.498437+02
+314	funding	0043_auto_20191108_0819	2020-09-18 14:07:35.629951+02
+315	funding	0044_auto_20191108_1008	2020-09-18 14:07:35.765208+02
+316	funding	0043_auto_20191106_1149	2020-09-18 14:07:35.782999+02
+317	funding	0045_merge_20191108_1853	2020-09-18 14:07:35.784771+02
+318	funding	0045_auto_20191111_1329	2020-09-18 14:07:36.122563+02
+319	funding	0046_merge_20191112_1256	2020-09-18 14:07:36.124376+02
+320	funding	0047_auto_20191116_1540	2020-09-18 14:07:36.438496+02
+321	funding	0048_add_permissions	2020-09-18 14:07:36.732099+02
+322	funding	0049_auto_20200124_1032	2020-09-18 14:07:37.147609+02
+323	funding	0050_auto_20200124_1230	2020-09-18 14:07:37.258579+02
+324	funding	0051_funding_update_contribution_date	2020-09-18 14:07:37.591102+02
+325	funding	0052_auto_20200205_1710	2020-09-18 14:07:37.709566+02
+326	events	0001_initial	2020-09-18 14:07:37.860107+02
+327	events	0002_add_permissions	2020-09-18 14:07:38.191505+02
+328	events	0003_auto_20190522_1329	2020-09-18 14:07:38.218938+02
+329	events	0004_add_permissions	2020-09-18 14:07:38.523401+02
+330	events	0005_auto_20190527_1431	2020-09-18 14:07:38.614615+02
+331	events	0006_event_is_online	2020-09-18 14:07:38.885285+02
+332	events	0007_auto_20190605_1434	2020-09-18 14:07:38.99963+02
+333	events	0008_auto_20190812_1612	2020-09-18 14:07:39.150771+02
+334	events	0009_event_duration	2020-09-18 14:07:39.192985+02
+335	events	0010_auto_20190816_1327	2020-09-18 14:07:39.272628+02
+336	events	0011_event_update_contribution_date	2020-09-18 14:07:39.402884+02
+337	tasks	0016_auto_20161208_1159	2020-09-18 14:07:39.454401+02
+338	tasks	0017_task_deadline_to_apply	2020-09-18 14:07:39.506855+02
+339	tasks	0018_auto_20170503_1405	2020-09-18 14:07:39.560693+02
+340	tasks	0019_remove_task_deadline_to_apply	2020-09-18 14:07:39.614733+02
+341	tasks	0020_task_deadline_to_apply	2020-09-18 14:07:39.669092+02
+342	tasks	0021_auto_20170503_1435	2020-09-18 14:07:40.105149+02
+343	tasks	0022_task_accepting	2020-09-18 14:07:40.163218+02
+344	tasks	0023_taskmember_resume	2020-09-18 14:07:40.210271+02
+345	tasks	0018_skill_expertise	2020-09-18 14:07:40.367498+02
+346	tasks	0023_merge_20170519_1012	2020-09-18 14:07:40.369531+02
+347	tasks	0024_merge_20170529_1436	2020-09-18 14:07:40.371061+02
+348	tasks	0025_auto_20170601_1540	2020-09-18 14:07:40.500424+02
+349	tasks	0024_auto_20170602_2304	2020-09-18 14:07:40.643982+02
+350	tasks	0026_merge_20170628_0905	2020-09-18 14:07:40.645861+02
+351	tasks	0027_delete_tasks_date_status_changed	2020-09-18 14:07:40.692144+02
+352	tasks	0028_add_api_permissions	2020-09-18 14:07:40.902146+02
+353	tasks	0029_add_group_permissions	2020-09-18 14:07:41.503487+02
+354	tasks	0030_auto_20170822_1104	2020-09-18 14:07:41.64119+02
+355	tasks	0031_set_owner_permissions	2020-09-18 14:07:42.00904+02
+356	tasks	0032_add_skill_permission	2020-09-18 14:07:42.309417+02
+357	tasks	0028_auto_20170817_1546	2020-09-18 14:07:42.470874+02
+358	tasks	0033_merge_20170830_1106	2020-09-18 14:07:42.472986+02
+359	tasks	0034_more_owner_permissions	2020-09-18 14:07:42.812114+02
+360	tasks	0029_fix_migration_statuslog_creation_20170721_1329	2020-09-18 14:07:42.948004+02
+361	tasks	0035_merge_20170831_1449	2020-09-18 14:07:42.949855+02
+362	tasks	0036_auto_20171005_1646	2020-09-18 14:07:42.991951+02
+363	tasks	0037_auto_20171010_1554	2020-09-18 14:07:43.280984+02
+364	tasks	0036_auto_20171114_1056	2020-09-18 14:07:43.321719+02
+365	tasks	0038_merge_20171115_1702	2020-09-18 14:07:43.323681+02
+366	tasks	0039_translate_skill	2020-09-18 14:07:43.444009+02
+367	tasks	0040_migrate_skill_translations	2020-09-18 14:07:43.566816+02
+368	tasks	0041_remove_untranslated_fields	2020-09-18 14:07:43.644412+02
+369	assignments	0001_initial	2020-09-18 14:07:43.777596+02
+370	assignments	0002_auto_20190529_0858	2020-09-18 14:07:43.81209+02
+371	assignments	0003_auto_20190909_1355	2020-09-18 14:07:44.134145+02
+372	assignments	0004_assignment_is_online	2020-09-18 14:07:44.176199+02
+373	assignments	0005_auto_20190909_1514	2020-09-18 14:07:44.440176+02
+374	assignments	0006_auto_20190909_1515	2020-09-18 14:07:44.818338+02
+375	assignments	0007_auto_20190909_1519	2020-09-18 14:07:44.858513+02
+376	assignments	0008_auto_20190909_1545	2020-09-18 14:07:44.932717+02
+377	assignments	0009_auto_20190909_1557	2020-09-18 14:07:45.088346+02
+378	assignments	0010_auto_20190911_1605	2020-09-18 14:07:45.260174+02
+379	assignments	0011_applicant_document	2020-09-18 14:07:45.338871+02
+380	assignments	0012_auto_20190913_1547	2020-09-18 14:07:45.432767+02
+381	assignments	0013_assignment_update_contribution_date	2020-09-18 14:07:45.568359+02
+382	activities	0016_auto_20200205_1139	2020-09-18 14:07:45.989279+02
+383	activities	0019_merge_20200213_1038	2020-09-18 14:07:45.991611+02
+384	activities	0020_auto_20200224_1005	2020-09-18 14:07:46.303076+02
+385	activities	0021_merge_review_status_20200501_1249	2020-09-18 14:07:46.432229+02
+386	files	0002_relatedimage	2020-09-18 14:07:46.520345+02
+387	files	0003_auto_20191111_1533	2020-09-18 14:07:46.852195+02
+388	files	0004_auto_20200106_1644	2020-09-18 14:07:47.196689+02
+389	files	0005_privatedocument	2020-09-18 14:07:47.315192+02
+390	files	0006_auto_20200401_1223	2020-09-18 14:07:47.642855+02
+391	activities	0021_auto_20200415_1501	2020-09-18 14:07:47.855845+02
+392	activities	0022_merge_20200513_1730	2020-09-18 14:07:47.857655+02
+393	activities	0022_activity_video_url	2020-09-18 14:07:47.926649+02
+394	activities	0023_merge_20200527_0830	2020-09-18 14:07:47.928703+02
+395	activities	0024_fix_statuses_20200630_0845	2020-09-18 14:07:48.091477+02
+396	segments	0001_initial	2020-09-18 14:07:48.115212+02
+397	segments	0002_auto_20200706_1557	2020-09-18 14:07:48.173045+02
+398	segments	0003_auto_20200706_1630	2020-09-18 14:07:48.216932+02
+399	activities	0023_activity_segments	2020-09-18 14:07:48.403459+02
+400	activities	0025_merge_20200819_1654	2020-09-18 14:07:48.405877+02
+401	admin	0001_initial	2020-09-18 14:07:48.544491+02
+402	admin	0002_logentry_remove_auto_add	2020-09-18 14:07:48.642106+02
+403	analytics	0001_initial	2020-09-18 14:07:48.718393+02
+404	analytics	0002_auto_20171031_1209	2020-09-18 14:07:49.097211+02
+405	analytics	0003_auto_20180210_1615	2020-09-18 14:07:49.164432+02
+406	analytics	0004_auto_20180404_1035	2020-09-18 14:07:49.236682+02
+407	analytics	0005_auto_20180424_1205	2020-09-18 14:07:49.280976+02
+408	assignments	0014_auto_20200206_1649	2020-09-18 14:07:49.716945+02
+409	assignments	0015_auto_20200217_1344	2020-09-18 14:07:49.801745+02
+410	assignments	0016_auto_20200217_1344	2020-09-18 14:07:49.945889+02
+411	assignments	0017_applicant_private_document	2020-09-18 14:07:50.039029+02
+412	assignments	0018_auto_20200401_1107	2020-09-18 14:07:50.428218+02
+413	assignments	0019_remove_applicant_document	2020-09-18 14:07:50.519473+02
+414	assignments	0020_auto_20200401_1223	2020-09-18 14:07:50.614969+02
+415	auth	0008_alter_user_username_max_length	2020-09-18 14:07:50.64466+02
+416	authtoken	0002_auto_20160226_1747	2020-09-18 14:07:50.829978+02
+417	axes	0001_initial	2020-09-18 14:07:50.877375+02
+418	axes	0002_auto_20151217_2044	2020-09-18 14:07:51.039957+02
+419	axes	0003_auto_20160322_0929	2020-09-18 14:07:51.201612+02
+420	axes	0004_auto_20181024_1538	2020-09-18 14:07:51.342054+02
+421	axes	0005_remove_accessattempt_trusted	2020-09-18 14:07:51.358569+02
+422	bb_accounts	0001_initial	2020-09-18 14:07:51.452938+02
+423	bb_accounts	0002_useraddress_user	2020-09-18 14:07:51.751644+02
+424	bb_accounts	0003_useraddress_position	2020-09-18 14:07:51.814333+02
+425	rewards	0001_initial	2020-09-18 14:07:51.898694+02
+426	orders	0001_initial	2020-09-18 14:07:51.983645+02
+427	fundraisers	0001_initial	2020-09-18 14:07:52.08182+02
+428	donations	0001_initial	2020-09-18 14:07:52.101458+02
+429	donations	0002_donation_fundraiser	2020-09-18 14:07:52.189795+02
+430	donations	0003_donation_order	2020-09-18 14:07:52.282245+02
+431	donations	0004_auto_20160523_1525	2020-09-18 14:07:52.463582+02
+432	donations	0005_auto_20160718_1811	2020-09-18 14:07:52.796857+02
+433	donations	0006_auto_20170803_1730	2020-09-18 14:07:53.175558+02
+434	donations	0007_donation_name	2020-09-18 14:07:53.219723+02
+435	donations	0008_auto_20170927_1021	2020-09-18 14:07:53.347208+02
+436	bb_follow	0001_initial	2020-09-18 14:07:53.436862+02
+437	bb_follow	0002_follow_user	2020-09-18 14:07:53.524506+02
+438	bb_follow	0003_auto_20180530_1621	2020-09-18 14:07:53.681402+02
+439	bluebottle_dashboard	0001_initial	2020-09-18 14:07:53.726851+02
+440	dashboard	0001_initial	2020-09-18 14:07:53.75059+02
+441	bluebottle_dashboard	0002_auto_20191107_0853	2020-09-18 14:07:53.900782+02
+442	categories	0009_translate_content_blocks	2020-09-18 14:07:54.607226+02
+443	categories	0010_migrate_content_blocks	2020-09-18 14:07:54.770199+02
+444	categories	0011_auto_20200422_0821	2020-09-18 14:07:54.887127+02
+445	categories	0012_category_video	2020-09-18 14:07:54.904902+02
+446	clients	0002_auto_20200205_1316	2020-09-18 14:07:54.917543+02
+447	statistics	0001_initial	2020-09-18 14:07:54.939821+02
+448	statistics	0002_auto_20161115_1601	2020-09-18 14:07:54.96317+02
+449	statistics	0003_auto_20161214_1524	2020-09-18 14:07:54.984048+02
+450	statistics	0002_auto_20161109_1024	2020-09-18 14:07:55.005929+02
+451	statistics	0004_merge_20170118_1533	2020-09-18 14:07:55.007919+02
+452	statistics	0004_merge_20170106_1627	2020-09-18 14:07:55.009696+02
+453	statistics	0005_merge_20170124_1338	2020-09-18 14:07:55.011223+02
+454	statistics	0006_auto_20170323_1227	2020-09-18 14:07:55.032286+02
+455	statistics	0007_auto_20171114_1035	2020-09-18 14:07:55.05419+02
+456	impact	0001_initial	2020-09-18 14:07:55.166407+02
+457	impact	0002_impactgoal_activity	2020-09-18 14:07:55.260027+02
+458	impact	0003_auto_20200624_1157	2020-09-18 14:07:55.283814+02
+459	impact	0004_auto_20200624_1157	2020-09-18 14:07:55.310786+02
+460	impact	0005_auto_20200710_1103	2020-09-18 14:07:55.666268+02
+461	impact	0006_auto_20200710_1104	2020-09-18 14:07:55.771271+02
+462	impact	0007_auto_20200714_1647	2020-09-18 14:07:55.885895+02
+463	impact	0008_impacttype_icon	2020-09-18 14:07:55.90804+02
+464	statistics	0008_auto_20200717_1136	2020-09-18 14:07:56.6178+02
+465	statistics	0009_auto_20200717_1201	2020-09-18 14:07:56.641561+02
+466	fluent_contents	0001_initial	2020-09-18 14:07:56.98649+02
+467	wallposts	0001_initial	2020-09-18 14:07:58.342901+02
+468	wallposts	0002_auto_20161115_1601	2020-09-18 14:07:58.62716+02
+469	wallposts	0003_mediawallpostphoto_results_page	2020-09-18 14:07:58.673746+02
+470	wallposts	0002_auto_20161109_1024	2020-09-18 14:07:58.928437+02
+471	wallposts	0004_merge_20170118_1533	2020-09-18 14:07:58.929988+02
+472	wallposts	0004_merge_20170106_1627	2020-09-18 14:07:58.931469+02
+473	wallposts	0005_merge_20170124_1338	2020-09-18 14:07:58.93291+02
+474	wallposts	0006_remove_duplicate_donation_wallposts	2020-09-18 14:07:59.339028+02
+475	wallposts	0007_auto_20170821_1459	2020-09-18 14:07:59.375794+02
+476	wallposts	0008_add_group_permissions	2020-09-18 14:08:00.010582+02
+477	wallposts	0009_auto_20170821_2001	2020-09-18 14:08:00.062687+02
+478	wallposts	0010_auto_20170821_2001	2020-09-18 14:08:00.51428+02
+479	wallposts	0011_auto_20170821_2018	2020-09-18 14:08:00.570789+02
+480	wallposts	0012_auto_20170821_2018	2020-09-18 14:08:01.077672+02
+481	wallposts	0013_auto_20170822_1105	2020-09-18 14:08:01.229143+02
+482	wallposts	0014_set_owner_permissions	2020-09-18 14:08:02.036411+02
+483	wallposts	0015_auto_20171114_1035	2020-09-18 14:08:02.121691+02
+484	wallposts	0016_auto_20180508_1512	2020-09-18 14:08:02.302497+02
+485	wallposts	0017_wallpost_pinned	2020-09-18 14:08:02.355362+02
+486	wallposts	0018_auto_20190115_0853	2020-09-18 14:08:02.561957+02
+487	wallposts	0019_auto_20191017_2204	2020-09-18 14:08:02.692664+02
+488	rewards	0002_auto_20160720_2245	2020-09-18 14:08:02.813213+02
+489	rewards	0003_add_api_permissions	2020-09-18 14:08:02.87431+02
+490	rewards	0004_add_group_permissions	2020-09-18 14:08:03.388398+02
+491	rewards	0005_auto_20170823_1131	2020-09-18 14:08:03.702913+02
+492	rewards	0006_set_owner_permissions	2020-09-18 14:08:04.204983+02
+493	rewards	0007_auto_20170914_2004	2020-09-18 14:08:04.265177+02
+494	rewards	0008_auto_20170914_2029	2020-09-18 14:08:04.331647+02
+495	rewards	0009_auto_20191104_1230	2020-09-18 14:08:04.393746+02
+496	projects	0084_auto_20181207_1435	2020-09-18 14:08:04.483587+02
+497	projects	0085_auto_20181207_1552	2020-09-18 14:08:04.50748+02
+498	projects	0080_auto_20180828_1049	2020-09-18 14:08:04.672391+02
+499	projects	0081_merge_20180919_1152	2020-09-18 14:08:04.67433+02
+500	projects	0082_merge_20181127_1044	2020-09-18 14:08:04.676101+02
+501	projects	0081_auto_20180918_1335	2020-09-18 14:08:04.702716+02
+502	projects	0086_merge_20190121_1425	2020-09-18 14:08:04.704692+02
+503	projects	0086_auto_20190117_1007	2020-09-18 14:08:05.360931+02
+504	projects	0087_merge_20190130_1355	2020-09-18 14:08:05.362804+02
+505	projects	0080_auto_20180904_1532	2020-09-18 14:08:05.485961+02
+506	projects	0081_merge_20180911_1659	2020-09-18 14:08:05.487914+02
+507	projects	0088_merge_20190215_1425	2020-09-18 14:08:05.489743+02
+508	projects	0087_merge_20190206_1714	2020-09-18 14:08:05.491379+02
+509	projects	0088_merge_20190208_1523	2020-09-18 14:08:05.493005+02
+510	projects	0089_merge_20190215_1438	2020-09-18 14:08:05.494529+02
+511	projects	0086_merge_20190204_1005	2020-09-18 14:08:05.49601+02
+512	projects	0088_merge_20190213_1448	2020-09-18 14:08:05.497465+02
+513	projects	0090_merge_20190222_1101	2020-09-18 14:08:05.502848+02
+514	organizations	0012_auto_20190416_1101	2020-09-18 14:08:06.628699+02
+515	initiatives	0002_copy_permissions	2020-09-18 14:08:07.038821+02
+516	initiatives	0003_auto_20190403_1619	2020-09-18 14:08:07.134852+02
+517	initiatives	0004_auto_20190416_1101	2020-09-18 14:08:07.418909+02
+518	initiatives	0005_initiative_hasorganization	2020-09-18 14:08:07.475969+02
+519	initiatives	0006_auto_20190416_1553	2020-09-18 14:08:07.542191+02
+520	initiatives	0004_auto_20190418_1643	2020-09-18 14:08:07.671165+02
+521	initiatives	0007_merge_20190501_0922	2020-09-18 14:08:07.673397+02
+522	initiatives	0008_auto_20190513_1518	2020-09-18 14:08:07.984141+02
+523	initiatives	0009_auto_20190520_1436	2020-09-18 14:08:08.439878+02
+524	initiatives	0010_auto_20190521_0954	2020-09-18 14:08:08.50667+02
+525	initiatives	0011_auto_20190522_0931	2020-09-18 14:08:08.552392+02
+526	initiatives	0009_auto_20190524_1144	2020-09-18 14:08:08.656429+02
+527	initiatives	0012_merge_20190524_1208	2020-09-18 14:08:08.659468+02
+528	initiatives	0013_auto_20190527_1131	2020-09-18 14:08:08.824997+02
+529	initiatives	0014_auto_20190628_1656	2020-09-18 14:08:09.006765+02
+530	funding_vitepay	0001_initial	2020-09-18 14:08:09.434592+02
+531	funding_vitepay	0002_vitepaypayment_payment_url	2020-09-18 14:08:09.461736+02
+532	funding_vitepay	0003_vitepaypaymentprovider_prefix	2020-09-18 14:08:09.494645+02
+533	funding_vitepay	0004_auto_20190715_0739	2020-09-18 14:08:09.526487+02
+534	funding_vitepay	0005_vitepaypayoutaccount	2020-09-18 14:08:09.646875+02
+535	funding_vitepay	0006_auto_20190918_1632	2020-09-18 14:08:09.870522+02
+536	funding_vitepay	0007_auto_20191002_0903	2020-09-18 14:08:09.893539+02
+537	funding_stripe	0001_initial	2020-09-18 14:08:10.344255+02
+538	geo	0014_auto_20191022_1105	2020-09-18 14:08:10.393013+02
+539	funding_pledge	0001_initial	2020-09-18 14:08:10.757166+02
+540	funding_pledge	0002_pledgepaymentprovider	2020-09-18 14:08:10.794055+02
+541	funding_pledge	0003_auto_20191002_0903	2020-09-18 14:08:10.824972+02
+542	funding_pledge	0004_pledgebankaccount	2020-09-18 14:08:10.943711+02
+543	funding_lipisha	0001_initial	2020-09-18 14:08:11.091705+02
+544	funding_lipisha	0002_auto_20190717_1637	2020-09-18 14:08:11.202207+02
+545	funding_lipisha	0003_lipishapayoutaccount	2020-09-18 14:08:11.333976+02
+546	funding_lipisha	0004_auto_20190918_1632	2020-09-18 14:08:11.603812+02
+547	funding_lipisha	0005_auto_20191001_2246	2020-09-18 14:08:11.892471+02
+548	funding_lipisha	0006_auto_20191001_2251	2020-09-18 14:08:11.95578+02
+549	funding_flutterwave	0001_initial	2020-09-18 14:08:12.32362+02
+550	funding_flutterwave	0002_flutterwavepaymentprovider_prefix	2020-09-18 14:08:12.35305+02
+551	funding_flutterwave	0003_flutterwavepayoutaccount	2020-09-18 14:08:12.460223+02
+552	funding_flutterwave	0004_auto_20190918_1633	2020-09-18 14:08:12.708874+02
+553	funding_flutterwave	0005_auto_20191002_0903	2020-09-18 14:08:12.773048+02
+554	projects	0091_project_to_initiatives	2020-09-18 14:08:13.076403+02
+555	utils	0002_maillog	2020-09-18 14:08:13.164233+02
+556	pages	0001_initial	2020-09-18 14:08:13.320102+02
+557	pages	0002_auto_20161115_1601	2020-09-18 14:08:13.631653+02
+558	pages	0002_auto_20161109_1024	2020-09-18 14:08:13.70234+02
+559	pages	0003_merge_20170118_1533	2020-09-18 14:08:13.705376+02
+560	pages	0003_merge_20170106_1627	2020-09-18 14:08:13.708071+02
+561	pages	0004_merge_20170124_1338	2020-09-18 14:08:13.710584+02
+562	pages	0005_auto_20170803_1729	2020-09-18 14:08:14.201343+02
+563	pages	0006_auto_20171114_1035	2020-09-18 14:08:14.264984+02
+564	pages	0007_imagetextitem	2020-09-18 14:08:14.296099+02
+565	pages	0008_auto_20180326_0821	2020-09-18 14:08:14.442113+02
+566	pages	0009_auto_20180709_1706	2020-09-18 14:08:14.522117+02
+567	news	0001_initial	2020-09-18 14:08:14.624768+02
+568	news	0002_auto_20160531_1651	2020-09-18 14:08:14.693128+02
+569	news	0003_auto_20161115_1601	2020-09-18 14:08:14.759605+02
+570	news	0003_auto_20161109_1024	2020-09-18 14:08:14.833549+02
+571	news	0004_merge_20170118_1533	2020-09-18 14:08:14.835956+02
+572	news	0004_merge_20170106_1627	2020-09-18 14:08:14.83831+02
+573	news	0005_merge_20170124_1338	2020-09-18 14:08:14.840642+02
+574	news	0006_auto_20170803_1729	2020-09-18 14:08:15.636391+02
+575	news	0007_auto_20180709_1706	2020-09-18 14:08:15.789355+02
+576	surveys	0001_initial	2020-09-18 14:08:15.858868+02
+577	surveys	0002_survey_link	2020-09-18 14:08:15.883027+02
+578	surveys	0003_survey_specification	2020-09-18 14:08:15.91185+02
+579	surveys	0004_auto_20160919_1552	2020-09-18 14:08:15.997331+02
+580	surveys	0005_auto_20160919_1556	2020-09-18 14:08:16.05304+02
+581	surveys	0006_auto_20160919_1609	2020-09-18 14:08:16.129454+02
+582	surveys	0007_question_title	2020-09-18 14:08:16.155144+02
+583	surveys	0008_question_properties	2020-09-18 14:08:16.18328+02
+584	surveys	0009_answer_value	2020-09-18 14:08:16.210265+02
+585	surveys	0010_auto_20160920_0854	2020-09-18 14:08:16.471843+02
+586	surveys	0011_auto_20160920_1126	2020-09-18 14:08:16.706476+02
+587	surveys	0012_auto_20160920_1153	2020-09-18 14:08:16.76043+02
+588	surveys	0013_auto_20160921_1410	2020-09-18 14:08:16.840661+02
+589	surveys	0014_auto_20160921_1444	2020-09-18 14:08:17.186955+02
+590	surveys	0015_auto_20160922_1057	2020-09-18 14:08:17.42877+02
+591	surveys	0016_auto_20160922_1104	2020-09-18 14:08:17.479503+02
+592	surveys	0017_auto_20160922_1210	2020-09-18 14:08:17.560168+02
+593	surveys	0018_auto_20160922_1610	2020-09-18 14:08:17.639569+02
+594	surveys	0019_auto_20160922_1618	2020-09-18 14:08:17.779366+02
+595	surveys	0020_answer_options	2020-09-18 14:08:17.81777+02
+596	surveys	0021_response_params	2020-09-18 14:08:17.870315+02
+597	surveys	0022_auto_20160926_0912	2020-09-18 14:08:18.031242+02
+598	surveys	0023_aggregateanswer_aggregation_type	2020-09-18 14:08:18.086674+02
+599	surveys	0024_auto_20160926_1958	2020-09-18 14:08:18.139642+02
+600	surveys	0025_auto_20160927_1102	2020-09-18 14:08:18.526555+02
+601	surveys	0021_survey_last_synced	2020-09-18 14:08:18.556397+02
+602	surveys	0026_merge	2020-09-18 14:08:18.558396+02
+603	surveys	0027_auto_20160929_0817	2020-09-18 14:08:18.612103+02
+604	surveys	0028_auto_20160929_0849	2020-09-18 14:08:18.691483+02
+605	surveys	0029_auto_20160929_0932	2020-09-18 14:08:18.876037+02
+606	surveys	0030_auto_20161115_1601	2020-09-18 14:08:19.002525+02
+607	surveys	0031_question_display_theme	2020-09-18 14:08:19.029903+02
+608	cms	0001_initial	2020-09-18 14:08:20.11822+02
+609	cms	0002_shareresultscontent	2020-09-18 14:08:20.222191+02
+610	cms	0002_auto_20161207_0918	2020-09-18 14:08:20.355045+02
+611	cms	0003_merge_20161207_1037	2020-09-18 14:08:20.357054+02
+612	cms	0004_resultpage_image	2020-09-18 14:08:20.381344+02
+613	cms	0005_auto_20161207_1512	2020-09-18 14:08:20.732908+02
+614	cms	0006_auto_20161207_1642	2020-09-18 14:08:21.384181+02
+615	cms	0007_auto_20161207_1709	2020-09-18 14:08:21.847361+02
+616	cms	0005_auto_20161208_1124	2020-09-18 14:08:21.904082+02
+617	cms	0006_auto_20161208_1159	2020-09-18 14:08:22.036072+02
+618	cms	0008_merge_20161212_1459	2020-09-18 14:08:22.038407+02
+619	cms	0004_projectsmapcontent	2020-09-18 14:08:22.140522+02
+620	cms	0007_merge_20161212_1501	2020-09-18 14:08:22.14244+02
+621	cms	0009_merge_20161213_1047	2020-09-18 14:08:22.144183+02
+622	cms	0010_auto_20161214_1429	2020-09-18 14:08:22.295094+02
+623	cms	0011_auto_20161214_1531	2020-09-18 14:08:22.921955+02
+624	cms	0012_auto_20161214_1618	2020-09-18 14:08:22.984747+02
+625	cms	0010_auto_20161214_1524	2020-09-18 14:08:23.052475+02
+626	cms	0013_merge_20161214_1637	2020-09-18 14:08:23.054554+02
+627	cms	0014_auto_20161216_1424	2020-09-18 14:08:23.935714+02
+628	cms	0014_auto_20161216_1359	2020-09-18 14:08:24.552633+02
+629	cms	0015_merge_20161219_0946	2020-09-18 14:08:24.555133+02
+630	cms	0016_auto_20161228_1420	2020-09-18 14:08:24.751919+02
+631	cms	0017_add_api_permissions	2020-09-18 14:08:24.779166+02
+632	cms	0018_add_group_permissions	2020-09-18 14:08:25.38424+02
+633	cms	0019_auto_20170829_1005	2020-09-18 14:08:25.404443+02
+634	cms	0020_add_group_permissions	2020-09-18 14:08:25.962873+02
+635	cms	0021_auto_20171005_1646	2020-09-18 14:08:26.338745+02
+636	cms	0022_migrate_quotes_1	2020-09-18 14:08:26.95707+02
+637	cms	0023_migrate_quotes_2	2020-09-18 14:08:27.188222+02
+638	cms	0024_migrate_quotes_3	2020-09-18 14:08:27.514438+02
+639	cms	0025_migrate_stats_1	2020-09-18 14:08:27.721827+02
+640	cms	0026_migrate_stats_2	2020-09-18 14:08:28.343388+02
+641	cms	0027_migrate_stats_3	2020-09-18 14:08:28.678109+02
+642	cms	0021_homepage	2020-09-18 14:08:28.706894+02
+643	cms	0022_auto_20171006_1155	2020-09-18 14:08:28.763426+02
+644	cms	0023_auto_20171006_1208	2020-09-18 14:08:29.316483+02
+645	cms	0028_merge_20171006_1622	2020-09-18 14:08:29.318484+02
+646	cms	0029_auto_20171010_0931	2020-09-18 14:08:30.725597+02
+647	cms	0030_migrate_projects_1	2020-09-18 14:08:30.844478+02
+648	cms	0031_migrate_projects_2	2020-09-18 14:08:31.13891+02
+649	cms	0032_migrate_projects_3	2020-09-18 14:08:31.709443+02
+650	cms	0033_auto_20171017_1353	2020-09-18 14:08:31.803496+02
+651	cms	0034_auto_20171017_1549	2020-09-18 14:08:32.09386+02
+652	cms	0035_auto_20171017_1611	2020-09-18 14:08:32.234911+02
+653	cms	0036_auto_20171017_1622	2020-09-18 14:08:32.290498+02
+654	cms	0037_auto_20171017_1645	2020-09-18 14:08:32.321274+02
+655	cms	0038_auto_20171017_1645	2020-09-18 14:08:32.568105+02
+656	cms	0039_auto_20171017_1708	2020-09-18 14:08:32.677159+02
+657	cms	0040_auto_20171018_1413	2020-09-18 14:08:32.766336+02
+658	cms	0041_auto_20171018_1437	2020-09-18 14:08:32.824439+02
+659	cms	0042_auto_20171018_1437	2020-09-18 14:08:33.053302+02
+660	cms	0043_auto_20171018_1442	2020-09-18 14:08:33.552218+02
+661	cms	0044_auto_20171018_1457	2020-09-18 14:08:33.592021+02
+662	cms	0045_auto_20171018_1505	2020-09-18 14:08:33.6644+02
+663	cms	0046_auto_20171018_1637	2020-09-18 14:08:33.696795+02
+664	cms	0047_auto_20171018_1709	2020-09-18 14:08:33.759541+02
+665	cms	0048_auto_20171024_1554	2020-09-18 14:08:33.938759+02
+666	cms	0049_auto_20171024_1601	2020-09-18 14:08:34.703301+02
+667	cms	0050_auto_20171024_1623	2020-09-18 14:08:36.281295+02
+668	cms	0051_auto_20171024_1631	2020-09-18 14:08:37.457371+02
+669	cms	0052_auto_20171027_1419	2020-09-18 14:08:37.732273+02
+670	cms	0053_auto_20171030_1645	2020-09-18 14:08:37.734741+02
+671	cms	0054_auto_20171031_1428	2020-09-18 14:08:43.271828+02
+672	cms	0021_auto_20171017_2015	2020-09-18 14:08:43.274091+02
+673	cms	0022_auto_20171019_1725	2020-09-18 14:08:43.275894+02
+674	cms	0023_auto_20171019_2042	2020-09-18 14:08:43.277479+02
+675	cms	0024_siteplatformsettings	2020-09-18 14:08:43.278871+02
+676	cms	0025_auto_20171024_1600	2020-09-18 14:08:43.280248+02
+677	cms	0055_merge_20171031_1713	2020-09-18 14:08:43.281628+02
+678	cms	0056_auto_20171102_1527	2020-09-18 14:08:43.283174+02
+679	cms	0057_auto_20171103_1438	2020-09-18 14:08:43.284664+02
+680	cms	0058_auto_20171110_1230	2020-09-18 14:08:43.286136+02
+681	cms	0059_auto_20171121_1022	2020-09-18 14:08:43.287598+02
+682	cms	0059_auto_20171121_0959	2020-09-18 14:08:43.289137+02
+683	cms	0060_merge_20171121_1334	2020-09-18 14:08:43.290646+02
+684	cms	0061_auto_20171128_1135	2020-09-18 14:08:43.292143+02
+685	cms	0062_auto_20171128_1355	2020-09-18 14:08:43.293653+02
+686	cms	0063_auto_20171204_1049	2020-09-18 14:08:43.295137+02
+687	cms	0064_auto_20171220_1145	2020-09-18 14:08:43.296542+02
+688	cms	0065_auto_20180313_1401	2020-09-18 14:08:43.297945+02
+689	cms	0066_auto_20180709_1657	2020-09-18 14:08:43.302305+02
+690	cms	0067_auto_20190710_0938	2020-09-18 14:08:43.303623+02
+691	cms	0068_migrate_start_project	2020-09-18 14:08:43.304978+02
+692	cms	0055_migrate_statistics	2020-09-18 14:08:43.811303+02
+693	cms	0056_auto_20191106_1041	2020-09-18 14:08:44.435705+02
+694	cms	0057_auto_20200129_0906	2020-09-18 14:08:45.05828+02
+695	cms	0058_siteplatformsettingstranslation_start_page	2020-09-18 14:08:45.089224+02
+696	cms	0059_homepagestatisticscontent	2020-09-18 14:08:45.123347+02
+697	cms	0060_auto_20200717_1037	2020-09-18 14:08:45.588371+02
+698	cms	0061_auto_20200812_1030	2020-09-18 14:08:46.40613+02
+699	cms	0062_auto_20200812_1514	2020-09-18 14:08:46.890385+02
+700	contact	0001_initial	2020-09-18 14:08:46.917432+02
+701	contact	0002_contactmessage_author	2020-09-18 14:08:47.124409+02
+702	text	0001_initial	2020-09-18 14:08:47.696155+02
+703	rawhtml	0001_initial	2020-09-18 14:08:47.939282+02
+704	oembeditem	0001_initial	2020-09-18 14:08:48.175343+02
+705	contentplugins	0001_initial	2020-09-18 14:08:48.408106+02
+706	contentplugins	0002_auto_20161115_1601	2020-09-18 14:08:48.466713+02
+707	contentplugins	0002_auto_20161109_1024	2020-09-18 14:08:48.525128+02
+708	contentplugins	0003_merge_20170118_1533	2020-09-18 14:08:48.527503+02
+709	contentplugins	0003_merge_20170106_1627	2020-09-18 14:08:48.529475+02
+710	contentplugins	0004_merge_20170124_1338	2020-09-18 14:08:48.531495+02
+711	contentplugins	0005_auto_20170818_1441	2020-09-18 14:08:50.482931+02
+712	django_summernote	0001_initial	2020-09-18 14:08:50.508402+02
+713	djcelery	0001_initial	2020-09-18 14:08:50.744895+02
+714	djmoney_rates	0001_initial	2020-09-18 14:08:51.177959+02
+715	donations	0009_auto_20190130_1140	2020-09-18 14:08:51.491082+02
+716	donations	0010_auto_20190130_1141	2020-09-18 14:08:51.982017+02
+717	donations	0011_auto_20191101_1046	2020-09-18 14:08:52.338383+02
+718	events	0012_auto_20200217_1106	2020-09-18 14:08:52.735777+02
+719	events	0013_event_start	2020-09-18 14:08:52.823699+02
+720	events	0014_auto_20200217_1107	2020-09-18 14:08:53.316972+02
+721	events	0015_auto_20200226_0838	2020-09-18 14:08:54.284409+02
+722	follow	0001_initial	2020-09-18 14:08:54.577734+02
+723	funding	0053_auto_20200320_1457	2020-09-18 14:08:55.026804+02
+724	funding	0054_auto_20200610_1215	2020-09-18 14:08:55.745799+02
+725	funding_flutterwave	0006_auto_20191111_1332	2020-09-18 14:08:56.993155+02
+726	funding_flutterwave	0007_auto_20200106_0839	2020-09-18 14:08:57.537966+02
+727	funding_flutterwave	0008_auto_20200106_1029	2020-09-18 14:08:57.676614+02
+728	funding_lipisha	0007_auto_20191008_1011	2020-09-18 14:08:57.8113+02
+729	funding_lipisha	0008_lipishabankaccount_mpesa_code	2020-09-18 14:08:57.879541+02
+730	funding_pledge	0005_auto_20191111_1331	2020-09-18 14:08:58.730117+02
+731	funding_stripe	0002_auto_20191111_1330	2020-09-18 14:08:59.594901+02
+732	funding_stripe	0003_auto_20200317_1601	2020-09-18 14:08:59.735501+02
+733	funding_stripe	0004_auto_20200318_1504	2020-09-18 14:09:00.554961+02
+734	funding_telesom	0001_initial	2020-09-18 14:09:01.218832+02
+735	funding_telesom	0002_auto_20200707_0856	2020-09-18 14:09:01.354848+02
+736	funding_telesom	0003_telesompayment_response	2020-09-18 14:09:01.416117+02
+737	funding_telesom	0004_auto_20200707_0929	2020-09-18 14:09:01.486166+02
+738	funding_vitepay	0008_auto_20191008_1034	2020-09-18 14:09:01.615738+02
+739	funding_vitepay	0009_auto_20191111_1330	2020-09-18 14:09:02.525551+02
+740	fundraisers	0002_fundraiser_owner	2020-09-18 14:09:03.259874+02
+741	fundraisers	0003_fundraiser_project	2020-09-18 14:09:03.658776+02
+742	fundraisers	0004_auto_20160718_1811	2020-09-18 14:09:04.460094+02
+743	fundraisers	0005_auto_20160720_1726	2020-09-18 14:09:05.209062+02
+744	fundraisers	0004_auto_20160720_1140	2020-09-18 14:09:06.011514+02
+745	fundraisers	0006_merge	2020-09-18 14:09:06.013866+02
+746	fundraisers	0007_auto_20170803_1730	2020-09-18 14:09:07.230967+02
+747	geo	0015_add_permissions	2020-09-18 14:09:08.207324+02
+748	geo	0016_location_slug	2020-09-18 14:09:08.409262+02
+749	homepage	0001_initial	2020-09-18 14:09:09.382556+02
+750	impact	0009_auto_20200810_1347	2020-09-18 14:09:09.795987+02
+751	impact	0010_impacttypetranslation_unit	2020-09-18 14:09:09.827256+02
+752	impact	0011_auto_20200812_1038	2020-09-18 14:09:11.234718+02
+753	impact	0012_auto_20200817_1608	2020-09-18 14:09:11.606855+02
+754	impact	0013_remove_impacttypetranslation_name	2020-09-18 14:09:11.64008+02
+755	impact	0013_auto_20200818_1105	2020-09-18 14:09:12.277573+02
+756	impact	0014_merge_20200819_0916	2020-09-18 14:09:12.279935+02
+757	impact	0015_impacttypetranslation_name	2020-09-18 14:09:12.319557+02
+758	impact	0016_auto_20200820_1717	2020-09-18 14:09:12.936981+02
+759	initiatives	0015_auto_20190708_1417	2020-09-18 14:09:13.644335+02
+760	initiatives	0016_auto_20190726_0915	2020-09-18 14:09:14.244767+02
+761	initiatives	0017_auto_20191031_1439	2020-09-18 14:09:14.276747+02
+762	initiatives	0018_auto_20191108_1222	2020-09-18 14:09:14.836257+02
+763	initiatives	0018_auto_20191106_0928	2020-09-18 14:09:16.484489+02
+764	initiatives	0019_merge_20191108_1853	2020-09-18 14:09:16.487246+02
+765	initiatives	0020_auto_20191129_1131	2020-09-18 14:09:16.543908+02
+766	initiatives	0021_auto_20191129_1132	2020-09-18 14:09:17.072706+02
+767	initiatives	0022_remove_initiativeplatformsettings_search_filters	2020-09-18 14:09:17.107157+02
+768	initiatives	0023_auto_20200707_1306	2020-09-18 14:09:17.562154+02
+769	initiatives	0023_auto_20200624_1209	2020-09-18 14:09:18.076521+02
+770	initiatives	0024_merge_20200806_1510	2020-09-18 14:09:18.079626+02
+771	jet	0001_initial	2020-09-18 14:09:18.178614+02
+772	jet	0002_delete_userdashboardmodule	2020-09-18 14:09:18.208346+02
+773	default	0001_initial	2020-09-18 14:09:19.372695+02
+774	social_auth	0001_initial	2020-09-18 14:09:19.375648+02
+775	default	0002_add_related_name	2020-09-18 14:09:19.712916+02
+776	social_auth	0002_add_related_name	2020-09-18 14:09:19.715072+02
+777	looker	0001_initial	2020-09-18 14:09:19.747515+02
+778	looker	0002_auto_20180328_1054	2020-09-18 14:09:19.791878+02
+779	looker	0003_init_looker_embeds	2020-09-18 14:09:20.519542+02
+780	mails	0001_initial	2020-09-18 14:09:20.559647+02
+781	mails	0002_auto_20171211_1117	2020-09-18 14:09:20.563319+02
+782	mails	0003_auto_20180727_1122	2020-09-18 14:09:21.192602+02
+783	orders	0002_auto_20160718_2010	2020-09-18 14:09:21.526116+02
+784	orders	0003_auto_20170823_1533	2020-09-18 14:09:21.706505+02
+785	orders	0004_add_group_permissions	2020-09-18 14:09:22.75824+02
+786	members	0011_permission_groups	2020-09-18 14:09:23.709115+02
+787	members	0012_auto_20170807_1454	2020-09-18 14:09:24.313789+02
+788	members	0012_auto_20170803_1730	2020-09-18 14:09:25.367663+02
+789	members	0013_merge_20170811_1500	2020-09-18 14:09:25.369927+02
+790	members	0014_auto_20170816_1614	2020-09-18 14:09:25.593208+02
+791	members	0015_auto_20170816_1614	2020-09-18 14:09:26.672537+02
+792	members	0016_auto_20170822_1104	2020-09-18 14:09:26.877219+02
+793	members	0017_closed_site_permissions	2020-09-18 14:09:27.847655+02
+794	members	0018_auto_20170824_1521	2020-09-18 14:09:28.209193+02
+795	members	0019_auto_20170824_1812	2020-09-18 14:09:28.407977+02
+796	members	0020_auto_20171031_1048	2020-09-18 14:09:28.998891+02
+797	members	0021_auto_20171114_1035	2020-09-18 14:09:29.366588+02
+798	members	0022_auto_20171207_0856	2020-09-18 14:09:29.863362+02
+799	members	0023_memberplatformsettings_require_consent	2020-09-18 14:09:29.895759+02
+800	members	0024_create_empty_settings	2020-09-18 14:09:30.893945+02
+801	members	0025_memberplatformsettings_consent_link	2020-09-18 14:09:30.925031+02
+802	members	0026_auto_20190129_1050	2020-09-18 14:09:31.140476+02
+803	members	0027_auto_20190208_1119	2020-09-18 14:09:31.320776+02
+804	members	0026_auto_20180919_1434	2020-09-18 14:09:31.507059+02
+805	members	0028_merge_20190215_1441	2020-09-18 14:09:31.509071+02
+806	members	0028_auto_20190219_1024	2020-09-18 14:09:31.697355+02
+807	members	0029_merge_20190222_0930	2020-09-18 14:09:31.706972+02
+808	members	0030_auto_20190225_1215	2020-09-18 14:09:32.669163+02
+809	members	0027_auto_20190206_1018	2020-09-18 14:09:33.457071+02
+810	members	0031_merge_20190226_1449	2020-09-18 14:09:33.459466+02
+811	members	0032_auto_20191223_1456	2020-09-18 14:09:34.197135+02
+812	members	0033_auto_20200114_1050	2020-09-18 14:09:34.862088+02
+813	members	0034_auto_20200114_1050	2020-09-18 14:09:35.462556+02
+814	members	0035_memberplatformsettings_background	2020-09-18 14:09:35.492437+02
+815	members	0036_auto_20200406_1127	2020-09-18 14:09:35.524766+02
+816	members	0037_auto_20200706_1637	2020-09-18 14:09:35.892547+02
+817	members	0038_auto_20200801_2114	2020-09-18 14:09:36.517449+02
+818	members	0039_auto_20200804_0750	2020-09-18 14:09:36.580858+02
+819	notifications	0001_initial	2020-09-18 14:09:37.261391+02
+820	notifications	0002_message_custom_message	2020-09-18 14:09:37.482172+02
+821	notifications	0003_notificationplatformsettings	2020-09-18 14:09:37.511241+02
+822	notifications	0004_auto_20200123_1344	2020-09-18 14:09:37.665965+02
+823	notifications	0005_auto_20200124_1505	2020-09-18 14:09:38.089624+02
+824	payments	0001_initial	2020-09-18 14:09:39.815212+02
+825	payments	0002_auto_20160718_2345	2020-09-18 14:09:40.717553+02
+826	payments	0003_auto_20161025_1221	2020-09-18 14:09:40.94303+02
+827	payments	0004_auto_20170919_1621	2020-09-18 14:09:41.142313+02
+828	payments	0005_auto_20170919_1621	2020-09-18 14:09:41.144361+02
+829	orders	0005_auto_20171003_1112	2020-09-18 14:09:41.7045+02
+830	orders	0006_auto_20180509_1436	2020-09-18 14:09:41.903532+02
+831	orders	0007_auto_20180509_1437	2020-09-18 14:09:42.510073+02
+832	orders	0008_auto_20190904_0838	2020-09-18 14:09:43.113586+02
+833	organizations	0013_remove_organizationcontact_organization	2020-09-18 14:09:43.4418+02
+834	organizations	0014_auto_20190708_1418	2020-09-18 14:09:44.453232+02
+835	organizations	0015_auto_20191209_2128	2020-09-18 14:09:44.787319+02
+836	organizations	0016_auto_20200106_1636	2020-09-18 14:09:45.794463+02
+837	pages	0010_auto_20180717_1017	2020-09-18 14:09:46.0036+02
+838	pages	0011_auto_20200106_1620	2020-09-18 14:09:46.738245+02
+839	pages	0012_columnsitem	2020-09-18 14:09:47.028852+02
+840	pages	0011_auto_20200106_1647	2020-09-18 14:09:48.438978+02
+841	pages	0013_merge_20200120_1128	2020-09-18 14:09:48.441952+02
+842	pages	0014_imagetextrounditem	2020-09-18 14:09:48.753538+02
+843	payments	0006_auto_20181115_1321	2020-09-18 14:09:49.248582+02
+844	payments_beyonic	0001_initial	2020-09-18 14:09:49.547509+02
+845	payments_docdata	0001_initial	2020-09-18 14:09:50.508303+02
+846	payments_docdata	0002_auto_20161115_1601	2020-09-18 14:09:50.542588+02
+847	payments_docdata	0002_auto_20161109_1024	2020-09-18 14:09:50.577578+02
+848	payments_docdata	0003_merge_20170118_1533	2020-09-18 14:09:50.579842+02
+849	payments_docdata	0003_merge_20170106_1627	2020-09-18 14:09:50.582022+02
+850	payments_docdata	0004_merge_20170124_1338	2020-09-18 14:09:50.584469+02
+851	payments_external	0001_initial	2020-09-18 14:09:50.898436+02
+852	payments_flutterwave	0001_initial	2020-09-18 14:09:51.238345+02
+853	payments_flutterwave	0002_auto_20170202_2054	2020-09-18 14:09:51.342395+02
+854	payments_flutterwave	0003_auto_20170206_1235	2020-09-18 14:09:51.931536+02
+855	payments_flutterwave	0004_auto_20170207_1532	2020-09-18 14:09:52.053968+02
+856	payments_flutterwave	0005_auto_20170210_1058	2020-09-18 14:09:52.174908+02
+857	payments_flutterwave	0006_auto_20170323_1227	2020-09-18 14:09:52.433822+02
+858	payments_flutterwave	0007_flutterwavempesapayment	2020-09-18 14:09:52.747692+02
+859	payments_flutterwave	0008_flutterwavempesapayment_transaction_amount	2020-09-18 14:09:52.807865+02
+860	payments_interswitch	0001_initial	2020-09-18 14:09:53.140945+02
+861	payments_interswitch	0002_auto_20161006_1144	2020-09-18 14:09:53.606704+02
+862	payments_interswitch	0003_interswitchpaymentstatusupdate	2020-09-18 14:09:53.948414+02
+863	payments_lipisha	0001_initial	2020-09-18 14:09:54.289577+02
+864	payments_lipisha	0002_lipishaproject_organisationnumber	2020-09-18 14:09:54.940806+02
+865	payments_logger	0001_initial	2020-09-18 14:09:55.270161+02
+866	payments_mock	0001_initial	2020-09-18 14:09:55.596203+02
+867	payments_pledge	0001_initial	2020-09-18 14:09:55.927013+02
+868	payments_stripe	0001_initial	2020-09-18 14:09:56.273415+02
+869	payments_stripe	0002_stripepayment_currency	2020-09-18 14:09:56.342594+02
+870	payments_stripe	0003_auto_20190130_1231	2020-09-18 14:09:56.481365+02
+871	payments_telesom	0001_initial	2020-09-18 14:09:56.839924+02
+872	payments_vitepay	0001_initial	2020-09-18 14:09:57.14686+02
+873	payments_voucher	0001_initial	2020-09-18 14:09:57.86746+02
+874	payouts	0023_auto_20190705_0906	2020-09-18 14:09:58.372587+02
+875	projects	0092_auto_20191031_0901	2020-09-18 14:09:59.434421+02
+876	projects	0093_auto_20191106_1206	2020-09-18 14:10:00.053282+02
+877	projects	0093_auto_20191106_0928	2020-09-18 14:10:00.681971+02
+878	projects	0094_merge_20191107_0943	2020-09-18 14:10:00.685059+02
+879	quotes	0001_initial	2020-09-18 14:10:00.971942+02
+880	quotes	0002_auto_20161115_1601	2020-09-18 14:10:01.124488+02
+881	quotes	0002_auto_20161109_1024	2020-09-18 14:10:01.27519+02
+882	quotes	0003_merge_20170118_1533	2020-09-18 14:10:01.278379+02
+883	quotes	0003_merge_20170106_1627	2020-09-18 14:10:01.28055+02
+884	quotes	0004_merge_20170124_1338	2020-09-18 14:10:01.282604+02
+885	redirects	0001_initial	2020-09-18 14:10:01.320612+02
+886	scim	0001_initial	2020-09-18 14:10:01.355768+02
+887	scim	0002_auto_20190118_1625	2020-09-18 14:10:02.356311+02
+888	segments	0004_auto_20200708_1404	2020-09-18 14:10:02.424181+02
+889	sessions	0001_initial	2020-09-18 14:10:02.453894+02
+890	sites	0001_initial	2020-09-18 14:10:02.487421+02
+891	sites	0002_alter_domain_unique	2020-09-18 14:10:02.525329+02
+892	slides	0001_initial	2020-09-18 14:10:02.79817+02
+893	slides	0002_auto_20161115_1601	2020-09-18 14:10:02.954143+02
+894	slides	0002_auto_20161109_1024	2020-09-18 14:10:03.115614+02
+895	slides	0003_merge_20170118_1533	2020-09-18 14:10:03.11802+02
+896	slides	0003_merge_20170106_1627	2020-09-18 14:10:03.120169+02
+897	slides	0004_merge_20170124_1338	2020-09-18 14:10:03.122308+02
+898	slides	0005_auto_20170803_1730	2020-09-18 14:10:04.303567+02
+899	slides	0006_auto_20180717_1017	2020-09-18 14:10:04.459359+02
+900	slides	0007_auto_20200903_1117	2020-09-18 14:10:05.622886+02
+901	default	0003_alter_email_max_length	2020-09-18 14:10:05.658901+02
+902	social_auth	0003_alter_email_max_length	2020-09-18 14:10:05.660987+02
+903	default	0004_auto_20160423_0400	2020-09-18 14:10:05.833804+02
+904	social_auth	0004_auto_20160423_0400	2020-09-18 14:10:05.836285+02
+905	social_auth	0005_auto_20160727_2333	2020-09-18 14:10:05.881991+02
+906	social_django	0006_partial	2020-09-18 14:10:05.923819+02
+907	social_django	0007_code_timestamp	2020-09-18 14:10:05.960532+02
+908	social_django	0008_partial_timestamp	2020-09-18 14:10:05.997409+02
+909	statistics	0010_auto_20200717_1337	2020-09-18 14:10:06.03681+02
+910	statistics	0011_auto_20200722_0810	2020-09-18 14:10:06.174719+02
+911	statistics	0012_auto_20200812_1024	2020-09-18 14:10:07.283797+02
+912	suggestions	0001_initial	2020-09-18 14:10:07.571675+02
+913	suggestions	0002_suggestion_language	2020-09-18 14:10:07.722195+02
+914	suggestions	0003_auto_20160720_1140	2020-09-18 14:10:07.890143+02
+915	suggestions	0003_auto_20160718_1811	2020-09-18 14:10:08.047407+02
+916	suggestions	0004_merge	2020-09-18 14:10:08.054771+02
+917	surveys	0030_auto_20161109_1024	2020-09-18 14:10:08.357966+02
+918	surveys	0032_merge_20170118_1533	2020-09-18 14:10:08.360874+02
+919	surveys	0032_merge_20170106_1627	2020-09-18 14:10:08.363559+02
+920	surveys	0033_merge_20170124_1338	2020-09-18 14:10:08.365886+02
+921	surveys	0034_survey_active	2020-09-18 14:10:08.409217+02
+922	tasks	0042_migrate_tasks_to_activities	2020-09-18 14:10:09.756365+02
+923	terms	0001_initial	2020-09-18 14:10:10.380445+02
+924	terms	0002_auto_20180907_1132	2020-09-18 14:10:10.689588+02
+925	terms	0003_auto_20180907_1132	2020-09-18 14:10:11.905545+02
+926	text	0002_textitem_text_final	2020-09-18 14:10:11.955622+02
+927	thumbnail	0001_initial	2020-09-18 14:10:11.998014+02
+928	token_auth	0001_initial	2020-09-18 14:10:12.312038+02
+929	utils	0003_auto_20200626_1047	2020-09-18 14:10:12.883752+02
+930	utils	0004_auto_20200626_1053	2020-09-18 14:10:12.917762+02
+931	utils	0005_auto_20200626_1145	2020-09-18 14:10:13.280641+02
+932	votes	0001_initial	2020-09-18 14:10:13.74297+02
+933	votes	0002_auto_20161004_1342	2020-09-18 14:10:13.9086+02
+934	wallposts	0020_auto_20191017_2208	2020-09-18 14:10:14.66107+02
+935	social_django	0003_alter_email_max_length	2020-09-18 14:10:14.666119+02
+936	social_django	0004_auto_20160423_0400	2020-09-18 14:10:14.667863+02
+937	social_django	0002_add_related_name	2020-09-18 14:10:14.669711+02
+938	social_django	0005_auto_20160727_2333	2020-09-18 14:10:14.671402+02
+939	cms	0054_auto_20171031_1428_squashed_0068_migrate_start_project	2020-09-18 14:10:14.673127+02
+940	social_django	0001_initial	2020-09-18 14:10:14.674848+02
 \.
 
 
@@ -26790,7 +29300,7 @@ COPY test2.donations_donation (id, amount, created, updated, completed, anonymou
 -- Data for Name: events_event; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.events_event (activity_ptr_id, capacity, automatically_accept, location_hint, start_time, registration_deadline, location_id, is_online, start_date, duration, "end") FROM stdin;
+COPY test2.events_event (activity_ptr_id, capacity, automatically_accept, location_hint, start_time, registration_deadline, location_id, is_online, start_date, duration, "end", start) FROM stdin;
 \.
 
 
@@ -26819,6 +29329,14 @@ COPY test2.files_image (id, created, file, used, owner_id) FROM stdin;
 
 
 --
+-- Data for Name: files_privatedocument; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.files_privatedocument (id, created, file, used, owner_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: files_relatedimage; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
@@ -26831,18 +29349,18 @@ COPY test2.files_relatedimage (id, object_id, content_type_id, image_id) FROM st
 --
 
 COPY test2.fluent_contents_contentitem (id, parent_id, language_code, sort_order, parent_type_id, placeholder_id, polymorphic_ctype_id) FROM stdin;
-1	1	en	4	133	1	134
-2	1	nl	4	133	1	134
-3	1	en	6	133	1	135
-4	1	nl	6	133	1	135
-5	1	en	3	133	1	136
-6	1	nl	3	133	1	136
-7	1	en	1	133	1	137
-8	1	nl	1	133	1	137
-11	1	en	5	133	1	139
-12	1	nl	5	133	1	139
-13	1	en	2	133	1	179
-14	1	nl	2	133	1	179
+1	1	en	6	156	1	157
+2	1	nl	6	156	1	157
+5	1	en	1	156	1	159
+6	1	nl	1	156	1	159
+7	1	en	5	156	1	160
+8	1	nl	5	156	1	160
+9	1	en	4	156	1	161
+10	1	nl	4	156	1	161
+11	1	en	3	156	1	162
+12	1	nl	3	156	1	162
+13	1	en	2	156	1	202
+14	1	nl	2	156	1	202
 \.
 
 
@@ -26851,8 +29369,8 @@ COPY test2.fluent_contents_contentitem (id, parent_id, language_code, sort_order
 --
 
 COPY test2.fluent_contents_placeholder (id, slot, role, parent_id, title, parent_type_id) FROM stdin;
-1	content	m	1		133
-2	content	m	1		159
+1	content	m	1		156
+2	content	m	1		182
 \.
 
 
@@ -26917,7 +29435,7 @@ COPY test2.funding_flutterwave_flutterwavepaymentprovider (paymentprovider_ptr_i
 -- Data for Name: funding_funding; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.funding_funding (activity_ptr_id, deadline, duration, target_currency, target, country_id, amount_matching, amount_matching_currency, bank_account_id) FROM stdin;
+COPY test2.funding_funding (activity_ptr_id, deadline, duration, target_currency, target, country_id, amount_matching, amount_matching_currency, bank_account_id, started) FROM stdin;
 \.
 
 
@@ -26926,7 +29444,7 @@ COPY test2.funding_funding (activity_ptr_id, deadline, duration, target_currency
 --
 
 COPY test2.funding_fundingplatformsettings (id, update, allow_anonymous_rewards) FROM stdin;
-1	2019-12-30 13:01:26.854806+01	t
+1	2020-09-18 14:10:00.679046+02	t
 \.
 
 
@@ -26975,7 +29493,7 @@ COPY test2.funding_lipisha_lipishapaymentprovider (paymentprovider_ptr_id, api_k
 -- Data for Name: funding_payment; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.funding_payment (id, status, created, updated, donation_id, polymorphic_ctype_id, payment_method) FROM stdin;
+COPY test2.funding_payment (id, status, created, updated, donation_id, polymorphic_ctype_id) FROM stdin;
 \.
 
 
@@ -26992,10 +29510,10 @@ COPY test2.funding_paymentcurrency (id, code, min_amount, max_amount, default1, 
 --
 
 COPY test2.funding_paymentprovider (id, polymorphic_ctype_id) FROM stdin;
-1	106
-2	107
-3	108
-4	109
+1	132
+2	133
+3	134
+4	135
 \.
 
 
@@ -27019,7 +29537,7 @@ COPY test2.funding_payoutaccount (id, status, owner_id, polymorphic_ctype_id, cr
 -- Data for Name: funding_plainpayoutaccount; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.funding_plainpayoutaccount (payoutaccount_ptr_id, document_id, ip_address) FROM stdin;
+COPY test2.funding_plainpayoutaccount (payoutaccount_ptr_id, ip_address, document_id) FROM stdin;
 \.
 
 
@@ -27092,7 +29610,7 @@ COPY test2.funding_stripe_stripepaymentprovider (paymentprovider_ptr_id, credit_
 -- Data for Name: funding_stripe_stripepayoutaccount; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.funding_stripe_stripepayoutaccount (payoutaccount_ptr_id, account_id, country, document_type) FROM stdin;
+COPY test2.funding_stripe_stripepayoutaccount (payoutaccount_ptr_id, account_id, country, document_type, eventually_due) FROM stdin;
 \.
 
 
@@ -27101,6 +29619,30 @@ COPY test2.funding_stripe_stripepayoutaccount (payoutaccount_ptr_id, account_id,
 --
 
 COPY test2.funding_stripe_stripesourcepayment (payment_ptr_id, source_token, charge_token) FROM stdin;
+\.
+
+
+--
+-- Data for Name: funding_telesom_telesombankaccount; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.funding_telesom_telesombankaccount (bankaccount_ptr_id, account_name, mobile_number) FROM stdin;
+\.
+
+
+--
+-- Data for Name: funding_telesom_telesompayment; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.funding_telesom_telesompayment (payment_ptr_id, account_number, account_name, unique_id, reference_id, transaction_id, transaction_amount, issuer_transaction_id, amount, currency, response) FROM stdin;
+\.
+
+
+--
+-- Data for Name: funding_telesom_telesompaymentprovider; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.funding_telesom_telesompaymentprovider (paymentprovider_ptr_id, merchant_uid, api_user_id, api_key, api_url, prefix) FROM stdin;
 \.
 
 
@@ -27173,7 +29715,7 @@ COPY test2.geo_initiativeplace (id, street_number, street, postal_code, locality
 -- Data for Name: geo_location; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.geo_location (id, name, "position", city, description, image, country_id, group_id) FROM stdin;
+COPY test2.geo_location (id, name, "position", city, description, image, country_id, group_id, slug) FROM stdin;
 \.
 
 
@@ -27226,6 +29768,58 @@ COPY test2.geo_subregion_translation (id, language_code, name, master_id) FROM s
 
 
 --
+-- Data for Name: impact_impactgoal; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.impact_impactgoal (id, target, realized, type_id, activity_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: impact_impacttype; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.impact_impacttype (id, slug, active, icon) FROM stdin;
+1	co2	f	co2
+2	people	f	people
+3	food	f	
+4	water	f	water
+5	plastic	f	plastic
+6	trees	f	trees
+7	jobs	f	jobs
+\.
+
+
+--
+-- Data for Name: impact_impacttype_translation; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.impact_impacttype_translation (id, language_code, master_id, text, text_passed, text_with_target, unit, name) FROM stdin;
+1	nl	1	CO₂ uitstoot te verminderen	CO₂ uitstoot verminderd	CO₂ uitstoot met {} kg te verminderen	kg	CO₂ uitstoot verminderen
+2	en	1	reduce CO₂ emissions	reduce CO₂ emissions by {} kg	CO₂ emissions reduced	kg	Reduce CO₂ emissions
+15	fr	1	réduire les émissions de CO₂	réduire les émissions de CO₂ de {} kg	Émissions de CO₂ réduites	kg	Réduire les émissions de CO₂
+3	nl	2	mensen te bereiken	mensen bereikt	{} mensen te bereiken		Mensen bereiken
+4	en	2	reach people	people reached	reach {} people		Reach people
+16	fr	2	touchez les gens	personnes touchés	toucher {} personnes		Touchez les gens
+5	nl	3	voedselverspilling te verminderen	voedselverspilling verminderd	voedselverspilling met {} kg te verminderen	kg	Voedselverspilling verminderen
+6	en	3	reduce food waste	food waste reduced	reduce food waste by {} kg	kg	Reduce food waste
+17	fr	3	réduisez le gaspillage alimentaire	gaspillage alimentaire réduit	réduire le gaspillage alimentaire de {} kg	kg	Réduisez le gaspillage alimentaire
+7	nl	4	water te besparen	water bespaard	{} l water te besparen	l	Water besparen
+8	en	4	save water	water saved	save {} l water	l	Save water
+18	fr	4	économiser l'eau	eau économisée	économisez {} l d'eau	l	Économiser l'eau
+9	nl	5	plastic te besparen	plastic bespaard	{} kg plastic te besparen	kg	Plastic besparen
+10	en	5	save plastic	plastic saved	save {} kg plastic	kg	Save plastic
+19	fr	5	économisez du plastique	plastique économisé	économisez {} kg de plastique	kg	Économisez du plastique
+11	nl	6	bomen te planten	bomen geplant	{} bomen te planten		Bomen planten
+12	en	6	plant trees	trees planted	plant {} trees		Plant trees
+20	fr	6	planter des arbres	arbres plantés	planter {} arbres		Planter des arbres
+13	nl	7	banen te creëren	banen gecreëerd	{} banen te creëren		Banen creëren
+14	en	7	create jobs	jobs created	create {} jobs		Create jobs
+21	fr	7	créer des emplois	emplois créés	créer {} emplois		Créer des emplois
+\.
+
+
+--
 -- Data for Name: initiatives_initiative; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
@@ -27245,8 +29839,8 @@ COPY test2.initiatives_initiative_categories (id, initiative_id, category_id) FR
 -- Data for Name: initiatives_initiativeplatformsettings; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.initiatives_initiativeplatformsettings (id, update, activity_types, require_organization, contact_method, activity_search_filters, initiative_search_filters) FROM stdin;
-1	2019-12-30 13:01:26.853788+01	event,assignment,funding	f	mail	country,date,skill,type,theme,category,status	country,theme,category
+COPY test2.initiatives_initiativeplatformsettings (id, update, activity_types, require_organization, contact_method, activity_search_filters, initiative_search_filters, enable_impact) FROM stdin;
+1	2020-09-18 14:10:00.678377+02	event,assignment,funding	f	mail	country,date,skill,type,theme,category,status	country,theme,category	f
 \.
 
 
@@ -27282,7 +29876,7 @@ COPY test2.looker_lookerembed (id, title, type, looker_id) FROM stdin;
 --
 
 COPY test2.mails_mailplatformsettings (id, update, email_logo) FROM stdin;
-1	2019-12-30 13:00:50.665024+01	
+1	2020-09-18 14:09:21.190527+02	
 \.
 
 
@@ -27307,7 +29901,7 @@ COPY test2.members_custommemberfieldsettings (id, name, description, sequence, m
 --
 
 COPY test2.members_member (id, password, last_login, is_superuser, email, username, is_staff, is_active, date_joined, updated, deleted, user_type, first_name, last_name, picture, is_co_financer, can_pledge, about_me, primary_language, share_time_knowledge, share_money, newsletter, phone_number, gender, birthdate, disable_token, campaign_notifications, website, facebook, twitter, skypename, remote_id, location_id, verified, last_seen, partner_organization_id, is_anonymized, welcome_email_is_sent, last_logout, scim_external_id, matching_options_set, subscribed) FROM stdin;
-1		\N	f	devteam+accounting@onepercentclub.com	accounting	f	t	2019-12-30 12:58:41.952482+01	2019-12-30 12:59:13.729469+01	\N	person				f	f		en	f	f	t			\N	\N	t					\N	\N	f	\N	\N	f	f	\N	\N	\N	f
+1		\N	f	devteam+accounting@onepercentclub.com	accounting	f	t	2020-09-18 14:07:13.00282+02	2020-09-18 14:07:27.123471+02	\N	person				f	f		en	f	f	t			\N	\N	t					\N	\N	f	\N	\N	f	f	\N	\N	\N	f
 \.
 
 
@@ -27326,6 +29920,14 @@ COPY test2.members_member_favourite_themes (id, member_id, projecttheme_id) FROM
 COPY test2.members_member_groups (id, member_id, group_id) FROM stdin;
 1	1	4
 2	1	3
+\.
+
+
+--
+-- Data for Name: members_member_segments; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.members_member_segments (id, member_id, segment_id) FROM stdin;
 \.
 
 
@@ -27349,8 +29951,8 @@ COPY test2.members_member_user_permissions (id, member_id, permission_id) FROM s
 -- Data for Name: members_memberplatformsettings; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.members_memberplatformsettings (id, update, require_consent, consent_link, closed, confirm_signup, email_domain, login_methods, background) FROM stdin;
-1	2020-01-27 08:47:18.867883+01	f	/pages/terms-and-conditions	f	f	\N	password	\N
+COPY test2.members_memberplatformsettings (id, update, require_consent, consent_link, closed, confirm_signup, email_domain, login_methods, background, anonymization_age, enable_segments, create_segments) FROM stdin;
+1	2020-09-18 14:09:35.46019+02	f	/pages/terms-and-conditions	f	f	\N	password	\N	0	f	f
 \.
 
 
@@ -27407,7 +30009,7 @@ COPY test2.notifications_messagetemplate_translation (id, language_code, subject
 --
 
 COPY test2.notifications_notificationplatformsettings (id, update, share_options, facebook_at_work_url, match_options) FROM stdin;
-1	2019-12-30 13:01:26.852334+01	twitter,facebook	\N	
+1	2020-09-18 14:10:00.6776+02	twitter,facebook	\N	
 \.
 
 
@@ -27752,7 +30354,7 @@ COPY test2.projects_projectphaselog (id, start, project_id, status_id) FROM stdi
 --
 
 COPY test2.projects_projectplatformsettings (id, update, create_types, create_flow, contact_method, contact_types, allow_anonymous_rewards, facebook_at_work_url, share_options, match_options) FROM stdin;
-1	2019-12-30 12:59:00.039147+01	funding	combined	mail	organization	t	\N	twitter,facebook	
+1	2020-09-18 14:07:21.370352+02	funding	combined	mail	organization	t	\N	twitter,facebook	
 \.
 
 
@@ -27788,7 +30390,23 @@ COPY test2.rewards_reward (id, amount, title, description, "limit", created, upd
 --
 
 COPY test2.scim_scimplatformsettings (id, update, bearer_token) FROM stdin;
-1	2019-12-30 13:01:31.012686+01	C5oYCc4XTq0LoC2Arhy4Omve9BOrEgAI
+1	2020-09-18 14:10:02.353503+02	2UsO7P2m2rregJ0k0QZwk9qXtoYz4RDM
+\.
+
+
+--
+-- Data for Name: segments_segment; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.segments_segment (id, name, alternate_names, type_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: segments_segmenttype; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.segments_segmenttype (id, name, slug, is_active, enable_search) FROM stdin;
 \.
 
 
@@ -27796,7 +30414,7 @@ COPY test2.scim_scimplatformsettings (id, update, bearer_token) FROM stdin;
 -- Data for Name: slides_slide; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.slides_slide (id, slug, language, tab_text, title, body, image, background_image, video_url, link_text, link_url, style, status, publication_date, publication_end_date, sequence, creation_date, modification_date, author_id) FROM stdin;
+COPY test2.slides_slide (id, slug, language, tab_text, title, body, image, background_image, video_url, link_text, link_url, style, status, publication_date, publication_end_date, sequence, creation_date, modification_date, author_id, video) FROM stdin;
 \.
 
 
@@ -27837,6 +30455,62 @@ COPY test2.social_auth_partial (id, token, next_step, backend, data, "timestamp"
 --
 
 COPY test2.social_auth_usersocialauth (id, provider, uid, extra_data, user_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_basestatistic; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.statistics_basestatistic (id, active, polymorphic_ctype_id, sequence) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_databasestatistic; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.statistics_databasestatistic (basestatistic_ptr_id, query) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_databasestatistic_translation; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.statistics_databasestatistic_translation (id, language_code, name, master_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_impactstatistic; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.statistics_impactstatistic (basestatistic_ptr_id, impact_type_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_impactstatistic_translation; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.statistics_impactstatistic_translation (id, language_code, master_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_manualstatistic; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.statistics_manualstatistic (basestatistic_ptr_id, value, icon) FROM stdin;
+\.
+
+
+--
+-- Data for Name: statistics_manualstatistic_translation; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.statistics_manualstatistic_translation (id, language_code, name, master_id) FROM stdin;
 \.
 
 
@@ -27963,6 +30637,8 @@ COPY test2.tasks_skill (id, disabled, expertise) FROM stdin;
 --
 
 COPY test2.tasks_skill_translation (id, language_code, name, description, master_id) FROM stdin;
+0	nl	- Geen specifieke vaardigheid nodig -		1
+1	en	- No specific skill needed -		1
 2	nl	Natuur & Milieu		2
 3	en	Agriculture		2
 4	nl	Architectuur / Bouwkunde		3
@@ -28021,8 +30697,6 @@ COPY test2.tasks_skill_translation (id, language_code, name, description, master
 57	en	Writing proposals		29
 58	nl	Coachen		30
 59	en	Coaching		30
-0	nl	- Geen specifieke vaardigheid nodig -		1
-1	en	- No specific skill needed -		1
 \.
 
 
@@ -28103,8 +30777,8 @@ COPY test2.token_auth_checkedtoken (id, token, "timestamp", user_id) FROM stdin;
 --
 
 COPY test2.utils_language (id, code, language_name, native_name) FROM stdin;
-396	en	English	English
-397	nl	Dutch	Nederlands
+4	en	English	English
+5	nl	Dutch	Nederlands
 \.
 
 
@@ -28117,10 +30791,18 @@ COPY test2.utils_maillog (id, object_id, type, created, content_type_id) FROM st
 
 
 --
--- Data for Name: utils_metadatamodel; Type: TABLE DATA; Schema: test2; Owner: -
+-- Data for Name: utils_translationplatformsettings; Type: TABLE DATA; Schema: test2; Owner: -
 --
 
-COPY test2.utils_metadatamodel (id, title) FROM stdin;
+COPY test2.utils_translationplatformsettings (id, update) FROM stdin;
+\.
+
+
+--
+-- Data for Name: utils_translationplatformsettings_translation; Type: TABLE DATA; Schema: test2; Owner: -
+--
+
+COPY test2.utils_translationplatformsettings_translation (id, language_code, master_id, office, office_location, select_an_office_location, whats_the_location_of_your_office) FROM stdin;
 \.
 
 
@@ -28198,14 +30880,14 @@ SELECT pg_catalog.setval('public.celery_tasksetmeta_id_seq', 1, false);
 -- Name: clients_client_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.clients_client_id_seq', 6, true);
+SELECT pg_catalog.setval('public.clients_client_id_seq', 2, true);
 
 
 --
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 848, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 940, true);
 
 
 --
@@ -28261,21 +30943,28 @@ SELECT pg_catalog.setval('public.djmoney_rates_rate_id_seq', 6, true);
 -- Name: djmoney_rates_ratesource_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.djmoney_rates_ratesource_id_seq', 214, true);
+SELECT pg_catalog.setval('public.djmoney_rates_ratesource_id_seq', 1, true);
 
 
 --
 -- Name: activities_activity_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.activities_activity_id_seq', 672, true);
+SELECT pg_catalog.setval('test.activities_activity_id_seq', 1, false);
+
+
+--
+-- Name: activities_activity_segments_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.activities_activity_segments_id_seq', 1, false);
 
 
 --
 -- Name: activities_contribution_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.activities_contribution_id_seq', 1332, true);
+SELECT pg_catalog.setval('test.activities_contribution_id_seq', 1, false);
 
 
 --
@@ -28296,28 +30985,42 @@ SELECT pg_catalog.setval('test.analytics_analyticsplatformsettings_id_seq', 1, t
 -- Name: auth_group_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.auth_group_id_seq', 40, true);
+SELECT pg_catalog.setval('test.auth_group_id_seq', 4, true);
 
 
 --
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.auth_group_permissions_id_seq', 367, true);
+SELECT pg_catalog.setval('test.auth_group_permissions_id_seq', 391, true);
 
 
 --
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.auth_permission_id_seq', 932, true);
+SELECT pg_catalog.setval('test.auth_permission_id_seq', 986, true);
+
+
+--
+-- Name: axes_accessattempt_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.axes_accessattempt_id_seq', 1, false);
+
+
+--
+-- Name: axes_accesslog_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.axes_accesslog_id_seq', 1, false);
 
 
 --
 -- Name: bb_follow_follow_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.bb_follow_follow_id_seq', 450, true);
+SELECT pg_catalog.setval('test.bb_follow_follow_id_seq', 1, false);
 
 
 --
@@ -28356,10 +31059,24 @@ SELECT pg_catalog.setval('test.categories_category_id_seq', 1, false);
 
 
 --
+-- Name: categories_category_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.categories_category_translation_id_seq', 1, false);
+
+
+--
 -- Name: categories_categorycontent_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
 SELECT pg_catalog.setval('test.categories_categorycontent_id_seq', 1, false);
+
+
+--
+-- Name: categories_categorycontent_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.categories_categorycontent_translation_id_seq', 1, false);
 
 
 --
@@ -28380,35 +31097,35 @@ SELECT pg_catalog.setval('test.cms_categoriescontent_categories_id_seq', 1, fals
 -- Name: cms_contentlink_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.cms_contentlink_id_seq', 8, true);
+SELECT pg_catalog.setval('test.cms_contentlink_id_seq', 4, true);
 
 
 --
 -- Name: cms_greeting_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.cms_greeting_id_seq', 8, true);
+SELECT pg_catalog.setval('test.cms_greeting_id_seq', 4, true);
 
 
 --
 -- Name: cms_homepage_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.cms_homepage_id_seq', 10, true);
+SELECT pg_catalog.setval('test.cms_homepage_id_seq', 1, false);
 
 
 --
 -- Name: cms_homepage_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.cms_homepage_translation_id_seq', 2, true);
+SELECT pg_catalog.setval('test.cms_homepage_translation_id_seq', 3, true);
 
 
 --
 -- Name: cms_link_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.cms_link_id_seq', 25, true);
+SELECT pg_catalog.setval('test.cms_link_id_seq', 1, false);
 
 
 --
@@ -28422,7 +31139,7 @@ SELECT pg_catalog.setval('test.cms_link_link_permissions_id_seq', 1, false);
 -- Name: cms_linkgroup_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.cms_linkgroup_id_seq', 10, true);
+SELECT pg_catalog.setval('test.cms_linkgroup_id_seq', 1, false);
 
 
 --
@@ -28478,7 +31195,7 @@ SELECT pg_catalog.setval('test.cms_resultpage_translation_id_seq', 2, true);
 -- Name: cms_sitelinks_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.cms_sitelinks_id_seq', 5, true);
+SELECT pg_catalog.setval('test.cms_sitelinks_id_seq', 1, false);
 
 
 --
@@ -28486,6 +31203,13 @@ SELECT pg_catalog.setval('test.cms_sitelinks_id_seq', 5, true);
 --
 
 SELECT pg_catalog.setval('test.cms_siteplatformsettings_id_seq', 1, true);
+
+
+--
+-- Name: cms_siteplatformsettings_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.cms_siteplatformsettings_translation_id_seq', 1, false);
 
 
 --
@@ -28506,7 +31230,7 @@ SELECT pg_catalog.setval('test.cms_stat_id_seq', 15, true);
 -- Name: cms_step_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.cms_step_id_seq', 178, true);
+SELECT pg_catalog.setval('test.cms_step_id_seq', 5, true);
 
 
 --
@@ -28527,28 +31251,28 @@ SELECT pg_catalog.setval('test.contact_contactmessage_id_seq', 1, false);
 -- Name: dashboard_userdashboardmodule_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.dashboard_userdashboardmodule_id_seq', 1, true);
+SELECT pg_catalog.setval('test.dashboard_userdashboardmodule_id_seq', 1, false);
 
 
 --
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.django_admin_log_id_seq', 10, true);
+SELECT pg_catalog.setval('test.django_admin_log_id_seq', 1, false);
 
 
 --
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.django_content_type_id_seq', 256, true);
+SELECT pg_catalog.setval('test.django_content_type_id_seq', 282, true);
 
 
 --
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.django_migrations_id_seq', 848, true);
+SELECT pg_catalog.setval('test.django_migrations_id_seq', 940, true);
 
 
 --
@@ -28569,7 +31293,7 @@ SELECT pg_catalog.setval('test.django_site_id_seq', 1, true);
 -- Name: donations_donation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.donations_donation_id_seq', 90, true);
+SELECT pg_catalog.setval('test.donations_donation_id_seq', 1, false);
 
 
 --
@@ -28583,14 +31307,14 @@ SELECT pg_catalog.setval('test.files_relatedimage_id_seq', 1, false);
 -- Name: fluent_contents_contentitem_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.fluent_contents_contentitem_id_seq', 200, true);
+SELECT pg_catalog.setval('test.fluent_contents_contentitem_id_seq', 25, true);
 
 
 --
 -- Name: fluent_contents_placeholder_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.fluent_contents_placeholder_id_seq', 144, true);
+SELECT pg_catalog.setval('test.fluent_contents_placeholder_id_seq', 13, true);
 
 
 --
@@ -28604,14 +31328,14 @@ SELECT pg_catalog.setval('test.follow_follow_id_seq', 1, false);
 -- Name: funding_bankaccount_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.funding_bankaccount_id_seq', 514, true);
+SELECT pg_catalog.setval('test.funding_bankaccount_id_seq', 1, false);
 
 
 --
 -- Name: funding_budgetline_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.funding_budgetline_id_seq', 184, true);
+SELECT pg_catalog.setval('test.funding_budgetline_id_seq', 1, false);
 
 
 --
@@ -28632,77 +31356,77 @@ SELECT pg_catalog.setval('test.funding_fundraiser_id_seq', 1, false);
 -- Name: funding_payment_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.funding_payment_id_seq', 1173, true);
+SELECT pg_catalog.setval('test.funding_payment_id_seq', 1, false);
 
 
 --
 -- Name: funding_paymentcurrency_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.funding_paymentcurrency_id_seq', 1673, true);
+SELECT pg_catalog.setval('test.funding_paymentcurrency_id_seq', 1, false);
 
 
 --
 -- Name: funding_paymentprovider_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.funding_paymentprovider_id_seq', 546, true);
+SELECT pg_catalog.setval('test.funding_paymentprovider_id_seq', 4, true);
 
 
 --
 -- Name: funding_payout_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.funding_payout_id_seq', 107, true);
+SELECT pg_catalog.setval('test.funding_payout_id_seq', 1, false);
 
 
 --
 -- Name: funding_payoutaccount_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.funding_payoutaccount_id_seq', 455, true);
+SELECT pg_catalog.setval('test.funding_payoutaccount_id_seq', 1, false);
 
 
 --
 -- Name: funding_reward_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.funding_reward_id_seq', 29, true);
+SELECT pg_catalog.setval('test.funding_reward_id_seq', 1, false);
 
 
 --
 -- Name: funding_stripe_paymentintent_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.funding_stripe_paymentintent_id_seq', 373, true);
+SELECT pg_catalog.setval('test.funding_stripe_paymentintent_id_seq', 1, false);
 
 
 --
 -- Name: fundraisers_fundraiser_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.fundraisers_fundraiser_id_seq', 90, true);
+SELECT pg_catalog.setval('test.fundraisers_fundraiser_id_seq', 1, false);
 
 
 --
 -- Name: geo_activityplace_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_activityplace_id_seq', 725, true);
+SELECT pg_catalog.setval('test.geo_activityplace_id_seq', 1, false);
 
 
 --
 -- Name: geo_country_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_country_id_seq', 1243, true);
+SELECT pg_catalog.setval('test.geo_country_id_seq', 10, true);
 
 
 --
 -- Name: geo_country_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_country_translation_id_seq', 1243, true);
+SELECT pg_catalog.setval('test.geo_country_translation_id_seq', 10, true);
 
 
 --
@@ -28737,28 +31461,49 @@ SELECT pg_catalog.setval('test.geo_place_id_seq', 1, false);
 -- Name: geo_region_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_region_id_seq', 1243, true);
+SELECT pg_catalog.setval('test.geo_region_id_seq', 10, true);
 
 
 --
 -- Name: geo_region_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_region_translation_id_seq', 1243, true);
+SELECT pg_catalog.setval('test.geo_region_translation_id_seq', 10, true);
 
 
 --
 -- Name: geo_subregion_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_subregion_id_seq', 1243, true);
+SELECT pg_catalog.setval('test.geo_subregion_id_seq', 10, true);
 
 
 --
 -- Name: geo_subregion_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.geo_subregion_translation_id_seq', 1243, true);
+SELECT pg_catalog.setval('test.geo_subregion_translation_id_seq', 10, true);
+
+
+--
+-- Name: impact_impactgoal_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.impact_impactgoal_id_seq', 1, false);
+
+
+--
+-- Name: impact_impacttype_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.impact_impacttype_id_seq', 7, true);
+
+
+--
+-- Name: impact_impacttype_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.impact_impacttype_translation_id_seq', 21, true);
 
 
 --
@@ -28772,14 +31517,14 @@ SELECT pg_catalog.setval('test.initiatives_initiative_categories_id_seq', 1, fal
 -- Name: initiatives_initiative_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.initiatives_initiative_id_seq', 712, true);
+SELECT pg_catalog.setval('test.initiatives_initiative_id_seq', 1, false);
 
 
 --
 -- Name: initiatives_initiativeplatformsettings_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.initiatives_initiativeplatformsettings_id_seq', 14, true);
+SELECT pg_catalog.setval('test.initiatives_initiativeplatformsettings_id_seq', 1, true);
 
 
 --
@@ -28814,14 +31559,14 @@ SELECT pg_catalog.setval('test.mails_mailplatformsettings_id_seq', 1, true);
 -- Name: members_custommemberfield_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.members_custommemberfield_id_seq', 49, true);
+SELECT pg_catalog.setval('test.members_custommemberfield_id_seq', 1, false);
 
 
 --
 -- Name: members_custommemberfieldsettings_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.members_custommemberfieldsettings_id_seq', 61, true);
+SELECT pg_catalog.setval('test.members_custommemberfieldsettings_id_seq', 1, false);
 
 
 --
@@ -28835,14 +31580,21 @@ SELECT pg_catalog.setval('test.members_member_favourite_themes_id_seq', 1, false
 -- Name: members_member_groups_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.members_member_groups_id_seq', 7148, true);
+SELECT pg_catalog.setval('test.members_member_groups_id_seq', 22, true);
 
 
 --
 -- Name: members_member_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.members_member_id_seq', 7061, true);
+SELECT pg_catalog.setval('test.members_member_id_seq', 21, true);
+
+
+--
+-- Name: members_member_segments_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.members_member_segments_id_seq', 1, false);
 
 
 --
@@ -28863,14 +31615,14 @@ SELECT pg_catalog.setval('test.members_member_user_permissions_id_seq', 1, false
 -- Name: members_memberplatformsettings_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.members_memberplatformsettings_id_seq', 4, true);
+SELECT pg_catalog.setval('test.members_memberplatformsettings_id_seq', 1, true);
 
 
 --
 -- Name: members_useractivity_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.members_useractivity_id_seq', 9, true);
+SELECT pg_catalog.setval('test.members_useractivity_id_seq', 1, false);
 
 
 --
@@ -28891,21 +31643,21 @@ SELECT pg_catalog.setval('test.news_newsitem_id_seq', 1, false);
 -- Name: notifications_message_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.notifications_message_id_seq', 1290, true);
+SELECT pg_catalog.setval('test.notifications_message_id_seq', 1, false);
 
 
 --
 -- Name: notifications_messagetemplate_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.notifications_messagetemplate_id_seq', 24, true);
+SELECT pg_catalog.setval('test.notifications_messagetemplate_id_seq', 1, false);
 
 
 --
 -- Name: notifications_messagetemplate_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.notifications_messagetemplate_translation_id_seq', 24, true);
+SELECT pg_catalog.setval('test.notifications_messagetemplate_translation_id_seq', 1, false);
 
 
 --
@@ -28919,14 +31671,14 @@ SELECT pg_catalog.setval('test.notifications_notificationplatformsettings_id_seq
 -- Name: orders_order_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.orders_order_id_seq', 90, true);
+SELECT pg_catalog.setval('test.orders_order_id_seq', 1, false);
 
 
 --
 -- Name: organizations_organization_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.organizations_organization_id_seq', 470, true);
+SELECT pg_catalog.setval('test.organizations_organization_id_seq', 10, true);
 
 
 --
@@ -28940,7 +31692,7 @@ SELECT pg_catalog.setval('test.organizations_organizationcontact_id_seq', 1, fal
 -- Name: pages_page_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.pages_page_id_seq', 76, true);
+SELECT pg_catalog.setval('test.pages_page_id_seq', 1, false);
 
 
 --
@@ -29031,7 +31783,7 @@ SELECT pg_catalog.setval('test.projects_project_categories_id_seq', 1, false);
 -- Name: projects_project_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.projects_project_id_seq', 470, true);
+SELECT pg_catalog.setval('test.projects_project_id_seq', 10, true);
 
 
 --
@@ -29066,7 +31818,7 @@ SELECT pg_catalog.setval('test.projects_projectimage_id_seq', 1, false);
 -- Name: projects_projectphaselog_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.projects_projectphaselog_id_seq', 470, true);
+SELECT pg_catalog.setval('test.projects_projectphaselog_id_seq', 10, true);
 
 
 --
@@ -29105,10 +31857,24 @@ SELECT pg_catalog.setval('test.scim_scimplatformsettings_id_seq', 1, true);
 
 
 --
+-- Name: segments_segment_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.segments_segment_id_seq', 1, false);
+
+
+--
+-- Name: segments_segmenttype_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.segments_segmenttype_id_seq', 1, false);
+
+
+--
 -- Name: slides_slide_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.slides_slide_id_seq', 16, true);
+SELECT pg_catalog.setval('test.slides_slide_id_seq', 8, true);
 
 
 --
@@ -29144,6 +31910,34 @@ SELECT pg_catalog.setval('test.social_auth_partial_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('test.social_auth_usersocialauth_id_seq', 1, false);
+
+
+--
+-- Name: statistics_basestatistic_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.statistics_basestatistic_id_seq', 1, false);
+
+
+--
+-- Name: statistics_databasestatistic_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.statistics_databasestatistic_translation_id_seq', 1, false);
+
+
+--
+-- Name: statistics_impactstatistic_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.statistics_impactstatistic_translation_id_seq', 1, false);
+
+
+--
+-- Name: statistics_manualstatistic_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.statistics_manualstatistic_translation_id_seq', 1, false);
 
 
 --
@@ -29220,21 +32014,21 @@ SELECT pg_catalog.setval('test.taggit_taggeditem_id_seq', 1, false);
 -- Name: tasks_skill_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.tasks_skill_id_seq', 90, true);
+SELECT pg_catalog.setval('test.tasks_skill_id_seq', 30, true);
 
 
 --
 -- Name: tasks_skill_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.tasks_skill_translation_id_seq', 119, true);
+SELECT pg_catalog.setval('test.tasks_skill_translation_id_seq', 59, true);
 
 
 --
 -- Name: tasks_task_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.tasks_task_id_seq', 180, true);
+SELECT pg_catalog.setval('test.tasks_task_id_seq', 1, false);
 
 
 --
@@ -29248,7 +32042,7 @@ SELECT pg_catalog.setval('test.tasks_taskfile_id_seq', 1, false);
 -- Name: tasks_taskmember_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.tasks_taskmember_id_seq', 90, true);
+SELECT pg_catalog.setval('test.tasks_taskmember_id_seq', 1, false);
 
 
 --
@@ -29290,7 +32084,7 @@ SELECT pg_catalog.setval('test.token_auth_checkedtoken_id_seq', 1, false);
 -- Name: utils_language_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.utils_language_id_seq', 1005, true);
+SELECT pg_catalog.setval('test.utils_language_id_seq', 37, true);
 
 
 --
@@ -29301,10 +32095,17 @@ SELECT pg_catalog.setval('test.utils_maillog_id_seq', 1, false);
 
 
 --
--- Name: utils_metadatamodel_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+-- Name: utils_translationplatformsettings_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.utils_metadatamodel_id_seq', 1, false);
+SELECT pg_catalog.setval('test.utils_translationplatformsettings_id_seq', 1, false);
+
+
+--
+-- Name: utils_translationplatformsettings_translation_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
+--
+
+SELECT pg_catalog.setval('test.utils_translationplatformsettings_translation_id_seq', 1, false);
 
 
 --
@@ -29332,7 +32133,7 @@ SELECT pg_catalog.setval('test.wallposts_reaction_id_seq', 1, false);
 -- Name: wallposts_wallpost_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
 
-SELECT pg_catalog.setval('test.wallposts_wallpost_id_seq', 265, true);
+SELECT pg_catalog.setval('test.wallposts_wallpost_id_seq', 1, false);
 
 
 --
@@ -29340,6 +32141,13 @@ SELECT pg_catalog.setval('test.wallposts_wallpost_id_seq', 265, true);
 --
 
 SELECT pg_catalog.setval('test2.activities_activity_id_seq', 1, false);
+
+
+--
+-- Name: activities_activity_segments_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.activities_activity_segments_id_seq', 1, false);
 
 
 --
@@ -29374,14 +32182,28 @@ SELECT pg_catalog.setval('test2.auth_group_id_seq', 4, true);
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.auth_group_permissions_id_seq', 367, true);
+SELECT pg_catalog.setval('test2.auth_group_permissions_id_seq', 391, true);
 
 
 --
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.auth_permission_id_seq', 932, true);
+SELECT pg_catalog.setval('test2.auth_permission_id_seq', 986, true);
+
+
+--
+-- Name: axes_accessattempt_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.axes_accessattempt_id_seq', 1, false);
+
+
+--
+-- Name: axes_accesslog_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.axes_accesslog_id_seq', 1, false);
 
 
 --
@@ -29427,10 +32249,24 @@ SELECT pg_catalog.setval('test2.categories_category_id_seq', 1, false);
 
 
 --
+-- Name: categories_category_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.categories_category_translation_id_seq', 1, false);
+
+
+--
 -- Name: categories_categorycontent_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
 SELECT pg_catalog.setval('test2.categories_categorycontent_id_seq', 1, false);
+
+
+--
+-- Name: categories_categorycontent_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.categories_categorycontent_translation_id_seq', 1, false);
 
 
 --
@@ -29472,7 +32308,7 @@ SELECT pg_catalog.setval('test2.cms_homepage_id_seq', 1, false);
 -- Name: cms_homepage_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.cms_homepage_translation_id_seq', 2, true);
+SELECT pg_catalog.setval('test2.cms_homepage_translation_id_seq', 3, true);
 
 
 --
@@ -29560,6 +32396,13 @@ SELECT pg_catalog.setval('test2.cms_siteplatformsettings_id_seq', 1, true);
 
 
 --
+-- Name: cms_siteplatformsettings_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.cms_siteplatformsettings_translation_id_seq', 1, false);
+
+
+--
 -- Name: cms_slide_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -29612,14 +32455,14 @@ SELECT pg_catalog.setval('test2.django_admin_log_id_seq', 1, false);
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.django_content_type_id_seq', 256, true);
+SELECT pg_catalog.setval('test2.django_content_type_id_seq', 282, true);
 
 
 --
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.django_migrations_id_seq', 848, true);
+SELECT pg_catalog.setval('test2.django_migrations_id_seq', 940, true);
 
 
 --
@@ -29833,6 +32676,27 @@ SELECT pg_catalog.setval('test2.geo_subregion_translation_id_seq', 1, false);
 
 
 --
+-- Name: impact_impactgoal_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.impact_impactgoal_id_seq', 1, false);
+
+
+--
+-- Name: impact_impacttype_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.impact_impacttype_id_seq', 7, true);
+
+
+--
+-- Name: impact_impacttype_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.impact_impacttype_translation_id_seq', 21, true);
+
+
+--
 -- Name: initiatives_initiative_categories_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -29914,6 +32778,13 @@ SELECT pg_catalog.setval('test2.members_member_groups_id_seq', 2, true);
 --
 
 SELECT pg_catalog.setval('test2.members_member_id_seq', 1, true);
+
+
+--
+-- Name: members_member_segments_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.members_member_segments_id_seq', 1, false);
 
 
 --
@@ -30176,6 +33047,20 @@ SELECT pg_catalog.setval('test2.scim_scimplatformsettings_id_seq', 1, true);
 
 
 --
+-- Name: segments_segment_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.segments_segment_id_seq', 1, false);
+
+
+--
+-- Name: segments_segmenttype_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.segments_segmenttype_id_seq', 1, false);
+
+
+--
 -- Name: slides_slide_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
@@ -30215,6 +33100,34 @@ SELECT pg_catalog.setval('test2.social_auth_partial_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('test2.social_auth_usersocialauth_id_seq', 1, false);
+
+
+--
+-- Name: statistics_basestatistic_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.statistics_basestatistic_id_seq', 1, false);
+
+
+--
+-- Name: statistics_databasestatistic_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.statistics_databasestatistic_translation_id_seq', 1, false);
+
+
+--
+-- Name: statistics_impactstatistic_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.statistics_impactstatistic_translation_id_seq', 1, false);
+
+
+--
+-- Name: statistics_manualstatistic_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.statistics_manualstatistic_translation_id_seq', 1, false);
 
 
 --
@@ -30361,7 +33274,7 @@ SELECT pg_catalog.setval('test2.token_auth_checkedtoken_id_seq', 1, false);
 -- Name: utils_language_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.utils_language_id_seq', 397, true);
+SELECT pg_catalog.setval('test2.utils_language_id_seq', 5, true);
 
 
 --
@@ -30372,10 +33285,17 @@ SELECT pg_catalog.setval('test2.utils_maillog_id_seq', 1, false);
 
 
 --
--- Name: utils_metadatamodel_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+-- Name: utils_translationplatformsettings_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
 --
 
-SELECT pg_catalog.setval('test2.utils_metadatamodel_id_seq', 1, false);
+SELECT pg_catalog.setval('test2.utils_translationplatformsettings_id_seq', 1, false);
+
+
+--
+-- Name: utils_translationplatformsettings_translation_id_seq; Type: SEQUENCE SET; Schema: test2; Owner: -
+--
+
+SELECT pg_catalog.setval('test2.utils_translationplatformsettings_translation_id_seq', 1, false);
 
 
 --
@@ -30607,11 +33527,35 @@ ALTER TABLE ONLY test.activities_activity
 
 
 --
+-- Name: activities_activity_segments activities_activity_segm_activity_id_segment_id_8979a0b0_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_activity_segments
+    ADD CONSTRAINT activities_activity_segm_activity_id_segment_id_8979a0b0_uniq UNIQUE (activity_id, segment_id);
+
+
+--
+-- Name: activities_activity_segments activities_activity_segments_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_activity_segments
+    ADD CONSTRAINT activities_activity_segments_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: activities_contribution activities_contribution_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.activities_contribution
     ADD CONSTRAINT activities_contribution_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: activities_organizer activities_organizer_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_organizer
+    ADD CONSTRAINT activities_organizer_pkey PRIMARY KEY (contribution_ptr_id);
 
 
 --
@@ -30711,6 +33655,22 @@ ALTER TABLE ONLY test.authtoken_token
 
 
 --
+-- Name: axes_accessattempt axes_accessattempt_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.axes_accessattempt
+    ADD CONSTRAINT axes_accessattempt_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: axes_accesslog axes_accesslog_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.axes_accesslog
+    ADD CONSTRAINT axes_accesslog_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: bb_follow_follow bb_follow_follow_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -30807,11 +33767,27 @@ ALTER TABLE ONLY test.categories_category
 
 
 --
--- Name: categories_category categories_category_title_key; Type: CONSTRAINT; Schema: test; Owner: -
+-- Name: categories_category_translation categories_category_tran_language_code_master_id_52a0a7d7_uniq; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.categories_category
-    ADD CONSTRAINT categories_category_title_key UNIQUE (title);
+ALTER TABLE ONLY test.categories_category_translation
+    ADD CONSTRAINT categories_category_tran_language_code_master_id_52a0a7d7_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: categories_category_translation categories_category_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.categories_category_translation
+    ADD CONSTRAINT categories_category_translation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: categories_categorycontent_translation categories_categoryconte_language_code_master_id_1e14f452_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.categories_categorycontent_translation
+    ADD CONSTRAINT categories_categoryconte_language_code_master_id_1e14f452_uniq UNIQUE (language_code, master_id);
 
 
 --
@@ -30820,6 +33796,14 @@ ALTER TABLE ONLY test.categories_category
 
 ALTER TABLE ONLY test.categories_categorycontent
     ADD CONSTRAINT categories_categorycontent_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: categories_categorycontent_translation categories_categorycontent_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.categories_categorycontent_translation
+    ADD CONSTRAINT categories_categorycontent_translation_pkey PRIMARY KEY (id);
 
 
 --
@@ -31023,11 +34007,27 @@ ALTER TABLE ONLY test.cms_sitelinks
 
 
 --
+-- Name: cms_siteplatformsettings_translation cms_siteplatformsettings_language_code_master_id_9b083568_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.cms_siteplatformsettings_translation
+    ADD CONSTRAINT cms_siteplatformsettings_language_code_master_id_9b083568_uniq UNIQUE (language_code, master_id);
+
+
+--
 -- Name: cms_siteplatformsettings cms_siteplatformsettings_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.cms_siteplatformsettings
     ADD CONSTRAINT cms_siteplatformsettings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cms_siteplatformsettings_translation cms_siteplatformsettings_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.cms_siteplatformsettings_translation
+    ADD CONSTRAINT cms_siteplatformsettings_translation_pkey PRIMARY KEY (id);
 
 
 --
@@ -31092,6 +34092,14 @@ ALTER TABLE ONLY test.contentitem_cms_activitiescontent
 
 ALTER TABLE ONLY test.contentitem_cms_categoriescontent
     ADD CONSTRAINT contentitem_cms_categoriescontent_pkey PRIMARY KEY (contentitem_ptr_id);
+
+
+--
+-- Name: contentitem_cms_homepagestatisticscontent contentitem_cms_homepagestatisticscontent_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.contentitem_cms_homepagestatisticscontent
+    ADD CONSTRAINT contentitem_cms_homepagestatisticscontent_pkey PRIMARY KEY (contentitem_ptr_id);
 
 
 --
@@ -31263,6 +34271,14 @@ ALTER TABLE ONLY test.contentitem_pages_imagetextitem
 
 
 --
+-- Name: contentitem_pages_imagetextrounditem contentitem_pages_imagetextrounditem_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.contentitem_pages_imagetextrounditem
+    ADD CONSTRAINT contentitem_pages_imagetextrounditem_pkey PRIMARY KEY (contentitem_ptr_id);
+
+
+--
 -- Name: contentitem_rawhtml_rawhtmlitem contentitem_rawhtml_rawhtmlitem_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -31388,6 +34404,14 @@ ALTER TABLE ONLY test.files_document
 
 ALTER TABLE ONLY test.files_image
     ADD CONSTRAINT files_image_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: files_privatedocument files_privatedocument_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.files_privatedocument
+    ADD CONSTRAINT files_privatedocument_pkey PRIMARY KEY (id);
 
 
 --
@@ -31695,6 +34719,30 @@ ALTER TABLE ONLY test.funding_stripe_stripesourcepayment
 
 
 --
+-- Name: funding_telesom_telesombankaccount funding_telesom_telesombankaccount_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.funding_telesom_telesombankaccount
+    ADD CONSTRAINT funding_telesom_telesombankaccount_pkey PRIMARY KEY (bankaccount_ptr_id);
+
+
+--
+-- Name: funding_telesom_telesompayment funding_telesom_telesompayment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.funding_telesom_telesompayment
+    ADD CONSTRAINT funding_telesom_telesompayment_pkey PRIMARY KEY (payment_ptr_id);
+
+
+--
+-- Name: funding_telesom_telesompaymentprovider funding_telesom_telesompaymentprovider_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.funding_telesom_telesompaymentprovider
+    ADD CONSTRAINT funding_telesom_telesompaymentprovider_pkey PRIMARY KEY (paymentprovider_ptr_id);
+
+
+--
 -- Name: funding_vitepay_vitepaybankaccount funding_vitepay_vitepaybankaccount_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -31863,6 +34911,46 @@ ALTER TABLE ONLY test.geo_subregion_translation
 
 
 --
+-- Name: impact_impactgoal impact_impactgoal_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.impact_impactgoal
+    ADD CONSTRAINT impact_impactgoal_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: impact_impacttype impact_impacttype_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.impact_impacttype
+    ADD CONSTRAINT impact_impacttype_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: impact_impacttype impact_impacttype_slug_key; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.impact_impacttype
+    ADD CONSTRAINT impact_impacttype_slug_key UNIQUE (slug);
+
+
+--
+-- Name: impact_impacttype_translation impact_impacttype_transl_language_code_master_id_1933e57c_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.impact_impacttype_translation
+    ADD CONSTRAINT impact_impacttype_transl_language_code_master_id_1933e57c_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: impact_impacttype_translation impact_impacttype_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.impact_impacttype_translation
+    ADD CONSTRAINT impact_impacttype_translation_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: initiatives_initiative_categories initiatives_initiative_c_initiative_id_category_i_9d73ad46_uniq; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -31996,6 +35084,22 @@ ALTER TABLE ONLY test.members_member_groups
 
 ALTER TABLE ONLY test.members_member
     ADD CONSTRAINT members_member_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: members_member_segments members_member_segments_member_id_segment_id_7d687b6f_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.members_member_segments
+    ADD CONSTRAINT members_member_segments_member_id_segment_id_7d687b6f_uniq UNIQUE (member_id, segment_id);
+
+
+--
+-- Name: members_member_segments members_member_segments_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.members_member_segments
+    ADD CONSTRAINT members_member_segments_pkey PRIMARY KEY (id);
 
 
 --
@@ -32591,6 +35695,30 @@ ALTER TABLE ONLY test.scim_scimplatformsettings
 
 
 --
+-- Name: segments_segment segments_segment_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.segments_segment
+    ADD CONSTRAINT segments_segment_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: segments_segmenttype segments_segmenttype_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.segments_segmenttype
+    ADD CONSTRAINT segments_segmenttype_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: segments_segmenttype segments_segmenttype_slug_key; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.segments_segmenttype
+    ADD CONSTRAINT segments_segmenttype_slug_key UNIQUE (slug);
+
+
+--
 -- Name: slides_slide slides_slide_pkey; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -32668,6 +35796,86 @@ ALTER TABLE ONLY test.social_auth_usersocialauth
 
 ALTER TABLE ONLY test.social_auth_usersocialauth
     ADD CONSTRAINT social_auth_usersocialauth_provider_uid_e6b5e668_uniq UNIQUE (provider, uid);
+
+
+--
+-- Name: statistics_basestatistic statistics_basestatistic_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_basestatistic
+    ADD CONSTRAINT statistics_basestatistic_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: statistics_databasestatistic_translation statistics_databasestati_language_code_master_id_c95e1304_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_databasestatistic_translation
+    ADD CONSTRAINT statistics_databasestati_language_code_master_id_c95e1304_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: statistics_databasestatistic statistics_databasestatistic_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_databasestatistic
+    ADD CONSTRAINT statistics_databasestatistic_pkey PRIMARY KEY (basestatistic_ptr_id);
+
+
+--
+-- Name: statistics_databasestatistic_translation statistics_databasestatistic_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_databasestatistic_translation
+    ADD CONSTRAINT statistics_databasestatistic_translation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: statistics_impactstatistic_translation statistics_impactstatist_language_code_master_id_8c247515_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_impactstatistic_translation
+    ADD CONSTRAINT statistics_impactstatist_language_code_master_id_8c247515_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: statistics_impactstatistic statistics_impactstatistic_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_impactstatistic
+    ADD CONSTRAINT statistics_impactstatistic_pkey PRIMARY KEY (basestatistic_ptr_id);
+
+
+--
+-- Name: statistics_impactstatistic_translation statistics_impactstatistic_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_impactstatistic_translation
+    ADD CONSTRAINT statistics_impactstatistic_translation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: statistics_manualstatistic_translation statistics_manualstatist_language_code_master_id_fd555c31_uniq; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_manualstatistic_translation
+    ADD CONSTRAINT statistics_manualstatist_language_code_master_id_fd555c31_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: statistics_manualstatistic statistics_manualstatistic_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_manualstatistic
+    ADD CONSTRAINT statistics_manualstatistic_pkey PRIMARY KEY (basestatistic_ptr_id);
+
+
+--
+-- Name: statistics_manualstatistic_translation statistics_manualstatistic_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_manualstatistic_translation
+    ADD CONSTRAINT statistics_manualstatistic_translation_pkey PRIMARY KEY (id);
 
 
 --
@@ -32871,11 +36079,27 @@ ALTER TABLE ONLY test.utils_maillog
 
 
 --
--- Name: utils_metadatamodel utils_metadatamodel_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+-- Name: utils_translationplatformsettings_translation utils_translationplatfor_language_code_master_id_de2d6855_uniq; Type: CONSTRAINT; Schema: test; Owner: -
 --
 
-ALTER TABLE ONLY test.utils_metadatamodel
-    ADD CONSTRAINT utils_metadatamodel_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY test.utils_translationplatformsettings_translation
+    ADD CONSTRAINT utils_translationplatfor_language_code_master_id_de2d6855_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: utils_translationplatformsettings utils_translationplatformsettings_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.utils_translationplatformsettings
+    ADD CONSTRAINT utils_translationplatformsettings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: utils_translationplatformsettings_translation utils_translationplatformsettings_translation_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.utils_translationplatformsettings_translation
+    ADD CONSTRAINT utils_translationplatformsettings_translation_pkey PRIMARY KEY (id);
 
 
 --
@@ -32951,11 +36175,35 @@ ALTER TABLE ONLY test2.activities_activity
 
 
 --
+-- Name: activities_activity_segments activities_activity_segm_activity_id_segment_id_8979a0b0_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_activity_segments
+    ADD CONSTRAINT activities_activity_segm_activity_id_segment_id_8979a0b0_uniq UNIQUE (activity_id, segment_id);
+
+
+--
+-- Name: activities_activity_segments activities_activity_segments_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_activity_segments
+    ADD CONSTRAINT activities_activity_segments_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: activities_contribution activities_contribution_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.activities_contribution
     ADD CONSTRAINT activities_contribution_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: activities_organizer activities_organizer_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_organizer
+    ADD CONSTRAINT activities_organizer_pkey PRIMARY KEY (contribution_ptr_id);
 
 
 --
@@ -33055,6 +36303,22 @@ ALTER TABLE ONLY test2.authtoken_token
 
 
 --
+-- Name: axes_accessattempt axes_accessattempt_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.axes_accessattempt
+    ADD CONSTRAINT axes_accessattempt_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: axes_accesslog axes_accesslog_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.axes_accesslog
+    ADD CONSTRAINT axes_accesslog_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: bb_follow_follow bb_follow_follow_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -33151,11 +36415,27 @@ ALTER TABLE ONLY test2.categories_category
 
 
 --
--- Name: categories_category categories_category_title_key; Type: CONSTRAINT; Schema: test2; Owner: -
+-- Name: categories_category_translation categories_category_tran_language_code_master_id_52a0a7d7_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.categories_category
-    ADD CONSTRAINT categories_category_title_key UNIQUE (title);
+ALTER TABLE ONLY test2.categories_category_translation
+    ADD CONSTRAINT categories_category_tran_language_code_master_id_52a0a7d7_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: categories_category_translation categories_category_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.categories_category_translation
+    ADD CONSTRAINT categories_category_translation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: categories_categorycontent_translation categories_categoryconte_language_code_master_id_1e14f452_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.categories_categorycontent_translation
+    ADD CONSTRAINT categories_categoryconte_language_code_master_id_1e14f452_uniq UNIQUE (language_code, master_id);
 
 
 --
@@ -33164,6 +36444,14 @@ ALTER TABLE ONLY test2.categories_category
 
 ALTER TABLE ONLY test2.categories_categorycontent
     ADD CONSTRAINT categories_categorycontent_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: categories_categorycontent_translation categories_categorycontent_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.categories_categorycontent_translation
+    ADD CONSTRAINT categories_categorycontent_translation_pkey PRIMARY KEY (id);
 
 
 --
@@ -33367,11 +36655,27 @@ ALTER TABLE ONLY test2.cms_sitelinks
 
 
 --
+-- Name: cms_siteplatformsettings_translation cms_siteplatformsettings_language_code_master_id_9b083568_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.cms_siteplatformsettings_translation
+    ADD CONSTRAINT cms_siteplatformsettings_language_code_master_id_9b083568_uniq UNIQUE (language_code, master_id);
+
+
+--
 -- Name: cms_siteplatformsettings cms_siteplatformsettings_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.cms_siteplatformsettings
     ADD CONSTRAINT cms_siteplatformsettings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cms_siteplatformsettings_translation cms_siteplatformsettings_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.cms_siteplatformsettings_translation
+    ADD CONSTRAINT cms_siteplatformsettings_translation_pkey PRIMARY KEY (id);
 
 
 --
@@ -33436,6 +36740,14 @@ ALTER TABLE ONLY test2.contentitem_cms_activitiescontent
 
 ALTER TABLE ONLY test2.contentitem_cms_categoriescontent
     ADD CONSTRAINT contentitem_cms_categoriescontent_pkey PRIMARY KEY (contentitem_ptr_id);
+
+
+--
+-- Name: contentitem_cms_homepagestatisticscontent contentitem_cms_homepagestatisticscontent_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.contentitem_cms_homepagestatisticscontent
+    ADD CONSTRAINT contentitem_cms_homepagestatisticscontent_pkey PRIMARY KEY (contentitem_ptr_id);
 
 
 --
@@ -33607,6 +36919,14 @@ ALTER TABLE ONLY test2.contentitem_pages_imagetextitem
 
 
 --
+-- Name: contentitem_pages_imagetextrounditem contentitem_pages_imagetextrounditem_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.contentitem_pages_imagetextrounditem
+    ADD CONSTRAINT contentitem_pages_imagetextrounditem_pkey PRIMARY KEY (contentitem_ptr_id);
+
+
+--
 -- Name: contentitem_rawhtml_rawhtmlitem contentitem_rawhtml_rawhtmlitem_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -33732,6 +37052,14 @@ ALTER TABLE ONLY test2.files_document
 
 ALTER TABLE ONLY test2.files_image
     ADD CONSTRAINT files_image_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: files_privatedocument files_privatedocument_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.files_privatedocument
+    ADD CONSTRAINT files_privatedocument_pkey PRIMARY KEY (id);
 
 
 --
@@ -34039,6 +37367,30 @@ ALTER TABLE ONLY test2.funding_stripe_stripesourcepayment
 
 
 --
+-- Name: funding_telesom_telesombankaccount funding_telesom_telesombankaccount_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.funding_telesom_telesombankaccount
+    ADD CONSTRAINT funding_telesom_telesombankaccount_pkey PRIMARY KEY (bankaccount_ptr_id);
+
+
+--
+-- Name: funding_telesom_telesompayment funding_telesom_telesompayment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.funding_telesom_telesompayment
+    ADD CONSTRAINT funding_telesom_telesompayment_pkey PRIMARY KEY (payment_ptr_id);
+
+
+--
+-- Name: funding_telesom_telesompaymentprovider funding_telesom_telesompaymentprovider_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.funding_telesom_telesompaymentprovider
+    ADD CONSTRAINT funding_telesom_telesompaymentprovider_pkey PRIMARY KEY (paymentprovider_ptr_id);
+
+
+--
 -- Name: funding_vitepay_vitepaybankaccount funding_vitepay_vitepaybankaccount_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -34207,6 +37559,46 @@ ALTER TABLE ONLY test2.geo_subregion_translation
 
 
 --
+-- Name: impact_impactgoal impact_impactgoal_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.impact_impactgoal
+    ADD CONSTRAINT impact_impactgoal_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: impact_impacttype impact_impacttype_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.impact_impacttype
+    ADD CONSTRAINT impact_impacttype_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: impact_impacttype impact_impacttype_slug_key; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.impact_impacttype
+    ADD CONSTRAINT impact_impacttype_slug_key UNIQUE (slug);
+
+
+--
+-- Name: impact_impacttype_translation impact_impacttype_transl_language_code_master_id_1933e57c_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.impact_impacttype_translation
+    ADD CONSTRAINT impact_impacttype_transl_language_code_master_id_1933e57c_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: impact_impacttype_translation impact_impacttype_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.impact_impacttype_translation
+    ADD CONSTRAINT impact_impacttype_translation_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: initiatives_initiative_categories initiatives_initiative_c_initiative_id_category_i_9d73ad46_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -34340,6 +37732,22 @@ ALTER TABLE ONLY test2.members_member_groups
 
 ALTER TABLE ONLY test2.members_member
     ADD CONSTRAINT members_member_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: members_member_segments members_member_segments_member_id_segment_id_7d687b6f_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.members_member_segments
+    ADD CONSTRAINT members_member_segments_member_id_segment_id_7d687b6f_uniq UNIQUE (member_id, segment_id);
+
+
+--
+-- Name: members_member_segments members_member_segments_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.members_member_segments
+    ADD CONSTRAINT members_member_segments_pkey PRIMARY KEY (id);
 
 
 --
@@ -34935,6 +38343,30 @@ ALTER TABLE ONLY test2.scim_scimplatformsettings
 
 
 --
+-- Name: segments_segment segments_segment_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.segments_segment
+    ADD CONSTRAINT segments_segment_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: segments_segmenttype segments_segmenttype_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.segments_segmenttype
+    ADD CONSTRAINT segments_segmenttype_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: segments_segmenttype segments_segmenttype_slug_key; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.segments_segmenttype
+    ADD CONSTRAINT segments_segmenttype_slug_key UNIQUE (slug);
+
+
+--
 -- Name: slides_slide slides_slide_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -35012,6 +38444,86 @@ ALTER TABLE ONLY test2.social_auth_usersocialauth
 
 ALTER TABLE ONLY test2.social_auth_usersocialauth
     ADD CONSTRAINT social_auth_usersocialauth_provider_uid_e6b5e668_uniq UNIQUE (provider, uid);
+
+
+--
+-- Name: statistics_basestatistic statistics_basestatistic_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_basestatistic
+    ADD CONSTRAINT statistics_basestatistic_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: statistics_databasestatistic_translation statistics_databasestati_language_code_master_id_c95e1304_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_databasestatistic_translation
+    ADD CONSTRAINT statistics_databasestati_language_code_master_id_c95e1304_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: statistics_databasestatistic statistics_databasestatistic_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_databasestatistic
+    ADD CONSTRAINT statistics_databasestatistic_pkey PRIMARY KEY (basestatistic_ptr_id);
+
+
+--
+-- Name: statistics_databasestatistic_translation statistics_databasestatistic_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_databasestatistic_translation
+    ADD CONSTRAINT statistics_databasestatistic_translation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: statistics_impactstatistic_translation statistics_impactstatist_language_code_master_id_8c247515_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_impactstatistic_translation
+    ADD CONSTRAINT statistics_impactstatist_language_code_master_id_8c247515_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: statistics_impactstatistic statistics_impactstatistic_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_impactstatistic
+    ADD CONSTRAINT statistics_impactstatistic_pkey PRIMARY KEY (basestatistic_ptr_id);
+
+
+--
+-- Name: statistics_impactstatistic_translation statistics_impactstatistic_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_impactstatistic_translation
+    ADD CONSTRAINT statistics_impactstatistic_translation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: statistics_manualstatistic_translation statistics_manualstatist_language_code_master_id_fd555c31_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_manualstatistic_translation
+    ADD CONSTRAINT statistics_manualstatist_language_code_master_id_fd555c31_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: statistics_manualstatistic statistics_manualstatistic_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_manualstatistic
+    ADD CONSTRAINT statistics_manualstatistic_pkey PRIMARY KEY (basestatistic_ptr_id);
+
+
+--
+-- Name: statistics_manualstatistic_translation statistics_manualstatistic_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_manualstatistic_translation
+    ADD CONSTRAINT statistics_manualstatistic_translation_pkey PRIMARY KEY (id);
 
 
 --
@@ -35215,11 +38727,27 @@ ALTER TABLE ONLY test2.utils_maillog
 
 
 --
--- Name: utils_metadatamodel utils_metadatamodel_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+-- Name: utils_translationplatformsettings_translation utils_translationplatfor_language_code_master_id_de2d6855_uniq; Type: CONSTRAINT; Schema: test2; Owner: -
 --
 
-ALTER TABLE ONLY test2.utils_metadatamodel
-    ADD CONSTRAINT utils_metadatamodel_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY test2.utils_translationplatformsettings_translation
+    ADD CONSTRAINT utils_translationplatfor_language_code_master_id_de2d6855_uniq UNIQUE (language_code, master_id);
+
+
+--
+-- Name: utils_translationplatformsettings utils_translationplatformsettings_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.utils_translationplatformsettings
+    ADD CONSTRAINT utils_translationplatformsettings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: utils_translationplatformsettings_translation utils_translationplatformsettings_translation_pkey; Type: CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.utils_translationplatformsettings_translation
+    ADD CONSTRAINT utils_translationplatformsettings_translation_pkey PRIMARY KEY (id);
 
 
 --
@@ -35455,6 +38983,13 @@ CREATE INDEX djmoney_rates_ratesource_name_b64a0817_like ON public.djmoney_rates
 
 
 --
+-- Name: activities_activity_image_id_7297db2f; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX activities_activity_image_id_7297db2f ON test.activities_activity USING btree (image_id);
+
+
+--
 -- Name: activities_activity_initiative_id_9478bef8; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -35473,6 +39008,20 @@ CREATE INDEX activities_activity_owner_id_44d8a0b4 ON test.activities_activity U
 --
 
 CREATE INDEX activities_activity_polymorphic_ctype_id_7083f155 ON test.activities_activity USING btree (polymorphic_ctype_id);
+
+
+--
+-- Name: activities_activity_segments_activity_id_d3d6afbe; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX activities_activity_segments_activity_id_d3d6afbe ON test.activities_activity_segments USING btree (activity_id);
+
+
+--
+-- Name: activities_activity_segments_segment_id_89441f68; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX activities_activity_segments_segment_id_89441f68 ON test.activities_activity_segments USING btree (segment_id);
 
 
 --
@@ -35518,10 +39067,10 @@ CREATE INDEX analytics_analyticsadapter_analytics_settings_id_8059fd54 ON test.a
 
 
 --
--- Name: assignments_applicant_document_id_52766ded; Type: INDEX; Schema: test; Owner: -
+-- Name: assignments_applicant_private_document_id_23065006; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX assignments_applicant_document_id_52766ded ON test.assignments_applicant USING btree (document_id);
+CREATE INDEX assignments_applicant_private_document_id_23065006 ON test.assignments_applicant USING btree (document_id);
 
 
 --
@@ -35571,6 +39120,83 @@ CREATE INDEX auth_permission_content_type_id_2f476e4b ON test.auth_permission US
 --
 
 CREATE INDEX authtoken_token_key_10f0b77e_like ON test.authtoken_token USING btree (key varchar_pattern_ops);
+
+
+--
+-- Name: axes_accessattempt_ip_address_10922d9c; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX axes_accessattempt_ip_address_10922d9c ON test.axes_accessattempt USING btree (ip_address);
+
+
+--
+-- Name: axes_accessattempt_user_agent_ad89678b; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX axes_accessattempt_user_agent_ad89678b ON test.axes_accessattempt USING btree (user_agent);
+
+
+--
+-- Name: axes_accessattempt_user_agent_ad89678b_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX axes_accessattempt_user_agent_ad89678b_like ON test.axes_accessattempt USING btree (user_agent varchar_pattern_ops);
+
+
+--
+-- Name: axes_accessattempt_username_3f2d4ca0; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX axes_accessattempt_username_3f2d4ca0 ON test.axes_accessattempt USING btree (username);
+
+
+--
+-- Name: axes_accessattempt_username_3f2d4ca0_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX axes_accessattempt_username_3f2d4ca0_like ON test.axes_accessattempt USING btree (username varchar_pattern_ops);
+
+
+--
+-- Name: axes_accesslog_ip_address_86b417e5; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX axes_accesslog_ip_address_86b417e5 ON test.axes_accesslog USING btree (ip_address);
+
+
+--
+-- Name: axes_accesslog_trusted_496c5681; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX axes_accesslog_trusted_496c5681 ON test.axes_accesslog USING btree (trusted);
+
+
+--
+-- Name: axes_accesslog_user_agent_0e659004; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX axes_accesslog_user_agent_0e659004 ON test.axes_accesslog USING btree (user_agent);
+
+
+--
+-- Name: axes_accesslog_user_agent_0e659004_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX axes_accesslog_user_agent_0e659004_like ON test.axes_accesslog USING btree (user_agent varchar_pattern_ops);
+
+
+--
+-- Name: axes_accesslog_username_df93064b; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX axes_accesslog_username_df93064b ON test.axes_accesslog USING btree (username);
+
+
+--
+-- Name: axes_accesslog_username_df93064b_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX axes_accesslog_username_df93064b_like ON test.axes_accesslog USING btree (username varchar_pattern_ops);
 
 
 --
@@ -35651,10 +39277,31 @@ CREATE INDEX categories_category_slug_6fddebb1_like ON test.categories_category 
 
 
 --
--- Name: categories_category_title_7f88da35_like; Type: INDEX; Schema: test; Owner: -
+-- Name: categories_category_translation_language_code_a5642e15; Type: INDEX; Schema: test; Owner: -
 --
 
-CREATE INDEX categories_category_title_7f88da35_like ON test.categories_category USING btree (title varchar_pattern_ops);
+CREATE INDEX categories_category_translation_language_code_a5642e15 ON test.categories_category_translation USING btree (language_code);
+
+
+--
+-- Name: categories_category_translation_language_code_a5642e15_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX categories_category_translation_language_code_a5642e15_like ON test.categories_category_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: categories_category_translation_master_id_a63a5b21; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX categories_category_translation_master_id_a63a5b21 ON test.categories_category_translation USING btree (master_id);
+
+
+--
+-- Name: categories_categoryconte_language_code_0c878a01_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX categories_categoryconte_language_code_0c878a01_like ON test.categories_categorycontent_translation USING btree (language_code varchar_pattern_ops);
 
 
 --
@@ -35669,6 +39316,20 @@ CREATE INDEX categories_categorycontent_category_id_90b5ba30 ON test.categories_
 --
 
 CREATE INDEX categories_categorycontent_sequence_50f3aaef ON test.categories_categorycontent USING btree (sequence);
+
+
+--
+-- Name: categories_categorycontent_translation_language_code_0c878a01; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX categories_categorycontent_translation_language_code_0c878a01 ON test.categories_categorycontent_translation USING btree (language_code);
+
+
+--
+-- Name: categories_categorycontent_translation_master_id_4f0cf64c; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX categories_categorycontent_translation_master_id_4f0cf64c ON test.categories_categorycontent_translation USING btree (master_id);
 
 
 --
@@ -35875,6 +39536,27 @@ CREATE INDEX cms_resultpage_translation_slug_4b611d78_like ON test.cms_resultpag
 
 
 --
+-- Name: cms_siteplatformsettings_language_code_d8b6c861_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX cms_siteplatformsettings_language_code_d8b6c861_like ON test.cms_siteplatformsettings_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: cms_siteplatformsettings_translation_language_code_d8b6c861; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX cms_siteplatformsettings_translation_language_code_d8b6c861 ON test.cms_siteplatformsettings_translation USING btree (language_code);
+
+
+--
+-- Name: cms_siteplatformsettings_translation_master_id_ffaecf01; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX cms_siteplatformsettings_translation_master_id_ffaecf01 ON test.cms_siteplatformsettings_translation USING btree (master_id);
+
+
+--
 -- Name: cms_slide_block_id_d12f3da7; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -36033,6 +39715,13 @@ CREATE INDEX files_document_owner_id_ff5cb015 ON test.files_document USING btree
 --
 
 CREATE INDEX files_image_owner_id_cfa1bdde ON test.files_image USING btree (owner_id);
+
+
+--
+-- Name: files_privatedocument_owner_id_16e5a712; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX files_privatedocument_owner_id_16e5a712 ON test.files_privatedocument USING btree (owner_id);
 
 
 --
@@ -36379,6 +40068,20 @@ CREATE INDEX geo_location_group_id_70137a39 ON test.geo_location USING btree (gr
 
 
 --
+-- Name: geo_location_slug_4f8f8fbd; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX geo_location_slug_4f8f8fbd ON test.geo_location USING btree (slug);
+
+
+--
+-- Name: geo_location_slug_4f8f8fbd_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX geo_location_slug_4f8f8fbd_like ON test.geo_location USING btree (slug varchar_pattern_ops);
+
+
+--
 -- Name: geo_place_content_type_id_462feeb6; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -36453,6 +40156,48 @@ CREATE INDEX geo_subregion_translation_language_code_2b3808bd_like ON test.geo_s
 --
 
 CREATE INDEX geo_subregion_translation_master_id_333c864c ON test.geo_subregion_translation USING btree (master_id);
+
+
+--
+-- Name: impact_impactgoal_activity_id_c97d01b3; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX impact_impactgoal_activity_id_c97d01b3 ON test.impact_impactgoal USING btree (activity_id);
+
+
+--
+-- Name: impact_impactgoal_type_id_fa1805fa; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX impact_impactgoal_type_id_fa1805fa ON test.impact_impactgoal USING btree (type_id);
+
+
+--
+-- Name: impact_impacttype_slug_eed1a443_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX impact_impacttype_slug_eed1a443_like ON test.impact_impacttype USING btree (slug varchar_pattern_ops);
+
+
+--
+-- Name: impact_impacttype_translation_language_code_83748113; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX impact_impacttype_translation_language_code_83748113 ON test.impact_impacttype_translation USING btree (language_code);
+
+
+--
+-- Name: impact_impacttype_translation_language_code_83748113_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX impact_impacttype_translation_language_code_83748113_like ON test.impact_impacttype_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: impact_impacttype_translation_master_id_15f98377; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX impact_impacttype_translation_master_id_15f98377 ON test.impact_impacttype_translation USING btree (master_id);
 
 
 --
@@ -36635,6 +40380,20 @@ CREATE INDEX members_member_location_id_9166afc9 ON test.members_member USING bt
 --
 
 CREATE INDEX members_member_partner_organization_id_d0cb8957 ON test.members_member USING btree (partner_organization_id);
+
+
+--
+-- Name: members_member_segments_member_id_0ed707a1; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX members_member_segments_member_id_0ed707a1 ON test.members_member_segments USING btree (member_id);
+
+
+--
+-- Name: members_member_segments_segment_id_d9279566; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX members_member_segments_segment_id_d9279566 ON test.members_member_segments USING btree (segment_id);
 
 
 --
@@ -37261,6 +41020,20 @@ CREATE INDEX rewards_reward_project_id_ae73b643 ON test.rewards_reward USING btr
 
 
 --
+-- Name: segments_segment_type_id_21ef9900; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX segments_segment_type_id_21ef9900 ON test.segments_segment USING btree (type_id);
+
+
+--
+-- Name: segments_segmenttype_slug_13a852eb_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX segments_segmenttype_slug_13a852eb_like ON test.segments_segmenttype USING btree (slug varchar_pattern_ops);
+
+
+--
 -- Name: slides_slide_author_id_22b6f684; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -37356,6 +41129,104 @@ CREATE INDEX social_auth_partial_token_3017fea3_like ON test.social_auth_partial
 --
 
 CREATE INDEX social_auth_usersocialauth_user_id_17d28448 ON test.social_auth_usersocialauth USING btree (user_id);
+
+
+--
+-- Name: statistics_basestatistic_polymorphic_ctype_id_89355190; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_basestatistic_polymorphic_ctype_id_89355190 ON test.statistics_basestatistic USING btree (polymorphic_ctype_id);
+
+
+--
+-- Name: statistics_basestatistic_sequence_d7b124ab; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_basestatistic_sequence_d7b124ab ON test.statistics_basestatistic USING btree (sequence);
+
+
+--
+-- Name: statistics_databasestati_language_code_93843a88_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_databasestati_language_code_93843a88_like ON test.statistics_databasestatistic_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: statistics_databasestatistic_query_4e9ea881; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_databasestatistic_query_4e9ea881 ON test.statistics_databasestatistic USING btree (query);
+
+
+--
+-- Name: statistics_databasestatistic_query_4e9ea881_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_databasestatistic_query_4e9ea881_like ON test.statistics_databasestatistic USING btree (query varchar_pattern_ops);
+
+
+--
+-- Name: statistics_databasestatistic_translation_language_code_93843a88; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_databasestatistic_translation_language_code_93843a88 ON test.statistics_databasestatistic_translation USING btree (language_code);
+
+
+--
+-- Name: statistics_databasestatistic_translation_master_id_9e429696; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_databasestatistic_translation_master_id_9e429696 ON test.statistics_databasestatistic_translation USING btree (master_id);
+
+
+--
+-- Name: statistics_impactstatist_language_code_e40eaaa9_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_impactstatist_language_code_e40eaaa9_like ON test.statistics_impactstatistic_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: statistics_impactstatistic_impact_type_id_7ef917b0; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_impactstatistic_impact_type_id_7ef917b0 ON test.statistics_impactstatistic USING btree (impact_type_id);
+
+
+--
+-- Name: statistics_impactstatistic_translation_language_code_e40eaaa9; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_impactstatistic_translation_language_code_e40eaaa9 ON test.statistics_impactstatistic_translation USING btree (language_code);
+
+
+--
+-- Name: statistics_impactstatistic_translation_master_id_36080f43; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_impactstatistic_translation_master_id_36080f43 ON test.statistics_impactstatistic_translation USING btree (master_id);
+
+
+--
+-- Name: statistics_manualstatist_language_code_3af2bbef_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_manualstatist_language_code_3af2bbef_like ON test.statistics_manualstatistic_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: statistics_manualstatistic_translation_language_code_3af2bbef; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_manualstatistic_translation_language_code_3af2bbef ON test.statistics_manualstatistic_translation USING btree (language_code);
+
+
+--
+-- Name: statistics_manualstatistic_translation_master_id_8b18eb96; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX statistics_manualstatistic_translation_master_id_8b18eb96 ON test.statistics_manualstatistic_translation USING btree (master_id);
 
 
 --
@@ -37625,6 +41496,27 @@ CREATE INDEX utils_maillog_content_type_id_0411d58b ON test.utils_maillog USING 
 
 
 --
+-- Name: utils_translationplatfor_language_code_fd9ccfa3_like; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX utils_translationplatfor_language_code_fd9ccfa3_like ON test.utils_translationplatformsettings_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: utils_translationplatforms_language_code_fd9ccfa3; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX utils_translationplatforms_language_code_fd9ccfa3 ON test.utils_translationplatformsettings_translation USING btree (language_code);
+
+
+--
+-- Name: utils_translationplatforms_master_id_5ae457be; Type: INDEX; Schema: test; Owner: -
+--
+
+CREATE INDEX utils_translationplatforms_master_id_5ae457be ON test.utils_translationplatformsettings_translation USING btree (master_id);
+
+
+--
 -- Name: votes_vote_created_d2bd31ac; Type: INDEX; Schema: test; Owner: -
 --
 
@@ -37730,6 +41622,13 @@ CREATE INDEX wallposts_wallpost_polymorphic_ctype_id_d018895d ON test.wallposts_
 
 
 --
+-- Name: activities_activity_image_id_7297db2f; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX activities_activity_image_id_7297db2f ON test2.activities_activity USING btree (image_id);
+
+
+--
 -- Name: activities_activity_initiative_id_9478bef8; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -37748,6 +41647,20 @@ CREATE INDEX activities_activity_owner_id_44d8a0b4 ON test2.activities_activity 
 --
 
 CREATE INDEX activities_activity_polymorphic_ctype_id_7083f155 ON test2.activities_activity USING btree (polymorphic_ctype_id);
+
+
+--
+-- Name: activities_activity_segments_activity_id_d3d6afbe; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX activities_activity_segments_activity_id_d3d6afbe ON test2.activities_activity_segments USING btree (activity_id);
+
+
+--
+-- Name: activities_activity_segments_segment_id_89441f68; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX activities_activity_segments_segment_id_89441f68 ON test2.activities_activity_segments USING btree (segment_id);
 
 
 --
@@ -37793,10 +41706,10 @@ CREATE INDEX analytics_analyticsadapter_analytics_settings_id_8059fd54 ON test2.
 
 
 --
--- Name: assignments_applicant_document_id_52766ded; Type: INDEX; Schema: test2; Owner: -
+-- Name: assignments_applicant_private_document_id_23065006; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX assignments_applicant_document_id_52766ded ON test2.assignments_applicant USING btree (document_id);
+CREATE INDEX assignments_applicant_private_document_id_23065006 ON test2.assignments_applicant USING btree (document_id);
 
 
 --
@@ -37846,6 +41759,83 @@ CREATE INDEX auth_permission_content_type_id_2f476e4b ON test2.auth_permission U
 --
 
 CREATE INDEX authtoken_token_key_10f0b77e_like ON test2.authtoken_token USING btree (key varchar_pattern_ops);
+
+
+--
+-- Name: axes_accessattempt_ip_address_10922d9c; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX axes_accessattempt_ip_address_10922d9c ON test2.axes_accessattempt USING btree (ip_address);
+
+
+--
+-- Name: axes_accessattempt_user_agent_ad89678b; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX axes_accessattempt_user_agent_ad89678b ON test2.axes_accessattempt USING btree (user_agent);
+
+
+--
+-- Name: axes_accessattempt_user_agent_ad89678b_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX axes_accessattempt_user_agent_ad89678b_like ON test2.axes_accessattempt USING btree (user_agent varchar_pattern_ops);
+
+
+--
+-- Name: axes_accessattempt_username_3f2d4ca0; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX axes_accessattempt_username_3f2d4ca0 ON test2.axes_accessattempt USING btree (username);
+
+
+--
+-- Name: axes_accessattempt_username_3f2d4ca0_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX axes_accessattempt_username_3f2d4ca0_like ON test2.axes_accessattempt USING btree (username varchar_pattern_ops);
+
+
+--
+-- Name: axes_accesslog_ip_address_86b417e5; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX axes_accesslog_ip_address_86b417e5 ON test2.axes_accesslog USING btree (ip_address);
+
+
+--
+-- Name: axes_accesslog_trusted_496c5681; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX axes_accesslog_trusted_496c5681 ON test2.axes_accesslog USING btree (trusted);
+
+
+--
+-- Name: axes_accesslog_user_agent_0e659004; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX axes_accesslog_user_agent_0e659004 ON test2.axes_accesslog USING btree (user_agent);
+
+
+--
+-- Name: axes_accesslog_user_agent_0e659004_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX axes_accesslog_user_agent_0e659004_like ON test2.axes_accesslog USING btree (user_agent varchar_pattern_ops);
+
+
+--
+-- Name: axes_accesslog_username_df93064b; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX axes_accesslog_username_df93064b ON test2.axes_accesslog USING btree (username);
+
+
+--
+-- Name: axes_accesslog_username_df93064b_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX axes_accesslog_username_df93064b_like ON test2.axes_accesslog USING btree (username varchar_pattern_ops);
 
 
 --
@@ -37926,10 +41916,31 @@ CREATE INDEX categories_category_slug_6fddebb1_like ON test2.categories_category
 
 
 --
--- Name: categories_category_title_7f88da35_like; Type: INDEX; Schema: test2; Owner: -
+-- Name: categories_category_translation_language_code_a5642e15; Type: INDEX; Schema: test2; Owner: -
 --
 
-CREATE INDEX categories_category_title_7f88da35_like ON test2.categories_category USING btree (title varchar_pattern_ops);
+CREATE INDEX categories_category_translation_language_code_a5642e15 ON test2.categories_category_translation USING btree (language_code);
+
+
+--
+-- Name: categories_category_translation_language_code_a5642e15_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX categories_category_translation_language_code_a5642e15_like ON test2.categories_category_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: categories_category_translation_master_id_a63a5b21; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX categories_category_translation_master_id_a63a5b21 ON test2.categories_category_translation USING btree (master_id);
+
+
+--
+-- Name: categories_categoryconte_language_code_0c878a01_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX categories_categoryconte_language_code_0c878a01_like ON test2.categories_categorycontent_translation USING btree (language_code varchar_pattern_ops);
 
 
 --
@@ -37944,6 +41955,20 @@ CREATE INDEX categories_categorycontent_category_id_90b5ba30 ON test2.categories
 --
 
 CREATE INDEX categories_categorycontent_sequence_50f3aaef ON test2.categories_categorycontent USING btree (sequence);
+
+
+--
+-- Name: categories_categorycontent_translation_language_code_0c878a01; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX categories_categorycontent_translation_language_code_0c878a01 ON test2.categories_categorycontent_translation USING btree (language_code);
+
+
+--
+-- Name: categories_categorycontent_translation_master_id_4f0cf64c; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX categories_categorycontent_translation_master_id_4f0cf64c ON test2.categories_categorycontent_translation USING btree (master_id);
 
 
 --
@@ -38150,6 +42175,27 @@ CREATE INDEX cms_resultpage_translation_slug_4b611d78_like ON test2.cms_resultpa
 
 
 --
+-- Name: cms_siteplatformsettings_language_code_d8b6c861_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX cms_siteplatformsettings_language_code_d8b6c861_like ON test2.cms_siteplatformsettings_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: cms_siteplatformsettings_translation_language_code_d8b6c861; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX cms_siteplatformsettings_translation_language_code_d8b6c861 ON test2.cms_siteplatformsettings_translation USING btree (language_code);
+
+
+--
+-- Name: cms_siteplatformsettings_translation_master_id_ffaecf01; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX cms_siteplatformsettings_translation_master_id_ffaecf01 ON test2.cms_siteplatformsettings_translation USING btree (master_id);
+
+
+--
 -- Name: cms_slide_block_id_d12f3da7; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -38308,6 +42354,13 @@ CREATE INDEX files_document_owner_id_ff5cb015 ON test2.files_document USING btre
 --
 
 CREATE INDEX files_image_owner_id_cfa1bdde ON test2.files_image USING btree (owner_id);
+
+
+--
+-- Name: files_privatedocument_owner_id_16e5a712; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX files_privatedocument_owner_id_16e5a712 ON test2.files_privatedocument USING btree (owner_id);
 
 
 --
@@ -38654,6 +42707,20 @@ CREATE INDEX geo_location_group_id_70137a39 ON test2.geo_location USING btree (g
 
 
 --
+-- Name: geo_location_slug_4f8f8fbd; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX geo_location_slug_4f8f8fbd ON test2.geo_location USING btree (slug);
+
+
+--
+-- Name: geo_location_slug_4f8f8fbd_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX geo_location_slug_4f8f8fbd_like ON test2.geo_location USING btree (slug varchar_pattern_ops);
+
+
+--
 -- Name: geo_place_content_type_id_462feeb6; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -38728,6 +42795,48 @@ CREATE INDEX geo_subregion_translation_language_code_2b3808bd_like ON test2.geo_
 --
 
 CREATE INDEX geo_subregion_translation_master_id_333c864c ON test2.geo_subregion_translation USING btree (master_id);
+
+
+--
+-- Name: impact_impactgoal_activity_id_c97d01b3; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX impact_impactgoal_activity_id_c97d01b3 ON test2.impact_impactgoal USING btree (activity_id);
+
+
+--
+-- Name: impact_impactgoal_type_id_fa1805fa; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX impact_impactgoal_type_id_fa1805fa ON test2.impact_impactgoal USING btree (type_id);
+
+
+--
+-- Name: impact_impacttype_slug_eed1a443_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX impact_impacttype_slug_eed1a443_like ON test2.impact_impacttype USING btree (slug varchar_pattern_ops);
+
+
+--
+-- Name: impact_impacttype_translation_language_code_83748113; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX impact_impacttype_translation_language_code_83748113 ON test2.impact_impacttype_translation USING btree (language_code);
+
+
+--
+-- Name: impact_impacttype_translation_language_code_83748113_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX impact_impacttype_translation_language_code_83748113_like ON test2.impact_impacttype_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: impact_impacttype_translation_master_id_15f98377; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX impact_impacttype_translation_master_id_15f98377 ON test2.impact_impacttype_translation USING btree (master_id);
 
 
 --
@@ -38910,6 +43019,20 @@ CREATE INDEX members_member_location_id_9166afc9 ON test2.members_member USING b
 --
 
 CREATE INDEX members_member_partner_organization_id_d0cb8957 ON test2.members_member USING btree (partner_organization_id);
+
+
+--
+-- Name: members_member_segments_member_id_0ed707a1; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX members_member_segments_member_id_0ed707a1 ON test2.members_member_segments USING btree (member_id);
+
+
+--
+-- Name: members_member_segments_segment_id_d9279566; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX members_member_segments_segment_id_d9279566 ON test2.members_member_segments USING btree (segment_id);
 
 
 --
@@ -39536,6 +43659,20 @@ CREATE INDEX rewards_reward_project_id_ae73b643 ON test2.rewards_reward USING bt
 
 
 --
+-- Name: segments_segment_type_id_21ef9900; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX segments_segment_type_id_21ef9900 ON test2.segments_segment USING btree (type_id);
+
+
+--
+-- Name: segments_segmenttype_slug_13a852eb_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX segments_segmenttype_slug_13a852eb_like ON test2.segments_segmenttype USING btree (slug varchar_pattern_ops);
+
+
+--
 -- Name: slides_slide_author_id_22b6f684; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -39631,6 +43768,104 @@ CREATE INDEX social_auth_partial_token_3017fea3_like ON test2.social_auth_partia
 --
 
 CREATE INDEX social_auth_usersocialauth_user_id_17d28448 ON test2.social_auth_usersocialauth USING btree (user_id);
+
+
+--
+-- Name: statistics_basestatistic_polymorphic_ctype_id_89355190; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_basestatistic_polymorphic_ctype_id_89355190 ON test2.statistics_basestatistic USING btree (polymorphic_ctype_id);
+
+
+--
+-- Name: statistics_basestatistic_sequence_d7b124ab; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_basestatistic_sequence_d7b124ab ON test2.statistics_basestatistic USING btree (sequence);
+
+
+--
+-- Name: statistics_databasestati_language_code_93843a88_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_databasestati_language_code_93843a88_like ON test2.statistics_databasestatistic_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: statistics_databasestatistic_query_4e9ea881; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_databasestatistic_query_4e9ea881 ON test2.statistics_databasestatistic USING btree (query);
+
+
+--
+-- Name: statistics_databasestatistic_query_4e9ea881_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_databasestatistic_query_4e9ea881_like ON test2.statistics_databasestatistic USING btree (query varchar_pattern_ops);
+
+
+--
+-- Name: statistics_databasestatistic_translation_language_code_93843a88; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_databasestatistic_translation_language_code_93843a88 ON test2.statistics_databasestatistic_translation USING btree (language_code);
+
+
+--
+-- Name: statistics_databasestatistic_translation_master_id_9e429696; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_databasestatistic_translation_master_id_9e429696 ON test2.statistics_databasestatistic_translation USING btree (master_id);
+
+
+--
+-- Name: statistics_impactstatist_language_code_e40eaaa9_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_impactstatist_language_code_e40eaaa9_like ON test2.statistics_impactstatistic_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: statistics_impactstatistic_impact_type_id_7ef917b0; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_impactstatistic_impact_type_id_7ef917b0 ON test2.statistics_impactstatistic USING btree (impact_type_id);
+
+
+--
+-- Name: statistics_impactstatistic_translation_language_code_e40eaaa9; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_impactstatistic_translation_language_code_e40eaaa9 ON test2.statistics_impactstatistic_translation USING btree (language_code);
+
+
+--
+-- Name: statistics_impactstatistic_translation_master_id_36080f43; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_impactstatistic_translation_master_id_36080f43 ON test2.statistics_impactstatistic_translation USING btree (master_id);
+
+
+--
+-- Name: statistics_manualstatist_language_code_3af2bbef_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_manualstatist_language_code_3af2bbef_like ON test2.statistics_manualstatistic_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: statistics_manualstatistic_translation_language_code_3af2bbef; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_manualstatistic_translation_language_code_3af2bbef ON test2.statistics_manualstatistic_translation USING btree (language_code);
+
+
+--
+-- Name: statistics_manualstatistic_translation_master_id_8b18eb96; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX statistics_manualstatistic_translation_master_id_8b18eb96 ON test2.statistics_manualstatistic_translation USING btree (master_id);
 
 
 --
@@ -39900,6 +44135,27 @@ CREATE INDEX utils_maillog_content_type_id_0411d58b ON test2.utils_maillog USING
 
 
 --
+-- Name: utils_translationplatfor_language_code_fd9ccfa3_like; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX utils_translationplatfor_language_code_fd9ccfa3_like ON test2.utils_translationplatformsettings_translation USING btree (language_code varchar_pattern_ops);
+
+
+--
+-- Name: utils_translationplatforms_language_code_fd9ccfa3; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX utils_translationplatforms_language_code_fd9ccfa3 ON test2.utils_translationplatformsettings_translation USING btree (language_code);
+
+
+--
+-- Name: utils_translationplatforms_master_id_5ae457be; Type: INDEX; Schema: test2; Owner: -
+--
+
+CREATE INDEX utils_translationplatforms_master_id_5ae457be ON test2.utils_translationplatformsettings_translation USING btree (master_id);
+
+
+--
 -- Name: votes_vote_created_d2bd31ac; Type: INDEX; Schema: test2; Owner: -
 --
 
@@ -40037,6 +44293,30 @@ ALTER TABLE ONLY public.djmoney_rates_rate
 
 
 --
+-- Name: activities_activity_segments activities_activity__activity_id_d3d6afbe_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_activity_segments
+    ADD CONSTRAINT activities_activity__activity_id_d3d6afbe_fk_activitie FOREIGN KEY (activity_id) REFERENCES test.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: activities_activity_segments activities_activity__segment_id_89441f68_fk_segments_; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_activity_segments
+    ADD CONSTRAINT activities_activity__segment_id_89441f68_fk_segments_ FOREIGN KEY (segment_id) REFERENCES test.segments_segment(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: activities_activity activities_activity_image_id_7297db2f_fk_files_image_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_activity
+    ADD CONSTRAINT activities_activity_image_id_7297db2f_fk_files_image_id FOREIGN KEY (image_id) REFERENCES test.files_image(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: activities_activity activities_activity_initiative_id_9478bef8_fk_initiativ; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -40085,6 +44365,14 @@ ALTER TABLE ONLY test.activities_contribution
 
 
 --
+-- Name: activities_organizer activities_organizer_contribution_ptr_id_7ffef135_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.activities_organizer
+    ADD CONSTRAINT activities_organizer_contribution_ptr_id_7ffef135_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: analytics_analyticsadapter analytics_analyticsa_analytics_settings_i_8059fd54_fk_analytics; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -40101,11 +44389,11 @@ ALTER TABLE ONLY test.assignments_applicant
 
 
 --
--- Name: assignments_applicant assignments_applicant_document_id_52766ded_fk_files_document_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: assignments_applicant assignments_applican_document_id_52766ded_fk_files_pri; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.assignments_applicant
-    ADD CONSTRAINT assignments_applicant_document_id_52766ded_fk_files_document_id FOREIGN KEY (document_id) REFERENCES test.files_document(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT assignments_applican_document_id_52766ded_fk_files_pri FOREIGN KEY (document_id) REFERENCES test.files_privatedocument(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40197,11 +44485,27 @@ ALTER TABLE ONLY test.bb_projects_projecttheme_translation
 
 
 --
+-- Name: categories_category_translation categories_category__master_id_a63a5b21_fk_categorie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.categories_category_translation
+    ADD CONSTRAINT categories_category__master_id_a63a5b21_fk_categorie FOREIGN KEY (master_id) REFERENCES test.categories_category(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: categories_categorycontent categories_categoryc_category_id_90b5ba30_fk_categorie; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.categories_categorycontent
     ADD CONSTRAINT categories_categoryc_category_id_90b5ba30_fk_categorie FOREIGN KEY (category_id) REFERENCES test.categories_category(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: categories_categorycontent_translation categories_categoryc_master_id_4f0cf64c_fk_categorie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.categories_categorycontent_translation
+    ADD CONSTRAINT categories_categoryc_master_id_4f0cf64c_fk_categorie FOREIGN KEY (master_id) REFERENCES test.categories_categorycontent(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40357,6 +44661,14 @@ ALTER TABLE ONLY test.cms_sitelinks
 
 
 --
+-- Name: cms_siteplatformsettings_translation cms_siteplatformsett_master_id_ffaecf01_fk_cms_sitep; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.cms_siteplatformsettings_translation
+    ADD CONSTRAINT cms_siteplatformsett_master_id_ffaecf01_fk_cms_sitep FOREIGN KEY (master_id) REFERENCES test.cms_siteplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: cms_slide cms_slide_block_id_d12f3da7_fk_contentit; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -40418,6 +44730,14 @@ ALTER TABLE ONLY test.contentitem_cms_activitiescontent
 
 ALTER TABLE ONLY test.contentitem_cms_categoriescontent
     ADD CONSTRAINT contentitem_cms_cate_contentitem_ptr_id_748677a5_fk_fluent_co FOREIGN KEY (contentitem_ptr_id) REFERENCES test.fluent_contents_contentitem(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: contentitem_cms_homepagestatisticscontent contentitem_cms_home_contentitem_ptr_id_025c1895_fk_fluent_co; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.contentitem_cms_homepagestatisticscontent
+    ADD CONSTRAINT contentitem_cms_home_contentitem_ptr_id_025c1895_fk_fluent_co FOREIGN KEY (contentitem_ptr_id) REFERENCES test.fluent_contents_contentitem(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40597,6 +44917,14 @@ ALTER TABLE ONLY test.contentitem_pages_imagetextitem
 
 
 --
+-- Name: contentitem_pages_imagetextrounditem contentitem_pages_im_contentitem_ptr_id_aeb2abd0_fk_fluent_co; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.contentitem_pages_imagetextrounditem
+    ADD CONSTRAINT contentitem_pages_im_contentitem_ptr_id_aeb2abd0_fk_fluent_co FOREIGN KEY (contentitem_ptr_id) REFERENCES test.fluent_contents_contentitem(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: contentitem_rawhtml_rawhtmlitem contentitem_rawhtml__contentitem_ptr_id_a20d2b03_fk_fluent_co; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -40698,6 +45026,14 @@ ALTER TABLE ONLY test.files_document
 
 ALTER TABLE ONLY test.files_image
     ADD CONSTRAINT files_image_owner_id_cfa1bdde_fk_members_member_id FOREIGN KEY (owner_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: files_privatedocument files_privatedocument_owner_id_16e5a712_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.files_privatedocument
+    ADD CONSTRAINT files_privatedocument_owner_id_16e5a712_fk_members_member_id FOREIGN KEY (owner_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -40981,11 +45317,11 @@ ALTER TABLE ONLY test.funding_payoutaccount
 
 
 --
--- Name: funding_plainpayoutaccount funding_plainpayouta_document_id_76e77d67_fk_files_doc; Type: FK CONSTRAINT; Schema: test; Owner: -
+-- Name: funding_plainpayoutaccount funding_plainpayouta_document_id_76e77d67_fk_files_pri; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
 ALTER TABLE ONLY test.funding_plainpayoutaccount
-    ADD CONSTRAINT funding_plainpayouta_document_id_76e77d67_fk_files_doc FOREIGN KEY (document_id) REFERENCES test.files_document(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT funding_plainpayouta_document_id_76e77d67_fk_files_pri FOREIGN KEY (document_id) REFERENCES test.files_privatedocument(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -41098,6 +45434,30 @@ ALTER TABLE ONLY test.funding_stripe_stripepaymentprovider
 
 ALTER TABLE ONLY test.funding_stripe_stripepayoutaccount
     ADD CONSTRAINT funding_stripe_strip_payoutaccount_ptr_id_4bb561bc_fk_funding_p FOREIGN KEY (payoutaccount_ptr_id) REFERENCES test.funding_payoutaccount(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: funding_telesom_telesombankaccount funding_telesom_tele_bankaccount_ptr_id_b2a0a3cc_fk_funding_b; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.funding_telesom_telesombankaccount
+    ADD CONSTRAINT funding_telesom_tele_bankaccount_ptr_id_b2a0a3cc_fk_funding_b FOREIGN KEY (bankaccount_ptr_id) REFERENCES test.funding_bankaccount(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: funding_telesom_telesompayment funding_telesom_tele_payment_ptr_id_943fece0_fk_funding_p; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.funding_telesom_telesompayment
+    ADD CONSTRAINT funding_telesom_tele_payment_ptr_id_943fece0_fk_funding_p FOREIGN KEY (payment_ptr_id) REFERENCES test.funding_payment(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: funding_telesom_telesompaymentprovider funding_telesom_tele_paymentprovider_ptr__857115b7_fk_funding_p; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.funding_telesom_telesompaymentprovider
+    ADD CONSTRAINT funding_telesom_tele_paymentprovider_ptr__857115b7_fk_funding_p FOREIGN KEY (paymentprovider_ptr_id) REFERENCES test.funding_paymentprovider(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -41234,6 +45594,30 @@ ALTER TABLE ONLY test.geo_subregion
 
 ALTER TABLE ONLY test.geo_subregion_translation
     ADD CONSTRAINT geo_subregion_transl_master_id_333c864c_fk_geo_subre FOREIGN KEY (master_id) REFERENCES test.geo_subregion(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: impact_impactgoal impact_impactgoal_activity_id_c97d01b3_fk_activitie; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.impact_impactgoal
+    ADD CONSTRAINT impact_impactgoal_activity_id_c97d01b3_fk_activitie FOREIGN KEY (activity_id) REFERENCES test.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: impact_impactgoal impact_impactgoal_type_id_fa1805fa_fk_impact_impacttype_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.impact_impactgoal
+    ADD CONSTRAINT impact_impactgoal_type_id_fa1805fa_fk_impact_impacttype_id FOREIGN KEY (type_id) REFERENCES test.impact_impacttype(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: impact_impacttype_translation impact_impacttype_tr_master_id_15f98377_fk_impact_im; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.impact_impacttype_translation
+    ADD CONSTRAINT impact_impacttype_tr_master_id_15f98377_fk_impact_im FOREIGN KEY (master_id) REFERENCES test.impact_impacttype(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -41402,6 +45786,22 @@ ALTER TABLE ONLY test.members_member
 
 ALTER TABLE ONLY test.members_member
     ADD CONSTRAINT members_member_partner_organization_d0cb8957_fk_organizat FOREIGN KEY (partner_organization_id) REFERENCES test.organizations_organization(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: members_member_segments members_member_segme_segment_id_d9279566_fk_segments_; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.members_member_segments
+    ADD CONSTRAINT members_member_segme_segment_id_d9279566_fk_segments_ FOREIGN KEY (segment_id) REFERENCES test.segments_segment(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: members_member_segments members_member_segments_member_id_0ed707a1_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.members_member_segments
+    ADD CONSTRAINT members_member_segments_member_id_0ed707a1_fk_members_member_id FOREIGN KEY (member_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -42053,6 +46453,14 @@ ALTER TABLE ONLY test.rewards_reward
 
 
 --
+-- Name: segments_segment segments_segment_type_id_21ef9900_fk_segments_segmenttype_id; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.segments_segment
+    ADD CONSTRAINT segments_segment_type_id_21ef9900_fk_segments_segmenttype_id FOREIGN KEY (type_id) REFERENCES test.segments_segmenttype(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: slides_slide slides_slide_author_id_22b6f684_fk_members_member_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -42066,6 +46474,70 @@ ALTER TABLE ONLY test.slides_slide
 
 ALTER TABLE ONLY test.social_auth_usersocialauth
     ADD CONSTRAINT social_auth_usersoci_user_id_17d28448_fk_members_m FOREIGN KEY (user_id) REFERENCES test.members_member(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_basestatistic statistics_basestati_polymorphic_ctype_id_89355190_fk_django_co; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_basestatistic
+    ADD CONSTRAINT statistics_basestati_polymorphic_ctype_id_89355190_fk_django_co FOREIGN KEY (polymorphic_ctype_id) REFERENCES test.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_databasestatistic statistics_databases_basestatistic_ptr_id_3810a6c4_fk_statistic; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_databasestatistic
+    ADD CONSTRAINT statistics_databases_basestatistic_ptr_id_3810a6c4_fk_statistic FOREIGN KEY (basestatistic_ptr_id) REFERENCES test.statistics_basestatistic(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_databasestatistic_translation statistics_databases_master_id_9e429696_fk_statistic; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_databasestatistic_translation
+    ADD CONSTRAINT statistics_databases_master_id_9e429696_fk_statistic FOREIGN KEY (master_id) REFERENCES test.statistics_databasestatistic(basestatistic_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_impactstatistic statistics_impactsta_basestatistic_ptr_id_816efe58_fk_statistic; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_impactstatistic
+    ADD CONSTRAINT statistics_impactsta_basestatistic_ptr_id_816efe58_fk_statistic FOREIGN KEY (basestatistic_ptr_id) REFERENCES test.statistics_basestatistic(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_impactstatistic statistics_impactsta_impact_type_id_7ef917b0_fk_impact_im; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_impactstatistic
+    ADD CONSTRAINT statistics_impactsta_impact_type_id_7ef917b0_fk_impact_im FOREIGN KEY (impact_type_id) REFERENCES test.impact_impacttype(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_impactstatistic_translation statistics_impactsta_master_id_36080f43_fk_statistic; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_impactstatistic_translation
+    ADD CONSTRAINT statistics_impactsta_master_id_36080f43_fk_statistic FOREIGN KEY (master_id) REFERENCES test.statistics_impactstatistic(basestatistic_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_manualstatistic statistics_manualsta_basestatistic_ptr_id_8580fc85_fk_statistic; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_manualstatistic
+    ADD CONSTRAINT statistics_manualsta_basestatistic_ptr_id_8580fc85_fk_statistic FOREIGN KEY (basestatistic_ptr_id) REFERENCES test.statistics_basestatistic(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_manualstatistic_translation statistics_manualsta_master_id_8b18eb96_fk_statistic; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.statistics_manualstatistic_translation
+    ADD CONSTRAINT statistics_manualsta_master_id_8b18eb96_fk_statistic FOREIGN KEY (master_id) REFERENCES test.statistics_manualstatistic(basestatistic_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -42301,6 +46773,14 @@ ALTER TABLE ONLY test.utils_maillog
 
 
 --
+-- Name: utils_translationplatformsettings_translation utils_translationpla_master_id_5ae457be_fk_utils_tra; Type: FK CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.utils_translationplatformsettings_translation
+    ADD CONSTRAINT utils_translationpla_master_id_5ae457be_fk_utils_tra FOREIGN KEY (master_id) REFERENCES test.utils_translationplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: votes_vote votes_vote_project_id_7d68c734_fk_projects_project_id; Type: FK CONSTRAINT; Schema: test; Owner: -
 --
 
@@ -42437,6 +46917,30 @@ ALTER TABLE ONLY test.wallposts_wallpost
 
 
 --
+-- Name: activities_activity_segments activities_activity__activity_id_d3d6afbe_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_activity_segments
+    ADD CONSTRAINT activities_activity__activity_id_d3d6afbe_fk_activitie FOREIGN KEY (activity_id) REFERENCES test2.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: activities_activity_segments activities_activity__segment_id_89441f68_fk_segments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_activity_segments
+    ADD CONSTRAINT activities_activity__segment_id_89441f68_fk_segments_ FOREIGN KEY (segment_id) REFERENCES test2.segments_segment(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: activities_activity activities_activity_image_id_7297db2f_fk_files_image_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_activity
+    ADD CONSTRAINT activities_activity_image_id_7297db2f_fk_files_image_id FOREIGN KEY (image_id) REFERENCES test2.files_image(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: activities_activity activities_activity_initiative_id_9478bef8_fk_initiativ; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -42485,6 +46989,14 @@ ALTER TABLE ONLY test2.activities_contribution
 
 
 --
+-- Name: activities_organizer activities_organizer_contribution_ptr_id_7ffef135_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.activities_organizer
+    ADD CONSTRAINT activities_organizer_contribution_ptr_id_7ffef135_fk_activitie FOREIGN KEY (contribution_ptr_id) REFERENCES test2.activities_contribution(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: analytics_analyticsadapter analytics_analyticsa_analytics_settings_i_8059fd54_fk_analytics; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -42501,11 +47013,11 @@ ALTER TABLE ONLY test2.assignments_applicant
 
 
 --
--- Name: assignments_applicant assignments_applicant_document_id_52766ded_fk_files_document_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: assignments_applicant assignments_applican_document_id_52766ded_fk_files_pri; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.assignments_applicant
-    ADD CONSTRAINT assignments_applicant_document_id_52766ded_fk_files_document_id FOREIGN KEY (document_id) REFERENCES test2.files_document(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT assignments_applican_document_id_52766ded_fk_files_pri FOREIGN KEY (document_id) REFERENCES test2.files_privatedocument(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -42597,11 +47109,27 @@ ALTER TABLE ONLY test2.bb_projects_projecttheme_translation
 
 
 --
+-- Name: categories_category_translation categories_category__master_id_a63a5b21_fk_categorie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.categories_category_translation
+    ADD CONSTRAINT categories_category__master_id_a63a5b21_fk_categorie FOREIGN KEY (master_id) REFERENCES test2.categories_category(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: categories_categorycontent categories_categoryc_category_id_90b5ba30_fk_categorie; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.categories_categorycontent
     ADD CONSTRAINT categories_categoryc_category_id_90b5ba30_fk_categorie FOREIGN KEY (category_id) REFERENCES test2.categories_category(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: categories_categorycontent_translation categories_categoryc_master_id_4f0cf64c_fk_categorie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.categories_categorycontent_translation
+    ADD CONSTRAINT categories_categoryc_master_id_4f0cf64c_fk_categorie FOREIGN KEY (master_id) REFERENCES test2.categories_categorycontent(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -42757,6 +47285,14 @@ ALTER TABLE ONLY test2.cms_sitelinks
 
 
 --
+-- Name: cms_siteplatformsettings_translation cms_siteplatformsett_master_id_ffaecf01_fk_cms_sitep; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.cms_siteplatformsettings_translation
+    ADD CONSTRAINT cms_siteplatformsett_master_id_ffaecf01_fk_cms_sitep FOREIGN KEY (master_id) REFERENCES test2.cms_siteplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: cms_slide cms_slide_block_id_d12f3da7_fk_contentit; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -42818,6 +47354,14 @@ ALTER TABLE ONLY test2.contentitem_cms_activitiescontent
 
 ALTER TABLE ONLY test2.contentitem_cms_categoriescontent
     ADD CONSTRAINT contentitem_cms_cate_contentitem_ptr_id_748677a5_fk_fluent_co FOREIGN KEY (contentitem_ptr_id) REFERENCES test2.fluent_contents_contentitem(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: contentitem_cms_homepagestatisticscontent contentitem_cms_home_contentitem_ptr_id_025c1895_fk_fluent_co; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.contentitem_cms_homepagestatisticscontent
+    ADD CONSTRAINT contentitem_cms_home_contentitem_ptr_id_025c1895_fk_fluent_co FOREIGN KEY (contentitem_ptr_id) REFERENCES test2.fluent_contents_contentitem(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -42997,6 +47541,14 @@ ALTER TABLE ONLY test2.contentitem_pages_imagetextitem
 
 
 --
+-- Name: contentitem_pages_imagetextrounditem contentitem_pages_im_contentitem_ptr_id_aeb2abd0_fk_fluent_co; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.contentitem_pages_imagetextrounditem
+    ADD CONSTRAINT contentitem_pages_im_contentitem_ptr_id_aeb2abd0_fk_fluent_co FOREIGN KEY (contentitem_ptr_id) REFERENCES test2.fluent_contents_contentitem(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: contentitem_rawhtml_rawhtmlitem contentitem_rawhtml__contentitem_ptr_id_a20d2b03_fk_fluent_co; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -43098,6 +47650,14 @@ ALTER TABLE ONLY test2.files_document
 
 ALTER TABLE ONLY test2.files_image
     ADD CONSTRAINT files_image_owner_id_cfa1bdde_fk_members_member_id FOREIGN KEY (owner_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: files_privatedocument files_privatedocument_owner_id_16e5a712_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.files_privatedocument
+    ADD CONSTRAINT files_privatedocument_owner_id_16e5a712_fk_members_member_id FOREIGN KEY (owner_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -43381,11 +47941,11 @@ ALTER TABLE ONLY test2.funding_payoutaccount
 
 
 --
--- Name: funding_plainpayoutaccount funding_plainpayouta_document_id_76e77d67_fk_files_doc; Type: FK CONSTRAINT; Schema: test2; Owner: -
+-- Name: funding_plainpayoutaccount funding_plainpayouta_document_id_76e77d67_fk_files_pri; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
 ALTER TABLE ONLY test2.funding_plainpayoutaccount
-    ADD CONSTRAINT funding_plainpayouta_document_id_76e77d67_fk_files_doc FOREIGN KEY (document_id) REFERENCES test2.files_document(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT funding_plainpayouta_document_id_76e77d67_fk_files_pri FOREIGN KEY (document_id) REFERENCES test2.files_privatedocument(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -43498,6 +48058,30 @@ ALTER TABLE ONLY test2.funding_stripe_stripepaymentprovider
 
 ALTER TABLE ONLY test2.funding_stripe_stripepayoutaccount
     ADD CONSTRAINT funding_stripe_strip_payoutaccount_ptr_id_4bb561bc_fk_funding_p FOREIGN KEY (payoutaccount_ptr_id) REFERENCES test2.funding_payoutaccount(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: funding_telesom_telesombankaccount funding_telesom_tele_bankaccount_ptr_id_b2a0a3cc_fk_funding_b; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.funding_telesom_telesombankaccount
+    ADD CONSTRAINT funding_telesom_tele_bankaccount_ptr_id_b2a0a3cc_fk_funding_b FOREIGN KEY (bankaccount_ptr_id) REFERENCES test2.funding_bankaccount(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: funding_telesom_telesompayment funding_telesom_tele_payment_ptr_id_943fece0_fk_funding_p; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.funding_telesom_telesompayment
+    ADD CONSTRAINT funding_telesom_tele_payment_ptr_id_943fece0_fk_funding_p FOREIGN KEY (payment_ptr_id) REFERENCES test2.funding_payment(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: funding_telesom_telesompaymentprovider funding_telesom_tele_paymentprovider_ptr__857115b7_fk_funding_p; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.funding_telesom_telesompaymentprovider
+    ADD CONSTRAINT funding_telesom_tele_paymentprovider_ptr__857115b7_fk_funding_p FOREIGN KEY (paymentprovider_ptr_id) REFERENCES test2.funding_paymentprovider(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -43634,6 +48218,30 @@ ALTER TABLE ONLY test2.geo_subregion
 
 ALTER TABLE ONLY test2.geo_subregion_translation
     ADD CONSTRAINT geo_subregion_transl_master_id_333c864c_fk_geo_subre FOREIGN KEY (master_id) REFERENCES test2.geo_subregion(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: impact_impactgoal impact_impactgoal_activity_id_c97d01b3_fk_activitie; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.impact_impactgoal
+    ADD CONSTRAINT impact_impactgoal_activity_id_c97d01b3_fk_activitie FOREIGN KEY (activity_id) REFERENCES test2.activities_activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: impact_impactgoal impact_impactgoal_type_id_fa1805fa_fk_impact_impacttype_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.impact_impactgoal
+    ADD CONSTRAINT impact_impactgoal_type_id_fa1805fa_fk_impact_impacttype_id FOREIGN KEY (type_id) REFERENCES test2.impact_impacttype(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: impact_impacttype_translation impact_impacttype_tr_master_id_15f98377_fk_impact_im; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.impact_impacttype_translation
+    ADD CONSTRAINT impact_impacttype_tr_master_id_15f98377_fk_impact_im FOREIGN KEY (master_id) REFERENCES test2.impact_impacttype(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -43802,6 +48410,22 @@ ALTER TABLE ONLY test2.members_member
 
 ALTER TABLE ONLY test2.members_member
     ADD CONSTRAINT members_member_partner_organization_d0cb8957_fk_organizat FOREIGN KEY (partner_organization_id) REFERENCES test2.organizations_organization(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: members_member_segments members_member_segme_segment_id_d9279566_fk_segments_; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.members_member_segments
+    ADD CONSTRAINT members_member_segme_segment_id_d9279566_fk_segments_ FOREIGN KEY (segment_id) REFERENCES test2.segments_segment(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: members_member_segments members_member_segments_member_id_0ed707a1_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.members_member_segments
+    ADD CONSTRAINT members_member_segments_member_id_0ed707a1_fk_members_member_id FOREIGN KEY (member_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -44453,6 +49077,14 @@ ALTER TABLE ONLY test2.rewards_reward
 
 
 --
+-- Name: segments_segment segments_segment_type_id_21ef9900_fk_segments_segmenttype_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.segments_segment
+    ADD CONSTRAINT segments_segment_type_id_21ef9900_fk_segments_segmenttype_id FOREIGN KEY (type_id) REFERENCES test2.segments_segmenttype(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: slides_slide slides_slide_author_id_22b6f684_fk_members_member_id; Type: FK CONSTRAINT; Schema: test2; Owner: -
 --
 
@@ -44466,6 +49098,70 @@ ALTER TABLE ONLY test2.slides_slide
 
 ALTER TABLE ONLY test2.social_auth_usersocialauth
     ADD CONSTRAINT social_auth_usersoci_user_id_17d28448_fk_members_m FOREIGN KEY (user_id) REFERENCES test2.members_member(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_basestatistic statistics_basestati_polymorphic_ctype_id_89355190_fk_django_co; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_basestatistic
+    ADD CONSTRAINT statistics_basestati_polymorphic_ctype_id_89355190_fk_django_co FOREIGN KEY (polymorphic_ctype_id) REFERENCES test2.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_databasestatistic statistics_databases_basestatistic_ptr_id_3810a6c4_fk_statistic; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_databasestatistic
+    ADD CONSTRAINT statistics_databases_basestatistic_ptr_id_3810a6c4_fk_statistic FOREIGN KEY (basestatistic_ptr_id) REFERENCES test2.statistics_basestatistic(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_databasestatistic_translation statistics_databases_master_id_9e429696_fk_statistic; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_databasestatistic_translation
+    ADD CONSTRAINT statistics_databases_master_id_9e429696_fk_statistic FOREIGN KEY (master_id) REFERENCES test2.statistics_databasestatistic(basestatistic_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_impactstatistic statistics_impactsta_basestatistic_ptr_id_816efe58_fk_statistic; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_impactstatistic
+    ADD CONSTRAINT statistics_impactsta_basestatistic_ptr_id_816efe58_fk_statistic FOREIGN KEY (basestatistic_ptr_id) REFERENCES test2.statistics_basestatistic(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_impactstatistic statistics_impactsta_impact_type_id_7ef917b0_fk_impact_im; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_impactstatistic
+    ADD CONSTRAINT statistics_impactsta_impact_type_id_7ef917b0_fk_impact_im FOREIGN KEY (impact_type_id) REFERENCES test2.impact_impacttype(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_impactstatistic_translation statistics_impactsta_master_id_36080f43_fk_statistic; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_impactstatistic_translation
+    ADD CONSTRAINT statistics_impactsta_master_id_36080f43_fk_statistic FOREIGN KEY (master_id) REFERENCES test2.statistics_impactstatistic(basestatistic_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_manualstatistic statistics_manualsta_basestatistic_ptr_id_8580fc85_fk_statistic; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_manualstatistic
+    ADD CONSTRAINT statistics_manualsta_basestatistic_ptr_id_8580fc85_fk_statistic FOREIGN KEY (basestatistic_ptr_id) REFERENCES test2.statistics_basestatistic(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: statistics_manualstatistic_translation statistics_manualsta_master_id_8b18eb96_fk_statistic; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.statistics_manualstatistic_translation
+    ADD CONSTRAINT statistics_manualsta_master_id_8b18eb96_fk_statistic FOREIGN KEY (master_id) REFERENCES test2.statistics_manualstatistic(basestatistic_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -44698,6 +49394,14 @@ ALTER TABLE ONLY test2.token_auth_checkedtoken
 
 ALTER TABLE ONLY test2.utils_maillog
     ADD CONSTRAINT utils_maillog_content_type_id_0411d58b_fk_django_co FOREIGN KEY (content_type_id) REFERENCES test2.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: utils_translationplatformsettings_translation utils_translationpla_master_id_5ae457be_fk_utils_tra; Type: FK CONSTRAINT; Schema: test2; Owner: -
+--
+
+ALTER TABLE ONLY test2.utils_translationplatformsettings_translation
+    ADD CONSTRAINT utils_translationpla_master_id_5ae457be_fk_utils_tra FOREIGN KEY (master_id) REFERENCES test2.utils_translationplatformsettings(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

@@ -3,6 +3,7 @@ import xlrd
 from datetime import timedelta
 from django.db import connection
 from django.test import override_settings
+from django.utils import translation
 from django.utils.timezone import now
 
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
@@ -213,6 +214,7 @@ class TestExportAdmin(BluebottleTestCase):
             '_save': 'Confirm'
         }
         tenant = connection.tenant
+        translation.activate("en")
         result = plain_export(Exporter, tenant=tenant, **data)
         book = xlrd.open_workbook(result)
 

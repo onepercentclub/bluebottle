@@ -36,10 +36,10 @@ class TestExportAdmin(BluebottleTestCase):
             '_save': 'Confirm'
         }
         tenant = connection.tenant
-        initiatives = InitiativeFactory.create_batch(10)
+        initiatives = InitiativeFactory.create_batch(4)
         for initiative in initiatives:
-            EventFactory.create_batch(10, initiative=initiative)
-            AssignmentFactory.create_batch(7, initiative=initiative)
+            EventFactory.create_batch(3, initiative=initiative)
+            AssignmentFactory.create_batch(2, initiative=initiative)
             FundingFactory.create_batch(1, initiative=initiative)
 
         result = plain_export(Exporter, tenant=tenant, **data)
@@ -50,19 +50,19 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertEqual(
             book.sheet_by_name('Users').nrows,
-            221
+            41
         )
         self.assertEqual(
             book.sheet_by_name('Initiatives').nrows,
-            11
+            5
         )
         self.assertEqual(
             book.sheet_by_name('Funding activities').nrows,
-            11
+            5
         )
         self.assertEqual(
             book.sheet_by_name('Events').nrows,
-            101
+            13
         )
         self.assertEqual(
             book.sheet_by_name('Events').cell(0, 13).value,
@@ -75,7 +75,7 @@ class TestExportAdmin(BluebottleTestCase):
 
         self.assertEqual(
             book.sheet_by_name('Tasks').nrows,
-            71
+            9
         )
         self.assertEqual(
             book.sheet_by_name('Tasks').cell(0, 16).value,

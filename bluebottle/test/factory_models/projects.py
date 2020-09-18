@@ -60,4 +60,5 @@ class ProjectFactory(factory.DjangoModelFactory):
     deadline = timezone.now() + timedelta(days=100)
     amount_needed = Money(100, 'EUR')
     amount_asked = Money(100, 'EUR')
+    amount_extra = Money(0, 'EUR')
     allow_overfunding = True

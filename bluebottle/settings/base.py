@@ -292,6 +292,8 @@ SHARED_APPS = (
     'django_singleton_admin',
     'django_filters',
     'multiselectfield',
+
+    'djmoney.contrib.exchange',
 )
 
 TENANT_APPS = (
@@ -427,7 +429,6 @@ TENANT_APPS = (
     'bluebottle.cms',
 
     'djmoney',
-    'djmoney.contrib.exchange',
     'django_singleton_admin',
     'nested_inline',
     'permissions_widget',
@@ -930,8 +931,7 @@ STATIC_MAPS_API_KEY = ''
 STATIC_MAPS_API_SECRET = ''
 
 # django money settings
-OPEN_EXCHANGE_RATES_URL = 'http://openexchangerates.org/api/latest.json'
-OPEN_EXCHANGE_RATES_APP_ID = '3e53678e72c140b4857dc5bb1deb59dc'
+OPEN_EXCHANGE_RATES_APP_ID = 'f8d574bb309148cbaa0d10c1f9f4adda'
 RATES_CACHE_TIMEOUT = 60 * 60 * 24
 
 AUTO_CONVERT_MONEY = False

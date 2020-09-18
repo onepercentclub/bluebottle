@@ -6,7 +6,7 @@ class ExchangeBackendFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = ExchangeBackend
 
-    name = 'openexchange.org'
+    name = 'openexchangerates.org'
     base_currency = 'USD'
 
 

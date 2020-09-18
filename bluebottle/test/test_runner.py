@@ -41,7 +41,7 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         self.init_projects()
 
         try:
-            backend = ExchangeBackendFactory.create(base_currency='USD')
+            backend = ExchangeBackendFactory.create(base_currency='EUR')
             RateFactory.create(backend=backend, currency='USD', value=1)
             RateFactory.create(backend=backend, currency='EUR', value=1.5)
             RateFactory.create(backend=backend, currency='XOF', value=1000)

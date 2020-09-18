@@ -50,7 +50,7 @@ install_requires = [
     'django-map-widgets==0.2.2',
     'django-memoize==2.1.0',
     'django-modeltranslation==0.12.1',
-    'django-money==0.14',
+    'django-money==0.15.1',
     'django-parler==1.9.2',
     'django-permissions-widget==1.5.1',
     'django_polymorphic==1.2',
@@ -124,7 +124,6 @@ install_requires = [
     'django-fluent-contents @ git+https://github.com/onepercentclub/django-fluent-contents.git@741ffae615a4afed01388a202709ed9a5b60e80f#egg=django-fluent-contents-1.2.1-741ffae6',
     'django-bb-salesforce @ git+https://github.com/onepercentclub/django-bb-salesforce.git@1.2.2#egg=django-bb-salesforce-1.2.2',
     'django-taggit-autocomplete-modified @ git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
-    'django-money-rates @ git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github',
 ]
 
 tests_requires = [

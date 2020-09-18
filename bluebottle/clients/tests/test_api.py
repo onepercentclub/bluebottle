@@ -135,6 +135,7 @@ class TestDefaultAPI(ESTestCase, BluebottleTestCase):
     Test the default API, open and closed, authenticated or not
     with default permissions
     """
+
     def setUp(self):
         super(TestDefaultAPI, self).setUp()
 

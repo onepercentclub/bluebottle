@@ -12,8 +12,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.db import connection, ProgrammingError
 from django.utils.translation import get_language
-from djmoney_rates.exceptions import CurrencyConversionException
-from djmoney_rates.utils import get_rate
+from djmoney.contrib.exchange.exceptions import MissingRate
+from djmoney.contrib.exchange.models import get_rate
 from tenant_extras.utils import get_tenant_properties
 
 from bluebottle.clients import properties
@@ -106,8 +106,8 @@ def get_currencies():
         if currency['code'] in min_amounts:
             currency['minAmount'] = min_amounts[currency['code']]
         try:
-            currency['rate'] = get_rate(currency['code'])
-        except (CurrencyConversionException, ProgrammingError):
+            currency['rate'] = get_rate(properties.DEFAULT_CURRENCY, currency['code'])
+        except (MissingRate, ProgrammingError):
             currency['rate'] = 1
 
     return currencies

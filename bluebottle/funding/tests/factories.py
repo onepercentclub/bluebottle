@@ -69,13 +69,8 @@ class BudgetLineFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = BudgetLine
 
-
-<< << << < HEAD
-activity = factory.SubFactory(FundingFactory)
-amount = Money(35, 'EUR')
-
-== == == =
->>>>>> > hotfix / remove - djmoney - rates
+    activity = factory.SubFactory(FundingFactory)
+    amount = Money(35, 'EUR')
 
 
 class PlainPayoutAccountFactory(factory.DjangoModelFactory):

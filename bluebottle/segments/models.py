@@ -1,12 +1,8 @@
-from builtins import str
-
-from future.utils import python_2_unicode_compatible
-
 from django.contrib.postgres.fields import ArrayField
-from django.template.defaultfilters import slugify
 from django.db import models
-
+from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 
 
 @python_2_unicode_compatible

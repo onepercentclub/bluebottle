@@ -57,36 +57,39 @@ class ClientSettingsTestCase(BluebottleTestCase):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['readOnlyFields'], {'user': ['first_name']})
 
-    @override_settings(PAYMENT_METHODS=[{
-        'provider': 'docdata',
-        'id': 'docdata-ideal',
-        'profile': 'ideal',
-        'name': 'iDEAL',
-        'restricted_countries': ('NL', ),
-        'currencies': {
-            'EUR': {'max_amount': 100}
-        }
-    }, {
-        'provider': 'docdata',
-        'id': 'docdata-directdebit',
-        'profile': 'directdebit',
-        'name': 'Direct Debit',
-        'restricted_countries': ('NL', 'BE', ),
-        'currencies': {
-            'EUR': {'min_amount': 10, 'max_amount': 100}
-        }
+    @override_settings(
+        PAYMENT_METHODS=[{
+            'provider': 'docdata',
+            'id': 'docdata-ideal',
+            'profile': 'ideal',
+            'name': 'iDEAL',
+            'restricted_countries': ('NL', ),
+            'currencies': {
+                'EUR': {'max_amount': 100}
+            }
+        }, {
+            'provider': 'docdata',
+            'id': 'docdata-directdebit',
+            'profile': 'directdebit',
+            'name': 'Direct Debit',
+            'restricted_countries': ('NL', 'BE', ),
+            'currencies': {
+                'EUR': {'min_amount': 10, 'max_amount': 100}
+            }
 
-    }, {
-        'provider': 'docdata',
-        'id': 'docdata-creditcard',
-        'profile': 'creditcard',
-        'name': 'CreditCard',
-        'currencies': {
-            'USD': {'min_amount': 5, 'max_amount': 100},
-            'NGN': {'min_amount': 3000, 'max_amount': 100},
-            'XOF': {'min_amount': 5000, 'max_amount': 100},
-        }
-    }])
+        }, {
+            'provider': 'docdata',
+            'id': 'docdata-creditcard',
+            'profile': 'creditcard',
+            'name': 'CreditCard',
+            'currencies': {
+                'USD': {'min_amount': 5, 'max_amount': 100},
+                'NGN': {'min_amount': 3000, 'max_amount': 100},
+                'XOF': {'min_amount': 5000, 'max_amount': 100},
+            }
+        }],
+        DEFAULT_CURRENCY='USD'
+    )
     def test_settings_currencies(self):
         # Check that exposed property is in settings api, and other settings are not shown
         response = self.client.get(self.settings_url)

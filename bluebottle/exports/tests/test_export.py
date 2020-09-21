@@ -126,10 +126,15 @@ class TestExportAdmin(BluebottleTestCase):
             book.sheet_by_name('Users').cell(0, 11).value,
             'Favourite colour'
         )
-        self.assertEqual(
-            book.sheet_by_name('Users').cell(1, 11).value,
-            'Parblue Yellow'
-        )
+        t = 1
+        while t < book.sheet_by_name('Users').nrows:
+            if book.sheet_by_name('Users').cell(t, 5).value == users[0].email:
+                self.assertEqual(
+                    book.sheet_by_name('Users').cell(1, 11).value,
+                    'Parblue Yellow'
+                )
+            t += 1
+
         self.assertEqual(
             book.sheet_by_name('Task contributions').cell(0, 13).value,
             'Favourite colour'

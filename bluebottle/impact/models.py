@@ -76,9 +76,7 @@ class ImpactType(SortableTranslatableModel):
         ),
     )
 
-    def __str__(self):
-        import ipdb
-        ipdb.set_trace()
+    def __unicode__(self):
         return self.name
 
     def save(self, **kwargs):

@@ -19,16 +19,13 @@ class BlueBottleUserFactory(factory.DjangoModelFactory):
     is_superuser = False
 
     @classmethod
-    def _prepare(cls, create, **kwargs):
-        password = kwargs.pop('password', None)
-        user = super(BlueBottleUserFactory, cls)._prepare(False, **kwargs)
-
+    def _create(cls, model_class, *args, **kwargs):
+        password = kwargs.pop("password", None)
+        user = super(BlueBottleUserFactory, cls)._create(model_class, *args, **kwargs)
+        # ensure the raw password gets set after the initial save
         if password:
             user.set_password(password)
-
-        if create:
-            user.save()
-
+        user.save()
         return user
 
 

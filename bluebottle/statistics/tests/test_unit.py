@@ -1,6 +1,6 @@
+import datetime
 
 from builtins import range
-import datetime
 from django.test.utils import override_settings
 from django.utils import timezone
 from moneyed.classes import Money

@@ -460,7 +460,6 @@ class PasswordSetTest(BluebottleTestCase):
             email='user@example.com'
         )
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-
         self.current_user_url = reverse('user-current')
         self.set_password_url = reverse('user-set-password')
 

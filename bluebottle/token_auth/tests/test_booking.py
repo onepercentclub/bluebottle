@@ -33,6 +33,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
     """
     Tests the Token Authentication backend.
     """
+
     def setUp(self):
         super(TestBookingTokenAuthentication, self).setUp()
 
@@ -72,7 +73,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
             AES.block_size - len(s) % AES.block_size)
         init_vector = Random.new().read(AES.block_size)
         cipher = AES.new(self.aes_key, AES.MODE_CBC, init_vector)
-        padded_message = pad(message)
+        padded_message = str(pad(message))
         aes_message = init_vector + cipher.encrypt(padded_message)
         hmac_digest = hmac.new(self.hmac_key, aes_message, hashlib.sha1)
 

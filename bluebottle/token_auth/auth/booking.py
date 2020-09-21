@@ -80,13 +80,14 @@ class TokenAuthentication(BaseTokenAuthentication):
     5. Read the timestamp included in the message to check if the token already
     expired or if its finally valid.
     """
+
     def check_hmac_signature(self, message):
         """
         Checks the HMAC-SHA1 signature of the message.
         """
         data = message[:-20]
         checksum = message[-20:]
-        hmac_data = hmac.new(str(self.settings['hmac_key']), str(data), hashlib.sha1)
+        hmac_data = hmac.new(bytes(self.settings['hmac_key']), bytes(data), hashlib.sha1)
 
         return True if hmac_data.digest() == checksum else False
 
@@ -129,7 +130,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         """
         Decrypts the AES encoded message.
         """
-        token = str(self.args['token'])
+        token = bytes(self.args['token'])
         message = base64.urlsafe_b64decode(token)
 
         # Check that the message is valid (HMAC-SHA1 checking).
@@ -139,7 +140,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         init_vector = message[:16]
         enc_message = message[16:-20]
 
-        aes = AES.new(str(self.settings['aes_key']), AES.MODE_CBC, init_vector)
+        aes = AES.new(bytes(self.settings['aes_key']), AES.MODE_CBC, init_vector)
         message = aes.decrypt(enc_message)
 
         # Get the login data in an easy-to-use tuple.
@@ -155,7 +156,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         parts.pop(0)
         last_name = " ".join(parts)
         email = login_data[3].strip()
-        email = [x for x in email if x in string.printable]
+        email = ''.join(x for x in email if x in string.printable)
 
         data = {
             'timestamp': login_data[0],

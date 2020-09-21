@@ -5,6 +5,7 @@ from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.triggers import TriggerMixin
 
@@ -17,6 +18,7 @@ from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
+@python_2_unicode_compatible
 class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
     owner = models.ForeignKey(
         'members.Member',
@@ -85,7 +87,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
             ('api_read_own_activity', 'Can view own activity through the API'),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title or str(_('-empty-'))
 
     def save(self, **kwargs):
@@ -127,6 +129,7 @@ def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
     return models.CASCADE(collector, field, sub_objs.non_polymorphic(), using)
 
 
+@python_2_unicode_compatible
 class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
@@ -155,7 +158,7 @@ class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     class Meta(object):
         ordering = ('-created',)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_('Contribution'))
 
 
@@ -173,7 +176,7 @@ class Organizer(Contribution):
 
         super(Organizer, self).save()
 
-    def __unicode__(self):
+    def __str__(self):
         if self.user:
             return self.user.full_name
         else:

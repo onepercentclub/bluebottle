@@ -7,11 +7,13 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import (
     CreationDateTimeField, ModificationDateTimeField
 )
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 
 
+@python_2_unicode_compatible
 class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
     """
     Organizations can run Projects. An organization has one or more members.
@@ -35,7 +37,7 @@ class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
 
     required_fields = ['name', 'website']
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):

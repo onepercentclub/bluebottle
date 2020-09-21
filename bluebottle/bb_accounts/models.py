@@ -17,6 +17,7 @@ from django.utils.functional import lazy, cached_property
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
+from future.utils import python_2_unicode_compatible
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_accounts.utils import valid_email
@@ -91,6 +92,7 @@ def get_default_language():
     return properties.LANGUAGE_CODE
 
 
+@python_2_unicode_compatible
 class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     """
     Custom user model for BlueBottle.

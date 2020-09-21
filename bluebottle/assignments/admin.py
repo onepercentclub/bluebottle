@@ -89,7 +89,7 @@ class AssignmentAdmin(ActivityChildAdmin):
     raw_id_fields = ('owner', 'location', 'initiative')
 
     list_display = (
-        '__unicode__', 'initiative', 'created', 'state_name', 'highlight',
+        '__str__', 'initiative', 'created', 'state_name', 'highlight',
         'date', 'is_online', 'registration_deadline'
     )
     search_fields = ['title', 'description']

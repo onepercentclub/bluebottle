@@ -6,6 +6,7 @@ from operator import attrgetter
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import loader
 from django.utils.html import format_html
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
 from bluebottle.notifications.models import Message, MessageTemplate
@@ -14,6 +15,7 @@ from bluebottle.utils.utils import get_current_language
 from django.utils.translation import ugettext_lazy as _
 
 
+@python_2_unicode_compatible
 class TransitionMessage(object):
     """
     Base model for sending message
@@ -77,7 +79,7 @@ class TransitionMessage(object):
         self.obj = obj
         self.options = options
 
-    def __unicode__(self):
+    def __str__(self):
         return self.subject
 
     def get_template(self):

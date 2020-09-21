@@ -19,7 +19,7 @@ class GeneratePayoutsEffect(Effect):
     def execute(self, **kwargs):
         Payout.generate(self.instance)
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Generate payouts, so that payouts can be approved')
 
 
@@ -32,7 +32,7 @@ class DeletePayoutsEffect(Effect):
     def execute(self, **kwargs):
         self.instance.payouts.all().delete()
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Delete all related payouts')
 
 
@@ -46,7 +46,7 @@ class UpdateFundingAmountsEffect(Effect):
     def execute(self, **kwargs):
         self.instance.activity.update_amounts()
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Update total amounts')
 
 
@@ -60,7 +60,7 @@ class RemoveDonationFromPayoutEffect(Effect):
     def execute(self, **kwargs):
         self.instance.payout = None
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Remove donation from payout')
 
 
@@ -84,7 +84,7 @@ class SetDeadlineEffect(Effect):
                 )
             )
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Set deadline according to the duration')
 
 
@@ -98,7 +98,7 @@ class RefundPaymentAtPSPEffect(Effect):
     def execute(self, **kwargs):
         self.instance.refund()
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Request refund payment at PSP')
 
 
@@ -118,7 +118,7 @@ class GenerateDonationWallpostEffect(Effect):
             }
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Generate wallpost for donation')
 
 
@@ -134,7 +134,7 @@ class RemoveDonationWallpostEffect(Effect):
             donation=self.instance,
         ).all().delete()
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Delete wallpost for donation')
 
 
@@ -151,7 +151,7 @@ class SubmitConnectedActivitiesEffect(Effect):
             ):
                 funding.states.submit(save=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Submit connected activities')
 
 
@@ -166,7 +166,7 @@ class DeleteDocumentEffect(Effect):
             self.instance.document.delete()
             self.instance.document = None
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Delete verification documents, since they are no longer needed')
 
 
@@ -180,7 +180,7 @@ class SubmitPayoutEffect(Effect):
         adapter = DoradoPayoutAdapter(self.instance)
         adapter.trigger_payout()
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Trigger payout at the PSP')
 
 
@@ -195,7 +195,7 @@ class BaseSetDateEffect(Effect):
     def execute(self, **kwargs):
         setattr(self.instance, self.field, timezone.now())
 
-    def __unicode__(self):
+    def __str__(self):
         field = self.instance._meta.get_field(self.field)
         return _('Set {} to current date').format(field.verbose_name)
 
@@ -218,5 +218,5 @@ class ClearPayoutDatesEffect(Effect):
         self.instance.date_started = None
         self.instance.date_completed = None
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Clear payout event dates')

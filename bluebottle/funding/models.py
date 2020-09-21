@@ -7,6 +7,8 @@ import random
 import string
 
 from babel.numbers import get_currency_name
+from future.utils import python_2_unicode_compatible
+
 from bluebottle.clients import properties
 from djmoney.contrib.exchange.models import convert_money
 
@@ -49,6 +51,7 @@ class PaymentCurrency(models.Model):
         verbose_name_plural = _('Payment currencies')
 
 
+@python_2_unicode_compatible
 class PaymentProvider(PolymorphicModel):
 
     public_settings = {}
@@ -88,7 +91,7 @@ class PaymentProvider(PolymorphicModel):
     def payment_methods(self):
         return []
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.polymorphic_ctype)
 
     @property
@@ -294,10 +297,11 @@ class Funding(Activity):
 
         super(Funding, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title or str(_('-empty-'))
 
 
+@python_2_unicode_compatible
 class Reward(models.Model):
     """
     Rewards for donations
@@ -323,7 +327,7 @@ class Reward(models.Model):
             status=DonationStateMachine.succeeded.value
         ).count()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     class Meta(object):
@@ -341,6 +345,7 @@ class Reward(models.Model):
         return super(Reward, self).delete(*args, **kwargs)
 
 
+@python_2_unicode_compatible
 class BudgetLine(models.Model):
     """
     BudgetLine: Entries to the Activity Budget sheet.
@@ -360,10 +365,11 @@ class BudgetLine(models.Model):
         verbose_name = _('budget line')
         verbose_name_plural = _('budget lines')
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{0} - {1}'.format(self.description, self.amount)
 
 
+@python_2_unicode_compatible
 class Fundraiser(AnonymizationMixin, models.Model):
     owner = models.ForeignKey('members.Member', related_name="funding_fundraisers")
     activity = models.ForeignKey(
@@ -383,7 +389,7 @@ class Fundraiser(AnonymizationMixin, models.Model):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     @cached_property
@@ -466,8 +472,8 @@ class Payout(TriggerMixin, models.Model):
         verbose_name = _('payout')
         verbose_name_plural = _('payouts')
 
-    def __unicode__(self):
-        return u'{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
+    def __str__(self):
+        return '{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
 
 
 class Donation(Contribution):
@@ -505,13 +511,14 @@ class Donation(Contribution):
         verbose_name = _('Donation')
         verbose_name_plural = _('Donations')
 
-    def __unicode__(self):
-        return u'{}'.format(self.amount)
+    def __str__(self):
+        return '{}'.format(self.amount)
 
     class JSONAPIMeta(object):
         resource_name = 'contributions/donations'
 
 
+@python_2_unicode_compatible
 class Payment(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
@@ -533,7 +540,7 @@ class Payment(TriggerMixin, PolymorphicModel):
 
         super(Payment, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return "{} - {}".format(self.polymorphic_ctype, self.id)
 
     class Meta(object):
@@ -623,6 +630,7 @@ class PlainPayoutAccount(PayoutAccount):
         return required
 
 
+@python_2_unicode_compatible
 class BankAccount(PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

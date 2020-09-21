@@ -30,7 +30,7 @@ class EventFinishedTask(ModelPeriodicTask):
         ]),
     ]
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_("Finish an event when end time has passed."))
 
 
@@ -53,7 +53,7 @@ class EventStartTask(ModelPeriodicTask):
         ]),
     ]
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_("Start an event when start time ha passed."))
 
 
@@ -72,7 +72,7 @@ class EventReminderTask(ModelPeriodicTask):
 
     ]
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_("Send a reminder five days before the event starts."))
 
 

@@ -16,7 +16,7 @@ class CreateOrganizer(Effect):
             defaults={'user': self.instance.owner}
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_('Create organizer'))
 
 

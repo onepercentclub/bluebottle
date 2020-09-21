@@ -173,7 +173,7 @@ class PrimaryKeyGenericRelatedField(serializers.RelatedField):
         super(PrimaryKeyGenericRelatedField, self).__init__(queryset=queryset)
 
     def label_from_instance(self, obj):
-        return "{0} - {1}".format(smart_str(self.to_model.__unicode__(obj)),
+        return "{0} - {1}".format(smart_str(self.to_model.__str__(obj)),
                                   str(obj.id))
 
     def prepare_value(self, obj):
@@ -209,7 +209,7 @@ class SlugGenericRelatedField(serializers.RelatedField):
                                                       **kwargs)
 
     def label_from_instance(self, obj):
-        return "{0} - {1}".format(smart_str(self.to_model.__unicode__(obj)),
+        return "{0} - {1}".format(smart_str(self.to_model.__str__(obj)),
                                   obj.slug)
 
     def prepare_value(self, to_instance):

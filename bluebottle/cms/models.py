@@ -6,6 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from adminsortable.models import SortableMixin
 from fluent_contents.models import PlaceholderField, ContentItem
 from adminsortable.fields import SortableForeignKey
+from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.activities.models import Activity
@@ -58,16 +59,18 @@ class HomePage(TranslatableModel):
         )
 
 
+@python_2_unicode_compatible
 class LinkPermission(models.Model):
     permission = models.CharField(max_length=255, null=False,
                                   help_text=_('A dot separated app name and permission codename.'))
     present = models.BooleanField(null=False, default=True,
                                   help_text=_('Should the permission be present or not to access the link?'))
 
-    def __unicode__(self):
+    def __str__(self):
         return u"{0} - {1}".format(self.permission, self.present)
 
 
+@python_2_unicode_compatible
 class SiteLinks(models.Model):
     language = models.OneToOneField('utils.Language', null=False)
     has_copyright = models.BooleanField(null=False, default=True)
@@ -75,7 +78,7 @@ class SiteLinks(models.Model):
     class Meta(object):
         verbose_name_plural = _("Site links")
 
-    def __unicode__(self):
+    def __str__(self):
         return u"Site Links {0}".format(self.language.code.upper())
 
 
@@ -199,7 +202,7 @@ class QuotesContent(TitledContent):
     class Meta(object):
         verbose_name = _('Quotes')
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.quotes)
 
     @property
@@ -218,7 +221,7 @@ class StatsContent(TitledContent):
     def items(self):
         return self.stats
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.stats)
 
 
@@ -229,7 +232,7 @@ class HomepageStatisticsContent(TitledContent):
     class Meta(object):
         verbose_name = _('Statistics')
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.title)
 
 
@@ -251,7 +254,7 @@ class ActivitiesContent(TitledContent):
     class Meta(object):
         verbose_name = _('Activities')
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.title)
 
 
@@ -270,7 +273,7 @@ class ProjectsContent(TitledContent):
     class Meta(object):
         verbose_name = _('Projects')
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.title)
 
 
@@ -288,7 +291,7 @@ class ShareResultsContent(TitledContent):
     class Meta(object):
         verbose_name = _('Share Results')
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Share results block'
 
 
@@ -298,7 +301,7 @@ class ProjectsMapContent(TitledContent):
     class Meta(object):
         verbose_name = _('Projects Map')
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Projects Map'
 
 
@@ -311,7 +314,7 @@ class SupporterTotalContent(TitledContent):
     class Meta(object):
         verbose_name = _('Supporter total')
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Supporter total'
 
 
@@ -356,7 +359,7 @@ class SlidesContent(TitledContent):
     class Meta(object):
         verbose_name = _('Slides')
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.slides)
 
 
@@ -386,7 +389,7 @@ class StepsContent(TitledContent):
     class Meta(object):
         verbose_name = _('Steps')
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_('Steps'))
 
     @property
@@ -401,7 +404,7 @@ class LocationsContent(TitledContent):
     class Meta(object):
         verbose_name = _('Locations')
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_('Locations'))
 
 
@@ -412,7 +415,7 @@ class CategoriesContent(TitledContent):
     class Meta(object):
         verbose_name = _('Categories')
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_('Categories'))
 
 
@@ -441,7 +444,7 @@ class LogosContent(TitledContent):
     class Meta(object):
         verbose_name = _('Logos')
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_('Logos'))
 
 
@@ -467,7 +470,7 @@ class LinksContent(TitledContent):
     class Meta(object):
         verbose_name = _('Links')
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_('Links'))
 
 
@@ -485,7 +488,7 @@ class WelcomeContent(ContentItem):
     class Meta(object):
         verbose_name = _('Welcome')
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_('Welcome'))
 
 

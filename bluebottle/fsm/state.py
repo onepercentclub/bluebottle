@@ -3,12 +3,14 @@ from builtins import object
 from django.utils.translation import ugettext_lazy as _
 from django.dispatch import Signal
 from future.utils import with_metaclass
+from stripe.six import python_2_unicode_compatible
 
 
 class TransitionNotPossible(Exception):
     pass
 
 
+@python_2_unicode_compatible
 class BaseTransition(object):
     def __init__(self, sources, target, name='', description='',
                  automatic=True, conditions=None, effects=None, **options):
@@ -72,7 +74,7 @@ class BaseTransition(object):
     def __repr__(self):
         return '<Transition from {} to {}>'.format(self.sources, self.target)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.name or self.field)
 
 
@@ -123,6 +125,7 @@ class Transition(BaseTransition):
         )
 
 
+@python_2_unicode_compatible
 class State(object):
     transition_class = Transition
 
@@ -134,7 +137,7 @@ class State(object):
     def __repr__(self):
         return '<State {}>'.format(self.name)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.name)
 
 

@@ -9,6 +9,8 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from operator import attrgetter
+
+from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
 import bluebottle.utils.monkey_patch_corsheaders  # noqa
@@ -24,6 +26,7 @@ from bluebottle.utils.managers import (
 )
 
 
+@python_2_unicode_compatible
 class Language(models.Model):
     """
     A language - ISO 639-1
@@ -35,10 +38,11 @@ class Language(models.Model):
     class Meta(object):
         ordering = ['language_name']
 
-    def __unicode__(self):
+    def __str__(self):
         return self.language_name
 
 
+@python_2_unicode_compatible
 class Address(models.Model):
     """
     A postal address.
@@ -53,7 +57,7 @@ class Address(models.Model):
     class Meta(object):
         abstract = True
 
-    def __unicode__(self):
+    def __str__(self):
         return self.line1[:80]
 
 
@@ -67,6 +71,7 @@ class MailLog(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
 
+@python_2_unicode_compatible
 class BasePlatformSettings(models.Model):
 
     update = models.DateTimeField(auto_now=True)
@@ -85,8 +90,8 @@ class BasePlatformSettings(models.Model):
         except cls.DoesNotExist:
             return cls()
 
-    def __unicode__(self):
-        return 'Settings'
+    def __str__(self):
+        return str(_('Settings'))
 
 
 class SortableTranslatableModel(TranslatableModel):

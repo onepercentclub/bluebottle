@@ -37,7 +37,7 @@ class BaseNotificationEffect(Effect):
                 recipients_text = _('related users')
         return {'subject': message.generic_subject, 'recipients': recipients_text}
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Message {subject} to {recipients}').format(**self._content())
 
     @property

@@ -8,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, \
     ModificationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
+from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields, TranslatableModel
 from polymorphic.models import PolymorphicModel
 
@@ -21,6 +22,7 @@ def get_languages():
     return properties.LANGUAGES
 
 
+@python_2_unicode_compatible
 class BaseStatistic(PolymorphicModel, SortableMixin):
 
     objects = TranslatablePolymorphicManager()
@@ -33,13 +35,13 @@ class BaseStatistic(PolymorphicModel, SortableMixin):
         help_text=_('Order in which metrics are shown.'),
         default=0, editable=False, db_index=True)
 
-    def __unicode__(self):
+    def __str__(self):
         for child in (DatabaseStatistic, ManualStatistic, ImpactStatistic):
             try:
-                return u"{}".format(getattr(self, child.__name__.lower()).name)
+                return "{}".format(getattr(self, child.__name__.lower()).name)
             except child.DoesNotExist:
                 pass
-        return u"Stat #{}".format(self.id)
+        return "Stat #{}".format(self.id)
 
     class Meta(object):
         ordering = ['sequence']
@@ -65,7 +67,7 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
     class JSONAPIMeta(object):
         resource_name = 'statistics/manual-statistics'
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.translations.name)
 
     class Meta(object):
@@ -226,7 +228,7 @@ class Statistic(models.Model):
         null=True,
         choices=lazy(get_languages, tuple)())
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     @property

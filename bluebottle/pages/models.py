@@ -14,6 +14,7 @@ from fluent_contents.models.fields import ContentItemRelation
 from fluent_contents.models.managers import ContentItemManager
 from fluent_contents.rendering import render_placeholder
 from fluent_contents.utils.filters import apply_filters
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
 from bluebottle.utils.models import PublishableModel
@@ -173,6 +174,7 @@ class ImageTextRoundItem(ContentItem):
             self.text_final = None
 
 
+@python_2_unicode_compatible
 class Page(PublishableModel):
     class PageStatus(DjangoChoices):
         published = ChoiceItem('published', label=_('Published'))
@@ -221,7 +223,7 @@ class Page(PublishableModel):
             ('api_delete_page', 'Can delete pages through the API'),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def get_meta_description(self, **kwargs):

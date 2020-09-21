@@ -177,7 +177,7 @@ class Applicant(Contribution):
     def delete(self, *args, **kwargs):
         super(Applicant, self).delete(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.user.full_name
 
 

@@ -2,8 +2,10 @@ from builtins import str
 from builtins import object
 from django.utils.translation import ugettext_lazy as _
 from django.template.loader import render_to_string
+from future.utils import python_2_unicode_compatible
 
 
+@python_2_unicode_compatible
 class Effect(object):
     effects = []
     save = False
@@ -59,7 +61,7 @@ class Effect(object):
     def is_valid(self):
         return True
 
-    def __unicode__(self):
+    def __str__(self):
         return self.__class__.__name__
 
     def to_html(self):
@@ -110,7 +112,7 @@ class BaseTransitionEffect(Effect):
     def __repr__(self):
         return '<Effect: {}>'.format(self.transition)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.transition.target)
 
     @property
@@ -195,7 +197,7 @@ class BaseRelatedTransitionEffect(Effect):
 
         return result
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} related {}'.format(
             self.transition_effect_class.name,
             self.relation

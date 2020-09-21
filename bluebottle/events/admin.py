@@ -63,7 +63,7 @@ class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
     inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
     list_display = [
-        '__unicode__', 'initiative', 'state_name',
+        '__str__', 'initiative', 'state_name',
         'highlight', 'start', 'duration', 'created'
     ]
     search_fields = ['title', 'description']

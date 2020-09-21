@@ -80,7 +80,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                      'place', 'organization', 'organization_contact')
 
     date_hierarchy = 'created'
-    list_display = ['__unicode__', 'created', 'owner', 'state_name']
+    list_display = ['__str__', 'created', 'owner', 'state_name']
 
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']

@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 from __future__ import division
+
+from future.utils import python_2_unicode_compatible
 from past.utils import old_div
 from builtins import object
 import re
@@ -27,6 +29,7 @@ from bluebottle.funding_stripe.utils import stripe
 from bluebottle.utils.models import ValidatorError
 
 
+@python_2_unicode_compatible
 class PaymentIntent(models.Model):
     intent_id = models.CharField(max_length=30)
     client_secret = models.CharField(max_length=100)
@@ -70,7 +73,7 @@ class PaymentIntent(models.Model):
     class JSONAPIMeta(object):
         resource_name = 'payments/stripe-payment-intents'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.intent_id
 
 
@@ -598,7 +601,7 @@ class ExternalAccount(BankAccount):
         verbose_name = _('Stripe external account')
         verbose_name_plural = _('Stripe exterrnal account')
 
-    def __unicode__(self):
+    def __str__(self):
         return "Stripe external account {}".format(self.account_id)
 
 

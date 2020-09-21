@@ -1,6 +1,9 @@
 from builtins import str
 
+from future.utils import python_2_unicode_compatible
 
+
+@python_2_unicode_compatible
 class PaymentException(Exception):
     """ Wrapper around Payment error messages. """
 
@@ -9,9 +12,6 @@ class PaymentException(Exception):
         self.error_list = error_list
 
     def __str__(self):
-        return str(self.message)
-
-    def __unicode__(self):
         return str(self.message)
 
 

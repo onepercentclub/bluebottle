@@ -2,11 +2,13 @@ from builtins import object
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
 
 from bluebottle.utils.models import SortableTranslatableModel
 
 
+@python_2_unicode_compatible
 class ProjectTheme(SortableTranslatableModel):
 
     """ Themes for Projects. """
@@ -21,7 +23,7 @@ class ProjectTheme(SortableTranslatableModel):
         description=models.TextField(_('description'), blank=True)
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def save(self, **kwargs):

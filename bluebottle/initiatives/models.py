@@ -8,6 +8,7 @@ from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from djmoney.contrib.exchange.models import convert_money
+from future.utils import python_2_unicode_compatible
 from moneyed import Money
 from multiselectfield import MultiSelectField
 
@@ -23,6 +24,7 @@ from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, A
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
+@python_2_unicode_compatible
 class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.Model):
     status = models.CharField(max_length=40)
     title = models.CharField(_('title'), max_length=255)
@@ -133,7 +135,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     class JSONAPIMeta(object):
         resource_name = 'initiatives'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title or str(_('-empty-'))
 
     @property

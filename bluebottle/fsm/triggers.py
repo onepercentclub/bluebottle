@@ -2,8 +2,10 @@ from builtins import str
 from builtins import zip
 from builtins import object
 from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 
 
+@python_2_unicode_compatible
 class ModelTrigger(object):
     def __init__(self, instance):
         self.instance = instance
@@ -20,7 +22,7 @@ class ModelTrigger(object):
             if effect.is_valid:
                 yield effect
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_("Model has been changed"))
 
 
@@ -37,7 +39,7 @@ class ModelChangedTrigger(ModelTrigger):
             return True
         return self.instance.field_is_changed(self.field)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.field:
             field_name = self.instance._meta.get_field(self.field).verbose_name
             return str(_("{} has been changed").format(field_name.capitalize()))
@@ -52,7 +54,7 @@ class ModelDeletedTrigger(ModelTrigger):
     def is_valid(self):
         pass
 
-    def __unicode__(self):
+    def __str__(self):
         return str(_("Model has been deleted"))
 
 

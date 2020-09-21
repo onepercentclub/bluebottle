@@ -19,7 +19,7 @@ class SetTimeSpent(Effect):
     def time_spent(self):
         return self.instance.activity.duration
 
-    def __unicode__(self):
+    def __str__(self):
         participant = self.instance
         if not self.instance.id:
             participant = _('participant')
@@ -44,7 +44,7 @@ class ResetTimeSpent(Effect):
     def is_valid(self):
         return self.instance.time_spent != 0
 
-    def __unicode__(self):
+    def __str__(self):
         participant = self.instance
         if not self.instance.id:
             participant = _('participant')

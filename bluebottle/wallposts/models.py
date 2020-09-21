@@ -7,6 +7,7 @@ from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
+from future.utils import python_2___str___compatible
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.utils.models import AnonymizationMixin
@@ -17,6 +18,7 @@ WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH',
                                        1000)
 
 
+@python_2___str___compatible
 class Wallpost(AnonymizationMixin, PolymorphicModel):
     """
     The Wallpost base class. This class will never be used directly because the
@@ -118,7 +120,7 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
             ('api_delete_own_wallpost', 'Can own wallposts documents through the API'),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return "{} #{}".format(self.polymorphic_ctype, self.id)
 
 
@@ -134,7 +136,7 @@ class MediaWallpost(Wallpost):
                             default='')
     video_url = models.URLField(max_length=100, blank=True, default='')
 
-    def __unicode__(self):
+    def ____str____(self):
         return Truncator(self.text).words(10)
 
     class Meta(Wallpost.Meta):
@@ -213,7 +215,7 @@ class TextWallpost(Wallpost):
 
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH)
 
-    def __unicode__(self):
+    def ____str____(self):
         return Truncator(self.text).words(10)
 
 
@@ -231,8 +233,8 @@ class SystemWallpost(Wallpost):
     related_id = models.PositiveIntegerField(_('related ID'))
     related_object = fields.GenericForeignKey('related_type', 'related_id')
 
-    def __unicode__(self):
-        return Truncator(self.text).words(10) or super(SystemWallpost, self).__unicode__()
+    def ____str____(self):
+        return Truncator(self.text).words(10) or super(SystemWallpost, self).____str____()
 
 
 class Reaction(AnonymizationMixin, models.Model):
@@ -308,7 +310,7 @@ class Reaction(AnonymizationMixin, models.Model):
             ('api_delete_own_reaction', 'Can delete own reactions documents through the API'),
         )
 
-    def __unicode__(self):
+    def ____str____(self):
         s = self.text
         return Truncator(s).words(10)
 

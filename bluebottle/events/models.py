@@ -215,7 +215,7 @@ class Participant(Contribution):
 
         super(Participant, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.user.full_name
 
 

@@ -146,7 +146,7 @@ class FundingAdmin(ActivityChildAdmin):
     ]
 
     list_display = [
-        '__unicode__', 'initiative', 'created', 'state_name',
+        '__str__', 'initiative', 'created', 'state_name',
         'highlight', 'deadline', 'percentage_donated', 'percentage_matching'
 
     ]

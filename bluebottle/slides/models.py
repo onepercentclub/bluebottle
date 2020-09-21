@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
 from bluebottle.files.validators import validate_video_file_size
@@ -17,6 +18,7 @@ def get_languages():
     return properties.LANGUAGES
 
 
+@python_2_unicode_compatible
 class Slide(PublishableModel):
     """
     Slides for homepage
@@ -80,7 +82,7 @@ class Slide(PublishableModel):
     def background_image_full_path(self):
         return "{0}{1}".format(settings.MEDIA_URL, str(self.background_image))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     class Meta(object):

@@ -3,6 +3,7 @@ from builtins import object
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
 
 from bluebottle.utils.models import SortableTranslatableModel
@@ -28,6 +29,7 @@ ICONS = [
 ]
 
 
+@python_2_unicode_compatible
 class ImpactType(SortableTranslatableModel):
     slug = models.SlugField(
         _('slug'),
@@ -76,7 +78,7 @@ class ImpactType(SortableTranslatableModel):
         ),
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def save(self, **kwargs):

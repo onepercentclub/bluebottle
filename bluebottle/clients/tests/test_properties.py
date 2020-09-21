@@ -1,8 +1,6 @@
 import mock
 import os
 
-import past.builtins
-
 from django.test import TestCase
 
 from bluebottle.clients import TenantProperties
@@ -39,6 +37,6 @@ class TestProperties(TestCase):
 
     def test_verify_settings(self):
         tenant_dir = os.path.join(os.path.dirname(__file__), 'files/')
-        with mock.patch("bluebottle.clients.settings", MULTI_TENANT_DIR=tenant_dir) as settings:
+        with mock.patch("bluebottle.clients.settings", MULTI_TENANT_DIR=tenant_dir):
             properties.set_tenant(Mock(client_name='testtenant'))
             self.assertEqual(properties.set_by_test, True)

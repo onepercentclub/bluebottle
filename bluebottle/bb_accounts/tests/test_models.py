@@ -172,8 +172,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
             remote_id=None,
             primary_language='en')
         self.assertEqual(len(mail.outbox), 1)
-        # We need a better way to verify the right mail is loaded
-        self.assertTrue("Welcome" in mail.outbox[0].subject)
+        self.assertEqual("Welcome to Test!", mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].activated_language, 'en')
         self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
         self.assertTrue('Take me there: https://testserver/partner\n' in mail.outbox[0].body)
@@ -195,7 +194,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
             remote_id='123',
             primary_language='en')
         self.assertEqual(len(mail.outbox), 1)
-        # We need a better way to verify the right mail is loaded
         self.assertTrue("Welcome" in mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].activated_language, 'en')
         self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)

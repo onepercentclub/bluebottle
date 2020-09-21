@@ -80,7 +80,7 @@ install_requires = [
     'lxml==4.3.0',
     'micawber==0.3.4',
     'mixpanel==4.3.2',
-    'munch=2.5.0',
+    'munch==2.5.0',
     'django-multiselectfield==0.1.8',
     'openpyxl==2.4.8',
     'pendulum==1.2.4',

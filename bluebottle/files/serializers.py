@@ -1,5 +1,5 @@
 from builtins import object
-import md5
+import hashlib
 import os
 
 from django.core.urlresolvers import reverse
@@ -138,7 +138,7 @@ class ImageSerializer(DocumentSerializer):
             try:
                 relationship = getattr(obj, self.relationship)
                 parent_id = getattr(obj, self.relationship).get().pk
-                hash = md5.new(obj.file.name.encode('utf-8')).hexdigest()
+                hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
                 return dict(
                     (
                         key,

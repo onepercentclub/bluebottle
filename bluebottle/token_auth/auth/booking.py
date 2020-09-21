@@ -1,7 +1,8 @@
-from urllib import urlencode
 
 from future import standard_library
 standard_library.install_aliases()
+
+from urllib.parse import urlencode
 from builtins import chr
 from builtins import str
 import base64
@@ -44,7 +45,7 @@ def _encode_message(message):
     cipher = AES.new(aes_key, AES.MODE_CBC, init_vector)
     padded_message = pad(message)
     aes_message = init_vector + cipher.encrypt(padded_message)
-    hmac_digest = hmac.new(str(hmac_key), str(aes_message), hashlib.sha1)
+    hmac_digest = hmac.new(bytes(hmac_key), bytes(aes_message), hashlib.sha1)
 
     return aes_message, hmac_digest
 
@@ -130,7 +131,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         """
         Decrypts the AES encoded message.
         """
-        token = bytes(self.args['token'])
+        token = bytes(self.args['token'].encode('utf-8'))
         message = base64.urlsafe_b64decode(token)
 
         # Check that the message is valid (HMAC-SHA1 checking).
@@ -141,7 +142,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         enc_message = message[16:-20]
 
         aes = AES.new(bytes(self.settings['aes_key']), AES.MODE_CBC, init_vector)
-        message = aes.decrypt(enc_message)
+        message = aes.decrypt(enc_message).decode('utf-8')
 
         # Get the login data in an easy-to-use tuple.
         try:

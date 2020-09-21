@@ -1,7 +1,7 @@
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
-from urllib import urlencode
+from urllib.parse import urlencode
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test.utils import override_settings
 from django.test import RequestFactory

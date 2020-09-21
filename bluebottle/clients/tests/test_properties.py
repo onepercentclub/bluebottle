@@ -1,4 +1,7 @@
 import mock
+import os
+
+import past.builtins
 
 from django.test import TestCase
 
@@ -35,8 +38,7 @@ class TestProperties(TestCase):
             self.failIf(hasattr(p, 'foo'))
 
     def test_verify_settings(self):
-        with mock.patch("bluebottle.clients.settings",
-                        MULTI_TENANT_DIR='/tmp/') as settings, \
-                mock.patch("__builtin__.execfile") as execfile:
+        tenant_dir = os.path.join(os.path.dirname(__file__), 'files/')
+        with mock.patch("bluebottle.clients.settings", MULTI_TENANT_DIR=tenant_dir) as settings:
             properties.set_tenant(Mock(client_name='testtenant'))
-            self.assertEquals(execfile.call_args[0][1]['settings'], settings)
+            self.assertEqual(properties.set_by_test, True)

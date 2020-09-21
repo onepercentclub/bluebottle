@@ -155,6 +155,9 @@ class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     class Meta(object):
         ordering = ('-created',)
 
+    def __unicode__(self):
+        return str(_('Contribution'))
+
 
 class Organizer(Contribution):
     class Meta(object):

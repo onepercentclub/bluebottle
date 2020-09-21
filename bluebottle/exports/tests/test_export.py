@@ -199,6 +199,8 @@ class TestExportAdmin(BluebottleTestCase):
         co2 = ImpactType.objects.get(slug='co2')
         co2.active = True
         co2.save()
+        import ipdb
+        ipdb.set_trace()
         water = ImpactType.objects.get(slug='water')
         water.active = True
         water.save()

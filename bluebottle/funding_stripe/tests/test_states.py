@@ -1,4 +1,4 @@
-import bunch
+import munch
 from django.core import mail
 from djmoney.money import Money
 from mock import patch
@@ -125,14 +125,14 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         self.stripe_account = stripe.Account(account_id)
         self.stripe_account.update({
             'country': 'NL',
-            'individual': bunch.bunchify({
+            'individual': munch.munchify({
                 'first_name': 'Jhon',
                 'last_name': 'Example',
                 'email': 'jhon@example.com',
                 'verification': {
                     'status': 'verified',
                 },
-                'requirements': bunch.bunchify({
+                'requirements': munch.munchify({
                     'eventually_due': [
                         'external_accounts',
                         'individual.verification.document',
@@ -140,7 +140,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
                     ]
                 }),
             }),
-            'requirements': bunch.bunchify({
+            'requirements': munch.munchify({
                 'eventually_due': [
                     'external_accounts',
                     'individual.verification.document.front',
@@ -148,7 +148,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
                 ],
                 'disabled': False
             }),
-            'external_accounts': bunch.bunchify({
+            'external_accounts': munch.munchify({
                 'total_count': 0,
                 'data': []
             })

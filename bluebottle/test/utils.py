@@ -1,6 +1,6 @@
 from builtins import str
 from builtins import object
-from bunch import bunchify
+from munch import munchify
 
 from django.db import connection
 from django.test.utils import override_settings
@@ -168,6 +168,7 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
     payout_url = reverse('admin:payouts_projectpayout_changelist')
     response = self.app.get(payout_url, user=self.superuser)
     """
+
     def setUp(self):
         self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)
         self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
@@ -221,9 +222,9 @@ class FsmTestMixin(object):
         if totals is not None:
             default_totals.update(totals)
 
-        return bunchify({
-            'payment': bunchify(payments),
-            'approximateTotals': bunchify(default_totals)
+        return munchify({
+            'payment': munchify(payments),
+            'approximateTotals': munchify(default_totals)
         })
 
     def assert_status(self, instance, new_status):

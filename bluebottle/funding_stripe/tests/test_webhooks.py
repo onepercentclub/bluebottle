@@ -1,7 +1,7 @@
 from builtins import object
 import json
 
-import bunch
+import munch
 import mock
 import stripe
 from django.core import mail
@@ -31,7 +31,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class MockEvent(object):
     def __init__(self, type, data):
         self.type = type
-        self.data = bunch.bunchify(data)
+        self.data = munch.munchify(data)
 
 
 class IntentWebhookTestCase(BluebottleTestCase):
@@ -694,7 +694,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.connect_account = stripe.Account('some-account-id')
 
         external_account = stripe.BankAccount('some-bank-token')
-        external_account.update(bunch.bunchify({
+        external_account.update(munch.munchify({
             'object': 'bank_account',
             'account_holder_name': 'Jane Austen',
             'account_holder_type': 'individual',
@@ -717,7 +717,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             'total_count': 1,
         })
 
-        self.connect_account.update(bunch.bunchify({
+        self.connect_account.update(munch.munchify({
             'country': 'NL',
             'requirements': {
                 'disabled': False,

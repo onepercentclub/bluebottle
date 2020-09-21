@@ -7,7 +7,7 @@ from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
-from future.utils import python_2___str___compatible
+from future.utils import python_2_unicode_compatible
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.utils.models import AnonymizationMixin
@@ -18,7 +18,7 @@ WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH',
                                        1000)
 
 
-@python_2___str___compatible
+@python_2_unicode_compatible
 class Wallpost(AnonymizationMixin, PolymorphicModel):
     """
     The Wallpost base class. This class will never be used directly because the

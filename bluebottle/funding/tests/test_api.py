@@ -3,7 +3,7 @@ from builtins import range
 import json
 from datetime import timedelta
 import mock
-import bunch
+import munch
 
 import stripe
 
@@ -1486,7 +1486,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             'bluebottle.funding_stripe.models.ExternalAccount.account', new_callable=mock.PropertyMock
         ) as account:
             external_account = stripe.BankAccount('some-bank-token')
-            external_account.update(bunch.bunchify({
+            external_account.update(munch.munchify({
                 'object': 'bank_account',
                 'account_holder_name': 'Jane Austen',
                 'account_holder_type': 'individual',

@@ -1,5 +1,5 @@
 from builtins import object
-import bunch
+import munch
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK
 
@@ -13,7 +13,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class MockEvent(object):
     def __init__(self, type, data):
         self.type = type
-        self.data = bunch.bunchify(data)
+        self.data = munch.munchify(data)
 
 
 class VitepayPaymentTestCase(BluebottleTestCase):

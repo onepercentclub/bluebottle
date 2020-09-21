@@ -1,4 +1,4 @@
-import bunch
+import munch
 import mock
 import stripe
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory
@@ -19,14 +19,14 @@ class ConnectAccountTestCase(BluebottleTestCase):
         self.connect_account = stripe.Account(account_id)
         self.connect_account.update({
             'country': self.check.country,
-            'individual': bunch.bunchify({
+            'individual': munch.munchify({
                 'first_name': 'Jhon',
                 'last_name': 'Example',
                 'email': 'jhon@example.com',
                 'verification': {
                     'status': 'verified',
                 },
-                'requirements': bunch.bunchify({
+                'requirements': munch.munchify({
                     'eventually_due': [
                         'external_accounts',
                         'individual.verification.document',
@@ -34,7 +34,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
                     ]
                 }),
             }),
-            'requirements': bunch.bunchify({
+            'requirements': munch.munchify({
                 'eventually_due': [
                     'external_accounts',
                     'individual.verification.document.front',
@@ -42,7 +42,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 ],
                 'disabled': False
             }),
-            'external_accounts': bunch.bunchify({
+            'external_accounts': munch.munchify({
                 'total_count': 0,
                 'data': []
             })
@@ -50,8 +50,8 @@ class ConnectAccountTestCase(BluebottleTestCase):
 
         self.country_spec = stripe.CountrySpec(self.check.country)
         self.country_spec.update({
-            'verification_fields': bunch.bunchify({
-                'individual': bunch.bunchify({
+            'verification_fields': munch.munchify({
+                'individual': munch.munchify({
                     'additional': ['individual.verification.document'],
                     'minimum': ['individual.first_name'],
                 })
@@ -224,12 +224,12 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
 
         self.connect_account.update({
             'country': country,
-            'individual': bunch.bunchify({
+            'individual': munch.munchify({
                 'first_name': 'Jhon',
                 'last_name': 'Example',
                 'email': 'jhon@example.com',
             }),
-            'requirements': bunch.bunchify({
+            'requirements': munch.munchify({
                 'eventually_due': ['external_accounts'],
                 'disabled': False
             }),

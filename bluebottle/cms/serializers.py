@@ -498,18 +498,12 @@ class BlockSerializer(serializers.Serializer):
         return serializer(obj, context=self.context).to_representation(obj)
 
 
-def watermark():
-    return '{}/logo-overlay.png'.format(connection.tenant.client_name)
-
-
 class ResultPageSerializer(serializers.ModelSerializer):
     blocks = BlockSerializer(
         source='content.contentitems.all.translated', many=True)
     image = ImageSerializer()
     share_image = SorlImageField(
         '1200x600', source='image', crop='center',
-        watermark=watermark,
-        watermark_pos='center', watermark_size='1200x600'
     )
 
     class Meta(object):

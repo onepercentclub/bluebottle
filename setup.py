@@ -101,7 +101,6 @@ install_requires = [
     'requests==2.20.1',
     'schwifty==2.1.0',
     'sorl-thumbnail @ git+https://github.com/mariocesar/sorl-thumbnail.git@v12.3#egg=sorl-thumbnail-12.3-github',
-    'sorl-watermark==1.0.0',
     'South==1.0.2',
     'Sphinx==1.6.3',
     'staticmaps-signature==0.2.0',

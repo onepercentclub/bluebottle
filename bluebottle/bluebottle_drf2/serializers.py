@@ -45,18 +45,12 @@ class RestrictedImageField(serializers.ImageField):
 
 class SorlImageField(RestrictedImageField):
     def __init__(self, geometry_string, crop='center',
-                 colorspace='RGB', watermark=None, watermark_pos=None,
-                 watermark_size=None, **kwargs):
+                 colorspace='RGB', **kwargs):
         self.geometry_string = geometry_string
         self.sorl_options = {
             'crop': crop,
             'colorspace': colorspace,
         }
-
-        if watermark:
-            self.sorl_options['watermark'] = watermark
-            self.sorl_options['watermark_pos'] = watermark_pos
-            self.sorl_options['watermark_size'] = watermark_size
 
         super(SorlImageField, self).__init__(**kwargs)
 
@@ -73,12 +67,6 @@ class SorlImageField(RestrictedImageField):
         _, ext = os.path.splitext(value.path)
         if ext == '.svg':
             return value.url
-
-        if 'watermark' in self.sorl_options:
-            try:
-                self.sorl_options['watermark'] = self.sorl_options['watermark']()
-            except TypeError:
-                pass
 
         if ext == '.png':
             self.sorl_options['format'] = 'PNG'

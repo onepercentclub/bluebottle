@@ -1,5 +1,4 @@
 import logging
-from memoize import memoize
 
 from rest_framework import permissions
 
@@ -164,7 +163,6 @@ class ResourcePermission(BasePermission, permissions.DjangoModelPermissions):
     def has_object_action_permission(self, action, user, obj):
         return True
 
-    @memoize()
     def has_action_permission(self, action, user, model_cls):
         perms = self.get_required_permissions(action, model_cls)
         return user.has_perms(perms)
@@ -194,6 +192,7 @@ class RelatedResourceOwnerPermission(ResourceOwnerPermission):
 
     This class assumes the child resource has a `parent` property which will return the parent object.
     """
+
     def has_parent_permission(self, action, user, parent, model=None):
         return user == parent.owner
 

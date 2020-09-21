@@ -1,9 +1,10 @@
 # coding=utf-8
-from urlparse import urlparse, parse_qs
 
 from future import standard_library
 
 standard_library.install_aliases()
+
+from urllib.parse import urlparse, parse_qs
 from builtins import str
 import json
 from datetime import timedelta
@@ -65,11 +66,11 @@ class EventListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.data['status'], 'draft')
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
         self.assertEqual(
-            [
+            {
                 transition['name'] for transition in
                 response.json()['data']['meta']['transitions']
-            ],
-            ['submit', 'delete']
+            },
+            {'submit', 'delete'}
         )
 
         # Add an event with the same title should NOT return an error
@@ -358,9 +359,9 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(google_query['location'][0], self.event.location.formatted_address)
         self.assertEqual(google_query['text'][0], self.event.title)
         self.assertEqual(google_query['uid'][0], 'test-event-{}'.format(self.event.pk))
-        details = "Just kidding, we're going\xc2\xa0to clean it up of course \xf0\x9f\x98\x89\n" \
-                  "http://testserver/en/initiatives/activities/details/" \
-                  "event/{}/{}".format(self.event.pk, self.event.slug)
+        details = u"Just kidding, we're going to clean it up of course 😉\n" \
+                  u"http://testserver/en/initiatives/activities/details/" \
+                  u"event/{}/{}".format(self.event.pk, self.event.slug)
         self.assertEqual(google_query['details'][0], details)
         self.assertEqual(
             google_query['dates'][0],
@@ -440,7 +441,7 @@ class EventDetailTestCase(BluebottleTestCase):
     def test_update_event_image(self):
 
         file_path = './bluebottle/files/tests/files/test-image.png'
-        with open(file_path) as test_file:
+        with open(file_path, 'rb') as test_file:
             response = self.client.post(
                 reverse('image-list'),
                 test_file.read(),
@@ -551,8 +552,8 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.assertEqual(
             data['data']['meta']['transitions'],
             [
+                {u'available': True, u'name': u'delete', u'target': u'deleted'},
                 {u'available': True, u'name': u'submit', u'target': u'submitted'},
-                {u'available': True, u'name': u'delete', u'target': u'deleted'}
             ],
         )
 

@@ -28,6 +28,9 @@ class SegmentType(models.Model):
     def __unicode__(self):
         return str(self.name)
 
+    class Meta:
+        ordering = ('name',)
+
 
 class Segment(models.Model):
     name = models.CharField(_('name'), max_length=255)

@@ -31,3 +31,6 @@ class Quote(PublishableModel):
 
     def __unicode__(self):
         return self.quote
+
+    class Meta:
+        ordering = ('-publication_date',)

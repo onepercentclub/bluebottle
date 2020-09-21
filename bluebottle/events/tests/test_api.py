@@ -1,10 +1,12 @@
 # coding=utf-8
+from urlparse import urlparse, parse_qs
+
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import str
 import json
 from datetime import timedelta
-import urllib.parse
 
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -346,8 +348,8 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         links = response.data['links']
-        google_link = urllib.parse.urlparse(links['google'])
-        google_query = urllib.parse.parse_qs(google_link.query)
+        google_link = urlparse(links['google'])
+        google_query = parse_qs(google_link.query)
 
         self.assertEqual(google_link.netloc, 'calendar.google.com')
         self.assertEqual(google_link.path, '/calendar/render')
@@ -368,8 +370,8 @@ class EventDetailTestCase(BluebottleTestCase):
             )
         )
 
-        outlook_link = urllib.parse.urlparse(links['outlook'])
-        outlook_query = urllib.parse.parse_qs(outlook_link.query)
+        outlook_link = urlparse(links['outlook'])
+        outlook_query = parse_qs(outlook_link.query)
 
         self.assertEqual(outlook_link.netloc, 'outlook.live.com')
         self.assertEqual(outlook_link.path, '/owa/')

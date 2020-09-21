@@ -18,7 +18,7 @@ class TestCeleryMail(BluebottleTestCase):
 
     def test_handle_non_unicode_char(self):
         """ Test handling a non-unicode character in subject or body """
-        s = '€'
+        s = u'€'
         msg = EmailMultiAlternatives(subject=s,
                                      body=s,
                                      to=['test@testing.com'])

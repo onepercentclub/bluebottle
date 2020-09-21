@@ -25,24 +25,21 @@ def _send_celery_mail(msg, tenant=None, send=False):
         to utf_8 so we don't get Unicode errors.
     """
     with LocalTenant(tenant, clear_tenant=True):
+
         body = msg.body
-        if isinstance(body, str):
-            body = msg.body.encode('utf_8')
 
         subject = msg.subject
-        if isinstance(subject, str):
-            subject = msg.subject.encode('utf_8')
 
         if send:
             try:
-                logger.info("Trying to send mail to:\n\
+                logger.info(u"Trying to send mail to:\n\
                             recipients: {0}\n\
                             from: {1}\n\
                             subject: {2}\n\n".format(msg.to, msg.from_email,
                                                      subject))
                 msg.send()
 
-                logger.info("Succesfully sent mail:\n\
+                logger.info(u"Succesfully sent mail:\n\
                             recipients: {0} \n\
                             from: {1}\n\
                             subject: {2} \n\
@@ -51,17 +48,22 @@ def _send_celery_mail(msg, tenant=None, send=False):
                                     subject,
                                     body))
             except Exception as e:
-                logger.error("Error sending mail: {0}".format(e))
+                logger.error(u"Error sending mail: {0}".format(e))
                 raise e
         else:
-            logger.info("Sending mail off. Mail task received for msg:\n\
-                        recipients: {0} \n\
-                        from: {1} \n\
-                        subject: {2} \n\
-                        body:{3} \n\n"
-                        .format(msg.to, msg.from_email,
-                                subject,
-                                body))
+            logger.info((
+                u"Sending mail off. Mail task received for msg:"
+                u"recipients: {0}"
+                u"from: {1} "
+                u"subject: {2}"
+                u"body:{3}"
+            ).format(
+                msg.to,
+                msg.from_email,
+                subject,
+                body
+            )
+            )
 
 
 @shared_task

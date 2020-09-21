@@ -4,7 +4,6 @@ standard_library.install_aliases()
 
 from urllib.parse import urlencode
 from builtins import chr
-from builtins import str
 import base64
 import hashlib
 import hmac

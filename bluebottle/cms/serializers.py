@@ -1,6 +1,5 @@
 from builtins import str
 from builtins import object
-from django.db import connection
 from django.db.models import Sum
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem

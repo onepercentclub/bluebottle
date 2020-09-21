@@ -1,4 +1,3 @@
-from builtins import str
 from builtins import object
 import logging
 
@@ -113,8 +112,8 @@ def modelresource_factory(model, resource_class=ExportModelResource, **meta_kwar
 
     attrs.update(**meta_kwargs)
 
-    Meta = type(str('Meta'), (object,), attrs)
-    class_name = model.__name__ + str('Resource')
+    Meta = type('Meta', (object,), attrs)
+    class_name = "{}{}".format(model.__name__, 'Resource')
     class_attrs = {'Meta': Meta}
 
     all_fields = [f.name for f in model._meta.get_fields()]

@@ -60,4 +60,4 @@ class ExportAsCSVActionTest(BluebottleTestCase):
         data = list(csv.reader(response.content.split('\n')))
 
         self.assertEqual(data[0], ['Just a title', 'Some text'])
-        self.assertEqual(data[1], ['\'@bla', '\'+bli bloe'])
+        self.assertEqual(data[1], ['@bla', '+bli bloe'])

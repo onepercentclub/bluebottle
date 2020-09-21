@@ -2,6 +2,9 @@
 ContentItem models for custom django-fluent-contents plugins.
 """
 from builtins import object
+
+from future.utils import python_2_unicode_compatible
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
@@ -9,6 +12,7 @@ from fluent_contents.models import ContentItem
 from bluebottle.utils.fields import ImageField
 
 
+@python_2_unicode_compatible
 class PictureItem(ContentItem):
     """
     Picture content item
@@ -27,5 +31,5 @@ class PictureItem(ContentItem):
         verbose_name = _("Picture")
         verbose_name_plural = _("Pictures")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.image.name if self.image else u'(no image)'

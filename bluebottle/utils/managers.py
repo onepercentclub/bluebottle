@@ -5,7 +5,6 @@ from django.db.models.query_utils import Q
 from django.db.models.signals import pre_save, post_save
 from django.db.models.query import QuerySet
 from django.contrib.contenttypes.models import ContentType
-from django.utils.encoding import force_unicode
 from django.utils.timezone import now
 
 from django_subquery.expressions import Subquery, OuterRef
@@ -28,7 +27,7 @@ class GenericForeignKeyManagerMixin(object):
         ct = ContentType.objects.get_for_model(model)
         qs = self.get_queryset().filter(content_type=ct)
         if isinstance(model, models.Model):
-            qs = qs.filter(object_id=force_unicode(model._get_pk_val()))
+            qs = qs.filter(object_id=model._get_pk_val())
         return qs
 
     def for_content_type(self, content_type):

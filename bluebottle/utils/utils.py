@@ -1,8 +1,10 @@
-from urllib import urlencode
 
 from future import standard_library
 
 standard_library.install_aliases()
+
+from urllib.parse import urlencode
+
 from builtins import object
 import json
 import logging
@@ -286,6 +288,7 @@ class PreviousStatusMixin(object):
     """
     Store the status of the instance on init to be accessed as _original_status
     """
+
     def __init__(self, *args, **kwargs):
         super(PreviousStatusMixin, self).__init__(*args, **kwargs)
 

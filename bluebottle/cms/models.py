@@ -1,5 +1,5 @@
-from builtins import str
-from builtins import object
+from future.utils import python_2_unicode_compatible
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -36,7 +36,7 @@ class ResultPage(TranslatableModel):
         description=models.CharField(_('Description'), max_length=45, blank=True, null=True)
     )
 
-    class Meta(object):
+    class Meta:
         permissions = (
             ('api_read_resultpage', 'Can view result pages through the API'),
             ('api_add_resultpage', 'Can add result pages through the API'),
@@ -49,7 +49,7 @@ class HomePage(TranslatableModel):
     content = PlaceholderField('content')
     translations = TranslatedFields()
 
-    class Meta(object):
+    class Meta:
         permissions = (
             ('api_read_homepage', 'Can view homepages through the API'),
             ('api_add_homepage', 'Can add homepages through the API'),
@@ -72,7 +72,7 @@ class SiteLinks(models.Model):
     language = models.OneToOneField('utils.Language', null=False)
     has_copyright = models.BooleanField(null=False, default=True)
 
-    class Meta(object):
+    class Meta:
         verbose_name_plural = _("Site links")
 
     def __unicode__(self):
@@ -93,7 +93,7 @@ class LinkGroup(SortableMixin):
     title = models.CharField(_('Title'), blank=True, max_length=50)
     group_order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
-    class Meta(object):
+    class Meta:
         ordering = ['group_order']
 
 
@@ -122,7 +122,7 @@ class Link(SortableMixin):
     external_link = models.CharField(_('External Link'), max_length=2000, blank=True, null=True)
     link_order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
-    class Meta(object):
+    class Meta:
         ordering = ['link_order']
 
 
@@ -168,7 +168,7 @@ class Stat(SortableMixin, models.Model):
     def name(self):
         return self.title
 
-    class Meta(object):
+    class Meta:
         ordering = ['sequence']
 
 
@@ -188,51 +188,55 @@ class TitledContent(ContentItem):
 
     preview_template = 'admin/cms/preview/default.html'
 
-    class Meta(object):
+    class Meta:
         abstract = True
 
 
+@python_2_unicode_compatible
 class QuotesContent(TitledContent):
     type = 'quotes'
     preview_template = 'admin/cms/preview/quotes.html'
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Quotes')
 
-    def __unicode__(self):
-        return str(self.quotes)
+    def __str__(self):
+        return self.quotes
 
     @property
     def items(self):
         return self.quotes
 
 
+@python_2_unicode_compatible
 class StatsContent(TitledContent):
     type = 'statistics'
     preview_template = 'admin/cms/preview/stats.html'
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Platform Statistics')
 
     @property
     def items(self):
         return self.stats
 
-    def __unicode__(self):
-        return str(self.stats)
+    def __str__(self):
+        return self.stats
 
 
+@python_2_unicode_compatible
 class HomepageStatisticsContent(TitledContent):
     type = 'homepage-statistics'
     preview_template = 'admin/cms/preview/homepage-statistics.html'
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Statistics')
 
-    def __unicode__(self):
-        return str(self.title)
+    def __str__(self):
+        return self.title
 
 
+@python_2_unicode_compatible
 class ActivitiesContent(TitledContent):
     type = 'activities'
     action_text = models.CharField(max_length=80,
@@ -248,13 +252,14 @@ class ActivitiesContent(TitledContent):
 
     preview_template = 'admin/cms/preview/activities.html'
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Activities')
 
-    def __unicode__(self):
-        return str(self.title)
+    def __str__(self):
+        return self.title
 
 
+@python_2_unicode_compatible
 class ProjectsContent(TitledContent):
     type = 'projects'
     action_text = models.CharField(max_length=80,
@@ -267,13 +272,14 @@ class ProjectsContent(TitledContent):
 
     preview_template = 'admin/cms/preview/projects.html'
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Projects')
 
-    def __unicode__(self):
-        return str(self.title)
+    def __str__(self):
+        return self.title
 
 
+@python_2_unicode_compatible
 class ShareResultsContent(TitledContent):
     type = 'share-results'
     preview_template = 'admin/cms/preview/share_results.html'
@@ -285,33 +291,35 @@ class ShareResultsContent(TitledContent):
         help_text="{amount}, {fundraisers}, {events}, {tasks}, {hours}, {people} will be replaced by live statistics"
     )
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Share Results')
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Share results block'
 
 
+@python_2_unicode_compatible
 class ProjectsMapContent(TitledContent):
     type = 'projects-map'
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Projects Map')
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Projects Map'
 
 
+@python_2_unicode_compatible
 class SupporterTotalContent(TitledContent):
     type = 'supporter_total'
     preview_template = 'admin/cms/preview/supporter_total.html'
 
     co_financer_title = models.CharField(max_length=70, blank=True, null=True)
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Supporter total')
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Supporter total'
 
 
@@ -346,18 +354,19 @@ class Slide(SortableMixin, models.Model):
     )
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
-    class Meta(object):
+    class Meta:
         ordering = ['sequence']
 
 
+@python_2_unicode_compatible
 class SlidesContent(TitledContent):
     type = 'slides'
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Slides')
 
-    def __unicode__(self):
-        return str(self.slides)
+    def __str__(self):
+        return self.slides
 
 
 class Step(SortableMixin, models.Model):
@@ -370,10 +379,11 @@ class Step(SortableMixin, models.Model):
     text = models.CharField(_("Text"), max_length=400, null=True, blank=True)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
-    class Meta(object):
+    class Meta:
         ordering = ['sequence']
 
 
+@python_2_unicode_compatible
 class StepsContent(TitledContent):
     action_text = models.CharField(max_length=40,
                                    default=_('Start your own project'),
@@ -383,37 +393,39 @@ class StepsContent(TitledContent):
 
     type = 'steps'
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Steps')
 
-    def __unicode__(self):
-        return str(_('Steps'))
+    def __str__(self):
+        return _('Steps')
 
     @property
     def items(self):
         return self.steps
 
 
+@python_2_unicode_compatible
 class LocationsContent(TitledContent):
     type = 'locations'
     locations = models.ManyToManyField(Location, db_table='cms_locationscontent_locations')
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Locations')
 
-    def __unicode__(self):
-        return str(_('Locations'))
+    def __str__(self):
+        return _('Locations')
 
 
+@python_2_unicode_compatible
 class CategoriesContent(TitledContent):
     type = 'categories'
     categories = models.ManyToManyField(Category, db_table='cms_categoriescontent_categories')
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Categories')
 
-    def __unicode__(self):
-        return str(_('Categories'))
+    def __str__(self):
+        return _('Categories')
 
 
 class Logo(SortableMixin, models.Model):
@@ -425,10 +437,11 @@ class Logo(SortableMixin, models.Model):
     link = models.CharField(max_length=100, blank=True, null=True)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
-    class Meta(object):
+    class Meta:
         ordering = ['sequence']
 
 
+@python_2_unicode_compatible
 class LogosContent(TitledContent):
     type = 'logos'
     action_text = models.CharField(max_length=40, null=True, blank=True)
@@ -438,11 +451,11 @@ class LogosContent(TitledContent):
         blank=True, null=True
     )
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Logos')
 
-    def __unicode__(self):
-        return str(_('Logos'))
+    def __str__(self):
+        return _('Logos')
 
 
 class ContentLink(SortableMixin, models.Model):
@@ -457,18 +470,19 @@ class ContentLink(SortableMixin, models.Model):
     )
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
-    class Meta(object):
+    class Meta:
         ordering = ['sequence']
 
 
+@python_2_unicode_compatible
 class LinksContent(TitledContent):
     type = 'links'
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Links')
 
-    def __unicode__(self):
-        return str(_('Links'))
+    def __str__(self):
+        return _('Links')
 
 
 class Greeting(models.Model):
@@ -476,17 +490,18 @@ class Greeting(models.Model):
     text = models.TextField()
 
 
+@python_2_unicode_compatible
 class WelcomeContent(ContentItem):
     type = 'welcome'
     preview_template = 'admin/cms/preview/default.html'
 
     preamble = models.CharField(max_length=20)
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Welcome')
 
-    def __unicode__(self):
-        return str(_('Welcome'))
+    def __str__(self):
+        return _('Welcome')
 
 
 class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
@@ -518,6 +533,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
 
     )
 
-    class Meta(object):
+    class Meta:
         verbose_name_plural = _('site platform settings')
         verbose_name = _('site platform settings')

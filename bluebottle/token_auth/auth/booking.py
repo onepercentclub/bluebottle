@@ -1,3 +1,5 @@
+from urllib import urlencode
+
 from future import standard_library
 standard_library.install_aliases()
 from builtins import chr
@@ -7,7 +9,6 @@ import hashlib
 import hmac
 import logging
 import re
-import urllib.request, urllib.parse, urllib.error
 from datetime import timedelta
 import string
 from datetime import datetime
@@ -174,7 +175,7 @@ class TokenAuthentication(BaseTokenAuthentication):
     def sso_url(self, target_url=None):
         url = self.settings['sso_url']
         if target_url:
-            url += '?{}'.format(urllib.parse.urlencode({'url': target_url.encode('utf-8')}))
+            url += '?{}'.format(urlencode({'url': target_url.encode('utf-8')}))
 
         return url
 

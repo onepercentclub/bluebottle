@@ -1,10 +1,12 @@
+from urllib import urlencode
+
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import object
 import json
 import logging
 import socket
-import urllib.request, urllib.parse, urllib.error
 from collections import namedtuple
 from importlib import import_module
 
@@ -299,7 +301,7 @@ signer = TimestampSigner()
 def reverse_signed(name, args):
     url = reverse(name, args=args)
     signature = signer.sign(url)
-    return '{}?{}'.format(url, urllib.parse.urlencode({'signature': signature}))
+    return '{}?{}'.format(url, urlencode({'signature': signature}))
 
 
 def get_language_from_request(request):

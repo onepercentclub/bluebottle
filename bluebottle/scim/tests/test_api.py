@@ -1,8 +1,9 @@
+from urllib import urlencode
+
 from future import standard_library
 standard_library.install_aliases()
 from builtins import range
 from builtins import object
-import urllib.request, urllib.parse, urllib.error
 
 from django.contrib.auth.models import Group
 from django.core import mail
@@ -302,7 +303,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         )
 
     def test_get_paged(self):
-        params = urllib.parse.urlencode({
+        params = urlencode({
             'count': 8,
             'startIndex': 1
         })
@@ -317,7 +318,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         self.assertEqual(len(data['Resources']), 8)
 
     def test_get_next_page(self):
-        params = urllib.parse.urlencode({
+        params = urlencode({
             'count': 8,
             'startIndex': 9
         })
@@ -332,7 +333,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         self.assertEqual(len(data['Resources']), 2)
 
     def test_get_page_to_far(self):
-        params = urllib.parse.urlencode({
+        params = urlencode({
             'count': 8,
             'startIndex': 12
         })

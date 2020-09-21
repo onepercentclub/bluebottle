@@ -5,7 +5,6 @@ from optparse import make_option
 from django.core import exceptions
 from django.utils.encoding import force_str
 from django.conf import settings
-from django.utils.six.moves import input
 from django.db.utils import IntegrityError
 from django.core.management import call_command
 

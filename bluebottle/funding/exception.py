@@ -1,4 +1,6 @@
 from builtins import str
+
+
 class PaymentException(Exception):
     """ Wrapper around Payment error messages. """
 

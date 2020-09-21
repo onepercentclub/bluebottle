@@ -445,9 +445,9 @@ class ParticipantStateMachine(ContributionStateMachine):
         description=_("The participant successfully took part in the activity."),
         effects=[
             SetTimeSpent,
-            RelatedTransitionEffect(
-                'activity', 'succeed',
-                conditions=[event_is_finished])
+            # RelatedTransitionEffect(
+            #     'activity', 'succeed',
+            #     conditions=[event_is_finished])
         ]
     )
 

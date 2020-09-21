@@ -1,4 +1,6 @@
 from builtins import object
+
+
 class HomePage(object):
     """ HomePage is a class to combine Slide, Quote and Stats into a single object.
 

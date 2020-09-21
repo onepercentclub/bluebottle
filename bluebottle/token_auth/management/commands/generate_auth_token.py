@@ -4,11 +4,6 @@ from optparse import make_option
 from django.core.management.base import BaseCommand
 from bluebottle.token_auth.auth.booking import generate_token
 
-try:
-    from django.utils.six.moves import input
-except ImportError:
-    input = raw_input
-
 
 class Command(BaseCommand):
     help = "Generate a authentication token"

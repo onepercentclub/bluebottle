@@ -166,7 +166,7 @@ class BaseRelatedTransitionEffect(Effect):
 
         if value:
             try:
-                for instance in value.all():
+                for instance in value.all().iterator():
                     yield instance
             except AttributeError:
                 try:
@@ -186,6 +186,7 @@ class BaseRelatedTransitionEffect(Effect):
                 effect.do(post_save, **kwargs)
 
     def all_effects(self, result=None):
+        result = super(BaseRelatedTransitionEffect, self).all_effects(result)
         result = super(BaseRelatedTransitionEffect, self).all_effects(result)
         if self.is_valid:
             for effect in self.effects:

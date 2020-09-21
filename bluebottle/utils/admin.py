@@ -26,7 +26,6 @@ from bluebottle.activities.models import Contribution
 from bluebottle.clients import properties
 from bluebottle.fsm import TransitionNotPossible
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
-from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.forms import FSMModelForm
 from bluebottle.utils.forms import TransitionConfirmationForm
 from .models import Language, TranslationPlatformSettings

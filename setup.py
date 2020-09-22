@@ -129,7 +129,7 @@ tests_requires = [
     'django-webtest==1.9.2',
     'factory-boy==2.12.0',
     'httmock==1.2.6',
-    'mock==4.0.2',
+    'mock==4.0.2' if sys.version_info.major == 3 else 'mock==3.0.5',
     'nose==1.3.7',
     'pylint==1.7.2',
     'pyquery==1.2.17',

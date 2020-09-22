@@ -1,7 +1,7 @@
-from urllib import urlencode
 
 from future import standard_library
 standard_library.install_aliases()
+from urllib.parse import urlencode
 import json
 
 from django.core.urlresolvers import reverse

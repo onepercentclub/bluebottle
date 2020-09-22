@@ -16,7 +16,6 @@ from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 from moneyed.classes import Money
 from rest_framework import status
-from sorl_watermarker.engines.pil_engine import Engine
 
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, ShareResultsContent, ProjectsMapContent,
@@ -45,24 +44,19 @@ class ResultPageTestCase(BluebottleTestCase):
     def setUp(self):
         super(ResultPageTestCase, self).setUp()
         self.init_projects()
-        image = File(open('./bluebottle/projects/test_images/upload.png'))
+        image = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
         self.page = ResultPageFactory(title='Results last year', image=image)
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         self.url = reverse('result-page-detail', kwargs={'pk': self.page.id})
         cache.clear()
 
     def test_results_header(self):
-        def watermark(self, image, *args, **kwargs):
-            return image
-
-        with mock.patch.object(Engine, 'watermark', side_effect=watermark) as watermark_mock:
-            response = self.client.get(self.url)
-            self.assertEquals(response.status_code, status.HTTP_200_OK)
-            # Image should come in 4 sizes
-            self.assertEqual(len(response.data['image']), 6)
-            self.assertEqual(response.data['title'], self.page.title)
-            self.assertEqual(response.data['description'], self.page.description)
-            self.assertEqual(watermark_mock.call_args[0][1]['watermark'], 'test/logo-overlay.png')
+        response = self.client.get(self.url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        # Image should come in 4 sizes
+        self.assertEqual(len(response.data['image']), 6)
+        self.assertEqual(response.data['title'], self.page.title)
+        self.assertEqual(response.data['description'], self.page.description)
 
     def test_results_stats(self):
         yesterday = now() - timedelta(days=1)
@@ -304,7 +298,7 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_slides(self):
         SlidesContent.objects.create_for_placeholder(self.placeholder)
-        image = File(open('./bluebottle/cms/tests/test_images/upload.png'))
+        image = File(open('./bluebottle/cms/tests/test_images/upload.png', 'rb'))
 
         for i in range(0, 4):
             SlideFactory(
@@ -502,17 +496,17 @@ class PageTestCase(BluebottleTestCase):
         text = TextItem.objects.create_for_placeholder(self.placeholder, text='<p>Test content</p>')
         document = DocumentItem.objects.create_for_placeholder(
             self.placeholder,
-            document=File(open('./bluebottle/projects/test_images/upload.png')),
+            document=File(open('./bluebottle/projects/test_images/upload.png', 'rb'),),
             text='Some file upload'
         )
         picture = PictureItem.objects.create_for_placeholder(
             self.placeholder,
-            image=File(open('./bluebottle/projects/test_images/upload.png')),
+            image=File(open('./bluebottle/projects/test_images/upload.png', 'rb')),
             align='center'
         )
         image_text = ImageTextItem.objects.create_for_placeholder(
             self.placeholder,
-            image=File(open('./bluebottle/projects/test_images/upload.png')),
+            image=File(open('./bluebottle/projects/test_images/upload.png', 'rb')),
             text='some text',
             align='center'
         )
@@ -610,7 +604,7 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['metadata_description'], None)
 
     def test_site_platform_settings_favicons(self):
-        favicon = File(open('./bluebottle/projects/test_images/upload.png'))
+        favicon = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
         SitePlatformSettings.objects.create(favicon=favicon)
 
         response = self.client.get(reverse('settings'))
@@ -627,7 +621,7 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         )
 
     def test_site_platform_settings_logo(self):
-        favicon = File(open('./bluebottle/projects/test_images/upload.png'))
+        favicon = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
         SitePlatformSettings.objects.create(favicon=favicon)
 
         response = self.client.get(reverse('settings'))

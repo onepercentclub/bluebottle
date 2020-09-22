@@ -74,7 +74,7 @@ class SorlImageField(RestrictedImageField):
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
         try:
-            thumbnail = str(get_thumbnail(value, self.geometry_string, **self.sorl_options))
+            thumbnail = get_thumbnail(value, self.geometry_string, **self.sorl_options)
         except IOError:
             return ""
         except Exception:
@@ -82,7 +82,7 @@ class SorlImageField(RestrictedImageField):
                 raise
             logger.error('Thumbnail failed:', exc_info=sys.exc_info())
             return ""
-        relative_url = settings.MEDIA_URL + thumbnail
+        relative_url = settings.MEDIA_URL + thumbnail.name
         return relative_url
 
 
@@ -252,18 +252,12 @@ class ImageSerializer(RestrictedImageField):
         if not isfile(value.path):
             return None
         try:
-            large = settings.MEDIA_URL + str(
-                get_thumbnail(value, '800x450', crop=self.crop))
-            full = settings.MEDIA_URL + str(
-                get_thumbnail(value, '1200x900'))
-            small = settings.MEDIA_URL + str(
-                get_thumbnail(value, '400x300', crop=self.crop))
-            square = settings.MEDIA_URL + str(
-                get_thumbnail(value, '600x600', crop=self.crop))
-            wide = settings.MEDIA_URL + str(
-                get_thumbnail(value, '1024x256', crop=self.crop))
-            original = settings.MEDIA_URL + str(
-                get_thumbnail(value, '1920', upscale=False))
+            large = settings.MEDIA_URL + get_thumbnail(value, '800x450', crop=self.crop).name
+            full = settings.MEDIA_URL + get_thumbnail(value, '1200x900').name
+            small = settings.MEDIA_URL + get_thumbnail(value, '400x300', crop=self.crop).name
+            square = settings.MEDIA_URL + get_thumbnail(value, '600x600', crop=self.crop).name
+            wide = settings.MEDIA_URL + get_thumbnail(value, '1024x256', crop=self.crop).name
+            original = settings.MEDIA_URL + get_thumbnail(value, '1920', upscale=False).name
 
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 import json
 
 from django.apps import apps
@@ -40,7 +39,9 @@ class Command(BaseCommand):
         for page_data in data:
 
             if page_data['model'] == 'Page':
-                print('Loading {} {}'.format(page_data['model'], page_data['properties']['title']))
+                self.out.write(
+                    'Loading {} {}'.format(page_data['model'], page_data['properties']['title'])
+                )
                 model = apps.get_model(page_data['app'], page_data['model'])
                 language = Language.objects.get(code=page_data['properties']['language'])
                 # Make publication_date tz aware
@@ -53,7 +54,10 @@ class Command(BaseCommand):
                 page_type = ContentType.objects.get_for_model(page)
                 slot = 'blog_contents'
             else:
-                print('Loading {}'.format(page_data['model']))
+
+                self.out.write(
+                    'Loading {}'.format(page_data['model'])
+                )
                 model = apps.get_model(page_data['app'], page_data['model'])
                 page, _c = model.objects.get_or_create(
                     defaults=page_data['properties']

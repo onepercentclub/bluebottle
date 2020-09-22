@@ -14,4 +14,4 @@ class SlideAdminTest(BluebottleAdminTestCase):
 
     def test_form(self):
         response = self.client.get(self.news_url)
-        self.assertIn('Add slide', response.content)
+        self.assertIn(b'Add slide', response.content)

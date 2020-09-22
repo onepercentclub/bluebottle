@@ -276,12 +276,12 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
     def test_put_image(self):
         file_path = './bluebottle/files/tests/files/test-image.png'
-        with open(file_path) as test_file:
+        with open(file_path, 'rb') as test_file:
             response = self.client.post(
                 reverse('image-list'),
                 test_file.read(),
                 content_type="image/png",
-                HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.jpg"',
+                HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.png"',
                 user=self.owner
             )
 
@@ -982,7 +982,7 @@ class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
 
         file_path = './bluebottle/files/tests/files/test-image.png'
 
-        with open(file_path) as test_file:
+        with open(file_path, 'rb') as test_file:
             response = self.client.post(
                 reverse('image-list'),
                 test_file.read(),

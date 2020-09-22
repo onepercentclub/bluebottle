@@ -137,7 +137,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertFalse(
             '/en/admin/initiatives/initiative/{}/transition/states/delete'.format(
                 initiative.pk
-            ) in response.content
+            ) in response.content.decode()
         )
 
     def test_add_reviewer(self):

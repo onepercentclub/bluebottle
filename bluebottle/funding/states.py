@@ -648,7 +648,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
     verify = Transition(
-        [new, incomplete, rejected],
+        [new, incomplete, rejected, pending],
         verified,
         name=_('Verify'),
         description=_("Verify the payout account."),

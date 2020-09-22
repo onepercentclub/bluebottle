@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='memberplatformsettings',
             name='login_methods',
-            field=multiselectfield.db.fields.MultiSelectField(choices=[(b'password', 'Email/password combination'), (b'SSO', 'Company SSO')], default=[b'password'], max_length=100),
+            field=multiselectfield.db.fields.MultiSelectField(choices=[('password', 'Email/password combination'), ('SSO', 'Company SSO')], default=['password'], max_length=100),
         ),
         migrations.AlterField(
             model_name='member',

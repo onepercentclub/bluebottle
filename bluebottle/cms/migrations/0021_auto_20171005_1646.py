@@ -72,7 +72,7 @@ class Migration(migrations.Migration):
                 ('sub_title', models.CharField(blank=True, max_length=70, null=True)),
                 ('action_text', models.CharField(blank=True, max_length=40, null=True)),
                 ('action_link', models.CharField(blank=True, max_length=100, null=True)),
-                ('tasks', models.ManyToManyField(db_table=b'cms_taskscontent_tasks', to='tasks.Task')),
+                ('tasks', models.ManyToManyField(db_table='cms_taskscontent_tasks', to='tasks.Task')),
             ],
             options={
                 'db_table': 'contentitem_cms_taskscontent',

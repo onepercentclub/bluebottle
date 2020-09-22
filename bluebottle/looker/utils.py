@@ -61,7 +61,7 @@ class LookerSSOEmbed(object):
 
         string_to_sign = "\n".join(values)
         signer = hmac.new(
-            settings.LOOKER_SECRET, string_to_sign.encode('utf-8').strip(), sha1
+            settings.LOOKER_SECRET.encode('utf-8'), string_to_sign.encode('utf-8').strip(), sha1
         )
         return base64.b64encode(signer.digest()).strip()
 
@@ -71,7 +71,7 @@ class LookerSSOEmbed(object):
         fiscal_month_offset = AnalyticsPlatformSettings.objects.get().fiscal_month_offset
 
         params = OrderedDict([
-            ('nonce', self.nonce),
+            ('nonce', self.nonce.decode()),
             ('time', self.time),
             ('session_length', self.session_length),
             ('external_user_id', '{}-{}'.format(schema_name, self.user.id)),

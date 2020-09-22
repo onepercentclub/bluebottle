@@ -39,7 +39,7 @@ class Command(BaseCommand):
         for page_data in data:
 
             if page_data['model'] == 'Page':
-                self.out.write(
+                self.stdout.write(
                     'Loading {} {}'.format(page_data['model'], page_data['properties']['title'])
                 )
                 model = apps.get_model(page_data['app'], page_data['model'])
@@ -55,7 +55,7 @@ class Command(BaseCommand):
                 slot = 'blog_contents'
             else:
 
-                self.out.write(
+                self.stdout.write(
                     'Loading {}'.format(page_data['model'])
                 )
                 model = apps.get_model(page_data['app'], page_data['model'])

@@ -349,11 +349,13 @@ class TestSAMLTokenAuthentication(TestCase):
                 TokenAuthenticationError,
                 auth_backend.authenticate
             )
-            error.assert_called_with((
-                'Saml login error: [\'invalid_response\'], reason: '
-                'Signature validation failed. SAML Response rejected, '
-                'assertions: {}'
-            ))
+            self.assertTrue(
+                (
+                    'Saml login error: [\'invalid_response\'], reason: '
+                    'Signature validation failed. SAML Response rejected, '
+                    'assertions: '
+                ) in error.call_args[0][0]
+            )
 
     @patch('bluebottle.token_auth.auth.saml.logger.error')
     def test_auth_no_response(self, error):

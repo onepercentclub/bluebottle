@@ -16,6 +16,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('fluent_contents', '0001_initial'),
         ('projects', '0015_auto_20161207_0900'),
+        ('surveys', '0001_initial'),
     ]
 
     operations = [

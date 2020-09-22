@@ -23,6 +23,7 @@ install_requires = [
     'bleach==2.1.4',
     'celery==3.1.24',
     'dotted==0.1.8',
+    'defusedxml==0.6.0',
     'django-admin-sortable==2.2.1',
     'django-admin-tools==0.8.1',
     'django-adminfilters==0.3',

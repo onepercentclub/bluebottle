@@ -41,7 +41,9 @@ def save_profile_picture(strategy, user, response, details, backend,
 
 def refresh(strategy, social, *args, **kwargs):
     """Refresh the facebook token, so that we get a long lived backend token."""
-    social.refresh_token(strategy)
+    kwargs['response'].update(
+        kwargs['backend'].refresh_token(kwargs['response']['access_token'])
+    )
 
 
 def set_language(strategy, user, response, details,

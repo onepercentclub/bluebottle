@@ -62,7 +62,7 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
     if isinstance(output, (list, tuple, QuerySet)):
         output = manyToManySep.join([str(item) for item in output])
-    return str(output).encode('utf-8') if output else ""
+    return output if output else ""
 
 
 def escape_csv_formulas(item):
@@ -111,6 +111,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 
         for obj in queryset:
             row = [prep_field(request, obj, field, manyToManySep) for field in field_names]
+
             # Write extra field data
             if queryset.model is Member:
                 for field in CustomMemberFieldSettings.objects.all():

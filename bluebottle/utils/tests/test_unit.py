@@ -301,8 +301,8 @@ class TestTenantAwareMailServer(unittest.TestCase):
                         new=mock.Mock([])) as properties:
             properties.MAIL_CONFIG = {'HOST': 'tenanthost', 'PORT': 4242}
 
-            properties.DKIM_SELECTOR = "key2"
-            properties.DKIM_DOMAIN = "testserver"
+            properties.DKIM_SELECTOR = b"key2"
+            properties.DKIM_DOMAIN = b"testserver"
             properties.DKIM_PRIVATE_KEY = DKIM_PRIVATE_KEY
 
             be = TenantAwareBackend()
@@ -320,8 +320,11 @@ class TestTenantAwareMailServer(unittest.TestCase):
 
             signed_msg = connection.sendmail.call_args[0][2]
             dkim_message = dkim.DKIM(message=to_bytes(signed_msg))
-            dkim_check = dkim_message.verify(dnsfunc=lambda name: b"".join([b"v=DKIM1; p=",
-                                                                            _plain_key(DKIM_PUBLIC_KEY)]))
+            dkim_check = dkim_message.verify(
+                dnsfunc=lambda name, timeout=0: b"".join(
+                    [b"v=DKIM1; p=", _plain_key(DKIM_PUBLIC_KEY)]
+                )
+            )
 
             self.assertTrue(signed_msg.find("d=testserver") >= 0)
             self.assertTrue(signed_msg.find("s=key2") >= 0)
@@ -608,49 +611,49 @@ class RestrictedImageFormFieldTestCase(TestCase):
         self.field = RestrictedImageFormField()
 
     def test_image(self):
-        with open('./bluebottle/utils/tests/test_images/upload.png') as image:
+        with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
             image_file = SimpleUploadedFile('upload.png', image.read(), content_type='image/png')
             result = self.field.to_python(image_file)
 
         self.assertEqual(result, image_file)
 
     def test_image_suffix_capitals(self):
-        with open('./bluebottle/utils/tests/test_images/upload.png') as image:
+        with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
             image_file = SimpleUploadedFile('upload.PNG', image.read(), content_type='image/png')
             result = self.field.to_python(image_file)
 
         self.assertEqual(result, image_file)
 
     def test_non_image(self):
-        with open('./bluebottle/utils/tests/test_images/non-image.svg') as image:
+        with open('./bluebottle/utils/tests/test_images/non-image.svg', 'rb') as image:
             image_file = SimpleUploadedFile('upload.png', image.read(), content_type='image/png')
 
             with self.assertRaises(ValidationError):
                 self.field.to_python(image_file)
 
     def test_svg(self):
-        with open('./bluebottle/utils/tests/test_images/upload.svg') as image:
+        with open('./bluebottle/utils/tests/test_images/upload.svg', 'rb') as image:
             image_file = SimpleUploadedFile('upload.svg', image.read(), content_type='image/svg+xml')
             result = self.field.to_python(image_file)
 
         self.assertEqual(result, image_file)
 
     def test_non_image_svg_mime(self):
-        with open('./bluebottle/utils/tests/test_images/non-image.svg') as image:
+        with open('./bluebottle/utils/tests/test_images/non-image.svg', 'rb') as image:
             image_file = SimpleUploadedFile('upload.svg', image.read(), content_type='image/svg+xml')
 
             with self.assertRaises(ValidationError):
                 self.field.to_python(image_file)
 
     def test_image_incorrect_suffix(self):
-        with open('./bluebottle/utils/tests/test_images/upload.png') as image:
+        with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
             image_file = SimpleUploadedFile('upload.html', image.read(), content_type='image/png')
 
             with self.assertRaises(ValidationError):
                 self.field.to_python(image_file)
 
     def test_image_incorrect_suffix_capitals(self):
-        with open('./bluebottle/utils/tests/test_images/upload.png') as image:
+        with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
             image_file = SimpleUploadedFile('upload.HTML', image.read(), content_type='image/png')
 
             with self.assertRaises(ValidationError):

@@ -229,10 +229,8 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.assertEqual(self.funding.status, 'succeeded')
 
-        self.assertRaises(
-            TransitionNotPossible,
+        with self.assertRaises(TransitionNotPossible):
             self.funding.states.extend(save=True)
-        )
 
     def test_refund(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(50, 'EUR'))

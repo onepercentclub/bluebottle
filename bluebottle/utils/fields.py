@@ -227,7 +227,7 @@ class ValidationErrorsField(serializers.ReadOnlyField):
     def to_representation(self, value):
         return [
             {
-                'title': error.message,
+                'title': str(error),
                 'code': error.code,
                 'source': {
                     'pointer': '/data/attributes/{}'.format(inflection.dasherize(error.field).replace('.', '/'))

@@ -44,7 +44,6 @@ class ExportAsCSVActionTest(BluebottleTestCase):
             self.request,
             TestModelQuerySet([TestModel(title='bla', text='bli bloe')])
         )
-        print(response.content)
 
         data = list(csv.reader(response.content.decode('utf-8').split('\n')))
 

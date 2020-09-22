@@ -1,7 +1,8 @@
-from urllib import urlencode
 
 from future import standard_library
 standard_library.install_aliases()
+
+from urllib.parse import urlencode
 from builtins import range
 from builtins import object
 

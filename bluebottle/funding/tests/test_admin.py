@@ -134,6 +134,6 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
 
         response = self.client.get(url)
-        self.assertTrue(first.title in response.content)
-        self.assertTrue(second.title in response.content)
-        self.assertFalse(third.title in response.content)
+        self.assertTrue(first.title in response.content.decode())
+        self.assertTrue(second.title in response.content.decode())
+        self.assertFalse(third.title in response.content.decode())

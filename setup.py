@@ -17,7 +17,7 @@ changes = ''
 install_requires = [
     'Babel==2.4.0',
     'Django==1.11.17',
-    'Pillow==7.2.0',
+    'Pillow==7.2.0' if sys.version_info.major == 3 else 'Pillow==6.2.2',
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
     'bleach==2.1.4',

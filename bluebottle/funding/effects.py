@@ -1,3 +1,5 @@
+from future.utils import python_2_unicode_compatible
+
 import datetime
 
 from django.utils import timezone
@@ -10,6 +12,7 @@ from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.wallposts.models import SystemWallpost
 
 
+@python_2_unicode_compatible
 class GeneratePayoutsEffect(Effect):
     post_save = True
     conditions = []
@@ -23,6 +26,7 @@ class GeneratePayoutsEffect(Effect):
         return _('Generate payouts, so that payouts can be approved')
 
 
+@python_2_unicode_compatible
 class DeletePayoutsEffect(Effect):
     post_save = True
     conditions = []
@@ -36,6 +40,7 @@ class DeletePayoutsEffect(Effect):
         return _('Delete all related payouts')
 
 
+@python_2_unicode_compatible
 class UpdateFundingAmountsEffect(Effect):
     post_save = True
     conditions = []
@@ -50,6 +55,7 @@ class UpdateFundingAmountsEffect(Effect):
         return _('Update total amounts')
 
 
+@python_2_unicode_compatible
 class RemoveDonationFromPayoutEffect(Effect):
     post_save = False
     conditions = []
@@ -64,6 +70,7 @@ class RemoveDonationFromPayoutEffect(Effect):
         return _('Remove donation from payout')
 
 
+@python_2_unicode_compatible
 class SetDeadlineEffect(Effect):
     post_save = False
     conditions = []
@@ -88,6 +95,7 @@ class SetDeadlineEffect(Effect):
         return _('Set deadline according to the duration')
 
 
+@python_2_unicode_compatible
 class RefundPaymentAtPSPEffect(Effect):
     post_save = False
 
@@ -102,6 +110,7 @@ class RefundPaymentAtPSPEffect(Effect):
         return _('Request refund payment at PSP')
 
 
+@python_2_unicode_compatible
 class GenerateDonationWallpostEffect(Effect):
     post_save = True
     conditions = []
@@ -122,6 +131,7 @@ class GenerateDonationWallpostEffect(Effect):
         return _('Generate wallpost for donation')
 
 
+@python_2_unicode_compatible
 class RemoveDonationWallpostEffect(Effect):
     post_save = True
     conditions = []
@@ -138,6 +148,7 @@ class RemoveDonationWallpostEffect(Effect):
         return _('Delete wallpost for donation')
 
 
+@python_2_unicode_compatible
 class SubmitConnectedActivitiesEffect(Effect):
     post_save = True
     conditions = []
@@ -155,6 +166,7 @@ class SubmitConnectedActivitiesEffect(Effect):
         return _('Submit connected activities')
 
 
+@python_2_unicode_compatible
 class DeleteDocumentEffect(Effect):
     post_save = False
     conditions = []
@@ -170,6 +182,7 @@ class DeleteDocumentEffect(Effect):
         return _('Delete verification documents, since they are no longer needed')
 
 
+@python_2_unicode_compatible
 class SubmitPayoutEffect(Effect):
     post_save = False
     conditions = []
@@ -184,6 +197,7 @@ class SubmitPayoutEffect(Effect):
         return _('Trigger payout at the PSP')
 
 
+@python_2_unicode_compatible
 class BaseSetDateEffect(Effect):
     post_save = False
     conditions = []
@@ -207,6 +221,7 @@ def SetDateEffect(_field):
     return _SetDateEffect
 
 
+@python_2_unicode_compatible
 class ClearPayoutDatesEffect(Effect):
     post_save = False
     conditions = []

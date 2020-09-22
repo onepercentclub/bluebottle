@@ -630,7 +630,6 @@ class PlainPayoutAccount(PayoutAccount):
         return required
 
 
-@python_2_unicode_compatible
 class BankAccount(PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

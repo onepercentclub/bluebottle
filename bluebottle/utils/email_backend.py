@@ -49,9 +49,9 @@ class TenantAwareBackend(EmailBackend):
             return False
         try:
             message_string = email_message.message().as_string()
-            signature = ""
+            signature = b""
             try:
-                signature = dkim.sign(message_string,
+                signature = dkim.sign(message_string.encode('utf-8'),
                                       properties.DKIM_SELECTOR,
                                       properties.DKIM_DOMAIN,
                                       properties.DKIM_PRIVATE_KEY)
@@ -60,7 +60,7 @@ class TenantAwareBackend(EmailBackend):
 
             self.connection.sendmail(
                 email_message.from_email, email_message.recipients(),
-                signature + message_string)
+                signature.decode() + message_string)
         except Exception:
             if not self.fail_silently:
                 raise

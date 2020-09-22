@@ -1,6 +1,10 @@
 from __future__ import absolute_import
+
 from future import standard_library
 standard_library.install_aliases()
+
+from urllib.parse import urljoin, urlencode
+
 from builtins import object
 import datetime
 from html.parser import HTMLParser
@@ -134,13 +138,11 @@ class Event(Activity):
             if date:
                 return date.astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
 
-        prepared_request = PreparedRequest()
-
-        url = 'https://calendar.google.com/calendar/render'
+        url = u'https://calendar.google.com/calendar/render'
         params = {
-            'action': 'TEMPLATE',
+            'action': u'TEMPLATE',
             'text': self.title,
-            'dates': '{}/{}'.format(
+            'dates': u'{}/{}'.format(
                 format_date(self.start), format_date(self.end)
             ),
             'details': HTMLParser().unescape(
@@ -154,8 +156,7 @@ class Event(Activity):
         if self.location:
             params['location'] = self.location.formatted_address
 
-        prepared_request.prepare_url(url, params)
-        return prepared_request.url
+        return u'{}?{}'.format(url, urlencode(params))
 
     @property
     def outlook_link(self):
@@ -163,7 +164,6 @@ class Event(Activity):
             if date:
                 return date.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
 
-        prepared_request = PreparedRequest()
         url = 'https://outlook.live.com/owa/'
 
         params = {
@@ -183,8 +183,7 @@ class Event(Activity):
         if self.location:
             params['location'] = self.location.formatted_address
 
-        prepared_request.prepare_url(url, params)
-        return prepared_request.url
+        return u'{}?{}'.format(url, urlencode(params))
 
 
 class Participant(Contribution):

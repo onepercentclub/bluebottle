@@ -1,4 +1,7 @@
 from __future__ import absolute_import
+
+from future.utils import python_2_unicode_compatible
+
 from builtins import object
 from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.fields import GenericRelation
@@ -88,6 +91,7 @@ class MemberPlatformSettings(BasePlatformSettings):
         verbose_name = _('member platform settings')
 
 
+@python_2_unicode_compatible
 class Member(BlueBottleBaseUser):
     verified = models.BooleanField(default=False, blank=True, help_text=_('Was verified for voting by recaptcha.'))
     subscribed = models.BooleanField(

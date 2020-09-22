@@ -93,40 +93,40 @@ class ClientSettingsTestCase(BluebottleTestCase):
     def test_settings_currencies(self):
         # Check that exposed property is in settings api, and other settings are not shown
         response = self.client.get(self.settings_url)
-
-        self.assertTrue(
-            response.data['currencies'] ==
-            [
-                {
-                    'symbol': u'CFA',
-                    'code': 'XOF',
-                    'name': u'West African CFA Franc',
-                    'rate': Decimal(1000.0),
-                    'minAmount': 5000
-                },
-                {
-                    'symbol': u'\u20a6',
-                    'code': 'NGN',
-                    'name': u'Nigerian Naira',
-                    'rate': Decimal(500.0),
-                    'minAmount': 3000
-                },
-                {
-                    'symbol': u'$',
-                    'code': 'USD',
-                    'name': u'US Dollar',
-                    'rate': Decimal(1.0),
-                    'minAmount': 5
-                },
-                {
-                    'symbol': u'\u20ac',
-                    'code': 'EUR',
-                    'name': u'Euro',
-                    'rate': Decimal(1.5),
-                    'minAmount': 0
-                }
-            ]
-        )
+        expected = [
+            {
+                'symbol': u'\u20ac',
+                'code': 'EUR',
+                'name': u'Euro',
+                'rate': Decimal(1.5),
+                'minAmount': 0
+            },
+            {
+                'symbol': u'\u20a6',
+                'code': 'NGN',
+                'name': u'Nigerian Naira',
+                'rate': Decimal(500.0),
+                'minAmount': 3000
+            },
+            {
+                'symbol': u'$',
+                'code': 'USD',
+                'name': u'US Dollar',
+                'rate': Decimal(1.0),
+                'minAmount': 5
+            },
+            {
+                'symbol': u'CFA',
+                'code': 'XOF',
+                'name': u'West African CFA Franc',
+                'rate': Decimal(1000.0),
+                'minAmount': 5000
+            },
+        ]
+        result = response.data['currencies']
+        result = sorted(result, key=lambda i: i['name'])
+        expected = sorted(expected, key=lambda i: i['name'])
+        self.assertEqual(result, expected)
 
 
 @override_settings(

@@ -758,7 +758,7 @@ class ActivityRelatedImageAPITestCase(BluebottleTestCase):
 
         file_path = './bluebottle/files/tests/files/test-image.png'
 
-        with open(file_path) as test_file:
+        with open(file_path, 'rb') as test_file:
             response = self.client.post(
                 reverse('image-list'),
                 test_file.read(),

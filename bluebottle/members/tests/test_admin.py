@@ -63,7 +63,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
 
     def test_form(self):
         response = self.client.get(self.add_member_url)
-        self.assertIn('Add member', response.content)
+        self.assertIn(b'Add member', response.content)
 
     def test_invalid_form(self):
         response = self.client.get(self.add_member_url)
@@ -72,7 +72,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
             'csrfmiddlewaretoken': csrf
         }
         response = self.client.post(self.add_member_url, data)
-        self.assertIn('Please correct the errors below.', response.content)
+        self.assertIn(b'Please correct the errors below.', response.content)
 
     @override_settings(
         SEND_WELCOME_MAIL=True,
@@ -109,7 +109,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
 
         confirm_response = self.client.get(reset_url)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue('Are you sure' in confirm_response.content)
+        self.assertTrue(b'Are you sure' in confirm_response.content)
 
         response = self.client.post(reset_url, {'confirm': True})
         self.assertEquals(response.status_code, 302)
@@ -136,7 +136,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
 
         confirm_response = self.client.get(welcome_email_url)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue('Are you sure' in confirm_response.content)
+        self.assertTrue(b'Are you sure' in confirm_response.content)
 
         response = self.client.post(welcome_email_url, {'confirm': True})
         self.assertEquals(response.status_code, 302)
@@ -343,7 +343,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         export_action = self.member_admin.actions[0]
         response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
-        data = response.content.split("\r\n")
+        data = response.content.decode().split("\r\n")
         headers = data[0].split(",")
         user_data = []
         for row in data:
@@ -358,7 +358,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(user_data[0], 'malle-eppie')
         self.assertEqual(user_data[7], 'True')
         self.assertEqual(user_data[8], 'True')
-        self.assertEqual(user_data[9], '35.00 \xe2\x82\xac')
+        self.assertEqual(user_data[9], '35.00 €')
         self.assertEqual(user_data[10], '47.0')
         self.assertEqual(user_data[13], 'Fine')
 
@@ -370,7 +370,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         export_action = self.member_admin.actions[0]
         response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
-        data = response.content.split("\r\n")
+        data = response.content.decode().split("\r\n")
         headers = data[0].split(",")
         data = data[1].split(",")
 

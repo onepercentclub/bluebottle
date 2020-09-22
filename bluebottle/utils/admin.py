@@ -1,6 +1,6 @@
-from builtins import str
-from builtins import object
 import csv
+from builtins import object
+from builtins import str
 
 from adminfilters.multiselect import UnionFieldListFilter
 from django.conf import settings
@@ -66,7 +66,9 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
 
 def escape_csv_formulas(item):
-    if item and item[0] in ['=', '+', '-', '@']:
+    if isinstance(item, bytes):
+        item = item.decode()
+    if item and isinstance(item, str) and item[0] in ['=', '+', '-', '@']:
         return "'" + item
     else:
         return item

@@ -518,7 +518,7 @@ class PasswordSetTest(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertTrue('too short' in response.content)
+        self.assertTrue(b'too short' in response.content)
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('some-password'))

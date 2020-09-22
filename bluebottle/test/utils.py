@@ -1,14 +1,13 @@
-from builtins import str
 from builtins import object
-from munch import munchify
-
-from django.db import connection
-from django.test.utils import override_settings
-from django.test import TestCase, Client
-from django.conf import settings
-
-from django_webtest import WebTestMixin
+from builtins import str
 from importlib import import_module
+
+from django.conf import settings
+from django.db import connection
+from django.test import TestCase, Client
+from django.test.utils import override_settings
+from django_webtest import WebTestMixin
+from munch import munchify
 from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient
 from tenant_schemas.middleware import TenantMiddleware
@@ -18,18 +17,6 @@ from bluebottle.clients import properties
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.utils.models import Language
-
-
-# TODO: remove this temporary work around to not verify ssl certs
-#       when docdata fix their ssl cert chain on their testing server.
-import ssl
-
-try:
-    _create_unverified_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
-else:
-    ssl._create_default_https_context = _create_unverified_https_context
 
 
 def css_dict(style):
@@ -175,8 +162,8 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
 
     def get_csrf_token(self, response):
         csrf = "name='csrfmiddlewaretoken' value='"
-        start = response.content.find(csrf) + len(csrf)
-        end = response.content.find("'", start)
+        start = response.content.decode().find(csrf) + len(csrf)
+        end = response.content.decode().find("'", start)
 
         return response.content[start:end]
 

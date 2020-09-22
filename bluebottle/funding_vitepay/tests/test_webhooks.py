@@ -43,7 +43,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(response.content, '{"status": "1"}')
+        self.assertEqual(response.content, b'{"status": "1"}')
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'succeeded')
 
@@ -55,7 +55,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(response.content, '{"status": "1"}')
+        self.assertEqual(response.content, b'{"status": "1"}')
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'failed')
 
@@ -67,6 +67,6 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(response.content, '{"status": "0", "message": "Order not found."}')
+        self.assertEqual(response.content, b'{"status": "0", "message": "Order not found."}')
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'new')

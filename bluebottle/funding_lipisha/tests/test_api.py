@@ -90,7 +90,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.content, "Error creating payment: Invalid API Credentials")
+        self.assertEqual(response.content, b"Error creating payment: Invalid API Credentials")
 
 
 class LipishaPayoutAccountTestCase(BluebottleTestCase):

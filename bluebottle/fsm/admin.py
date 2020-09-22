@@ -30,7 +30,7 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
 
 def get_effects(effects):
     displayed_effects = [effect for effect in effects if effect.display]
-    displayed_effects.sort(key=lambda x: x.__class__)
+    displayed_effects.sort(key=lambda x: x.__class__.__name__)
     grouped_effects = defaultdict(list)
 
     for effect in displayed_effects:

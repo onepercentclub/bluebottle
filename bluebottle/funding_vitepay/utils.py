@@ -45,7 +45,7 @@ def get_payment_url(payment):
                                                    callback_url=callback_url,
                                                    api_secret=api_secret)
 
-    payment_hash = hashlib.sha1(message.upper()).hexdigest()
+    payment_hash = hashlib.sha1(message.upper().encode('utf-8')).hexdigest()
 
     email = ''
     if payment.donation.user:
@@ -97,7 +97,7 @@ def update_payment_status(payment, authenticity, success, failure):
         api_secret=api_secret
     )
 
-    update_hash = hashlib.sha1(message).hexdigest().upper()
+    update_hash = hashlib.sha1(message.encode('utf-8')).hexdigest().upper()
 
     # DIRTY HACK
     update_hash = authenticity

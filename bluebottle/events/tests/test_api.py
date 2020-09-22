@@ -446,7 +446,7 @@ class EventDetailTestCase(BluebottleTestCase):
                 reverse('image-list'),
                 test_file.read(),
                 content_type="image/png",
-                HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.jpg"',
+                HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.png"',
                 user=self.event.owner
             )
 

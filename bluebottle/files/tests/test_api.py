@@ -39,7 +39,7 @@ class FileListAPITestCase(TestCase):
         self.assertTrue(file_field.file.name.endswith(data['data']['meta']['filename']))
 
     def test_create_image(self):
-        with open(self.image_path) as test_file:
+        with open(self.image_path, 'rb') as test_file:
             response = self.client.post(
                 self.image_url,
                 test_file.read(),
@@ -58,7 +58,7 @@ class FileListAPITestCase(TestCase):
         self.assertTrue(file_field.file.name.endswith(data['data']['meta']['filename']))
 
     def test_create_image_anonymous(self):
-        with open(self.image_path) as test_file:
+        with open(self.image_path, 'rb') as test_file:
             response = self.client.post(
                 self.image_url,
                 test_file.read(),
@@ -69,7 +69,7 @@ class FileListAPITestCase(TestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_create_image_spoofed_mime_type(self):
-        with open(self.image_path) as test_file:
+        with open(self.image_path, 'rb') as test_file:
             response = self.client.post(
                 self.image_url,
                 test_file.read(),

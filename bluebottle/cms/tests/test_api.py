@@ -1,10 +1,9 @@
-from builtins import str
-from builtins import range
 import os
+from builtins import range
+from builtins import str
 from datetime import timedelta
 from decimal import Decimal
 
-import mock
 from django.contrib.auth.models import Permission, Group
 from django.core.cache import cache
 from django.core.files.base import File

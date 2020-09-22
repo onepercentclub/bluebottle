@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # flake8: noqa
 import os
-
+import sys
 import bluebottle
 from setuptools import setup, find_packages
 
@@ -17,11 +17,10 @@ changes = ''
 install_requires = [
     'Babel==2.4.0',
     'Django==1.11.17',
-    'Pillow==4.1.1',
+    'Pillow==7.2.0',
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
     'bleach==2.1.4',
-    'beyonic==0.1.16',
     'celery==3.1.24',
     'dotted==0.1.8',
     'django-admin-sortable==2.2.1',
@@ -98,7 +97,7 @@ install_requires = [
     'rave-python==1.0.2',
     'raven==6.1.0',
     'regex==2017.05.26',
-    'requests==2.20.1',
+    'requests==2.24.0',
     'schwifty==2.1.0',
     'sorl-thumbnail @ git+https://github.com/mariocesar/sorl-thumbnail.git@v12.3#egg=sorl-thumbnail-12.3-github',
     'South==1.0.2',

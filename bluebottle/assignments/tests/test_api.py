@@ -411,12 +411,16 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(
-            data['data']['meta']['transitions'],
-            [
-                {u'available': True, u'name': u'submit', u'target': u'submitted'},
-                {u'available': True, u'name': u'delete', u'target': u'deleted'}
-            ]
+
+        self.assertEqual(len(data['data']['meta']['transitions']), 2)
+        self.assertTrue(
+            {u'available': True, u'name': u'submit', u'target': u'submitted'} in
+            data['data']['meta']['transitions']
+        )
+
+        self.assertTrue(
+            {u'available': True, u'name': u'delete', u'target': u'deleted'} in
+            data['data']['meta']['transitions']
         )
 
         self.assertEqual(data['data']['meta']['required'], [])
@@ -579,7 +583,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
                         mail.outbox[0].body)
 
     def test_apply_with_document(self):
-        with open(self.png_document_path) as test_file:
+        with open(self.png_document_path, 'rb') as test_file:
             response = self.client.post(
                 self.private_document_url,
                 test_file.read(),

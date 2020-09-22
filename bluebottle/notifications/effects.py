@@ -1,8 +1,11 @@
+from future.utils import python_2_unicode_compatible
+
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.effects import Effect
 
 
+@python_2_unicode_compatible
 class BaseNotificationEffect(Effect):
     post_save = True
     title = _('Send email')

@@ -518,7 +518,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         passwords = {'new_password1': 'short', 'new_password2': 'short'}
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue('This password is too short' in response.content)
+        self.assertTrue(b'This password is too short' in response.content)
 
     def test_deactivate(self):
         response = self.client.delete(

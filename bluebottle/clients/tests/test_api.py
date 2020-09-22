@@ -94,8 +94,8 @@ class ClientSettingsTestCase(BluebottleTestCase):
         # Check that exposed property is in settings api, and other settings are not shown
         response = self.client.get(self.settings_url)
 
-        self.assertEqual(
-            response.data['currencies'],
+        self.assertTrue(
+            response.data['currencies'] ==
             [
                 {
                     'symbol': u'CFA',

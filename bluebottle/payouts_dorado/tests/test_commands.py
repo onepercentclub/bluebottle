@@ -1,8 +1,10 @@
 from future import standard_library
 standard_library.install_aliases()
 import json
-from io import StringIO
-
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from django.db import connection
 from django.test import TestCase
@@ -27,7 +29,6 @@ class ExportKeysTest(TestCase):
         out = StringIO()
         call_command('export_keys', 'test@example.com', '--all', stdout=out)
         result = json.loads(out.getvalue())
-
         self.assertEqual(len(result), 2)
 
         for token in result:

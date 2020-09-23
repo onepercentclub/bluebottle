@@ -1,11 +1,10 @@
 import json
 
 from django.core.management.base import BaseCommand, CommandError
-
 from rest_framework.authtoken.models import Token
 
-from bluebottle.clients.models import Client
 from bluebottle.clients import properties
+from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 
 

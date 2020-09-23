@@ -1,30 +1,24 @@
 from __future__ import absolute_import
 
-from future import standard_library
-standard_library.install_aliases()
-
-from urllib.parse import urljoin, urlencode
-
-from builtins import object
 import datetime
-from html.parser import HTMLParser
+from urllib.parse import urlencode
 
+import pytz
+from builtins import object
 from django.db import models, connection
 from django.db.models import Count, Sum
 from django.utils.html import strip_tags
-from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import utc
-
-from requests.models import PreparedRequest
-
+from django.utils.translation import ugettext_lazy as _
+from future import standard_library
+from html.parser import HTMLParser
 from timezonefinder import TimezoneFinder
-
-import pytz
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.events.validators import RegistrationDeadlineValidator
 from bluebottle.geo.models import Geolocation
 
+standard_library.install_aliases()
 
 tf = TimezoneFinder()
 

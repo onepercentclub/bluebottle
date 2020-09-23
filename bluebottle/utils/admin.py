@@ -1,4 +1,5 @@
 import csv
+import six
 from builtins import object
 from builtins import str
 
@@ -68,7 +69,7 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
 
 def escape_csv_formulas(item):
-    if item and isinstance(item, str):
+    if item and isinstance(item, six.string_types):
         if item[0] in ['=', '+', '-', '@']:
             item = u"'" + item
         return smart_str(item)

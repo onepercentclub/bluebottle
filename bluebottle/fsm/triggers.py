@@ -158,8 +158,6 @@ class TriggerMixin(object):
     def delete(self, *args, **kwargs):
         for trigger in self.triggers:
             if issubclass(trigger, ModelDeletedTrigger):
-                for current_effect in trigger(self).current_effects:
-                    for effect in current_effect.all_effects():
-                        effect.do(post_save=True)
+                trigger(self).execute([])
 
         return super(TriggerMixin, self).delete(*args, **kwargs)

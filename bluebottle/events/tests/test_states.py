@@ -414,6 +414,7 @@ class ParticipantStateMachineTests(BluebottleTestCase):
             duration=1,
             start=now() + timedelta(hours=4)
         )
+        self.event.states.submit(save=True)
         self.user = BlueBottleUserFactory.create()
         self.old_user = BlueBottleUserFactory.create()
 

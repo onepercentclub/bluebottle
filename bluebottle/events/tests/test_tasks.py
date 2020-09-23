@@ -59,7 +59,7 @@ class EventTasksTestCase(BluebottleTestCase):
 
         self.assertEqual(event.status, 'open')
         tenant = connection.tenant
-        future = timezone.now() + timedelta(hours=2)
+        future = timezone.now() + timedelta(hours=4)
         with mock.patch.object(timezone, 'now', return_value=future):
             event_tasks()
         with LocalTenant(tenant, clear_tenant=True):

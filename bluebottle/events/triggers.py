@@ -100,7 +100,7 @@ def event_will_be_empty(effect):
 
 def not_triggered_by_user(effect):
     "The participant is different from the current user"
-    return effect.options['user'] != effect.instance.user
+    return 'user' not in effect.options or effect.options['user'] != effect.instance.user
 
 
 @register(Event)

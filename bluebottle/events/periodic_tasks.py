@@ -26,7 +26,7 @@ class EventFinishedTask(ModelPeriodicTask):
             event_should_finish,
             event_has_participants
         ]),
-        TransitionEffect(EventStateMachine.succeed, conditions=[
+        TransitionEffect(EventStateMachine.cancel, conditions=[
             event_should_finish,
             event_has_no_participants
         ]),
@@ -45,13 +45,9 @@ class EventStartTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect(EventStateMachine.succeed, conditions=[
+        TransitionEffect(EventStateMachine.start, conditions=[
             event_should_start,
             event_has_participants
-        ]),
-        TransitionEffect(EventStateMachine.succeed, conditions=[
-            event_should_start,
-            event_has_no_participants
         ]),
     ]
 

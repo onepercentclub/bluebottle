@@ -679,6 +679,9 @@ class BankAccount(PolymorphicModel):
 
     public_data = {}
 
+    class Meta:
+        ordering = ('id',)
+
 
 class FundingPlatformSettings(BasePlatformSettings):
 

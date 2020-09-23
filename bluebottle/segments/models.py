@@ -54,3 +54,6 @@ class Segment(models.Model):
 
     def __str__(self):
         return u'{}: {}'.format(self.type.name, self.name)
+
+    class Meta:
+        ordering = ('name',)

@@ -209,7 +209,7 @@ class RestoreEventTrigger(TransitionTrigger):
 
     effects = [
         RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
-        RelatedTransitionEffect('participants', OrganizerStateMachine.reset),
+        RelatedTransitionEffect('all_participants', ParticipantStateMachine.reset),
     ]
 
 

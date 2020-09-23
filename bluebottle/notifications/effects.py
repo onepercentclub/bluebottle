@@ -9,7 +9,6 @@ class BaseNotificationEffect(Effect):
 
     def post_save(self, **kwargs):
         if self.options.get('send_messages', True) and self.is_valid:
-
             self.message(
                 self.instance,
                 custom_message=self.options.get('message')

@@ -377,6 +377,31 @@ class ActivityStateMachineTests(BluebottleTestCase):
             self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
             self.assertEqual(participant.time_spent, self.event.duration)
 
+    def test_succeed_after_reset(self):
+        self.event.capacity = 400
+        self.event.states.submit(save=True)
+        ParticipantFactory.create(activity=self.event)
+
+        self.assertEqual(self.event.status, EventStateMachine.open.value)
+        self.event.states.cancel(save=True)
+
+        for participant in self.event.contributions.instance_of(Participant):
+            self.assertEqual(participant.status, ParticipantStateMachine.failed.value)
+
+        self.event.start = timezone.now() - timedelta(hours=2)
+        self.event.states.restore(save=True)
+
+        for participant in self.event.contributions.instance_of(Participant):
+            self.assertEqual(participant.status, ParticipantStateMachine.new.value)
+
+        self.event.states.submit(save=True)
+
+        self.assertEqual(self.event.status, EventStateMachine.succeeded.value)
+
+        for participant in self.event.contributions.instance_of(Participant):
+            self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
+            self.assertEqual(participant.time_spent, self.event.duration)
+
     def test_change_start_reopen_from_cancelled(self):
         self.passed_event.states.submit(save=True)
         self.assertEqual(self.passed_event.status, EventStateMachine.cancelled.value)

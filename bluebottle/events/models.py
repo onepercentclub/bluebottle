@@ -111,6 +111,10 @@ class Event(Activity):
         super(Event, self).save(*args, **kwargs)
 
     @property
+    def all_participants(self):
+        return self.contributions.instance_of(Participant)
+
+    @property
     def participants(self):
         from states import ParticipantStateMachine
         return self.contributions.filter(

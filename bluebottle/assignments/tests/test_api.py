@@ -210,7 +210,7 @@ class AssignmentDetailAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_cancelled(self):
-        self.assignment.initiative.states.submit()
+        self.assignment.initiative.states.submit(save=True)
         self.assignment.initiative.states.approve(save=True)
         self.assignment.refresh_from_db()
 

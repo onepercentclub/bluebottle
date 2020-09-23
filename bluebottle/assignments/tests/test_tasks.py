@@ -32,11 +32,12 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         end = now() + timedelta(days=4)
         assignment = AssignmentFactory.create(
             owner=user,
-            status='open',
             end_date_type='deadline',
             initiative=self.initiative,
+            registration_deadline=None,
             date=end
         )
+        assignment.states.submit(save=True)
 
         ApplicantFactory.create_batch(2, activity=assignment, status='new')
         ApplicantFactory.create(activity=assignment, status='accepted')
@@ -67,11 +68,12 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         end = now() + timedelta(days=4)
         assignment = AssignmentFactory.create(
             owner=user,
-            status='open',
             end_date_type='on_date',
             initiative=self.initiative,
+            registration_deadline=None,
             date=end
         )
+        assignment.states.submit(save=True)
 
         ApplicantFactory.create_batch(2, activity=assignment, status='new')
         ApplicantFactory.create(activity=assignment, status='accepted')
@@ -102,10 +104,11 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         end = now() + timedelta(days=4)
         assignment = AssignmentFactory.create(
             owner=user,
-            status='open',
             initiative=self.initiative,
+            registration_deadline=None,
             date=end,
         )
+        assignment.states.submit(save=True)
 
         ApplicantFactory.create_batch(3, activity=assignment, status='new')
         withdrawn = ApplicantFactory.create(activity=assignment, status='new')
@@ -125,7 +128,6 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         assignment = AssignmentFactory.create(
             owner=user,
-            status='open',
             capacity=3,
             end_date_type='on_date',
             registration_deadline=deadline.date(),
@@ -133,6 +135,9 @@ class AssignmentTasksTestCase(BluebottleTestCase):
             duration=4,
             date=end,
         )
+
+        assignment.states.submit(save=True)
+
         applicants = ApplicantFactory.create_batch(3, activity=assignment, status='new')
         for applicant in applicants:
             applicant.states.accept(save=True)
@@ -153,7 +158,6 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         assignment = AssignmentFactory.create(
             owner=user,
-            status='open',
             capacity=3,
             registration_deadline=registration_deadline.date(),
             initiative=self.initiative,
@@ -161,6 +165,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
             duration=10,
             date=date
         )
+        assignment.states.submit(save=True)
         applicants = ApplicantFactory.create_batch(3, activity=assignment, status='new')
         for applicant in applicants:
             applicant.states.accept(save=True)
@@ -177,20 +182,22 @@ class AssignmentTasksTestCase(BluebottleTestCase):
     def test_assignment_check_start_date_no_applicants(self):
         user = BlueBottleUserFactory.create(first_name='Nono')
 
-        deadline = now() - timedelta(days=1)
-        date = now() - timedelta(hours=2)
+        deadline = now() + timedelta(days=2)
+        date = now() + timedelta(days=4)
 
         assignment = AssignmentFactory.create(
             owner=user,
-            status='open',
             capacity=3,
             registration_deadline=deadline.date(),
             initiative=self.initiative,
             duration=10,
             date=date
         )
+        assignment.states.submit(save=True)
+
         tenant = connection.tenant
-        assignment_tasks()
+        with mock.patch.object(timezone, 'now', return_value=(timezone.now() + timedelta(days=13))):
+            assignment_tasks()
 
         with LocalTenant(tenant, clear_tenant=True):
             assignment.refresh_from_db()
@@ -200,24 +207,26 @@ class AssignmentTasksTestCase(BluebottleTestCase):
     def test_assignment_check_end_date(self):
         user = BlueBottleUserFactory.create(first_name='Nono')
 
-        deadline = now() - timedelta(days=4)
-        date = now() - timedelta(days=2)
+        deadline = now() + timedelta(days=2)
+        date = now() + timedelta(days=4)
 
         assignment = AssignmentFactory.create(
             owner=user,
-            status='open',
             capacity=3,
             registration_deadline=deadline.date(),
             initiative=self.initiative,
             date=date,
         )
+        assignment.states.submit(save=True)
 
         applicants = ApplicantFactory.create_batch(3, activity=assignment, status='new')
         for applicant in applicants:
             applicant.states.accept(save=True)
 
         tenant = connection.tenant
-        assignment_tasks()
+
+        with mock.patch.object(timezone, 'now', return_value=(timezone.now() + timedelta(days=13))):
+            assignment_tasks()
 
         with LocalTenant(tenant, clear_tenant=True):
             assignment.refresh_from_db()

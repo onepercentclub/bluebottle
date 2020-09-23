@@ -52,7 +52,9 @@ class TransitionSerializer(serializers.Serializer):
 
         self.instance = Transition(resource, transition_name, message)
 
-        transition.execute(states, save=True, user=user, send_messages=True, message=message)
+        transition.execute(states)
+        resource.execute_triggers(user=user, send_messages=True, message=message)
+        resource.save()
 
     class Meta:
         fields = ('id', 'transition', 'message', 'resource')

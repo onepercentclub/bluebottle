@@ -23,9 +23,6 @@ class Effect(object):
         return unicode(self)
 
     def __init__(self, instance, **kwargs):
-        if not instance:
-            import ipdb
-            ipdb.set_trace()
         self.instance = instance
         self.options = kwargs
 

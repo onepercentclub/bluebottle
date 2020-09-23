@@ -209,7 +209,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
 
         self.assignment.refresh_from_db()
 
-        self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
+        self.assertEqual(self.assignment.status, AssignmentStateMachine.full.value)
 
     def test_change_date(self):
         tomorrow = now() + timedelta(days=1)

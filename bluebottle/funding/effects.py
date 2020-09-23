@@ -37,13 +37,12 @@ class DeletePayoutsEffect(Effect):
 
 
 class UpdateFundingAmountsEffect(Effect):
-    post_save = True
     conditions = []
     title = _('Update amounts')
 
     display = False
 
-    def execute(self, **kwargs):
+    def post_save(self, **kwargs):
         self.instance.activity.update_amounts()
 
     def __unicode__(self):

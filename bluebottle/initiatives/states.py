@@ -1,10 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transition, register
-from bluebottle.initiatives.messages import (
-    InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage,
-    InitiativeCancelledOwnerMessage
-)
 from bluebottle.initiatives.models import Initiative
 
 

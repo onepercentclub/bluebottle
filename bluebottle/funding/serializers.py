@@ -16,7 +16,7 @@ from bluebottle.activities.utils import (
     BaseTinyActivitySerializer
 )
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.files.serializers import ImageField, PrivateDocumentSerializer
+from bluebottle.files.serializers import PrivateDocumentSerializer
 from bluebottle.files.serializers import PrivateDocumentField
 from bluebottle.funding.filters import DonationListFilter
 from bluebottle.funding.models import (

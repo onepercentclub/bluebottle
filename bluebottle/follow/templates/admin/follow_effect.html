@@ -1,0 +1,12 @@
+{% load i18n %}
+<h3>{% trans "Follow the activity" %}</h3>
+
+<p>
+    "{{effects.0.instance}}" 
+    {% if effects|length > 1 %} 
+        {% blocktrans with extra=effects|length|add:"-1" %}
+        and {{ extra }} other users 
+        {% endblocktrans %}
+    {% endif %} 
+    {% trans "will start following the activity." %}
+</p>

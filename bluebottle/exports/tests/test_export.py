@@ -10,8 +10,10 @@ from bluebottle.events.tests.factories import EventFactory
 from bluebottle.exports.exporter import Exporter
 from bluebottle.exports.tasks import plain_export
 from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.impact.models import ImpactType
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import CustomMemberField, CustomMemberFieldSettings
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -34,10 +36,10 @@ class TestExportAdmin(BluebottleTestCase):
             '_save': 'Confirm'
         }
         tenant = connection.tenant
-        initiatives = InitiativeFactory.create_batch(10)
+        initiatives = InitiativeFactory.create_batch(4)
         for initiative in initiatives:
-            EventFactory.create_batch(10, initiative=initiative)
-            AssignmentFactory.create_batch(7, initiative=initiative)
+            EventFactory.create_batch(3, initiative=initiative)
+            AssignmentFactory.create_batch(2, initiative=initiative)
             FundingFactory.create_batch(1, initiative=initiative)
 
         result = plain_export(Exporter, tenant=tenant, **data)
@@ -48,19 +50,19 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertEqual(
             book.sheet_by_name('Users').nrows,
-            221
+            41
         )
         self.assertEqual(
             book.sheet_by_name('Initiatives').nrows,
-            11
+            5
         )
         self.assertEqual(
             book.sheet_by_name('Funding activities').nrows,
-            11
+            5
         )
         self.assertEqual(
             book.sheet_by_name('Events').nrows,
-            101
+            13
         )
         self.assertEqual(
             book.sheet_by_name('Events').cell(0, 13).value,
@@ -73,7 +75,7 @@ class TestExportAdmin(BluebottleTestCase):
 
         self.assertEqual(
             book.sheet_by_name('Tasks').nrows,
-            71
+            9
         )
         self.assertEqual(
             book.sheet_by_name('Tasks').cell(0, 16).value,
@@ -103,7 +105,8 @@ class TestExportAdmin(BluebottleTestCase):
                 value='Parblue Yellow'
             )
         initiative = InitiativeFactory.create(owner=users[0])
-        assignment = AssignmentFactory.create(owner=users[1], initiative=initiative)
+        assignment = AssignmentFactory.create(
+            owner=users[1], initiative=initiative)
         ApplicantFactory.create(activity=assignment, user=users[2])
 
         data = {
@@ -128,10 +131,104 @@ class TestExportAdmin(BluebottleTestCase):
             'Parblue Yellow'
         )
         self.assertEqual(
-            book.sheet_by_name('Task contributions').cell(0, 10).value,
+            book.sheet_by_name('Task contributions').cell(0, 13).value,
             'Favourite colour'
         )
         self.assertEqual(
-            book.sheet_by_name('Task contributions').cell(1, 10).value,
+            book.sheet_by_name('Task contributions').cell(1, 13).value,
             'Parblue Yellow'
+        )
+
+    def test_export_user_segments(self):
+        from_date = now() - timedelta(weeks=2)
+        to_date = now() + timedelta(weeks=1)
+        users = BlueBottleUserFactory.create_batch(5)
+        segment_type = SegmentTypeFactory.create(name='Department')
+        engineering = SegmentFactory.create(type=segment_type, name='Engineering')
+        rubbish = SegmentFactory.create(type=segment_type, name='Rubbish')
+        users[0].segments.add(engineering)
+        initiative = InitiativeFactory.create(owner=users[0])
+        assignment = AssignmentFactory.create(
+            owner=users[1],
+            initiative=initiative
+        )
+        assignment.segments.add(engineering)
+        assignment.segments.add(rubbish)
+        ApplicantFactory.create(activity=assignment, user=users[2])
+
+        data = {
+            'from_date': from_date,
+            'to_date': to_date,
+            '_save': 'Confirm'
+        }
+        tenant = connection.tenant
+        result = plain_export(Exporter, tenant=tenant, **data)
+        book = xlrd.open_workbook(result)
+
+        self.assertEqual(
+            book.sheet_by_name('Users').ncols,
+            12
+        )
+        self.assertEqual(
+            book.sheet_by_name('Users').cell(0, 11).value,
+            'Department'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Users').cell(1, 11).value,
+            'Engineering'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Tasks').cell(0, 23).value,
+            'Department'
+        )
+        self.assertTrue(
+            book.sheet_by_name('Tasks').cell(1, 23).value in
+            ['Engineering, Rubbish', 'Rubbish, Engineering']
+        )
+
+    def test_export_impact(self):
+        from_date = now() - timedelta(weeks=2)
+        to_date = now() + timedelta(weeks=1)
+        users = BlueBottleUserFactory.create_batch(5)
+
+        co2 = ImpactType.objects.get(slug='co2')
+        co2.active = True
+        co2.save()
+        water = ImpactType.objects.get(slug='water')
+        water.active = True
+        water.save()
+
+        initiative = InitiativeFactory.create(owner=users[0])
+
+        assignment = AssignmentFactory.create(
+            owner=users[1],
+            initiative=initiative
+        )
+        assignment.goals.create(type=co2, realized=300)
+        assignment.goals.create(type=water, realized=750)
+
+        data = {
+            'from_date': from_date,
+            'to_date': to_date,
+            '_save': 'Confirm'
+        }
+        tenant = connection.tenant
+        result = plain_export(Exporter, tenant=tenant, **data)
+        book = xlrd.open_workbook(result)
+
+        self.assertEqual(
+            book.sheet_by_name('Tasks').cell(0, 23).value,
+            u'Reduce CO\u2082 emissions'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Tasks').cell(1, 23).value,
+            300
+        )
+        self.assertEqual(
+            book.sheet_by_name('Tasks').cell(0, 24).value,
+            u'Save water'
+        )
+        self.assertEqual(
+            book.sheet_by_name('Tasks').cell(1, 24).value,
+            750
         )

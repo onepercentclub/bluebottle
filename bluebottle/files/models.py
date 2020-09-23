@@ -1,6 +1,7 @@
 import os
 import uuid
 
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -9,12 +10,20 @@ from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.files.fields import ImageField
 from bluebottle.utils.models import AnonymizationMixin
+from bluebottle.utils.validators import FileMimetypeValidator
 
 
 class File(AnonymizationMixin, models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateField(_('created'), default=timezone.now)
-    file = models.FileField(_('file'), upload_to='files')
+    file = models.FileField(
+        _('file'),
+        upload_to='files',
+        validators=[FileMimetypeValidator(
+            allowed_mimetypes=settings.PRIVATE_FILE_ALLOWED_MIME_TYPES
+        )]
+
+    )
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('owner'),

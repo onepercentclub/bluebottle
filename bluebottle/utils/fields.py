@@ -200,7 +200,7 @@ class FSMStatusValidator(object):
 
         transitions = [
             transition for transition in available_transitions if
-            transition.target == value
+            transition.target == value and not transition.options.get('automatic')
         ]
 
         if len(transitions) != 1:

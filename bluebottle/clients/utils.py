@@ -57,7 +57,10 @@ class LocalTenant(object):
 
 def tenant_url():
     # workaround for development setups. Assume port 8000
-    domain = connection.tenant.domain_url
+    try:
+        domain = connection.tenant.domain_url
+    except AttributeError:
+        domain = 'example.com'
 
     if domain.endswith("localhost"):
         return "http://{0}:8000".format(domain)
@@ -65,7 +68,10 @@ def tenant_url():
 
 
 def tenant_name():
-    return connection.tenant.name
+    try:
+        return connection.tenant.name
+    except AttributeError:
+        return 'Example Tenant'
 
 
 def tenant_site():

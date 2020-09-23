@@ -109,8 +109,8 @@ def update_payment_status(payment, authenticity, success, failure):
     elif not success and not failure:
         raise PaymentException('Both failure and success are not set. Not sure what to do.')
     elif failure:
-        payment.transitions.fail()
+        payment.states.fail()
     else:
-        payment.transitions.succeed()
+        payment.states.succeed()
     payment.save()
     return payment

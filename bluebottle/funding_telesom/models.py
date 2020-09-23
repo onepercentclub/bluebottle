@@ -1,9 +1,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, BankAccount
-from bluebottle.funding.transitions import PaymentTransitions
 
 
 class TelesomPaymentProvider(PaymentProvider):
@@ -51,7 +49,6 @@ class TelesomPayment(Payment):
     amount = models.DecimalField(default=10.0, max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=3, default='USD')
     response = models.TextField(default='')
-    transitions = TransitionManager(PaymentTransitions, 'status')
 
     provider = 'telesom'
 
@@ -76,3 +73,6 @@ class TelesomBankAccount(BankAccount):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/telesom-external-accounts'
+
+
+from .states import *  # noqa

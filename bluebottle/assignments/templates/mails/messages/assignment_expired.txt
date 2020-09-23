@@ -7,9 +7,9 @@
     {% else %}
         {% blocktrans with recipient_name=to.first_name assignment_title=obj.title context 'email' %}
         Hi {{ recipient_name }},
-        Unfortunately, nobody applied to your task {{ assignment_title }} before the deadline. This means we'll have to close this task.
-        But, don't give up yet! You can always create a new task and try again.
-        Need some tips to make your task stand out? The support team is always happy to help.
+        Unfortunately, nobody applied to your task “{{ assignment_title }}” before the deadline to apply. That’s why we have cancelled the task. 
+
+        Don’t worry, you can always edit the task and try again. Need some tips to make your task stand out? Reach out to the platform manager by replying to this email. 
         {% endblocktrans %}
     {% endif %}
 {% endblock %}

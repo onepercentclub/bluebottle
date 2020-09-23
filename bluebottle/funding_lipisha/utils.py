@@ -6,7 +6,7 @@ from moneyed import Money
 from bluebottle.clients import properties
 from bluebottle.fsm import TransitionNotPossible
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Donation, Funding
+from bluebottle.funding.models import Donation
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayment, LipishaBankAccount
 
 
@@ -31,14 +31,15 @@ def init_client():
 
 def initiate_push_payment(payment):
     """
-    This will iniate a payment at Lipisha. It will send a push notification to the user's phone.
+    This will initiate a payment at Lipisha.
+    It will send a push notification to the user's phone.
     They just have to confirm with there pin to authorise the payment.
     """
     client = init_client()
-    provider = LipishaPaymentProvider.objects.get()
+    account_number = payment.donation.activity.bank_account.mpesa_code
 
     response = client.request_money(
-        account_number=provider.paybill,
+        account_number=account_number,
         mobile_number=payment.mobile_number,
         method=payment.method,
         amount=int(payment.donation.amount.amount),
@@ -50,8 +51,7 @@ def initiate_push_payment(payment):
         payment.transaction = response['content']['transaction']
         payment.save()
     else:
-        payment.transitions.fail()
-        payment.save()
+        payment.states.fail(save=True)
         raise PaymentException(response['status']['status_description'])
     return payment
 
@@ -75,7 +75,7 @@ def check_payment_status(payment):
     data = response['content']
     if len(data) == 0:
         try:
-            payment.transitions.fail()
+            payment.states.fail()
         except TransitionNotPossible:
             pass
         payment.save()
@@ -86,24 +86,24 @@ def check_payment_status(payment):
             # Update donation amount based on the amount registered at Lipisha
             amount = Money(data['transaction_amount'], 'KES')
             payment.donation.amount = amount
-        payment.donation.name = data['transaction_account_name']
+        payment.donation.name = data['transaction_name'].replace('+', ' ').title()
         payment.donation.save()
 
     payment.mobile_number = data['transaction_mobile_number']
 
     if data['transaction_status'] in ['Completed', 'Settled', 'Acknowledged', 'Authorized']:
         try:
-            payment.transitions.succeed()
+            payment.states.succeed()
         except TransitionNotPossible:
             pass
     if data['transaction_status'] in ['Cancelled', 'Voided']:
         try:
-            payment.transitions.fail()
+            payment.states.fail()
         except TransitionNotPossible:
             pass
     if data['transaction_reversal_status'] == 'Reverse' or data['transaction_status'] in ['Reversed']:
         try:
-            payment.transitions.refund()
+            payment.states.refund()
         except TransitionNotPossible:
             pass
     payment.save()
@@ -149,56 +149,6 @@ def generate_error_response(reference):
         "transaction_status_action": "REJECT",
         "transaction_status_reason": "INVALID_TRANSACTION"
     }
-
-
-def update_webhook_payment(data):
-    # account_number = data['transaction_account_number']
-    transaction_merchant_reference = data['transaction_merchant_reference']
-    transaction_reference = data['transaction_reference']
-    credentials = get_credentials()
-
-    if credentials['api_key'] != data['api_key']:
-        return generate_error_response(transaction_reference)
-    if credentials['api_signature'] != data['api_signature']:
-        return generate_error_response(transaction_reference)
-
-    payment = None
-
-    # Try to find a matching payment
-    if transaction_merchant_reference:
-        payment, created = LipishaPayment.objects.get_or_create(
-            unique_id=transaction_merchant_reference
-        )
-    if transaction_reference:
-        payment, created = LipishaPayment.objects.get_or_create(
-            unique_id=transaction_merchant_reference
-        )
-
-    # Try to find an payout account with matching account_number
-    if not payment:
-        name = data['transaction_name'].replace('+', ' ').title()
-
-        # FIXME: get the right Funding Activity
-        funding = Funding.objects.first()
-
-        donation = Donation.objects.create(
-            amount=Money(data['transaction_amount'], data['transaction_currency']),
-            name=name,
-            activity=funding
-        )
-        payment = LipishaPayment.objects.create(
-            donation=donation
-        )
-
-    payment.mobile_number = data['transaction_mobile']
-    payment.reference = data['transaction_mobile']
-
-    try:
-        check_payment_status(payment)
-    except PaymentException:
-        pass
-    payment.save()
-    return payment
 
 
 def initiate_payment(data):
@@ -279,7 +229,7 @@ def acknowledge_payment(data):
     except LipishaPayment.MultipleObjectsReturned:
         payment = LipishaPayment.objects.filter(transaction=transaction_reference).last()
 
-    payment.mobile_number = data['transaction_mobile']
+    # payment.mobile_number = data['transaction_mobile_number']
 
     try:
         check_payment_status(payment)

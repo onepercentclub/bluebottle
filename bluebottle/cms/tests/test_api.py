@@ -60,7 +60,7 @@ class ResultPageTestCase(BluebottleTestCase):
             response = self.client.get(self.url)
             self.assertEquals(response.status_code, status.HTTP_200_OK)
             # Image should come in 4 sizes
-            self.assertEqual(len(response.data['image']), 5)
+            self.assertEqual(len(response.data['image']), 6)
             self.assertEqual(response.data['title'], self.page.title)
             self.assertEqual(response.data['description'], self.page.description)
             self.assertEqual(watermark_mock.call_args[0][1]['watermark'], 'test/logo-overlay.png')
@@ -74,14 +74,14 @@ class ResultPageTestCase(BluebottleTestCase):
         DonationFactory.create(
             activity=funding,
             status='succeeded',
-            transition_date=yesterday,
+            contribution_date=yesterday,
             user=user,
             amount=Money(50, 'EUR')
         )
         DonationFactory.create(
             activity=funding,
             status='succeeded',
-            transition_date=long_ago,
+            contribution_date=long_ago,
             user=user,
             amount=Money(50, 'EUR')
         )

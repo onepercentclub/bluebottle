@@ -9,6 +9,7 @@ from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvide
 @admin.register(PledgePayment)
 class PledgePaymentAdmin(PaymentChildAdmin):
     base_model = Payment
+    fields = PaymentChildAdmin.fields
 
 
 @admin.register(PledgePaymentProvider)

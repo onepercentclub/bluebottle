@@ -6,7 +6,7 @@ from django.contrib.gis.geos import Point
 from django.core.urlresolvers import reverse
 from django.test import TestCase, tag
 from django.test.utils import override_settings
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 
 from moneyed import Money
 from django_elasticsearch_dsl.test import ESTestCase
@@ -17,12 +17,14 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
+from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
 from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.test.utils import JSONAPITestClient
+from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 
 
 def get_include(response, name):
@@ -249,10 +251,10 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             owner=self.owner,
             place=GeolocationFactory(position=Point(23.6851594, 43.0579025))
         )
+        self.initiative.states.submit(save=True)
         self.url = reverse('initiative-detail', args=(self.initiative.pk,))
 
-    def test_patch(self):
-        data = {
+        self.data = {
             'data': {
                 'id': self.initiative.id,
                 'type': 'initiatives',
@@ -261,9 +263,11 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 }
             }
         }
+
+    def test_patch(self):
         response = self.client.patch(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -359,38 +363,39 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
 
     def test_patch_anonymous(self):
-        data = {
-            'data': {
-                'id': self.initiative.id,
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title'
-                }
-            }
-        }
-
         response = self.client.patch(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_patch_wrong_user(self):
-        data = {
-            'data': {
-                'id': self.initiative.id,
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title'
-                }
-            }
-        }
-
         response = self.client.patch(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=BlueBottleUserFactory.create()
         )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_cancelled(self):
+        self.initiative.states.approve()
+        self.initiative.states.cancel(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.initiative.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_deleted(self):
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.delete(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.initiative.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_rejected(self):
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.reject(save=True)
+        response = self.client.put(self.url, json.dumps(self.data), user=self.initiative.owner)
+
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_owner(self):
@@ -409,9 +414,9 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(
             data['meta']['transitions'],
             [{
-                u'available': False,
-                u'name': u'submit',
-                u'target': u'submitted'
+                u'available': True,
+                u'name': u'request_changes',
+                u'target': u'needs_work'
             }])
         self.assertEqual(data['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
         self.assertEqual(data['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
@@ -521,8 +526,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
 
-    def test_many_results(self):
-        InitiativeFactory.create_batch(39, owner=self.owner, status='approved')
+    def test_more_results(self):
+        InitiativeFactory.create_batch(19, owner=self.owner, status='approved')
         InitiativeFactory.create(status="approved")
 
         response = self.client.get(
@@ -531,7 +536,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
         data = json.loads(response.content)
 
-        self.assertEqual(data['meta']['pagination']['count'], 40)
+        self.assertEqual(data['meta']['pagination']['count'], 20)
         self.assertEqual(len(data['data']), 8)
 
     def test_only_owner_permission(self):
@@ -802,31 +807,31 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         first = InitiativeFactory.create(status='approved')
         FundingFactory.create(
             initiative=first,
-            review_status='approved',
-            deadline=datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
+            status='open',
+            deadline=now() + datetime.timedelta(days=8)
         )
         FundingFactory.create(
             initiative=first,
-            review_status='submitted',
-            deadline=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+            status='submitted',
+            deadline=now() + datetime.timedelta(days=7)
         )
 
         second = InitiativeFactory.create(status='approved')
         EventFactory.create(
             initiative=second,
-            review_status='approved',
-            start=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+            status='open',
+            start=now() + datetime.timedelta(days=7)
         )
         third = InitiativeFactory.create(status='approved')
         EventFactory.create(
             initiative=third,
-            review_status='approved',
-            start=datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+            status='open',
+            start=now() + datetime.timedelta(days=7)
         )
         AssignmentFactory.create(
             initiative=third,
-            review_status='approved',
-            date=datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
+            status='open',
+            date=now() + datetime.timedelta(days=9)
         )
 
         response = self.client.get(
@@ -853,38 +858,9 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
             owner=self.owner
         )
 
-    def test_transition_to_submitted(self):
-        data = {
-            'data': {
-                'type': 'initiative-transitions',
-                'attributes': {
-                    'transition': 'submit',
-                },
-                'relationships': {
-                    'resource': {
-                        'data': {
-                            'type': 'initiatives',
-                            'id': self.initiative.pk
-                        }
-                    }
-                }
-            }
-        }
-
-        response = self.client.post(
-            self.url,
-            json.dumps(data),
-            user=self.owner
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        data = json.loads(response.content)
-
-        initiative = Initiative.objects.get(pk=self.initiative.pk)
-        self.assertEqual(initiative.status, 'submitted')
-        self.assertTrue(data['data']['id'])
-        self.assertEqual(data['data']['attributes']['transition'], 'submit')
-
     def test_transition_disallowed(self):
+        self.initiative.states.submit(save=True)
+
         data = {
             'data': {
                 'type': 'initiative-transitions',
@@ -913,7 +889,7 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(data['errors'][0], u'Transition is not available')
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
-        self.assertEqual(initiative.status, 'draft')
+        self.assertEqual(initiative.status, 'submitted')
 
 
 class InitiativeRedirectTest(TestCase):
@@ -1132,3 +1108,59 @@ class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class ThemeListAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(ThemeListAPITestCase, self).setUp()
+
+        self.client = JSONAPITestClient()
+        for theme in ProjectTheme.objects.all():
+            theme.delete()
+
+        self.url = reverse('initiative-theme-list')
+        self.user = BlueBottleUserFactory()
+
+        ProjectThemeFactory.create_batch(5, disabled=False)
+
+    def test_list(self):
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            len(response.json()['data']), 5
+        )
+        result = response.json()['data'][0]
+
+        theme = ProjectTheme.objects.get(pk=result['id'])
+
+        self.assertEqual(theme.name, result['attributes']['name'])
+
+    def test_list_anonymous(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            len(response.json()['data']), 5
+        )
+
+    def test_list_closed(self):
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_list_disabled(self):
+        ProjectThemeFactory.create(disabled=True)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            len(response.json()['data']), 5
+        )

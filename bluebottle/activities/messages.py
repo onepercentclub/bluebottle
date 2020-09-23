@@ -11,6 +11,7 @@ class ActivityWallpostOwnerMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """activity organizer"""
         if self.obj.author != self.obj.content_object.owner:
             return [self.obj.content_object.owner]
         else:
@@ -26,6 +27,7 @@ class ActivityWallpostReactionMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """wallpost author"""
         return [self.obj.wallpost.author]
 
 
@@ -38,6 +40,7 @@ class ActivityWallpostOwnerReactionMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """activity organizer"""
         if self.obj.author != self.obj.wallpost.content_object.owner:
             return [self.obj.wallpost.content_object.owner]
         else:
@@ -52,6 +55,7 @@ class ActivityWallpostFollowerMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """followers of the activity"""
         activity = self.obj.content_object
         follows = activity.follows.filter(
             user__campaign_notifications=True
@@ -60,3 +64,14 @@ class ActivityWallpostFollowerMessage(TransitionMessage):
         )
 
         return [follow.user for follow in follows]
+
+
+class ImpactReminderMessage(TransitionMessage):
+    subject = (u'Please share the impact results for your activity "{title}".')
+    template = 'messages/activity_impact_reminder'
+    context = {
+        'title': 'title'
+    }
+
+    def get_recipients(self):
+        return [self.obj.owner]

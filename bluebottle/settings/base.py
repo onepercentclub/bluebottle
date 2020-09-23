@@ -164,7 +164,7 @@ MIDDLEWARE_CLASSES = (
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
-    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
+    'bluebottle.auth.middleware.LogAuthFailureMiddleWare'
 )
 
 REST_FRAMEWORK = {
@@ -284,7 +284,6 @@ SHARED_APPS = (
     'geoposition',
     'tenant_extras',
     'localflavor',
-    'filetransfers',
     'corsheaders',
     'djmoney_rates',
     'parler',
@@ -333,12 +332,14 @@ TENANT_APPS = (
     'rest_framework.authtoken',
     'django_elasticsearch_dsl',
 
+    'bluebottle.fsm',
     'bluebottle.looker',
     'bluebottle.exports',
 
     'bluebottle.members',
     'bluebottle.projects',
     'bluebottle.organizations',
+    'bluebottle.impact',
 
     'bluebottle.transitions',
     'bluebottle.files',
@@ -354,6 +355,7 @@ TENANT_APPS = (
     'bluebottle.funding_flutterwave',
     'bluebottle.funding_lipisha',
     'bluebottle.funding_telesom',
+    'bluebottle.segments',
 
     'bluebottle.tasks',
     'bluebottle.homepage',
@@ -666,7 +668,13 @@ DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', 'image/svg+xml')
+IMAGE_ALLOWED_MIME_TYPES = (
+    'image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'
+)
+VIDEO_FILE_ALLOWED_MIME_TYPES = (
+    'video/ogg', 'video/mp4', 'video/webm', 'video/3gpp',
+    'video/x-msvideo', 'video/quicktime'
+)
 PRIVATE_FILE_ALLOWED_MIME_TYPES = (
     'image/png', 'image/jpeg', 'image/gif', 'image/tiff',
     'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -753,7 +761,9 @@ EXPORTDB_EXPORT_CONF = {
             'fields': (
                 ('id', 'Contribution ID'),
                 ('activity__title', 'Activity Title'),
+                ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
+                ('activity__status', 'Activity status'),
                 ('user__id', 'User ID'),
                 ('user__remote_id', 'Remote ID'),
                 ('user__email', 'Email'),
@@ -761,7 +771,9 @@ EXPORTDB_EXPORT_CONF = {
 
                 ('time_spent', 'Time spent'),
 
-                ('created', 'Date created'),
+
+                ('activity__assignment__date', 'Activity date'),
+                ('created', 'Date registered'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.ApplicantResource',
@@ -796,7 +808,9 @@ EXPORTDB_EXPORT_CONF = {
             'fields': (
                 ('id', 'Contribution ID'),
                 ('activity__title', 'Activity Title'),
+                ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
+                ('activity__status', 'Activity status'),
                 ('user__id', 'User ID'),
                 ('user__remote_id', 'Remote ID'),
                 ('user__email', 'Email'),
@@ -804,7 +818,8 @@ EXPORTDB_EXPORT_CONF = {
 
                 ('time_spent', 'Time spent'),
 
-                ('created', 'Date created'),
+                ('activity__event__start', 'Activity date'),
+                ('created', 'Date registered'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.ParticipantResource',
@@ -827,7 +842,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('amount_donated', 'Amount donated'),
                 ('deadline', 'Deadline'),
 
-                ('created', 'Date created'),
+                ('created', 'created'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.EventResource',
@@ -837,7 +852,9 @@ EXPORTDB_EXPORT_CONF = {
             'fields': (
                 ('id', 'Contribution ID'),
                 ('activity__title', 'Activity Title'),
+                ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
+                ('activity__status', 'Activity status'),
                 ('user__id', 'User ID'),
                 ('user__remote_id', 'Remote ID'),
                 ('user__email', 'Email'),
@@ -848,7 +865,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('reward__name', 'Reward'),
                 ('name', 'Name'),
 
-                ('created', 'Date created'),
+                ('activity__funding__deadline', 'Activity date'),
+                ('created', 'Donation date'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.DonationResource',
@@ -857,10 +875,10 @@ EXPORTDB_EXPORT_CONF = {
     ])
 }
 EXPORTDB_CONFIRM_FORM = 'bluebottle.exports.forms.ExportDBForm'
-EXPORTDB_EXPORT_ROOT = os.path.join(MEDIA_ROOT, '%s', 'exports')
+EXPORTDB_EXPORT_ROOT = os.path.join(MEDIA_ROOT, '%s', 'private', 'exports')
 EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser
 EXPORTDB_USE_CELERY = True
-EXPORTDB_EXPORT_MEDIA_URL = os.path.join(MEDIA_URL, 'exports')
+EXPORTDB_EXPORT_MEDIA_URL = os.path.join(MEDIA_URL, 'private/exports')
 
 # maximum delta between from/to date for exports
 EXPORT_MAX_DAYS = 366 * 3

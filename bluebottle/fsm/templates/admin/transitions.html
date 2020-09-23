@@ -1,0 +1,14 @@
+{% load i18n %}
+{% for group_name, group_choices, group_index in widget.optgroups %}
+    {% for option in group_choices %}
+        {% if option.value %}
+            <div class="transition-option">
+                {% include option.template_name with widget=option obj=widget.attrs.obj %}
+            </div>
+        {% endif %}
+    {% endfor %}
+{% empty %}
+    <i>
+        {% trans "No transitions possible" %}
+    </i>
+{% endfor %}

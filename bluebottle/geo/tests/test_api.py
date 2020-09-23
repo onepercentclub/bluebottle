@@ -1,11 +1,12 @@
 import json
 
+from bluebottle.funding.tests.factories import FundingFactory
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from bluebottle.geo.models import Country, Location
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import CountryFactory
+from bluebottle.test.factory_models.geo import CountryFactory, LocationFactory, GeolocationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.events.tests.factories import EventFactory
 from bluebottle.assignments.tests.factories import AssignmentFactory
@@ -23,9 +24,7 @@ class GeoTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(GeoTestCase, self).setUp()
-
         self.init_projects()
-
         self.country_1 = Country.objects.get(translations__name="Abkhazia")
 
 
@@ -63,41 +62,59 @@ class UsedCountryListTestCase(GeoTestCase):
 
     Endpoint: /api/geo/used_countries
     """
+
     def setUp(self):
         super(UsedCountryListTestCase, self).setUp()
 
-        self.event = EventFactory.create(
-            review_status='approved', status='new'
+        belgium = Country.objects.get(translations__name="Belgium")
+        location_be = GeolocationFactory.create(country=belgium)
+
+        bulgaria = Country.objects.get(translations__name="Bulgaria")
+        location_bg = GeolocationFactory.create(country=bulgaria)
+
+        germany = Country.objects.get(translations__name="Germany")
+        location_de = GeolocationFactory.create(country=germany)
+
+        turkey = Country.objects.get(translations__name="Turkey")
+        location_tr = LocationFactory.create(country=turkey)
+        LocationFactory.create(country=Country.objects.get(translations__name='France'))
+
+        EventFactory.create(
+            status='open',
+            location=location_be
         )
         EventFactory.create(
-            review_status='approved', status='new', location=self.event.location
+            status='full',
+            location=location_bg
         )
 
-        self.assignment = AssignmentFactory.create(
-            review_status='approved', status='new'
+        AssignmentFactory.create(
+            status='draft',
+            location=location_de
         )
 
         EventFactory.create(
-            review_status='submitted', status='in_review'
+            status='submitted',
+            location=location_de
         )
-        self.initiative = InitiativeFactory.create(
-            status='approved'
+        initiative = InitiativeFactory.create(
+            status='approved',
+            location=location_tr
+        )
+        FundingFactory.create(
+            initiative=initiative,
+            status='open'
         )
 
     def test_api_used_country_list_endpoint(self):
         """
         Ensure get request returns 200.
         """
-        response = self.client.get(reverse('used-country-list'))
-
+        response = self.client.get(reverse('country-list'), {'filter[used]': True})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), 3)
-
         countries = [country['id'] for country in response.json()]
-
-        self.assertTrue(self.initiative.place.country.pk in countries)
-        self.assertTrue(self.event.location.country.pk in countries)
-        self.assertTrue(self.assignment.location.country.pk in countries)
+        self.assertEqual(len(countries), 3)
 
 
 class LocationListTestCase(GeoTestCase):
@@ -106,6 +123,7 @@ class LocationListTestCase(GeoTestCase):
 
     Endpoint: /api/geo/locations
     """
+
     def setUp(self):
         super(GeoTestCase, self).setUp()
 
@@ -146,6 +164,7 @@ class GeolocationCreateTestCase(GeoTestCase):
     Test case for ``GeolocationList`` API view.
     Endpoint: /api/geo/geolocations
     """
+
     def setUp(self):
         super(GeoTestCase, self).setUp()
         self.country = CountryFactory.create()

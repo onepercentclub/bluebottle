@@ -2,12 +2,16 @@ from bluebottle.notifications.messages import TransitionMessage
 from django.utils.translation import ugettext_lazy as _
 
 
-class InitiativeApproveOwnerMessage(TransitionMessage):
+class InitiativeApprovedOwnerMessage(TransitionMessage):
     subject = _('Your initiative "{title}" has been approved!')
     template = 'messages/initiative_approved_owner'
     context = {
         'title': 'title'
     }
+
+    def get_recipients(self):
+        """the initiator"""
+        return [self.obj.owner]
 
 
 class InitiativeNeedsWorkOwnerMessage(TransitionMessage):
@@ -17,13 +21,33 @@ class InitiativeNeedsWorkOwnerMessage(TransitionMessage):
         'title': 'title'
     }
 
+    def get_recipients(self):
+        """the initiator"""
+        return [self.obj.owner]
 
-class InitiativeClosedOwnerMessage(TransitionMessage):
-    subject = _('Your initiative "{title}" has been closed')
-    template = 'messages/initiative_closed_owner'
+
+class InitiativeRejectedOwnerMessage(TransitionMessage):
+    subject = _('Your initiative "{title}" has been rejected.')
+    template = 'messages/initiative_rejected_owner'
     context = {
         'title': 'title'
     }
+
+    def get_recipients(self):
+        """the initiator"""
+        return [self.obj.owner]
+
+
+class InitiativeCancelledOwnerMessage(TransitionMessage):
+    subject = _('The initiative "{title}" has been cancelled.')
+    template = 'messages/initiative_cancelled_owner'
+    context = {
+        'title': 'title'
+    }
+
+    def get_recipients(self):
+        """the initiator"""
+        return [self.obj.owner]
 
 
 class AssignedReviewerMessage(TransitionMessage):
@@ -34,6 +58,7 @@ class AssignedReviewerMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """the reviewer"""
         return [self.obj.reviewer]
 
 
@@ -46,6 +71,7 @@ class InitiativeWallpostOwnerMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """"the initiator"""
         if self.obj.author != self.obj.content_object.owner:
             return [self.obj.content_object.owner]
         else:
@@ -61,6 +87,7 @@ class InitiativeWallpostReactionMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """the wallpost author"""
         return [self.obj.wallpost.author]
 
 
@@ -73,6 +100,7 @@ class InitiativeWallpostOwnerReactionMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """the initiator"""
         if self.obj.author != self.obj.wallpost.content_object.owner:
             return [self.obj.wallpost.content_object.owner]
         else:
@@ -87,10 +115,18 @@ class InitiativeWallpostFollowerMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """followers of the initiative"""
         initiative = self.obj.content_object
         follows = []
         for activity in initiative.activities.filter(
-            review_status='approved'
+            status__in=(
+                'succeeded',
+                'open',
+                'partially_funded',
+                'full',
+                'running'
+            )
+
         ):
             follows += activity.follows.filter(
                 user__campaign_notifications=True

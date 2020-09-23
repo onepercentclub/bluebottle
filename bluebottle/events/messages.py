@@ -1,18 +1,35 @@
+# -*- coding: utf-8 -*-
 from bluebottle.notifications.messages import TransitionMessage
 from django.utils.translation import ugettext_lazy as _
 
 
 class EventSucceededOwnerMessage(TransitionMessage):
-    subject = _('You completed your event "{title}"!')
+    subject = _(u'Your event "{title}" took place! 🎉')
     template = 'messages/event_succeeded_owner'
     context = {
         'title': 'title'
     }
 
 
-class EventClosedOwnerMessage(TransitionMessage):
-    subject = _('Your event "{title}" has been closed')
-    template = 'messages/event_closed_owner'
+class EventRejectedOwnerMessage(TransitionMessage):
+    subject = _('Your event "{title}" has been rejected')
+    template = 'messages/event_rejected_owner'
+    context = {
+        'title': 'title'
+    }
+
+
+class EventCancelledMessage(TransitionMessage):
+    subject = _('Your event "{title}" has been cancelled')
+    template = 'messages/event_cancelled'
+    context = {
+        'title': 'title'
+    }
+
+
+class EventExpiredMessage(TransitionMessage):
+    subject = _('Your event "{title}" has been cancelled')
+    template = 'messages/event_expired'
     context = {
         'title': 'title'
     }
@@ -26,27 +43,33 @@ class EventDateChanged(TransitionMessage):
     }
 
     def get_recipients(self):
+        """participants that signed up"""
         from bluebottle.events.models import Participant
-
         return [
             contribution.user for contribution
-            in self.obj.contributions.instance_of(Participant).filter(status='new')
+            in self.obj.contributions.instance_of(
+                Participant
+            ).filter(status='new')
         ]
 
 
-class EventReminder(TransitionMessage):
+class EventReminderMessage(TransitionMessage):
     subject = _('Your event "{title}" will take place in 5 days!')
     template = 'messages/event_reminder'
     context = {
         'title': 'title'
     }
+    send_once = True
 
     def get_recipients(self):
+        """participants that signed up"""
         from bluebottle.events.models import Participant
 
         return [
             contribution.user for contribution
-            in self.obj.contributions.instance_of(Participant).filter(status='new')
+            in self.obj.contributions.instance_of(
+                Participant
+            ).filter(status='new')
         ]
 
 
@@ -58,6 +81,7 @@ class ParticipantApplicationMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """the participant"""
         return [self.obj.user]
 
 
@@ -69,6 +93,7 @@ class ParticipantApplicationManagerMessage(TransitionMessage):
     }
 
     def get_recipients(self):
+        """the organizer and the activity manager"""
         return [
             self.obj.activity.owner,
             self.obj.activity.initiative.activity_manager
@@ -76,11 +101,12 @@ class ParticipantApplicationManagerMessage(TransitionMessage):
 
 
 class ParticipantRejectedMessage(TransitionMessage):
-    subject = _('Your status for "{title}" was changed to "not going"')
+    subject = _('You have been rejected for the event "{title}"')
     template = 'messages/participant_rejected'
     context = {
         'title': 'activity.title'
     }
 
     def get_recipients(self):
+        """the participant"""
         return [self.obj.user]

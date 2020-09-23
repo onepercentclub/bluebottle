@@ -1,15 +1,28 @@
 from rest_framework_json_api.views import AutoPrefetchMixin
+from rest_framework.pagination import PageNumberPagination
 
-from bluebottle.activities.permissions import ActivityOwnerPermission, ActivityTypePermission, ApplicantPermission
+from bluebottle.activities.permissions import (
+    ActivityOwnerPermission,
+    ActivityTypePermission,
+    ActivityStatusPermission,
+    ApplicantPermission
+)
+from bluebottle.tasks.models import Skill
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.serializers import (
     ApplicantSerializer, AssignmentTransitionSerializer,
-    ApplicantTransitionSerializer, AssignmentSerializer)
+    ApplicantTransitionSerializer, AssignmentSerializer,
+    SkillSerializer
+)
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission)
+    OneOf, ResourcePermission, ResourceOwnerPermission,
+    TenantConditionalOpenClose
+)
 from bluebottle.utils.views import (
-    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, PrivateFileView)
+    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, PrivateFileView,
+    ListAPIView, TranslatedApiViewMixin
+)
 
 
 class AssignmentList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -36,6 +49,7 @@ class AssignmentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
     serializer_class = AssignmentSerializer
 
     permission_classes = (
+        ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 
@@ -112,3 +126,14 @@ class ApplicantDocumentDetail(PrivateFileView):
     queryset = Applicant.objects
     relation = 'document'
     field = 'file'
+
+
+class SkillPagination(PageNumberPagination):
+    page_size = 10000
+
+
+class SkillList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
+    serializer_class = SkillSerializer
+    queryset = Skill.objects.filter(disabled=False)
+    permission_classes = [TenantConditionalOpenClose, ]
+    pagination_class = SkillPagination

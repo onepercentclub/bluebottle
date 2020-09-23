@@ -4,6 +4,10 @@ jet = {
     jQuery: $
 };
 
+require("jquery-ui/ui/dialog");
+require("jquery-ui/ui/mouse");
+require("jquery-ui/ui/button");
+
 require('./layout-updaters/actions');
 require('./layout-updaters/breadcrumbs');
 require('./layout-updaters/paginator');
@@ -33,3 +37,4 @@ require('./features/selects');
 require('./features/related-popups');
 require('./features/scroll-to-bottom-detector');
 require('./features/touchmove-non-scrollable');
+

@@ -6,11 +6,12 @@ from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseContributionSerializer,
     BaseActivityListSerializer, BaseTinyActivitySerializer
 )
+from bluebottle.tasks.models import Skill
 from bluebottle.assignments.filters import ApplicantListFilter
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.permissions import ApplicantDocumentPermission
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
-from bluebottle.transitions.serializers import TransitionSerializer
+from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 
 
@@ -58,7 +59,7 @@ class TinyAssignmentSerializer(BaseTinyActivitySerializer):
 
     class Meta(BaseTinyActivitySerializer.Meta):
         model = Assignment
-        fields = BaseTinyActivitySerializer.Meta.fields + ('end_date', 'end_date_type', 'date')
+        fields = BaseTinyActivitySerializer.Meta.fields + ('end_date_type', 'date')
 
     class JSONAPIMeta(BaseTinyActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/assignments'
@@ -72,7 +73,6 @@ class AssignmentSerializer(BaseActivitySerializer):
         model = Assignment
         fields = BaseActivitySerializer.Meta.fields + (
             'is_online',
-            'end_date',
             'date',
             'local_date',
             'end_date_type',
@@ -109,7 +109,7 @@ class AssignmentSerializer(BaseActivitySerializer):
 
 class AssignmentTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Assignment.objects.all())
-    field = 'transitions'
+    field = 'states'
     included_serializers = {
         'resource': 'bluebottle.assignments.serializers.AssignmentSerializer',
     }
@@ -120,7 +120,7 @@ class AssignmentTransitionSerializer(TransitionSerializer):
 
 
 class ApplicantListSerializer(BaseContributionSerializer):
-    time_spent = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    time_spent = serializers.FloatField(required=False, allow_null=True)
 
     class Meta(BaseContributionSerializer.Meta):
         model = Applicant
@@ -142,7 +142,7 @@ class ApplicantListSerializer(BaseContributionSerializer):
 
 
 class ApplicantSerializer(BaseContributionSerializer):
-    time_spent = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    time_spent = serializers.FloatField(required=False, allow_null=True)
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     document = PrivateDocumentField(required=False, allow_null=True, permissions=[ApplicantDocumentPermission])
 
@@ -178,7 +178,7 @@ class ApplicantSerializer(BaseContributionSerializer):
 
 class ApplicantTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Applicant.objects.all())
-    field = 'transitions'
+    field = 'states'
     included_serializers = {
         'resource': 'bluebottle.assignments.serializers.ApplicantSerializer',
         'resource.activity': 'bluebottle.assignments.serializers.AssignmentSerializer',
@@ -190,3 +190,15 @@ class ApplicantTransitionSerializer(TransitionSerializer):
             'resource',
             'resource.activity',
         ]
+
+
+class SkillSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+
+    class Meta:
+        model = Skill
+        fields = ('id', 'name', 'expertise')
+
+    class JSONAPIMeta:
+        included_resources = ['resource', ]
+        resource_name = 'skills'

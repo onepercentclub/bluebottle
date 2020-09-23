@@ -9,12 +9,13 @@ from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.geo.models import Location, Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
-from bluebottle.utils.admin import FSMAdmin, BasePlatformSettingsAdmin, export_as_csv_action
-from bluebottle.utils.forms import FSMModelForm
+from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action
+from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
+from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.wallposts.admin import WallpostInline
 
 
-class InitiativeAdminForm(FSMModelForm):
+class InitiativeAdminForm(StateMachineModelForm):
 
     class Meta:
         model = Initiative
@@ -68,7 +69,7 @@ class InitiativeCountryFilter(admin.SimpleListFilter):
 
 
 @admin.register(Initiative)
-class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, FSMAdmin):
+class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, StateMachineAdmin):
 
     form = InitiativeAdminForm
 
@@ -78,12 +79,12 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, FSM
                      'place', 'organization', 'organization_contact')
 
     date_hierarchy = 'created'
-    list_display = ['__unicode__', 'created', 'owner', 'status']
+    list_display = ['__unicode__', 'created', 'owner', 'state_name']
 
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
 
-    readonly_fields = ['status', 'link', 'created', 'updated']
+    readonly_fields = ['link', 'created', 'updated', 'valid']
 
     ordering = ('-created', )
 
@@ -111,7 +112,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, FSM
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
     def get_list_filter(self, instance):
-        filters = [InitiativeReviewerFilter, 'categories', 'theme', 'status']
+        filters = [InitiativeReviewerFilter, 'categories', 'theme', StateMachineFilter, ]
 
         if Location.objects.count():
             filters.append('location')
@@ -128,7 +129,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, FSM
         else:
             details.append('place')
 
-        return (
+        fieldsets = (
             (_('Basic'), {'fields': (
                 'title', 'link', 'slug', 'owner',
                 'image', 'video_url',
@@ -136,16 +137,41 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, FSM
             (_('Details'), {'fields': details}),
             (_('Organization'), {'fields': (
                 'has_organization', 'organization', 'organization_contact')}),
-            (_('Review'), {'fields': (
+            (_('Status'), {'fields': (
+                'valid',
                 'reviewer', 'activity_manager',
-                'promoter', 'status', 'transitions')}),
+                'promoter', 'status', 'states')}),
         )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': (
+                    'force_status',
+                )}),
+            )
+        return fieldsets
 
     inlines = [ActivityAdminInline, MessageAdminInline, WallpostInline]
 
     def link(self, obj):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url, obj.title)
     link.short_description = _("Show on site")
+
+    def valid(self, obj):
+        errors = list(obj.errors)
+        required = list(obj.required)
+        if not errors and not required:
+            return '-'
+
+        errors += [
+            _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
+            for field in required
+        ]
+
+        return format_html("<ul class='validation-error-list'>{}</ul>", format_html("".join([
+            format_html(u"<li>{}</li>", value) for value in errors
+        ])))
+
+    valid.short_description = _('Steps to complete initiative')
 
     class Media:
         js = ('admin/js/inline-activities-add.js',)

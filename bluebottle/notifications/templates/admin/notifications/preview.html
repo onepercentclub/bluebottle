@@ -1,0 +1,3 @@
+{% load i18n %}
+{% trans 'Message to' %}: <b>{{ message.get_recipients|join:", " }}</b> <br/>
+{% trans 'Subject' %}: <i>{{ message.generic_subject }}</i>

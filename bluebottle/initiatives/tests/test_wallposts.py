@@ -18,14 +18,14 @@ class InitiativeWallpostTestCase(TestCase):
         self.follower = BlueBottleUserFactory.create()
         EventFollowFactory.create(
             instance=EventFactory.create(
-                review_status='approved',
+                status='open',
                 initiative=self.initiative
             ),
             user=self.follower
         )
         FundingFollowFactory.create(
             instance=FundingFactory.create(
-                review_status='approved',
+                status='open',
                 initiative=self.initiative
             ),
             user=self.follower
@@ -33,7 +33,7 @@ class InitiativeWallpostTestCase(TestCase):
 
         EventFollowFactory.create(
             instance=EventFactory.create(
-                review_status='approved',
+                status='open',
                 initiative=self.initiative
             ),
             user=BlueBottleUserFactory(campaign_notifications=False),
@@ -41,7 +41,7 @@ class InitiativeWallpostTestCase(TestCase):
 
         EventFollowFactory.create(
             instance=EventFactory.create(
-                review_status='approved',
+                status='open',
                 initiative=self.initiative
             ),
             user=self.initiative.owner

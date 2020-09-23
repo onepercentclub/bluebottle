@@ -1,12 +1,14 @@
 import dateutil
+import re
+
 from django_filters.rest_framework import DjangoFilterBackend
 
 from elasticsearch_dsl.query import FunctionScore, SF, Terms, Term, Nested, Q, Range
 from django.db.models import Q as DQ
 
-from bluebottle.activities.transitions import ActivityTransitions
-from bluebottle.events.transitions import EventTransitions
-from bluebottle.funding.transitions import FundingTransitions
+from bluebottle.activities.states import ActivityStateMachine
+from bluebottle.events.states import EventStateMachine
+from bluebottle.funding.states import FundingStateMachine
 from bluebottle.utils.filters import ElasticSearchFilter
 from bluebottle.activities.documents import activity
 
@@ -31,13 +33,14 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'status',
         'date',
         'initiative_location.id',
+        'segment',
     )
 
     search_fields = (
         'status', 'title', 'description', 'owner.full_name',
         'initiative.title', 'initiative.pitch', 'initiative.pitch',
         'initiative_location.name', 'initiative_location.city',
-        'location.formatted_address',
+        'location.formatted_address', 'segments.name',
     )
 
     boost = {
@@ -159,7 +162,26 @@ class ActivitySearchFilter(ElasticSearchFilter):
         date = dateutil.parser.parse(value).date()
         start = date.replace(date.year, date.month, 1)
         end = start + dateutil.relativedelta.relativedelta(day=31)
-        return Range(activity_date={'gt': start, 'lt': end})
+        return Range(activity_date={'gte': start, 'lte': end})
+
+    def get_filters(self, request):
+        filters = super(ActivitySearchFilter, self).get_filters(request)
+        regex = re.compile(b'^filter\[segment\.(?P<type>[\w\-]+)\]$')
+        for key, value in request.GET.items():
+            matches = regex.match(key)
+            if matches:
+                filters.append(
+                    Nested(
+                        path='segments',
+                        query=Term(
+                            segments__type=matches.groupdict()['type']
+                        ) & Term(
+                            segments__id=value
+                        )
+                    )
+                )
+
+        return filters
 
     def get_default_filters(self, request):
         permission = 'activities.api_read_activity'
@@ -169,11 +191,12 @@ class ActivitySearchFilter(ElasticSearchFilter):
                     path='owner',
                     query=Term(owner__id=request.user.pk)
                 ),
-                Terms(review_status=['approved']),
-                ~Term(status='closed')
+                ~Terms(status=['draft', 'needs_work', 'submitted', 'deleted', 'closed', 'cancelled'])
             ]
         else:
-            return [Terms(review_status=['approved']), ~Term(status='closed')]
+            return [
+                ~Terms(status=['draft', 'needs_work', 'submitted', 'deleted', 'closed', 'cancelled'])
+            ]
 
 
 class ActivityFilter(DjangoFilterBackend):
@@ -181,11 +204,11 @@ class ActivityFilter(DjangoFilterBackend):
     Filter that shows only successful contributions
     """
     public_statuses = [
-        ActivityTransitions.values.succeeded,
-        ActivityTransitions.values.open,
-        FundingTransitions.values.partially_funded,
-        EventTransitions.values.full,
-        EventTransitions.values.running
+        ActivityStateMachine.succeeded.value,
+        ActivityStateMachine.open.value,
+        FundingStateMachine.partially_funded.value,
+        EventStateMachine.full.value,
+        EventStateMachine.running.value
     ]
 
     def filter_queryset(self, request, queryset, view):
@@ -195,7 +218,7 @@ class ActivityFilter(DjangoFilterBackend):
                 DQ(initiative__activity_manager=request.user) |
                 DQ(initiative__owner=request.user) |
                 DQ(status__in=self.public_statuses)
-            ).exclude(status=ActivityTransitions.values.deleted)
+            ).exclude(status=ActivityStateMachine.deleted.value)
         else:
             queryset = queryset.filter(status__in=self.public_statuses)
 

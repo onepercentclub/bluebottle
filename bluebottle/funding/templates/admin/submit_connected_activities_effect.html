@@ -1,0 +1,12 @@
+{% load i18n %}
+<h3>{% trans "Submit connected activities" %}</h3>
+
+<p>
+    {% trans "Submit all activities related to " %}
+    "{{effects.0.instance}}" 
+    {% if effects|length > 1 %} 
+        {% blocktrans with extra=effects|length|add:"-1" %}
+        and {{ extra }} other payout accounts
+        {% endblocktrans %}
+    {% endif %}
+</p>

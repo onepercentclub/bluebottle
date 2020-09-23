@@ -109,7 +109,15 @@ class InitiativeDocument(DocType):
                 'id': activity.pk,
                 'title': activity.title,
                 'contribution_date': activity.contribution_date
-            } for activity in instance.activities.filter(review_status='approved')
+            } for activity in instance.activities.filter(
+                status__in=(
+                    'succeeded',
+                    'open',
+                    'partially_funded',
+                    'full',
+                    'running'
+                )
+            )
         ]
 
     def prepare_activity_owners(self, instance):

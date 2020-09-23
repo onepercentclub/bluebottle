@@ -79,8 +79,8 @@ class ProjectThemeAdmin(TranslatableAdmin):
     fields = ('name', 'slug', 'description', 'disabled') + readonly_fields
 
     def project_link(self, obj):
-        url = "{}?theme_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)
-        return format_html("<a href='{}'>{} projects</a>".format(url, obj.project_set.count()))
+        url = "{}?theme__id__exact={}".format(reverse('admin:initiatives_initiative_changelist'), obj.id)
+        return format_html("<a href='{}'>{} initiatives</a>".format(url, obj.initiative_set.count()))
 
     project_link.short_description = _('Project link')
 

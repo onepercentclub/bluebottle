@@ -38,8 +38,6 @@ urlpatterns = [
         include('bluebottle.pages.urls.api')),
     url(r'^api/quotes/',
         include('bluebottle.quotes.urls.api')),
-    url(r'^api/slides/',
-        include('bluebottle.slides.urls.api')),
     url(r'^api/utils/',
         include('bluebottle.utils.urls.api')),
     url(r'^api/wallposts/',
@@ -52,24 +50,18 @@ urlpatterns = [
     # Homepage API urls
     url(r'^api/homepage/',
         include('bluebottle.homepage.urls.api')),
-    url(r'^api/stats',
+    url(r'^api/statistics/',
         include('bluebottle.statistics.urls.api')),
     url(r'^api/cms/',
         include('bluebottle.cms.urls.api')),
     url(r'^api/initiatives',
         include('bluebottle.initiatives.urls.api')),
-
     url(r'^api/activities',
         include('bluebottle.activities.urls.api')),
-
     url(r'^api/events',
         include('bluebottle.events.urls.api')),
-
     url(r'^api/assignments',
         include('bluebottle.assignments.urls.api')),
-
-    url(r'^api/funding',
-        include('bluebottle.funding.urls.api')),
     url(r'^api/funding',
         include('bluebottle.funding.urls.api')),
     url(r'^api/funding/pledge',
@@ -84,9 +76,14 @@ urlpatterns = [
         include('bluebottle.funding_lipisha.urls.api')),
     url(r'^api/funding/telesom',
         include('bluebottle.funding_telesom.urls.api')),
+    url(r'^api/impact/',
+        include('bluebottle.impact.urls.api')),
+    url(r'^api/segments/',
+        include('bluebottle.segments.urls.api')),
 
     url(r'^api/files/',
         include('bluebottle.files.urls.api')),
+
 
     url(r'^payments_mock/',
         include('bluebottle.payments_mock.urls.core')),

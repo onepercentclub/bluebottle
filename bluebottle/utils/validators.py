@@ -1,5 +1,7 @@
 import os
 
+import magic
+
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
@@ -9,6 +11,8 @@ from localflavor.de.forms import DEZipCodeField
 from localflavor.fr.forms import FRZipCodeField
 from localflavor.nl.forms import NLZipCodeField
 
+
+mime = magic.Magic(mime=True)
 
 # Can safely add more post code form fields here.
 postal_code_mapping = {
@@ -70,6 +74,57 @@ class FileExtensionValidator:
             'bluebottle.utils.validators.FileExtensionValidator',
             (
                 self.allowed_extensions,
+                getattr(self, 'messsage', None),
+                getattr(self, 'code', None),
+            ),
+            {}
+        )
+
+
+class FileMimetypeValidator:
+    message = _(
+        "Mime type '%(mimetype)s' is not allowed. "
+        "Allowed mime-types are: '%(allowed_mimetypes)s'."
+    )
+    code = 'invalid_mimetype'
+
+    def __init__(self, allowed_mimetypes=None, message=None, code=None):
+        if allowed_mimetypes is not None:
+            allowed_mimetypes = [allowed_mimetype.lower() for allowed_mimetype in allowed_mimetypes]
+        self.allowed_mimetypes = allowed_mimetypes
+        if message is not None:
+            self.message = message
+        if code is not None:
+            self.code = code
+
+    def __call__(self, value):
+        mimetype = mime.from_buffer(value.file.read(1000))
+        value.file.seek(0)
+
+        if self.allowed_mimetypes is not None and mimetype not in self.allowed_mimetypes:
+            raise ValidationError(
+                self.message,
+                code=self.code,
+                params={
+                    'mimetype': mimetype,
+                    'allowed_mimetypes': ', '.join(self.allowed_mimetypes)
+                }
+            )
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, self.__class__) and
+            self.allowed_mimetypes == other.allowed_mimetypes and
+            self.message == other.message and
+            self.code == other.code
+
+        )
+
+    def deconstruct(self):
+        return (
+            'bluebottle.utils.validators.FileMimetypeValidator',
+            (
+                self.allowed_mimetypes,
                 getattr(self, 'messsage', None),
                 getattr(self, 'code', None),
             ),

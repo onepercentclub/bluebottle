@@ -20,7 +20,6 @@ class ActivityDocument(DocType):
     description = fields.TextField()
     status = fields.KeywordField()
     status_score = fields.FloatField()
-    review_status = fields.KeywordField()
     created = fields.DateField()
 
     date = fields.DateField()
@@ -60,6 +59,14 @@ class ActivityDocument(DocType):
     expertise = fields.NestedField(
         properties={
             'id': fields.KeywordField(),
+        }
+    )
+
+    segments = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'type': fields.KeywordField(attr='type.slug'),
+            'name': fields.TextField()
         }
     )
 

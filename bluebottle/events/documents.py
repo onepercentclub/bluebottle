@@ -1,4 +1,5 @@
 from bluebottle.activities.documents import ActivityDocument, activity
+
 from bluebottle.events.models import Event, Participant
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member

@@ -1,7 +1,6 @@
 import logging
 import os
 import posixpath
-
 from django.conf import settings
 from django.utils import timezone
 
@@ -45,7 +44,8 @@ def export(exporter_class, format='xlsx', **kwargs):
         os.makedirs(export_root)
     with open(export_to, 'wb') as outfile:
         outfile.write(getattr(databook, format))
-    return posixpath.join(settings.EXPORTDB_EXPORT_MEDIA_URL, filename)
+
+    return filename
 
 
 def plain_export(exporter_class, format='xlsx', **kwargs):

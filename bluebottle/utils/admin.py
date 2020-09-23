@@ -17,7 +17,6 @@ from django.template import loader
 from django.template.response import TemplateResponse
 from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
-
 from parler.admin import TranslatableAdmin
 
 from bluebottle.activities.models import Contribution

@@ -6,7 +6,7 @@ from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, PlainPayoutAccountFactory
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
-from bluebottle.funding_lipisha.tests.factories import LipishaPaymentProviderFactory
+from bluebottle.funding_lipisha.tests.factories import LipishaPaymentProviderFactory, LipishaBankAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_included
@@ -49,10 +49,11 @@ class LipishaPaymentTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
 
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
 
-        self.funding = FundingFactory.create(initiative=self.initiative)
+        bank_account = LipishaBankAccountFactory.create()
+        self.funding = FundingFactory.create(initiative=self.initiative, bank_account=bank_account)
         self.donation = DonationFactory.create(activity=self.funding, user=self.user)
 
         self.payment_url = reverse('lipisha-payment-list')
@@ -101,9 +102,8 @@ class LipishaPayoutAccountTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
         LipishaPaymentProviderFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.payout_account = PlainPayoutAccountFactory.create(
             status='verified',

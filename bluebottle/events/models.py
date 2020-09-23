@@ -14,28 +14,11 @@ from timezonefinder import TimezoneFinder
 import pytz
 
 from bluebottle.activities.models import Activity, Contribution
-from bluebottle.events.transitions import EventTransitions, ParticipantTransitions
-from bluebottle.follow.models import follow
-from bluebottle.fsm import TransitionManager
+from bluebottle.events.validators import RegistrationDeadlineValidator
 from bluebottle.geo.models import Geolocation
-from bluebottle.utils.models import Validator
 
 
 tf = TimezoneFinder()
-
-
-class RegistrationDeadlineValidator(Validator):
-    field = 'registration_deadline'
-    code = 'registration-deadline'
-    message = _('Registration deadline should be before the start time'),
-
-    def is_valid(self):
-        return (
-            not self.instance.registration_deadline or (
-                self.instance.start and
-                self.instance.registration_deadline < self.instance.start.date()
-            )
-        )
 
 
 class Event(Activity):
@@ -49,12 +32,10 @@ class Event(Activity):
 
     start_date = models.DateField(_('start date'), null=True, blank=True)
     start_time = models.TimeField(_('start time'), null=True, blank=True)
-    start = models.DateTimeField(_('Start'), null=True, blank=True)
+    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.FloatField(_('duration'), null=True, blank=True)
-    end = models.DateTimeField(_('end'), null=True, blank=True)
+    end = models.DateTimeField(_('end date and time'), null=True, blank=True)
     registration_deadline = models.DateField(_('deadline to apply'), null=True, blank=True)
-
-    transitions = TransitionManager(EventTransitions, 'status')
 
     validators = [RegistrationDeadlineValidator]
 
@@ -69,14 +50,19 @@ class Event(Activity):
 
     @property
     def stats(self):
+        from states import ParticipantStateMachine
         contributions = self.contributions.instance_of(Participant)
 
         stats = contributions.filter(
-            status=ParticipantTransitions.values.succeeded).\
-            aggregate(count=Count('user__id'), hours=Sum('participant__time_spent'))
+            status=ParticipantStateMachine.succeeded.value
+        ).aggregate(
+            count=Count('user__id'), hours=Sum('participant__time_spent')
+        )
         committed = contributions.filter(
-            status=ParticipantTransitions.values.new).\
-            aggregate(committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent'))
+            status=ParticipantStateMachine.new.value
+        ).aggregate(
+            committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent')
+        )
         stats.update(committed)
         return stats
 
@@ -114,29 +100,25 @@ class Event(Activity):
     class JSONAPIMeta:
         resource_name = 'activities/events'
 
-    def check_capacity(self, save=True):
-        if self.capacity and len(self.participants) >= self.capacity and self.status == EventTransitions.values.open:
-            self.transitions.full()
-            if save:
-                self.save()
-        elif self.capacity and len(self.participants) < self.capacity and self.status == EventTransitions.values.full:
-            self.transitions.reopen()
-            if save:
-                self.save()
+    @property
+    def current_end(self):
+        if self.start and self.duration:
+            return self.start + datetime.timedelta(hours=self.duration)
 
     def save(self, *args, **kwargs):
-        if self.start and self.duration:
-            self.end = self.start + datetime.timedelta(hours=self.duration)
+        self.end = self.current_end
 
-        self.check_capacity(save=False)
-        return super(Event, self).save(*args, **kwargs)
+        super(Event, self).save(*args, **kwargs)
 
     @property
     def participants(self):
-        return self.contributions.instance_of(Participant).filter(
-            status__in=[ParticipantTransitions.values.new,
-                        ParticipantTransitions.values.succeeded]
-        )
+        from states import ParticipantStateMachine
+        return self.contributions.filter(
+            status__in=[
+                ParticipantStateMachine.new.value,
+                ParticipantStateMachine.succeeded.value
+            ]
+        ).instance_of(Participant)
 
     @property
     def uid(self):
@@ -203,7 +185,6 @@ class Event(Activity):
 
 class Participant(Contribution):
     time_spent = models.FloatField(default=0)
-    transitions = TransitionManager(ParticipantTransitions, 'status')
 
     class Meta:
         verbose_name = _("Participant")
@@ -225,30 +206,15 @@ class Participant(Contribution):
         resource_name = 'contributions/participants'
 
     def save(self, *args, **kwargs):
-        created = self.pk is None
-
-        # Fail the self if hours are set to 0
-        if self.status == ParticipantTransitions.values.succeeded and self.time_spent in [None, '0', 0.0]:
-            self.transitions.close()
-        # Succeed self if the hours are set to an amount
-        elif self.status in [
-            ParticipantTransitions.values.failed,
-            ParticipantTransitions.values.closed
-        ] and self.time_spent not in [None, '0', 0.0]:
-            self.transitions.succeed()
+        if not self.contribution_date:
+            self.contribution_date = self.activity.start
 
         super(Participant, self).save(*args, **kwargs)
 
-        if created and self.status == 'new':
-            self.transitions.initiate()
-            follow(self.user, self.activity)
-
-        self.activity.check_capacity()
-
-    def delete(self, *args, **kwargs):
-        super(Participant, self).delete(*args, **kwargs)
-
-        self.activity.check_capacity()
+    def __unicode__(self):
+        return self.user.full_name
 
 
-from bluebottle.events.signals import *  # noqa
+from bluebottle.events.states import *  # noqa
+from bluebottle.events.triggers import *  # noqa
+from bluebottle.events.periodic_tasks import *  # noqa

@@ -1,21 +1,19 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm import TransitionManager
 from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, BankAccount
-from bluebottle.funding.transitions import PaymentTransitions
 from bluebottle.funding_flutterwave.utils import check_payment_status
 
 
 class FlutterwavePayment(Payment):
     tx_ref = models.CharField(max_length=30, unique=True)
     provider = 'flutterwave'
-    transitions = TransitionManager(PaymentTransitions, 'status')
-
-    provider = 'flutterwave'
 
     def update(self):
         check_payment_status(self)
+
+    def refund(self):
+        raise NotImplementedError
 
 
 class FlutterwavePaymentProvider(PaymentProvider):
@@ -107,3 +105,6 @@ class FlutterwaveBankAccount(BankAccount):
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/flutterwave-external-accounts'
+
+
+from states import *  # noqa

@@ -23,9 +23,8 @@ class PaymentTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory(can_pledge=True)
         self.initiative = InitiativeFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.donation = DonationFactory.create(activity=self.funding, user=self.user)
@@ -84,9 +83,8 @@ class PledgePayoutAccountListTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
         PledgePaymentProviderFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.payout_account = PlainPayoutAccountFactory.create(
             status='verified',
@@ -168,9 +166,8 @@ class PledgePayoutAccountDetailTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
         PledgePaymentProviderFactory.create()
-
-        self.initiative.transitions.submit()
-        self.initiative.transitions.approve()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(initiative=self.initiative)
         self.payout_account = PlainPayoutAccountFactory.create(
             status='verified',

@@ -461,8 +461,7 @@ class TestDonationWallpost(BluebottleTestCase):
             activity=self.funding,
             fundraiser=None
         )
-        donation.transitions.succeed()
-        donation.save()
+        donation.states.succeed(save=True)
 
         self.data = {
             "title": "",
@@ -702,8 +701,7 @@ class FundingWallpostTest(BluebottleTestCase):
             user=None,
             activity=self.funding
         )
-        self.donation.transitions.succeed()
-        self.donation.save()
+        self.donation.states.succeed(save=True)
 
         response = self.client.get(self.updates_url, token=self.owner_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -730,8 +728,7 @@ class FundingWallpostTest(BluebottleTestCase):
             name='Tante Ans',
             activity=self.funding
         )
-        self.donation.transitions.succeed()
-        self.donation.save()
+        self.donation.states.succeed(save=True)
 
         response = self.client.get(self.updates_url, token=self.owner_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

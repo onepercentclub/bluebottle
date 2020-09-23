@@ -18,6 +18,8 @@ from django.http import HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
 from django_singleton_admin.admin import SingletonAdmin
+from django.utils.encoding import smart_str
+
 from djmoney.contrib.exchange.models import convert_money
 from moneyed import Money
 from parler.admin import TranslatableAdmin
@@ -66,10 +68,10 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
 
 def escape_csv_formulas(item):
-    if isinstance(item, bytes):
-        item = item.decode()
-    if item and isinstance(item, str) and item[0] in ['=', '+', '-', '@']:
-        return "'" + item
+    if item and isinstance(item, str):
+        if item[0] in ['=', '+', '-', '@']:
+            item = u"'" + item
+        return smart_str(item)
     else:
         return item
 
@@ -121,15 +123,16 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                         value = obj.extra.get(field=field).value
                     except CustomMemberField.DoesNotExist:
                         value = ''
-                    row.append(value.encode('utf-8'))
+                    row.append(value)
             if isinstance(obj, Contribution):
                 for field in CustomMemberFieldSettings.objects.all():
                     try:
                         value = obj.user.extra.get(field=field).value
                     except CustomMemberField.DoesNotExist:
                         value = ''
-                    row.append(value.encode('utf-8'))
-            writer.writerow([escape_csv_formulas(item) for item in row])
+                    row.append(value)
+            escaped_row = [escape_csv_formulas(item) for item in row]
+            writer.writerow(escaped_row)
         return response
 
     export_as_csv.short_description = description

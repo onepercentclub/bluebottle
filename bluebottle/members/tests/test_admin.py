@@ -321,6 +321,7 @@ class MemberAdminExportTest(BluebottleTestCase):
     """
     Test csv export
     """
+
     def setUp(self):
         super(MemberAdminExportTest, self).setUp()
         self.init_projects()
@@ -343,7 +344,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         export_action = self.member_admin.actions[0]
         response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
-        data = response.content.decode().split("\r\n")
+        data = response.content.decode('utf-8').split("\r\n")
         headers = data[0].split(",")
         user_data = []
         for row in data:
@@ -358,19 +359,19 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(user_data[0], 'malle-eppie')
         self.assertEqual(user_data[7], 'True')
         self.assertEqual(user_data[8], 'True')
-        self.assertEqual(user_data[9], '35.00 €')
+        self.assertEqual(user_data[9], u'35.00 €')
         self.assertEqual(user_data[10], '47.0')
         self.assertEqual(user_data[13], 'Fine')
 
     def test_member_unicode_export(self):
         member = BlueBottleUserFactory.create(username='stimpy')
         friend = CustomMemberFieldSettings.objects.create(name='Best friend')
-        CustomMemberField.objects.create(member=member, value='Ren Höek', field=friend)
+        CustomMemberField.objects.create(member=member, value=u'Ren Höek', field=friend)
 
         export_action = self.member_admin.actions[0]
         response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
-        data = response.content.decode().split("\r\n")
+        data = response.content.decode('utf-8').split("\r\n")
         headers = data[0].split(",")
         data = data[1].split(",")
 
@@ -378,7 +379,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(headers[0], 'username')
         self.assertEqual(headers[12], 'Best friend')
         self.assertEqual(data[0], 'stimpy')
-        self.assertEqual(data[12], 'Ren Höek')
+        self.assertEqual(data[12], u'Ren Höek')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)

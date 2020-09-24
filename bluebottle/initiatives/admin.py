@@ -6,7 +6,7 @@ from django_summernote.widgets import SummernoteWidget
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityAdminInline
-from bluebottle.geo.models import Location, Country
+from bluebottle.geo.models import Location, Country, LocationGroup
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action
@@ -73,6 +73,12 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     form = InitiativeAdminForm
 
+    def lookup_allowed(self, key, value):
+        if key in ('location__group__id__exact', ):
+            return True
+        else:
+            return super(InitiativeAdmin, self).lookup_allowed(key, value)
+
     prepopulated_fields = {"slug": ("title",)}
 
     raw_id_fields = ('owner', 'reviewer', 'promoter', 'activity_manager',
@@ -116,6 +122,8 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
         if Location.objects.count():
             filters.append('location')
+            if LocationGroup.objects.count():
+                filters.append('location__group')
         else:
             filters.append(InitiativeCountryFilter)
 

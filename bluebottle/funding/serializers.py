@@ -16,11 +16,11 @@ from bluebottle.activities.utils import (
     BaseTinyActivitySerializer
 )
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.files.serializers import ImageField, PrivateDocumentSerializer
+from bluebottle.files.serializers import PrivateDocumentSerializer
 from bluebottle.files.serializers import PrivateDocumentField
 from bluebottle.funding.filters import DonationListFilter
 from bluebottle.funding.models import (
-    Funding, Donation, Fundraiser, Reward, BudgetLine, PaymentMethod,
+    Funding, Donation, Reward, BudgetLine, PaymentMethod,
     BankAccount, PayoutAccount, PaymentProvider,
     Payout, FundingPlatformSettings)
 from bluebottle.funding.models import PlainPayoutAccount
@@ -74,56 +74,6 @@ class FundingCurrencyValidator(object):
                 data[field].currency != activity.target.currency
             ):
                 raise ValidationError(self.message)
-
-
-class FundraiserSerializer(ModelSerializer):
-    """
-    Serializer to view/create fundraisers
-    """
-    owner = ResourceRelatedField(read_only=True)
-    activity = ResourceRelatedField(queryset=Funding.objects.all())
-    image = ImageField(required=False, allow_null=True)
-
-    amount_donated = MoneySerializer(read_only=True)
-    amount = MoneySerializer()
-
-    validators = [FundingCurrencyValidator()]
-
-    included_serializers = {
-        'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'activity': 'bluebottle.funding.serializers.FundingSerializer',
-    }
-
-    class Meta:
-        model = Fundraiser
-        fields = (
-            'id',
-            'owner',
-            'activity',
-            'title',
-            'description',
-            'image',
-            'amount',
-            'amount_donated',
-            'deadline'
-        )
-
-    class JSONAPIMeta:
-        included_resources = [
-            'image',
-            'owner',
-            'activity',
-        ]
-
-        resource_name = 'activities/fundraisers'
-
-    def validate(self, data):
-        if data.get('deadline') and data['deadline'] > data['activity'].deadline:
-            raise ValidationError(
-                {'deadline': [_("Fundraiser deadline exceeds activity deadline.")]}
-            )
-        return data
 
 
 class RewardSerializer(ModelSerializer):
@@ -259,7 +209,6 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
-    fundraisers = FundraiserSerializer(many=True, required=False)
     rewards = RewardSerializer(many=True, required=False)
     budget_lines = BudgetLineSerializer(many=True, required=False)
     payment_methods = SerializerMethodResourceRelatedField(
@@ -311,7 +260,6 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             'rewards',
             'payment_methods',
             'budget_lines',
-            'fundraisers',
             'contributions',
             'bank_account',
             'supporters_export_url',
@@ -432,7 +380,7 @@ class DonationListSerializer(BaseContributionListSerializer):
 
     class Meta(BaseContributionListSerializer.Meta):
         model = Donation
-        fields = BaseContributionListSerializer.Meta.fields + ('amount', 'fundraiser', 'name', 'reward', 'anonymous',)
+        fields = BaseContributionListSerializer.Meta.fields + ('amount', 'name', 'reward', 'anonymous',)
         meta_fields = ('created', 'updated', )
 
     class JSONAPIMeta(BaseContributionListSerializer.JSONAPIMeta):
@@ -457,19 +405,17 @@ class DonationSerializer(BaseContributionSerializer):
         'activity': 'bluebottle.funding.serializers.FundingListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reward': 'bluebottle.funding.serializers.RewardSerializer',
-        'fundraiser': 'bluebottle.funding.serializers.FundraiserSerializer',
     }
 
     validators = [
         IsRelatedToActivity('reward'),
-        IsRelatedToActivity('fundraiser'),
         DonationMemberValidator(),
         reward_amount_matches,
     ]
 
     class Meta(BaseContributionSerializer.Meta):
         model = Donation
-        fields = BaseContributionSerializer.Meta.fields + ('amount', 'fundraiser', 'name', 'reward', 'anonymous',)
+        fields = BaseContributionSerializer.Meta.fields + ('amount', 'name', 'reward', 'anonymous',)
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/donations'
@@ -477,7 +423,6 @@ class DonationSerializer(BaseContributionSerializer):
             'user',
             'activity',
             'reward',
-            'fundraiser',
         ]
 
     def get_fields(self):

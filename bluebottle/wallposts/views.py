@@ -1,25 +1,22 @@
+import django_filters
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
-
-import django_filters
 from rest_framework.generics import RetrieveDestroyAPIView
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
+from bluebottle.utils.permissions import (
+    OneOf, ResourcePermission, RelatedResourceOwnerPermission, ResourceOwnerPermission
+)
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, OwnerListViewMixin,
     CreateAPIView)
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, RelatedResourceOwnerPermission, ResourceOwnerPermission
-)
-from bluebottle.projects.models import Project
 from bluebottle.wallposts.permissions import RelatedManagementOrReadOnlyPermission
-
 from .models import TextWallpost, MediaWallpost, MediaWallpostPhoto, Wallpost, Reaction
+from .permissions import DonationOwnerPermission
 from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
                           MediaWallpostPhotoSerializer, ReactionSerializer,
                           WallpostSerializer)
-from .permissions import DonationOwnerPermission
 
 
 class WallpostFilter(django_filters.FilterSet):
@@ -96,22 +93,10 @@ class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
         # Some custom filtering projects slugs.
         parent_type = self.request.query_params.get('parent_type', None)
         parent_id = self.request.query_params.get('parent_id', None)
-        if parent_type == 'project':
-            content_type = ContentType.objects.get_for_model(Project)
-        else:
-            white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
-            content_type = ContentType.objects.filter(
-                app_label__in=white_listed_apps).get(model=parent_type)
+        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
+        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
         queryset = queryset.filter(content_type=content_type)
-
-        if parent_type == 'project' and parent_id:
-            try:
-                project = Project.objects.get(slug=parent_id)
-            except Project.DoesNotExist:
-                return Wallpost.objects.none()
-            queryset = queryset.filter(object_id=project.id)
-        else:
-            queryset = queryset.filter(object_id=parent_id)
+        queryset = queryset.filter(object_id=parent_id)
         queryset = queryset.order_by('-pinned', '-created')
         return queryset
 
@@ -134,16 +119,12 @@ class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIVi
 
     def get_queryset(self, queryset=None):
         queryset = super(TextWallpostList, self).get_queryset()
-        # Some custom filtering projects slugs.
         parent_type = self.request.query_params.get('parent_type', None)
         parent_id = self.request.query_params.get('parent_id', None)
-        if parent_type == 'project' and parent_id:
-            try:
-                # project = Project.objects.get(slug=parent_id)
-                parent_id = Project.objects.get(slug=parent_id).id
-            except Project.DoesNotExist:
-                return Wallpost.objects.none()
-            queryset = queryset.filter(object_id=parent_id)
+        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
+        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
+        queryset = queryset.filter(content_type=content_type)
+        queryset = queryset.filter(object_id=parent_id)
         queryset = queryset.order_by('-created')
         return queryset
 

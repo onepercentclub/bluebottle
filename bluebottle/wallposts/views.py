@@ -41,26 +41,6 @@ class SetAuthorMixin(object):
         serializer.save(editor=self.request.user, ip_address=get_client_ip(self.request))
 
 
-class FilterQSParams(object):
-
-    def get_qs(self, qs):
-        parent_id = self.request.query_params.get('parent_id', None)
-        parent_type = self.request.query_params.get('parent_type', None)
-        if parent_type == 'project':
-            qs = qs.filter(conten_object__slug=parent_id)
-        elif parent_id:
-            qs = qs.filter(conten_object__id=parent_id)
-        text = self.request.query_params.get('text', None)
-        if text:
-            qs = qs.filter(Q(title__icontains=text) |
-                           Q(description__icontains=text))
-
-        status = self.request.query_params.get('status', None)
-        if status:
-            qs = qs.filter(status=status)
-        return qs
-
-
 class WallpostOwnerFilterMixin(object):
     def get_queryset(self):
         qs = super(WallpostOwnerFilterMixin, self).get_queryset()
@@ -105,7 +85,7 @@ class WallpostPagination(BluebottlePagination):
     page_size = 5
 
 
-class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIView, FilterQSParams):
+class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIView):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter

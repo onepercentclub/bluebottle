@@ -74,11 +74,8 @@ class WallpostOwnerFilterMixin(object):
         if not self.request.user.has_perm(permission):
             user = self.request.user if self.request.user.is_authenticated else None
             qs = qs.filter(
-                Q(project_wallposts__owner=user) |
-                Q(task_wallposts__author=user) |
-                Q(task_wallposts__project__owner=user) |
-                Q(task_wallposts__project__promoter=user) |
-                Q(fundraiser_wallposts__owner=user)
+                Q(activity_wallposts__owner=user) |
+                Q(initiative_wallposts__owner=user)
             )
         return qs
 
@@ -102,8 +99,7 @@ class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
         if parent_type == 'project':
             content_type = ContentType.objects.get_for_model(Project)
         else:
-            white_listed_apps = ['projects', 'tasks', 'fundraisers', 'initiatives',
-                                 'assignments', 'events', 'funding']
+            white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
             content_type = ContentType.objects.filter(
                 app_label__in=white_listed_apps).get(model=parent_type)
         queryset = queryset.filter(content_type=content_type)
@@ -186,7 +182,11 @@ class WallpostDetail(RetrieveDestroyAPIView, SetAuthorMixin):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
+        OneOf(
+            ResourcePermission,
+            ResourceOwnerPermission,
+            RelatedManagementOrReadOnlyPermission
+        ),
     )
 
 

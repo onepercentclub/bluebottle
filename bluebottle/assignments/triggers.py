@@ -43,14 +43,14 @@ class DateChangedTrigger(ModelChangedTrigger):
             'succeed',
             conditions=[
                 AssignmentStateMachine.should_finish,
-                AssignmentStateMachine.has_accepted_applicants
+                AssignmentStateMachine.has_new_or_accepted_applicants
             ]
         ),
         TransitionEffect(
             'expire',
             conditions=[
                 AssignmentStateMachine.should_finish,
-                AssignmentStateMachine.has_no_accepted_applicants
+                AssignmentStateMachine.has_no_new_or_accepted_applicants
             ]
         ),
         TransitionEffect(

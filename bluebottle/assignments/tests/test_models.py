@@ -55,14 +55,6 @@ class AssignmentTestCase(BluebottleTestCase):
         messages = dict((message.to[0], message.body)
                         for message in mail.outbox)
 
-        self.assertTrue(
-            assignment.local_timezone_name in messages[0].body
-        )
-
-        self.assertTrue(
-            format.time_format(assignment.local_time) in messages[0].body
-        )
-
         for participant in assignment.contributions.instance_of(Applicant).all():
             if participant.status in ('new', 'accepted'):
                 self.assertTrue(participant.user.email in messages)

@@ -142,10 +142,16 @@ class EventTestCase(BluebottleTestCase):
 
         event.start = event.start + timedelta(days=1)
         event.save()
-        print formats.date_format(event.local_start, 'e')
 
         recipients = [message.to[0] for message in mail.outbox]
-        print mail.outbox[0].body
+
+        self.assertTrue(
+            event.local_timezone_name in mail.outbox[0].body
+        )
+
+        self.assertTrue(
+            formats.time_format(event.local_start) in mail.outbox[0].body
+        )
 
         for participant in event.contributions.instance_of(Participant):
             if participant.status == 'new':

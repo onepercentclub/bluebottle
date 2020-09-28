@@ -873,7 +873,7 @@ class SkillAPITestCase(BluebottleTestCase):
             len(response.json()['data']), 5
         )
         result = response.json()['data'][0]
-        self.assertEqual(self.theme.name, result['attributes']['name'])
+        self.assertEqual(self.skill.name, result['attributes']['name'])
 
     def test_list_anonymous(self):
         response = self.client.get(self.list_url)
@@ -898,8 +898,8 @@ class SkillAPITestCase(BluebottleTestCase):
     def test_detail(self):
         response = self.client.get(self.detail_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        result = response.json()
-        self.assertEqual(self.skill.name, result['attributes']['name'])
+        result = response.json()['data']
+        self.assertEqual(result['attributes']['name'], self.skill.name)
 
     def test_detail_anonymous(self):
         response = self.client.get(self.detail_url)

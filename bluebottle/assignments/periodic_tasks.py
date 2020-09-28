@@ -28,9 +28,6 @@ class AssignmentStartOnDateTask(ModelPeriodicTask):
         TransitionEffect('start', conditions=[
             AssignmentStateMachine.has_accepted_applicants
         ]),
-        TransitionEffect('expire', conditions=[
-            AssignmentStateMachine.has_no_accepted_applicants
-        ]),
     ]
 
     def __str__(self):
@@ -53,9 +50,6 @@ class AssignmentStartDeadlineTask(ModelPeriodicTask):
         TransitionEffect('start', conditions=[
             AssignmentStateMachine.has_accepted_applicants
         ]),
-        TransitionEffect('expire', conditions=[
-            AssignmentStateMachine.has_no_accepted_applicants
-        ]),
     ]
 
     def __str__(self):
@@ -77,10 +71,10 @@ class AssignmentFinishedDeadlineTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect('succeed', conditions=[
-            AssignmentStateMachine.has_accepted_applicants
+            AssignmentStateMachine.has_new_or_accepted_applicants
         ]),
         TransitionEffect('expire', conditions=[
-            AssignmentStateMachine.has_no_accepted_applicants
+            AssignmentStateMachine.has_no_new_or_accepted_applicants
         ]),
     ]
 
@@ -103,10 +97,10 @@ class AssignmentFinishedOnDateTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect('succeed', conditions=[
-            AssignmentStateMachine.has_accepted_applicants
+            AssignmentStateMachine.has_new_or_accepted_applicants
         ]),
         TransitionEffect('expire', conditions=[
-            AssignmentStateMachine.has_no_accepted_applicants
+            AssignmentStateMachine.has_no_new_or_accepted_applicants
         ]),
     ]
 
@@ -128,10 +122,10 @@ class AssignmentRegistrationOnDateTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect('lock', conditions=[
-            AssignmentStateMachine.has_accepted_applicants
+            AssignmentStateMachine.has_new_or_accepted_applicants
         ]),
         TransitionEffect('expire', conditions=[
-            AssignmentStateMachine.has_no_accepted_applicants
+            AssignmentStateMachine.has_no_new_or_accepted_applicants
         ]),
     ]
 

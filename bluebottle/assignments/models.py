@@ -137,6 +137,10 @@ class Assignment(Activity):
         return self.contributions.instance_of(Applicant).filter(status__in=accepted_states)
 
     @property
+    def new_applicants(self):
+        return self.contributions.instance_of(Applicant).filter(status='new')
+
+    @property
     def applicants(self):
         return self.contributions.instance_of(Applicant)
 

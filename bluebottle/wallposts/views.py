@@ -1,5 +1,5 @@
-from builtins import object
 import django_filters
+from builtins import object
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
 from rest_framework.generics import RetrieveDestroyAPIView
@@ -42,27 +42,23 @@ class SetAuthorMixin(object):
         serializer.save(editor=self.request.user, ip_address=get_client_ip(self.request))
 
 
-class FilterQSParams(object):
+class WallpostOwnerFilterMixin(object):
+    def get_queryset(self):
+        qs = super(WallpostOwnerFilterMixin, self).get_queryset()
+        permission = '{}.api_read_{}'.format(
+            self.model._meta.app_label, self.model._meta.model_name
+        )
 
-    def get_qs(self, qs):
-        parent_id = self.request.query_params.get('parent_id', None)
-        parent_type = self.request.query_params.get('parent_type', None)
-        if parent_type == 'project':
-            qs = qs.filter(conten_object__slug=parent_id)
-        elif parent_id:
-            qs = qs.filter(conten_object__id=parent_id)
-        text = self.request.query_params.get('text', None)
-        if text:
-            qs = qs.filter(Q(title__icontains=text) |
-                           Q(description__icontains=text))
-
-        status = self.request.query_params.get('status', None)
-        if status:
-            qs = qs.filter(status=status)
+        if not self.request.user.has_perm(permission):
+            user = self.request.user if self.request.user.is_authenticated else None
+            qs = qs.filter(
+                Q(activity_wallposts__owner=user) |
+                Q(initiative_wallposts__owner=user)
+            )
         return qs
 
 
-class WallpostList(ListAPIView):
+class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     pagination_class = BluebottlePagination
@@ -78,12 +74,9 @@ class WallpostList(ListAPIView):
         # Some custom filtering projects slugs.
         parent_type = self.request.query_params.get('parent_type', None)
         parent_id = self.request.query_params.get('parent_id', None)
-        white_listed_apps = ['projects', 'tasks', 'fundraisers', 'initiatives',
-                             'assignments', 'events', 'funding']
-        content_type = ContentType.objects.filter(
-            app_label__in=white_listed_apps).get(model=parent_type)
+        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
+        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
         queryset = queryset.filter(content_type=content_type)
-
         queryset = queryset.filter(object_id=parent_id)
         queryset = queryset.order_by('-pinned', '-created')
         return queryset
@@ -93,7 +86,7 @@ class WallpostPagination(BluebottlePagination):
     page_size = 5
 
 
-class TextWallpostList(SetAuthorMixin, ListCreateAPIView, FilterQSParams):
+class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIView):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
@@ -107,8 +100,11 @@ class TextWallpostList(SetAuthorMixin, ListCreateAPIView, FilterQSParams):
 
     def get_queryset(self, queryset=None):
         queryset = super(TextWallpostList, self).get_queryset()
-        # Some custom filtering projects slugs.
+        parent_type = self.request.query_params.get('parent_type', None)
         parent_id = self.request.query_params.get('parent_id', None)
+        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
+        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
+        queryset = queryset.filter(content_type=content_type)
         queryset = queryset.filter(object_id=parent_id)
         queryset = queryset.order_by('-created')
         return queryset
@@ -155,7 +151,11 @@ class WallpostDetail(RetrieveDestroyAPIView, SetAuthorMixin):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
+        OneOf(
+            ResourcePermission,
+            ResourceOwnerPermission,
+            RelatedManagementOrReadOnlyPermission
+        ),
     )
 
 

@@ -1,10 +1,10 @@
 from builtins import str
-from bluebottle.assignments.tests.factories import AssignmentFactory
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from djmoney.money import Money
 from rest_framework import status
 
+from bluebottle.assignments.tests.factories import AssignmentFactory
 from bluebottle.events.tests.factories import EventFactory
 from bluebottle.funding.tests.factories import DonationFactory, FundingFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -94,16 +94,15 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.assignment.initiative.promoter = BlueBottleUserFactory.create()
         self.assignment.initiative.save()
+        promoter_token = "JWT {0}".format(self.assignment.initiative.promoter.get_jwt_token())
 
         # Assignment owner can share a post
-        owner_token = "JWT {0}".format(self.assignment.owner.get_jwt_token())
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
-                                    token=owner_token)
+                                    token=promoter_token)
 
         self.assertEqual(wallpost.status_code,
                          status.HTTP_201_CREATED)
-
         # Promoters users can share a post
         promoter_token = "JWT {0}".format(self.assignment.initiative.promoter.get_jwt_token())
         wallpost = self.client.post(self.media_wallpost_url,
@@ -145,10 +144,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_filter_on_assignment_wallpost_list(self):
-        """
-        Tests that initiative initiator can post and view assignment wallposts
-        """
-        self.initiative.assignment_manager = BlueBottleUserFactory.create()
+        self.initiative.activity_manager = BlueBottleUserFactory.create()
         self.initiative.promoter = BlueBottleUserFactory.create()
         self.initiative.save()
 
@@ -161,11 +157,11 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
             Permission.objects.get(codename='api_read_own_wallpost')
         )
 
-        MediaWallpostFactory.create_batch(3, content_object=self.assignment)
+        MediaWallpostFactory.create_batch(3, content_object=self.initiative)
 
         response = self.client.get(
             self.wallpost_url,
-            {'parent_id': str(self.assignment.id), 'parent_type': 'assignment'},
+            {'parent_id': self.initiative.id, 'parent_type': 'initiative'},
             token=self.owner_token
         )
 
@@ -180,6 +176,10 @@ class WallpostDeletePermissionTest(BluebottleTestCase):
         self.owner = BlueBottleUserFactory.create()
         self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
 
+        self.author_user = BlueBottleUserFactory.create()
+        self.author_token = "JWT {0}".format(
+            self.author_user.get_jwt_token())
+
         self.other_user = BlueBottleUserFactory.create()
         self.other_token = "JWT {0}".format(
             self.other_user.get_jwt_token())
@@ -188,41 +188,36 @@ class WallpostDeletePermissionTest(BluebottleTestCase):
 
         self.wallpost = MediaWallpostFactory.create(
             content_object=self.initiative,
-            author=self.other_user
+            author=self.author_user
         )
 
         self.wallpost_detail_url = reverse('wallpost_detail', args=(self.wallpost.id, ))
 
     def test_delete_own_wallpost(self):
-        """
-        Tests that initiative initiator can post and view assignment wallposts
-        """
+        response = self.client.delete(
+            self.wallpost_detail_url,
+            token=self.author_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_other_wallpost(self):
         response = self.client.delete(
             self.wallpost_detail_url,
             token=self.other_token
         )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_delete_other_wallpost(self):
-        """
-        Tests that initiative initiator can post and view assignment wallposts
-        """
+    def test_delete_wallpost_activity_owner(self):
         response = self.client.delete(
             self.wallpost_detail_url,
             token=self.owner_token
         )
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_wallpost_no_authorization(self):
-        """
-        Tests that initiative initiator can post and view assignment wallposts
-        """
         response = self.client.delete(
             self.wallpost_detail_url
         )
-
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 

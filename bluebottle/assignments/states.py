@@ -58,6 +58,14 @@ class AssignmentStateMachine(ActivityStateMachine):
         """there are no accepted applicants"""
         return len(self.instance.accepted_applicants) == 0
 
+    def has_new_or_accepted_applicants(self):
+        """there are accepted applicants"""
+        return len(self.instance.accepted_applicants) > 0 or len(self.instance.new_applicants) > 0
+
+    def has_no_new_or_accepted_applicants(self):
+        """there are no accepted applicants"""
+        return len(self.instance.accepted_applicants) == 0 and len(self.instance.new_applicants) == 0
+
     def is_not_full(self):
         """the task is not full"""
         return self.instance.capacity > len(self.instance.accepted_applicants)
@@ -211,6 +219,7 @@ class AssignmentStateMachine(ActivityStateMachine):
         automatic=True,
         effects=[
             RelatedTransitionEffect('accepted_applicants', 'succeed'),
+            RelatedTransitionEffect('new_applicants', 'succeed'),
             NotificationEffect(AssignmentCompletedMessage)
         ]
     )
@@ -333,7 +342,8 @@ class ApplicantStateMachine(ContributionStateMachine):
         description=_("User applied to join the task."),
         effects=[
             NotificationEffect(AssignmentApplicationMessage),
-            FollowActivityEffect
+            FollowActivityEffect,
+            TransitionEffect('succeed', conditions=[assignment_is_finished])
         ]
     )
 

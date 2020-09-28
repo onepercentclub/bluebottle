@@ -70,6 +70,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     messages = GenericRelation('notifications.Message')
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
+    wallposts = GenericRelation('wallposts.Wallpost', related_query_name='activity_wallposts')
 
     @property
     def stats(self):

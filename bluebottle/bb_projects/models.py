@@ -10,11 +10,7 @@ from bluebottle.utils.models import SortableTranslatableModel
 
 @python_2_unicode_compatible
 class ProjectTheme(SortableTranslatableModel):
-
-    """ Themes for Projects. """
-
-    # The name is marked as unique so that users can't create duplicate
-    # theme names.
+    """ Themes for initiatives. """
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     disabled = models.BooleanField(_('disabled'), default=False)
 
@@ -34,8 +30,8 @@ class ProjectTheme(SortableTranslatableModel):
 
     class Meta(object):
         ordering = ['translations__name']
-        verbose_name = _('project theme')
-        verbose_name_plural = _('project themes')
+        verbose_name = _('theme')
+        verbose_name_plural = _('themes')
         permissions = (
-            ('api_read_projecttheme', 'Can view project theme through API'),
+            ('api_read_projecttheme', 'Can view theme through API'),
         )

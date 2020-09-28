@@ -19,7 +19,7 @@ class SkillAdmin(TranslatableAdmin):
         return actions
 
     def has_delete_permission(self, request, obj=None):
-        if obj and obj.task_set.count() == 0:
+        if obj and obj.assignment_set.count() == 0:
             return True
         return False
 
@@ -27,7 +27,7 @@ class SkillAdmin(TranslatableAdmin):
         url = "{}?expertise_filter={}".format(reverse('admin:assignments_assignment_changelist'), obj.id)
         return format_html(
             "<a href='{}'>{} {}</a>",
-            url, obj.activity_set.count(), _('tasks')
+            url, obj.assignment_set.count(), _('tasks')
         )
     task_link.short_description = _('Tasks with this skill')
 

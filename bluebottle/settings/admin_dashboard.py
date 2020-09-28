@@ -46,10 +46,6 @@ JET_SIDE_MENU_ITEMS = [
                 'name': 'geo.location',
                 'permissions': ['geo.location']
             },
-            {
-                'name': 'bb_projects.projecttheme',
-                'permissions': ['bb_projects.change_projecttheme']
-            },
         ]
     },
     {

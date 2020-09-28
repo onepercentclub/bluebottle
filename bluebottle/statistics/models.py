@@ -190,12 +190,6 @@ class Statistic(models.Model):
         manual = ChoiceItem('manual', label=_("Manual"))
         donated_total = ChoiceItem('donated_total', label=_("Donated total"))
         pledged_total = ChoiceItem('pledged_total', label=_("Pledged total"))
-        projects_online = ChoiceItem(
-            'projects_online', label=_("Projects online"))
-        projects_realized = ChoiceItem(
-            'projects_realized', label=_("Projects realized"))
-        projects_complete = ChoiceItem(
-            'projects_complete', label=_("Projects complete"))
         tasks_realized = ChoiceItem(
             'tasks_realized', label=_("Tasks realized"))
         task_members = ChoiceItem('task_members', label=_("Taskmembers"))

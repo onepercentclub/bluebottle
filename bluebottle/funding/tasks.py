@@ -24,7 +24,7 @@ def funding_tasks():
 
 
 @periodic_task(
-    run_every=(crontab(minute='*')),
+    run_every=(crontab(hour=3)),
     name="update_rates",
     ignore_result=True
 )

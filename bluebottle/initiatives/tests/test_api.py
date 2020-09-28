@@ -1110,10 +1110,10 @@ class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class ThemeListAPITestCase(BluebottleTestCase):
+class ThemeAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(ThemeListAPITestCase, self).setUp()
+        super(ThemeAPITestCase, self).setUp()
 
         self.client = JSONAPITestClient()
         for theme in ProjectTheme.objects.all():

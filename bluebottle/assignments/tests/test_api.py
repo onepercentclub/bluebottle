@@ -852,57 +852,66 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class SkillListAPITestCase(BluebottleTestCase):
+class SkillAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(SkillListAPITestCase, self).setUp()
+        super(SkillAPITestCase, self).setUp()
 
         self.client = JSONAPITestClient()
         for theme in Skill.objects.all():
             theme.delete()
-
-        self.url = reverse('assignment-skill-list')
         self.user = BlueBottleUserFactory()
 
-        SkillFactory.create_batch(5, disabled=False)
+        skills = SkillFactory.create_batch(5, disabled=False)
+        self.skill = skills[0]
+        self.list_url = reverse('assignment-skill-list')
+        self.detail_url = reverse('assignment-skill', args=(self.skill.id,))
 
     def test_list(self):
-        response = self.client.get(self.url, user=self.user)
-
+        response = self.client.get(self.list_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         self.assertEqual(
             len(response.json()['data']), 5
         )
         result = response.json()['data'][0]
-
-        theme = Skill.objects.get(pk=result['id'])
-
-        self.assertEqual(theme.name, result['attributes']['name'])
+        self.assertEqual(self.theme.name, result['attributes']['name'])
 
     def test_list_anonymous(self):
-        response = self.client.get(self.url)
-
+        response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         self.assertEqual(
             len(response.json()['data']), 5
         )
 
     def test_list_closed(self):
         MemberPlatformSettings.objects.update(closed=True)
-
-        response = self.client.get(self.url)
-
+        response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_list_disabled(self):
         SkillFactory.create(disabled=True)
-
-        response = self.client.get(self.url)
-
+        response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         self.assertEqual(
             len(response.json()['data']), 5
         )
+
+    def test_detail(self):
+        response = self.client.get(self.detail_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()
+        self.assertEqual(self.theme.name, result['attributes']['name'])
+
+    def test_detail_anonymous(self):
+        response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_detail_closed(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_detail_disabled(self):
+        SkillFactory.create(disabled=True)
+        response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

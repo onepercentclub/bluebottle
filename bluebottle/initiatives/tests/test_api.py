@@ -1119,13 +1119,14 @@ class ThemeListAPITestCase(BluebottleTestCase):
         for theme in ProjectTheme.objects.all():
             theme.delete()
 
-        self.url = reverse('initiative-theme-list')
+        self.list_url = reverse('initiative-theme-list')
         self.user = BlueBottleUserFactory()
-
-        self.themes = ProjectThemeFactory.create_batch(5, disabled=False)
+        themes = ProjectThemeFactory.create_batch(5, disabled=False)
+        self.theme = themes[0]
+        self.detail_url = reverse('initiative-theme', args=(self.theme.id,))
 
     def test_list(self):
-        response = self.client.get(self.url, user=self.user)
+        response = self.client.get(self.list_url, user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -1133,42 +1134,47 @@ class ThemeListAPITestCase(BluebottleTestCase):
             len(response.json()['data']), 5
         )
         result = response.json()['data'][0]
-
-        theme = ProjectTheme.objects.get(pk=result['id'])
-
-        self.assertEqual(theme.name, result['attributes']['name'])
-
-    def test_detail(self):
-        theme = self.themes[0]
-        url = reverse('initiative-theme', args=(theme.id,))
-        response = self.client.get(url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        result = response.json()['data']
-        self.assertEqual(result['attributes']['name'], theme.name)
+        self.assertEqual(self.theme.name, result['attributes']['name'])
 
     def test_list_anonymous(self):
-        response = self.client.get(self.url)
-
+        response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         self.assertEqual(
             len(response.json()['data']), 5
         )
 
     def test_list_closed(self):
         MemberPlatformSettings.objects.update(closed=True)
-
-        response = self.client.get(self.url)
-
+        response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_list_disabled(self):
         ProjectThemeFactory.create(disabled=True)
-
-        response = self.client.get(self.url)
-
+        response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         self.assertEqual(
             len(response.json()['data']), 5
         )
+
+    def test_detail(self):
+        response = self.client.get(self.detail_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()['data']
+        self.assertEqual(result['attributes']['name'], self.theme.name)
+
+    def test_detail_anonymous(self):
+        response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()['data']
+        self.assertEqual(result['attributes']['name'], self.theme.name)
+
+    def test_detail_closed(self):
+        MemberPlatformSettings.objects.update(closed=True)
+        response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_detail_disabled(self):
+        theme = ProjectThemeFactory.create(disabled=True)
+        url = reverse('initiative-theme', args=(theme.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

@@ -23,7 +23,6 @@ class Skill(SortableTranslatableModel):
         return self.name
 
     class Meta(object):
-        ordering = ['translations__name']
         permissions = (
             ('api_read_skill', 'Can view skills through the API'),
         )

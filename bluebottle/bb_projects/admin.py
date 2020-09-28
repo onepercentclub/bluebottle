@@ -12,6 +12,7 @@ class ProjectThemeAdmin(TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('slug', 'disabled', 'initiative_link')
     readonly_fields = ('initiative_link',)
     fields = ('name', 'slug', 'description', 'disabled') + readonly_fields
+    ordering = ('translations__name',)
 
     def initiative_link(self, obj):
         url = "{}?theme__id__exact={}".format(reverse('admin:initiatives_initiative_changelist'), obj.id)

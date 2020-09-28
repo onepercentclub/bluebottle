@@ -11,6 +11,7 @@ class SkillAdmin(TranslatableAdmin):
     list_display = ('name', 'task_link', 'member_link')
     readonly_fields = ('task_link', 'member_link')
     fields = readonly_fields + ('name', 'disabled', 'description', 'expertise')
+    ordering = ('translations__name',)
 
     def get_actions(self, request):
         actions = super(SkillAdmin, self).get_actions(request)

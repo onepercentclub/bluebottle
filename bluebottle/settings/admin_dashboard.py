@@ -249,10 +249,6 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['funding.change_paymentprovider']
             },
             {
-                'name': 'exchange.exchangebackend',
-                'permissions': ['exchange.change_exchangebackend']
-            },
-            {
                 'label': _('Manage Reporting'),
                 'name': 'looker.lookerembed',
             },

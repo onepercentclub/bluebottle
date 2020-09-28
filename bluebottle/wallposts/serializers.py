@@ -1,7 +1,6 @@
 from builtins import object
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-
 from rest_framework import serializers
 
 from bluebottle.assignments.models import Assignment
@@ -12,7 +11,6 @@ from bluebottle.funding.models import Funding, Donation
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.utils.serializers import MoneySerializer
-
 from .models import Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, Reaction
 
 
@@ -42,11 +40,11 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
     def to_internal_value(self, data):
         if data == 'initiative':
             data = ContentType.objects.get_for_model(Initiative)
-        if data == 'event':
+        elif data == 'event':
             data = ContentType.objects.get_for_model(Event)
-        if data == 'assignment':
+        elif data == 'assignment':
             data = ContentType.objects.get_for_model(Assignment)
-        if data == 'funding':
+        elif data == 'funding':
             data = ContentType.objects.get_for_model(Funding)
         return data
 

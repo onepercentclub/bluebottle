@@ -28,6 +28,5 @@
   },
   "dependencies": {
     "browserfy": "^1.0.0"
-  },
-
+  }
 }

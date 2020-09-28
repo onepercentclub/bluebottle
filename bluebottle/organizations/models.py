@@ -71,3 +71,6 @@ class OrganizationContact(ValidatedModelMixin, models.Model):
     class Meta(object):
         verbose_name = _('Partner Organization Contact')
         verbose_name_plural = _('Partner Organization Contacts')
+
+    def __str__(self):
+        return self.name

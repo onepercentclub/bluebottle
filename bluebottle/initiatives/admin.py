@@ -76,8 +76,12 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     prepopulated_fields = {"slug": ("title",)}
 
-    raw_id_fields = ('owner', 'reviewer', 'promoter', 'activity_manager',
-                     'place', 'organization', 'organization_contact')
+    raw_id_fields = (
+        'owner', 'reviewer',
+        'promoter', 'activity_manager',
+        'organization', 'organization_contact',
+        'place'
+    )
 
     date_hierarchy = 'created'
     list_display = ['__str__', 'created', 'owner', 'state_name']
@@ -137,7 +141,8 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 'created', 'updated')}),
             (_('Details'), {'fields': details}),
             (_('Organization'), {'fields': (
-                'has_organization', 'organization', 'organization_contact')}),
+                'has_organization', 'organization',
+                'organization_contact')}),
             (_('Status'), {'fields': (
                 'valid',
                 'reviewer', 'activity_manager',

@@ -46,10 +46,6 @@ JET_SIDE_MENU_ITEMS = [
                 'name': 'geo.location',
                 'permissions': ['geo.location']
             },
-            {
-                'name': 'bb_projects.projecttheme',
-                'permissions': ['bb_projects.change_projecttheme']
-            },
         ]
     },
     {
@@ -251,10 +247,6 @@ JET_SIDE_MENU_ITEMS = [
             {
                 'name': 'funding.paymentprovider',
                 'permissions': ['funding.change_paymentprovider']
-            },
-            {
-                'name': 'exchange.exchangebackend',
-                'permissions': ['exchange.change_exchangebackend']
             },
             {
                 'label': _('Manage Reporting'),

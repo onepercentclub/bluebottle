@@ -3,7 +3,6 @@ from django.conf.urls import url
 from bluebottle.funding.views import (
     RewardList, RewardDetail,
     BudgetLineList, BudgetLineDetail,
-    FundraiserList, FundraiserDetail,
     FundingList, FundingDetail,
     DonationList, DonationDetail,
     FundingTransitionList, PayoutAccountList,
@@ -23,9 +22,6 @@ urlpatterns = [
 
     url(r'^/budget-lines$', BudgetLineList.as_view(), name='funding-budget-line-list'),
     url(r'^/budget-lines/(?P<pk>[\d]+)$', BudgetLineDetail.as_view(), name='funding-budget-line-detail'),
-
-    url(r'^/fundraisers$', FundraiserList.as_view(), name='funding-fundraiser-list'),
-    url(r'^/fundraiser/(?P<pk>[\d]+)$', FundraiserDetail.as_view(), name='funding-fundraiser-detail'),
 
     # Funding
     url(r'^$', FundingList.as_view(), name='funding-list'),

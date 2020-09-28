@@ -4,8 +4,9 @@ from moneyed import Money
 from pytz import UTC
 
 from bluebottle.funding.models import (
-    Funding, Donation, Reward, Fundraiser, BudgetLine, Payment, BankAccount,
-    PlainPayoutAccount, Payout)
+    Funding, Donation, Reward, BudgetLine, Payment, BankAccount,
+    PlainPayoutAccount, Payout
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -50,18 +51,6 @@ class RewardFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Reward
 
-    activity = factory.SubFactory(FundingFactory)
-    amount = Money(35, 'EUR')
-
-
-class FundraiserFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = Fundraiser
-
-    amount = Money(3500, 'EUR')
-    activity = factory.SubFactory(FundingFactory)
-    owner = factory.SubFactory(BlueBottleUserFactory)
-
 
 class BudgetLineFactory(factory.DjangoModelFactory):
     amount = Money(35, 'EUR')
@@ -69,9 +58,6 @@ class BudgetLineFactory(factory.DjangoModelFactory):
 
     class Meta(object):
         model = BudgetLine
-
-    activity = factory.SubFactory(FundingFactory)
-    amount = Money(35, 'EUR')
 
 
 class PlainPayoutAccountFactory(factory.DjangoModelFactory):

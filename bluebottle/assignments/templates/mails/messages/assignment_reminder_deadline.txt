@@ -4,7 +4,7 @@
 {% blocktrans with recipient_name=to.first_name title=obj.title deadline=obj.date|date context 'email' %}
 Hi {{ recipient_name }},
 
-On {{ deadline }} your task "{{ title }}" is due. That's in 5 days!
+On {{ deadline }} your task "{{ title }}" is due. That's in a couple of days!
 
 If you still have some work to do, this is the moment.
 

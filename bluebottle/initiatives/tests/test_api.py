@@ -1122,7 +1122,7 @@ class ThemeListAPITestCase(BluebottleTestCase):
         self.url = reverse('initiative-theme-list')
         self.user = BlueBottleUserFactory()
 
-        ProjectThemeFactory.create_batch(5, disabled=False)
+        self.themes = ProjectThemeFactory.create_batch(5, disabled=False)
 
     def test_list(self):
         response = self.client.get(self.url, user=self.user)
@@ -1137,6 +1137,14 @@ class ThemeListAPITestCase(BluebottleTestCase):
         theme = ProjectTheme.objects.get(pk=result['id'])
 
         self.assertEqual(theme.name, result['attributes']['name'])
+
+    def test_detail(self):
+        theme = self.themes[0]
+        url = reverse('initiative-theme', args=(theme.id,))
+        response = self.client.get(url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()['data']
+        self.assertEqual(result['attributes']['name'], theme.name)
 
     def test_list_anonymous(self):
         response = self.client.get(self.url)

@@ -17,7 +17,7 @@ def update_status_names(apps, schema_editor):
         'closed': 'Rejected / Cancelled'
     }
 
-    for slug, new_name in list(updates.items()):
+    for slug, new_name in updates.items():
         try:
             phase = ProjectPhase.objects.get(slug=slug)
             phase.name = new_name

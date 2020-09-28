@@ -158,7 +158,7 @@ class Statistics(object):
     @property
     @memoize(timeout=timeout)
     def activities_online(self):
-        """ Total number of projects that have been in campaign mode"""
+        """ Total number of activities that have been in campaign mode"""
         return Activity.objects.filter(
             self.date_filter('transition_date'),
             status__in=('open', 'full', 'running', )
@@ -167,7 +167,7 @@ class Statistics(object):
     @property
     @memoize(timeout=timeout)
     def donated_total(self):
-        """ Total amount donated to all projects"""
+        """ Total amount donated to all activities"""
         donations = Donation.objects.filter(
             self.date_filter('contribution_date'),
             status='succeeded'
@@ -233,7 +233,7 @@ class Statistics(object):
     @property
     @memoize(timeout=timeout)
     def amount_matched(self):
-        """ Total amount matched on realized (done and incomplete) projects """
+        """ Total amount matched on realized (done and incomplete) activities """
         totals = Funding.objects.filter(
             self.date_filter('transition_date'),
             status='succeeded'
@@ -250,8 +250,8 @@ class Statistics(object):
     @property
     @memoize(timeout=timeout)
     def participants(self):
-        """ Total numbers of participants (members that started a project, or where a realized task member) """
-        project_owner_count = len(
+        """ Total numbers of participants (members that started a initiative, or where a realized task member) """
+        initiative_owner_count = len(
             Initiative.objects.filter(
                 self.date_filter('created'),
                 status='approved'
@@ -260,7 +260,7 @@ class Statistics(object):
             ).distinct('owner').values_list('owner_id', flat=True)
         )
 
-        return project_owner_count + self.event_members + self.assignment_members
+        return initiative_owner_count + self.event_members + self.assignment_members
 
     @property
     @memoize(timeout=timeout)

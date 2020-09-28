@@ -104,7 +104,6 @@ class EventAdmin(ActivityChildAdmin):
         ('is_online', 'Will be hosted online?'),
         ('location', 'Location'),
         ('location_hint', 'Location Hint'),
-        ('automatically_accept', 'Auto Accept Members'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

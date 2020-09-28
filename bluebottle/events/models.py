@@ -25,7 +25,6 @@ tf = TimezoneFinder()
 
 class Event(Activity):
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
-    automatically_accept = models.BooleanField(default=True)
 
     is_online = models.NullBooleanField(_('is online'), null=True, default=None)
     location = models.ForeignKey(Geolocation, verbose_name=_('location'),

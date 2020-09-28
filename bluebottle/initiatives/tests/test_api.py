@@ -1116,8 +1116,7 @@ class ThemeAPITestCase(BluebottleTestCase):
         super(ThemeAPITestCase, self).setUp()
 
         self.client = JSONAPITestClient()
-        for theme in ProjectTheme.objects.all():
-            theme.delete()
+        ProjectTheme.objects.all().delete()
 
         self.list_url = reverse('initiative-theme-list')
         self.user = BlueBottleUserFactory()

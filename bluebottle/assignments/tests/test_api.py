@@ -858,8 +858,7 @@ class SkillAPITestCase(BluebottleTestCase):
         super(SkillAPITestCase, self).setUp()
 
         self.client = JSONAPITestClient()
-        for theme in Skill.objects.all():
-            theme.delete()
+        Skill.objects.all().delete()
         self.user = BlueBottleUserFactory()
 
         skills = SkillFactory.create_batch(5, disabled=False)
@@ -900,7 +899,7 @@ class SkillAPITestCase(BluebottleTestCase):
         response = self.client.get(self.detail_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.json()
-        self.assertEqual(self.theme.name, result['attributes']['name'])
+        self.assertEqual(self.skill.name, result['attributes']['name'])
 
     def test_detail_anonymous(self):
         response = self.client.get(self.detail_url)
@@ -912,6 +911,6 @@ class SkillAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_detail_disabled(self):
-        SkillFactory.create(disabled=True)
-        response = self.client.get(self.detail_url)
+        skill = SkillFactory.create(disabled=True)
+        response = self.client.get(reverse('assignment-skill', args=(skill.id,)))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

@@ -587,6 +587,7 @@ class PaymentMethod(object):
         resource_name = 'payments/payment-methods'
 
 
+@python_2_unicode_compatible
 class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
@@ -604,6 +605,9 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, Polym
         for account in self.external_accounts.all():
             for funding in account.funding_set.all():
                 return funding
+
+    def __str__(self):
+        return "Payout account #{}".format(self.id)
 
 
 class PlainPayoutAccount(PayoutAccount):
@@ -630,6 +634,7 @@ class PlainPayoutAccount(PayoutAccount):
         return required
 
 
+@python_2_unicode_compatible
 class BankAccount(PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -678,6 +683,9 @@ class BankAccount(PolymorphicModel):
         resource_name = 'payout-accounts/external-accounts'
 
     public_data = {}
+
+    def __str__(self):
+        return "Bank account #{}".format(self.id)
 
     class Meta:
         ordering = ('id',)

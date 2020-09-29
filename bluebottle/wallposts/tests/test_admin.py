@@ -18,7 +18,6 @@ class TestWallpostAdmin(BluebottleAdminTestCase):
     def setUp(self):
         super(TestWallpostAdmin, self).setUp()
         self.client.force_login(self.superuser)
-        # Don't user reverse here, because polymorphic sometimes makes a mistake.
         self.media_wallpost_url = '/en/admin/wallposts/mediawallpost/'
 
     def test_mediawallpost_admin(self):

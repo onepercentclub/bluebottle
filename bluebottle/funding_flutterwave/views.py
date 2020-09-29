@@ -38,7 +38,7 @@ class FlutterwaveWebhookView(View):
                 donation = Donation.objects.get(id=data['txRef'])
                 payment = FlutterwavePayment.objects.create(
                     donation=donation,
-                    tx_ref=donation.id
+                    tx_ref=data['txRef']
                 )
                 payment.save()
             except Donation.DoesNotExist:

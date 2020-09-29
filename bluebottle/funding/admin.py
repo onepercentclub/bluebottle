@@ -232,7 +232,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
 
     raw_id_fields = ['activity', 'payout', 'user']
     readonly_fields = ContributionChildAdmin.readonly_fields + [
-        'payment_link', 'payment_link', 'amount', 'payout_amount',
+        'payment_link', 'payment_link', 'payout_amount',
     ]
     list_display = ['contribution_date', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
     list_filter = [
@@ -243,6 +243,11 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     date_hierarchy = 'contribution_date'
 
     inlines = [DonationWallpostInline]
+
+    superadmin_fields = [
+        'force_status',
+        'amount'
+    ]
 
     fields = [
         'contribution_date', 'created',

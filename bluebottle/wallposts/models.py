@@ -125,7 +125,6 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
 
 
 class MediaWallpost(Wallpost):
-    # The content of the wall post.
 
     @property
     def wallpost_type(self):
@@ -135,9 +134,6 @@ class MediaWallpost(Wallpost):
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH, blank=True,
                             default='')
     video_url = models.URLField(max_length=100, blank=True, default='')
-
-    def ____str____(self):
-        return Truncator(self.text).words(10)
 
     class Meta(Wallpost.Meta):
         permissions = (
@@ -198,6 +194,9 @@ class MediaWallpostPhoto(models.Model):
     def parent(self):
         return self.mediawallpost.content_object
 
+    def __str__(self):
+        return "Wallpost photo #{}".format(self.id)
+
 
 class TextWallpost(Wallpost):
     # The content of the wall post.
@@ -215,9 +214,6 @@ class TextWallpost(Wallpost):
 
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH)
 
-    def ____str____(self):
-        return Truncator(self.text).words(10)
-
 
 class SystemWallpost(Wallpost):
     # The content of the wall post.
@@ -233,10 +229,8 @@ class SystemWallpost(Wallpost):
     related_id = models.PositiveIntegerField(_('related ID'))
     related_object = fields.GenericForeignKey('related_type', 'related_id')
 
-    def ____str____(self):
-        return Truncator(self.text).words(10) or super(SystemWallpost, self).____str____()
 
-
+@python_2_unicode_compatible
 class Reaction(AnonymizationMixin, models.Model):
     """
     A user reaction or comment to a Wallpost. This model is based on
@@ -310,7 +304,7 @@ class Reaction(AnonymizationMixin, models.Model):
             ('api_delete_own_reaction', 'Can delete own reactions documents through the API'),
         )
 
-    def ____str____(self):
+    def __str__(self):
         s = self.text
         return Truncator(s).words(10)
 

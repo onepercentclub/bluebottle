@@ -321,6 +321,8 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
                                     token=self.another_token)
 
         # Delete Reaction by wall owner should work
+        reaction_detail_url = reverse(
+            'wallpost_reaction_detail', kwargs={'pk': response.data['id']})
         response = self.client.delete(
             reaction_detail_url, token=self.manager_token)
         self.assertEqual(

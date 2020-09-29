@@ -199,7 +199,12 @@ class ReactionList(OwnerListViewMixin, SetAuthorMixin, CreateAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
 
-    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission), )
+    permission_classes = (
+        OneOf(
+            ResourcePermission,
+            ResourceOwnerPermission,
+        ),
+    )
     pagination_class = BluebottlePagination
     filter_fields = ('wallpost',)
 
@@ -209,4 +214,10 @@ class ReactionList(OwnerListViewMixin, SetAuthorMixin, CreateAPIView):
 class ReactionDetail(SetAuthorMixin, RetrieveUpdateDestroyAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
-    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission), )
+    permission_classes = (
+        OneOf(
+            ResourcePermission,
+            ResourceOwnerPermission,
+            RelatedManagementOrReadOnlyPermission
+        ),
+    )

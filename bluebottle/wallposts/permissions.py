@@ -1,3 +1,5 @@
+from bluebottle.wallposts.models import Wallpost
+
 from bluebottle.activities.models import Activity
 
 from bluebottle.utils.permissions import RelatedResourceOwnerPermission, BasePermission
@@ -19,7 +21,7 @@ class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
         ]
 
     def has_object_action_permission(self, action, user, obj):
-        if not any([
+        if isinstance(obj, Wallpost) and not any([
             obj.share_with_linkedin,
             obj.share_with_twitter,
             obj.share_with_facebook,

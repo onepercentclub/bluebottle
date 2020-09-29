@@ -271,6 +271,10 @@ class Reaction(AnonymizationMixin, models.Model):
     def owner(self):
         return self.author
 
+    @property
+    def parent(self):
+        return self.wallpost.parent
+
     class Analytics:
         type = 'wallpost'
         tags = {}

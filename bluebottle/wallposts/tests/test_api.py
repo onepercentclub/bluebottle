@@ -227,7 +227,11 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
     def setUp(self):
         super(WallpostReactionApiIntegrationTest, self).setUp()
 
-        self.some_wallpost = TextWallpostFactory.create()
+        self.manager = BlueBottleUserFactory.create()
+        self.manager_token = "JWT {0}".format(
+            self.manager.get_jwt_token())
+        self.event = EventFactory.create(owner=self.manager)
+        self.some_wallpost = TextWallpostFactory.create(content_object=self.event)
         self.another_wallpost = TextWallpostFactory.create()
 
         self.some_user = BlueBottleUserFactory.create(
@@ -302,13 +306,23 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
                                     token=self.another_token)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
-        # Only check the substring because the single quote in "I'm" is escaped.
-        # https://docs.djangoinitiative.com/en/dev/topics/templates/#automatic-html-escaping
         self.assertTrue('not so sure' in response.data['text'])
 
         # Delete Reaction by author should work
         response = self.client.delete(
             reaction_detail_url, token=self.some_token)
+        self.assertEqual(
+            response.status_code, status.HTTP_204_NO_CONTENT, response)
+
+        another_reaction_text = "Great job"
+        response = self.client.post(self.wallpost_reaction_url,
+                                    {'text': another_reaction_text,
+                                     'wallpost': self.some_wallpost.id},
+                                    token=self.another_token)
+
+        # Delete Reaction by wall owner should work
+        response = self.client.delete(
+            reaction_detail_url, token=self.manager_token)
         self.assertEqual(
             response.status_code, status.HTTP_204_NO_CONTENT, response)
 

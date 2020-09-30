@@ -552,27 +552,4 @@ class PayoutAccountStateMachine(ModelStateMachine):
 
 @register(PlainPayoutAccount)
 class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
-    verify = Transition(
-        [
-            PayoutAccountStateMachine.new,
-            PayoutAccountStateMachine.incomplete,
-            PayoutAccountStateMachine.rejected
-        ],
-        PayoutAccountStateMachine.verified,
-        name=_('Verify'),
-        description=_("Verify the payout account."),
-        automatic=False,
-        permission=PayoutAccountStateMachine.can_approve,
-    )
-
-    reject = Transition(
-        [
-            PayoutAccountStateMachine.new,
-            PayoutAccountStateMachine.incomplete,
-            PayoutAccountStateMachine.verified
-        ],
-        PayoutAccountStateMachine.rejected,
-        name=_('Reject'),
-        description=_("Reject the payout account."),
-        automatic=False,
-    )
+    pass

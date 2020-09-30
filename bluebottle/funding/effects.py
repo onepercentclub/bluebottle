@@ -90,8 +90,6 @@ class RefundPaymentAtPSPEffect(Effect):
     template = 'admin/execute_refund_effect.html'
 
     def pre_save(self, **kwargs):
-        import ipdb
-        ipdb.set_trace()
         self.instance.refund()
 
     def __unicode__(self):

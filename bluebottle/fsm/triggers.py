@@ -92,6 +92,8 @@ def register(model_cls):
     def _register(TriggerManager):
         model_cls.triggers = TriggerManager()
 
+        return TriggerManager
+
     return _register
 
 

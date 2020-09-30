@@ -16,7 +16,7 @@ from bluebottle.funding.effects import (
 )
 
 from bluebottle.funding.states import (
-    FundingStateMachine, DonationStateMachine, PlainPayoutAccountStateMachine, BasePaymentStateMachine,
+    FundingStateMachine, DonationStateMachine, PayoutAccountStateMachine, BasePaymentStateMachine,
     PayoutStateMachine
 )
 from bluebottle.funding.models import Funding, PlainPayoutAccount, Donation, Payout, Payment
@@ -250,25 +250,20 @@ def is_unreviewed(effect):
     return not effect.instance.reviewed
 
 
-@register(PlainPayoutAccount)
-class PlainPayoutAccountTriggers(TriggerManager):
+class PayoutAccountTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
-            PlainPayoutAccountStateMachine.verify,
+            PayoutAccountStateMachine.verify,
             effects=[
-
                 NotificationEffect(PayoutAccountVerified),
                 SubmitConnectedActivitiesEffect,
-                DeleteDocumentEffect
             ]
         ),
 
         TransitionTrigger(
-            PlainPayoutAccountStateMachine.reject,
+            PayoutAccountStateMachine.reject,
             effects=[
-
                 NotificationEffect(PayoutAccountRejected),
-                DeleteDocumentEffect
             ]
         ),
 
@@ -276,15 +271,34 @@ class PlainPayoutAccountTriggers(TriggerManager):
             'reviewed',
             effects=[
                 TransitionEffect(
-                    PlainPayoutAccountStateMachine.verify,
+                    PayoutAccountStateMachine.verify,
                     conditions=[is_reviewed]
                 ),
                 TransitionEffect(
-                    PlainPayoutAccountStateMachine.reject,
+                    PayoutAccountStateMachine.reject,
                     conditions=[is_unreviewed]
                 ),
             ]
         )
+    ]
+
+
+@register(PlainPayoutAccount)
+class PlainPayoutAccountTriggers(PayoutAccountTriggers):
+    triggers = PayoutAccountTriggers.triggers + [
+        TransitionTrigger(
+            PayoutAccountStateMachine.verify,
+            effects=[
+                DeleteDocumentEffect
+            ]
+        ),
+
+        TransitionTrigger(
+            PayoutAccountStateMachine.reject,
+            effects=[
+                DeleteDocumentEffect
+            ]
+        ),
     ]
 
 

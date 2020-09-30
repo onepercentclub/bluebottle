@@ -85,7 +85,7 @@ class AssignmentFinishedDeadlineTask(ModelPeriodicTask):
         ]),
         TransitionEffect(AssignmentStateMachine.expire, conditions=[
             has_no_new_or_accepted_applicants
-        ])
+        ]),
     ]
 
     def __unicode__(self):

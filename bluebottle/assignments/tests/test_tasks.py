@@ -254,7 +254,8 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         tenant = connection.tenant
 
-        with mock.patch.object(timezone, 'now', return_value=(timezone.now() + timedelta(days=13))):
+        future = timezone.now() + timedelta(days=3)
+        with mock.patch.object(timezone, 'now', return_value=future):
             assignment_tasks()
 
         with LocalTenant(tenant, clear_tenant=True):

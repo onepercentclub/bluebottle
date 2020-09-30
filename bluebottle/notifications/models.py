@@ -9,8 +9,6 @@ from parler.models import TranslatableModel, TranslatedFields
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import get_class
 
-from .signals import *  # noqa
-
 
 class Message(models.Model):
     recipient = models.ForeignKey('members.Member')

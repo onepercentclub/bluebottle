@@ -3,7 +3,6 @@ from datetime import timedelta
 import requests
 from django.test.utils import override_settings
 from django.utils.timezone import now
-# from mock import patch
 from moneyed.classes import Money
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory

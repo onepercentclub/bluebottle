@@ -427,7 +427,7 @@ class PayoutStateMachine(ModelStateMachine):
         scheduled,
         name=_('Schedule'),
         description=_("Schedule payout. Triggered by payout app."),
-        automatic=True
+        automatic=True,
     )
 
     start = Transition(
@@ -452,6 +452,15 @@ class PayoutStateMachine(ModelStateMachine):
         succeeded,
         name=_('Succeed'),
         description=_("Payout was successful. Triggered by payout app."),
+        automatic=True,
+    )
+
+    fail = Transition(
+        AllStates(),
+        failed,
+        name=_('Fail'),
+        description=_("Payout was not successful. "
+                      "Contact support to resolve the issue."),
         automatic=True,
     )
 
@@ -511,7 +520,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
     verify = Transition(
-        [new, incomplete, rejected],
+        [new, incomplete, rejected, pending],
         verified,
         name=_('Verify'),
         description=_("Verify the payout account."),

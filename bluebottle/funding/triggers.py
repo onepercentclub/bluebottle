@@ -311,6 +311,13 @@ class PayoutTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
+            PayoutStateMachine.schedule,
+            effects=[
+                ClearPayoutDatesEffect
+            ]
+        ),
+
+        TransitionTrigger(
             PayoutStateMachine.succeed,
             effects=[
                 SetDateEffect('date_completed')

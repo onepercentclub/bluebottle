@@ -111,6 +111,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
+    wallposts = GenericRelation('wallposts.Wallpost', related_query_name='initiative_wallposts')
 
     class Meta:
         verbose_name = _("Initiative")

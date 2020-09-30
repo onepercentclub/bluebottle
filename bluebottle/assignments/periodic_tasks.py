@@ -7,7 +7,9 @@ from bluebottle.assignments.messages import AssignmentReminderDeadline, Assignme
 from bluebottle.assignments.models import Assignment
 from bluebottle.assignments.states import AssignmentStateMachine
 from bluebottle.assignments.triggers import (
-    has_accepted_applicants, has_no_accepted_applicants, is_on_date, has_deadline
+    has_accepted_applicants, has_no_accepted_applicants,
+    has_new_or_accepted_applicants, has_no_new_or_accepted_applicants,
+    is_on_date, has_deadline
 )
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
@@ -79,11 +81,11 @@ class AssignmentFinishedDeadlineTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect(AssignmentStateMachine.succeed, conditions=[
-            has_accepted_applicants
+            has_new_or_accepted_applicants
         ]),
         TransitionEffect(AssignmentStateMachine.expire, conditions=[
-            has_no_accepted_applicants
-        ]),
+            has_no_new_or_accepted_applicants
+        ])
     ]
 
     def __unicode__(self):
@@ -105,10 +107,10 @@ class AssignmentFinishedOnDateTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect(AssignmentStateMachine.succeed, conditions=[
-            has_accepted_applicants
+            has_new_or_accepted_applicants
         ]),
         TransitionEffect(AssignmentStateMachine.expire, conditions=[
-            has_no_accepted_applicants
+            has_no_new_or_accepted_applicants
         ]),
     ]
 
@@ -130,10 +132,10 @@ class AssignmentRegistrationOnDateTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect(AssignmentStateMachine.lock, conditions=[
-            has_accepted_applicants
+            has_new_or_accepted_applicants
         ]),
         TransitionEffect(AssignmentStateMachine.expire, conditions=[
-            has_no_accepted_applicants
+            has_no_new_or_accepted_applicants
         ]),
     ]
 

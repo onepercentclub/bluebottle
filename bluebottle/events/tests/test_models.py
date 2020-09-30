@@ -1,9 +1,14 @@
 from datetime import timedelta
 from django.core import mail
+from django.contrib.gis.geos import Point
+
+from django.utils import formats
 from django.utils.timezone import now
 
 from bluebottle.events.models import Participant
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
+
+from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -126,6 +131,7 @@ class EventTestCase(BluebottleTestCase):
         event = EventFactory(
             title='Test Title',
             status='open',
+            location=GeolocationFactory.create(position=Point(20.0, 10.0)),
             start=now() + timedelta(days=4),
         )
 
@@ -138,6 +144,14 @@ class EventTestCase(BluebottleTestCase):
         event.save()
 
         recipients = [message.to[0] for message in mail.outbox]
+
+        self.assertTrue(
+            event.local_timezone_name in mail.outbox[0].body
+        )
+
+        self.assertTrue(
+            formats.time_format(event.local_start) in mail.outbox[0].body
+        )
 
         for participant in event.contributions.instance_of(Participant):
             if participant.status == 'new':

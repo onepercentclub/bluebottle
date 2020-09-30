@@ -97,10 +97,9 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
     model = Payout
     readonly_fields = [
-        'payout_link', 'total_amount', 'provider', 'currency',
+        'payout_link', 'total_amount', 'status', 'provider', 'currency',
         'date_approved', 'date_started', 'date_completed'
     ]
-
     fields = readonly_fields
     extra = 0
     can_delete = False
@@ -110,7 +109,7 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
     def payout_link(self, obj):
         url = reverse('admin:funding_payout_change', args=(obj.id, ))
-        return format_html('<a href="{}">{}</a>', url, obj)
+        return format_html(u'<a href="{}">{}</a>', url, obj)
 
 
 class FundingAdminForm(StateMachineModelForm):
@@ -233,7 +232,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
 
     raw_id_fields = ['activity', 'payout', 'user']
     readonly_fields = ContributionChildAdmin.readonly_fields + [
-        'payment_link', 'payment_link', 'amount', 'payout_amount',
+        'payment_link', 'payment_link', 'payout_amount',
     ]
     list_display = ['contribution_date', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
     list_filter = [
@@ -244,6 +243,11 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     date_hierarchy = 'contribution_date'
 
     inlines = [DonationWallpostInline]
+
+    superadmin_fields = [
+        'force_status',
+        'amount'
+    ]
 
     fields = [
         'contribution_date', 'created',

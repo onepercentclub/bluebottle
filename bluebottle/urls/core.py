@@ -38,8 +38,6 @@ urlpatterns = [
         include('bluebottle.pages.urls.api')),
     url(r'^api/quotes/',
         include('bluebottle.quotes.urls.api')),
-    url(r'^api/slides/',
-        include('bluebottle.slides.urls.api')),
     url(r'^api/utils/',
         include('bluebottle.utils.urls.api')),
     url(r'^api/wallposts/',
@@ -58,18 +56,12 @@ urlpatterns = [
         include('bluebottle.cms.urls.api')),
     url(r'^api/initiatives',
         include('bluebottle.initiatives.urls.api')),
-
     url(r'^api/activities',
         include('bluebottle.activities.urls.api')),
-
     url(r'^api/events',
         include('bluebottle.events.urls.api')),
-
     url(r'^api/assignments',
         include('bluebottle.assignments.urls.api')),
-
-    url(r'^api/funding',
-        include('bluebottle.funding.urls.api')),
     url(r'^api/funding',
         include('bluebottle.funding.urls.api')),
     url(r'^api/funding/pledge',

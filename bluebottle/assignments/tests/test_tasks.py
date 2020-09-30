@@ -219,9 +219,38 @@ class AssignmentTasksTestCase(BluebottleTestCase):
         )
         assignment.states.submit(save=True)
 
-        applicants = ApplicantFactory.create_batch(3, activity=assignment, status='new')
+        ApplicantFactory.create_batch(3, activity=assignment)
+
+        tenant = connection.tenant
+        assignment_tasks()
+
+        with LocalTenant(tenant, clear_tenant=True):
+            assignment.refresh_from_db()
+
+        self.assertEqual(assignment.status, 'succeeded')
+        for applicant in assignment.applicants:
+            self.assertEqual(applicant.status, 'succeeded')
+
+    def test_assignment_check_end_date_future(self):
+        user = BlueBottleUserFactory.create(first_name='Nono')
+
+        deadline = now() - timedelta(days=4)
+        date = now() + timedelta(days=2)
+
+        assignment = AssignmentFactory.create(
+            owner=user,
+            status='open',
+            capacity=3,
+            registration_deadline=deadline.date(),
+            initiative=self.initiative,
+            date=date,
+        )
+
+        applicants = ApplicantFactory.create_batch(3, activity=assignment)
         for applicant in applicants:
             applicant.states.accept(save=True)
+
+        ApplicantFactory.create_batch(3, activity=assignment)
 
         tenant = connection.tenant
 
@@ -232,3 +261,5 @@ class AssignmentTasksTestCase(BluebottleTestCase):
             assignment.refresh_from_db()
 
         self.assertEqual(assignment.status, 'succeeded')
+        for applicant in assignment.applicants:
+            self.assertEqual(applicant.status, 'succeeded')

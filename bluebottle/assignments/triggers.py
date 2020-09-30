@@ -65,6 +65,16 @@ def has_no_accepted_applicants(effect):
     return len(effect.instance.accepted_applicants) == 0
 
 
+def has_new_or_accepted_applicants(effect):
+    """there are accepted applicants"""
+    return len(effect.instance.accepted_applicants) > 0 or len(effect.instance.new_applicants) > 0
+
+
+def has_no_new_or_accepted_applicants(effect):
+    """there are no accepted applicants"""
+    return len(effect.instance.accepted_applicants) == 0 and len(effect.instance.new_applicants) == 0
+
+
 def is_not_full(effect):
     """the task is not full"""
     return effect.instance.capacity > len(effect.instance.accepted_applicants)
@@ -183,14 +193,14 @@ class AssignmentTriggers(ActivityTriggers):
                     AssignmentStateMachine.succeed,
                     conditions=[
                         should_finish,
-                        has_accepted_applicants
+                        has_new_or_accepted_applicants
                     ]
                 ),
                 TransitionEffect(
                     AssignmentStateMachine.expire,
                     conditions=[
                         should_finish,
-                        has_no_accepted_applicants
+                        has_no_new_or_accepted_applicants
                     ]
                 ),
                 TransitionEffect(

@@ -11,14 +11,14 @@ from bluebottle.activities.permissions import (
 )
 from bluebottle.funding.authentication import DonationAuthentication
 from bluebottle.funding.models import (
-    Funding, Donation, Reward, Fundraiser,
+    Funding, Donation, Reward,
     BudgetLine, PayoutAccount, PlainPayoutAccount,
     Payout
 )
 from bluebottle.funding.permissions import DonationOwnerPermission, PaymentPermission
 from bluebottle.funding.serializers import (
     FundingSerializer, DonationSerializer, FundingTransitionSerializer,
-    FundraiserSerializer, RewardSerializer, BudgetLineSerializer,
+    RewardSerializer, BudgetLineSerializer,
     DonationCreateSerializer, FundingListSerializer,
     PayoutAccountSerializer, PlainPayoutAccountSerializer,
     PayoutSerializer
@@ -58,35 +58,6 @@ class RewardDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPI
 
     related_permission_classes = {
         'activity': [IsOwner]
-    }
-
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-
-class FundraiserList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
-    queryset = Fundraiser.objects.all()
-    serializer_class = FundraiserSerializer
-
-    prefetch_for_includes = {
-        'owner': ['owner'],
-        'activity': ['activity'],
-    }
-
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
-class FundraiserDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
-    queryset = Fundraiser.objects.all()
-    serializer_class = FundraiserSerializer
-
-    prefetch_for_includes = {
-        'owner': ['owner'],
-        'initiative': ['initiative'],
-        'location': ['location'],
-        'contributions': ['contributions']
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -183,12 +154,14 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
         status = serializer.validated_data.pop('status')
         if status == 'reset':
             serializer.instance.states.reset()
-        if status in ['new', 'scheduled', 're_scheduled']:
+        elif status in ['new', 'scheduled', 're_scheduled']:
             serializer.instance.states.schedule()
-        if status == 'started':
+        elif status == 'started':
             serializer.instance.states.start()
-        if status in ['succeeded', 'confirmed']:
+        elif status in ['success', 'succeeded', 'confirmed']:
             serializer.instance.states.succeed()
+        elif status in ['failed']:
+            serializer.instance.states.fail()
         serializer.instance.save()
         return HttpResponse(200)
 

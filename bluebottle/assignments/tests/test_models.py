@@ -56,6 +56,7 @@ class AssignmentTestCase(BluebottleTestCase):
                         for message in mail.outbox)
 
         for participant in assignment.contributions.instance_of(Applicant).all():
+
             if participant.status in ('new', 'accepted'):
                 self.assertTrue(participant.user.email in messages)
                 self.assertTrue(

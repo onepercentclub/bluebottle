@@ -162,10 +162,11 @@ class DeleteDocumentEffect(Effect):
 
 class SubmitPayoutEffect(Effect):
     conditions = []
+
     title = _('Trigger payout')
     template = 'admin/submit_payout_effect.html'
 
-    def post_save(self, **kwargs):
+    def pre_save(self, **kwargs):
         adapter = DoradoPayoutAdapter(self.instance)
         adapter.trigger_payout()
 

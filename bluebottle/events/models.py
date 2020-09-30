@@ -67,13 +67,22 @@ class Event(Activity):
         return stats
 
     @property
-    def local_start(self):
+    def local_timezone(self):
         if self.location and self.location.position:
             tz_name = tf.timezone_at(
                 lng=self.location.position.x,
                 lat=self.location.position.y
             )
-            tz = pytz.timezone(tz_name)
+            return pytz.timezone(tz_name)
+
+    @property
+    def local_timezone_name(self):
+        return self.local_timezone.tzname(self.local_start)
+
+    @property
+    def local_start(self):
+        tz = self.local_timezone
+        if tz:
             return self.start.astimezone(tz).replace(tzinfo=None)
         else:
             return self.start

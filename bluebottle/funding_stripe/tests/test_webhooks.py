@@ -400,6 +400,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                     self.webhook,
                     HTTP_STRIPE_SIGNATURE='some signature'
                 )
+
                 create_charge.assert_called_with(
                     amount=int(self.donation.amount.amount * 100),
                     currency=self.donation.amount.currency,
@@ -449,6 +450,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                     self.webhook,
                     HTTP_STRIPE_SIGNATURE='some signature'
                 )
+
                 create_charge.assert_called_with(
                     amount=int(self.donation.amount.amount * 100),
                     currency=self.donation.amount.currency,
@@ -458,6 +460,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                         'activity_title': self.funding.title,
                         'tenant_domain': u'testserver'
                     },
+                    on_behalf_of=u'acct_1234567890',
                     source=u'some-source-id',
                     statement_descriptor_suffix=u'Test',
                     transfer_data={

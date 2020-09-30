@@ -34,17 +34,24 @@ class PaymentIntent(models.Model):
 
             statement_descriptor = connection.tenant.name[:22]
 
-            account_id = self.donation.activity.bank_account.connect_account.account_id
-            intent = stripe.PaymentIntent.create(
+            connect_account = self.donation.activity.bank_account.connect_account
+            intent_args = dict(
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
                 transfer_data={
-                    'destination': account_id,
+                    'destination': connect_account.account_id,
                 },
                 statement_descriptor=statement_descriptor,
                 statement_descriptor_suffix=statement_descriptor[:18],
                 metadata=self.metadata
             )
+            if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+                intent_args['on_behalf_of'] = connect_account.account_id
+
+            intent = stripe.PaymentIntent.create(
+                **intent_args
+            )
+
             self.intent_id = intent.id
             self.client_secret = intent.client_secret
 
@@ -124,19 +131,24 @@ class StripeSourcePayment(Payment):
         )
 
     def do_charge(self):
-        account_id = self.donation.activity.bank_account.connect_account.account_id
+        connect_account = self.donation.activity.bank_account.connect_account
 
         statement_descriptor = connection.tenant.name[:22]
-        charge = stripe.Charge.create(
+        charge_args = dict(
             amount=int(self.donation.amount.amount * 100),
-            currency=self.donation.amount.currency,
             source=self.source_token,
+            currency=self.donation.amount.currency,
             transfer_data={
-                'destination': account_id,
+                'destination': connect_account.account_id,
             },
             statement_descriptor_suffix=statement_descriptor[:18],
             metadata=self.metadata
         )
+
+        if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+            charge_args['on_behalf_of'] = connect_account.account_id
+
+        charge = stripe.Charge.create(**charge_args)
 
         self.charge_token = charge.id
         self.states.charge(save=True)
@@ -269,6 +281,15 @@ with open('bluebottle/funding_stripe/data/document_spec.json') as file:
 @memoize(timeout=60 * 60 * 24)
 def get_specs(country):
     return stripe.CountrySpec.retrieve(country)
+
+
+STRIPE_EUROPEAN_COUNTRY_CODES = [
+    "AD", "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE",
+    "FO", "FI", "FR", "DE", "GI", "GR", "GL", "GG", "VA",
+    "HU", "IS", "IE", "IM", "IL", "IT", "JE", "LV", "LI",
+    "LT", "LU", "MT", "MC", "NL", "NO", "PL", "PT", "RO",
+    "PM", "SM", "SK", "SI", "ES", "SE", "TR", "GB"
+]
 
 
 class StripePayoutAccount(PayoutAccount):
@@ -448,7 +469,6 @@ class StripePayoutAccount(PayoutAccount):
         return self._account
 
     def save(self, *args, **kwargs):
-
         if self.account_id and not self.country == self.account.country:
             self.account_id = None
 
@@ -461,12 +481,17 @@ class StripePayoutAccount(PayoutAccount):
             if 'localhost' in url:
                 url = re.sub('localhost', 't.goodup.com', url)
 
+            capabilities = ['transfers']
+
+            if self.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+                capabilities.append('card_payments')
+
             self._account = stripe.Account.create(
                 country=self.country,
                 type='custom',
                 settings=self.account_settings,
                 business_type='individual',
-                requested_capabilities=["transfers"],
+                requested_capabilities=capabilities,
                 business_profile={
                     'url': url,
                     'mcc': '8398'

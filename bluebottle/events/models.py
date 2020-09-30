@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from future.utils import python_2_unicode_compatible
 
 import datetime
 from urllib.parse import urlencode
@@ -188,6 +189,7 @@ class Event(Activity):
         return u'{}?{}'.format(url, urlencode(params))
 
 
+@python_2_unicode_compatible
 class Participant(Contribution):
     time_spent = models.FloatField(default=0)
 

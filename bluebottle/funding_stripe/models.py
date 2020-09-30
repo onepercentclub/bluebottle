@@ -551,6 +551,7 @@ class StripePayoutAccount(PayoutAccount):
         resource_name = 'payout-accounts/stripes'
 
 
+@python_2_unicode_compatible
 class ExternalAccount(BankAccount):
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'ba_...'"))
     provider_class = StripePaymentProvider

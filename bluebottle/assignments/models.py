@@ -1,3 +1,5 @@
+from future.utils import python_2_unicode_compatible
+
 from builtins import object
 from django.utils.timezone import datetime, timedelta, utc
 from django.db import models
@@ -154,6 +156,7 @@ class Assignment(Activity):
         return super(Assignment, self).save(*args, **kwargs)
 
 
+@python_2_unicode_compatible
 class Applicant(Contribution):
     motivation = models.TextField(blank=True)
     time_spent = models.FloatField(_('time spent'), null=True, blank=True)

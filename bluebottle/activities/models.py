@@ -163,6 +163,7 @@ class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         return str(_('Contribution'))
 
 
+@python_2_unicode_compatible
 class Organizer(Contribution):
     class Meta(object):
         verbose_name = _("Activity owner")

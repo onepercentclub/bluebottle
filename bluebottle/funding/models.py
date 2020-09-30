@@ -297,9 +297,6 @@ class Funding(Activity):
 
         super(Funding, self).save(*args, **kwargs)
 
-    def __str__(self):
-        return self.title or str(_('-empty-'))
-
 
 @python_2_unicode_compatible
 class Reward(models.Model):
@@ -416,6 +413,7 @@ class Fundraiser(AnonymizationMixin, models.Model):
         verbose_name_plural = _('fundraisers')
 
 
+@python_2_unicode_compatible
 class Payout(TriggerMixin, models.Model):
     activity = models.ForeignKey(
         'funding.Funding',
@@ -476,6 +474,7 @@ class Payout(TriggerMixin, models.Model):
         return '{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
 
 
+@python_2_unicode_compatible
 class Donation(Contribution):
     amount = MoneyField()
     payout_amount = MoneyField()
@@ -512,7 +511,7 @@ class Donation(Contribution):
         verbose_name_plural = _('Donations')
 
     def __str__(self):
-        return '{}'.format(self.amount)
+        return u'{}'.format(self.amount)
 
     class JSONAPIMeta(object):
         resource_name = 'contributions/donations'

@@ -1,28 +1,8 @@
-from django.utils import timezone
-
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
-from bluebottle.events.effects import SetTimeSpent, ResetTimeSpent
 from bluebottle.events.models import Event, Participant
-from bluebottle.events.messages import (
-    EventSucceededOwnerMessage,
-    EventRejectedOwnerMessage,
-    ParticipantRejectedMessage,
-    ParticipantApplicationMessage,
-    ParticipantApplicationManagerMessage,
-    EventCancelledMessage,
-    EventExpiredMessage,
-)
-from bluebottle.follow.effects import (
-    FollowActivityEffect, UnFollowActivityEffect
-)
-from bluebottle.fsm.effects import (
-    TransitionEffect,
-    RelatedTransitionEffect
-)
 from bluebottle.fsm.state import State, EmptyState, Transition, register
-from bluebottle.notifications.effects import NotificationEffect
 
 
 @register(Event)
@@ -33,33 +13,6 @@ class EventStateMachine(ActivityStateMachine):
         _('running'),
         'running',
         _('The event is taking place and people can\'t join any more.')
-    )
-
-    submit = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.submitted,
-        description=_('Submit the activity for approval.'),
-        automatic=False,
-        name=_('Submit'),
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_submitted
-        ],
-    )
-
-    auto_approve = Transition(
-        [
-            ActivityStateMachine.submitted,
-            ActivityStateMachine.rejected
-        ],
-        ActivityStateMachine.open,
-        name=_('Approve'),
-        automatic=True,
-        description=_("The event will be visible in the frontend and people can join the event."),
     )
 
     cancel = Transition(
@@ -122,17 +75,6 @@ class EventStateMachine(ActivityStateMachine):
         description=_("Start the event.")
     )
 
-    expire = Transition(
-        [
-            ActivityStateMachine.submitted,
-            ActivityStateMachine.open,
-            ActivityStateMachine.succeeded
-        ],
-        ActivityStateMachine.cancelled,
-        name=_("Expire"),
-        description=_("The event didn\'t have any attendees before the start time and is cancelled."),
-    )
-
     succeed = Transition(
         [
             full,
@@ -147,39 +89,6 @@ class EventStateMachine(ActivityStateMachine):
         description=_(
             "The event ends and the contributions are counted. Triggered when the event "
             "end time passes."
-        ),
-    )
-
-    reject = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-            ActivityStateMachine.submitted
-        ],
-        ActivityStateMachine.rejected,
-        name=_('Reject'),
-        description=_(
-            'Reject in case this event doesn\'t fit your program or the rules of the game. '
-            'The activity owner will not be able to edit the event and it won\'t show up on '
-            'the search page in the front end. The event will still be available in the '
-            'back office and appear in your reporting.'
-        ),
-        automatic=False,
-        permission=ActivityStateMachine.is_staff,
-    )
-
-    restore = Transition(
-        [
-            ActivityStateMachine.rejected,
-            ActivityStateMachine.cancelled,
-            ActivityStateMachine.deleted,
-        ],
-        ActivityStateMachine.needs_work,
-        name=_("Restore"),
-        automatic=False,
-        description=_(
-            "The status of the event is set to 'needs work'. The activity owner can edit "
-            "the event again."
         ),
     )
 

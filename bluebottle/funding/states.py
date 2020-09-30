@@ -62,19 +62,6 @@ class FundingStateMachine(ActivityStateMachine):
             self.instance.bank_account.provider_class and \
             self.instance.bank_account.provider_class.refund_enabled
 
-    submit = Transition(
-        [ActivityStateMachine.draft, ActivityStateMachine.needs_work],
-        ActivityStateMachine.submitted,
-        automatic=False,
-        name=_('Submit'),
-        description=_('The campaign will be submitted for review.'),
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_submitted
-        ],
-    )
-
     approve = Transition(
         [
             ActivityStateMachine.needs_work,

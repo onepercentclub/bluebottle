@@ -4,7 +4,6 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, ModelDeletedTrigger, TransitionTrigger, register
 
-from bluebottle.activities.effects import CreateOrganizer
 from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
 
 from bluebottle.events.effects import SetTimeSpent, ResetTimeSpent
@@ -24,7 +23,6 @@ from bluebottle.events.messages import (
 from bluebottle.events.models import Event, Participant
 from bluebottle.events.messages import EventDateChanged
 from bluebottle.events.states import EventStateMachine, ParticipantStateMachine
-from bluebottle.activities.states import OrganizerStateMachine
 
 
 def event_is_full(effect):
@@ -105,12 +103,7 @@ def not_triggered_by_user(effect):
 
 @register(Event)
 class EventTriggers(ActivityTriggers):
-    triggers = [
-        TransitionTrigger(
-            EventStateMachine.initiate,
-            effects=[CreateOrganizer]
-        ),
-
+    triggers = ActivityTriggers.triggers + [
         TransitionTrigger(
             EventStateMachine.submit,
             effects=[
@@ -122,17 +115,12 @@ class EventTriggers(ActivityTriggers):
                     EventStateMachine.expire,
                     conditions=[event_should_finish, event_has_no_participants]
                 ),
-                TransitionEffect(
-                    OrganizerStateMachine.succeed,
-                    conditions=[event_should_finish, event_has_participants]
-                ),
             ]
         ),
 
         TransitionTrigger(
             EventStateMachine.auto_approve,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
                 TransitionEffect(
                     EventStateMachine.expire,
                     conditions=[event_should_start, event_has_no_participants]
@@ -151,7 +139,6 @@ class EventTriggers(ActivityTriggers):
         TransitionTrigger(
             EventStateMachine.cancel,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 RelatedTransitionEffect('participants', ParticipantStateMachine.fail),
                 NotificationEffect(EventCancelledMessage),
             ]
@@ -182,7 +169,6 @@ class EventTriggers(ActivityTriggers):
         TransitionTrigger(
             EventStateMachine.reject,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(EventRejectedOwnerMessage),
             ]
         ),
@@ -190,7 +176,6 @@ class EventTriggers(ActivityTriggers):
         TransitionTrigger(
             EventStateMachine.restore,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
                 RelatedTransitionEffect('all_participants', ParticipantStateMachine.reset),
             ]
         ),

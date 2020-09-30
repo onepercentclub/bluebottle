@@ -104,6 +104,24 @@ class ActivityStateMachine(ModelStateMachine):
         conditions=[is_complete, is_valid],
     )
 
+    reject = Transition(
+        [
+            draft,
+            needs_work,
+            submitted
+        ],
+        rejected,
+        name=_('Reject'),
+        description=_(
+            'Reject in case this activity doesn\'t fit your program or the rules of the game. '
+            'The activity owner will not be able to edit the activity and it won\'t show up on '
+            'the search page in the front end. The activity will still be available in the '
+            'back office and appear in your reporting.'
+        ),
+        automatic=False,
+        permission=is_staff,
+    )
+
     submit = Transition(
         [
             draft,
@@ -116,22 +134,18 @@ class ActivityStateMachine(ModelStateMachine):
         conditions=[is_complete, is_valid, initiative_is_submitted],
     )
 
-    reject = Transition(
+    auto_approve = Transition(
         [
-            draft,
-            needs_work,
-            submitted
+            submitted,
+            rejected
         ],
-        rejected,
-        name=_('Reject'),
+        open,
+        name=_('Approve'),
+        automatic=True,
         description=_(
-            'Reject in case this acivity doesn\'t fit your program or the rules of the game. '
-            'The activity manager will not be able to edit the activity and it won\'t show up '
-            'on the search page in the front end. The activity will still be available in the '
-            'back office and appear in your reporting.'
+            "The activity will be visible in the frontend and people can apply to "
+            "the activity."
         ),
-        automatic=False,
-        permission=is_staff,
     )
 
     cancel = Transition(
@@ -141,7 +155,11 @@ class ActivityStateMachine(ModelStateMachine):
         ],
         cancelled,
         name=_('Cancel'),
-        description=_('Cancel the activity.'),
+        description=_(
+            'Cancel if the activity will not be executed. The activity manager will not be able '
+            'to edit the activity and it won\'t show up on the search page in the front end. The '
+            'activity will still be available in the back office and appear in your reporting.'
+        ),
         automatic=False,
     )
 
@@ -153,12 +171,19 @@ class ActivityStateMachine(ModelStateMachine):
         ],
         needs_work,
         name=_('Restore'),
-        description=_(
-            'The status of the activity is set to "Needs work". The activity manager can edit '
-            'the activity again.'
-        ),
+        description=_("Restore a cancelled, rejected or deleted activity."),
         automatic=False,
         permission=is_staff,
+    )
+
+    expire = Transition(
+        [open, submitted, succeeded],
+        cancelled,
+        name=_('Expire'),
+        description=_(
+            "The activity didn't have any contributions before the deadline to apply and is cancelled."
+        ),
+        automatic=True,
     )
 
     delete = Transition(

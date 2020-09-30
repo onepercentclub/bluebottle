@@ -32,7 +32,6 @@ from bluebottle.funding.messages import (
 )
 from bluebottle.notifications.effects import NotificationEffect
 
-from bluebottle.activities.effects import CreateOrganizer
 from bluebottle.activities.states import OrganizerStateMachine, ContributionStateMachine
 
 
@@ -82,11 +81,7 @@ def no_donations(effect):
 
 @register(Funding)
 class FundingTriggers(ActivityTriggers):
-    triggers = [
-        TransitionTrigger(
-            FundingStateMachine.initiate,
-            effects=[CreateOrganizer]
-        ),
+    triggers = ActivityTriggers.triggers + [
 
         TransitionTrigger(
             FundingStateMachine.approve,
@@ -157,19 +152,6 @@ class FundingTriggers(ActivityTriggers):
             ]
         ),
 
-        TransitionTrigger(
-            FundingStateMachine.restore,
-            effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.reset)
-            ]
-        ),
-
-        TransitionTrigger(
-            FundingStateMachine.delete,
-            effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)
-            ]
-        ),
         TransitionTrigger(
             FundingStateMachine.refund,
             effects=[

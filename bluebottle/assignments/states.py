@@ -39,38 +39,6 @@ class AssignmentStateMachine(ActivityStateMachine):
         ),
     )
 
-    auto_approve = Transition(
-        [
-            ActivityStateMachine.submitted,
-            ActivityStateMachine.rejected
-        ],
-        ActivityStateMachine.open,
-        name=_('Approve'),
-        automatic=True,
-        description=_(
-            "The task will be visible in the frontend and people can apply to "
-            "the task."
-        ),
-    )
-
-    reject = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-            ActivityStateMachine.submitted
-        ],
-        ActivityStateMachine.rejected,
-        name=_('Reject'),
-        description=_(
-            'Reject in case this task doesn\'t fit your program or the rules of the game. '
-            'The activity owner will not be able to edit the task and it won\'t show up on '
-            'the search page in the front end. The task will still be available in the '
-            'back office and appear in your reporting.'
-        ),
-        automatic=False,
-        permission=ActivityStateMachine.is_staff,
-    )
-
     cancel = Transition(
         [
             full,
@@ -124,28 +92,6 @@ class AssignmentStateMachine(ActivityStateMachine):
             'The task ends and the contributions are counted. Triggered when the task date passes.'
         ),
         automatic=True,
-    )
-
-    expire = Transition(
-        ActivityStateMachine.open,
-        ActivityStateMachine.cancelled,
-        name=_('Expire'),
-        description=_(
-            "The task didn't have any applicants before the deadline to apply and is cancelled."
-        ),
-        automatic=True,
-    )
-
-    restore = Transition(
-        [
-            ActivityStateMachine.rejected,
-            ActivityStateMachine.cancelled,
-            ActivityStateMachine.deleted,
-        ],
-        ActivityStateMachine.needs_work,
-        name=_("Restore"),
-        automatic=False,
-        description=_("Restore a cancelled, rejected or deleted task."),
     )
 
 

@@ -56,6 +56,9 @@ class BaseTransitionEffect(Effect):
 
     @property
     def machine(self):
+        if not self.instance:
+            import ipdb
+            ipdb.set_trace()
         return getattr(self.instance, self.field)
 
     @property

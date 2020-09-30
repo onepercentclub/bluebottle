@@ -21,9 +21,23 @@ class ActivityTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
+            ActivityStateMachine.auto_approve,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
+            ]
+        ),
+
+        TransitionTrigger(
             ActivityStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)
+            ]
+        ),
+
+        TransitionTrigger(
+            ActivityStateMachine.expire,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
             ]
         ),
 

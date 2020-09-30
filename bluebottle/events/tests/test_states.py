@@ -446,9 +446,9 @@ class ParticipantStateMachineTests(BluebottleTestCase):
         self.passed_event = EventFactory.create(
             initiative=self.initiative,
             start=timezone.now() - timedelta(days=1),
-            status='succeeded',
             duration=1
         )
+        self.passed_event.states.submit(save=True)
         mail.outbox = []
         self.participant = ParticipantFactory.create(user=self.user, activity=self.event)
         self.passed_participant = ParticipantFactory.create(user=self.old_user, activity=self.passed_event)

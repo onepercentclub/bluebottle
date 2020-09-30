@@ -1,7 +1,5 @@
 from django.utils import timezone
 
-from bluebottle.activities.states import OrganizerStateMachine
-from bluebottle.activities.effects import CreateOrganizer
 from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
 
 from bluebottle.assignments.effects import SetTimeSpent, ClearTimeSpent
@@ -79,12 +77,7 @@ def is_full(effect):
 
 @register(Assignment)
 class AssignmentTriggers(ActivityTriggers):
-    triggers = [
-        TransitionTrigger(
-            AssignmentStateMachine.initiate,
-            effects=[CreateOrganizer]
-        ),
-
+    triggers = ActivityTriggers.triggers + [
         TransitionTrigger(
             AssignmentStateMachine.submit,
             effects=[
@@ -117,7 +110,6 @@ class AssignmentTriggers(ActivityTriggers):
         TransitionTrigger(
             AssignmentStateMachine.auto_approve,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
                 RelatedTransitionEffect('applicants', ApplicantStateMachine.reset),
                 TransitionEffect(
                     AssignmentStateMachine.expire,
@@ -129,7 +121,6 @@ class AssignmentTriggers(ActivityTriggers):
         TransitionTrigger(
             AssignmentStateMachine.reject,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(AssignmentRejectedMessage),
             ]
         ),
@@ -137,7 +128,6 @@ class AssignmentTriggers(ActivityTriggers):
         TransitionTrigger(
             AssignmentStateMachine.cancel,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.fail),
                 NotificationEffect(AssignmentCancelledMessage),
             ]
@@ -147,7 +137,6 @@ class AssignmentTriggers(ActivityTriggers):
             AssignmentStateMachine.expire,
             effects=[
                 NotificationEffect(AssignmentExpiredMessage),
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
             ]
         ),
 
@@ -169,7 +158,6 @@ class AssignmentTriggers(ActivityTriggers):
         TransitionTrigger(
             AssignmentStateMachine.restore,
             effects=[
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
                 RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.reset)
             ]
         ),

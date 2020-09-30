@@ -38,10 +38,10 @@ class BaseStatistic(PolymorphicModel, SortableMixin):
     def __str__(self):
         for child in (DatabaseStatistic, ManualStatistic, ImpactStatistic):
             try:
-                return "{}".format(getattr(self, child.__name__.lower()).name)
+                return u"{}".format(getattr(self, child.__name__.lower()).name)
             except child.DoesNotExist:
                 pass
-        return "Stat #{}".format(self.id)
+        return u"Stat #{}".format(self.id)
 
     class Meta(object):
         ordering = ['sequence']
@@ -146,6 +146,9 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
     def get_value(self, start=None, end=None):
         return getattr(Statistics(), self.query)
 
+    def __str__(self):
+        return str(self.query)
+
     class JSONAPIMeta(object):
         resource_name = 'statistics/database-statistics'
 
@@ -173,6 +176,9 @@ class ImpactStatistic(BaseStatistic):
     @property
     def name(self):
         return self.impact_type
+
+    def __str__(self):
+        return str(self.impact_type.name)
 
     class JSONAPIMeta(object):
         resource_name = 'statistics/impact-statistics'

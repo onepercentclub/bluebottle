@@ -40,13 +40,11 @@ class TestDonationSignalsTestCase(BluebottleTestCase):
             user=self.user,
             activity=self.funding
         )
-        self.donation.states.succeed()
-        self.donation.save()
+        self.donation.states.succeed(save=True)
         self.assertEqual(SystemWallpost.objects.count(), 1)
         self.assertEqual(SystemWallpost.objects.first().content_object, self.funding)
-        self.donation.states.fail()
-        self.donation.states.succeed()
-        self.donation.save()
+        self.donation.states.fail(save=True)
+        self.donation.states.succeed(save=True)
         self.assertEqual(SystemWallpost.objects.count(), 1)
 
     def test_successfull_anonymous_donation(self):

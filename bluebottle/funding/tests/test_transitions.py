@@ -11,7 +11,7 @@ from moneyed import Money
 
 from bluebottle.activities.models import Organizer
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.fsm import TransitionNotPossible
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.tasks import funding_tasks
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, \
     BudgetLineFactory, BankAccountFactory, PlainPayoutAccountFactory

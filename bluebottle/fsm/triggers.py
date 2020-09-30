@@ -6,36 +6,53 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.fsm.state import pre_state_transition
 
 
-class Trigger(object):
-    def __init__(self, instance):
+class TriggerManager(object):
+    pass
+
+
+class BoundTrigger(object):
+    def __init__(self, instance, trigger):
         self.instance = instance
+        self.trigger = trigger
 
-    def execute(self, effects, **options):
+    def execute(self, previous_effects, **options):
+        return self.trigger.execute(self.instance, previous_effects, **options)
+
+
+class Trigger(object):
+    def __init__(self, effects=None):
+        if effects is None:
+            effects = []
+
+        self.effects = effects
+
+    def execute(self, instance, previous_effects, **options):
         for effect_cls in self.effects:
-            effect = effect_cls(self.instance, **options)
+            effect = effect_cls(instance, **options)
 
-            if effect.is_valid and effect not in effects:
-                effect.pre_save(effects=effects)
+            if effect.is_valid and effect not in previous_effects:
+                effect.pre_save(effects=previous_effects)
                 if effect.post_save:
-                    self.instance._postponed_effects.insert(0, effect)
-                effects.append(effect)
+                    instance._postponed_effects.insert(0, effect)
+                previous_effects.append(effect)
 
-        return effects
+        return previous_effects
 
     def __unicode__(self):
         return unicode(_("Model has been changed"))
 
 
 class ModelChangedTrigger(Trigger):
-    field = None
+    def __init__(self, field, *args, **kwargs):
+        super(ModelChangedTrigger, self).__init__(*args, **kwargs)
+        self.field = field
 
     @ property
     def title(self):
         return 'change the {}'.format(self.field)
 
-    @ property
-    def changed(self):
-        return self.instance._initial_values.get(self.field) != getattr(self.instance, self.field)
+    def changed(self, instance):
+        return instance._initial_values.get(self.field) != getattr(instance, self.field)
 
     def __unicode__(self):
         if self.field:
@@ -45,16 +62,14 @@ class ModelChangedTrigger(Trigger):
 
 
 class ModelDeletedTrigger(Trigger):
-    def __init__(self, instance):
-        self.instance = instance
-
     def __unicode__(self):
         return unicode(_("Model has been deleted"))
 
 
 class TransitionTrigger(Trigger):
-    def __init__(self, instance):
-        self.instance = instance
+    def __init__(self, transition, *args, **kwargs):
+        super(TransitionTrigger, self).__init__(*args, **kwargs)
+        self.transition = transition
 
     def __unicode__(self):
         return unicode(_("Model has changed status"))
@@ -68,19 +83,14 @@ class TransitionTrigger(Trigger):
 @ receiver(pre_state_transition)
 def transition_trigger(sender, instance, transition, **kwargs):
     if issubclass(sender, TriggerMixin) and hasattr(instance, 'triggers'):
-        for trigger in instance.triggers:
-            if issubclass(trigger, TransitionTrigger) and trigger.transition == transition:
-                instance._triggers.append(trigger(instance))
+        for trigger in instance.triggers.triggers:
+            if isinstance(trigger, TransitionTrigger) and trigger.transition == transition:
+                instance._triggers.append(BoundTrigger(instance, trigger))
 
 
 def register(model_cls):
-    def _register(trigger):
-        if not hasattr(model_cls, 'triggers'):
-            model_cls.triggers = []
-
-        model_cls.triggers.append(trigger)
-
-        return trigger
+    def _register(TriggerManager):
+        model_cls.triggers = TriggerManager()
 
     return _register
 
@@ -122,11 +132,10 @@ class TriggerMixin(object):
 
     def _check_model_changed_triggers(self):
         if hasattr(self, 'triggers'):
-            for trigger_cls in self.triggers:
-                if issubclass(trigger_cls, ModelChangedTrigger):
-                    trigger = trigger_cls(self)
-                    if trigger.changed:
-                        self._triggers.append(trigger)
+            for trigger in self.triggers.triggers:
+                if isinstance(trigger, ModelChangedTrigger):
+                    if trigger.changed(self):
+                        self._triggers.append(BoundTrigger(self, trigger))
 
     def execute_triggers(self, effects=None, **options):
         if hasattr(self, '_state_machines'):
@@ -137,7 +146,7 @@ class TriggerMixin(object):
 
         self._check_model_changed_triggers()
 
-        if not effects:
+        if effects is None:
             effects = []
 
         while self._triggers:
@@ -156,8 +165,9 @@ class TriggerMixin(object):
             effect.post_save()
 
     def delete(self, *args, **kwargs):
-        for trigger in self.triggers:
-            if issubclass(trigger, ModelDeletedTrigger):
-                trigger(self).execute([])
+        if hasattr(self, 'triggers'):
+            for trigger in self.triggers.triggers:
+                if isinstance(trigger, ModelDeletedTrigger):
+                    BoundTrigger(self, trigger).execute([])
 
         return super(TriggerMixin, self).delete(*args, **kwargs)

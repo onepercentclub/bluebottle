@@ -41,20 +41,20 @@ class FundingEffectsTests(BluebottleTestCase):
     def test_generate_payouts_effect(self):
         effect = GeneratePayoutsEffect(self.funding)
         self.assertEqual(unicode(effect), 'Generate payouts, so that payouts can be approved')
-        effect.execute()
+        effect.post_save()
         self.assertEqual(self.funding.payouts.count(), 1)
 
     def test_delete_payouts_effect(self):
         PayoutFactory.create(activity=self.funding)
         effect = DeletePayoutsEffect(self.funding)
         self.assertEqual(unicode(effect), 'Delete all related payouts')
-        effect.execute()
+        effect.post_save()
         self.assertEqual(self.funding.payouts.count(), 0)
 
     def test_update_funding_amounts_effect(self):
         effect = UpdateFundingAmountsEffect(self.donation)
         self.assertEqual(unicode(effect), 'Update total amounts')
-        effect.execute()
+        effect.post_save()
         self.assertEqual(self.funding.amount_donated, Money(100, 'EUR'))
 
     def test_set_deadline_effect(self):
@@ -63,24 +63,24 @@ class FundingEffectsTests(BluebottleTestCase):
         self.assertIsNone(self.funding.deadline)
         effect = SetDeadlineEffect(self.funding)
         self.assertEqual(unicode(effect), 'Set deadline according to the duration')
-        effect.execute()
+        effect.pre_save()
         self.assertIsNotNone(self.funding.deadline)
 
     def test_generate_donation_wallpost_effect(self):
         PayoutFactory.create(activity=self.funding)
         effect = GenerateDonationWallpostEffect(self.donation)
         self.assertEqual(unicode(effect), 'Generate wallpost for donation')
-        effect.execute()
+        effect.post_save()
         self.assertEqual(Wallpost.objects.count(), 1)
 
     def test_remove_donation_wallpost_effect(self):
         PayoutFactory.create(activity=self.funding)
         effect = GenerateDonationWallpostEffect(self.donation)
-        effect.execute()
+        effect.post_save()
         self.assertEqual(Wallpost.objects.count(), 1)
         effect = RemoveDonationWallpostEffect(self.donation)
         self.assertEqual(unicode(effect), 'Delete wallpost for donation')
-        effect.execute()
+        effect.post_save()
         self.assertEqual(Wallpost.objects.count(), 0)
 
     def test_submit_connected_activities_effect(self):
@@ -88,14 +88,14 @@ class FundingEffectsTests(BluebottleTestCase):
         self.funding.save()
         effect = SubmitConnectedActivitiesEffect(self.payout_account)
         self.assertEqual(unicode(effect), 'Submit connected activities')
-        effect.execute()
+        effect.post_save()
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, 'submitted')
 
     def test_set_date_effect(self):
         effect = SetDateEffect('started')(self.funding)
         self.assertEqual(unicode(effect), 'Set started to current date')
-        effect.execute()
+        effect.pre_save()
         self.funding.refresh_from_db()
         self.assertAlmostEqual(self.funding.created, now(), delta=timedelta(seconds=60))
 
@@ -108,7 +108,7 @@ class FundingEffectsTests(BluebottleTestCase):
         self.assertIsNotNone(payout.date_approved)
         effect = ClearPayoutDatesEffect(payout)
         self.assertEqual(unicode(effect), 'Clear payout event dates')
-        effect.execute()
+        effect.pre_save()
         self.assertIsNone(payout.date_approved)
         self.assertIsNone(payout.date_started)
         self.assertIsNone(payout.date_completed)

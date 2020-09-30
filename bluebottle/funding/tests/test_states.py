@@ -442,6 +442,7 @@ class DonationStateMachineTests(BluebottleTestCase):
     def test_refund_unfollow(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
+
         self.assertTrue(self.funding.followers.filter(user=donation.user).exists())
         donation.payment.states.refund(save=True)
         self.assertFalse(self.funding.followers.filter(user=donation.user).exists())
@@ -459,7 +460,8 @@ class DonationStateMachineTests(BluebottleTestCase):
         payment.states.succeed(save=True)
         self.funding.states.succeed(save=True)
         with patch('bluebottle.funding_stripe.models.StripeSourcePayment.refund') as refund:
-            self.funding.states.refund(save=True)
+            self.funding.states.refund()
+
             refund.assert_called_once()
 
         payment.refresh_from_db()

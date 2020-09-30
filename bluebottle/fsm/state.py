@@ -10,6 +10,8 @@ def register(model_cls):
     def _register(state_machine_cls):
         if not hasattr(model_cls, '_state_machines'):
             model_cls._state_machines = {}
+        else:
+            model_cls._state_machines = dict(model_cls._state_machines)
 
         model_cls._state_machines[state_machine_cls.name] = state_machine_cls
         return state_machine_cls

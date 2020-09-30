@@ -1,8 +1,8 @@
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.effects import CreateOrganizer
+from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
 
 from bluebottle.assignments.effects import SetTimeSpent, ClearTimeSpent
 from bluebottle.assignments.messages import (
@@ -78,201 +78,181 @@ def is_full(effect):
 
 
 @register(Assignment)
-class InitiateTrigger(TransitionTrigger):
-    transition = AssignmentStateMachine.initiate
+class AssignmentTriggers(ActivityTriggers):
+    triggers = [
+        TransitionTrigger(
+            AssignmentStateMachine.initiate,
+            effects=[CreateOrganizer]
+        ),
 
-    effects = [CreateOrganizer]
-
-
-@register(Assignment)
-class SubmitAssignmentTrigger(TransitionTrigger):
-    transition = AssignmentStateMachine.submit
-
-    effects = [
-        TransitionEffect(
-            AssignmentStateMachine.auto_approve,
-            conditions=[
-                initiative_is_approved,
-                should_open
+        TransitionTrigger(
+            AssignmentStateMachine.submit,
+            effects=[
+                TransitionEffect(
+                    AssignmentStateMachine.auto_approve,
+                    conditions=[
+                        initiative_is_approved,
+                        should_open
+                    ]
+                ),
+                TransitionEffect(
+                    AssignmentStateMachine.expire,
+                    conditions=[should_finish, has_no_accepted_applicants]
+                ),
+                TransitionEffect(
+                    AssignmentStateMachine.succeed,
+                    conditions=[should_finish, has_accepted_applicants]
+                ),
             ]
+
         ),
-        TransitionEffect(
-            AssignmentStateMachine.expire,
-            conditions=[should_finish, has_no_accepted_applicants]
-        ),
-        TransitionEffect(
-            AssignmentStateMachine.succeed,
-            conditions=[should_finish, has_accepted_applicants]
-        ),
-    ]
 
-
-@register(Assignment)
-class StartAssignmentTrigger(TransitionTrigger):
-    transition = AssignmentStateMachine.start
-
-    effects = [
-        RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.activate),
-    ]
-
-
-@register(Assignment)
-class ApproveAssignmentTrigger(TransitionTrigger):
-    transition = AssignmentStateMachine.auto_approve
-
-    effects = [
-        RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
-        RelatedTransitionEffect('applicants', ApplicantStateMachine.reset),
-        TransitionEffect(
-            AssignmentStateMachine.expire,
-            conditions=[should_finish, has_no_accepted_applicants]
-        ),
-    ]
-
-
-@register(Assignment)
-class RejectAssignmentTrigger(TransitionTrigger):
-    transition = AssignmentStateMachine.reject
-
-    effects = [
-        RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-        NotificationEffect(AssignmentRejectedMessage),
-    ]
-
-
-@register(Assignment)
-class CancelAssignmentTrigger(TransitionTrigger):
-    transition = AssignmentStateMachine.cancel
-
-    effects = [
-        RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-        RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.fail),
-        NotificationEffect(AssignmentCancelledMessage),
-    ]
-
-
-@register(Assignment)
-class ExpireAssignmentTrigger(TransitionTrigger):
-    transition = AssignmentStateMachine.expire
-
-    effects = [
-        NotificationEffect(AssignmentExpiredMessage),
-        RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-    ]
-
-
-@register(Assignment)
-class RescheduleAssignmentTrigger(TransitionTrigger):
-    transition = AssignmentStateMachine.reschedule
-
-    effects = [
-        RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.reaccept),
-    ]
-
-
-@register(Assignment)
-class SuceedAssignmentTrigger(TransitionTrigger):
-    transition = AssignmentStateMachine.succeed
-
-    effects = [
-        RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.succeed),
-        NotificationEffect(AssignmentCompletedMessage)
-    ]
-
-
-@register(Assignment)
-class RestoreAssignmentTrigger(TransitionTrigger):
-    transition = AssignmentStateMachine.restore
-    effects = [
-        RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
-        RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.reset)
-
-    ]
-
-
-@register(Assignment)
-class DateChangedTrigger(ModelChangedTrigger):
-    field = 'date'
-
-    effects = [
-        NotificationEffect(
-            AssignmentDeadlineChanged,
-            conditions=[
-                in_the_future,
-                has_deadline
-            ]
-        ),
-        NotificationEffect(
-            AssignmentDateChanged,
-            conditions=[
-                in_the_future,
-                is_on_date
-            ]
-        ),
-        TransitionEffect(
-            AssignmentStateMachine.succeed,
-            conditions=[
-                should_finish,
-                has_accepted_applicants
-            ]
-        ),
-        TransitionEffect(
-            AssignmentStateMachine.expire,
-            conditions=[
-                should_finish,
-                has_no_accepted_applicants
-            ]
-        ),
-        TransitionEffect(
-            AssignmentStateMachine.reschedule,
-            conditions=[
-                should_open
-            ]
-        ),
-        TransitionEffect(
-            AssignmentStateMachine.lock,
-            conditions=[
-                is_full
-            ]
-        ),
-    ]
-
-
-@register(Assignment)
-class RegistrationDeadlineChangedTrigger(ModelChangedTrigger):
-    field = 'registration_deadline'
-
-    effects = [
-        TransitionEffect(
-            AssignmentStateMachine.reschedule,
-            conditions=[
-                should_open
-            ]
-        ),
-        TransitionEffect(
+        TransitionTrigger(
             AssignmentStateMachine.start,
-            conditions=[
-                should_start,
-                has_accepted_applicants
+            effects=[
+                RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.activate),
             ]
         ),
-        TransitionEffect(
+
+        TransitionTrigger(
+            AssignmentStateMachine.auto_approve,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
+                RelatedTransitionEffect('applicants', ApplicantStateMachine.reset),
+                TransitionEffect(
+                    AssignmentStateMachine.expire,
+                    conditions=[should_finish, has_no_accepted_applicants]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            AssignmentStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                NotificationEffect(AssignmentRejectedMessage),
+            ]
+        ),
+
+        TransitionTrigger(
+            AssignmentStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.fail),
+                NotificationEffect(AssignmentCancelledMessage),
+            ]
+        ),
+
+        TransitionTrigger(
             AssignmentStateMachine.expire,
-            conditions=[
-                should_start,
-                has_no_accepted_applicants
+            effects=[
+                NotificationEffect(AssignmentExpiredMessage),
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
             ]
         ),
-    ]
 
+        TransitionTrigger(
+            AssignmentStateMachine.reschedule,
+            effects=[
+                RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.reaccept),
+            ]
+        ),
 
-@register(Assignment)
-class CapacityChangedTrigger(ModelChangedTrigger):
-    field = 'capacity'
+        TransitionTrigger(
+            AssignmentStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.succeed),
+                NotificationEffect(AssignmentCompletedMessage)
+            ]
+        ),
 
-    effects = [
-        TransitionEffect(AssignmentStateMachine.reopen, conditions=[is_not_full]),
-        TransitionEffect(AssignmentStateMachine.lock, conditions=[is_full]),
+        TransitionTrigger(
+            AssignmentStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
+                RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.reset)
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'date',
+            effects=[
+                NotificationEffect(
+                    AssignmentDeadlineChanged,
+                    conditions=[
+                        in_the_future,
+                        has_deadline
+                    ]
+                ),
+                NotificationEffect(
+                    AssignmentDateChanged,
+                    conditions=[
+                        in_the_future,
+                        is_on_date
+                    ]
+                ),
+                TransitionEffect(
+                    AssignmentStateMachine.succeed,
+                    conditions=[
+                        should_finish,
+                        has_accepted_applicants
+                    ]
+                ),
+                TransitionEffect(
+                    AssignmentStateMachine.expire,
+                    conditions=[
+                        should_finish,
+                        has_no_accepted_applicants
+                    ]
+                ),
+                TransitionEffect(
+                    AssignmentStateMachine.reschedule,
+                    conditions=[
+                        should_open
+                    ]
+                ),
+                TransitionEffect(
+                    AssignmentStateMachine.lock,
+                    conditions=[
+                        is_full
+                    ]
+                ),
+            ]
+        ),
+        ModelChangedTrigger(
+            'registration_deadline',
+            effects=[
+                TransitionEffect(
+                    AssignmentStateMachine.reschedule,
+                    conditions=[
+                        should_open
+                    ]
+                ),
+                TransitionEffect(
+                    AssignmentStateMachine.start,
+                    conditions=[
+                        should_start,
+                        has_accepted_applicants
+                    ]
+                ),
+                TransitionEffect(
+                    AssignmentStateMachine.expire,
+                    conditions=[
+                        should_start,
+                        has_no_accepted_applicants
+                    ]
+                ),
+            ]
+        ),
+        ModelChangedTrigger(
+            'capacity',
+
+            effects=[
+                TransitionEffect(AssignmentStateMachine.reopen, conditions=[is_not_full]),
+                TransitionEffect(AssignmentStateMachine.lock, conditions=[is_full]),
+            ]
+        )
+
     ]
 
 
@@ -289,6 +269,7 @@ def has_no_time_spent(effect):
 def assignment_will_become_full(effect):
     """task will be full"""
     activity = effect.instance.activity
+
     return activity.capacity == len(activity.accepted_applicants) + 1
 
 
@@ -314,143 +295,136 @@ def assignment_will_be_empty(effect):
 
 
 @register(Applicant)
-class InitiateApplicantTransition(TransitionTrigger):
-    transition = ApplicantStateMachine.initiate
-
-    effects = [
-        NotificationEffect(AssignmentApplicationMessage),
-        FollowActivityEffect
-    ]
-
-
-@register(Applicant)
-class AcceptApplicantTransition(TransitionTrigger):
-    transition = ApplicantStateMachine.accept
-
-    effects = [
-        TransitionEffect(ApplicantStateMachine.succeed, conditions=[assignment_is_finished]),
-        RelatedTransitionEffect('activity', AssignmentStateMachine.lock, conditions=[assignment_will_become_full]),
-        RelatedTransitionEffect(
-            'activity',
-            AssignmentStateMachine.succeed,
-            conditions=[assignment_is_finished]
-        ),
-        NotificationEffect(ApplicantAcceptedMessage)
-    ]
-
-
-@register(Applicant)
-class ReacceptApplicantTransition(TransitionTrigger):
-    transition = ApplicantStateMachine.reaccept
-
-    effects = [
-        RelatedTransitionEffect('activity', AssignmentStateMachine.lock, conditions=[assignment_will_become_full]),
-        ClearTimeSpent,
-    ]
-
-
-@register(Applicant)
-class RejectApplicantTransition(TransitionTrigger):
-    transition = ApplicantStateMachine.reject
-
-    effects = [
-        RelatedTransitionEffect('activity', AssignmentStateMachine.reopen),
-        NotificationEffect(ApplicantRejectedMessage),
-        UnFollowActivityEffect
-    ]
-
-
-@register(Applicant)
-class WithdrawApplicantTransition(TransitionTrigger):
-    transition = ApplicantStateMachine.withdraw
-
-    effects = [
-        UnFollowActivityEffect
-    ]
-
-
-@register(Applicant)
-class ReapplyApplicantTransition(TransitionTrigger):
-    transition = ApplicantStateMachine.reapply
-
-    effects = [
-        FollowActivityEffect,
-        NotificationEffect(AssignmentApplicationMessage)
-    ]
-
-
-@register(Applicant)
-class SucceedApplicantTransition(TransitionTrigger):
-    transition = ApplicantStateMachine.succeed
-
-    effects = [
-        SetTimeSpent
-    ]
-
-
-@register(Applicant)
-class MarkAbsentApplicantTransition(TransitionTrigger):
-    transition = ApplicantStateMachine.mark_absent
-
-    effects = [
-        ClearTimeSpent,
-        RelatedTransitionEffect(
-            'activity', AssignmentStateMachine.cancel,
-            conditions=[assignment_is_finished, assignment_will_be_empty]
-        ),
-        UnFollowActivityEffect
-    ]
-
-
-@register(Applicant)
-class MarkPresentApplicantTransition(TransitionTrigger):
-    transition = ApplicantStateMachine.mark_present
-
-    effects = [
-        SetTimeSpent,
-        RelatedTransitionEffect(
-            'activity', AssignmentStateMachine.succeed,
-            conditions=[assignment_is_finished]
-        ),
-        FollowActivityEffect
-    ]
-
-
-@register(Applicant)
-class ResetApplicantTransition(TransitionTrigger):
-    transition = ApplicantStateMachine.reset
-
-    effects = [ClearTimeSpent]
-
-
-@register(Applicant)
-class TimeSpentChangedTrigger(ModelChangedTrigger):
-    field = 'time_spent'
-
-    effects = [
-        TransitionEffect(ApplicantStateMachine.mark_present, conditions=[has_time_spent]),
-        TransitionEffect(ApplicantStateMachine.mark_absent, conditions=[has_no_time_spent]),
-    ]
-
-
-@register(Applicant)
-class ApplicantDeletedTrigger(ModelDeletedTrigger):
-    title = _('delete this participant')
-    effects = [
-        RelatedTransitionEffect(
-            'activity',
-            AssignmentStateMachine.cancel,
-            conditions=[
-                assignment_is_finished,
-                assignment_will_be_empty
+class ApplicantTriggers(ContributionTriggers):
+    triggers = [
+        TransitionTrigger(
+            ApplicantStateMachine.initiate,
+            effects=[
+                NotificationEffect(AssignmentApplicationMessage),
+                FollowActivityEffect
             ]
         ),
-        RelatedTransitionEffect(
-            'activity',
-            AssignmentStateMachine.reopen,
-            conditions=[
-                assignment_will_become_open,
-                assignment_is_not_finished
-            ],
+
+        TransitionTrigger(
+            ApplicantStateMachine.accept,
+            effects=[
+                TransitionEffect(ApplicantStateMachine.succeed, conditions=[assignment_is_finished]),
+                RelatedTransitionEffect(
+                    'activity',
+                    AssignmentStateMachine.lock,
+                    conditions=[assignment_will_become_full]
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    AssignmentStateMachine.succeed,
+                    conditions=[assignment_is_finished]
+                ),
+                NotificationEffect(ApplicantAcceptedMessage)
+            ]
         ),
+
+        TransitionTrigger(
+            ApplicantStateMachine.reaccept,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    AssignmentStateMachine.lock,
+                    conditions=[assignment_will_become_full]
+                ),
+                ClearTimeSpent,
+            ]
+        ),
+
+        TransitionTrigger(
+            ApplicantStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect('activity', AssignmentStateMachine.reopen),
+                NotificationEffect(ApplicantRejectedMessage),
+                UnFollowActivityEffect
+            ]
+        ),
+
+
+        TransitionTrigger(
+            ApplicantStateMachine.withdraw,
+            effects=[
+                UnFollowActivityEffect
+            ]
+        ),
+
+        TransitionTrigger(
+            ApplicantStateMachine.reapply,
+            effects=[
+                FollowActivityEffect,
+                NotificationEffect(AssignmentApplicationMessage)
+            ]
+        ),
+
+        TransitionTrigger(
+            ApplicantStateMachine.succeed,
+            effects=[
+                SetTimeSpent
+            ]
+        ),
+
+        TransitionTrigger(
+            ApplicantStateMachine.mark_absent,
+            effects=[
+                ClearTimeSpent,
+                RelatedTransitionEffect(
+                    'activity', AssignmentStateMachine.cancel,
+                    conditions=[assignment_is_finished, assignment_will_be_empty]
+                ),
+                UnFollowActivityEffect
+            ]
+        ),
+
+        TransitionTrigger(
+            ApplicantStateMachine.mark_present,
+            effects=[
+                SetTimeSpent,
+                RelatedTransitionEffect(
+                    'activity', AssignmentStateMachine.succeed,
+                    conditions=[assignment_is_finished]
+                ),
+                FollowActivityEffect
+            ]
+        ),
+
+        TransitionTrigger(
+            ApplicantStateMachine.reset,
+            effects=[
+                ClearTimeSpent,
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'time_spent',
+            effects=[
+                TransitionEffect(ApplicantStateMachine.mark_present, conditions=[has_time_spent]),
+                TransitionEffect(ApplicantStateMachine.mark_absent, conditions=[has_no_time_spent]),
+            ]
+        ),
+
+        ModelDeletedTrigger(
+            effects=[
+
+                RelatedTransitionEffect(
+                    'activity',
+                    AssignmentStateMachine.cancel,
+                    conditions=[
+                        assignment_is_finished,
+                        assignment_will_be_empty
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    AssignmentStateMachine.reopen,
+                    conditions=[
+                        assignment_will_become_open,
+                        assignment_is_not_finished
+                    ],
+                ),
+            ]
+        )
     ]

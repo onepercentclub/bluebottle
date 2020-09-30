@@ -18,7 +18,6 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
-@mock.patch('bluebottle.funding.models.Funding.triggers', [])
 class FundingScheduledTasksTestCase(BluebottleTestCase):
 
     def setUp(self):
@@ -66,6 +65,7 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
             funding_tasks()
         with LocalTenant(tenant, clear_tenant=True):
             self.funding.refresh_from_db()
+
         self.assertEqual(self.funding.status, 'succeeded')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(

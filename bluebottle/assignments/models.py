@@ -180,6 +180,4 @@ class Applicant(Contribution):
         return self.user.full_name
 
 
-from bluebottle.assignments.states import *  # noqa
-from bluebottle.assignments.triggers import *  # noqa
 from bluebottle.assignments.periodic_tasks import *  # noqa

@@ -55,10 +55,10 @@ class AssignmentStartDeadlineTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect(AssignmentStateMachine.start, conditions=[
-            has_accepted_applicants
+            has_new_or_accepted_applicants
         ]),
         TransitionEffect(AssignmentStateMachine.expire, conditions=[
-            has_no_accepted_applicants
+            has_no_new_or_accepted_applicants
         ]),
     ]
 

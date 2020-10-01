@@ -23,8 +23,6 @@ class AdminPermissionsTest(BluebottleTestCase):
         self.user.save()
 
         # Login user
-        import ipdb
-        ipdb.set_trace()
         self.client.login(
             request=RequestFactory().post('/'), email=self.user.email, password='testing'
         )

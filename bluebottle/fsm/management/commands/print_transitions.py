@@ -2,6 +2,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.core.management.base import BaseCommand
 from django.utils.module_loading import import_string
 
+from bluebottle.fsm.triggers import TransitionTrigger
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.events.models import Event, Participant
 from bluebottle.funding.models import Donation, Funding
@@ -117,6 +118,12 @@ class Command(BaseCommand):
             str = u"<tr><td>{}</td><td>{}</td><td><ul>{}</ul></td>" \
                   u"<td>{}</td><td>{}</td><td><ul>{}</ul></td><td><ul>{}</ul></td></tr>"
 
+            triggers = [
+                trigger for trigger in instance.triggers.triggers
+                if isinstance(trigger, TransitionTrigger) and trigger.transition == transition
+            ]
+            effects = sum([trigger.effects for trigger in triggers], [])
+
             text += str.format(
                 transition.name,
                 transition.description,
@@ -131,12 +138,16 @@ class Command(BaseCommand):
                 u"".join(
                     u"<li>{}</li>".format(effect(instance).to_html())
                     for effect
-                    in transition.effects
+                    in effects
                 )
             )
         text += u"</table>"
 
-        if model.triggers:
+        triggers = [
+            trigger for trigger in model.triggers.triggers
+            if not isinstance(trigger, TransitionTrigger)
+        ]
+        if triggers:
             text += u"<h2>Triggers</h2>"
             text += u"<em>These are events that get triggered when the instance changes, " \
                     u"other then through a transition. " \
@@ -145,14 +156,14 @@ class Command(BaseCommand):
                     u"<tr><th>When</th>" \
                     u"<th>Effects</th></tr>"
 
-            for trigger in model.triggers:
+            for trigger in triggers:
                 text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
-                    unicode(trigger(instance)),
-                    "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in trigger(instance).effects])
+                    unicode(trigger),
+                    "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in trigger.effects])
                 )
             text += u"</table>"
 
-        if model.triggers:
+        if model.periodic_tasks:
             text += u"<h2>Periodic tasks</h2>"
             text += u"<em>These are events that get triggered when certain dates are passed. " \
                     u"Every 15 minutes the system checks for passing deadlines, registration dates and such.</em>"

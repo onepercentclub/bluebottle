@@ -1,3 +1,5 @@
+from collections import Iterable
+
 from django.utils.translation import ugettext_lazy as _
 from django.template.loader import render_to_string
 
@@ -129,11 +131,11 @@ class BaseRelatedTransitionEffect(Effect):
         relation = getattr(self.instance, self.relation)
 
         try:
-            self.instances = list(relation.all())
+            self.instances = relation.all()
         except AttributeError:
-            try:
-                self.instances = list(relation)
-            except TypeError:
+            if isinstance(relation, Iterable):
+                self.instances = relation
+            else:
                 self.instances = [relation]
 
     @property
@@ -167,12 +169,12 @@ class BaseRelatedTransitionEffect(Effect):
     def to_html(self):
         if self.conditions:
             return _('{transition} related {object} if {conditions}').format(
-                transition=self.transition_effect_class.name,
+                transition=self.transition_effect_class.transition.name,
                 object=unicode(self.relation),
                 conditions=" and ".join([c.__doc__ for c in self.conditions])
             )
         return _('{transition} related {object}').format(
-            transition=self.transition_effect_class.name,
+            transition=self.transition_effect_class.transition.name,
             object=unicode(self.relation)
         )
 

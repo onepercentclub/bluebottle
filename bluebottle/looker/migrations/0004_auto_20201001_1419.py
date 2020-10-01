@@ -9,7 +9,6 @@ from django.core.management import call_command
 def generate_looker_embeds(apps, schema_editor):
     LookerEmbed = apps.get_model('looker', 'LookerEmbed')
     LookerEmbed.objects.filter(looker_id=67).update(looker_id=79)
-    import ipdb; ipdb.set_trace()
 
 
 def dummy(apps, schema_editor):

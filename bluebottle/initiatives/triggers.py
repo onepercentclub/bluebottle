@@ -3,9 +3,6 @@ from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.states import ActivityStateMachine
-from bluebottle.assignments.states import AssignmentStateMachine
-from bluebottle.funding.states import FundingStateMachine
-from bluebottle.events.states import EventStateMachine
 
 from bluebottle.initiatives.messages import (
     InitiativeRejectedOwnerMessage, InitiativeApprovedOwnerMessage,
@@ -28,8 +25,10 @@ class InitiativeTriggers(TriggerManager):
         TransitionTrigger(
             ReviewStateMachine.approve,
             effects=[
-                RelatedTransitionEffect('activities', AssignmentStateMachine.auto_approve),
-                RelatedTransitionEffect('activities', EventStateMachine.auto_approve),
+                RelatedTransitionEffect(
+                    'activities',
+                    ActivityStateMachine.auto_approve,
+                ),
                 NotificationEffect(InitiativeApprovedOwnerMessage)
             ]
         ),
@@ -37,9 +36,7 @@ class InitiativeTriggers(TriggerManager):
         TransitionTrigger(
             ReviewStateMachine.reject,
             effects=[
-                RelatedTransitionEffect('activities', AssignmentStateMachine.reject),
-                RelatedTransitionEffect('activities', EventStateMachine.reject),
-                RelatedTransitionEffect('activities', FundingStateMachine.reject),
+                RelatedTransitionEffect('activities', ActivityStateMachine.reject),
                 NotificationEffect(InitiativeRejectedOwnerMessage)
             ]
         ),
@@ -47,9 +44,7 @@ class InitiativeTriggers(TriggerManager):
         TransitionTrigger(
             ReviewStateMachine.cancel,
             effects=[
-                RelatedTransitionEffect('activities', AssignmentStateMachine.cancel),
-                RelatedTransitionEffect('activities', EventStateMachine.cancel),
-                RelatedTransitionEffect('activities', FundingStateMachine.cancel),
+                RelatedTransitionEffect('activities', ActivityStateMachine.cancel),
                 NotificationEffect(InitiativeCancelledOwnerMessage)
             ]
         ),
@@ -64,9 +59,7 @@ class InitiativeTriggers(TriggerManager):
         TransitionTrigger(
             ReviewStateMachine.restore,
             effects=[
-                RelatedTransitionEffect('activities', AssignmentStateMachine.restore),
-                RelatedTransitionEffect('activities', EventStateMachine.restore),
-                RelatedTransitionEffect('activities', FundingStateMachine.restore),
+                RelatedTransitionEffect('activities', ActivityStateMachine.restore),
             ]
         ),
     ]

@@ -72,6 +72,8 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     follows = GenericRelation(Follow, object_id_field='instance_id')
     wallposts = GenericRelation('wallposts.Wallpost', related_query_name='activity_wallposts')
 
+    auto_approve = True
+
     @property
     def stats(self):
         return {}

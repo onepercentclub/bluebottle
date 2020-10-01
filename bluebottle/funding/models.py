@@ -138,6 +138,8 @@ class Funding(Activity):
 
     validators = [KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator]
 
+    auto_approve = False
+
     @property
     def required_fields(self):
         fields = ['title', 'description', 'target', 'bank_account']

@@ -85,6 +85,9 @@ class ActivityStateMachine(ModelStateMachine):
         """user is the owner"""
         return user == self.instance.owner
 
+    def should_auto_approve(self):
+        return self.instance.auto_approve
+
     initiate = Transition(
         EmptyState(),
         draft,
@@ -142,6 +145,7 @@ class ActivityStateMachine(ModelStateMachine):
         open,
         name=_('Approve'),
         automatic=True,
+        conditions=[should_auto_approve],
         description=_(
             "The activity will be visible in the frontend and people can apply to "
             "the activity."

@@ -15,23 +15,6 @@ class EventStateMachine(ActivityStateMachine):
         _('The event is taking place and people can\'t join any more.')
     )
 
-    cancel = Transition(
-        [
-            ActivityStateMachine.open,
-            running,
-            full,
-            ActivityStateMachine.succeeded,
-        ],
-        ActivityStateMachine.cancelled,
-        name=_('Cancel'),
-        description=_(
-            'Cancel if the event will not be executed. The activity manager will not be '
-            'able to edit the event and it won\'t show up on the search page in the front end. '
-            'The event will still be available in the back office and appear in your reporting.'
-        ),
-        automatic=False,
-    )
-
     lock = Transition(
         [
             ActivityStateMachine.open,

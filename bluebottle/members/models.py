@@ -182,7 +182,7 @@ class Member(BlueBottleBaseUser):
         return initials
 
     def __str__(self):
-        return "{} | {}".format(self.full_name, self.email)
+        return u"{} | {}".format(self.full_name, self.email)
 
 
 class UserActivity(models.Model):

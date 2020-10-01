@@ -229,7 +229,11 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
     def setUp(self):
         super(WallpostReactionApiIntegrationTest, self).setUp()
 
-        self.some_wallpost = TextWallpostFactory.create()
+        self.manager = BlueBottleUserFactory.create()
+        self.manager_token = "JWT {0}".format(
+            self.manager.get_jwt_token())
+        self.event = EventFactory.create(owner=self.manager)
+        self.some_wallpost = TextWallpostFactory.create(content_object=self.event)
         self.another_wallpost = TextWallpostFactory.create()
 
         self.some_user = BlueBottleUserFactory.create(
@@ -246,12 +250,17 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         self.wallpost_url = reverse('wallpost_list')
         self.text_wallpost_url = reverse('text_wallpost_list')
 
-    def test_wallpost_reaction_crud(self):
-        """
-        Tests for creating, retrieving, updating and deleting a reaction to a Initiative Wallpost.
-        """
+        response = self.client.post(
+            self.wallpost_reaction_url,
+            {
+                'text': 'Dit is een test',
+                'wallpost': self.some_wallpost.id
+            },
+            token=self.some_token
+        )
+        self.reaction_detail_url = reverse('wallpost_reaction_detail', kwargs={'pk': response.data['id']})
 
-        # Create a Reaction
+    def test_wallpost_reaction_create(self):
         reaction_text = "Hear! Hear!"
         response = self.client.post(self.wallpost_reaction_url,
                                     {'text': reaction_text,
@@ -262,63 +271,45 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
             response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertTrue(reaction_text in response.data['text'])
 
-        # Retrieve the created Reaction
-        reaction_detail_url = reverse(
-            'wallpost_reaction_detail', kwargs={'pk': response.data['id']})
-        response = self.client.get(reaction_detail_url)
-        self.assertEqual(
-            response.status_code, status.HTTP_200_OK, response.data)
-        self.assertTrue(reaction_text in response.data['text'])
+    def test_wallpost_reaction_retrieve(self):
+        response = self.client.get(self.reaction_detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertTrue('Dit is een test' in response.data['text'])
 
-        # Update the created Reaction by author.
+    def test_wallpost_reaction_update(self):
         new_reaction_text = 'HEAR!!! HEAR!!!'
-        response = self.client.put(reaction_detail_url,
-                                   {'text': new_reaction_text,
-                                    'wallpost': self.some_wallpost.id},
-                                   token=self.some_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_200_OK, response.data)
+        response = self.client.put(
+            self.reaction_detail_url,
+            {
+                'text': new_reaction_text,
+                'wallpost': self.some_wallpost.id
+            },
+            token=self.some_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertTrue(new_reaction_text in response.data['text'])
 
-        # switch to another user
-        self.client.logout()
+    def test_wallpost_reaction_retrieve_other_user(self):
+        response = self.client.get(self.reaction_detail_url, token=self.another_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertTrue('Dit is een test' in response.data['text'])
 
-        # Retrieve the created Reaction by non-author should work
-        response = self.client.get(
-            reaction_detail_url, token=self.another_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_200_OK, response.data)
-        self.assertTrue(new_reaction_text in response.data['text'])
+    def test_wallpost_reaction_delete(self):
+        response = self.client.delete(self.reaction_detail_url, token=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        # Delete Reaction by non-author should not work
-        self.client.logout()
-        response = self.client.delete(
-            reaction_detail_url, token=self.another_token)
+    def test_wallpost_reaction_delete_another_user(self):
+        response = self.client.delete(self.reaction_detail_url, token=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        # Create a Reaction by another user
-        another_reaction_text = "I'm not so sure..."
-        response = self.client.post(self.wallpost_reaction_url,
-                                    {'text': another_reaction_text,
-                                     'wallpost': self.some_wallpost.id},
-                                    token=self.another_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_201_CREATED, response.data)
-        # Only check the substring because the single quote in "I'm" is escaped.
-        # https://docs.djangoinitiative.com/en/dev/topics/templates/#automatic-html-escaping
-        self.assertTrue('not so sure' in response.data['text'])
+    def test_wallpost_reaction_delete_wall_owner(self):
+        response = self.client.delete(self.reaction_detail_url, token=self.manager_token)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        # Delete Reaction by author should work
-        response = self.client.delete(
-            reaction_detail_url, token=self.some_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_204_NO_CONTENT, response)
-
-        # Retrieve the deleted Reaction should fail
-        response = self.client.get(
-            reaction_detail_url, token=self.another_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_404_NOT_FOUND, response.data)
+    def test_wallpost_reaction_delete_then_retrieve(self):
+        response = self.client.delete(self.reaction_detail_url, token=self.some_token)
+        response = self.client.get(self.reaction_detail_url, token=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
 
     def test_reactions_on_multiple_objects(self):
         """

@@ -1,9 +1,9 @@
-from builtins import object
 import functools
 
 import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
+from builtins import object
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -22,6 +22,7 @@ from django.utils.html import format_html
 from django.utils.http import int_to_base36
 from django.utils.translation import ugettext_lazy as _
 from permissions_widget.forms import PermissionSelectMultipleField
+from rest_framework.authtoken.models import Token
 
 from bluebottle.assignments.models import Applicant
 from bluebottle.bb_accounts.utils import send_welcome_mail
@@ -568,3 +569,13 @@ class GroupsAdmin(GroupAdmin):
 
 admin.site.unregister(Group)
 admin.site.register(Group, GroupsAdmin)
+
+
+class TokenAdmin(admin.ModelAdmin):
+    raw_id_fields = ('user',)
+    readonly_fields = ('key',)
+    fields = ('user', 'key')
+
+
+admin.site.unregister(Token)
+admin.site.register(Token, TokenAdmin)

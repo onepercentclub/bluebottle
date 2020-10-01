@@ -31,7 +31,7 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView, ListAPIView, TranslatedApiViewMixin
+    CreateAPIView, ListAPIView, TranslatedApiViewMixin, RetrieveAPIView
 )
 
 
@@ -174,6 +174,12 @@ class ThemeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     queryset = ProjectTheme.objects.filter(disabled=False)
     permission_classes = [TenantConditionalOpenClose, ]
     pagination_class = ThemePagination
+
+
+class ThemeDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
+    serializer_class = ThemeSerializer
+    queryset = ProjectTheme.objects.filter(disabled=False)
+    permission_classes = [TenantConditionalOpenClose, ]
 
 
 from collections import namedtuple

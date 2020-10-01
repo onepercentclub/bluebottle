@@ -21,7 +21,7 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, PrivateFileView,
-    ListAPIView, TranslatedApiViewMixin
+    ListAPIView, TranslatedApiViewMixin, RetrieveAPIView
 )
 
 
@@ -137,3 +137,9 @@ class SkillList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     queryset = Skill.objects.filter(disabled=False)
     permission_classes = [TenantConditionalOpenClose, ]
     pagination_class = SkillPagination
+
+
+class SkillDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
+    serializer_class = SkillSerializer
+    queryset = Skill.objects.filter(disabled=False)
+    permission_classes = [TenantConditionalOpenClose, ]

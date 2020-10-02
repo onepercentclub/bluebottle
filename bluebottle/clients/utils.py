@@ -244,7 +244,6 @@ def get_public_properties(request):
                 'notifications': get_platform_settings('notifications.NotificationPlatformSettings'),
                 'translations': get_platform_settings('utils.TranslationPlatformSettings'),
                 'currencies': get_currency_settings(),
-                'analytics': get_platform_settings('analytics.AnalyticsPlatformSettings'),
                 'members': get_platform_settings('members.MemberPlatformSettings'),
             }
         }

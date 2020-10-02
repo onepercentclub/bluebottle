@@ -34,7 +34,6 @@ urlpatterns = [
         password_reset_confirm,
         {'post_reset_redirect': '/admin'}, name='password_reset_confirm'),
     url(r'^admin/exportdb/', include('bluebottle.exports.urls')),
-    url(r'^admin/analytics/', include('bluebottle.analytics.urls')),
     url(r'^admin/', include(admin.site.urls)),
 
     url(r'^admin/utils/tinymce/', include('tinymce.urls')),

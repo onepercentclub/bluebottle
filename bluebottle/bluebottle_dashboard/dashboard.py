@@ -10,7 +10,6 @@ from jet.dashboard.modules import LinkList
 
 from bluebottle.activities.dashboard import RecentActivities
 from bluebottle.assignments.dashboard import RecentAssignments
-from bluebottle.clients import properties
 from bluebottle.events.dashboard import RecentEvents
 from bluebottle.funding.dashboard import RecentFunding, PayoutsReadForApprovalDashboardModule
 from bluebottle.initiatives.dashboard import RecentInitiatives, MyReviewingInitiatives
@@ -54,12 +53,6 @@ class CustomIndexDashboard(Dashboard):
                     'url': reverse_lazy('exportdb_export'),
                 },
             ]
-            if properties.REPORTING_BACKOFFICE_ENABLED:
-                metrics_children.append({
-                    'title': _('Download report'),
-                    'url': reverse_lazy('report-export'),
-                })
-
             self.children.append(LinkList(
                 _('Export Metrics'),
                 children=metrics_children

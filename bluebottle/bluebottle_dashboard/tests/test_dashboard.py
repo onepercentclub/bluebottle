@@ -1,7 +1,6 @@
 # coding=utf-8
 
 from django.test.client import RequestFactory
-from django.test.utils import override_settings
 from jet.dashboard.dashboard import DefaultAppIndexDashboard
 from tenant_schemas.urlresolvers import reverse
 
@@ -26,17 +25,6 @@ class MainDashboardTest(BluebottleAdminTestCase):
         self.assertContains(response, 'Recently submitted events')
         self.assertContains(response, 'Recently joined users')
         self.assertContains(response, 'Export metrics')
-        # Stand settings don't show export options
-        self.assertNotContains(response, 'Download report')
-        self.assertNotContains(response, 'Request complete participation metrics')
-
-    @override_settings(REPORTING_BACKOFFICE_ENABLED=True, PARTICIPATION_BACKOFFICE_ENABLED=True)
-    def test_main_dashboard_export_options(self):
-        # Override settings to show export options
-        response = self.client.get(self.admin_url)
-        self.assertContains(response, 'Download report')
-        # Get rid of this
-        self.assertNotContains(response, 'Request complete participation metrics')
 
 
 class CustomAppDashboardTest(BluebottleAdminTestCase):

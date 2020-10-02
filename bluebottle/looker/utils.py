@@ -1,4 +1,5 @@
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import object
 import binascii
@@ -68,7 +69,7 @@ class LookerSSOEmbed(object):
     @property
     def url(self):
         schema_name = connection.tenant.schema_name
-        fiscal_month_offset = AnalyticsPlatformSettings.objects.get().fiscal_month_offset
+        analytics_settings = AnalyticsPlatformSettings.objects.get()
 
         params = OrderedDict([
             ('nonce', self.nonce.decode()),
@@ -84,7 +85,8 @@ class LookerSSOEmbed(object):
             ('external_group_id', 'Back-office Users'),
             ('user_attributes', {
                 'tenant': schema_name,
-                'fiscal_month_offset': fiscal_month_offset,
+                'fiscal_month_offset': analytics_settings.fiscal_month_offset,
+                'user_base': analytics_settings.user_base,
                 'language': properties.LANGUAGE_CODE,
             }),
             ('force_logout_login', True),

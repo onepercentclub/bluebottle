@@ -7,6 +7,7 @@ from builtins import object
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.admin.sites import NotRegistered
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
@@ -577,5 +578,8 @@ class TokenAdmin(admin.ModelAdmin):
     fields = ('user', 'key')
 
 
-admin.site.unregister(Token)
+try:
+    admin.site.unregister(Token)
+except NotRegistered:
+    pass
 admin.site.register(Token, TokenAdmin)

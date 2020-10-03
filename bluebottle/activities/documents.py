@@ -1,6 +1,7 @@
 from builtins import str
 from builtins import object
-from django_elasticsearch_dsl import DocType, fields
+
+from bluebottle.initiatives.documents import DocType, fields
 
 from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.activities.models import Activity

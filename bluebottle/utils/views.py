@@ -28,7 +28,10 @@ from bluebottle.utils.permissions import ResourcePermission
 from .models import Language
 from .serializers import LanguageSerializer
 
-mime = magic.Magic(mime=True)
+try:
+    mime = magic.Magic(mime=True)
+except TypeError:
+    mime = magic.Magic()
 
 
 class TagList(views.APIView):

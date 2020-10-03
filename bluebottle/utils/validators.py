@@ -21,7 +21,10 @@ from localflavor.nl.forms import NLZipCodeField
 logger = logging.getLogger(__name__)
 
 
-mime = magic.Magic(mime=True)
+try:
+    mime = magic.Magic(mime=True)
+except TypeError:
+    mime = magic.Magic()
 
 # Can safely add more post code form fields here.
 postal_code_mapping = {

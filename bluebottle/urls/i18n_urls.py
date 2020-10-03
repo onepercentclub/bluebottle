@@ -1,3 +1,4 @@
+from django import VERSION
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.core.urlresolvers import reverse_lazy
@@ -16,6 +17,13 @@ except ImportError:
     password_reset_confirm = PasswordResetConfirmView.as_view()
 
 admin.autodiscover()
+
+
+def dj1_include_with_namespace(dotted, namespace):
+    if VERSION >= (2, 0):
+        return include(dotted)
+    else:
+        return include(dotted, namespace)
 
 
 urlpatterns = [
@@ -46,7 +54,7 @@ urlpatterns = [
 
     # account login/logout, password reset, and password change
     url(r'^accounts/',
-        include('django.contrib.auth.urls', namespace='accounts')),
+        dj1_include_with_namespace('django.contrib.auth.urls', namespace='accounts')),
 
     url(r'^admin/summernote/', include('django_summernote.urls')),
     url(r'^admin', RedirectView.as_view(url=reverse_lazy('admin:index')), name='admin-slash'),

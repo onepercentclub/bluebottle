@@ -5,10 +5,14 @@ from django.db.models import Case, When, fields
 from django.db.models.query import QuerySet
 from django.db.models.query_utils import Q
 from django.utils.timezone import now
-from django_subquery.expressions import Subquery, OuterRef
 from parler.managers import TranslatableQuerySet, TranslatableManager
 from polymorphic.managers import PolymorphicManager
 from polymorphic.query import PolymorphicQuerySet
+
+try:
+    from django.db.models.expressions import Subquery, OuterRef
+except ImportError:
+    from django_subquery.expressions import Subquery, OuterRef
 
 
 class GenericForeignKeyManagerMixin(object):

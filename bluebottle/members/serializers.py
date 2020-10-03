@@ -1,5 +1,4 @@
 from builtins import object
-from axes.attempts import is_already_locked
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation, authenticate
@@ -22,6 +21,11 @@ from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
 from bluebottle.tasks.models import Skill
 from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
+
+try:
+    from axes.attempts import is_already_locked
+except ImportError:
+    is_already_locked = lambda request: request.axes_locked_out
 
 BB_USER_MODEL = get_user_model()
 

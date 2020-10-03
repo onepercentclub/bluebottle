@@ -100,6 +100,8 @@ class InitiativeDocument(DocType):
             DateActivity
         )
 
+    Django = Meta
+
     def get_queryset(self):
         return super(InitiativeDocument, self).get_queryset().select_related(
             'theme', 'place', 'owner', 'promoter',

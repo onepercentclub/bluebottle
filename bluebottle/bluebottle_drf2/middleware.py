@@ -1,8 +1,9 @@
-from builtins import object
+from django.utils.deprecation import MiddlewareMixin
+
 METHOD_OVERRIDE_HEADER = 'HTTP_X_HTTP_METHOD_OVERRIDE'
 
 
-class MethodOverrideMiddleware(object):
+class MethodOverrideMiddleware(MiddlewareMixin):
     def process_view(self, request, callback, callback_args, callback_kwargs):
         if request.method != 'POST':
             return

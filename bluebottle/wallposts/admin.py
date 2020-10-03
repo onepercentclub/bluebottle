@@ -195,9 +195,9 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
         'author__first_name', 'author__last_name', 'ip_address'
     )
     child_models = (
-        (MediaWallpost, MediaWallpostAdmin),
-        (TextWallpost, TextWallpostAdmin),
-        (SystemWallpost, SystemWallpostAdmin),
+        MediaWallpost,
+        TextWallpost,
+        SystemWallpost,
     )
 
     def type(self, obj):

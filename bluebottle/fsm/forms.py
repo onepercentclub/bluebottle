@@ -17,8 +17,9 @@ class StateWidget(forms.TextInput):
 
 class StateMachineModelFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
-        if 'Meta' in attrs:
-            for field, machine in list(attrs['Meta'].model._state_machines.items()):
+        model = getattr(attrs.get('Meta', None), 'model', None)
+        if hasattr(model, '_state_machines'):
+            for field, machine in list(model._state_machines.items()):
                 attrs[field] = forms.ChoiceField(
                     required=False,
                     widget=TransitionSelectWidget()

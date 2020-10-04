@@ -149,7 +149,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.clients.middleware.MediaMiddleware',
     'tenant_extras.middleware.TenantLocaleMiddleware',
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
-    'bluebottle.auth.middleware.UserJwtTokenMiddleware',
+    'bluebottle.auth.middleware.UserJwtTokenMiddleware',  # 'Member' object has no attribute 'has_header'
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
     'bluebottle.utils.middleware.APILanguageMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',

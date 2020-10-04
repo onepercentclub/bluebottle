@@ -41,7 +41,8 @@ class UserJwtTokenMiddleware(MiddlewareMixin):
     def process_request(self, request):
         """ Override only the request to add the user """
         try:
-            return request.user
+            request.user
+            return
         except AttributeError:
             pass
 

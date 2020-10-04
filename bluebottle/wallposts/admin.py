@@ -310,5 +310,5 @@ class WallpostInline(GenericTabularInline):
         url = reverse('admin:wallposts_wallpost_change', args=(obj.id,))
         return format_html(u'<a href="{}">{}</a>', url, obj)
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False

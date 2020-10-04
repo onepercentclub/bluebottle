@@ -110,7 +110,7 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
     extra = 0
     can_delete = False
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
     def payout_link(self, obj):
@@ -642,7 +642,7 @@ class DonorInline(PaymentLinkMixin, admin.TabularInline):
     extra = 0
     can_delete = False
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
 

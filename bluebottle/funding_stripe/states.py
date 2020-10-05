@@ -2,8 +2,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.fsm.state import Transition, State
-from bluebottle.funding.states import BasePaymentStateMachine, PayoutAccountStateMachine
-from bluebottle.funding_stripe.models import StripePayment, StripeSourcePayment, StripePayoutAccount
+from bluebottle.funding.states import BasePaymentStateMachine, PayoutAccountStateMachine, BankAccountStateMachine
+from bluebottle.funding_stripe.models import StripePayment, StripeSourcePayment, StripePayoutAccount, ExternalAccount
 
 
 class StripePaymentStateMachine(BasePaymentStateMachine):
@@ -85,3 +85,7 @@ class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
 
 class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
     model = StripePayoutAccount
+
+
+class StripeBankAccountStateMachine(BankAccountStateMachine):
+    model = ExternalAccount

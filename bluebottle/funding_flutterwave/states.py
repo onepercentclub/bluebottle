@@ -1,5 +1,5 @@
-from bluebottle.funding.states import BasePaymentStateMachine
-from bluebottle.funding_flutterwave.models import FlutterwavePayment
+from bluebottle.funding.states import BasePaymentStateMachine, BankAccountStateMachine
+from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwaveBankAccount
 
 
 class FlutterwavePaymentStateMachine(BasePaymentStateMachine):
@@ -7,3 +7,7 @@ class FlutterwavePaymentStateMachine(BasePaymentStateMachine):
 
     request_refund = None
     refund_requested = None
+
+
+class FlutterwaveBankAccountStateMachine(BankAccountStateMachine):
+    model = FlutterwaveBankAccount

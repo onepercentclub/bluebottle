@@ -568,6 +568,9 @@ class StripePayoutAccount(PayoutAccount):
     class JSONAPIMeta:
         resource_name = 'payout-accounts/stripes'
 
+    def __str__(self):
+        return u"Stripe connect account {}".format(self.account_id)
+
 
 class ExternalAccount(BankAccount):
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'ba_...'"))

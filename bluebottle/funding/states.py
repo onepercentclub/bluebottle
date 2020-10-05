@@ -12,7 +12,7 @@ from bluebottle.funding.effects import GeneratePayoutsEffect, GenerateDonationWa
     RemoveDonationWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect, \
     DeletePayoutsEffect, \
     SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect, \
-    ClearPayoutDatesEffect, RemoveDonationFromPayoutEffect
+    ClearPayoutDatesEffect, RemoveDonationFromPayoutEffect, VerifyConnectedAccountEffect
 from bluebottle.funding.messages import (
     DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
     FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage,
@@ -485,6 +485,50 @@ class BasePaymentStateMachine(ModelStateMachine):
     )
 
 
+class BankAccountStateMachine(ModelStateMachine):
+    unverified = State(
+        _('unverified'),
+        'unverified',
+        _("Bank account still needs to be verified")
+    )
+    incomplete = State(
+        _('incomplete'),
+        'incomplete',
+        _("Bank account details are missing or incorrect")
+    )
+    verified = State(
+        _('verified'),
+        'verified',
+        _("Bank account is verified")
+    )
+
+    initiate = Transition(
+        EmptyState(),
+        unverified,
+        name=_("Initiate"),
+        description=_("Bank account details are entered.")
+    )
+
+    request_changes = Transition(
+        [verified, unverified],
+        incomplete,
+        name=_('Request changes'),
+        description=_("Bank account is missing details"),
+        automatic=False
+    )
+
+    verify = Transition(
+        [incomplete, unverified],
+        verified,
+        name=_('Verify'),
+        description=_("Verify that the bank account is complete."),
+        automatic=False,
+        effects=[
+            VerifyConnectedAccountEffect
+        ]
+    )
+
+
 class PayoutStateMachine(ModelStateMachine):
     model = Payout
 
@@ -686,6 +730,7 @@ class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
     verify = Transition(
         [
             PayoutAccountStateMachine.new,
+            PayoutAccountStateMachine.pending,
             PayoutAccountStateMachine.incomplete,
             PayoutAccountStateMachine.rejected
         ],

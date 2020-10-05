@@ -626,7 +626,7 @@ class PlainPayoutAccount(PayoutAccount):
         return required
 
 
-class BankAccount(PolymorphicModel):
+class BankAccount(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
@@ -636,13 +636,11 @@ class BankAccount(PolymorphicModel):
         null=True, blank=True,
         related_name='external_accounts')
 
+    status = models.CharField(max_length=40)
+
     @property
     def parent(self):
         return self.connect_account
-
-    @property
-    def verified(self):
-        return (self.connect_account and self.connect_account.verified) and self.reviewed
 
     @property
     def ready(self):

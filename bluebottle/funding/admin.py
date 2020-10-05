@@ -494,8 +494,8 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixi
 @admin.register(BankAccount)
 class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
     base_model = BankAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
-    list_filter = ('reviewed', PolymorphicChildModelFilter)
+    list_display = ('created', 'polymorphic_ctype', 'status', 'funding_links')
+    list_filter = ('status', PolymorphicChildModelFilter)
     raw_id_fields = ('connect_account',)
     show_in_index = True
     search_fields = ['externalaccount__account_id',

@@ -16,8 +16,8 @@ class KYCReadyValidator(Validator):
 
     def is_valid(self):
         if self.instance.status in ['submitted', 'draft', 'needs_work']:
-            return self.instance.bank_account and self.instance.bank_account.verified
-        return self.instance.bank_account and self.instance.bank_account.ready
+            return self.instance.bank_account and self.instance.bank_account.status == 'verified'
+        return True
 
 
 class DeadlineValidator(Validator):

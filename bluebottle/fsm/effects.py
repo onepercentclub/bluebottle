@@ -47,7 +47,6 @@ class Effect(object):
                     for sub_effect in effect.all_effects(result):
                         if sub_effect.is_valid and sub_effect not in result:
                             result.append(sub_effect)
-
         return result
 
     def execute(self, **kwargs):

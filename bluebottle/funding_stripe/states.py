@@ -1,3 +1,4 @@
+from bluebottle.funding.effects import SubmitConnectedActivitiesEffect
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.effects import RelatedTransitionEffect
@@ -89,3 +90,28 @@ class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
 
 class StripeBankAccountStateMachine(BankAccountStateMachine):
     model = ExternalAccount
+
+    reject = Transition(
+        [
+            BankAccountStateMachine.verified,
+            BankAccountStateMachine.unverified,
+            BankAccountStateMachine.incomplete],
+        BankAccountStateMachine.rejected,
+        name=_('Reject'),
+        description=_("Reject bank account"),
+        automatic=True,
+        effects=[
+            SubmitConnectedActivitiesEffect
+        ]
+    )
+
+    verify = Transition(
+        [
+            BankAccountStateMachine.incomplete,
+            BankAccountStateMachine.unverified
+        ],
+        BankAccountStateMachine.verified,
+        name=_('Verify'),
+        description=_("Verify that the bank account is complete."),
+        automatic=True
+    )

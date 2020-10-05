@@ -106,5 +106,8 @@ class FlutterwaveBankAccount(BankAccount):
     class JSONAPIMeta:
         resource_name = 'payout-accounts/flutterwave-external-accounts'
 
+    def __str__(self):
+        return "Flutterwave Bankaccount {}".format(self.account_holder_name)
+
 
 from states import *  # noqa

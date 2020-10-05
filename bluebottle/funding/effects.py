@@ -220,17 +220,3 @@ class ClearPayoutDatesEffect(Effect):
 
     def __unicode__(self):
         return _('Clear payout event dates')
-
-
-class VerifyConnectedAccountEffect(Effect):
-    post_save = False
-    conditions = []
-    title = _('Verify connect payout account too')
-    template = 'admin/verify_payout_account_effect.html'
-
-    def execute(self, **kwargs):
-        if self.instance.connect_account.status != 'verified':
-            self.instance.connect_account.states.verify(save=True)
-
-    def __unicode__(self):
-        return _('Verify connected payout account')

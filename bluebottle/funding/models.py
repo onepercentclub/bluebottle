@@ -612,8 +612,8 @@ class PlainPayoutAccount(PayoutAccount):
         return self.reviewed
 
     class Meta:
-        verbose_name = _('Without payment account')
-        verbose_name_plural = _('Without payment accounts')
+        verbose_name = _('Plain KYC account')
+        verbose_name_plural = _('Plain KYC accounts')
 
     class JSONAPIMeta:
         resource_name = 'payout-accounts/plains'
@@ -624,6 +624,9 @@ class PlainPayoutAccount(PayoutAccount):
         if self.status == 'new':
             required.append('document')
         return required
+
+    def __str__(self):
+        return "KYC account for {}".format(self.owner.full_name)
 
 
 class BankAccount(TriggerMixin, PolymorphicModel):

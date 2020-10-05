@@ -753,9 +753,7 @@ class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
         ],
         PayoutAccountStateMachine.verified,
         name=_('Verify'),
-        description=_("Verify the payout account. "
-                      "Make sure you verified the uploaded ID scan "
-                      "as it will be removed with this step."),
+        description=_("Verify the KYC account. You will hereby confirm that you verified the users identity."),
         automatic=False,
         permission=PayoutAccountStateMachine.can_approve,
         effects=[

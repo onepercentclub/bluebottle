@@ -638,7 +638,6 @@ class BankAccountStateMachine(ModelStateMachine):
         description=_("Reject bank account"),
         automatic=False,
         effects=[
-            SubmitConnectedActivitiesEffect,
             RelatedTransitionEffect('connect_account', 'reject')
         ]
     )
@@ -650,6 +649,7 @@ class BankAccountStateMachine(ModelStateMachine):
         description=_("Verify that the bank account is complete."),
         automatic=False,
         effects=[
+            SubmitConnectedActivitiesEffect,
             RelatedTransitionEffect('connect_account', 'verify')
         ]
     )

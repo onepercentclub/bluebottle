@@ -99,10 +99,7 @@ class StripeBankAccountStateMachine(BankAccountStateMachine):
         BankAccountStateMachine.rejected,
         name=_('Reject'),
         description=_("Reject bank account"),
-        automatic=True,
-        effects=[
-            SubmitConnectedActivitiesEffect
-        ]
+        automatic=True
     )
 
     verify = Transition(
@@ -113,5 +110,8 @@ class StripeBankAccountStateMachine(BankAccountStateMachine):
         BankAccountStateMachine.verified,
         name=_('Verify'),
         description=_("Verify that the bank account is complete."),
-        automatic=True
+        automatic=True,
+        effects=[
+            SubmitConnectedActivitiesEffect
+        ]
     )

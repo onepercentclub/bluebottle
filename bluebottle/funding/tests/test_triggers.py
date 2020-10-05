@@ -22,7 +22,7 @@ class FundingTriggerTests(BluebottleTestCase):
         )
         BudgetLineFactory.create(activity=self.funding)
         payout_account = PlainPayoutAccountFactory.create()
-        bank_account = BankAccountFactory.create(connect_account=payout_account)
+        bank_account = BankAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = bank_account
         self.funding.states.submit(save=True)
 

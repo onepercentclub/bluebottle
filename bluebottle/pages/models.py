@@ -1,3 +1,4 @@
+from builtins import object
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.functional import lazy
@@ -13,6 +14,7 @@ from fluent_contents.models.fields import ContentItemRelation
 from fluent_contents.models.managers import ContentItemManager
 from fluent_contents.rendering import render_placeholder
 from fluent_contents.utils.filters import apply_filters
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
 from bluebottle.utils.models import PublishableModel
@@ -46,7 +48,7 @@ class DocumentItem(ContentItem):
     def __str__(self):
         return Truncator(strip_tags(self.text)).words(20)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Document')
         verbose_name_plural = _('Document')
 
@@ -59,7 +61,7 @@ class ActionItem(ContentItem):
     def __str__(self):
         return Truncator(strip_tags(self.title)).words(20)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Call to action')
         verbose_name_plural = _('Call to actions')
 
@@ -75,7 +77,7 @@ class ColumnsItem(ContentItem):
 
     objects = ContentItemManager()
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Text in columns')
         verbose_name_plural = _('Text in columns')
 
@@ -129,7 +131,7 @@ class ImageTextItem(ContentItem):
     def image_width(self):
         return 12 - self.text_width
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Picture + Text')
         verbose_name_plural = _('Picture + Text')
 
@@ -154,7 +156,7 @@ class ImageTextRoundItem(ContentItem):
 
     objects = ContentItemManager()
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Text + Round Image')
         verbose_name_plural = _('Text + Round Image')
 
@@ -172,6 +174,7 @@ class ImageTextRoundItem(ContentItem):
             self.text_final = None
 
 
+@python_2_unicode_compatible
 class Page(PublishableModel):
     class PageStatus(DjangoChoices):
         published = ChoiceItem('published', label=_('Published'))
@@ -209,7 +212,7 @@ class Page(PublishableModel):
     def content(self):
         return self.body
 
-    class Meta:
+    class Meta(object):
         ordering = ('language', 'slug')
         unique_together = ('language', 'slug')
 
@@ -220,7 +223,7 @@ class Page(PublishableModel):
             ('api_delete_page', 'Can delete pages through the API'),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def get_meta_description(self, **kwargs):

@@ -1,4 +1,5 @@
-import bunch
+from builtins import object
+import munch
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK
 
@@ -12,7 +13,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class MockEvent(object):
     def __init__(self, type, data):
         self.type = type
-        self.data = bunch.bunchify(data)
+        self.data = munch.munchify(data)
 
 
 class VitepayPaymentTestCase(BluebottleTestCase):
@@ -42,7 +43,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(response.content, '{"status": "1"}')
+        self.assertEqual(response.content, b'{"status": "1"}')
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'succeeded')
 
@@ -54,7 +55,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(response.content, '{"status": "1"}')
+        self.assertEqual(response.content, b'{"status": "1"}')
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'failed')
 
@@ -66,6 +67,6 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         }
         response = self.client.post(self.webhook, data, format='multipart')
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(response.content, '{"status": "0", "message": "Order not found."}')
+        self.assertEqual(response.content, b'{"status": "0", "message": "Order not found."}')
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'new')

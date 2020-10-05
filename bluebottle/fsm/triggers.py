@@ -1,6 +1,11 @@
+from builtins import str
+from builtins import zip
+from builtins import object
 from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 
 
+@python_2_unicode_compatible
 class ModelTrigger(object):
     def __init__(self, instance):
         self.instance = instance
@@ -17,8 +22,8 @@ class ModelTrigger(object):
             if effect.is_valid:
                 yield effect
 
-    def __unicode__(self):
-        return unicode(_("Model has been changed"))
+    def __str__(self):
+        return str(_("Model has been changed"))
 
 
 class ModelChangedTrigger(ModelTrigger):
@@ -34,11 +39,11 @@ class ModelChangedTrigger(ModelTrigger):
             return True
         return self.instance.field_is_changed(self.field)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.field:
             field_name = self.instance._meta.get_field(self.field).verbose_name
-            return unicode(_("{} has been changed").format(field_name.capitalize()))
-        return unicode(_("Object has been changed"))
+            return str(_("{} has been changed").format(field_name.capitalize()))
+        return str(_("Object has been changed"))
 
 
 class ModelDeletedTrigger(ModelTrigger):
@@ -49,8 +54,8 @@ class ModelDeletedTrigger(ModelTrigger):
     def is_valid(self):
         pass
 
-    def __unicode__(self):
-        return unicode(_("Model has been deleted"))
+    def __str__(self):
+        return str(_("Model has been deleted"))
 
 
 class TriggerMixin(object):
@@ -62,7 +67,7 @@ class TriggerMixin(object):
         self._effects = []
 
         if hasattr(self, '_state_machines'):
-            for name, machine_class in self._state_machines.items():
+            for name, machine_class in list(self._state_machines.items()):
                 machine = machine_class(self)
 
                 setattr(self, name, machine)
@@ -104,7 +109,7 @@ class TriggerMixin(object):
     @classmethod
     def from_db(cls, db, field_names, values):
         instance = super(TriggerMixin, cls).from_db(db, field_names, values)
-        instance._initial_values = dict(zip(field_names, values))
+        instance._initial_values = dict(list(zip(field_names, values)))
 
         return instance
 

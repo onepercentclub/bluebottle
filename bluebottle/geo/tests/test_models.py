@@ -1,3 +1,4 @@
+from builtins import object
 from django.core.exceptions import ValidationError
 
 from bluebottle.test.utils import BluebottleTestCase
@@ -33,7 +34,7 @@ class GeoTestsMixin(object):
 
         country = Country(name=name, numeric_code=numeric_code,
                           subregion=sub_region)
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             setattr(country, k, v)
 
         country.save()

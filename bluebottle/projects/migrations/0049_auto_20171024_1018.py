@@ -30,7 +30,7 @@ def migrate_project_settings(apps, schema_editor):
             project_settings=project_settings,
             name=filt['name']
         )
-        for k,v in filt.items():
+        for k,v in list(filt.items()):
             if filt['name'] == 'type' and k == 'values':
                 v = ",".join(v)
             setattr(project_filter, k, v)

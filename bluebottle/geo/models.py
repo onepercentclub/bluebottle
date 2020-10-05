@@ -1,9 +1,11 @@
+from builtins import object
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.template.defaultfilters import slugify
 
 from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 from geoposition.fields import GeopositionField
 from parler.models import TranslatedFields
 from sorl.thumbnail import ImageField
@@ -14,6 +16,7 @@ from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
 
 
+@python_2_unicode_compatible
 class GeoBaseModel(SortableTranslatableModel):
     """
     Abstract base model for the UN M.49 geoscheme.
@@ -31,7 +34,7 @@ class GeoBaseModel(SortableTranslatableModel):
                                         "ISO 3166-1 or M.49 numeric code")
                                     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
@@ -40,7 +43,7 @@ class GeoBaseModel(SortableTranslatableModel):
 
         super(GeoBaseModel, self).save(*args, **kwargs)
 
-    class Meta:
+    class Meta(object):
         abstract = True
 
 
@@ -104,6 +107,7 @@ class Country(GeoBaseModel):
         verbose_name_plural = _("countries")
 
 
+@python_2_unicode_compatible
 class LocationGroup(models.Model):
     name = models.CharField(_('name'), max_length=255)
     description = models.TextField(_('description'), blank=True)
@@ -113,10 +117,11 @@ class LocationGroup(models.Model):
         verbose_name = _("location group")
         verbose_name_plural = _("location groups")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
+@python_2_unicode_compatible
 class Location(models.Model):
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), blank=False, null=True, max_length=255)
@@ -141,7 +146,7 @@ class Location(models.Model):
 
         super(Location, self).save()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -175,6 +180,7 @@ class InitiativePlace(models.Model):
     position = GeopositionField()
 
 
+@python_2_unicode_compatible
 class Geolocation(models.Model):
     street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
     street = models.CharField(_('Street'), max_length=255, blank=True, null=True)
@@ -189,10 +195,10 @@ class Geolocation(models.Model):
 
     anonymized = False
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'locations'
 
-    def __unicode__(self):
+    def __str__(self):
         if self.locality:
             return u"{}, {}".format(self.locality, self.country.name)
         else:

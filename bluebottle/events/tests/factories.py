@@ -1,3 +1,4 @@
+from builtins import object
 from datetime import timedelta
 
 import factory.fuzzy
@@ -20,7 +21,6 @@ class EventFactory(factory.DjangoModelFactory):
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
     capacity = 10
-    automatically_accept = True
     is_online = False
 
     start = (now() + timedelta(weeks=4))

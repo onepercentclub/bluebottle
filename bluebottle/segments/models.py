@@ -1,10 +1,11 @@
 from django.contrib.postgres.fields import ArrayField
-from django.template.defaultfilters import slugify
 from django.db import models
-
+from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 
 
+@python_2_unicode_compatible
 class SegmentType(models.Model):
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
@@ -24,10 +25,14 @@ class SegmentType(models.Model):
 
         super(SegmentType, self).save(**kwargs)
 
-    def __unicode__(self):
-        return unicode(self.name)
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ('name',)
 
 
+@python_2_unicode_compatible
 class Segment(models.Model):
     name = models.CharField(_('name'), max_length=255)
 
@@ -47,5 +52,8 @@ class Segment(models.Model):
 
         super(Segment, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{}: {}'.format(self.type.name, self.name)
+
+    class Meta:
+        ordering = ('name',)

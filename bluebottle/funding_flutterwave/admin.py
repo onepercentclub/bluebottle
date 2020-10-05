@@ -12,7 +12,7 @@ class FlutterwavePaymentAdmin(PaymentChildAdmin):
     readonly_fields = PaymentChildAdmin.readonly_fields
     fields = ['donation', 'tx_ref'] + readonly_fields
     search_fields = ['tx_ref', ]
-    list_display = ['__unicode__', 'created', 'status', 'tx_ref']
+    list_display = ['__str__', 'created', 'status', 'tx_ref']
 
 
 @admin.register(FlutterwavePaymentProvider)

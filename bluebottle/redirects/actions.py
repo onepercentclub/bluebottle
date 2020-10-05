@@ -1,3 +1,4 @@
+from builtins import str
 import csv
 from django.http import HttpResponse
 
@@ -28,7 +29,7 @@ def export_as_csv_action(description="Export selected objects as CSV file",
 
         response = HttpResponse(mimetype='text/csv')
         response[
-            'Content-Disposition'] = 'attachment; filename="%s.csv"' % unicode(
+            'Content-Disposition'] = 'attachment; filename="%s.csv"' % str(
             opts).replace('.', '_')
 
         writer = csv.writer(response)
@@ -36,7 +37,7 @@ def export_as_csv_action(description="Export selected objects as CSV file",
             writer.writerow(list(field_names))
         for obj in queryset:
             writer.writerow(
-                [unicode(getattr(obj, field)).encode("utf-8", "replace") for
+                [str(getattr(obj, field)).encode("utf-8", "replace") for
                  field in field_names])
         return response
 

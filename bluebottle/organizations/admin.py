@@ -1,3 +1,4 @@
+from builtins import str
 from django.db import models
 from django.contrib import admin
 from django.core.urlresolvers import reverse
@@ -29,6 +30,7 @@ class OrganizationInitiativeInline(admin.TabularInline):
         return False
 
 
+@admin.register(OrganizationContact)
 class OrganizationContactAdmin(admin.ModelAdmin):
     model = Member
     fields = ('name', 'email', 'phone', )
@@ -43,6 +45,7 @@ class OrganizationContactAdmin(admin.ModelAdmin):
     actions = (export_as_csv_action(fields=export_fields), )
 
 
+@admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     inlines = (OrganizationInitiativeInline, )
 
@@ -70,7 +73,3 @@ class OrganizationAdmin(admin.ModelAdmin):
         return super(OrganizationAdmin, self).get_inline_instances(request, obj)
 
     actions = (export_as_csv_action(fields=export_fields), )
-
-
-admin.site.register(Organization, OrganizationAdmin)
-admin.site.register(OrganizationContact, OrganizationContactAdmin)

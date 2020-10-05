@@ -31,7 +31,7 @@ class DonationAdminStatusFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return [('all', _('All'))] + [
-            (s.value, s.name.title()) for s in DonationStateMachine.states.values()
+            (s.value, s.name.title()) for s in list(DonationStateMachine.states.values())
         ]
 
     def choices(self, cl):

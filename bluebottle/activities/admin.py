@@ -304,7 +304,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter, 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['__unicode__', 'created', 'type', 'state_name',
+    list_display = ['__str__', 'created', 'type', 'state_name',
                     'link', 'highlight']
 
     search_fields = ('title', 'description',

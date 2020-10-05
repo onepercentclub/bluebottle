@@ -1,3 +1,4 @@
+from builtins import object
 import factory
 
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings

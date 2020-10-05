@@ -1,3 +1,4 @@
+from builtins import object
 from rest_framework import serializers
 from bluebottle.funding.base_serializers import PaymentSerializer, BaseBankAccountSerializer
 from bluebottle.funding_telesom.models import TelesomPayment, TelesomBankAccount
@@ -36,7 +37,7 @@ class TelesomBankAccountSerializer(BaseBankAccountSerializer):
 
 
 class PayoutTelesomBankAccountSerializer(serializers.ModelSerializer):
-    class Meta:
+    class Meta(object):
         fields = (
             'id',
             'account_name',

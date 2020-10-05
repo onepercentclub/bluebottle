@@ -1,3 +1,4 @@
+from builtins import range
 import time
 
 import mock
@@ -12,51 +13,6 @@ from rest_framework import status
 from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-
-
-class ProjectPlatformSettingsTestCase(BluebottleTestCase):
-    """
-    Integration tests for the ProjectPlatformSettings API.
-    """
-    def test_member_platform_settings(self):
-        MemberPlatformSettings.objects.create(
-            require_consent=True,
-            consent_link='http://example.com',
-            login_methods=['sso'],
-            closed=True,
-            confirm_signup=True,
-            email_domain='example.com'
-        )
-
-        response = self.client.get(reverse('settings'))
-        self.assertEqual(response.data['platform']['members']['require_consent'], True)
-        self.assertEqual(
-            response.data['platform']['members']['consent_link'],
-            'http://example.com'
-        )
-        self.assertEqual(
-            response.data['platform']['members']['require_consent'], True
-        )
-        self.assertEqual(
-            response.data['platform']['members']['closed'], True
-        )
-        self.assertEqual(
-            response.data['platform']['members']['confirm_signup'], True
-        )
-        self.assertEqual(
-            response.data['platform']['members']['email_domain'], 'example.com'
-        )
-        self.assertEqual(
-            response.data['platform']['members']['login_methods'], ['sso']
-        )
-
-    def test_member_platform_settings_default(self):
-        response = self.client.get(reverse('settings'))
-        self.assertEqual(response.data['platform']['members']['require_consent'], False)
-        self.assertEqual(
-            response.data['platform']['members']['consent_link'],
-            '/pages/terms-and-conditions'
-        )
 
 
 class LoginTestCase(BluebottleTestCase):
@@ -128,7 +84,6 @@ class LoginTestCase(BluebottleTestCase):
         response = self.client.post(
             reverse('token-auth'), {'email': self.email, 'password': self.password}
         )
-
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
@@ -505,7 +460,6 @@ class PasswordSetTest(BluebottleTestCase):
             email='user@example.com'
         )
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-
         self.current_user_url = reverse('user-current')
         self.set_password_url = reverse('user-set-password')
 
@@ -564,7 +518,7 @@ class PasswordSetTest(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertTrue('too short' in response.content)
+        self.assertTrue(b'too short' in response.content)
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('some-password'))

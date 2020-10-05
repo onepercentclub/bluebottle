@@ -1,3 +1,4 @@
+from builtins import object
 import json
 
 from django.urls import reverse
@@ -12,7 +13,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
-class MockReponse():
+class MockReponse(object):
     status_code = 200,
 
     def json(self):

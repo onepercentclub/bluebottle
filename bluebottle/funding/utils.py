@@ -1,4 +1,7 @@
 from babel.numbers import get_currency_name, get_currency_symbol
+from bluebottle.utils.exchange_rates import convert
+from django.db.models import Sum
+from djmoney.money import Money
 
 from bluebottle.funding.models import PaymentProvider
 
@@ -22,3 +25,14 @@ def get_currency_settings():
                 'maxAmount': cur.max_amount
             })
     return result
+
+
+def calculate_total(queryset, target='EUR'):
+    totals = queryset.values(
+        'donation__amount_currency'
+    ).annotate(
+        total=Sum('donation__amount')
+    )
+    amounts = [Money(tot['total'], tot['donation__amount_currency']) for tot in totals]
+    amounts = [convert(amount, target) for amount in amounts]
+    return sum(amounts) or Money(0, target)

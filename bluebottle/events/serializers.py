@@ -1,3 +1,4 @@
+from builtins import object
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework import serializers
 
@@ -68,7 +69,7 @@ class ParticipantTransitionSerializer(TransitionSerializer):
         'resource.activity': 'bluebottle.events.serializers.EventSerializer',
     }
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'contributions/participant-transitions'
         included_resources = [
             'resource',
@@ -169,6 +170,6 @@ class EventTransitionSerializer(TransitionSerializer):
         'resource': 'bluebottle.events.serializers.EventSerializer',
     }
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = ['resource', ]
         resource_name = 'event-transitions'

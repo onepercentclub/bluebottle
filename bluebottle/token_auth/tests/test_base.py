@@ -281,7 +281,6 @@ class TestBaseTokenAuthentication(TestCase):
             self.assertEqual(authenticate_request.call_count, 1)
             self.assertTrue(created)
             self.assertEqual(user.email, 'test@example.com')
-            print user.segments.all()
             self.assertEqual(len(user.segments.all()), 1)
             self.assertEqual(user.segments.first().name, 'Online Marketing')
             self.assertEqual(user.segments.first().alternate_names, ['Online Marketing'])

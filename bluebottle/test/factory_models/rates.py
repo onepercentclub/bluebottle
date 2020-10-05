@@ -1,12 +1,13 @@
+from builtins import object
 import factory
-from djmoney_rates.models import RateSource, Rate
+from djmoney.contrib.exchange.models import Rate, ExchangeBackend
 
 
-class RateSourceFactory(factory.DjangoModelFactory):
+class ExchangeBackendFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = RateSource
+        model = ExchangeBackend
 
-    name = 'openexchange.org'
+    name = 'openexchangerates.org'
     base_currency = 'USD'
 
 
@@ -14,4 +15,4 @@ class RateFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Rate
 
-    source = factory.SubFactory(RateSourceFactory)
+    backend = factory.SubFactory(ExchangeBackendFactory)

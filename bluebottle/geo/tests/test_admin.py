@@ -1,3 +1,4 @@
+from builtins import str
 from django.contrib.admin.sites import AdminSite
 from django.contrib.gis.geos import Point
 from django.contrib.messages import get_messages
@@ -46,7 +47,7 @@ class GeolocationAdminTest(TestCase):
 
     def setUp(self):
         super(GeolocationAdminTest, self).setUp()
-        self.country = CountryFactory.create()
+        self.country = CountryFactory.create(name='Plopsaland')
         self.user = BlueBottleUserFactory(is_staff=True, is_superuser=True)
         self.admin_add_url = reverse('admin:geo_geolocation_add')
 

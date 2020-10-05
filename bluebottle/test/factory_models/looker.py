@@ -1,3 +1,4 @@
+from builtins import object
 from bluebottle.looker.models import LookerEmbed
 import factory
 

@@ -1,3 +1,4 @@
+from builtins import object
 import parler.appsettings
 from parler.utils.conf import add_default_language_settings
 

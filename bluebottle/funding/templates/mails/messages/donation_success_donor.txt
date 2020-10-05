@@ -1,5 +1,4 @@
 {% extends "base.mail.txt" %}
-{% load money %}
 {% load i18n %}
 
 {% block content %}
@@ -12,7 +11,7 @@ Give some extra support and share this campaign with your network.
 {% include 'mails/messages/partials/donation_receipt.txt' %}
 
 {% if pledged %}
-{% blocktrans with amount=obj.amount|format_money title=obj.activity.title %}
+{% blocktrans with amount=obj.amount title=obj.activity.title %}
     Please transfer the amount of {{ amount }} to "{{ title }}".
 {% endblocktrans %}
 {% endif %}

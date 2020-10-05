@@ -1,21 +1,19 @@
+from builtins import object
 from django.contrib import admin
-from django.utils import translation
-from django.utils.translation import ugettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin, ContributionInline
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine
-from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.fsm.admin import StateMachineFilter
+from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.tasks.models import Skill
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.wallposts.admin import WallpostInline
 
 
 class AssignmentAdminForm(StateMachineModelForm):
-    class Meta:
+    class Meta(object):
         model = Assignment
         fields = '__all__'
         widgets = {
@@ -31,7 +29,7 @@ class ApplicantInline(ContributionInline):
 
 
 class ApplicantAdminForm(StateMachineModelForm):
-    class Meta:
+    class Meta(object):
         model = Applicant
         exclude = ('transition_date', )
 
@@ -63,20 +61,6 @@ class ApplicantAdmin(ContributionChildAdmin):
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
 
-class ExpertiseFilter(admin.SimpleListFilter):
-    title = _('Skill')
-    parameter_name = 'expertise'
-
-    def lookups(self, request, model_admin):
-        language = translation.get_language()
-        return [(skill.id, skill.name) for skill in Skill.objects.language(language).order_by('translations__name')]
-
-    def queryset(self, request, queryset):
-        if self.value() is not None:
-            queryset = queryset.filter(id=self.value())
-        return queryset
-
-
 @admin.register(Assignment)
 class AssignmentAdmin(ActivityChildAdmin):
     form = AssignmentAdminForm
@@ -88,11 +72,11 @@ class AssignmentAdmin(ActivityChildAdmin):
     raw_id_fields = ('owner', 'location', 'initiative')
 
     list_display = (
-        '__unicode__', 'initiative', 'created', 'state_name', 'highlight',
+        '__str__', 'initiative', 'created', 'state_name', 'highlight',
         'date', 'is_online', 'registration_deadline'
     )
     search_fields = ['title', 'description']
-    list_filter = [StateMachineFilter, ExpertiseFilter, 'is_online']
+    list_filter = [StateMachineFilter, 'expertise', 'is_online']
     readonly_fields = ActivityChildAdmin.readonly_fields + ['local_date', ]
 
     detail_fields = (

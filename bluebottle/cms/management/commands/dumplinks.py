@@ -1,3 +1,4 @@
+from __future__ import print_function
 import json
 
 from django.core.management.base import BaseCommand
@@ -45,4 +46,4 @@ class Command(BaseCommand):
             text_file.write(json.dumps(data, indent=2))
             text_file.close()
         else:
-            print json.dumps(data)
+            print(json.dumps(data))

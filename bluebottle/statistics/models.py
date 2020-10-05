@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from adminsortable.models import SortableMixin
 from django.db import models
 from django.db.models import Sum
@@ -6,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, \
     ModificationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
+from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields, TranslatableModel
 from polymorphic.models import PolymorphicModel
 
@@ -19,6 +22,7 @@ def get_languages():
     return properties.LANGUAGES
 
 
+@python_2_unicode_compatible
 class BaseStatistic(PolymorphicModel, SortableMixin):
 
     objects = TranslatablePolymorphicManager()
@@ -31,7 +35,7 @@ class BaseStatistic(PolymorphicModel, SortableMixin):
         help_text=_('Order in which metrics are shown.'),
         default=0, editable=False, db_index=True)
 
-    def __unicode__(self):
+    def __str__(self):
         for child in (DatabaseStatistic, ManualStatistic, ImpactStatistic):
             try:
                 return u"{}".format(getattr(self, child.__name__.lower()).name)
@@ -39,7 +43,7 @@ class BaseStatistic(PolymorphicModel, SortableMixin):
                 pass
         return u"Stat #{}".format(self.id)
 
-    class Meta:
+    class Meta(object):
         ordering = ['sequence']
         verbose_name = _('Statistic')
         verbose_name_plural = _('Statistics')
@@ -60,13 +64,13 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
     def get_value(self, start=None, end=None):
         return self.value
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'statistics/manual-statistics'
 
-    def __unicode__(self):
-        return unicode(self.translations.name)
+    def __str__(self):
+        return str(self.translations.name)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Custom statistic')
         verbose_name_plural = _('Custom statistics')
 
@@ -142,10 +146,13 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
     def get_value(self, start=None, end=None):
         return getattr(Statistics(), self.query)
 
-    class JSONAPIMeta:
+    def __str__(self):
+        return str(self.query)
+
+    class JSONAPIMeta(object):
         resource_name = 'statistics/database-statistics'
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Engagement statistic')
         verbose_name_plural = _('Engagement statistics')
 
@@ -170,10 +177,13 @@ class ImpactStatistic(BaseStatistic):
     def name(self):
         return self.impact_type
 
-    class JSONAPIMeta:
+    def __str__(self):
+        return str(self.impact_type.name)
+
+    class JSONAPIMeta(object):
         resource_name = 'statistics/impact-statistics'
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Impact statistic')
         verbose_name_plural = _('Impact statistics')
 
@@ -186,12 +196,6 @@ class Statistic(models.Model):
         manual = ChoiceItem('manual', label=_("Manual"))
         donated_total = ChoiceItem('donated_total', label=_("Donated total"))
         pledged_total = ChoiceItem('pledged_total', label=_("Pledged total"))
-        projects_online = ChoiceItem(
-            'projects_online', label=_("Projects online"))
-        projects_realized = ChoiceItem(
-            'projects_realized', label=_("Projects realized"))
-        projects_complete = ChoiceItem(
-            'projects_complete', label=_("Projects complete"))
         tasks_realized = ChoiceItem(
             'tasks_realized', label=_("Tasks realized"))
         task_members = ChoiceItem('task_members', label=_("Taskmembers"))
@@ -224,7 +228,7 @@ class Statistic(models.Model):
         null=True,
         choices=lazy(get_languages, tuple)())
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     @property
@@ -238,5 +242,5 @@ class Statistic(models.Model):
 
         return getattr(self.statistics, self.type, 0)
 
-    class Meta:
+    class Meta(object):
         ordering = ('sequence', )

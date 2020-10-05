@@ -1,3 +1,7 @@
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import object
 import binascii
 from collections import OrderedDict
 import json
@@ -6,7 +10,7 @@ import base64
 from hashlib import sha1
 import time
 import os
-from urllib import urlencode, quote_plus
+from urllib.parse import urlencode, quote_plus
 
 from django.db import connection
 from django.conf import settings
@@ -58,17 +62,17 @@ class LookerSSOEmbed(object):
 
         string_to_sign = "\n".join(values)
         signer = hmac.new(
-            settings.LOOKER_SECRET, string_to_sign.encode('utf-8').strip(), sha1
+            settings.LOOKER_SECRET.encode('utf-8'), string_to_sign.encode('utf-8').strip(), sha1
         )
         return base64.b64encode(signer.digest()).strip()
 
     @property
     def url(self):
         schema_name = connection.tenant.schema_name
-        fiscal_month_offset = AnalyticsPlatformSettings.objects.get().fiscal_month_offset
+        analytics_settings = AnalyticsPlatformSettings.objects.get()
 
         params = OrderedDict([
-            ('nonce', self.nonce),
+            ('nonce', self.nonce.decode()),
             ('time', self.time),
             ('session_length', self.session_length),
             ('external_user_id', '{}-{}'.format(schema_name, self.user.id)),
@@ -81,12 +85,13 @@ class LookerSSOEmbed(object):
             ('external_group_id', 'Back-office Users'),
             ('user_attributes', {
                 'tenant': schema_name,
-                'fiscal_month_offset': fiscal_month_offset,
+                'fiscal_month_offset': analytics_settings.fiscal_month_offset,
+                'user_base': analytics_settings.user_base,
                 'language': properties.LANGUAGE_CODE,
             }),
             ('force_logout_login', True),
         ])
-        json_params = OrderedDict((key, json.dumps(value)) for key, value in params.items())
+        json_params = OrderedDict((key, json.dumps(value)) for key, value in list(params.items()))
 
         json_params['signature'] = self.sign(json_params)
 

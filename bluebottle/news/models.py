@@ -1,3 +1,4 @@
+from builtins import object
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.functional import lazy
@@ -5,6 +6,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from fluent_contents.models import PlaceholderField, ContentItemRelation
 from fluent_contents.rendering import render_placeholder
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
@@ -16,6 +18,7 @@ def get_languages():
     return properties.LANGUAGES
 
 
+@python_2_unicode_compatible
 class NewsItem(AnonymizationMixin, PublishableModel):
 
     title = models.CharField(_("Title"), max_length=200)
@@ -41,7 +44,7 @@ class NewsItem(AnonymizationMixin, PublishableModel):
 
     allow_comments = models.BooleanField(_("Allow comments"), default=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def get_meta_description(self, **kwargs):
@@ -50,7 +53,7 @@ class NewsItem(AnonymizationMixin, PublishableModel):
         s.feed(mark_safe(render_placeholder(request, self.contents).html))
         return truncatechars(s.get_data(), 250)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("news item")
         verbose_name_plural = _("news items")
 

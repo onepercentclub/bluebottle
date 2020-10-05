@@ -45,7 +45,7 @@ class PledgePaymentProviderAdmin(PaymentProviderChildAdmin):
 
 class StripeBankAccountInline(admin.TabularInline):
     model = ExternalAccount
-    readonly_fields = ['bank_account_link', 'verified', 'account_id', ]
+    readonly_fields = ['bank_account_link', 'status', 'account_id', ]
     fields = readonly_fields
     extra = 0
     can_delete = False
@@ -147,12 +147,12 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
 class StripeBankAccountAdmin(BankAccountChildAdmin):
     base_model = BankAccount
     model = ExternalAccount
-    readonly_fields = BankAccountChildAdmin.readonly_fields + ('account_details',)
-    fields = ('connect_account', 'account_id', 'account_details') + BankAccountChildAdmin.readonly_fields
+    readonly_fields = ('status', 'account_details') + BankAccountChildAdmin.readonly_fields
+    fields = ('connect_account', 'account_id') + readonly_fields
 
     list_filter = ['reviewed']
     search_fields = ['account_id']
-    list_display = ['created', 'account_id', 'reviewed']
+    list_display = ['created', 'account_id', 'status']
 
     def save_model(self, request, obj, form, change):
         if 'acct_' in obj.account_id:

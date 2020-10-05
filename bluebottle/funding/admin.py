@@ -4,12 +4,14 @@ from builtins import object
 import logging
 
 from babel.numbers import get_currency_symbol
+from bluebottle.utils.utils import reverse_signed
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin import TabularInline, SimpleListFilter
-from django.db import models
+from django.db import models, connection
 from django.http import HttpResponseRedirect
+from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -469,26 +471,34 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     ]
 
 
-class BankAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
+class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
     base_model = BankAccount
     raw_id_fields = ('connect_account',)
-    readonly_fields = ('verified', 'funding_links', 'created', 'updated')
-    fields = ('connect_account', 'reviewed', ) + readonly_fields
+    readonly_fields = ('document', 'funding_links', 'created', 'updated')
+    fields = ('connect_account', 'reviewed', 'status', 'states') + readonly_fields
     show_in_index = True
 
-    def get_form(self, request, obj=None, **kwargs):
-        help_texts = {
-            'verified': _('To verify this bank account review details here and also review the connected account.')
-        }
-        kwargs.update({'help_texts': help_texts})
-        return super(BankAccountChildAdmin, self).get_form(request, obj, **kwargs)
+    def document(self, obj):
+        if obj.connect_account and \
+                isinstance(obj.connect_account, PlainPayoutAccount) and \
+                obj.connect_account.document and \
+                obj.connect_account.document.file:
+            template = loader.get_template(
+                'admin/document_button.html'
+            )
+            if 'localhost' in connection.tenant.domain_url:
+                download_url = obj.connect_account.document.file.url
+            else:
+                download_url = reverse_signed('kyc-document', args=(obj.connect_account.id,))
+            return template.render({'document_url': download_url})
+        return "_"
 
 
 @admin.register(BankAccount)
 class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
     base_model = BankAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
-    list_filter = ('reviewed', PolymorphicChildModelFilter)
+    list_display = ('created', 'polymorphic_ctype', 'status', 'funding_links')
+    list_filter = ('status', PolymorphicChildModelFilter)
     raw_id_fields = ('connect_account',)
     show_in_index = True
     search_fields = ['externalaccount__account_id',
@@ -522,7 +532,20 @@ class BankAccountInline(TabularInline):
 class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
     model = PlainPayoutAccount
     inlines = [BankAccountInline]
-    fields = PayoutAccountChildAdmin.fields + ['document']
+    readonly_fields = ['document_link']
+    fields = PayoutAccountChildAdmin.fields + ['document', 'document_link']
+
+    def document_link(self, obj):
+        if obj.document and obj.document.file:
+            template = loader.get_template(
+                'admin/document_button.html'
+            )
+            if 'localhost' in connection.tenant.domain_url:
+                download_url = obj.document.file.url
+            else:
+                download_url = reverse_signed('kyc-document', args=(obj.id,))
+            return template.render({'document_url': download_url})
+        return "_"
 
 
 class DonationInline(PaymentLinkMixin, admin.TabularInline):

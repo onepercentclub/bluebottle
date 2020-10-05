@@ -1,5 +1,5 @@
-from bluebottle.funding.states import BasePaymentStateMachine
-from bluebottle.funding_lipisha.models import LipishaPayment
+from bluebottle.funding.states import BasePaymentStateMachine, BankAccountStateMachine
+from bluebottle.funding_lipisha.models import LipishaPayment, LipishaBankAccount
 
 
 class LipishaPaymentStateMachine(BasePaymentStateMachine):
@@ -7,3 +7,7 @@ class LipishaPaymentStateMachine(BasePaymentStateMachine):
 
     request_refund = None
     refund_requested = None
+
+
+class LipishaBankAccountStateMachine(BankAccountStateMachine):
+    model = LipishaBankAccount

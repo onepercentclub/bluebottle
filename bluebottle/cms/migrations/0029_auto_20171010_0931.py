@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
                 ('contentitem_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='fluent_contents.ContentItem')),
                 ('title', models.CharField(blank=True, max_length=40, null=True)),
                 ('sub_title', models.CharField(blank=True, max_length=70, null=True)),
-                ('categories', models.ManyToManyField(db_table=b'cms_categoriescontent_categories', to='categories.Category')),
+                ('categories', models.ManyToManyField(db_table='cms_categoriescontent_categories', to='categories.Category')),
             ],
             options={
                 'db_table': 'contentitem_cms_categoriescontent',
@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
                 ('contentitem_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='fluent_contents.ContentItem')),
                 ('title', models.CharField(blank=True, max_length=40, null=True)),
                 ('sub_title', models.CharField(blank=True, max_length=70, null=True)),
-                ('locations', models.ManyToManyField(db_table=b'cms_locationscontent_locations', to='geo.Location')),
+                ('locations', models.ManyToManyField(db_table='cms_locationscontent_locations', to='geo.Location')),
             ],
             options={
                 'db_table': 'contentitem_cms_locationscontent',

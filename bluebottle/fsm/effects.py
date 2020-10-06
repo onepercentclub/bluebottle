@@ -1,9 +1,15 @@
+from collections import Iterable
+
+from builtins import str
+from builtins import object
 from django.utils.translation import ugettext_lazy as _
 from django.template.loader import render_to_string
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.state import TransitionNotPossible
 
 
+@python_2_unicode_compatible
 class Effect(object):
     post_save = False
     conditions = []
@@ -20,7 +26,7 @@ class Effect(object):
 
     @property
     def description(self):
-        return unicode(self)
+        return str(self)
 
     def __init__(self, instance, **kwargs):
         self.instance = instance
@@ -36,11 +42,11 @@ class Effect(object):
     def is_valid(self):
         return True
 
-    def __unicode__(self):
+    def __str__(self):
         return self.__class__.__name__
 
     def to_html(self):
-        return unicode(self)
+        return str(self)
 
 
 class BaseTransitionEffect(Effect):
@@ -51,7 +57,7 @@ class BaseTransitionEffect(Effect):
     @property
     def description(self):
         return 'Change status of {} to {}'.format(
-            unicode(self.instance), self.transition.target.name
+            str(self.instance), self.transition.target.name
         )
 
     @property
@@ -84,8 +90,8 @@ class BaseTransitionEffect(Effect):
     def __repr__(self):
         return '<Effect: {}>'.format(self.transition)
 
-    def __unicode__(self):
-        return unicode(self.transition.target)
+    def __str__(self):
+        return str(self.transition.target)
 
     @property
     def help(self):
@@ -95,12 +101,12 @@ class BaseTransitionEffect(Effect):
         if self.conditions:
             return _('{transition} {object} if {conditions}').format(
                 transition=self.transition.name,
-                object=unicode(self.instance),
+                object=str(self.instance),
                 conditions=" and ".join([c.__doc__ for c in self.conditions])
             )
         return _('{transition} {object}').format(
             transition=self.transition.name,
-            object=unicode(self.instance)
+            object=str(self.instance)
         )
 
 
@@ -129,18 +135,28 @@ class BaseRelatedTransitionEffect(Effect):
         relation = getattr(self.instance, self.relation)
 
         try:
-            self.instances = list(relation.all())
+            self.instances = relation.all()
         except AttributeError:
-            try:
-                self.instances = list(relation)
-            except TypeError:
+            if isinstance(relation, Iterable):
+                self.instances = relation
+            else:
                 self.instances = [relation]
 
-    @property
-    def is_valid(self):
-        return all(condition(self) for condition in self.conditions)
+    def instances(self):
+        value = getattr(self.instance, self.relation)
 
-    def pre_save(self, effects=None, **kwargs):
+        if value:
+            try:
+                for instance in value.all().iterator():
+                    yield instance
+            except AttributeError:
+                try:
+                    for instance in value:
+                        yield instance
+                except TypeError:
+                    yield value
+
+    def pre_save(self, effects):
         for instance in self.instances:
             effect = self.transition_effect_class(instance)
             if effect not in effects and self.transition in effect.machine.transitions.values():
@@ -148,16 +164,20 @@ class BaseRelatedTransitionEffect(Effect):
 
                 effects.append(effect)
 
-                instance.execute_triggers(effects=effects)
-                instance.save()
+            instance.execute_triggers(effects=effects)
+            instance.save()
 
     def post_save(self):
         for instance in self.instances:
             instance.save()
 
-    def __unicode__(self):
+    @property
+    def is_valid(self):
+        return all(condition(self) for condition in self.conditions)
+
+    def __str__(self):
         return '{} related {}'.format(
-            self.transition_effect_class.name,
+            self.transition_effect_class.transition.name,
             self.relation
         )
 
@@ -167,13 +187,13 @@ class BaseRelatedTransitionEffect(Effect):
     def to_html(self):
         if self.conditions:
             return _('{transition} related {object} if {conditions}').format(
-                transition=self.transition_effect_class.name,
-                object=unicode(self.relation),
+                transition=self.transition_effect_class.transition.name,
+                object=str(self.relation),
                 conditions=" and ".join([c.__doc__ for c in self.conditions])
             )
         return _('{transition} related {object}').format(
             transition=self.transition_effect_class.name,
-            object=unicode(self.relation)
+            object=str(self.relation)
         )
 
 

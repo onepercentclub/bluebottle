@@ -1,5 +1,5 @@
 {% extends "base.mail.html" %}
-{% load money %}
+{% load djmoney %}
 {% load i18n %}
 
 {% block content %}
@@ -15,7 +15,7 @@
 
     {% if pledged %}
         <p class="twelve columns">
-            {% blocktrans with amount=obj.amount|format_money title=obj.activity.title %}
+            {% blocktrans with amount=obj.amount title=obj.activity.title %}
                 <strong>Please transfer the amount of {{ amount }} to "{{ title }}".</strong><br />
             {% endblocktrans %}
         </p>

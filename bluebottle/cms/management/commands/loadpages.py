@@ -14,6 +14,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--file', '-f', type=str, default=None, action='store')
+        parser.add_argument('--quiet', '-q', action='store_true')
 
     def create_block(self, block, placeholder):
         model = apps.get_model(block['app'], block['model'])
@@ -36,10 +37,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         with open(options['file']) as json_file:
             data = json.load(json_file)
+        quiet = options['quiet']
         for page_data in data:
 
             if page_data['model'] == 'Page':
-                print 'Loading {} {}'.format(page_data['model'], page_data['properties']['title'])
+                if not quiet:
+                    self.stdout.write(
+                        'Loading {} {}'.format(page_data['model'], page_data['properties']['title'])
+                    )
                 model = apps.get_model(page_data['app'], page_data['model'])
                 language = Language.objects.get(code=page_data['properties']['language'])
                 # Make publication_date tz aware
@@ -52,7 +57,10 @@ class Command(BaseCommand):
                 page_type = ContentType.objects.get_for_model(page)
                 slot = 'blog_contents'
             else:
-                print 'Loading {}'.format(page_data['model'])
+                if not quiet:
+                    self.stdout.write(
+                        'Loading {}'.format(page_data['model'])
+                    )
                 model = apps.get_model(page_data['app'], page_data['model'])
                 page, _c = model.objects.get_or_create(
                     defaults=page_data['properties']

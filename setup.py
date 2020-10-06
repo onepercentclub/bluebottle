@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # flake8: noqa
 import os
-
+import sys
 import bluebottle
 from setuptools import setup, find_packages
 
@@ -13,18 +13,16 @@ def read_file(name):
 readme = read_file('README.rst')
 changes = ''
 
-
 install_requires = [
     'Babel==2.4.0',
-    'Django==1.11.15',
-    'Pillow==4.1.1',
+    'Django==1.11.17',
+    'Pillow==7.2.0' if sys.version_info.major == 3 else 'Pillow==6.2.2',
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
     'bleach==2.1.4',
-    'bunch==1.0.1',
-    'beyonic==0.1.14',
     'celery==3.1.24',
     'dotted==0.1.8',
+    'defusedxml==0.6.0',
     'django-admin-sortable==2.2.1',
     'django-admin-tools==0.8.1',
     'django-adminfilters==0.3',
@@ -50,7 +48,7 @@ install_requires = [
     'django-map-widgets==0.2.2',
     'django-memoize==2.1.0',
     'django-modeltranslation==0.12.1',
-    'django-money==0.14',
+    'django-money==0.15.1',
     'django-parler==1.9.2',
     'django-permissions-widget==1.5.1',
     'django_polymorphic==1.2',
@@ -69,7 +67,7 @@ install_requires = [
     'djangorestframework-jsonapi==2.8.0',
     'djangorestframework-jwt==1.11.0',
     'djangorestframework==3.8.2',
-    'dkimpy==0.6.1',
+    'dkimpy==1.0.5',
     'elasticsearch==6.3.0',
     'elasticsearch-dsl==6.1.0',
     'geocoder==1.37.0',
@@ -81,30 +79,27 @@ install_requires = [
     'lxml==4.3.0',
     'micawber==0.3.4',
     'mixpanel==4.3.2',
+    'munch==2.5.0',
     'django-multiselectfield==0.1.8',
-    'ndg-httpsclient==0.4.3',
     'openpyxl==2.4.8',
     'pendulum==1.2.4',
-    'psycopg2==2.7.5',
+    'psycopg2-binary==2.8.6',
     'pyasn1==0.4.2',
-    'pycrypto>=2.6.1',
     'pygeoip==0.3.2',
     'pyjwt==1.5.3',
-    'pyOpenSSL==17.5.0',
     'python-dateutil==2.6.1',
     'python-magic==0.4.15',
     'python-memcached==1.58',
-    'python-saml==2.1.7',
+    'python3-saml==1.9.0' if sys.version_info.major == 3 else 'python-saml==2.1.7',
     'python-social-auth==0.3.6',
     'social-auth-app-django==2.1.0',
     'surlex==0.2.0',
     'rave-python==1.0.2',
     'raven==6.1.0',
     'regex==2017.05.26',
-    'requests==2.20.1',
+    'requests==2.24.0',
     'schwifty==2.1.0',
     'sorl-thumbnail @ git+https://github.com/mariocesar/sorl-thumbnail.git@v12.3#egg=sorl-thumbnail-12.3-github',
-    'sorl-watermark==1.0.0',
     'South==1.0.2',
     'Sphinx==1.6.3',
     'staticmaps-signature==0.2.0',
@@ -113,7 +108,6 @@ install_requires = [
     'SurveyGizmo==1.2.2',
     'tablib==0.14.0',
     'timezonefinder==3.4.2',
-    'transifex-client==0.12.4',
     'unicodecsv==0.14.1',
     'wheel==0.29.0',
     'xlsxwriter==0.9.8',
@@ -124,20 +118,18 @@ install_requires = [
     'django-fluent-contents @ git+https://github.com/onepercentclub/django-fluent-contents.git@741ffae615a4afed01388a202709ed9a5b60e80f#egg=django-fluent-contents-1.2.1-741ffae6',
     'django-bb-salesforce @ git+https://github.com/onepercentclub/django-bb-salesforce.git@1.2.2#egg=django-bb-salesforce-1.2.2',
     'django-taggit-autocomplete-modified @ git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
-    'django-money-rates @ git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github',
 ]
 
 tests_requires = [
     'coverage==4.4.1',
     'coveralls==1.1',
-    'pyyaml==3.12',
     'django-nose==1.4.4',
     'django-setuptest==0.2.1',
     'django-slowtests==0.5.1',
     'django-webtest==1.9.2',
-    'factory-boy==2.8.1',
+    'factory-boy==2.12.0',
     'httmock==1.2.6',
-    'mock==2.0.0',
+    'mock==4.0.2' if sys.version_info.major == 3 else 'mock==3.0.5',
     'nose==1.3.7',
     'pylint==1.7.2',
     'pyquery==1.2.17',

@@ -1,3 +1,4 @@
+from builtins import object
 import logging
 
 from django.conf import settings
@@ -111,8 +112,8 @@ def modelresource_factory(model, resource_class=ExportModelResource, **meta_kwar
 
     attrs.update(**meta_kwargs)
 
-    Meta = type(str('Meta'), (object,), attrs)
-    class_name = model.__name__ + str('Resource')
+    Meta = type('Meta', (object,), attrs)
+    class_name = "{}{}".format(model.__name__, 'Resource')
     class_attrs = {'Meta': Meta}
 
     all_fields = [f.name for f in model._meta.get_fields()]
@@ -138,12 +139,12 @@ def get_export_models(admin_only=False):
         if admin_only:
             if admin.site._registry == {}:
                 admin.autodiscover()
-            return admin.site._registry.keys()
+            return list(admin.site._registry.keys())
         return get_models()
     else:
         models = []
         not_installed = []
-        for model, _ in export_conf.items():
+        for model, _ in list(export_conf.items()):
             app_label, model_class_name = model.split('.')
             model_class = get_model(app_label, model_class_name)
             if model_class is not None:

@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import uuid
 
 from rest_framework.exceptions import ValidationError
@@ -58,8 +60,8 @@ class TransitionSerializer(serializers.Serializer):
             user=self.context['request'].user)
         resource.save()
 
-    class Meta:
+    class Meta(object):
         fields = ('id', 'transition', 'message', 'resource')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'transitions'

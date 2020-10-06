@@ -1,3 +1,4 @@
+from builtins import object
 from django.contrib.admin.sites import AdminSite
 from django.test.client import RequestFactory
 from django.urls import reverse
@@ -7,7 +8,7 @@ from bluebottle.scim.admin import SCIMPlatformSettingsAdmin
 from bluebottle.scim.models import SCIMPlatformSettings
 
 
-class MockUser:
+class MockUser(object):
     is_active = True
 
     def __init__(self, perms=None, is_staff=True):

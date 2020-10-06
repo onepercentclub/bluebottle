@@ -1,3 +1,4 @@
+from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -34,7 +35,7 @@ class Redirect(models.Model):
         default=0,
         help_text=_("Is incremented each time a visitor hits this redirect"))
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('redirect')
         verbose_name_plural = _('redirects')
         db_table = 'django_redirect'

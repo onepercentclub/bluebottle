@@ -1,4 +1,5 @@
 import django_filters
+from builtins import object
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
 from rest_framework.generics import RetrieveDestroyAPIView
@@ -23,7 +24,7 @@ class WallpostFilter(django_filters.FilterSet):
     parent_type = django_filters.CharFilter(name="content_type__name")
     parent_id = django_filters.NumberFilter(name="object_id")
 
-    class Meta:
+    class Meta(object):
         model = Wallpost
         fields = ['parent_type', 'parent_id']
 
@@ -108,6 +109,13 @@ class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIVi
         queryset = queryset.order_by('-created')
         return queryset
 
+    def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(author=self.request.user, **serializer.validated_data)
+        )
+        return super(TextWallpostList, self).perform_create(serializer)
+
 
 class TextWallpostDetail(RetrieveUpdateDestroyAPIView, SetAuthorMixin):
     queryset = TextWallpost.objects.all()
@@ -115,7 +123,7 @@ class TextWallpostDetail(RetrieveUpdateDestroyAPIView, SetAuthorMixin):
     permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission), )
 
 
-class MediaWallpostList(TextWallpostList, SetAuthorMixin):
+class MediaWallpostList(TextWallpostList):
     queryset = MediaWallpost.objects.all()
     serializer_class = MediaWallpostSerializer
     filter_class = WallpostFilter
@@ -129,7 +137,7 @@ class MediaWallpostList(TextWallpostList, SetAuthorMixin):
     def perform_create(self, serializer):
         self.check_object_permissions(
             self.request,
-            serializer.Meta.model(**serializer.validated_data)
+            serializer.Meta.model(author=self.request.user, **serializer.validated_data)
         )
         return super(MediaWallpostList, self).perform_create(serializer)
 

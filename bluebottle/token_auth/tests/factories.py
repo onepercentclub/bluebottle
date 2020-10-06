@@ -1,3 +1,4 @@
+from builtins import object
 import datetime
 import factory
 
@@ -16,5 +17,5 @@ class CheckedTokenFactory(factory.DjangoModelFactory):
         tzinfo=timezone.get_current_timezone())
     user = factory.SubFactory(BlueBottleUserFactory)
 
-    class Meta:
+    class Meta(object):
         model = CheckedToken

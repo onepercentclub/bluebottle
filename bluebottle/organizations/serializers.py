@@ -1,3 +1,4 @@
+from builtins import object
 from rest_framework import serializers
 
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -27,7 +28,7 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    class Meta:
+    class Meta(object):
         model = Organization
         fields = (
             'id', 'name', 'slug', 'description', 'website', 'owner', 'logo',
@@ -36,7 +37,7 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
 
         meta_fields = ['created', 'updated', 'errors', 'required', 'permissions']
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'organizations'
         included_resources = ['owner', ]
 
@@ -53,7 +54,7 @@ class OrganizationContactSerializer(NoCommitMixin, ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    class Meta:
+    class Meta(object):
         model = OrganizationContact
         fields = (
             'id', 'name', 'email', 'phone',
@@ -62,6 +63,6 @@ class OrganizationContactSerializer(NoCommitMixin, ModelSerializer):
 
         meta_fields = ['created', 'updated', 'errors', 'required']
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'organization-contacts'
         included_resources = ['owner', ]

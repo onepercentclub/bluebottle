@@ -1,7 +1,10 @@
+from __future__ import print_function
+from builtins import str
 from django.core.exceptions import FieldDoesNotExist
 from django.core.management.base import BaseCommand
 from django.utils.module_loading import import_string
 
+from bluebottle.fsm.triggers import TransitionTrigger
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.events.models import Event, Participant
 from bluebottle.funding.models import Donation, Funding
@@ -12,7 +15,7 @@ from bluebottle.members.models import Member
 def get_doc(element):
     if element.__doc__:
         return element.__doc__
-    return "{} (documentation missing)".format(unicode(element)).replace('<', '').replace('>', '')
+    return "{} (documentation missing)".format(str(element)).replace('<', '').replace('>', '')
 
 
 class Command(BaseCommand):
@@ -101,7 +104,7 @@ class Command(BaseCommand):
 
         text += u"<table data-layout=\"default\"><tr><th>State Name</th><th>Description</th></tr>"
 
-        for state in machine.states.values():
+        for state in list(machine.states.values()):
             text += u"<tr><td>{}</td><td>{}</td></tr>".format(state.name.capitalize(), state.description)
 
         text += u"</table>"
@@ -113,9 +116,15 @@ class Command(BaseCommand):
         text += u"<table data-layout=\"full-width\"><tr><th>Name</th><th>Description</th><th>From</th><th>To</th>" \
                 u"<th>Manual</th><th>Conditions</th><th>Side Effects</th></tr>"
 
-        for transition in machine.transitions.values():
+        for transition in list(machine.transitions.values()):
             str = u"<tr><td>{}</td><td>{}</td><td><ul>{}</ul></td>" \
                   u"<td>{}</td><td>{}</td><td><ul>{}</ul></td><td><ul>{}</ul></td></tr>"
+
+            triggers = [
+                trigger for trigger in instance.triggers.triggers
+                if isinstance(trigger, TransitionTrigger) and trigger.transition == transition
+            ]
+            effects = sum([trigger.effects for trigger in triggers], [])
 
             text += str.format(
                 transition.name,
@@ -131,12 +140,16 @@ class Command(BaseCommand):
                 u"".join(
                     u"<li>{}</li>".format(effect(instance).to_html())
                     for effect
-                    in transition.effects
+                    in effects
                 )
             )
         text += u"</table>"
 
-        if model.triggers:
+        triggers = [
+            trigger for trigger in model.triggers.triggers
+            if not isinstance(trigger, TransitionTrigger)
+        ]
+        if triggers:
             text += u"<h2>Triggers</h2>"
             text += u"<em>These are events that get triggered when the instance changes, " \
                     u"other then through a transition. " \
@@ -145,14 +158,14 @@ class Command(BaseCommand):
                     u"<tr><th>When</th>" \
                     u"<th>Effects</th></tr>"
 
-            for trigger in model.triggers:
+            for trigger in triggers:
                 text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
-                    unicode(trigger(instance)),
-                    "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in trigger(instance).effects])
+                    str(trigger),
+                    "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in trigger.effects])
                 )
             text += u"</table>"
 
-        if model.triggers:
+        if model.periodic_tasks:
             text += u"<h2>Periodic tasks</h2>"
             text += u"<em>These are events that get triggered when certain dates are passed. " \
                     u"Every 15 minutes the system checks for passing deadlines, registration dates and such.</em>"
@@ -163,7 +176,7 @@ class Command(BaseCommand):
 
             for task in model.periodic_tasks:
                 text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
-                    unicode(task(instance)),
+                    str(task(instance)),
                     "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in task(instance).effects])
                 )
             text += u"</table>"

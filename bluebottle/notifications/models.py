@@ -1,3 +1,4 @@
+from builtins import object
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -8,8 +9,6 @@ from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import get_class
-
-from .signals import *  # noqa
 
 
 class Message(models.Model):
@@ -66,7 +65,7 @@ class NotificationPlatformSettings(BasePlatformSettings):
         max_length=100, choices=MATCH_OPTIONS, blank=True
     )
 
-    class Meta:
+    class Meta(object):
         verbose_name_plural = _('notification settings')
         verbose_name = _('notification settings')
 

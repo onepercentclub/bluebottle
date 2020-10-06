@@ -1,3 +1,4 @@
+from builtins import range
 import copy
 from collections import OrderedDict
 import inflection
@@ -231,7 +232,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                 relation_data.update({'links': field_links} if field_links else dict())
                 data.update({field_name: relation_data})
 
-            if isinstance(field, (ResourceRelatedField, )):
+            if isinstance(field, ResourceRelatedField):
                 if not isinstance(field, SkipDataMixin):
                     relation_data.update({'data': resource.get(field_name)})
 

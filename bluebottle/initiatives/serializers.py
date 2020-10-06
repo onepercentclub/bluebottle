@@ -1,3 +1,4 @@
+from builtins import object
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
@@ -36,11 +37,11 @@ from bluebottle.utils.serializers import (
 
 class ThemeSerializer(ModelSerializer):
 
-    class Meta:
+    class Meta(object):
         model = ProjectTheme
         fields = ('id', 'slug', 'name', 'description')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'themes'
 
 
@@ -49,11 +50,11 @@ class CategorySerializer(ModelSerializer):
     image_logo = OldImageSerializer(required=False)
     slug = serializers.CharField(read_only=True)
 
-    class Meta:
+    class Meta(object):
         model = Category
         fields = ('id', 'title', 'slug', 'description', 'image', 'image_logo')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'categories'
 
 
@@ -64,7 +65,7 @@ class BaseMemberSerializer(ModelSerializer):
     short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
     is_anonymous = serializers.SerializerMethodField()
 
-    class Meta:
+    class Meta(object):
         model = Member
         fields = (
             'id', 'first_name', 'last_name', 'initials', 'avatar',
@@ -75,7 +76,7 @@ class BaseMemberSerializer(ModelSerializer):
     def get_is_anonymous(self, obj):
         return False
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'members'
 
 
@@ -85,7 +86,7 @@ class MemberSerializer(ModelSerializer):
     is_active = serializers.BooleanField(read_only=True)
     short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
 
-    class Meta:
+    class Meta(object):
         model = Member
         fields = (
             'id', 'first_name', 'last_name', 'initials', 'avatar',
@@ -93,7 +94,7 @@ class MemberSerializer(ModelSerializer):
             'about_me', 'is_co_financer', 'is_anonymous'
         )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'members'
 
     def to_representation(self, instance):
@@ -126,7 +127,7 @@ class InitiativeMapSerializer(serializers.ModelSerializer):
     # No need to repeat `type` and `latitude`, `longitude` for every record.
     position = TinyPointSerializer()
 
-    class Meta:
+    class Meta(object):
         model = Initiative
         fields = (
             'id', 'title', 'slug', 'position',
@@ -174,7 +175,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'activities.goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
     }
 
-    class Meta:
+    class Meta(object):
         model = Initiative
         fsm_fields = ['status']
         fields = (
@@ -191,7 +192,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'errors', 'stats',
         )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = [
             'owner', 'reviewer', 'promoter', 'activity_manager',
             'categories', 'theme', 'place', 'location',
@@ -222,7 +223,7 @@ class InitiativeListSerializer(ModelSerializer):
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
     }
 
-    class Meta:
+    class Meta(object):
         model = Initiative
         fsm_fields = ['status']
         fields = (
@@ -234,7 +235,7 @@ class InitiativeListSerializer(ModelSerializer):
 
         meta_fields = ('permissions', 'status', 'created', 'transitions',)
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = [
             'owner', 'activity_manager',
             'categories', 'theme', 'place', 'location',
@@ -261,11 +262,11 @@ class RelatedInitiativeImageSerializer(ModelSerializer):
         'image': 'bluebottle.initiatives.serializers.RelatedInitiativeImageContentSerializer',
     }
 
-    class Meta:
+    class Meta(object):
         model = RelatedImage
         fields = ('image', 'resource', )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = [
             'resource', 'image',
         ]
@@ -285,7 +286,7 @@ class OrganizationSubmitSerializer(serializers.ModelSerializer):
         else:
             return (False if data else True, data)
 
-    class Meta:
+    class Meta(object):
         model = Organization
         fields = ('name', )
 
@@ -300,7 +301,7 @@ class OrganizationContactSubmitSerializer(serializers.ModelSerializer):
         else:
             return (False if data else True, data)
 
-    class Meta:
+    class Meta(object):
         model = OrganizationContact
         fields = ('name', 'email', 'phone', )
 
@@ -354,7 +355,7 @@ class InitiativeSubmitSerializer(ModelSerializer):
             raise serializers.ValidationError("Place is required")
         return data
 
-    class Meta:
+    class Meta(object):
         model = Initiative
         fields = (
             'title', 'pitch', 'owner',
@@ -371,7 +372,7 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
         'resource': 'bluebottle.initiatives.serializers.InitiativeSerializer',
     }
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = ['resource']
         resource_name = 'initiative-transitions'
 
@@ -382,7 +383,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
     def get_has_locations(self, obj):
         return Location.objects.count()
 
-    class Meta:
+    class Meta(object):
         model = InitiativePlatformSettings
 
         fields = (
@@ -403,5 +404,5 @@ class InitiativeRedirectSerializer(serializers.Serializer):
     target_route = serializers.CharField(read_only=True)
     target_params = serializers.ListField(read_only=True)
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'initiative-redirects'

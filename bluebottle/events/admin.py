@@ -1,3 +1,4 @@
+from builtins import object
 from django.contrib import admin
 from django_summernote.widgets import SummernoteWidget
 
@@ -11,7 +12,7 @@ from bluebottle.fsm.forms import StateMachineModelForm
 
 class EventAdminForm(StateMachineModelForm):
 
-    class Meta:
+    class Meta(object):
         model = Event
         fields = '__all__'
         widgets = {
@@ -27,7 +28,7 @@ class ParticipantInline(ContributionInline):
 
 
 class ParticipantAdminForm(StateMachineModelForm):
-    class Meta:
+    class Meta(object):
         model = Participant
         exclude = ('transition_date', )
 
@@ -62,7 +63,7 @@ class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
     inlines = ActivityChildAdmin.inlines + (ParticipantInline, MessageAdminInline)
     list_display = [
-        '__unicode__', 'initiative', 'state_name',
+        '__str__', 'initiative', 'state_name',
         'highlight', 'start', 'duration', 'created'
     ]
     search_fields = ['title', 'description']
@@ -103,7 +104,6 @@ class EventAdmin(ActivityChildAdmin):
         ('is_online', 'Will be hosted online?'),
         ('location', 'Location'),
         ('location_hint', 'Location Hint'),
-        ('automatically_accept', 'Auto Accept Members'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

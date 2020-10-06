@@ -218,11 +218,22 @@ class AssignmentTasksTestCase(BluebottleTestCase):
             date=date,
         )
         assignment.states.submit(save=True)
-
         ApplicantFactory.create_batch(3, activity=assignment)
 
         tenant = connection.tenant
-        assignment_tasks()
+
+        future = timezone.now() + timedelta(days=3)
+        with mock.patch.object(timezone, 'now', return_value=future):
+            assignment_tasks()
+
+        with LocalTenant(tenant, clear_tenant=True):
+            assignment.refresh_from_db()
+
+        self.assertEqual(assignment.status, 'running')
+
+        future = timezone.now() + timedelta(days=10)
+        with mock.patch.object(timezone, 'now', return_value=future):
+            assignment_tasks()
 
         with LocalTenant(tenant, clear_tenant=True):
             assignment.refresh_from_db()
@@ -254,7 +265,8 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         tenant = connection.tenant
 
-        with mock.patch.object(timezone, 'now', return_value=(timezone.now() + timedelta(days=13))):
+        future = timezone.now() + timedelta(days=3)
+        with mock.patch.object(timezone, 'now', return_value=future):
             assignment_tasks()
 
         with LocalTenant(tenant, clear_tenant=True):

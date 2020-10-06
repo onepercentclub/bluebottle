@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import requests
 from django.core.exceptions import ImproperlyConfigured
 
@@ -12,7 +13,7 @@ def post(url, data):
 
 
 def check_payment_status(payment):
-    from states import FlutterwavePaymentStateMachine
+    from .states import FlutterwavePaymentStateMachine
     verify_url = "https://api.ravepay.co/flwv3-pug/getpaidx/api/v2/verify"
 
     from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider
@@ -45,7 +46,7 @@ def check_payment_status(payment):
         payment.donation.payout_amount = amount
     payment.donation.save()
     if data['data']['status'] == 'successful':
-        from states import FlutterwavePaymentStateMachine
+        from .states import FlutterwavePaymentStateMachine
         if payment.status != FlutterwavePaymentStateMachine.succeeded.value:
             payment.states.succeed()
     else:

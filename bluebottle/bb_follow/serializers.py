@@ -1,3 +1,4 @@
+from builtins import object
 from rest_framework import serializers
 from bluebottle.bb_follow.models import Follow
 from bluebottle.projects.models import Project
@@ -22,6 +23,6 @@ class FollowSerializer(serializers.ModelSerializer):
     """ Serializer for the Follow model """
     followed_object = FollowedObjectRelatedField()
 
-    class Meta:
+    class Meta(object):
         model = Follow
         fields = ('user', 'content_type', 'object_id', 'followed_object')

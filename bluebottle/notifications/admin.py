@@ -1,3 +1,4 @@
+from builtins import object
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.options import csrf_protect_m
@@ -97,7 +98,7 @@ class NotificationAdminMixin(object):
 
 
 class MessageTemplateAdminCreateForm(forms.ModelForm):
-    class Meta:
+    class Meta(object):
         model = MessageTemplate
         fields = ['message']
 
@@ -110,7 +111,7 @@ class MessageTemplateAdminForm(TranslatableModelForm):
     )
     body_txt = TranslatedField(widget=Textarea(attrs={'rows': 12, 'cols': 80}))
 
-    class Meta:
+    class Meta(object):
         model = MessageTemplate
         fields = ['message', 'subject', 'body_html', 'body_txt']
 

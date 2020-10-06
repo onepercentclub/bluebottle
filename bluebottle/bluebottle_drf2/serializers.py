@@ -1,10 +1,13 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import logging
 import os
 from os.path import isfile
 import re
 import sys
-from urllib2 import URLError
-import urlparse
+from urllib.error import URLError
+import urllib.parse
 
 
 from django.conf import settings
@@ -26,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 def is_absolute_url(url):
-    return bool(urlparse.urlparse(url).netloc)
+    return bool(urllib.parse.urlparse(url).netloc)
 
 
 class RestrictedImageField(serializers.ImageField):
@@ -42,18 +45,12 @@ class RestrictedImageField(serializers.ImageField):
 
 class SorlImageField(RestrictedImageField):
     def __init__(self, geometry_string, crop='center',
-                 colorspace='RGB', watermark=None, watermark_pos=None,
-                 watermark_size=None, **kwargs):
+                 colorspace='RGB', **kwargs):
         self.geometry_string = geometry_string
         self.sorl_options = {
             'crop': crop,
             'colorspace': colorspace,
         }
-
-        if watermark:
-            self.sorl_options['watermark'] = watermark
-            self.sorl_options['watermark_pos'] = watermark_pos
-            self.sorl_options['watermark_size'] = watermark_size
 
         super(SorlImageField, self).__init__(**kwargs)
 
@@ -71,19 +68,13 @@ class SorlImageField(RestrictedImageField):
         if ext == '.svg':
             return value.url
 
-        if 'watermark' in self.sorl_options:
-            try:
-                self.sorl_options['watermark'] = self.sorl_options['watermark']()
-            except TypeError:
-                pass
-
         if ext == '.png':
             self.sorl_options['format'] = 'PNG'
 
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
         try:
-            thumbnail = unicode(get_thumbnail(value, self.geometry_string, **self.sorl_options))
+            thumbnail = get_thumbnail(value, self.geometry_string, **self.sorl_options)
         except IOError:
             return ""
         except Exception:
@@ -91,7 +82,7 @@ class SorlImageField(RestrictedImageField):
                 raise
             logger.error('Thumbnail failed:', exc_info=sys.exc_info())
             return ""
-        relative_url = settings.MEDIA_URL + thumbnail
+        relative_url = settings.MEDIA_URL + thumbnail.name
         return relative_url
 
 
@@ -170,7 +161,7 @@ class PrimaryKeyGenericRelatedField(serializers.RelatedField):
         super(PrimaryKeyGenericRelatedField, self).__init__(queryset=queryset)
 
     def label_from_instance(self, obj):
-        return "{0} - {1}".format(smart_str(self.to_model.__unicode__(obj)),
+        return "{0} - {1}".format(smart_str(self.to_model.__str__(obj)),
                                   str(obj.id))
 
     def prepare_value(self, obj):
@@ -206,7 +197,7 @@ class SlugGenericRelatedField(serializers.RelatedField):
                                                       **kwargs)
 
     def label_from_instance(self, obj):
-        return "{0} - {1}".format(smart_str(self.to_model.__unicode__(obj)),
+        return "{0} - {1}".format(smart_str(self.to_model.__str__(obj)),
                                   obj.slug)
 
     def prepare_value(self, to_instance):
@@ -261,18 +252,12 @@ class ImageSerializer(RestrictedImageField):
         if not isfile(value.path):
             return None
         try:
-            large = settings.MEDIA_URL + unicode(
-                get_thumbnail(value, '800x450', crop=self.crop))
-            full = settings.MEDIA_URL + unicode(
-                get_thumbnail(value, '1200x900'))
-            small = settings.MEDIA_URL + unicode(
-                get_thumbnail(value, '400x300', crop=self.crop))
-            square = settings.MEDIA_URL + unicode(
-                get_thumbnail(value, '600x600', crop=self.crop))
-            wide = settings.MEDIA_URL + unicode(
-                get_thumbnail(value, '1024x256', crop=self.crop))
-            original = settings.MEDIA_URL + unicode(
-                get_thumbnail(value, '1920', upscale=False))
+            large = settings.MEDIA_URL + get_thumbnail(value, '800x450', crop=self.crop).name
+            full = settings.MEDIA_URL + get_thumbnail(value, '1200x900').name
+            small = settings.MEDIA_URL + get_thumbnail(value, '400x300', crop=self.crop).name
+            square = settings.MEDIA_URL + get_thumbnail(value, '600x600', crop=self.crop).name
+            wide = settings.MEDIA_URL + get_thumbnail(value, '1024x256', crop=self.crop).name
+            original = settings.MEDIA_URL + get_thumbnail(value, '1920', upscale=False).name
 
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
@@ -302,8 +287,8 @@ class PhotoSerializer(RestrictedImageField):
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
         try:
-            full = settings.MEDIA_URL + unicode(get_thumbnail(value, '800x600'))
-            small = settings.MEDIA_URL + unicode(
+            full = settings.MEDIA_URL + str(get_thumbnail(value, '800x600'))
+            small = settings.MEDIA_URL + str(
                 get_thumbnail(value, '120x120', crop=self.crop))
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):

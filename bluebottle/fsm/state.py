@@ -1,5 +1,9 @@
+from builtins import str
+from builtins import object
 from django.utils.translation import ugettext_lazy as _
 from django.dispatch import Signal
+from future.utils import with_metaclass
+from stripe.six import python_2_unicode_compatible
 
 
 class TransitionNotPossible(Exception):
@@ -19,6 +23,7 @@ def register(model_cls):
     return _register
 
 
+@python_2_unicode_compatible
 class BaseTransition(object):
     def __init__(self, sources, target, name='', description='',
                  automatic=True, conditions=None, effects=None, **options):
@@ -85,8 +90,8 @@ class BaseTransition(object):
     def __repr__(self):
         return '<Transition from {} to {}>'.format(self.sources, self.target)
 
-    def __unicode__(self):
-        return unicode(self.name or self.field)
+    def __str__(self):
+        return str(self.name or self.field)
 
 
 pre_state_transition = Signal(
@@ -132,6 +137,7 @@ class Transition(BaseTransition):
         )
 
 
+@python_2_unicode_compatible
 class State(object):
     transition_class = Transition
 
@@ -143,8 +149,8 @@ class State(object):
     def __repr__(self):
         return '<State {}>'.format(self.name)
 
-    def __unicode__(self):
-        return unicode(self.name)
+    def __str__(self):
+        return str(self.name)
 
 
 class EmptyState(State):
@@ -196,7 +202,7 @@ class StateMachineMeta(type):
             for key in dir(result)
             if isinstance(getattr(result, key), Transition)
         )
-        for key, transition in transitions.items():
+        for key, transition in list(transitions.items()):
             transition.field = key
 
         result.transitions = transitions
@@ -204,14 +210,12 @@ class StateMachineMeta(type):
         return result
 
 
-class StateMachine(object):
-    __metaclass__ = StateMachineMeta
-
+class StateMachine(with_metaclass(StateMachineMeta, object)):
     @property
     def initial_transition(self):
         initial_transitions = [
             transition
-            for transition in self.transitions.values()
+            for transition in list(self.transitions.values())
             if EmptyState() in transition.sources
         ]
         if (len(initial_transitions)) > 1:
@@ -224,13 +228,13 @@ class StateMachine(object):
 
     @property
     def current_state(self):
-        for state in self.states.values():
+        for state in list(self.states.values()):
             if state.value == self.state:
                 return state
 
     def possible_transitions(self, **kwargs):
         result = []
-        for transition in self.transitions.values():
+        for transition in list(self.transitions.values()):
             try:
                 transition.can_execute(self, **kwargs)
                 result.append(transition)
@@ -251,9 +255,7 @@ class ModelStateMachineMeta(StateMachineMeta):
         return StateMachineMeta.__new__(cls, name, bases, dct)
 
 
-class ModelStateMachine(StateMachine):
-    __metaclass__ = ModelStateMachineMeta
-
+class ModelStateMachine(with_metaclass(ModelStateMachineMeta, StateMachine)):
     def __init__(self, instance):
         self.instance = instance
 

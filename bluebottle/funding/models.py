@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from builtins import str
+from builtins import range
+from builtins import object
 import random
 import string
 
 from babel.numbers import get_currency_name
+from future.utils import python_2_unicode_compatible
+
+from bluebottle.clients import properties
+from djmoney.contrib.exchange.models import convert_money
+
 from bluebottle.fsm.triggers import TriggerMixin
 
 from django.db.models import Count
@@ -21,7 +30,6 @@ from tenant_schemas.postgresql_backend.base import FakeTenant
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
 from bluebottle.files.fields import ImageField, PrivateDocumentField
-from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
 
@@ -38,11 +46,12 @@ class PaymentCurrency(models.Model):
     default3 = models.DecimalField(decimal_places=2, max_digits=10)
     default4 = models.DecimalField(decimal_places=2, max_digits=10)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Payment currency')
         verbose_name_plural = _('Payment currencies')
 
 
+@python_2_unicode_compatible
 class PaymentProvider(PolymorphicModel):
 
     public_settings = {}
@@ -82,7 +91,7 @@ class PaymentProvider(PolymorphicModel):
     def payment_methods(self):
         return []
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.polymorphic_ctype)
 
     @property
@@ -138,6 +147,8 @@ class Funding(Activity):
 
     validators = [KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator]
 
+    auto_approve = False
+
     @property
     def required_fields(self):
         fields = ['title', 'description', 'target', 'bank_account']
@@ -147,10 +158,10 @@ class Funding(Activity):
 
         return fields
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'activities/fundings'
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("Funding")
         verbose_name_plural = _("Funding Activities")
         permissions = (
@@ -184,26 +195,21 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) converted to the targets currency
         """
-        from states import DonationStateMachine
+        from .states import DonationStateMachine
+        from bluebottle.funding.utils import calculate_total
         cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
-            totals = self.donations.filter(
+            donations = self.donations.filter(
                 status__in=(
                     DonationStateMachine.succeeded.value,
                     DonationStateMachine.activity_refunded.value,
                 )
-            ).values(
-                'donation__amount_currency'
-            ).annotate(
-                total=Sum('donation__amount')
             )
-            amounts = [Money(tot['total'], tot['donation__amount_currency']) for tot in totals]
-            amounts = [convert(amount, self.target.currency) for amount in amounts]
-            if self.target:
-                total = sum(amounts) or Money(0, self.target.currency)
+            if self.target and self.target.currency:
+                total = calculate_total(donations, self.target.currency)
             else:
-                total = Money(0, 'EUR')
+                total = calculate_total(donations, properties.DEFAULT_CURRENCY)
             cache.set(cache_key, total)
         return total
 
@@ -212,25 +218,22 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) without pledges converted to the targets currency
         """
-        from states import DonationStateMachine
+        from .states import DonationStateMachine
+        from bluebottle.funding.utils import calculate_total
         cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
-            totals = self.donations.filter(
+            donations = self.donations.filter(
                 status__in=(
                     DonationStateMachine.succeeded.value,
                     DonationStateMachine.activity_refunded.value,
                 ),
                 donation__payment__pledgepayment__isnull=True
-            ).values(
-                'donation__amount_currency'
-            ).annotate(
-                total=Sum('donation__amount')
             )
-            amounts = [Money(tot['total'], tot['donation__amount_currency']) for tot in totals]
-            amounts = [convert(amount, self.target.currency) for amount in amounts]
-
-            total = sum(amounts) or Money(0, self.target.currency)
+            if self.target and self.target.currency:
+                total = calculate_total(donations, self.target.currency)
+            else:
+                total = calculate_total(donations, properties.DEFAULT_CURRENCY)
             cache.set(cache_key, total)
         return total
 
@@ -239,22 +242,21 @@ class Funding(Activity):
         """
         The sum of all contributions (donations) converted to the targets currency
         """
-        from states import DonationStateMachine
-        totals = self.donations.filter(
+        from .states import DonationStateMachine
+        from bluebottle.funding.utils import calculate_total
+        donations = self.donations.filter(
             status__in=(
                 DonationStateMachine.succeeded.value,
                 DonationStateMachine.activity_refunded.value,
             ),
             donation__payment__pledgepayment__isnull=False
-        ).values(
-            'donation__amount_currency'
-        ).annotate(
-            total=Sum('donation__amount')
         )
-        amounts = [Money(total['total'], total['donation__amount_currency']) for total in totals]
-        amounts = [convert(amount, self.target.currency) for amount in amounts]
+        if self.target and self.target.currency:
+            total = calculate_total(donations, self.target.currency)
+        else:
+            total = calculate_total(donations, properties.DEFAULT_CURRENCY)
 
-        return sum(amounts) or Money(0, self.target.currency)
+        return total
 
     @property
     def amount_raised(self):
@@ -267,7 +269,7 @@ class Funding(Activity):
             currency = 'EUR'
         total = self.amount_donated
         if self.amount_matching:
-            total += convert(
+            total += convert_money(
                 self.amount_matching,
                 currency
             )
@@ -275,7 +277,7 @@ class Funding(Activity):
 
     @property
     def stats(self):
-        from states import DonationStateMachine
+        from .states import DonationStateMachine
         stats = self.donations.filter(
             status=DonationStateMachine.succeeded.value
         ).aggregate(
@@ -297,10 +299,8 @@ class Funding(Activity):
 
         super(Funding, self).save(*args, **kwargs)
 
-    def __unicode__(self):
-        return self.title or str(_('-empty-'))
 
-
+@python_2_unicode_compatible
 class Reward(models.Model):
     """
     Rewards for donations
@@ -321,20 +321,20 @@ class Reward(models.Model):
 
     @property
     def count(self):
-        from states import DonationStateMachine
+        from .states import DonationStateMachine
         return self.donations.filter(
             status=DonationStateMachine.succeeded.value
         ).count()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
-    class Meta:
+    class Meta(object):
         ordering = ['-activity__created', 'amount']
         verbose_name = _("Gift")
         verbose_name_plural = _("Gifts")
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'activities/rewards'
 
     def delete(self, *args, **kwargs):
@@ -344,6 +344,7 @@ class Reward(models.Model):
         return super(Reward, self).delete(*args, **kwargs)
 
 
+@python_2_unicode_compatible
 class BudgetLine(models.Model):
     """
     BudgetLine: Entries to the Activity Budget sheet.
@@ -356,17 +357,18 @@ class BudgetLine(models.Model):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'activities/budget-lines'
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('budget line')
         verbose_name_plural = _('budget lines')
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{0} - {1}'.format(self.description, self.amount)
 
 
+@python_2_unicode_compatible
 class Fundraiser(AnonymizationMixin, models.Model):
     owner = models.ForeignKey('members.Member', related_name="funding_fundraisers")
     activity = models.ForeignKey(
@@ -386,12 +388,12 @@ class Fundraiser(AnonymizationMixin, models.Model):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     @cached_property
     def amount_donated(self):
-        from states import DonationStateMachine
+        from .states import DonationStateMachine
         donations = self.donations.filter(
             status__in=[
                 DonationStateMachine.succeeded.value,
@@ -404,15 +406,16 @@ class Fundraiser(AnonymizationMixin, models.Model):
             donations.values('amount_currency').annotate(Sum('amount')).order_by()
         ]
 
-        totals = [convert(amount, self.amount.currency) for amount in totals]
+        totals = [convert_money(amount, self.amount.currency) for amount in totals]
 
         return sum(totals) or Money(0, self.amount.currency)
 
-    class Meta():
+    class Meta(object):
         verbose_name = _('fundraiser')
         verbose_name_plural = _('fundraisers')
 
 
+@python_2_unicode_compatible
 class Payout(TriggerMixin, models.Model):
     activity = models.ForeignKey(
         'funding.Funding',
@@ -433,7 +436,7 @@ class Payout(TriggerMixin, models.Model):
 
     @classmethod
     def generate(cls, activity):
-        from states import PayoutStateMachine
+        from .states import PayoutStateMachine
         for payout in cls.objects.filter(activity=activity):
             if payout.status == PayoutStateMachine.new.value:
                 payout.delete()
@@ -465,14 +468,15 @@ class Payout(TriggerMixin, models.Model):
             return Money(self.donations.aggregate(total=Sum('payout_amount'))['total'] or 0, self.currency)
         return self.donations.aggregate(total=Sum('amount'))['total']
 
-    class Meta():
+    class Meta(object):
         verbose_name = _('payout')
         verbose_name_plural = _('payouts')
 
-    def __unicode__(self):
-        return u'{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
+    def __str__(self):
+        return '{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
 
 
+@python_2_unicode_compatible
 class Donation(Contribution):
     amount = MoneyField()
     payout_amount = MoneyField()
@@ -504,17 +508,18 @@ class Donation(Contribution):
             return None
         return self.payment.type
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Donation')
         verbose_name_plural = _('Donations')
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{}'.format(self.amount)
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'contributions/donations'
 
 
+@python_2_unicode_compatible
 class Payment(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
@@ -536,10 +541,10 @@ class Payment(TriggerMixin, PolymorphicModel):
 
         super(Payment, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return "{} - {}".format(self.polymorphic_ctype, self.id)
 
-    class Meta:
+    class Meta(object):
         permissions = (
             ('refund_payment', 'Can refund payments'),
         )
@@ -579,10 +584,11 @@ class PaymentMethod(object):
     def pk(self):
         return self.id
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'payments/payment-methods'
 
 
+@python_2_unicode_compatible
 class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
@@ -601,6 +607,9 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, Polym
             for funding in account.funding_set.all():
                 return funding
 
+    def __str__(self):
+        return "Payout account #{}".format(self.id)
+
 
 class PlainPayoutAccount(PayoutAccount):
     document = PrivateDocumentField(blank=True, null=True)
@@ -611,11 +620,11 @@ class PlainPayoutAccount(PayoutAccount):
     def verified(self):
         return self.reviewed
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Without payment account')
         verbose_name_plural = _('Without payment accounts')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'payout-accounts/plains'
 
     @property
@@ -626,6 +635,7 @@ class PlainPayoutAccount(PayoutAccount):
         return required
 
 
+@python_2_unicode_compatible
 class BankAccount(PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -670,10 +680,16 @@ class BankAccount(PolymorphicModel):
         except self.provider_class.DoesNotExist:
             return []
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'payout-accounts/external-accounts'
 
     public_data = {}
+
+    def __str__(self):
+        return "Bank account #{}".format(self.id)
+
+    class Meta:
+        ordering = ('id',)
 
 
 class FundingPlatformSettings(BasePlatformSettings):
@@ -682,7 +698,7 @@ class FundingPlatformSettings(BasePlatformSettings):
         _('Allow guests to donate rewards'), default=True
     )
 
-    class Meta:
+    class Meta(object):
         verbose_name_plural = _('funding settings')
         verbose_name = _('funding settings')
 

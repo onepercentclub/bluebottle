@@ -1,3 +1,4 @@
+from builtins import range
 import json
 
 from bluebottle.funding.tests.factories import FundingFactory

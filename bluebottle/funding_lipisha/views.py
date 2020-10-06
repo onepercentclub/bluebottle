@@ -27,7 +27,7 @@ class LipishaPaymentList(PaymentList):
         try:
             return super(LipishaPaymentList, self).post(request, **kwargs)
         except PaymentException as e:
-            return HttpResponseBadRequest('Error creating payment: {}'.format(e))
+            return HttpResponseBadRequest('Error creating payment: {}'.format(e.message))
 
 
 class LipishaWebHookView(View):

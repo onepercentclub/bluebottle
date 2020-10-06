@@ -51,9 +51,6 @@ class RewardFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Reward
 
-    activity = factory.SubFactory(FundingFactory)
-    amount = Money(35, 'EUR')
-
 
 class BudgetLineFactory(factory.DjangoModelFactory):
     amount = Money(35, 'EUR')
@@ -61,9 +58,6 @@ class BudgetLineFactory(factory.DjangoModelFactory):
 
     class Meta(object):
         model = BudgetLine
-
-    activity = factory.SubFactory(FundingFactory)
-    amount = Money(35, 'EUR')
 
 
 class PlainPayoutAccountFactory(factory.DjangoModelFactory):

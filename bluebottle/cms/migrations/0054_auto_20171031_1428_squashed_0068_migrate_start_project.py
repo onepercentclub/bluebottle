@@ -115,7 +115,7 @@ def migrate_start_project(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
-    replaces = [(b'cms', '0054_auto_20171031_1428'), (b'cms', '0021_auto_20171017_2015'), (b'cms', '0022_auto_20171019_1725'), (b'cms', '0023_auto_20171019_2042'), (b'cms', '0024_siteplatformsettings'), (b'cms', '0025_auto_20171024_1600'), (b'cms', '0055_merge_20171031_1713'), (b'cms', '0056_auto_20171102_1527'), (b'cms', '0057_auto_20171103_1438'), (b'cms', '0058_auto_20171110_1230'), (b'cms', '0059_auto_20171121_1022'), (b'cms', '0059_auto_20171121_0959'), (b'cms', '0060_merge_20171121_1334'), (b'cms', '0061_auto_20171128_1135'), (b'cms', '0062_auto_20171128_1355'), (b'cms', '0063_auto_20171204_1049'), (b'cms', '0064_auto_20171220_1145'), (b'cms', '0065_auto_20180313_1401'), (b'cms', '0066_auto_20180709_1657'), (b'cms', '0067_auto_20190710_0938'), (b'cms', '0068_migrate_start_project')]
+    replaces = [('cms', '0054_auto_20171031_1428'), ('cms', '0021_auto_20171017_2015'), ('cms', '0022_auto_20171019_1725'), ('cms', '0023_auto_20171019_2042'), ('cms', '0024_siteplatformsettings'), ('cms', '0025_auto_20171024_1600'), ('cms', '0055_merge_20171031_1713'), ('cms', '0056_auto_20171102_1527'), ('cms', '0057_auto_20171103_1438'), ('cms', '0058_auto_20171110_1230'), ('cms', '0059_auto_20171121_1022'), ('cms', '0059_auto_20171121_0959'), ('cms', '0060_merge_20171121_1334'), ('cms', '0061_auto_20171128_1135'), ('cms', '0062_auto_20171128_1355'), ('cms', '0063_auto_20171204_1049'), ('cms', '0064_auto_20171220_1145'), ('cms', '0065_auto_20180313_1401'), ('cms', '0066_auto_20180709_1657'), ('cms', '0067_auto_20190710_0938'), ('cms', '0068_migrate_start_project')]
 
     dependencies = [
         ('news', '0007_auto_20180709_1706'),
@@ -130,7 +130,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='projectscontent',
             name='projects',
-            field=models.ManyToManyField(blank=True, db_table=b'cms_projectscontent_projects', to=b'projects.Project'),
+            field=models.ManyToManyField(blank=True, db_table='cms_projectscontent_projects', to='projects.Project'),
         ),
         migrations.AlterField(
             model_name='quote',
@@ -143,7 +143,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('highlight', models.BooleanField(default=False)),
                 ('title', models.CharField(max_length=100, verbose_name='Title')),
-                ('component', models.CharField(blank=True, choices=[(b'page', 'Page'), (b'project', 'Project'), (b'task', 'Task'), (b'fundraiser', 'Fundraiser'), (b'results', 'Results'), (b'news', 'News')], max_length=50, verbose_name='Component')),
+                ('component', models.CharField(blank=True, choices=[('page', 'Page'), ('project', 'Project'), ('task', 'Task'), ('fundraiser', 'Fundraiser'), ('results', 'Results'), ('news', 'News')], max_length=50, verbose_name='Component')),
                 ('component_id', models.CharField(blank=True, max_length=100, verbose_name='Component ID')),
                 ('external_link', models.CharField(blank=True, max_length=2000, verbose_name='External Link')),
                 ('link_order', models.PositiveIntegerField(db_index=True, default=0, editable=False)),
@@ -156,7 +156,7 @@ class Migration(migrations.Migration):
             name='LinkGroup',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(choices=[(b'main', 'Main'), (b'about', 'About'), (b'info', 'Info'), (b'discover', 'Discover'), (b'social', 'Social')], default=b'main', max_length=25, unique=True)),
+                ('name', models.CharField(choices=[('main', 'Main'), ('about', 'About'), ('info', 'Info'), ('discover', 'Discover'), ('social', 'Social')], default='main', max_length=25, unique=True)),
                 ('title', models.CharField(blank=True, max_length=50, verbose_name='Title')),
             ],
         ),
@@ -192,12 +192,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='link',
             name='link_permissions',
-            field=models.ManyToManyField(blank=True, to=b'cms.LinkPermission'),
+            field=models.ManyToManyField(blank=True, to='cms.LinkPermission'),
         ),
         migrations.AlterField(
             model_name='link',
             name='component',
-            field=models.CharField(blank=True, choices=[(b'page', 'Page'), (b'project', 'Project'), (b'task', 'Task'), (b'fundraiser', 'Fundraiser'), (b'results', 'Results'), (b'news', 'News')], max_length=50, null=True, verbose_name='Component'),
+            field=models.CharField(blank=True, choices=[('page', 'Page'), ('project', 'Project'), ('task', 'Task'), ('fundraiser', 'Fundraiser'), ('results', 'Results'), ('news', 'News')], max_length=50, null=True, verbose_name='Component'),
         ),
         migrations.AlterField(
             model_name='link',
@@ -212,7 +212,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='linkgroup',
             name='name',
-            field=models.CharField(choices=[(b'main', 'Main'), (b'about', 'About'), (b'info', 'Info'), (b'discover', 'Discover'), (b'social', 'Social')], default=b'main', max_length=25),
+            field=models.CharField(choices=[('main', 'Main'), ('about', 'About'), ('info', 'Info'), ('discover', 'Discover'), ('social', 'Social')], default='main', max_length=25),
         ),
         migrations.AlterModelOptions(
             name='linkgroup',
@@ -233,7 +233,7 @@ class Migration(migrations.Migration):
                 ('copyright', models.CharField(blank=True, max_length=100, null=True)),
                 ('powered_by_text', models.CharField(blank=True, max_length=100, null=True)),
                 ('powered_by_link', models.CharField(blank=True, max_length=100, null=True)),
-                ('powered_by_logo', models.ImageField(blank=True, null=True, upload_to=b'site_content/')),
+                ('powered_by_logo', models.ImageField(blank=True, null=True, upload_to='site_content/')),
             ],
             options={
                 'verbose_name': 'site platform settings',
@@ -281,7 +281,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='link',
             name='component',
-            field=models.CharField(blank=True, choices=[(b'page', 'Page'), (b'project', 'Project'), (b'task', 'Task'), (b'fundraiser', 'Fundraiser'), (b'results-page', 'Results Page'), (b'news', 'News')], max_length=50, null=True, verbose_name='Component'),
+            field=models.CharField(blank=True, choices=[('page', 'Page'), ('project', 'Project'), ('task', 'Task'), ('fundraiser', 'Fundraiser'), ('results-page', 'Results Page'), ('news', 'News')], max_length=50, null=True, verbose_name='Component'),
         ),
         migrations.AddField(
             model_name='contentlink',
@@ -306,7 +306,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='link',
             name='component',
-            field=models.CharField(blank=True, choices=[(b'page', 'Page'), (b'project', 'Project'), (b'task', 'Task'), (b'fundraiser', 'Fundraiser'), (b'results-page', 'Results Page'), (b'news', 'News')], max_length=50, null=True, verbose_name='Component'),
+            field=models.CharField(blank=True, choices=[('page', 'Page'), ('project', 'Project'), ('task', 'Task'), ('fundraiser', 'Fundraiser'), ('results-page', 'Results Page'), ('news', 'News')], max_length=50, null=True, verbose_name='Component'),
         ),
         migrations.AlterModelOptions(
             name='contentlink',
@@ -412,17 +412,17 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='siteplatformsettings',
             name='favicon',
-            field=models.ImageField(blank=True, null=True, upload_to=b'site_content/'),
+            field=models.ImageField(blank=True, null=True, upload_to='site_content/'),
         ),
         migrations.AddField(
             model_name='siteplatformsettings',
             name='logo',
-            field=models.ImageField(blank=True, null=True, upload_to=b'site_content/'),
+            field=models.ImageField(blank=True, null=True, upload_to='site_content/'),
         ),
         migrations.AlterField(
             model_name='stat',
             name='type',
-            field=models.CharField(choices=[(b'manual', 'Manual input'), (b'people_involved', 'People involved'), (b'participants', 'Participants'), (b'projects_realized', 'Projects realised'), (b'projects_complete', 'Projects complete'), (b'tasks_realized', 'Tasks realised'), (b'task_members', 'Taskmembers'), (b'donated_total', 'Donated total'), (b'pledged_total', 'Pledged total'), (b'amount_matched', 'Amount matched'), (b'projects_online', 'Projects Online'), (b'votes_cast', 'Votes casts'), (b'time_spent', 'Time spent'), (b'members', 'Number of members')], max_length=25),
+            field=models.CharField(choices=[('manual', 'Manual input'), ('people_involved', 'People involved'), ('participants', 'Participants'), ('projects_realized', 'Projects realised'), ('projects_complete', 'Projects complete'), ('tasks_realized', 'Tasks realised'), ('task_members', 'Taskmembers'), ('donated_total', 'Donated total'), ('pledged_total', 'Pledged total'), ('amount_matched', 'Amount matched'), ('projects_online', 'Projects Online'), ('votes_cast', 'Votes casts'), ('time_spent', 'Time spent'), ('members', 'Number of members')], max_length=25),
         ),
         migrations.RunPython(
             add_group_permissions,
@@ -434,9 +434,9 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(blank=True, max_length=50, null=True)),
                 ('sub_title', models.CharField(blank=True, max_length=400, null=True)),
                 ('action_text', models.CharField(blank=True, default='Find more activities', max_length=80, null=True)),
-                ('action_link', models.CharField(blank=True, default=b'/initiatives/activities/list', max_length=100, null=True)),
+                ('action_link', models.CharField(blank=True, default='/initiatives/activities/list', max_length=100, null=True)),
                 ('highlighted', models.BooleanField(default=False)),
-                ('activities', models.ManyToManyField(blank=True, db_table=b'cms_activitycontent_activities', to=b'activities.Activity')),
+                ('activities', models.ManyToManyField(blank=True, db_table='cms_activitycontent_activities', to='activities.Activity')),
             ],
             options={
                 'db_table': 'contentitem_cms_activitiescontent',

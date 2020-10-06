@@ -1,3 +1,4 @@
+from builtins import object
 from rest_framework import serializers
 from bluebottle.funding.base_serializers import PaymentSerializer, BaseBankAccountSerializer
 from bluebottle.funding_vitepay.models import VitepayPayment, VitepayBankAccount
@@ -38,7 +39,7 @@ class VitepayBankAccountSerializer(BaseBankAccountSerializer):
 
 
 class PayoutVitepayBankAccountSerializer(serializers.ModelSerializer):
-    class Meta:
+    class Meta(object):
         fields = (
             'id',
             'account_name',

@@ -1,21 +1,13 @@
-from mock import patch
-
-from django.utils import timezone
 from django.core import mail
 from django.db import IntegrityError
 from django.test.utils import override_settings
+from django.utils import timezone
+from mock import patch
 
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.tasks.models import TaskMember
-from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.fundraisers import FundraiserFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 
 class BlueBottleUserManagerTestCase(BluebottleTestCase):
@@ -180,8 +172,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
             remote_id=None,
             primary_language='en')
         self.assertEqual(len(mail.outbox), 1)
-        # We need a better way to verify the right mail is loaded
-        self.assertTrue("Welcome" in mail.outbox[0].subject)
+        self.assertEqual("Welcome to Test!", mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].activated_language, 'en')
         self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
         self.assertTrue('Take me there: https://testserver/partner\n' in mail.outbox[0].body)
@@ -203,7 +194,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
             remote_id='123',
             primary_language='en')
         self.assertEqual(len(mail.outbox), 1)
-        # We need a better way to verify the right mail is loaded
         self.assertTrue("Welcome" in mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].activated_language, 'en')
         self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
@@ -238,74 +228,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 0)
         BlueBottleUserFactory.create(email='new_user@onepercentclub.com')
         self.assertEqual(len(mail.outbox), 0)
-
-    def test_calculate_task_count(self):
-        """
-        Test that the task_count property on a user is calculated correctly.
-        We count a) tasks where a user is a task author and
-        b) TaskMembers where a user is applied, accepted or realized
-        """
-        self.assertEqual(self.user.task_count, 0)
-
-        task = TaskFactory.create(author=self.user)
-        self.assertEqual(self.user.task_count, 1)
-
-        TaskMemberFactory.create(
-            member=self.user,
-            status=TaskMember.TaskMemberStatuses.applied,
-            task=task
-        )
-
-        self.assertEqual(self.user.task_count, 2)
-
-        TaskMemberFactory.create(
-            member=self.user,
-            status=TaskMember.TaskMemberStatuses.withdrew,
-            task=task
-        )
-
-        self.assertEqual(self.user.task_count, 3)
-
-    def test_calculate_donation_count(self):
-        """ Test the counter for the number of donations a user has done """
-        self.assertEqual(self.user.donation_count, 0)
-
-        order = OrderFactory.create(user=self.user)
-        DonationFactory.create(amount=1000, order=order)
-
-        # Only successful or pending orders/donations are counted
-        self.assertEqual(self.user.donation_count, 0)
-
-        # Set donation to pending to be included in count
-        order.locked()
-        order.save()
-        order.pending()
-        order.save()
-        self.assertEqual(self.user.donation_count, 1)
-
-    def test_calculate_project_count(self):
-        """ Test the counter for the number of projects a user has started """
-        self.assertEqual(self.user.project_count, 0)
-        ProjectFactory.create(owner=self.user)
-
-        self.assertEqual(self.user.project_count, 0)
-
-        status = ProjectPhase.objects.get(slug='done-complete')
-
-        ProjectFactory.create(owner=self.user, status=status)
-        self.assertEqual(self.user.project_count, 1)
-
-        ProjectFactory.create(owner=self.user, status=status)
-        self.assertEqual(self.user.project_count, 2)
-
-    def test_calculate_fundraiser_count(self):
-        """ Test the counter for the number of fundraisers a user is owner of """
-        self.assertEqual(self.user.fundraiser_count, 0)
-
-        FundraiserFactory.create(amount=4000, owner=self.user)
-        self.assertEqual(self.user.fundraiser_count, 1)
-        FundraiserFactory.create(amount=4000, owner=self.user)
-        self.assertEqual(self.user.fundraiser_count, 2)
 
     def test_base_user_fields(self):
         """ Test that a base user model has all the expected fields """

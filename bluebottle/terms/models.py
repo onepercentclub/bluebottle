@@ -1,11 +1,14 @@
+from builtins import object
 from django.db import models
 from django.conf import settings
 from django.utils.timezone import now
 from django_extensions.db.fields import CreationDateTimeField, \
     ModificationDateTimeField
 from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 
 
+@python_2_unicode_compatible
 class Terms(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL)
 
@@ -17,10 +20,10 @@ class Terms(models.Model):
     contents = models.CharField(max_length=500000)
     version = models.CharField(max_length=40)
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Terms {0} - {1}'.format(self.version, self.date.date())
 
-    class Meta:
+    class Meta(object):
         ordering = ('-date',)
         verbose_name_plural = _('Terms')
         verbose_name = _('Term')
@@ -50,7 +53,7 @@ class TermsAgreement(models.Model):
                 return queryset.all()[0]
         return None
 
-    class Meta:
+    class Meta(object):
         ordering = ('-created',)
         verbose_name_plural = _('Terms agreement')
         verbose_name = _('Term agreements')

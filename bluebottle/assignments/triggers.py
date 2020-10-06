@@ -161,6 +161,7 @@ class AssignmentTriggers(ActivityTriggers):
             AssignmentStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect('accepted_applicants', ApplicantStateMachine.succeed),
+                RelatedTransitionEffect('new_applicants', ApplicantStateMachine.succeed),
                 NotificationEffect(AssignmentCompletedMessage)
             ]
         ),

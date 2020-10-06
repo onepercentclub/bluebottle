@@ -1,3 +1,4 @@
+from builtins import object
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 from rest_framework import serializers
 
@@ -13,7 +14,7 @@ class CategoryContentSerializer(serializers.ModelSerializer):
     link_url = serializers.URLField(required=False)
     sequence = serializers.IntegerField(read_only=True)
 
-    class Meta:
+    class Meta(object):
         model = CategoryContent
         fields = ('title', 'description', 'image', 'video_url', 'link_text', 'link_url', 'sequence')
 
@@ -26,6 +27,6 @@ class CategorySerializer(serializers.ModelSerializer):
     image_logo = ImageSerializer(required=False)
     contents = CategoryContentSerializer(many=True, read_only=True)
 
-    class Meta:
+    class Meta(object):
         model = Category
         fields = ('id', 'title', 'description', 'image', 'video', 'image_logo', 'contents')

@@ -17,7 +17,7 @@ def migrate_share_options(apps, schema_editor):
     properties.set_tenant(tenant)
 
     project_settings.share_options = [
-        key for key, value in properties.SHARE_OPTIONS.items() if value
+        key for key, value in list(properties.SHARE_OPTIONS.items()) if value
     ]
 
     if 'facebookAtWork' in project_settings.share_options:

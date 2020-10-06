@@ -1,6 +1,7 @@
+from builtins import object
 import json
 
-import bunch
+import munch
 import mock
 import stripe
 from django.core import mail
@@ -30,7 +31,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class MockEvent(object):
     def __init__(self, type, data):
         self.type = type
-        self.data = bunch.bunchify(data)
+        self.data = munch.munchify(data)
 
 
 class IntentWebhookTestCase(BluebottleTestCase):
@@ -400,6 +401,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                     self.webhook,
                     HTTP_STRIPE_SIGNATURE='some signature'
                 )
+
                 create_charge.assert_called_with(
                     amount=int(self.donation.amount.amount * 100),
                     currency=self.donation.amount.currency,
@@ -449,6 +451,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                     self.webhook,
                     HTTP_STRIPE_SIGNATURE='some signature'
                 )
+
                 create_charge.assert_called_with(
                     amount=int(self.donation.amount.amount * 100),
                     currency=self.donation.amount.currency,
@@ -458,6 +461,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                         'activity_title': self.funding.title,
                         'tenant_domain': u'testserver'
                     },
+                    on_behalf_of=u'acct_1234567890',
                     source=u'some-source-id',
                     statement_descriptor_suffix=u'Test',
                     transfer_data={
@@ -693,7 +697,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.connect_account = stripe.Account('some-account-id')
 
         external_account = stripe.BankAccount('some-bank-token')
-        external_account.update(bunch.bunchify({
+        external_account.update(munch.munchify({
             'object': 'bank_account',
             'account_holder_name': 'Jane Austen',
             'account_holder_type': 'individual',
@@ -716,7 +720,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             'total_count': 1,
         })
 
-        self.connect_account.update(bunch.bunchify({
+        self.connect_account.update(munch.munchify({
             'country': 'NL',
             'requirements': {
                 'disabled': False,

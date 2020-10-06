@@ -3,7 +3,6 @@
 SECRET_KEY = '1, 2, this is just a test!'
 
 from .base import *
-from bluebottle.payments_docdata.settings import *
 
 import warnings
 import logging
@@ -29,8 +28,6 @@ MERCHANT_ACCOUNTS = [
 # Set up a proper testing email backend
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 COMPRESS_ENABLED = False
-
-INSTALLED_APPS += ('bluebottle.payments_mock',)
 
 # Yes, activate the South migrations. Otherwise, we'll never notice if our
 # code screwed up the database synchronization
@@ -65,13 +62,38 @@ DATABASE_ROUTERS = (
     'tenant_schemas.routers.TenantSyncRouter',
 )
 
-TENANT_APPS += (
-    'bluebottle.payments_mock',
+PAYMENT_METHODS = (
+    {
+        'provider': 'mock',
+        'id': 'mock-paypal',
+        'profile': 'paypal',
+        'name': 'MockPal',
+        'currencies': {
+            'EUR': {'min_amount': 5, 'max_amount': 100}
+        }
+    },
+    {
+        'provider': 'mock',
+        'id': 'mock-ideal',
+        'profile': 'ideal',
+        'name': 'MockDeal',
+        'restricted_countries': ('NL',),
+        'currencies': {
+            'EUR': {'min_amount': 5},
+            'USD': {'min_amount': 5},
+        }
+    },
+    {
+        'provider': 'mock',
+        'id': 'mock-creditcard',
+        'profile': 'creditcard',
+        'name': 'MockCard',
+        'currencies': {
+            'USD': {'min_amount': 5},
+        }
+    }
 )
 
-from bluebottle.payments_mock.settings import MOCK_PAYMENT_METHODS
-
-PAYMENT_METHODS = MOCK_PAYMENT_METHODS
 MINIMAL_PAYOUT_AMOUNT = 10
 DOCDATA_FEES = {
     'transaction': 0.15,
@@ -163,4 +185,4 @@ AXES_CACHE = 'axes_cache'
 STATIC_MAPS_API_KEY = 'someinvalidapikey'
 STATIC_MAPS_API_SECRET = 'fpqFpdo4RY9GDc-xxawF6Ipmp3Y='
 
-
+DEFAULT_CURRENCY = 'EUR'

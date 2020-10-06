@@ -1,11 +1,10 @@
 {% load i18n %}
-{% load money %}
 <table class="donation-table twelve columns">
     <tr class="donation-table-row">
         <th class="donation-title">
             {% trans "Donation" %} {% if obj.reward %} - {{obj.reward.title}} {% endif %}
         </th>
-        <th class="donation-amount">{{ obj.amount|format_money }}</th>
+        <th class="donation-amount">{{ obj.amount }}</th>
         <tr class="donation-location">
             <td><a href="{{obj.activity.get_absolute_url}}">{{obj.activity.title}}</a></td>
         </tr>

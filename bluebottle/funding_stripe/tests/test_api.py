@@ -911,3 +911,12 @@ class ExternalAccountsTestCase(BluebottleTestCase):
             user=BlueBottleUserFactory.create()
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_add_bank_account(self):
+        self.assertTrue(False, 'Adding a bankaccount should get to the right status.')
+
+    def test_verifty_bank_account_submits_funding(self):
+        self.assertTrue(False, 'Verifying.')
+
+    def test_add_2nd_bank_account(self):
+        self.assertTrue(False, 'Adding a 2nd bankaccount should get to the right status.')

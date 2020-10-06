@@ -143,7 +143,7 @@ class BaseRelatedTransitionEffect(Effect):
         for instance in self.instances:
             effect = self.transition_effect_class(instance)
 
-            if effect not in effects and effect.is_valid and self.transition in effect.machine.transitions.values():
+            if effect not in effects and self.transition in effect.machine.transitions.values():
                 effect.pre_save(effects=effects)
 
                 effects.append(effect)

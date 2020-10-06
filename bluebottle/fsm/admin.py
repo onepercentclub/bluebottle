@@ -78,7 +78,7 @@ class StateMachineAdminMixin(object):
                     args=(object_id, )
                 )
                 action_text = ' and '.join(
-                    unicode(trigger.title) for trigger in obj._triggers
+                    str(trigger.title) for trigger in obj._triggers
                 ) or _('perform changes')
 
                 context = dict(

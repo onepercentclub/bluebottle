@@ -220,7 +220,7 @@ class PageDumpCommandsTestCase(BluebottleTestCase):
         with open('test_pages.json', 'w') as f:
             json.dump(PAGE_DUMP, f)
 
-        call_command('loadpages', '-f', 'test_pages.json')
+        call_command('loadpages', '-f', 'test_pages.json', '-q')
         homepage = HomePage.objects.get()
         items = homepage.content.get_content_items()
         self.assertEqual(items[0].type, 'slides')

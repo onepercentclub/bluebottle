@@ -1,9 +1,11 @@
+from builtins import object
 from functools import partial
 
 from django.db import models
 from django.dispatch import Signal
 
 from bluebottle.fsm.state import TransitionNotPossible
+from future.utils import with_metaclass
 
 pre_transition = Signal(providing_args=['instance', 'name', 'source', 'target', 'options', 'kwargs'])
 post_transition = Signal(providing_args=['instance', 'name', 'source', 'target', 'options', 'kwargs'])
@@ -112,9 +114,7 @@ class ModelTransitionsMeta(type):
         return type.__new__(cls, name, bases, dct)
 
 
-class ModelTransitions():
-    __metaclass__ = ModelTransitionsMeta
-
+class ModelTransitions(with_metaclass(ModelTransitionsMeta, object)):
     def __init__(self, instance, field):
         self.instance = instance
         self.field = field

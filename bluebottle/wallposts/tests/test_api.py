@@ -1,9 +1,10 @@
-from bluebottle.assignments.tests.factories import AssignmentFactory
+from builtins import str
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from djmoney.money import Money
 from rest_framework import status
 
+from bluebottle.assignments.tests.factories import AssignmentFactory
 from bluebottle.events.tests.factories import EventFactory
 from bluebottle.funding.tests.factories import DonationFactory, FundingFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -103,6 +104,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(wallpost.status_code,
                          status.HTTP_201_CREATED)
         # Promoters users can share a post
+        promoter_token = "JWT {0}".format(self.assignment.initiative.promoter.get_jwt_token())
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
                                     token=promoter_token)

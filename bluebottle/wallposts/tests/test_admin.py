@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+from bluebottle.assignments.tests.factories import AssignmentFactory
 
+from bluebottle.events.tests.factories import EventFactory
+
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from django.urls.base import reverse
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
-from bluebottle.test.factory_models.fundraisers import FundraiserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.wallposts import (
     MediaWallpostFactory, MediaWallpostPhotoFactory
 )
@@ -17,12 +18,11 @@ class TestWallpostAdmin(BluebottleAdminTestCase):
     def setUp(self):
         super(TestWallpostAdmin, self).setUp()
         self.client.force_login(self.superuser)
-        # Don't user reverse here, because polymorphic sometimes makes a mistake.
         self.media_wallpost_url = '/en/admin/wallposts/mediawallpost/'
 
     def test_mediawallpost_admin(self):
-        project = ProjectFactory.create()
-        self.wallpost = MediaWallpostFactory.create(content_object=project)
+        initiative = InitiativeFactory.create()
+        self.wallpost = MediaWallpostFactory.create(content_object=initiative)
         MediaWallpostPhotoFactory.create_batch(10, mediawallpost=self.wallpost)
         self.wallpost.save()
         response = self.client.get(self.media_wallpost_url)
@@ -30,18 +30,18 @@ class TestWallpostAdmin(BluebottleAdminTestCase):
 
         url = reverse('admin:wallposts_mediawallpost_change', args=(self.wallpost.id, ))
         response = self.client.get(url)
-        self.assertContains(response, project.title)
+        self.assertContains(response, initiative.title)
 
     def test_fundraiser_textwallpost_admin(self):
-        fundraiser = FundraiserFactory()
-        self.wallpost = MediaWallpostFactory.create(content_object=fundraiser)
+        event = EventFactory()
+        self.wallpost = MediaWallpostFactory.create(content_object=event)
         url = reverse('admin:wallposts_mediawallpost_change', args=(self.wallpost.id, ))
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertContains(response, fundraiser.title)
+        self.assertContains(response, event.title)
 
     def test_task_textwallpost_admin(self):
-        task = TaskFactory.create()
+        task = AssignmentFactory.create()
         self.wallpost = MediaWallpostFactory.create(content_object=task)
         url = reverse('admin:wallposts_mediawallpost_change', args=(self.wallpost.id, ))
         response = self.client.get(url)

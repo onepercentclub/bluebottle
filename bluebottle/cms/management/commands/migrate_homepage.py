@@ -1,4 +1,7 @@
-from StringIO import StringIO
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from io import StringIO
 from django.apps import apps
 from django.core.management.base import BaseCommand
 from django.contrib.contenttypes.models import ContentType
@@ -31,7 +34,7 @@ class Command(BaseCommand):
         content_type = ContentType.objects.get_for_model(model)
 
         block['kwargs'] = dict(
-            (key, val) for key, val in block['kwargs'].items() if val
+            (key, val) for key, val in list(block['kwargs'].items()) if val
         )
 
         content_block = model.objects.create_for_placeholder(
@@ -52,7 +55,7 @@ class Command(BaseCommand):
                             File(StringIO(response.content), name=item['image'].split('/')[-1])
                         )
                     else:
-                        print 'Missing image for: {}({})'.format(block_type, language)
+                        print('Missing image for: {}({})'.format(block_type, language))
                         del item['image']
 
                 item_model.objects.create(
@@ -99,7 +102,7 @@ class Command(BaseCommand):
             tenants = [Client.objects.get(schema_name=options['tenant'])]
 
         for client in tenants:
-            print "\n\nCreating homepage for {}".format(client.name)
+            print("\n\nCreating homepage for {}".format(client.name))
             with LocalTenant(client, clear_tenant=True):
                 ContentType.objects.clear_cache()
 
@@ -122,7 +125,7 @@ class Command(BaseCommand):
                 for item in ContentItem.objects.filter(parent_id=page.pk, parent_type=page_type):
                     item.delete()
 
-                for lang, blocks in properties.HOMEPAGE.items():
+                for lang, blocks in list(properties.HOMEPAGE.items()):
                     for (block_type, block) in blocks:
                         self.create_block(
                             block_type, block, placeholder, lang

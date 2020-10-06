@@ -1,19 +1,14 @@
+from builtins import object
 import mimetypes
 import os
-from collections import namedtuple
 
 import magic
-
-from django.db.models import Case, When, IntegerField
-from django.conf import settings
 from django.core.paginator import Paginator
 from django.core.signing import TimestampSigner, BadSignature
-from django.utils.functional import cached_property
+from django.db.models import Case, When, IntegerField
 from django.http import Http404, HttpResponse
-from django.http.response import HttpResponseNotFound
-from django.template.loader import render_to_string
 from django.utils import translation
-from django.utils.translation import ugettext as _
+from django.utils.functional import cached_property
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
@@ -25,17 +20,13 @@ from rest_framework_json_api.pagination import JsonApiPageNumberPagination
 from rest_framework_json_api.parsers import JSONParser
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from sorl.thumbnail.shortcuts import get_thumbnail
 from taggit.models import Tag
-from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.clients import properties
-from bluebottle.projects.models import Project
-from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.permissions import ResourcePermission
 from .models import Language
-from .serializers import ShareSerializer, LanguageSerializer
+from .serializers import LanguageSerializer
 
 mime = magic.Magic(mime=True)
 
@@ -63,104 +54,6 @@ class TagSearch(views.APIView):
         data = [tag.name for tag in
                 Tag.objects.filter(name__startswith=search).all()[:20]]
         return response.Response(data)
-
-
-class ShareFlyer(views.APIView):
-    serializer_class = ShareSerializer
-
-    def project_args(self, projectid):
-        try:
-            project = Project.objects.get(slug=projectid)
-        except Project.DoesNotExist:
-            return None
-
-        if project.image:
-            project_image = self.request.build_absolute_uri(
-                settings.MEDIA_URL + unicode(get_thumbnail(project.image,
-                                                           "400x225",
-                                                           crop="center")))
-        else:
-            project_image = None
-
-        args = dict(
-            project_title=project.title,
-            project_pitch=project.pitch,
-            project_image=project_image
-        )
-
-        return args
-
-    def get(self, request, *args, **kwargs):
-        """ Return the bare email as preview. We do not have access to the
-        logged in user so use fake data
-        """
-
-        data = request.GET
-
-        args = self.project_args(data.get('project'))
-
-        if args is None:
-            return HttpResponseNotFound()
-
-        args['share_name'] = "John Doe"
-        args['share_email'] = "john@example.com"
-
-        if self.request.user.is_authenticated():
-            args[
-                'sender_name'] = self.request.user.get_full_name() or self.request.user.username
-            args['sender_email'] = self.request.user.email
-        else:
-            args['sender_name'] = "John Doe"
-            args['sender_email'] = "john.doe@example.com"
-
-        args['share_motivation'] = """
-        (sample motivation) Great to see you again this afternoon.
-        Attached you'll find a project flyer for the big event next friday.
-        If you care to join in, please let me know,
-        I'll add you as my +1 on the attendee list.
-        Hope to hear from you soon
-        Cheers,
-        Jane"""
-        result = render_to_string('utils/mails/share_flyer.mail.html', args)
-        return response.Response({'preview': result})
-
-    def post(self, request, *args, **kwargs):
-        serializer = ShareSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        args = self.project_args(serializer.validated_data.get('project'))
-        if args is None:
-            return HttpResponseNotFound()
-
-        sender_name = self.request.user.get_full_name() or self.request.user.username
-        sender_email = self.request.user.email
-        share_name = serializer.validated_data.get('share_name', None)
-        share_email = serializer.validated_data.get('share_email', None)
-        share_motivation = serializer.validated_data.get('share_motivation', None)
-        share_cc = serializer.validated_data.get('share_cc')
-
-        with TenantLanguage(self.request.user.primary_language):
-            subject = _('%(name)s wants to share a project with you!') % dict(
-                name=sender_name)
-
-        args.update(dict(
-            template_name='utils/mails/share_flyer.mail',
-            subject=subject,
-            to=namedtuple("Receiver", "email")(email=share_email),
-            share_name=share_name,
-            share_email=share_email,
-            share_motivation=share_motivation,
-            sender_name=sender_name,
-            sender_email=sender_email,
-            reply_to=sender_email,
-            cc=[sender_email] if share_cc else []
-        ))
-        if share_cc:
-            args['cc'] = [sender_email]
-
-        send_mail(**args)
-
-        return response.Response({}, status=201)
 
 
 class ModelTranslationViewMixin(object):
@@ -229,7 +122,7 @@ class RelatedPermissionMixin(object):
         Check if the request should be permitted for a given related object.
         Raises an appropriate exception if the request is not permitted.
         """
-        for related, permissions in self.related_permission_classes.items():
+        for related, permissions in list(self.related_permission_classes.items()):
             related_obj = getattr(obj, related)
             for permission in permissions:
                 if not permission().has_object_permission(request, None, related_obj):

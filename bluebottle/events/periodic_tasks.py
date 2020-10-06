@@ -1,3 +1,4 @@
+from builtins import str
 from datetime import timedelta
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -29,8 +30,8 @@ class EventFinishedTask(ModelPeriodicTask):
         ]),
     ]
 
-    def __unicode__(self):
-        return unicode(_("Finish an event when end time has passed."))
+    def __str__(self):
+        return str(_("Finish an event when end time has passed."))
 
 
 class EventStartTask(ModelPeriodicTask):
@@ -52,8 +53,8 @@ class EventStartTask(ModelPeriodicTask):
         ]),
     ]
 
-    def __unicode__(self):
-        return unicode(_("Start an event when start time ha passed."))
+    def __str__(self):
+        return str(_("Start an event when start time ha passed."))
 
 
 class EventReminderTask(ModelPeriodicTask):
@@ -71,8 +72,8 @@ class EventReminderTask(ModelPeriodicTask):
 
     ]
 
-    def __unicode__(self):
-        return unicode(_("Send a reminder five days before the event starts."))
+    def __str__(self):
+        return str(_("Send a reminder five days before the event starts."))
 
 
 Event.periodic_tasks = [EventFinishedTask, EventStartTask, EventReminderTask]

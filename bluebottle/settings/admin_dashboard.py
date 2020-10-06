@@ -46,10 +46,6 @@ JET_SIDE_MENU_ITEMS = [
                 'name': 'geo.location',
                 'permissions': ['geo.location']
             },
-            {
-                'name': 'bb_projects.projecttheme',
-                'permissions': ['bb_projects.change_projecttheme']
-            },
         ]
     },
     {
@@ -115,81 +111,6 @@ JET_SIDE_MENU_ITEMS = [
             {
                 'name': 'funding.payout',
                 'permissions': ['funding.change_payout']
-            },
-        ]
-    },
-    {
-        'label': _('Legacy'),
-        'app_label': 'projects',
-        'permissions': ['projects.change_project'],
-        'items': [
-            {
-                'name': 'projects.project',
-                'permissions': ['projects.change_project']
-            },
-            {
-                'name': 'categories.category',
-                'permissions': ['categories.change_category']
-            },
-            {
-                'name': 'fundraisers.fundraiser',
-                'permissions': ['fundraisers.change_fundraiser']
-            },
-            {
-                'name': 'bb_projects.projectphase',
-                'permissions': ['bb_projects.change_projectphase']
-            },
-            {
-                'name': 'bb_projects.projecttheme',
-                'permissions': ['bb_projects.change_projecttheme']
-            },
-            {
-                'name': 'organizations.organization',
-                'permissions': ['organizations.organization']
-            },
-            {
-                'name': 'geo.location',
-                'permissions': ['geo.location']
-            },
-            {
-                'name': 'votes.vote',
-                'permissions': ['votes.vote']
-            },
-            {
-                'name': 'tasks.task',
-                'permissions': ['tasks.change_task']
-            },
-            {
-                'name': 'tasks.taskmember',
-                'permissions': ['tasks.change_task']
-            },
-            {
-                'name': 'tasks.skill',
-                'permissions': ['tasks.change_skill']
-            },
-            {
-                'name': 'donations.donation',
-                'permissions': ['donations.change_donation']
-            },
-            {
-                'name': 'orders.order',
-                'permissions': ['orders.change_order']
-            },
-            {
-                'name': 'payouts.payoutaccount',
-                'permissions': ['payouts_payoutaccount']
-            },
-            {
-                'name': 'payments.orderpayment',
-                'permissions': ['payments.change_orderpayment']
-            },
-            {
-                'name': 'payments.payment',
-                'permissions': ['payments.change_payment']
-            },
-            {
-                'name': 'projects.projectplatformsettings',
-                'permissions': ['projects.change_projectplatformsettings']
             },
         ]
     },
@@ -326,10 +247,6 @@ JET_SIDE_MENU_ITEMS = [
             {
                 'name': 'funding.paymentprovider',
                 'permissions': ['funding.change_paymentprovider']
-            },
-            {
-                'name': 'djmoney_rates.ratesource',
-                'permissions': ['djmoney_rates.change_ratesource']
             },
             {
                 'label': _('Manage Reporting'),

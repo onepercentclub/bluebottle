@@ -462,7 +462,6 @@ class ParticipantStateMachineTests(BluebottleTestCase):
         self.assertTrue(
             self.event.followers.filter(user=self.participant.user).exists()
         )
-        print [m.subject for m in self.messages(self.participant.user)]
         self.assertEqual(
             len(self.messages(self.participant.user)), 2
         )

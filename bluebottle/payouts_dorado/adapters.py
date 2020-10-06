@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import json
 import requests
 
@@ -40,7 +42,7 @@ class DoradoPayoutAdapter(object):
                 raise TransitionNotPossible(response.content)
         except MissingSchema:
             raise ImproperlyConfigured("Incorrect Payout URL")
-        except IOError, e:
-            raise PayoutCreationError(unicode(e))
+        except IOError as e:
+            raise PayoutCreationError(str(e))
         except TypeError:
             raise ImproperlyConfigured("Invalid Payout settings")

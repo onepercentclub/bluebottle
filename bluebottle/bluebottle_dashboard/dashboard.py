@@ -1,41 +1,25 @@
+from builtins import object
 import importlib
 
-from django.urls.base import reverse, reverse_lazy
-from django.utils.timezone import now
+import rules
+from django.urls.base import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 from jet.dashboard import modules
 from jet.dashboard.dashboard import Dashboard, DefaultAppIndexDashboard
-from jet.dashboard.modules import DashboardModule, LinkList
-
-import rules
+from jet.dashboard.modules import LinkList
 
 from bluebottle.activities.dashboard import RecentActivities
 from bluebottle.assignments.dashboard import RecentAssignments
-from bluebottle.clients import properties
 from bluebottle.events.dashboard import RecentEvents
 from bluebottle.funding.dashboard import RecentFunding, PayoutsReadForApprovalDashboardModule
 from bluebottle.initiatives.dashboard import RecentInitiatives, MyReviewingInitiatives
 from bluebottle.members.dashboard import RecentMembersDashboard
-from bluebottle.tasks.models import Task
-
-
-class ClosingTasks(DashboardModule):
-    title = _('Tasks nearing application deadline')
-    title_url = reverse('admin:tasks_task_changelist')
-    template = 'dashboard/closing_tasks.html'
-    limit = 5
-
-    def init_with_context(self, context):
-        tasks = Task.objects.exclude(deadline_to_apply__lt=now()).\
-            filter(project__status__slug='campaign').\
-            filter(status__in=['open', 'full']).order_by('deadline_to_apply')
-        self.children = tasks[:self.limit]
 
 
 class CustomIndexDashboard(Dashboard):
     columns = 2
 
-    class Media:
+    class Media(object):
         css = ('css/admin/dashboard.css', )
 
     def init_with_context(self, context):
@@ -69,12 +53,6 @@ class CustomIndexDashboard(Dashboard):
                     'url': reverse_lazy('exportdb_export'),
                 },
             ]
-            if properties.REPORTING_BACKOFFICE_ENABLED:
-                metrics_children.append({
-                    'title': _('Download report'),
-                    'url': reverse_lazy('report-export'),
-                })
-
             self.children.append(LinkList(
                 _('Export Metrics'),
                 children=metrics_children

@@ -1,3 +1,4 @@
+from builtins import object
 import corsheaders.defaults
 from bluebottle.clients import properties
 

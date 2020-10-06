@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import os
 import uuid
 
@@ -7,12 +9,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.files.fields import ImageField
 from bluebottle.utils.models import AnonymizationMixin
 from bluebottle.utils.validators import FileMimetypeValidator
 
 
+@python_2_unicode_compatible
 class File(AnonymizationMixin, models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateField(_('created'), default=timezone.now)
@@ -31,23 +35,23 @@ class File(AnonymizationMixin, models.Model):
     )
     used = models.BooleanField(_('used'), default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.id)
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'files'
 
-    class Meta:
+    class Meta(object):
         abstract = True
 
 
 class Image(File):
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'images'
 
 
 class Document(File):
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'documents'
 
 
@@ -64,7 +68,7 @@ class PrivateDocument(File):
 
     file = models.FileField(_('file'), upload_to=get_private_path)
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'private-documents'
 
 

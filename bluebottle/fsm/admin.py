@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from collections import defaultdict
 
 from django.conf.urls import url
@@ -20,7 +22,7 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
         user_id=user.id,
         content_type_id=ContentType.objects.get_for_model(obj).pk,
         object_id=obj.pk,
-        object_repr=unicode(obj),
+        object_repr=str(obj),
         action_flag=action_flag,
         change_message=change_message
     )
@@ -28,13 +30,13 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
 
 def get_effects(effects):
     displayed_effects = [effect for effect in effects if effect.display]
-    displayed_effects.sort(key=lambda x: x.__class__)
+    displayed_effects.sort(key=lambda x: x.__class__.__name__)
     grouped_effects = defaultdict(list)
 
     for effect in displayed_effects:
         grouped_effects[(effect.__class__, effect.instance.__class__)].append(effect)
 
-    return [cls.render(grouped) for (cls, instance_cls), grouped in grouped_effects.items()]
+    return [cls.render(grouped) for (cls, instance_cls), grouped in list(grouped_effects.items())]
 
 
 class StateMachineAdminMixin(object):
@@ -62,7 +64,7 @@ class StateMachineAdminMixin(object):
                 args=(object_id, )
             )
             action_text = ' and '.join(
-                unicode(trigger.title) for trigger in obj.current_triggers
+                str(trigger.title) for trigger in obj.current_triggers
             )
 
             if effects:
@@ -214,9 +216,9 @@ class StateMachineFilter(admin.SimpleListFilter):
         if hasattr(model_admin, 'child_models'):
             states = []
             for model in model_admin.child_models:
-                states += model._state_machines['states'].states.items()
+                states += list(model._state_machines['states'].states.items())
         else:
-            states = model_admin.model._state_machines['states'].states.items()
+            states = list(model_admin.model._state_machines['states'].states.items())
 
         return set((status, state.name) for (status, state) in states)
 

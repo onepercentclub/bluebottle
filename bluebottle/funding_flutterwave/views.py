@@ -9,7 +9,7 @@ from bluebottle.funding.views import PaymentList
 from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwaveBankAccount
 from bluebottle.funding_flutterwave.serializers import FlutterwavePaymentSerializer, FlutterwaveBankAccountSerializer
 from bluebottle.funding_flutterwave.utils import check_payment_status
-from bluebottle.payments.exception import PaymentException
+from bluebottle.funding.exception import PaymentException
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import ListCreateAPIView, JsonApiViewMixin, RetrieveUpdateAPIView
 

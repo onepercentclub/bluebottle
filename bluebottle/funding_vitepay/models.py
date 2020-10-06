@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -30,7 +32,7 @@ class VitepayPaymentProvider(PaymentProvider):
             'api_url': self.api_url
         }
 
-    class Meta:
+    class Meta(object):
         verbose_name = 'Vitepay payment provider'
 
 
@@ -59,12 +61,12 @@ class VitepayBankAccount(BankAccount):
     def save(self, *args, **kwargs):
         super(VitepayBankAccount, self).save(*args, **kwargs)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Vitepay bank account')
         verbose_name_plural = _('Vitepay bank accounts')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'payout-accounts/vitepay-external-accounts'
 
 
-from states import *  # noqa
+from .states import *  # noqa

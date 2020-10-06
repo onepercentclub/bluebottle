@@ -1,6 +1,10 @@
+from builtins import str
+from builtins import object
 from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 
 
+@python_2_unicode_compatible
 class ModelPeriodicTask(object):
 
     def __init__(self, model, field='states'):
@@ -20,5 +24,5 @@ class ModelPeriodicTask(object):
                     effect.execute(effects=True)
                     instance.save()
 
-    def __unicode__(self):
-        return unicode(_("Periodic task") + ": " + self.__class__.__name__)
+    def __str__(self):
+        return str(_("Periodic task") + ": " + self.__class__.__name__)

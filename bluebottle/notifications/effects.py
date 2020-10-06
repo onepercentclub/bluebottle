@@ -1,8 +1,11 @@
+from future.utils import python_2_unicode_compatible
+
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.effects import Effect
 
 
+@python_2_unicode_compatible
 class BaseNotificationEffect(Effect):
     post_save = True
     title = _('Send email')
@@ -37,7 +40,7 @@ class BaseNotificationEffect(Effect):
                 recipients_text = _('related users')
         return {'subject': message.generic_subject, 'recipients': recipients_text}
 
-    def __unicode__(self):
+    def __str__(self):
         return _('Message {subject} to {recipients}').format(**self._content())
 
     @property

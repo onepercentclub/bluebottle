@@ -1,3 +1,4 @@
+from builtins import object
 from django_elasticsearch_dsl import DocType, fields
 
 from bluebottle.utils.documents import MultiTenantIndex
@@ -84,7 +85,7 @@ class InitiativeDocument(DocType):
         }
     )
 
-    class Meta:
+    class Meta(object):
         model = Initiative
         related_models = (
             Geolocation, Member, ProjectTheme, Event, Funding, Assignment

@@ -1,20 +1,19 @@
+from builtins import object
 from django import forms
 from django.utils.translation import ugettext_lazy as _
-
 from fluent_contents.extensions import plugin_pool, ContentPlugin
+from fluent_contents.forms import ContentItemForm
 
 from bluebottle.cms.admin import (
     QuoteInline, StatInline, StepInline, LogoInline, ContentLinkInline,
     GreetingInline
 )
 from bluebottle.cms.models import (
-    QuotesContent, StatsContent, SurveyContent, ProjectsContent,
-    ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent, TasksContent, StepsContent, SlidesContent,
-    CategoriesContent, LocationsContent, LogosContent,
+    QuotesContent, StatsContent, ShareResultsContent, SupporterTotalContent,
+    StepsContent, SlidesContent,
+    CategoriesContent, LocationsContent, LogosContent, ProjectsMapContent,
     LinksContent, WelcomeContent, HomepageStatisticsContent,
     ActivitiesContent)
-from fluent_contents.forms import ContentItemForm
 
 
 class CMSContentItemForm(ContentItemForm):
@@ -28,7 +27,7 @@ class CMSContentPlugin(ContentPlugin):
     form = CMSContentItemForm
     admin_form_template = 'admin/cms/content_item.html'
 
-    class Media:
+    class Media(object):
         css = {
             "all": ('admin/css/forms-nested.css', )
         }
@@ -63,29 +62,10 @@ class HomepageStatisticsBlockPlugin(CMSContentPlugin):
 
 
 @plugin_pool.register
-class SurveyBlockPlugin(CMSContentPlugin):
-    model = SurveyContent
-    category = _('Results')
-
-
-@plugin_pool.register
-class ProjectsBlockPlugin(CMSContentPlugin):
-    model = ProjectsContent
-    raw_id_fields = ('projects', )
-    category = _('Projects')
-
-
-@plugin_pool.register
 class ActivitiesBlockPlugin(CMSContentPlugin):
     model = ActivitiesContent
     raw_id_fields = ('activities', )
     category = _('Activities')
-
-
-@plugin_pool.register
-class ProjectImagesBlockPlugin(CMSContentPlugin):
-    model = ProjectImagesContent
-    category = _('Projects')
 
 
 @plugin_pool.register
@@ -104,13 +84,6 @@ class ProjectMapBlockPlugin(CMSContentPlugin):
 class SupporterTotalBlockPlugin(CMSContentPlugin):
     model = SupporterTotalContent
     category = _('Stats')
-
-
-@plugin_pool.register
-class TasksBlockPlugin(CMSContentPlugin):
-    model = TasksContent
-    raw_id_fields = ('tasks', )
-    category = _('Tasks')
 
 
 @plugin_pool.register

@@ -1,8 +1,9 @@
 import os
+from builtins import range
+from builtins import str
 from datetime import timedelta
 from decimal import Decimal
 
-import mock
 from django.contrib.auth.models import Permission, Group
 from django.core.cache import cache
 from django.core.files.base import File
@@ -14,27 +15,23 @@ from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 from moneyed.classes import Money
 from rest_framework import status
-from sorl_watermarker.engines.pil_engine import Engine
 
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import (
-    StatsContent, QuotesContent, SurveyContent, ProjectsContent,
-    ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
+    StatsContent, QuotesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings,
-    LinksContent, WelcomeContent, StepsContent
+    LinksContent, WelcomeContent, StepsContent, ActivitiesContent
 )
 from bluebottle.contentplugins.models import PictureItem
+from bluebottle.events.tests.factories import EventFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.pages.models import DocumentItem, ImageTextItem, ActionItem, ColumnsItem
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory, StepFactory,
     QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory,
 )
-from bluebottle.test.factory_models.pages import PageFactory
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.test.factory_models.news import NewsItemFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.surveys import SurveyFactory
+from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -46,24 +43,19 @@ class ResultPageTestCase(BluebottleTestCase):
     def setUp(self):
         super(ResultPageTestCase, self).setUp()
         self.init_projects()
-        image = File(open('./bluebottle/projects/test_images/upload.png'))
+        image = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
         self.page = ResultPageFactory(title='Results last year', image=image)
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         self.url = reverse('result-page-detail', kwargs={'pk': self.page.id})
         cache.clear()
 
     def test_results_header(self):
-        def watermark(self, image, *args, **kwargs):
-            return image
-
-        with mock.patch.object(Engine, 'watermark', side_effect=watermark) as watermark_mock:
-            response = self.client.get(self.url)
-            self.assertEquals(response.status_code, status.HTTP_200_OK)
-            # Image should come in 4 sizes
-            self.assertEqual(len(response.data['image']), 6)
-            self.assertEqual(response.data['title'], self.page.title)
-            self.assertEqual(response.data['description'], self.page.description)
-            self.assertEqual(watermark_mock.call_args[0][1]['watermark'], 'test/logo-overlay.png')
+        response = self.client.get(self.url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        # Image should come in 4 sizes
+        self.assertEqual(len(response.data['image']), 6)
+        self.assertEqual(response.data['title'], self.page.title)
+        self.assertEqual(response.data['description'], self.page.description)
 
     def test_results_stats(self):
         yesterday = now() - timedelta(days=1)
@@ -155,10 +147,10 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(quotes['quotes'][0]['name'], self.quote.name)
         self.assertEqual(quotes['quotes'][0]['quote'], self.quote.quote)
 
-    def test_results_projects(self):
-        self.project = ProjectFactory()
-        block = ProjectsContent.objects.create_for_placeholder(self.placeholder)
-        block.projects.add(self.project)
+    def test_results_activities(self):
+        event = EventFactory.create(status='open')
+        block = ActivitiesContent.objects.create_for_placeholder(self.placeholder)
+        block.activities.add(event)
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -167,27 +159,8 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(response.data['description'], self.page.description)
 
         projects = response.data['blocks'][0]
-        self.assertEqual(projects['type'], 'projects')
-        self.assertEqual(projects['projects'][0]['title'], self.project.title)
-
-    def test_results_project_images(self):
-        yesterday = now() - timedelta(days=1)
-        done_complete = ProjectPhase.objects.get(slug='done-complete')
-        ProjectFactory(campaign_ended=yesterday, status=done_complete)
-        ProjectFactory(campaign_ended=yesterday, status=done_complete)
-
-        ProjectImagesContent.objects.create_for_placeholder(self.placeholder, title='Nice pics')
-
-        response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(response.data['title'], self.page.title)
-        self.assertEqual(response.data['description'], self.page.description)
-
-        images = response.data['blocks'][0]
-        self.assertEqual(images['type'], 'project_images')
-        self.assertEqual(images['title'], 'Nice pics')
-        self.assertEqual(len(images['images']), 2)
+        self.assertEqual(projects['type'], 'activities')
+        self.assertEqual(projects['activities'][0]['title'], event.title)
 
     def test_results_share_results(self):
         share_text = '{people} donated {donated} and did {tasks} tasks and joined {events} events.'
@@ -209,22 +182,6 @@ class ResultPageTestCase(BluebottleTestCase):
         for key in ['people', 'amount', 'hours', 'events', 'tasks', 'fundraisers']:
             self.assertTrue(key in share['statistics'])
 
-    def test_results_survey(self):
-        survey = SurveyFactory.create()
-
-        SurveyContent.objects.create_for_placeholder(self.placeholder, survey=survey)
-
-        response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(response.data['title'], self.page.title)
-        self.assertEqual(response.data['description'], self.page.description)
-
-        survey = response.data['blocks'][0]
-        self.assertEqual(survey['type'], 'survey')
-        self.assertTrue('response_count' in survey)
-        self.assertEqual(survey['answers'], [])
-
     def test_results_map(self):
         ProjectsMapContent.objects.create_for_placeholder(self.placeholder, title='Test title')
 
@@ -238,9 +195,6 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(data['type'], 'projects-map')
 
     def test_results_list(self):
-        survey = SurveyFactory.create()
-        SurveyContent.objects.create_for_placeholder(self.placeholder, survey=survey)
-
         quote_block = QuotesContent.objects.create_for_placeholder(self.placeholder)
         self.quote = QuoteFactory(block=quote_block)
 
@@ -249,10 +203,9 @@ class ResultPageTestCase(BluebottleTestCase):
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data['blocks']), 3)
-        self.assertEquals(response.data['blocks'][0]['type'], 'survey')
-        self.assertEquals(response.data['blocks'][1]['type'], 'quotes')
-        self.assertEquals(response.data['blocks'][2]['type'], 'statistics')
+        self.assertEquals(len(response.data['blocks']), 2)
+        self.assertEquals(response.data['blocks'][0]['type'], 'quotes')
+        self.assertEquals(response.data['blocks'][1]['type'], 'statistics')
 
     def test_results_supporters(self):
         yesterday = now() - timedelta(days=1)
@@ -320,7 +273,6 @@ class HomePageTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(HomePageTestCase, self).setUp()
-        self.init_projects()
         HomePage.objects.get(pk=1).delete()
         self.page = HomePageFactory(pk=1)
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
@@ -335,28 +287,17 @@ class HomePageTestCase(BluebottleTestCase):
         self.assertEqual(response.data['blocks'][0]['type'], 'raw-html')
         self.assertEqual(response.data['blocks'][0]['html'], '<p>Test content</p>')
 
-    def test_projects_from_homepage(self):
-        done_complete = ProjectPhase.objects.get(slug='done-complete')
-        for i in range(0, 5):
-            ProjectFactory.create(is_campaign=True, status=done_complete)
-
-        for i in range(0, 5):
-            ProjectFactory.create(is_campaign=False, status=done_complete)
-
-        ProjectsContent.objects.create_for_placeholder(self.placeholder, from_homepage=True)
+    def test_activities_from_homepage(self):
+        EventFactory.create_batch(10, status='open', highlight=True)
+        ActivitiesContent.objects.create_for_placeholder(self.placeholder, highlighted=True)
         response = self.client.get(self.url)
-
         self.assertEqual(response.status_code, 200)
-
-        self.assertEqual(response.data['blocks'][0]['type'], 'projects')
-        self.assertEqual(len(response.data['blocks'][0]['projects']), 4)
-
-        for project in response.data['blocks'][0]['projects']:
-            self.assertTrue(project['is_campaign'])
+        self.assertEqual(response.data['blocks'][0]['type'], 'activities')
+        self.assertEqual(len(response.data['blocks'][0]['activities']), 4)
 
     def test_slides(self):
         SlidesContent.objects.create_for_placeholder(self.placeholder)
-        image = File(open('./bluebottle/cms/tests/test_images/upload.png'))
+        image = File(open('./bluebottle/cms/tests/test_images/upload.png', 'rb'))
 
         for i in range(0, 4):
             SlideFactory(
@@ -554,17 +495,17 @@ class PageTestCase(BluebottleTestCase):
         text = TextItem.objects.create_for_placeholder(self.placeholder, text='<p>Test content</p>')
         document = DocumentItem.objects.create_for_placeholder(
             self.placeholder,
-            document=File(open('./bluebottle/projects/test_images/upload.png')),
+            document=File(open('./bluebottle/projects/test_images/upload.png', 'rb'),),
             text='Some file upload'
         )
         picture = PictureItem.objects.create_for_placeholder(
             self.placeholder,
-            image=File(open('./bluebottle/projects/test_images/upload.png')),
+            image=File(open('./bluebottle/projects/test_images/upload.png', 'rb')),
             align='center'
         )
         image_text = ImageTextItem.objects.create_for_placeholder(
             self.placeholder,
-            image=File(open('./bluebottle/projects/test_images/upload.png')),
+            image=File(open('./bluebottle/projects/test_images/upload.png', 'rb')),
             text='some text',
             align='center'
         )
@@ -662,7 +603,7 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['metadata_description'], None)
 
     def test_site_platform_settings_favicons(self):
-        favicon = File(open('./bluebottle/projects/test_images/upload.png'))
+        favicon = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
         SitePlatformSettings.objects.create(favicon=favicon)
 
         response = self.client.get(reverse('settings'))
@@ -679,7 +620,7 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         )
 
     def test_site_platform_settings_logo(self):
-        favicon = File(open('./bluebottle/projects/test_images/upload.png'))
+        favicon = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
         SitePlatformSettings.objects.create(favicon=favicon)
 
         response = self.client.get(reverse('settings'))

@@ -56,7 +56,7 @@ def create_default_result_pages(apps, schema_editor):
         end_date=datetime.date(2017, 12, 31)
     )
     # And all the translations
-    for language_code, attrs in PAGE.items():
+    for language_code, attrs in list(PAGE.items()):
         if language_code in languages:
             page.translations.create(
                 language_code=language_code,
@@ -75,7 +75,7 @@ def create_default_result_pages(apps, schema_editor):
     stats = Stats.objects.create()
     for type, translations in STATS:
         stat = Stat.objects.create(type=type, stats=stats)
-        for language_code, attrs in translations.items():
+        for language_code, attrs in list(translations.items()):
             stat.translations.create(language_code=language_code, **attrs)
 
     # And the projects list
@@ -173,7 +173,7 @@ def create_default_result_pages(apps, schema_editor):
 
     def create_content_block(cls, content):
         content_type = ContentType.objects.get_for_model(cls)
-        for language_code, attrs in content.items():
+        for language_code, attrs in list(content.items()):
             if language_code in languages:
                 cls.objects.create_for_placeholder(
                     placeholder,
@@ -183,7 +183,7 @@ def create_default_result_pages(apps, schema_editor):
                 )
 
     # create all the content
-    for cls, content in all_content.items():
+    for cls, content in list(all_content.items()):
         create_content_block(cls, content)
 
 

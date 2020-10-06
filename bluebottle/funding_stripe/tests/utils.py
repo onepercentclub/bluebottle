@@ -1,4 +1,4 @@
-import bunch
+import munch
 import stripe
 from mock import patch
 
@@ -17,14 +17,14 @@ def generate_stripe_payout_account(account_id='some-id', owner=None):
     stripe_account = stripe.Account(account_id)
     stripe_account.update({
         'country': 'NL',
-        'individual': bunch.bunchify({
+        'individual': munch.munchify({
             'first_name': 'Jhon',
             'last_name': 'Example',
             'email': 'jhon@example.com',
             'verification': {
                 'status': 'verified',
             },
-            'requirements': bunch.bunchify({
+            'requirements': munch.munchify({
                 'eventually_due': [
                     'external_accounts',
                     'individual.verification.document',
@@ -32,7 +32,7 @@ def generate_stripe_payout_account(account_id='some-id', owner=None):
                 ]
             }),
         }),
-        'requirements': bunch.bunchify({
+        'requirements': munch.munchify({
             'eventually_due': [
                 'external_accounts',
                 'individual.verification.document.front',
@@ -40,7 +40,7 @@ def generate_stripe_payout_account(account_id='some-id', owner=None):
             ],
             'disabled': False
         }),
-        'external_accounts': bunch.bunchify({
+        'external_accounts': munch.munchify({
             'total_count': 0,
             'data': []
         })

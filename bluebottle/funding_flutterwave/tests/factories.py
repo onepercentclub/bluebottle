@@ -1,3 +1,4 @@
+from builtins import object
 import factory
 
 from bluebottle.funding.tests.factories import DonationFactory, PlainPayoutAccountFactory

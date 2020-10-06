@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import str
 import logging
 import re
 import dkim
@@ -47,9 +49,9 @@ class TenantAwareBackend(EmailBackend):
             return False
         try:
             message_string = email_message.message().as_string()
-            signature = ""
+            signature = b""
             try:
-                signature = dkim.sign(message_string,
+                signature = dkim.sign(message_string.encode('utf-8'),
                                       properties.DKIM_SELECTOR,
                                       properties.DKIM_DOMAIN,
                                       properties.DKIM_PRIVATE_KEY)
@@ -58,7 +60,7 @@ class TenantAwareBackend(EmailBackend):
 
             self.connection.sendmail(
                 email_message.from_email, email_message.recipients(),
-                signature + message_string)
+                signature.decode() + message_string)
         except Exception:
             if not self.fail_silently:
                 raise
@@ -172,8 +174,8 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
                              **kwargs)
     except Exception as e:
         msg = None
-        print '#####################'
-        print "Exception while rendering email template: {0}".format(e)
+        print('#####################')
+        print("Exception while rendering email template: {0}".format(e))
         logger.error("Exception while rendering email template: {0}".format(e))
         return
 

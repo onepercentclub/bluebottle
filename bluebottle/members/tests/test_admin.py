@@ -1,6 +1,14 @@
 # coding=utf-8
+from builtins import object
 import os
 
+from djmoney.money import Money
+
+from bluebottle.funding.tests.factories import DonationFactory
+
+from bluebottle.assignments.tests.factories import ApplicantFactory
+
+from bluebottle.events.tests.factories import ParticipantFactory
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import Group
 from django.core import mail
@@ -21,11 +29,11 @@ from bluebottle.utils.models import Language
 factory = RequestFactory()
 
 
-class MockRequest:
+class MockRequest(object):
     pass
 
 
-class MockUser:
+class MockUser(object):
     def __init__(self, perms=None, is_staff=True, is_superuser=False, groups=None):
         self.perms = perms or []
         self.is_superuser = is_superuser
@@ -55,7 +63,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
 
     def test_form(self):
         response = self.client.get(self.add_member_url)
-        self.assertIn('Add member', response.content)
+        self.assertIn(b'Add member', response.content)
 
     def test_invalid_form(self):
         response = self.client.get(self.add_member_url)
@@ -64,7 +72,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
             'csrfmiddlewaretoken': csrf
         }
         response = self.client.post(self.add_member_url, data)
-        self.assertIn('Please correct the errors below.', response.content)
+        self.assertIn(b'Please correct the errors below.', response.content)
 
     @override_settings(
         SEND_WELCOME_MAIL=True,
@@ -101,7 +109,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
 
         confirm_response = self.client.get(reset_url)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue('Are you sure' in confirm_response.content)
+        self.assertTrue(b'Are you sure' in confirm_response.content)
 
         response = self.client.post(reset_url, {'confirm': True})
         self.assertEquals(response.status_code, 302)
@@ -128,7 +136,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
 
         confirm_response = self.client.get(welcome_email_url)
         self.assertEquals(response.status_code, 200)
-        self.assertTrue('Are you sure' in confirm_response.content)
+        self.assertTrue(b'Are you sure' in confirm_response.content)
 
         response = self.client.post(welcome_email_url, {'confirm': True})
         self.assertEquals(response.status_code, 302)
@@ -313,13 +321,13 @@ class MemberAdminExportTest(BluebottleTestCase):
     """
     Test csv export
     """
+
     def setUp(self):
         super(MemberAdminExportTest, self).setUp()
         self.init_projects()
         self.request_factory = RequestFactory()
         self.request = self.request_factory.post('/')
         self.request.user = MockUser()
-        self.init_projects()
         self.member_admin = MemberAdmin(Member, AdminSite())
 
     def test_member_export(self):
@@ -328,30 +336,42 @@ class MemberAdminExportTest(BluebottleTestCase):
         field = CustomMemberFieldSettings.objects.create(name='How are you')
         CustomMemberField.objects.create(member=member, value='Fine', field=field)
 
+        ParticipantFactory.create(time_spent=5, user=member, status='succeeded')
+        ParticipantFactory.create(time_spent=12, user=member, status='succeeded')
+        ApplicantFactory.create_batch(3, time_spent=10, user=member, status='succeeded')
+        DonationFactory.create_batch(7, amount=Money(5, 'EUR'), user=member, status='succeeded')
+
         export_action = self.member_admin.actions[0]
         response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
-        data = response.content.split("\r\n")
+        data = response.content.decode('utf-8').split("\r\n")
         headers = data[0].split(",")
-        data = data[1].split(",")
+        user_data = []
+        for row in data:
+            if row.startswith('malle-eppie'):
+                user_data = row.split(',')
 
         # Test basic info and extra field are in the csv export
-        self.assertEqual(headers[0], 'username')
-        self.assertEqual(headers[12], 'Extra Info')
-        self.assertEqual(headers[13], 'How are you')
-        self.assertEqual(data[0], 'malle-eppie')
-        self.assertEqual(data[12], '')
-        self.assertEqual(data[13], 'Fine')
+        self.assertEqual(headers, [
+            'username', 'email', 'remote_id', 'first_name', 'last name',
+            'date joined', 'is initiator', 'is supporter', 'is volunteer',
+            'amount donated', 'time spent', 'subscribed to matching projects', 'Extra Info', 'How are you'])
+        self.assertEqual(user_data[0], 'malle-eppie')
+        self.assertEqual(user_data[7], 'True')
+        self.assertEqual(user_data[8], 'True')
+        self.assertEqual(user_data[9], u'35.00 €')
+        self.assertEqual(user_data[10], '47.0')
+        self.assertEqual(user_data[13], 'Fine')
 
     def test_member_unicode_export(self):
         member = BlueBottleUserFactory.create(username='stimpy')
         friend = CustomMemberFieldSettings.objects.create(name='Best friend')
-        CustomMemberField.objects.create(member=member, value='Ren Höek', field=friend)
+        CustomMemberField.objects.create(member=member, value=u'Ren Höek', field=friend)
 
         export_action = self.member_admin.actions[0]
         response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
 
-        data = response.content.split("\r\n")
+        data = response.content.decode('utf-8').split("\r\n")
         headers = data[0].split(",")
         data = data[1].split(",")
 
@@ -359,7 +379,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(headers[0], 'username')
         self.assertEqual(headers[12], 'Best friend')
         self.assertEqual(data[0], 'stimpy')
-        self.assertEqual(data[12], 'Ren Höek')
+        self.assertEqual(data[12], u'Ren Höek')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)

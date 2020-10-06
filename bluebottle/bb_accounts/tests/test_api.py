@@ -1,6 +1,9 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import json
 import re
-import urlparse
+import urllib.parse
 import time
 
 import mock
@@ -74,9 +77,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         # Fields taken from the serializer
         serializer_fields = ['id', 'url', 'full_name', 'short_name', 'picture',
                              'primary_language', 'about_me', 'location',
-                             'project_count', 'donation_count', 'date_joined',
-                             'fundraiser_count', 'task_count', 'time_spent',
-                             'website', 'twitter', 'facebook', 'skypename']
+                             'date_joined', 'website', 'twitter', 'facebook', 'skypename']
 
         for field in serializer_fields:
             self.assertTrue(field in response.data, "Missing field {}".format(field))
@@ -155,9 +156,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         # Fields taken from the serializer
         serializer_fields = ['id', 'url', 'full_name', 'short_name', 'picture',
-                             'primary_language', 'about_me', 'location',
-                             'project_count', 'donation_count', 'date_joined',
-                             'fundraiser_count', 'task_count', 'time_spent',
+                             'primary_language', 'about_me', 'location', 'date_joined',
                              'website', 'twitter', 'facebook', 'skypename',
                              'email', 'phone_number',
                              'newsletter', 'campaign_notifications',
@@ -346,8 +345,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['last_name'], self.user_1.first_name)
 
         self.assertEqual(response.data['permissions']['project_list'],
-                         {u'OPTIONS': True, u'GET': True})
-        self.assertEqual(response.data['permissions']['project_manage_list'],
                          {u'GET': True, u'OPTIONS': True, u'POST': True})
         self.assertEqual(response.data['permissions']['homepage'],
                          {u'GET': True, u'OPTIONS': True})
@@ -447,10 +444,10 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['non_field_errors'][0]['type'], 'email')
         self.assertEqual(response.data['non_field_errors'][0]['email'], 'nijntje27@hetkonijntje.nl')
         self.assertEqual(
-            unicode(response.data['non_field_errors'][0]['id']), unicode(user_1.pk)
+            str(response.data['non_field_errors'][0]['id']), str(user_1.pk)
         )
         self.assertEqual(
-            unicode(response.data['email'][0]), 'member with this email address already exists.'
+            str(response.data['email'][0]), 'member with this email address already exists.'
         )
 
     def test_generate_username(self):
@@ -521,7 +518,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         passwords = {'new_password1': 'short', 'new_password2': 'short'}
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue('This password is too short' in response.content)
+        self.assertTrue(b'This password is too short' in response.content)
 
     def test_deactivate(self):
         response = self.client.delete(
@@ -595,7 +592,7 @@ class AuthLocaleMiddlewareTest(BluebottleTestCase):
 
 @httmock.urlmatch(netloc='www.google.com', path='/recaptcha/api/siteverify')
 def captcha_mock(url, request):
-    data = urlparse.parse_qs(request.body)
+    data = urllib.parse.parse_qs(request.body)
     if data.get('response')[0] == 'test-token':
         return json.dumps({'success': True})
     else:
@@ -672,7 +669,7 @@ class TokenLoginApiTest(BluebottleTestCase):
             data={'user_id': self.user.pk, 'token': token}
         )
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data.keys(), ['token'])
+        self.assertEqual(list(response.data.keys()), ['token'])
 
     def test_token_login_twice(self):
         token = login_token_generator.make_token(self.user)

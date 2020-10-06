@@ -1,21 +1,19 @@
+from __future__ import absolute_import
+
+from future.utils import python_2_unicode_compatible
+
+from builtins import object
 from adminsortable.models import SortableMixin
-from django.db import models
-from django.db.models import Sum
 from django.contrib.contenttypes.fields import GenericRelation
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
-from django.utils.functional import cached_property
-from django.core.exceptions import ObjectDoesNotExist
-
 from multiselectfield import MultiSelectField
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.geo.models import Place
-from bluebottle.projects.models import Project
-from bluebottle.fundraisers.models import Fundraiser
-from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.models import BasePlatformSettings
-from bluebottle.utils.utils import StatusDefinition
 
 
 class CustomMemberFieldSettings(SortableMixin):
@@ -32,7 +30,7 @@ class CustomMemberFieldSettings(SortableMixin):
     def slug(self):
         return slugify(self.name)
 
-    class Meta:
+    class Meta(object):
         ordering = ['sequence']
 
 
@@ -88,11 +86,12 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_("The number of days after which user data should be anonymised. 0 for no anonymisation")
     )
 
-    class Meta:
+    class Meta(object):
         verbose_name_plural = _('member platform settings')
         verbose_name = _('member platform settings')
 
 
+@python_2_unicode_compatible
 class Member(BlueBottleBaseUser):
     verified = models.BooleanField(default=False, blank=True, help_text=_('Was verified for voting by recaptcha.'))
     subscribed = models.BooleanField(
@@ -141,7 +140,7 @@ class Member(BlueBottleBaseUser):
         except Place.DoesNotExist:
             return None
 
-    class Analytics:
+    class Analytics(object):
         type = 'member'
         tags = {}
         fields = {
@@ -172,57 +171,6 @@ class Member(BlueBottleBaseUser):
             else:
                 return obj.updated
 
-    def get_tasks_qs(self):
-        return TaskMember.objects.filter(
-            member=self, status__in=['applied', 'accepted', 'realized'])
-
-    @property
-    def time_spent(self):
-        """ Returns the number of donations a user has made """
-        return self.get_tasks_qs().aggregate(Sum('time_spent'))[
-            'time_spent__sum']
-
-    @property
-    def is_volunteer(self):
-        return self.time_spent > 0
-
-    @cached_property
-    def sourcing(self):
-        return self.get_tasks_qs().distinct('task__project').count()
-
-    @property
-    def fundraiser_count(self):
-        return Fundraiser.objects.filter(owner=self).count()
-
-    @property
-    def project_count(self):
-        """ Return the number of projects a user started / is owner of """
-        return Project.objects.filter(
-            owner=self,
-            status__slug__in=['campaign', 'done-complete', 'done-incomplete', 'voting', 'voting-done']
-        ).count()
-
-    @property
-    def is_initiator(self):
-        return self.project_count > 0
-
-    @property
-    def has_projects(self):
-        """ Return the number of projects a user started / is owner of """
-        return Project.objects.filter(owner=self).count() > 0
-
-    @property
-    def amount_donated(self):
-        return self.order_set.filter(
-            status=StatusDefinition.SUCCESS
-        ).aggregate(
-            amount_donated=models.Sum('total')
-        )['amount_donated']
-
-    @property
-    def is_supporter(self):
-        return self.amount_donated > 0
-
     @property
     def initials(self):
         initials = ''
@@ -233,7 +181,7 @@ class Member(BlueBottleBaseUser):
 
         return initials
 
-    def __unicode__(self):
+    def __str__(self):
         return u"{} | {}".format(self.full_name, self.email)
 
 
@@ -243,10 +191,10 @@ class UserActivity(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     path = models.CharField(max_length=200, null=True, blank=True)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('User activity')
         verbose_name_plural = _('User activities')
         ordering = ['-created']
 
 
-import signals  # noqa
+from . import signals  # noqa

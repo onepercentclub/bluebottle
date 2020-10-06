@@ -166,8 +166,8 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
     def get_filters(self, request):
         filters = super(ActivitySearchFilter, self).get_filters(request)
-        regex = re.compile(b'^filter\[segment\.(?P<type>[\w\-]+)\]$')
-        for key, value in request.GET.items():
+        regex = re.compile('^filter\[segment\.(?P<type>[\w\-]+)\]$')
+        for key, value in list(request.GET.items()):
             matches = regex.match(key)
             if matches:
                 filters.append(

@@ -41,12 +41,14 @@ def save_profile_picture(strategy, user, response, details, backend,
 
 def refresh(strategy, social, *args, **kwargs):
     """Refresh the facebook token, so that we get a long lived backend token."""
-    social.refresh_token(strategy)
+    kwargs['response'].update(
+        kwargs['backend'].refresh_token(kwargs['response']['access_token'])
+    )
 
 
 def set_language(strategy, user, response, details,
                  is_new=False, *args, **kwargs):
-    supported_langauges = dict(properties.LANGUAGES).keys()
+    supported_langauges = list(dict(properties.LANGUAGES).keys())
 
     try:
         language = response['locale'][:2]

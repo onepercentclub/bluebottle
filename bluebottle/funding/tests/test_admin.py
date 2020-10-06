@@ -134,6 +134,25 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
 
         response = self.client.get(url)
-        self.assertTrue(first.title in response.content)
-        self.assertTrue(second.title in response.content)
-        self.assertFalse(third.title in response.content)
+        self.assertTrue(first.title in response.content.decode('utf-8'))
+        self.assertTrue(second.title in response.content.decode('utf-8'))
+        self.assertFalse(third.title in response.content.decode('utf-8'))
+
+
+class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
+
+    def setUp(self):
+        super(PayoutAccountAdminTestCase, self).setUp()
+        self.payout_account = StripePayoutAccountFactory.create()
+        self.bank_account = ExternalAccountFactory.create(connect_account=self.payout_account)
+        self.payout_account_url = reverse('admin:funding_payoutaccount_change', args=(self.payout_account.id,))
+        self.bank_account_url = reverse('admin:funding_bankaccount_change', args=(self.bank_account.id,))
+        self.client.force_login(self.superuser)
+
+    def test_payout_account_admin(self):
+        response = self.client.get(self.payout_account_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_bank_account_admin(self):
+        response = self.client.get(self.bank_account_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

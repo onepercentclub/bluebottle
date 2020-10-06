@@ -1,3 +1,4 @@
+from builtins import range
 import locale
 
 from django.db import connection, IntegrityError
@@ -5,7 +6,7 @@ from django_slowtests.testrunner import DiscoverSlowestTestsRunner
 
 from tenant_schemas.utils import get_tenant_model
 
-from bluebottle.test.factory_models.rates import RateSourceFactory, RateFactory
+from bluebottle.test.factory_models.rates import RateFactory, ExchangeBackendFactory
 from bluebottle.test.utils import InitProjectDataMixin
 
 
@@ -41,13 +42,13 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         self.init_projects()
 
         try:
-            rate_source = RateSourceFactory.create(base_currency='USD')
-            RateFactory.create(source=rate_source, currency='USD', value=1)
-            RateFactory.create(source=rate_source, currency='EUR', value=1.5)
-            RateFactory.create(source=rate_source, currency='XOF', value=1000)
-            RateFactory.create(source=rate_source, currency='NGN', value=500)
-            RateFactory.create(source=rate_source, currency='UGX', value=5000)
-            RateFactory.create(source=rate_source, currency='KES', value=100)
+            backend = ExchangeBackendFactory.create(base_currency='USD')
+            RateFactory.create(backend=backend, currency='USD', value=1)
+            RateFactory.create(backend=backend, currency='EUR', value=1.5)
+            RateFactory.create(backend=backend, currency='XOF', value=1000)
+            RateFactory.create(backend=backend, currency='NGN', value=500)
+            RateFactory.create(backend=backend, currency='UGX', value=5000)
+            RateFactory.create(backend=backend, currency='KES', value=100)
         except IntegrityError:
             pass
 

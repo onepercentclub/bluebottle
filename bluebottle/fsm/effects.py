@@ -142,7 +142,21 @@ class BaseRelatedTransitionEffect(Effect):
             else:
                 self.instances = [relation]
 
-    def pre_save(self, effects=None, **kwargs):
+    def instances(self):
+        value = getattr(self.instance, self.relation)
+
+        if value:
+            try:
+                for instance in value.all().iterator():
+                    yield instance
+            except AttributeError:
+                try:
+                    for instance in value:
+                        yield instance
+                except TypeError:
+                    yield value
+
+    def pre_save(self, effects):
         for instance in self.instances:
             effect = self.transition_effect_class(instance)
             if effect not in effects and self.transition in effect.machine.transitions.values():
@@ -150,8 +164,8 @@ class BaseRelatedTransitionEffect(Effect):
 
                 effects.append(effect)
 
-                instance.execute_triggers(effects=effects)
-                instance.save()
+            instance.execute_triggers(effects=effects)
+            instance.save()
 
     def post_save(self):
         for instance in self.instances:
@@ -178,8 +192,8 @@ class BaseRelatedTransitionEffect(Effect):
                 conditions=" and ".join([c.__doc__ for c in self.conditions])
             )
         return _('{transition} related {object}').format(
-            transition=self.transition_effect_class.transition.name,
-            object=unicode(self.relation)
+            transition=self.transition_effect_class.name,
+            object=str(self.relation)
         )
 
 

@@ -23,4 +23,5 @@ class NotificationEffectsTestCase(BluebottleTestCase):
 
         self.assertEqual(str(effect), 'Message {} to faal@haas.nl'.format(subject))
         effect.post_save()
+
         self.assertEqual(mail.outbox[0].subject, subject)

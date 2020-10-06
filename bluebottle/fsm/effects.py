@@ -62,9 +62,6 @@ class BaseTransitionEffect(Effect):
 
     @property
     def machine(self):
-        if not self.instance:
-            import ipdb
-            ipdb.set_trace()
         return getattr(self.instance, self.field)
 
     @property
@@ -135,37 +132,23 @@ class BaseRelatedTransitionEffect(Effect):
         relation = getattr(self.instance, self.relation)
 
         try:
-            self.instances = relation.all()
+            self.instances = list(relation.all())
         except AttributeError:
             if isinstance(relation, Iterable):
                 self.instances = relation
             else:
                 self.instances = [relation]
 
-    def instances(self):
-        value = getattr(self.instance, self.relation)
-
-        if value:
-            try:
-                for instance in value.all().iterator():
-                    yield instance
-            except AttributeError:
-                try:
-                    for instance in value:
-                        yield instance
-                except TypeError:
-                    yield value
-
     def pre_save(self, effects):
         for instance in self.instances:
             effect = self.transition_effect_class(instance)
-            if effect not in effects and self.transition in effect.machine.transitions.values():
+
+            if effect not in effects and effect.is_valid and self.transition in effect.machine.transitions.values():
                 effect.pre_save(effects=effects)
 
                 effects.append(effect)
 
             instance.execute_triggers(effects=effects)
-            instance.save()
 
     def post_save(self):
         for instance in self.instances:

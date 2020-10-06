@@ -160,7 +160,8 @@ class FundingStateMachine(ActivityStateMachine):
             "The campaign will be extended and can receive more donations."),
         automatic=True,
         conditions=[
-            without_approved_payouts
+            without_approved_payouts,
+            deadline_in_future
         ],
     )
 

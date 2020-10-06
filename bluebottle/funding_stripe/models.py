@@ -1,3 +1,9 @@
+from __future__ import absolute_import
+from __future__ import division
+
+from future.utils import python_2_unicode_compatible
+from past.utils import old_div
+from builtins import object
 import re
 import json
 from operator import attrgetter
@@ -23,6 +29,7 @@ from bluebottle.funding_stripe.utils import stripe
 from bluebottle.utils.models import ValidatorError
 
 
+@python_2_unicode_compatible
 class PaymentIntent(models.Model):
     intent_id = models.CharField(max_length=30)
     client_secret = models.CharField(max_length=100)
@@ -34,17 +41,24 @@ class PaymentIntent(models.Model):
 
             statement_descriptor = connection.tenant.name[:22]
 
-            account_id = self.donation.activity.bank_account.connect_account.account_id
-            intent = stripe.PaymentIntent.create(
+            connect_account = self.donation.activity.bank_account.connect_account
+            intent_args = dict(
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
                 transfer_data={
-                    'destination': account_id,
+                    'destination': connect_account.account_id,
                 },
                 statement_descriptor=statement_descriptor,
                 statement_descriptor_suffix=statement_descriptor[:18],
                 metadata=self.metadata
             )
+            if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+                intent_args['on_behalf_of'] = connect_account.account_id
+
+            intent = stripe.PaymentIntent.create(
+                **intent_args
+            )
+
             self.intent_id = intent.id
             self.client_secret = intent.client_secret
 
@@ -63,10 +77,10 @@ class PaymentIntent(models.Model):
             "activity_title": self.donation.activity.title,
         }
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'payments/stripe-payment-intents'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.intent_id
 
 
@@ -124,19 +138,24 @@ class StripeSourcePayment(Payment):
         )
 
     def do_charge(self):
-        account_id = self.donation.activity.bank_account.connect_account.account_id
+        connect_account = self.donation.activity.bank_account.connect_account
 
         statement_descriptor = connection.tenant.name[:22]
-        charge = stripe.Charge.create(
+        charge_args = dict(
             amount=int(self.donation.amount.amount * 100),
-            currency=self.donation.amount.currency,
             source=self.source_token,
+            currency=self.donation.amount.currency,
             transfer_data={
-                'destination': account_id,
+                'destination': connect_account.account_id,
             },
             statement_descriptor_suffix=statement_descriptor[:18],
             metadata=self.metadata
         )
+
+        if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+            charge_args['on_behalf_of'] = connect_account.account_id
+
+        charge = stripe.Charge.create(**charge_args)
 
         self.charge_token = charge.id
         self.states.charge(save=True)
@@ -144,9 +163,9 @@ class StripeSourcePayment(Payment):
     def update(self):
         try:
             # Update donation amount if it differs
-            if self.source.amount / 100 != self.donation.amount.amount \
+            if old_div(self.source.amount, 100) != self.donation.amount.amount \
                     or self.source.currency != self.donation.amount.currency:
-                self.donation.amount = Money(self.source.amount / 100, self.source.currency)
+                self.donation.amount = Money(old_div(self.source.amount, 100), self.source.currency)
                 self.donation.save()
             if not self.charge_token and self.source.status == 'chargeable':
                 self.do_charge()
@@ -258,7 +277,7 @@ class StripePaymentProvider(PaymentProvider):
                         methods.append(method)
         return methods
 
-    class Meta:
+    class Meta(object):
         verbose_name = 'Stripe payment provider'
 
 
@@ -269,6 +288,15 @@ with open('bluebottle/funding_stripe/data/document_spec.json') as file:
 @memoize(timeout=60 * 60 * 24)
 def get_specs(country):
     return stripe.CountrySpec.retrieve(country)
+
+
+STRIPE_EUROPEAN_COUNTRY_CODES = [
+    "AD", "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE",
+    "FO", "FI", "FR", "DE", "GI", "GR", "GL", "GG", "VA",
+    "HU", "IS", "IE", "IM", "IL", "IT", "JE", "LV", "LI",
+    "LT", "LU", "MT", "MC", "NL", "NO", "PL", "PT", "RO",
+    "PM", "SM", "SK", "SI", "ES", "SE", "TR", "GB"
+]
 
 
 class StripePayoutAccount(PayoutAccount):
@@ -448,7 +476,6 @@ class StripePayoutAccount(PayoutAccount):
         return self._account
 
     def save(self, *args, **kwargs):
-
         if self.account_id and not self.country == self.account.country:
             self.account_id = None
 
@@ -461,12 +488,17 @@ class StripePayoutAccount(PayoutAccount):
             if 'localhost' in url:
                 url = re.sub('localhost', 't.goodup.com', url)
 
+            capabilities = ['transfers']
+
+            if self.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+                capabilities.append('card_payments')
+
             self._account = stripe.Account.create(
                 country=self.country,
                 type='custom',
                 settings=self.account_settings,
                 business_type='individual',
-                requested_capabilities=["transfers"],
+                requested_capabilities=capabilities,
                 business_profile={
                     'url': url,
                     'mcc': '8398'
@@ -536,14 +568,15 @@ class StripePayoutAccount(PayoutAccount):
             "member_id": self.owner.pk,
         }
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('stripe payout account')
         verbose_name_plural = _('stripe payout accounts')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripes'
 
 
+@python_2_unicode_compatible
 class ExternalAccount(BankAccount):
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'ba_...'"))
     provider_class = StripePaymentProvider
@@ -587,15 +620,15 @@ class ExternalAccount(BankAccount):
             "tenant_domain": connection.tenant.domain_url,
         }
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripe-external-accounts'
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Stripe external account')
         verbose_name_plural = _('Stripe exterrnal account')
 
-    def __unicode__(self):
+    def __str__(self):
         return "Stripe external account {}".format(self.account_id)
 
 
-from states import *  # noqa
+from .states import *  # noqa

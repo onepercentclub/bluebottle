@@ -1,3 +1,4 @@
+from builtins import object
 from datetime import timedelta
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -8,10 +9,11 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from operator import attrgetter
+
+from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
 import bluebottle.utils.monkey_patch_corsheaders  # noqa
-import bluebottle.utils.monkey_patch_dj_money_rates  # noqa
 import bluebottle.utils.monkey_patch_django_elasticsearch_dsl  # noqa
 import bluebottle.utils.monkey_patch_migration  # noqa
 import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa
@@ -24,6 +26,7 @@ from bluebottle.utils.managers import (
 )
 
 
+@python_2_unicode_compatible
 class Language(models.Model):
     """
     A language - ISO 639-1
@@ -32,13 +35,14 @@ class Language(models.Model):
     language_name = models.CharField(max_length=100, blank=False)
     native_name = models.CharField(max_length=100, blank=False)
 
-    class Meta:
+    class Meta(object):
         ordering = ['language_name']
 
-    def __unicode__(self):
+    def __str__(self):
         return self.language_name
 
 
+@python_2_unicode_compatible
 class Address(models.Model):
     """
     A postal address.
@@ -50,10 +54,10 @@ class Address(models.Model):
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     postal_code = models.CharField(max_length=20, blank=True)
 
-    class Meta:
+    class Meta(object):
         abstract = True
 
-    def __unicode__(self):
+    def __str__(self):
         return self.line1[:80]
 
 
@@ -67,11 +71,12 @@ class MailLog(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
 
+@python_2_unicode_compatible
 class BasePlatformSettings(models.Model):
 
     update = models.DateTimeField(auto_now=True)
 
-    class Meta:
+    class Meta(object):
         abstract = True
 
     def save(self, *args, **kwargs):
@@ -85,12 +90,12 @@ class BasePlatformSettings(models.Model):
         except cls.DoesNotExist:
             return cls()
 
-    def __unicode__(self):
-        return 'Settings'
+    def __str__(self):
+        return str(_('Settings'))
 
 
 class SortableTranslatableModel(TranslatableModel):
-    class Meta:
+    class Meta(object):
         abstract = True
 
     objects = SortableTranslatableManager()
@@ -124,7 +129,7 @@ class PublishableModel(models.Model):
 
     objects = PublishedManager()
 
-    class Meta:
+    class Meta(object):
         abstract = True
 
 
@@ -132,6 +137,7 @@ class ValidatorError(Exception):
     def __init__(self, field, code, message):
         self.field = field
         self.code = code
+        self.message = message
         super(ValidatorError, self).__init__(message)
 
 
@@ -155,7 +161,7 @@ class ValidatedModelMixin(object):
         for validator in self.validators:
             try:
                 validator(self)()
-            except ValidatorError, e:
+            except ValidatorError as e:
                 yield e
 
     @property
@@ -201,6 +207,6 @@ class TranslationPlatformSettings(TranslatableModel, BasePlatformSettings):
 
     )
 
-    class Meta:
+    class Meta(object):
         verbose_name_plural = _('translation settings')
         verbose_name = _('translation settings')

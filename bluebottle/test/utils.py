@@ -1,12 +1,13 @@
-from bunch import bunchify
-
-from django.db import connection
-from django.test.utils import override_settings
-from django.test import TestCase, Client
-from django.conf import settings
-
-from django_webtest import WebTestMixin
+from builtins import object
+from builtins import str
 from importlib import import_module
+
+from django.conf import settings
+from django.db import connection
+from django.test import TestCase, Client
+from django.test.utils import override_settings
+from django_webtest import WebTestMixin
+from munch import munchify
 from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient
 from tenant_schemas.middleware import TenantMiddleware
@@ -16,18 +17,6 @@ from bluebottle.clients import properties
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.utils.models import Language
-
-
-# TODO: remove this temporary work around to not verify ssl certs
-#       when docdata fix their ssl cert chain on their testing server.
-import ssl
-
-try:
-    _create_unverified_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
-else:
-    ssl._create_default_https_context = _create_unverified_https_context
 
 
 def css_dict(style):
@@ -50,7 +39,7 @@ def css_dict(style):
         return dict([(k.strip(), v.strip()) for k, v in
                      [prop.split(':') for prop in
                       style.rstrip(';').split(';')]])
-    except ValueError, e:
+    except ValueError as e:
         raise ValueError('Could not parse CSS: %s (%s)' % (style, e))
 
 
@@ -166,14 +155,15 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
     payout_url = reverse('admin:payouts_projectpayout_changelist')
     response = self.app.get(payout_url, user=self.superuser)
     """
+
     def setUp(self):
         self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)
         self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
 
     def get_csrf_token(self, response):
         csrf = "name='csrfmiddlewaretoken' value='"
-        start = response.content.find(csrf) + len(csrf)
-        end = response.content.find("'", start)
+        start = response.content.decode().find(csrf) + len(csrf)
+        end = response.content.decode().find("'", start)
 
         return response.content[start:end]
 
@@ -219,9 +209,9 @@ class FsmTestMixin(object):
         if totals is not None:
             default_totals.update(totals)
 
-        return bunchify({
-            'payment': bunchify(payments),
-            'approximateTotals': bunchify(default_totals)
+        return munchify({
+            'payment': munchify(payments),
+            'approximateTotals': munchify(default_totals)
         })
 
     def assert_status(self, instance, new_status):
@@ -236,7 +226,7 @@ class FsmTestMixin(object):
                              instance.status))
 
 
-class override_properties():
+class override_properties(object):
     def __init__(self, **kwargs):
         self.properties = kwargs
 

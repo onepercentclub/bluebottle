@@ -1,6 +1,9 @@
-
 from django.dispatch import receiver
+from builtins import str
+from builtins import zip
+from builtins import object
 from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 
 
 from bluebottle.fsm.state import pre_state_transition
@@ -19,6 +22,7 @@ class BoundTrigger(object):
         return self.trigger.execute(self.instance, previous_effects, **options)
 
 
+@python_2_unicode_compatible
 class Trigger(object):
     def __init__(self, effects=None):
         if effects is None:
@@ -38,10 +42,11 @@ class Trigger(object):
 
         return previous_effects
 
-    def __unicode__(self):
-        return unicode(_("Model has been changed"))
+    def __str__(self):
+        return str(_("Model has been changed"))
 
 
+@python_2_unicode_compatible
 class ModelChangedTrigger(Trigger):
     def __init__(self, field, *args, **kwargs):
         super(ModelChangedTrigger, self).__init__(*args, **kwargs)
@@ -54,27 +59,28 @@ class ModelChangedTrigger(Trigger):
     def changed(self, instance):
         return instance._initial_values.get(self.field) != getattr(instance, self.field)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.field:
             field_name = self.instance._meta.get_field(self.field).verbose_name
-            return unicode(_("{} has been changed").format(field_name.capitalize()))
-        return unicode(_("Object has been changed"))
+            return str(_("{} has been changed").format(field_name.capitalize()))
+        return str(_("Object has been changed"))
 
 
+@python_2_unicode_compatible
 class ModelDeletedTrigger(Trigger):
-    def __unicode__(self):
-        return unicode(_("Model has been deleted"))
+    def __str__(self):
+        return str(_("Model has been deleted"))
 
 
+@python_2_unicode_compatible
 class TransitionTrigger(Trigger):
     def __init__(self, transition, *args, **kwargs):
         super(TransitionTrigger, self).__init__(*args, **kwargs)
         self.transition = transition
 
-    def __unicode__(self):
-        return unicode(_("Model has changed status"))
+    def __str__(self):
+        return str(_("Model has changed status"))
 
-    @property
     def title(self):
         import ipdb
         ipdb.set_trace()
@@ -107,7 +113,7 @@ class TriggerMixin(object):
         self._transitions = []
 
         if hasattr(self, '_state_machines'):
-            for name, machine_class in self._state_machines.items():
+            for name, machine_class in list(self._state_machines.items()):
                 machine = machine_class(self)
 
                 setattr(self, name, machine)
@@ -128,7 +134,7 @@ class TriggerMixin(object):
     @ classmethod
     def from_db(cls, db, field_names, values):
         instance = super(TriggerMixin, cls).from_db(db, field_names, values)
-        instance._initial_values = dict(zip(field_names, values))
+        instance._initial_values = dict(list(zip(field_names, values)))
 
         return instance
 

@@ -1,8 +1,6 @@
-from bluebottle.wallposts.models import Wallpost
-
 from bluebottle.activities.models import Activity
-
 from bluebottle.utils.permissions import RelatedResourceOwnerPermission, BasePermission
+from bluebottle.wallposts.models import Wallpost
 
 
 class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):

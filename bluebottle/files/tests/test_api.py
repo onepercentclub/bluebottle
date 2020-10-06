@@ -1,3 +1,4 @@
+from builtins import str
 import json
 
 from django.core.urlresolvers import reverse
@@ -32,13 +33,13 @@ class FileListAPITestCase(TestCase):
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.content)
         self.assertEqual(data['data']['type'], 'documents')
-        self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+        self.assertEqual(data['data']['relationships']['owner']['data']['id'], str(self.owner.pk))
 
         file_field = Document.objects.get(pk=data['data']['id'])
         self.assertTrue(file_field.file.name.endswith(data['data']['meta']['filename']))
 
     def test_create_image(self):
-        with open(self.image_path) as test_file:
+        with open(self.image_path, 'rb') as test_file:
             response = self.client.post(
                 self.image_url,
                 test_file.read(),
@@ -53,11 +54,11 @@ class FileListAPITestCase(TestCase):
         file_field = Image.objects.get(pk=data['data']['id'])
 
         self.assertEqual(data['data']['type'], 'images')
-        self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+        self.assertEqual(data['data']['relationships']['owner']['data']['id'], str(self.owner.pk))
         self.assertTrue(file_field.file.name.endswith(data['data']['meta']['filename']))
 
     def test_create_image_anonymous(self):
-        with open(self.image_path) as test_file:
+        with open(self.image_path, 'rb') as test_file:
             response = self.client.post(
                 self.image_url,
                 test_file.read(),
@@ -68,7 +69,7 @@ class FileListAPITestCase(TestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_create_image_spoofed_mime_type(self):
-        with open(self.image_path) as test_file:
+        with open(self.image_path, 'rb') as test_file:
             response = self.client.post(
                 self.image_url,
                 test_file.read(),

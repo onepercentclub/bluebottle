@@ -1,3 +1,4 @@
+from builtins import object
 import factory
 from django.utils.timezone import now
 from bluebottle.quotes.models import Quote

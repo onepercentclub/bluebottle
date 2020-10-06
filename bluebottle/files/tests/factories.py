@@ -1,3 +1,4 @@
+from builtins import object
 import factory
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory

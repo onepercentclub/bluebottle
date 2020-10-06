@@ -1,3 +1,4 @@
+from builtins import object
 from django.contrib import admin
 from django.utils import translation
 from django.utils.html import format_html
@@ -17,7 +18,7 @@ from bluebottle.wallposts.admin import WallpostInline
 
 class InitiativeAdminForm(StateMachineModelForm):
 
-    class Meta:
+    class Meta(object):
         model = Initiative
         fields = '__all__'
         widgets = {
@@ -75,11 +76,15 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     prepopulated_fields = {"slug": ("title",)}
 
-    raw_id_fields = ('owner', 'reviewer', 'promoter', 'activity_manager',
-                     'place', 'organization', 'organization_contact')
+    raw_id_fields = (
+        'owner', 'reviewer',
+        'promoter', 'activity_manager',
+        'organization', 'organization_contact',
+        'place'
+    )
 
     date_hierarchy = 'created'
-    list_display = ['__unicode__', 'created', 'owner', 'state_name']
+    list_display = ['__str__', 'created', 'owner', 'state_name']
 
     search_fields = ['title', 'pitch', 'story',
                      'owner__first_name', 'owner__last_name', 'owner__email']
@@ -136,7 +141,8 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
                 'created', 'updated')}),
             (_('Details'), {'fields': details}),
             (_('Organization'), {'fields': (
-                'has_organization', 'organization', 'organization_contact')}),
+                'has_organization', 'organization',
+                'organization_contact')}),
             (_('Status'), {'fields': (
                 'valid',
                 'reviewer', 'activity_manager',
@@ -173,7 +179,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
 
     valid.short_description = _('Steps to complete initiative')
 
-    class Media:
+    class Media(object):
         js = ('admin/js/inline-activities-add.js',)
 
 

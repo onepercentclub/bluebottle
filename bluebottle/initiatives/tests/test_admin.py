@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from builtins import str
 from django.contrib.admin.sites import AdminSite
 from django.contrib.messages import get_messages
 from django.core import mail
@@ -11,6 +12,7 @@ from bluebottle.initiatives.admin import InitiativeAdmin
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.organizations import OrganizationContactFactory, OrganizationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 
 
@@ -42,6 +44,18 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertContains(response, 'Messages')
         self.assertContains(response, 'Office location')
         self.assertContains(response, 'Impact location')
+
+    def test_initiative_admin_with_organization_contact(self):
+        self.initiative.contact = OrganizationFactory.create()
+        self.initiative.organization_contact = OrganizationContactFactory.create()
+        self.initiative.has_organization = True
+        self.initiative.save()
+        self.assertIsNotNone(self.initiative.organization_contact)
+        self.client.force_login(self.superuser)
+        admin_url = reverse('admin:initiatives_initiative_change',
+                            args=(self.initiative.id,))
+        response = self.client.get(admin_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_review_initiative_send_mail(self):
         self.client.force_login(self.superuser)
@@ -136,7 +150,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertFalse(
             '/en/admin/initiatives/initiative/{}/transition/states/delete'.format(
                 initiative.pk
-            ) in response.content
+            ) in response.content.decode('utf-8')
         )
 
     def test_add_reviewer(self):

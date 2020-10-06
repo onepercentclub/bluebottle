@@ -1,5 +1,7 @@
-import urllib
-
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
+from urllib.parse import urlencode
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test.utils import override_settings
 from django.test import RequestFactory
@@ -18,8 +20,8 @@ DUMMY_AUTH = {'backend': 'token_auth.tests.test_views.DummyAuthentication'}
 class DummyUser(object):
     pk = 1
 
-    class _meta:
-        class pk:
+    class _meta(object):
+        class pk(object):
             @staticmethod
             def value_to_string(obj):
                 return 1
@@ -88,7 +90,7 @@ class RedirectViewTestCase(TestCase):
     def test_get_custom_target(self, sso_url):
 
         response = self.view.get(
-            self.factory.get('/api/sso/redirect?' + urllib.urlencode({'url': '/test/'}))
+            self.factory.get('/api/sso/redirect?' + urlencode({'url': '/test/'}))
         )
         sso_url.assert_called_once_with(target_url='/test/')
         self.assertEqual(response.status_code, 302)

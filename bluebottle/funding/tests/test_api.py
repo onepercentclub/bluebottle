@@ -1,7 +1,9 @@
+from builtins import str
+from builtins import range
 import json
 from datetime import timedelta
 import mock
-import bunch
+import munch
 
 import stripe
 
@@ -253,7 +255,7 @@ class RewardListTestCase(BluebottleTestCase):
             len(funding_data['data']['relationships']['rewards']['data']), 1
         )
         self.assertEqual(
-            funding_data['data']['relationships']['rewards']['data'][0]['id'], unicode(data['data']['id'])
+            funding_data['data']['relationships']['rewards']['data'][0]['id'], str(data['data']['id'])
         )
 
     def test_create_wrong_currency(self):
@@ -473,7 +475,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         export_url = data['data']['attributes']['supporters-export-url']['url']
 
         export_response = self.client.get(export_url)
-        self.assertTrue('Email,Name,Donation Date' in export_response.content)
+        self.assertTrue(b'Email,Name,Donation Date' in export_response.content)
 
         wrong_signature_response = self.client.get(export_url + '111')
         self.assertEqual(
@@ -504,7 +506,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         bank_account = response.json()['data']['relationships']['bank-account']['data']
         self.assertEqual(
-            bank_account['id'], unicode(self.funding.bank_account.pk)
+            bank_account['id'], str(self.funding.bank_account.pk)
         )
 
     def test_other_user(self):
@@ -587,7 +589,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         bank_account = response.json()['data']['relationships']['bank-account']['data']
         self.assertEqual(
-            bank_account['id'], unicode(external_account.pk)
+            bank_account['id'], str(external_account.pk)
         )
         self.assertEqual(
             bank_account['type'], 'payout-accounts/stripe-external-accounts'
@@ -708,8 +710,8 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
-        self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
-        self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertEqual(data['data']['relationships']['activity']['data']['id'], str(self.funding.pk))
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
         self.assertIsNone(data['data']['attributes']['client-secret'])
 
     def test_donate(self):
@@ -724,7 +726,7 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.get(self.funding_url, user=self.user)
 
         donation = get_included(response, 'contributions/donations')
-        self.assertEqual(donation['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertEqual(donation['relationships']['user']['data']['id'], str(self.user.pk))
 
         self.assertTrue(response.json()['data']['attributes']['is-follower'])
 
@@ -892,7 +894,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
         self.assertEqual(len(data['data']['attributes']['client-secret']), 32)
-        self.assertEqual(data['data']['relationships']['activity']['data']['id'], unicode(self.funding.pk))
+        self.assertEqual(data['data']['relationships']['activity']['data']['id'], str(self.funding.pk))
         self.assertEqual(data['data']['relationships']['user']['data'], None)
 
     def test_claim(self):
@@ -928,7 +930,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
-        self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
         self.assertTrue('client-secret' not in data['data']['attributes'])
 
         patch_data = {
@@ -1042,7 +1044,7 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEqual(data['data']['attributes']['amount'], {'amount': 200, 'currency': 'EUR'})
-        self.assertEqual(data['data']['relationships']['user']['data']['id'], unicode(self.user.pk))
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
 
     def test_update_no_user_wrong_token(self):
         response = self.client.post(self.create_url, json.dumps(self.data))
@@ -1081,7 +1083,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['relationships']['reward']['data']['id'], unicode(reward.pk))
+        self.assertEqual(data['data']['relationships']['reward']['data']['id'], str(reward.pk))
 
     def test_create_reward_higher_amount(self):
         reward = RewardFactory.create(amount=Money(50, 'EUR'), activity=self.funding)
@@ -1094,7 +1096,7 @@ class DonationTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['relationships']['reward']['data']['id'], unicode(reward.pk))
+        self.assertEqual(data['data']['relationships']['reward']['data']['id'], str(reward.pk))
 
     def test_create_reward_lower_amount(self):
         reward = RewardFactory.create(amount=Money(150, 'EUR'), activity=self.funding)
@@ -1356,7 +1358,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             'bluebottle.funding_stripe.models.ExternalAccount.account', new_callable=mock.PropertyMock
         ) as account:
             external_account = stripe.BankAccount('some-bank-token')
-            external_account.update(bunch.bunchify({
+            external_account.update(munch.munchify({
                 'object': 'bank_account',
                 'account_holder_name': 'Jane Austen',
                 'account_holder_type': 'individual',

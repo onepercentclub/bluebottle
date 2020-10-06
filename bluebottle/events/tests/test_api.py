@@ -1,7 +1,13 @@
 # coding=utf-8
+
+from future import standard_library
+
+standard_library.install_aliases()
+
+from urllib.parse import urlparse, parse_qs
+from builtins import str
 import json
 from datetime import timedelta
-import urlparse
 
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -60,11 +66,11 @@ class EventListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.data['status'], 'draft')
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
         self.assertEqual(
-            [
+            {
                 transition['name'] for transition in
                 response.json()['data']['meta']['transitions']
-            ],
-            ['submit', 'delete']
+            },
+            {'submit', 'delete'}
         )
 
         # Add an event with the same title should NOT return an error
@@ -343,8 +349,8 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         links = response.data['links']
-        google_link = urlparse.urlparse(links['google'])
-        google_query = urlparse.parse_qs(google_link.query)
+        google_link = urlparse(links['google'])
+        google_query = parse_qs(google_link.query)
 
         self.assertEqual(google_link.netloc, 'calendar.google.com')
         self.assertEqual(google_link.path, '/calendar/render')
@@ -353,9 +359,9 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(google_query['location'][0], self.event.location.formatted_address)
         self.assertEqual(google_query['text'][0], self.event.title)
         self.assertEqual(google_query['uid'][0], 'test-event-{}'.format(self.event.pk))
-        details = "Just kidding, we're going\xc2\xa0to clean it up of course \xf0\x9f\x98\x89\n" \
-                  "http://testserver/en/initiatives/activities/details/" \
-                  "event/{}/{}".format(self.event.pk, self.event.slug)
+        details = u"Just kidding, we're going to clean it up of course 😉\n" \
+                  u"http://testserver/en/initiatives/activities/details/" \
+                  u"event/{}/{}".format(self.event.pk, self.event.slug)
         self.assertEqual(google_query['details'][0], details)
         self.assertEqual(
             google_query['dates'][0],
@@ -365,8 +371,8 @@ class EventDetailTestCase(BluebottleTestCase):
             )
         )
 
-        outlook_link = urlparse.urlparse(links['outlook'])
-        outlook_query = urlparse.parse_qs(outlook_link.query)
+        outlook_link = urlparse(links['outlook'])
+        outlook_query = parse_qs(outlook_link.query)
 
         self.assertEqual(outlook_link.netloc, 'outlook.live.com')
         self.assertEqual(outlook_link.path, '/owa/')
@@ -378,10 +384,10 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(outlook_query['body'][0], details)
         self.assertEqual(
             outlook_query['startdt'][0],
-            unicode(self.event.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
+            str(self.event.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
         )
         self.assertEqual(
-            outlook_query['enddt'][0], unicode(self.event.end.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
+            outlook_query['enddt'][0], str(self.event.end.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S'))
         )
 
         self.assertTrue(
@@ -435,12 +441,12 @@ class EventDetailTestCase(BluebottleTestCase):
     def test_update_event_image(self):
 
         file_path = './bluebottle/files/tests/files/test-image.png'
-        with open(file_path) as test_file:
+        with open(file_path, 'rb') as test_file:
             response = self.client.post(
                 reverse('image-list'),
                 test_file.read(),
                 content_type="image/png",
-                HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.jpg"',
+                HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.png"',
                 user=self.event.owner
             )
 
@@ -543,12 +549,14 @@ class EventTransitionTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(
-            data['data']['meta']['transitions'],
-            [
-                {u'available': True, u'name': u'submit', u'target': u'submitted'},
-                {u'available': True, u'name': u'delete', u'target': u'deleted'}
-            ],
+        self.assertTrue(
+            {u'available': True, u'name': u'delete', u'target': u'deleted'}
+            in data['data']['meta']['transitions']
+        )
+
+        self.assertTrue(
+            {u'available': True, u'name': u'submit', u'target': u'submitted'}
+            in data['data']['meta']['transitions']
         )
 
     def test_delete_by_owner(self):

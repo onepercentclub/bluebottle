@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='aggregateanswer',
             name='list',
-            field=django_extensions.db.fields.json.JSONField(default=b'[]', null=True),
+            field=django_extensions.db.fields.json.JSONField(default='[]', null=True),
         ),
         migrations.AddField(
             model_name='aggregateanswer',

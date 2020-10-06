@@ -1,5 +1,6 @@
+from builtins import object
 import factory.fuzzy
-import bunch
+import munch
 import mock
 
 from bluebottle.funding.tests.factories import DonationFactory
@@ -66,7 +67,7 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
         account = stripe.Account(
             id=account_id,
         )
-        account.requirements = bunch.bunchify({
+        account.requirements = munch.munchify({
             'eventually_due': [
                 'individual.first_name', 'individual.last_name'
             ]

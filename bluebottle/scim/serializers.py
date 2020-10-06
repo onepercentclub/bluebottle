@@ -1,3 +1,4 @@
+from builtins import object
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
@@ -90,7 +91,7 @@ class MetaSerializer(NonNestedSerializer):
 class UserGroupSerializer(serializers.ModelSerializer):
     id = SCIMIdField('group')
 
-    class Meta:
+    class Meta(object):
         model = Group
         fields = ('id', 'name',)
 
@@ -130,7 +131,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
             read_only=True
         ).data
 
-    class Meta:
+    class Meta(object):
         model = Member
         fields = ('id', 'externalId', 'userName', 'name', 'emails', 'active', 'groups', 'schemas', 'meta')
 
@@ -161,7 +162,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
         result['$ref'] = result.pop('ref')
         return result
 
-    class Meta:
+    class Meta(object):
         model = Member
         list_serializer_class = GroupMemberListSerializer
         fields = ('value', 'ref', 'type')
@@ -178,7 +179,7 @@ class SCIMGroupSerializer(serializers.ModelSerializer):
     schemas = SchemaSerializer(read_only=False, required=False)
     meta = MetaSerializer(required=False)
 
-    class Meta:
+    class Meta(object):
         model = Group
         fields = ('id', 'displayName', 'schemas', 'meta', 'members', )
 

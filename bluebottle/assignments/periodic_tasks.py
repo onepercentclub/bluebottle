@@ -1,3 +1,4 @@
+from builtins import str
 from datetime import timedelta
 from django.db.models.expressions import F
 from django.utils import timezone
@@ -37,8 +38,8 @@ class AssignmentStartOnDateTask(ModelPeriodicTask):
         ]),
     ]
 
-    def __unicode__(self):
-        return unicode(_("Start a task on a set date."))
+    def __str__(self):
+        return str(_("Start a task on a set date."))
 
 
 class AssignmentStartDeadlineTask(ModelPeriodicTask):
@@ -62,8 +63,8 @@ class AssignmentStartDeadlineTask(ModelPeriodicTask):
         ]),
     ]
 
-    def __unicode__(self):
-        return unicode(_("Start a task with deadline after registration deadline has passed."))
+    def __str__(self):
+        return str(_("Start a task with deadline after registration deadline has passed."))
 
 
 class AssignmentFinishedDeadlineTask(ModelPeriodicTask):
@@ -88,8 +89,8 @@ class AssignmentFinishedDeadlineTask(ModelPeriodicTask):
         ]),
     ]
 
-    def __unicode__(self):
-        return unicode(_("Finish a task when deadline has passed."))
+    def __str__(self):
+        return str(_("Finish a task when deadline has passed."))
 
 
 class AssignmentFinishedOnDateTask(ModelPeriodicTask):
@@ -114,8 +115,8 @@ class AssignmentFinishedOnDateTask(ModelPeriodicTask):
         ]),
     ]
 
-    def __unicode__(self):
-        return unicode(_("Finish a task after it has ended (date + duration)."))
+    def __str__(self):
+        return str(_("Finish a task after it has ended (date + duration)."))
 
 
 class AssignmentRegistrationOnDateTask(ModelPeriodicTask):
@@ -139,8 +140,8 @@ class AssignmentRegistrationOnDateTask(ModelPeriodicTask):
         ]),
     ]
 
-    def __unicode__(self):
-        return unicode(_("Make sure users can't sign up after registration date has passed on a task with a set date."))
+    def __str__(self):
+        return str(_("Make sure users can't sign up after registration date has passed on a task with a set date."))
 
 
 class AssignmentRegistrationReminderTask(ModelPeriodicTask):
@@ -168,8 +169,8 @@ class AssignmentRegistrationReminderTask(ModelPeriodicTask):
             ]
         )]
 
-    def __unicode__(self):
-        return unicode(_("Send a reminder if the task deadline/date is in 5 days."))
+    def __str__(self):
+        return str(_("Send a reminder if the task deadline/date is in 5 days."))
 
 
 Assignment.periodic_tasks = [

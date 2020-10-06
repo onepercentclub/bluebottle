@@ -1,3 +1,6 @@
+from future.utils import python_2_unicode_compatible
+
+from builtins import object
 from django.utils.timezone import datetime, timedelta, utc
 from django.db import models
 from django.db.models import SET_NULL, Count, Sum
@@ -111,7 +114,7 @@ class Assignment(Activity):
         stats.update(committed)
         return stats
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("Task")
         verbose_name_plural = _("Tasks")
         ordering = ('-created',)
@@ -127,7 +130,7 @@ class Assignment(Activity):
             ('api_delete_own_assignment', 'Can delete own task through the API'),
         )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'activities/assignments'
 
     @property
@@ -153,13 +156,14 @@ class Assignment(Activity):
         return super(Assignment, self).save(*args, **kwargs)
 
 
+@python_2_unicode_compatible
 class Applicant(Contribution):
     motivation = models.TextField(blank=True)
     time_spent = models.FloatField(_('time spent'), null=True, blank=True)
 
     document = PrivateDocumentField(blank=True, null=True)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("Applicant")
         verbose_name_plural = _("Applicants")
         permissions = (
@@ -174,13 +178,13 @@ class Applicant(Contribution):
             ('api_delete_own_applicant', 'Can delete own applicant through the API'),
         )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'contributions/applicants'
 
     def delete(self, *args, **kwargs):
         super(Applicant, self).delete(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.user.full_name
 
 

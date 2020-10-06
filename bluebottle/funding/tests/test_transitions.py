@@ -136,8 +136,8 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertTrue('Hi Bill,' in mail.outbox[1].body)
 
         # Donation amount should appear in both emails
-        self.assertTrue(u'€ 50' in mail.outbox[0].body)
-        self.assertTrue(u'€ 50' in mail.outbox[1].body)
+        self.assertTrue(u'50.00 €' in mail.outbox[0].body)
+        self.assertTrue(u'50.00 €' in mail.outbox[1].body)
 
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
@@ -229,10 +229,8 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         self.assertEqual(self.funding.status, 'succeeded')
 
-        self.assertRaises(
-            TransitionNotPossible,
+        with self.assertRaises(TransitionNotPossible):
             self.funding.states.extend(save=True)
-        )
 
     def test_refund(self):
         donation = DonationFactory.create(activity=self.funding, amount=Money(50, 'EUR'))

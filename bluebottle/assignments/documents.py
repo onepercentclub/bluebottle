@@ -1,3 +1,4 @@
+from builtins import object
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.initiatives.models import Initiative
@@ -13,7 +14,7 @@ SCORE_MAP = {
 
 @activity.doc_type
 class AssignmentDocument(ActivityDocument):
-    class Meta:
+    class Meta(object):
         model = Assignment
         related_models = (Initiative, Member, Applicant)
 

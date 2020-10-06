@@ -1,3 +1,4 @@
+from builtins import object
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
@@ -49,7 +50,7 @@ class AssignmentListSerializer(BaseActivityListSerializer):
     included_serializers = dict(
         BaseActivityListSerializer.included_serializers,
         **{
-            'expertise': 'bluebottle.tasks.serializers.SkillSerializer',
+            'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )
@@ -100,7 +101,7 @@ class AssignmentSerializer(BaseActivitySerializer):
     included_serializers = dict(
         BaseActivitySerializer.included_serializers,
         **{
-            'expertise': 'bluebottle.tasks.serializers.SkillSerializer',
+            'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'contributions': 'bluebottle.assignments.serializers.ApplicantSerializer',
         }
@@ -114,7 +115,7 @@ class AssignmentTransitionSerializer(TransitionSerializer):
         'resource': 'bluebottle.assignments.serializers.AssignmentSerializer',
     }
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = ['resource', ]
         resource_name = 'assignment-transitions'
 
@@ -184,7 +185,7 @@ class ApplicantTransitionSerializer(TransitionSerializer):
         'resource.activity': 'bluebottle.assignments.serializers.AssignmentSerializer',
     }
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'contributions/applicant-transitions'
         included_resources = [
             'resource',
@@ -195,10 +196,10 @@ class ApplicantTransitionSerializer(TransitionSerializer):
 class SkillSerializer(serializers.ModelSerializer):
     name = serializers.CharField()
 
-    class Meta:
+    class Meta(object):
         model = Skill
         fields = ('id', 'name', 'expertise')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = ['resource', ]
         resource_name = 'skills'

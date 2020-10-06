@@ -1,3 +1,4 @@
+from builtins import str
 import json
 from datetime import timedelta
 import dateutil
@@ -65,8 +66,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         response = self.client.get(self.url, user=self.owner)
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][1]['id'], unicode(succeeded.pk))
-        self.assertEqual(data['data'][0]['id'], unicode(open.pk))
+        self.assertEqual(data['data'][1]['id'], str(succeeded.pk))
+        self.assertEqual(data['data'][0]['id'], str(open.pk))
 
         self.assertTrue('meta' in data['data'][0])
 
@@ -81,8 +82,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         response = self.client.get(self.url)
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][1]['id'], unicode(succeeded.pk))
-        self.assertEqual(data['data'][0]['id'], unicode(open.pk))
+        self.assertEqual(data['data'][1]['id'], str(succeeded.pk))
+        self.assertEqual(data['data'][0]['id'], str(open.pk))
 
         self.assertTrue('meta' in data['data'][0])
 
@@ -97,7 +98,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
 
     def test_only_owner_permission(self):
         EventFactory.create(owner=self.owner, status='open')
@@ -119,7 +120,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
 
-        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
 
     def test_initiative_location(self):
         location = LocationFactory.create()
@@ -134,7 +135,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['id'], unicode(activity.pk))
+        self.assertEqual(data['data'][0]['id'], str(activity.pk))
 
     def test_activity_date_filter(self):
         next_month = now() + dateutil.relativedelta.relativedelta(months=1)
@@ -195,10 +196,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         found = [item['id'] for item in data['data']]
 
-        self.assertTrue(unicode(event.pk) in found)
-        self.assertTrue(unicode(on_date_assignment.pk) in found)
-        self.assertTrue(unicode(deadline_assignment.pk) in found)
-        self.assertTrue(unicode(funding.pk) in found)
+        self.assertTrue(str(event.pk) in found)
+        self.assertTrue(str(on_date_assignment.pk) in found)
+        self.assertTrue(str(deadline_assignment.pk) in found)
+        self.assertTrue(str(funding.pk) in found)
 
     def test_filter_segment(self):
         segment = SegmentFactory.create()
@@ -221,7 +222,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
 
     def test_filter_segment_mismatch(self):
         first = EventFactory.create(
@@ -263,8 +264,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
+        self.assertEqual(data['data'][1]['id'], str(second.pk))
 
     def test_search_different_type(self):
         first = EventFactory.create(
@@ -282,9 +283,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
         self.assertEqual(data['data'][0]['type'], 'activities/events')
-        self.assertEqual(data['data'][1]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][1]['id'], str(second.pk))
         self.assertEqual(data['data'][1]['type'], 'activities/fundings')
 
     def test_search_boost(self):
@@ -307,8 +308,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(second.pk))
+        self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_search_formatted_address(self):
         location = GeolocationFactory.create(formatted_address='Roggeveenstraat')
@@ -332,8 +333,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(second.pk))
+        self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_search_initiative_title(self):
         first = EventFactory.create(
@@ -356,8 +357,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
-        self.assertEqual(data['data'][0]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(second.pk))
+        self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_search_segment_name(self):
         first = EventFactory.create(
@@ -377,7 +378,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 1)
-        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
 
     def test_sort_title(self):
         second = EventFactory.create(title='B: something else', status='open')
@@ -392,9 +393,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 3)
-        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(third.pk))
+        self.assertEqual(data['data'][0]['id'], str(first.pk))
+        self.assertEqual(data['data'][1]['id'], str(second.pk))
+        self.assertEqual(data['data'][2]['id'], str(third.pk))
 
     def test_sort_activity_date(self):
         first = EventFactory.create(
@@ -418,9 +419,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 3)
-        self.assertEqual(data['data'][0]['id'], unicode(third.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][0]['id'], str(third.pk))
+        self.assertEqual(data['data'][1]['id'], str(first.pk))
+        self.assertEqual(data['data'][2]['id'], str(second.pk))
 
     def test_sort_matching_popularity(self):
         first = EventFactory.create(status='open')
@@ -451,10 +452,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 4)
 
-        self.assertEqual(data['data'][0]['id'], unicode(fourth.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(third.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][3]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][1]['id'], str(third.pk))
+        self.assertEqual(data['data'][2]['id'], str(second.pk))
+        self.assertEqual(data['data'][3]['id'], str(first.pk))
 
     def test_sort_matching_status(self):
         EventFactory.create(status='closed')
@@ -479,10 +480,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 4)
 
-        self.assertEqual(data['data'][0]['id'], unicode(fifth.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(fourth.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(third.pk))
-        self.assertEqual(data['data'][3]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][0]['id'], str(fifth.pk))
+        self.assertEqual(data['data'][1]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][2]['id'], str(third.pk))
+        self.assertEqual(data['data'][3]['id'], str(second.pk))
 
     def test_sort_matching_skill(self):
         skill = SkillFactory.create()
@@ -507,10 +508,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 4)
 
-        self.assertEqual(data['data'][0]['id'], unicode(fourth.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(third.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][3]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][1]['id'], str(third.pk))
+        self.assertEqual(data['data'][2]['id'], str(second.pk))
+        self.assertEqual(data['data'][3]['id'], str(first.pk))
 
     def test_sort_matching_theme(self):
         theme = ProjectThemeFactory.create()
@@ -541,10 +542,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 4)
 
-        self.assertEqual(data['data'][0]['id'], unicode(fourth.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(third.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][3]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][1]['id'], str(third.pk))
+        self.assertEqual(data['data'][2]['id'], str(second.pk))
+        self.assertEqual(data['data'][3]['id'], str(first.pk))
 
     def test_sort_matching_location(self):
         PlaceFactory.create(content_object=self.owner, position='10.0, 20.0')
@@ -582,11 +583,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 5)
 
-        self.assertEqual(data['data'][0]['id'], unicode(fifth.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(fourth.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(third.pk))
-        self.assertEqual(data['data'][3]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][4]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(fifth.pk))
+        self.assertEqual(data['data'][1]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][2]['id'], str(third.pk))
+        self.assertEqual(data['data'][3]['id'], str(second.pk))
+        self.assertEqual(data['data'][4]['id'], str(first.pk))
 
     def test_filter_country(self):
         country1 = CountryFactory.create()
@@ -616,8 +617,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
 
-        self.assertEqual(data['data'][0]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(second.pk))
+        self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_sort_matching_office_location(self):
         self.owner.location = LocationFactory.create(position='10.0, 20.0')
@@ -654,11 +655,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 5)
 
-        self.assertEqual(data['data'][0]['id'], unicode(fifth.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(fourth.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(third.pk))
-        self.assertEqual(data['data'][3]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][4]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(fifth.pk))
+        self.assertEqual(data['data'][1]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][2]['id'], str(third.pk))
+        self.assertEqual(data['data'][3]['id'], str(second.pk))
+        self.assertEqual(data['data'][4]['id'], str(first.pk))
 
     def test_sort_matching_created(self):
         first = EventFactory.create(
@@ -678,9 +679,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 3)
 
-        self.assertEqual(data['data'][0]['id'], unicode(third.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(third.pk))
+        self.assertEqual(data['data'][1]['id'], str(second.pk))
+        self.assertEqual(data['data'][2]['id'], str(first.pk))
 
     def test_sort_matching_combined(self):
         theme = ProjectThemeFactory.create()
@@ -722,9 +723,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 3)
 
-        self.assertEqual(data['data'][0]['id'], unicode(third.pk))
-        self.assertEqual(data['data'][1]['id'], unicode(second.pk))
-        self.assertEqual(data['data'][2]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][0]['id'], str(third.pk))
+        self.assertEqual(data['data'][1]['id'], str(second.pk))
+        self.assertEqual(data['data'][2]['id'], str(first.pk))
 
     def test_limits(self):
         initiative = InitiativeFactory.create()
@@ -758,7 +759,7 @@ class ActivityRelatedImageAPITestCase(BluebottleTestCase):
 
         file_path = './bluebottle/files/tests/files/test-image.png'
 
-        with open(file_path) as test_file:
+        with open(file_path, 'rb') as test_file:
             response = self.client.post(
                 reverse('image-list'),
                 test_file.read(),

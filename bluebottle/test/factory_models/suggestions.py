@@ -1,3 +1,4 @@
+from builtins import object
 import factory
 import factory.fuzzy
 from datetime import timedelta

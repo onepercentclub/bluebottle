@@ -1,7 +1,14 @@
+
+from future import standard_library
+
+standard_library.install_aliases()
+
+from urllib.parse import urlencode
+
+from builtins import object
 import json
 import logging
 import socket
-import urllib
 from collections import namedtuple
 from importlib import import_module
 
@@ -262,14 +269,14 @@ def update_group_permissions(label, group_perms, apps):
         create_permissions(app_config, apps=apps, verbosity=0)
         app_config.models_module = None
 
-    for group_name, permissions in group_perms.items():
+    for group_name, permissions in list(group_perms.items()):
         group, _ = Group.objects.get_or_create(name=group_name)
         for perm_codename in permissions['perms']:
             try:
                 permissions = Permission.objects.filter(codename=perm_codename)
                 permissions = permissions.filter(content_type__app_label=label)
                 group.permissions.add(permissions.get())
-            except Permission.DoesNotExist, err:
+            except Permission.DoesNotExist as err:
                 logging.debug(err)
                 raise Exception(
                     'Could not add permission: {}: {}'.format(perm_codename, err)
@@ -281,6 +288,7 @@ class PreviousStatusMixin(object):
     """
     Store the status of the instance on init to be accessed as _original_status
     """
+
     def __init__(self, *args, **kwargs):
         super(PreviousStatusMixin, self).__init__(*args, **kwargs)
 
@@ -296,7 +304,7 @@ signer = TimestampSigner()
 def reverse_signed(name, args):
     url = reverse(name, args=args)
     signature = signer.sign(url)
-    return '{}?{}'.format(url, urllib.urlencode({'signature': signature}))
+    return '{}?{}'.format(url, urlencode({'signature': signature}))
 
 
 def get_language_from_request(request):
@@ -304,7 +312,7 @@ def get_language_from_request(request):
 
 
 def _json_object_hook(d):
-    return namedtuple('X', d.keys())(*d.values())
+    return namedtuple('X', list(d.keys()))(*list(d.values()))
 
 
 def json2obj(data):

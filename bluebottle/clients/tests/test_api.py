@@ -1,22 +1,19 @@
-import mock
 from decimal import Decimal
 
+import mock
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
-
 from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
 
-from bluebottle.analytics.models import AnalyticsPlatformSettings, AnalyticsAdapter
 from bluebottle.clients import properties
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.funding.models import FundingPlatformSettings
-from bluebottle.notifications.models import NotificationPlatformSettings
-from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 
 class ClientSettingsTestCase(BluebottleTestCase):
@@ -58,73 +55,76 @@ class ClientSettingsTestCase(BluebottleTestCase):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['readOnlyFields'], {'user': ['first_name']})
 
-    @override_settings(PAYMENT_METHODS=[{
-        'provider': 'docdata',
-        'id': 'docdata-ideal',
-        'profile': 'ideal',
-        'name': 'iDEAL',
-        'restricted_countries': ('NL', ),
-        'currencies': {
-            'EUR': {'max_amount': 100}
-        }
-    }, {
-        'provider': 'docdata',
-        'id': 'docdata-directdebit',
-        'profile': 'directdebit',
-        'name': 'Direct Debit',
-        'restricted_countries': ('NL', 'BE', ),
-        'currencies': {
-            'EUR': {'min_amount': 10, 'max_amount': 100}
-        }
+    @override_settings(
+        PAYMENT_METHODS=[{
+            'provider': 'docdata',
+            'id': 'docdata-ideal',
+            'profile': 'ideal',
+            'name': 'iDEAL',
+            'restricted_countries': ('NL', ),
+            'currencies': {
+                'EUR': {'max_amount': 100}
+            }
+        }, {
+            'provider': 'docdata',
+            'id': 'docdata-directdebit',
+            'profile': 'directdebit',
+            'name': 'Direct Debit',
+            'restricted_countries': ('NL', 'BE', ),
+            'currencies': {
+                'EUR': {'min_amount': 10, 'max_amount': 100}
+            }
 
-    }, {
-        'provider': 'docdata',
-        'id': 'docdata-creditcard',
-        'profile': 'creditcard',
-        'name': 'CreditCard',
-        'currencies': {
-            'USD': {'min_amount': 5, 'max_amount': 100},
-            'NGN': {'min_amount': 3000, 'max_amount': 100},
-            'XOF': {'min_amount': 5000, 'max_amount': 100},
-        }
-    }])
+        }, {
+            'provider': 'docdata',
+            'id': 'docdata-creditcard',
+            'profile': 'creditcard',
+            'name': 'CreditCard',
+            'currencies': {
+                'USD': {'min_amount': 5, 'max_amount': 100},
+                'NGN': {'min_amount': 3000, 'max_amount': 100},
+                'XOF': {'min_amount': 5000, 'max_amount': 100},
+            }
+        }],
+        DEFAULT_CURRENCY='USD'
+    )
     def test_settings_currencies(self):
         # Check that exposed property is in settings api, and other settings are not shown
         response = self.client.get(self.settings_url)
-
-        self.assertEqual(
-            response.data['currencies'],
-            [
-                {
-                    'symbol': u'CFA',
-                    'code': 'XOF',
-                    'name': u'West African CFA Franc',
-                    'rate': Decimal(1000.0),
-                    'minAmount': 5000
-                },
-                {
-                    'symbol': u'\u20a6',
-                    'code': 'NGN',
-                    'name': u'Nigerian Naira',
-                    'rate': Decimal(500.0),
-                    'minAmount': 3000
-                },
-                {
-                    'symbol': u'$',
-                    'code': 'USD',
-                    'name': u'US Dollar',
-                    'rate': Decimal(1.0),
-                    'minAmount': 5
-                },
-                {
-                    'symbol': u'\u20ac',
-                    'code': 'EUR',
-                    'name': u'Euro',
-                    'rate': Decimal(1.5),
-                    'minAmount': 0
-                }
-            ]
-        )
+        expected = [
+            {
+                'symbol': u'\u20ac',
+                'code': 'EUR',
+                'name': u'Euro',
+                'rate': Decimal(1.5),
+                'minAmount': 0
+            },
+            {
+                'symbol': u'\u20a6',
+                'code': 'NGN',
+                'name': u'Nigerian Naira',
+                'rate': Decimal(500.0),
+                'minAmount': 3000
+            },
+            {
+                'symbol': u'$',
+                'code': 'USD',
+                'name': u'US Dollar',
+                'rate': Decimal(1.0),
+                'minAmount': 5
+            },
+            {
+                'symbol': u'CFA',
+                'code': 'XOF',
+                'name': u'West African CFA Franc',
+                'rate': Decimal(1000.0),
+                'minAmount': 5000
+            },
+        ]
+        result = response.data['currencies']
+        result = sorted(result, key=lambda i: i['name'])
+        expected = sorted(expected, key=lambda i: i['name'])
+        self.assertEqual(result, expected)
 
 
 @override_settings(
@@ -136,6 +136,7 @@ class TestDefaultAPI(ESTestCase, BluebottleTestCase):
     Test the default API, open and closed, authenticated or not
     with default permissions
     """
+
     def setUp(self):
         super(TestDefaultAPI, self).setUp()
 
@@ -175,48 +176,6 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         super(TestPlatformSettingsApi, self).setUp()
         self.init_projects()
         self.settings_url = reverse('settings')
-
-    def test_project_platform_settings(self):
-        # Create some project settings and confirm they end up correctly in settings api
-        project_settings = ProjectPlatformSettings.objects.create(
-            create_types=['sourcing', 'funding'],
-            contact_types=['organization'],
-            create_flow='choice',
-            contact_method='email'
-        )
-        ProjectSearchFilter.objects.create(
-            project_settings=project_settings,
-            name='location'
-        )
-        ProjectSearchFilter.objects.create(
-            project_settings=project_settings,
-            name='theme'
-        )
-        ProjectSearchFilter.objects.create(
-            project_settings=project_settings,
-            name='status',
-            default='campaign,voting'
-        )
-        ProjectSearchFilter.objects.create(
-            project_settings=project_settings,
-            name='type',
-            values='volunteering,funding'
-        )
-        filters = [
-            {'name': 'location', 'default': None, 'values': None, 'sequence': 1},
-            {'name': 'theme', 'default': None, 'values': None, 'sequence': 2},
-            {'name': 'status', 'default': 'campaign,voting', 'values': None, 'sequence': 3},
-            {'name': 'type', 'default': None, 'values': 'volunteering,funding', 'sequence': 4},
-        ]
-
-        response = self.client.get(self.settings_url)
-        self.assertEqual(
-            set(response.data['platform']['projects']['create_types']),
-            set(['funding', 'sourcing'])
-        )
-        self.assertEqual(response.data['platform']['projects']['contact_types'], ['organization'])
-        self.assertEqual(response.data['platform']['projects']['contact_method'], 'email')
-        self.assertEqual(response.data['platform']['projects']['filters'], filters)
 
     def test_site_platform_settings(self):
         # Create site platform settings and confirm they end up correctly in settings api
@@ -278,41 +237,3 @@ class TestPlatformSettingsApi(BluebottleTestCase):
 
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['platform']['funding']['allow_anonymous_rewards'], True)
-
-    def test_analytics_platform_settings(self):
-        # Create analytics platform settings and confirm they end up correctly in settings api
-        analytics_settings = AnalyticsPlatformSettings.objects.create()
-        AnalyticsAdapter.objects.create(
-            analytics_settings=analytics_settings,
-            type='SiteCatalyst',
-            code='AB-345-GG'
-        )
-
-        data = {
-            'type': 'SiteCatalyst',
-            'code': 'AB-345-GG'
-        }
-        response = self.client.get(self.settings_url)
-        self.assertEqual(response.data['platform']['analytics']['adapters'][0], data)
-
-    @override_settings(
-        PAYOUT_METHODS=[{
-            'currencies': [u'EUR'],
-            'method': u'rabobank',
-            'payment_methods': [u'docdata-creditcard', u'docdata-ideal', u'docdata-directdebit']
-        }, {
-            'currencies': [u'EUR', 'USD'],
-            'method': u'stripe',
-            'payment_methods': [u'stripe-creditcard', u'stripe-ideal', u'stripe-directdebit']
-        }, {
-            'currencies': [u'EUR'],
-            'method': u'excel',
-            'payment_methods': [u'pledge-standard']
-        }]
-    )
-    def test_payout_settings(self):
-        response = self.client.get(self.settings_url)
-        data = response.data['platform']['payouts']
-
-        self.assertEqual(set(data['EUR']), set(['rabobank', 'excel', 'stripe']))
-        self.assertEqual(set(data['USD']), set(['stripe']))

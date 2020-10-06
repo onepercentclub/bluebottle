@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='projectscontent',
             name='projects',
-            field=models.ManyToManyField(blank=True, db_table=b'cms_projectscontent_projects', to='projects.Project'),
+            field=models.ManyToManyField(blank=True, db_table='cms_projectscontent_projects', to='projects.Project'),
         ),
         migrations.AlterField(
             model_name='quote',

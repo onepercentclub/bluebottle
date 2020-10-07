@@ -233,7 +233,6 @@ class override_properties(object):
     def __enter__(self):
         self.old_properties = properties.tenant_properties
         properties.tenant_properties = self.properties
-        print properties.DEFAULT_CURRENCY, '!!!!'
 
     def __exit__(self, *args):
         properties.tenant_properties = self.old_properties

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from datetime import timedelta
 
 from django.urls import reverse
@@ -104,6 +105,20 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
             bank_account=bank_account
         )
         self.admin_url = reverse('admin:funding_donation_changelist')
+
+    def test_donation_total(self):
+        for donation in DonationFactory.create_batch(
+            2,
+            activity=self.funding,
+            amount=Money(100, 'NGN')
+        ):
+            PledgePaymentFactory.create(donation=donation)
+
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.admin_url)
+        self.assertTrue(
+            'Total amount:  <b>0.60 €</b>' in response.content
+        )
 
     def test_donation_admin_pledge_filter(self):
         for donation in DonationFactory.create_batch(2, activity=self.funding):

@@ -10,7 +10,6 @@ from babel.numbers import get_currency_name
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
-from djmoney.contrib.exchange.models import convert_money
 
 from bluebottle.fsm.triggers import TriggerMixin
 
@@ -30,6 +29,7 @@ from tenant_schemas.postgresql_backend.base import FakeTenant
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
 from bluebottle.files.fields import ImageField, PrivateDocumentField
+from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
 
@@ -267,7 +267,7 @@ class Funding(Activity):
             currency = 'EUR'
         total = self.amount_donated
         if self.amount_matching:
-            total += convert_money(
+            total += convert(
                 self.amount_matching,
                 currency
             )
@@ -404,7 +404,7 @@ class Fundraiser(AnonymizationMixin, models.Model):
             donations.values('amount_currency').annotate(Sum('amount')).order_by()
         ]
 
-        totals = [convert_money(amount, self.amount.currency) for amount in totals]
+        totals = [convert(amount, self.amount.currency) for amount in totals]
 
         return sum(totals) or Money(0, self.amount.currency)
 

@@ -177,11 +177,13 @@ class UserPermissionsSerializer(serializers.Serializer):
         return obj
 
     project_list = PermissionField('initiative-list')
+    project_manage_list = PermissionField('initiative-list')
     homepage = PermissionField('homepage', view_args=('primary_language', ))
 
     class Meta(object):
         fields = [
             'project_list',
+            'project_manage_list',
             'homepage'
         ]
 

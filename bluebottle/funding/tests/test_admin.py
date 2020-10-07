@@ -117,7 +117,7 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         response = self.client.get(self.admin_url)
         self.assertTrue(
-            'Total amount:  <b>0.60 €</b>' in response.content
+            u'Total amount:  <b>0.60 €</b>'.encode('utf-8') in response.content
         )
 
     def test_donation_admin_pledge_filter(self):

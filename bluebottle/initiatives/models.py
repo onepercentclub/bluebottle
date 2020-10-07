@@ -7,7 +7,6 @@ from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
-from djmoney.contrib.exchange.models import convert_money
 from future.utils import python_2_unicode_compatible
 from moneyed import Money
 from multiselectfield import MultiSelectField
@@ -20,6 +19,7 @@ from bluebottle.geo.models import Geolocation, Location
 from bluebottle.initiatives.messages import AssignedReviewerMessage
 from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.organizations.models import Organization, OrganizationContact
+from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
@@ -157,7 +157,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             'contributions': sum(stat['count'] for stat in stats),
             'hours': sum(stat['hours'] or 0 for stat in stats if 'hours' in stat),
             'amount': sum(
-                convert_money(Money(stat['amount']['amount'], stat['amount']['currency']), currency).amount
+                convert(Money(stat['amount']['amount'], stat['amount']['currency']), currency).amount
                 for stat in stats if 'amount' in stat
             ),
         }

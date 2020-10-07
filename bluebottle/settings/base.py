@@ -863,6 +863,7 @@ DONATION_AMOUNTS = {
 }
 
 DEFAULT_CURRENCY = 'EUR'
+BASE_CURRENCY = 'USD'
 
 # By default we do not show suggestion on the start-project page
 PROJECT_SUGGESTIONS = False

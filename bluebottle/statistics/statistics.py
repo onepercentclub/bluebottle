@@ -1,7 +1,6 @@
 from builtins import object
 from django.db.models import Q
 from django.db.models.aggregates import Sum
-from djmoney.contrib.exchange.models import convert_money
 
 from memoize import memoize
 
@@ -16,6 +15,7 @@ from bluebottle.events.models import Event, Participant
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.funding.models import Donation, Funding
 from bluebottle.funding_pledge.models import PledgePayment
+from bluebottle.utils.exchange_rates import convert
 
 
 class Statistics(object):
@@ -175,7 +175,7 @@ class Statistics(object):
         totals = donations.order_by('amount_currency').values('amount_currency').annotate(total=Sum('amount'))
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
         if totals:
-            donated = sum([convert_money(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
+            donated = sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
         else:
             donated = Money(0, properties.DEFAULT_CURRENCY)
 
@@ -243,7 +243,7 @@ class Statistics(object):
 
         amounts = [Money(total['total'], total['amount_matching_currency']) for total in totals]
         if totals:
-            return sum([convert_money(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
+            return sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
         else:
             return Money(0, properties.DEFAULT_CURRENCY)
 
@@ -276,7 +276,7 @@ class Statistics(object):
 
         amounts = [Money(total['total'], total['donation__amount_currency']) for total in totals]
         if totals:
-            donated = sum([convert_money(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
+            donated = sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
         else:
             donated = Money(0, properties.DEFAULT_CURRENCY)
 

@@ -21,7 +21,6 @@ from django.template.response import TemplateResponse
 from django_singleton_admin.admin import SingletonAdmin
 from django.utils.encoding import smart_str
 
-from djmoney.contrib.exchange.models import convert_money
 from moneyed import Money
 from parler.admin import TranslatableAdmin
 
@@ -31,6 +30,7 @@ from bluebottle.fsm import TransitionNotPossible
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.utils.forms import FSMModelForm
 from bluebottle.utils.forms import TransitionConfirmationForm
+from bluebottle.utils.exchange_rates import convert
 from .models import Language, TranslationPlatformSettings
 
 
@@ -156,7 +156,7 @@ class TotalAmountAdminChangeList(ChangeList):
         ).order_by()
 
         amounts = [Money(total['total'], total[currency_column]) for total in totals]
-        amounts = [convert_money(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
+        amounts = [convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
 
 

@@ -48,7 +48,7 @@ class TenantAwareBackend(EmailBackend):
         if not email_message.recipients():
             return False
         try:
-            message_string = email_message.message().as_string()
+            message_string = email_message.message().as_bytes()
             signature = b""
             try:
                 signature = dkim.sign(message_string,

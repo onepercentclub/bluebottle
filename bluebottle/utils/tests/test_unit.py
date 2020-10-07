@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from builtins import str
 from builtins import object
 import dkim
@@ -306,7 +307,7 @@ class TestTenantAwareMailServer(unittest.TestCase):
             properties.DKIM_PRIVATE_KEY = DKIM_PRIVATE_KEY
 
             be = TenantAwareBackend()
-            msg = EmailMultiAlternatives(subject="test", body="test",
+            msg = EmailMultiAlternatives(subject=u"test€", body=u"test€",
                                          to=["test@example.com"])
 
             be.open()
@@ -326,8 +327,8 @@ class TestTenantAwareMailServer(unittest.TestCase):
                 )
             )
 
-            self.assertTrue(signed_msg.find("d=testserver") >= 0)
-            self.assertTrue(signed_msg.find("s=key2") >= 0)
+            self.assertTrue(signed_msg.find(b"d=testserver") >= 0)
+            self.assertTrue(signed_msg.find(b"s=key2") >= 0)
             self.assertTrue(dkim_check, "Email should be signed by tenant")
 
     @override_settings(

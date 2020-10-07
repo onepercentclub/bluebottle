@@ -319,7 +319,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
     def test_cancel_with_activities(self):
         self.initiative.states.submit(save=True)
 
-        self.initiative.states.approve()
+        self.initiative.states.approve(save=True)
 
         event = EventFactory.create(initiative=self.initiative)
         event.states.submit(save=True)

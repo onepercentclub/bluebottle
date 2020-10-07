@@ -6,7 +6,7 @@ from bluebottle.fsm.effects import Effect
 class SetTimeSpent(Effect):
     template = 'admin/set_time_spent_effect.html'
 
-    def post_save(self, **kwargs):
+    def pre_save(self, **kwargs):
         if not self.instance.time_spent:
             self.instance.time_spent = self.time_spent
 
@@ -24,7 +24,7 @@ class SetTimeSpent(Effect):
 class ClearTimeSpent(Effect):
     template = 'admin/reset_time_spent_effect.html'
 
-    def post_save(self, **kwargs):
+    def pre_save(self, **kwargs):
         self.instance.time_spent = 0
 
     def __str__(self):

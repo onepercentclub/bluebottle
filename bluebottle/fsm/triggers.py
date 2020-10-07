@@ -35,10 +35,10 @@ class Trigger(object):
             effect = effect_cls(instance, **options)
 
             if effect.is_valid and effect not in previous_effects:
+                previous_effects.append(effect)
                 effect.pre_save(effects=previous_effects)
                 if effect.post_save:
                     instance._postponed_effects.insert(0, effect)
-                previous_effects.append(effect)
 
         return previous_effects
 
@@ -178,4 +178,10 @@ class TriggerMixin(object):
                 if isinstance(trigger, ModelDeletedTrigger):
                     BoundTrigger(self, trigger).execute([])
 
-        return super(TriggerMixin, self).delete(*args, **kwargs)
+        result = super(TriggerMixin, self).delete(*args, **kwargs)
+
+        while self._postponed_effects:
+            effect = self._postponed_effects.pop()
+            effect.post_save()
+
+        return result

@@ -19,6 +19,7 @@ class ModelPeriodicTask(object):
     def execute(self):
         for instance in self.get_queryset():
             accumulated_effects = []
+
             for effect_class in self.effects:
                 effect = effect_class(instance)
                 if effect.is_valid and effect not in accumulated_effects:

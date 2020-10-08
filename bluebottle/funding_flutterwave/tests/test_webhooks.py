@@ -83,8 +83,8 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
         payload = {
             "data": {
                 "id": 1231,
-                "txRef": donation.id,
-                "flwRef": "FLW-MOCK-3aa21c8ed962e5b64a986403fc60fa2d",
+                "tx_ref": donation.id,
+                "flw_ref": "FLW-MOCK-3aa21c8ed962e5b64a986403fc60fa2d",
                 "amount": 17500,
                 "currency": "NGN",
                 "status": "successful",

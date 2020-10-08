@@ -40,11 +40,10 @@ def check_payment_status(payment):
     except KeyError:
         amount = data['data']['amount']
 
-    if payment.donation.amount != amount:
-        payment.donation.amount = amount
-    if payment.donation.payout_amount != amount:
-        payment.donation.payout_amount = amount
+    payment.donation.amount = amount
+    payment.donation.payout_amount = amount
     payment.donation.save()
+
     if data['data']['status'] == 'successful':
         from .states import FlutterwavePaymentStateMachine
         if payment.status != FlutterwavePaymentStateMachine.succeeded.value:

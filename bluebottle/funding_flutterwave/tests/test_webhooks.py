@@ -81,3 +81,25 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
         self.assertEqual(donation.payment.status, 'succeeded')
         donation.refresh_from_db()
         self.assertEqual(donation.status, 'succeeded')
+
+    @patch('bluebottle.funding_flutterwave.utils.post',
+           return_value=success_response)
+    def test_webhook_bank_transfer_without_payment(self, mock_post):
+        donation = DonationFactory.create()
+        payload = {
+            "id": 1231,
+            "tx_ref": donation.id,
+            "flw_ref": "FLW-MOCK-3aa21c8ed962e5b64a986403fc60fa2d",
+            "amount": 17500,
+            "currency": "NGN",
+            "customer": {
+                "id": 154159,
+            },
+            "event.type": "BANK_TRANSFER"
+        }
+
+        response = self.client.post(self.webhook_url, data=payload)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(donation.payment.status, 'succeeded')
+        donation.refresh_from_db()
+        self.assertEqual(donation.status, 'succeeded')

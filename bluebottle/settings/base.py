@@ -454,7 +454,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s %(levelname)s %(name) %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(asctime)s %(levelname)s %(name)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
             'format': '%(asctime)s %(levelname)s %(name)s %(message)s'

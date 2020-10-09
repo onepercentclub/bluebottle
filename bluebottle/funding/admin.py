@@ -1,3 +1,6 @@
+from __future__ import division
+from past.utils import old_div
+from builtins import object
 import logging
 
 from babel.numbers import get_currency_symbol
@@ -114,7 +117,7 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
 class FundingAdminForm(StateMachineModelForm):
 
-    class Meta:
+    class Meta(object):
         model = Funding
         exclude = ('contribution_date', )
         widgets = {
@@ -143,21 +146,21 @@ class FundingAdmin(ActivityChildAdmin):
     ]
 
     list_display = [
-        '__unicode__', 'initiative', 'created', 'state_name',
+        '__str__', 'initiative', 'created', 'state_name',
         'highlight', 'deadline', 'percentage_donated', 'percentage_matching'
 
     ]
 
     def percentage_donated(self, obj):
         if obj.target and obj.target.amount and obj.amount_donated.amount:
-            return '{:.2f}%'.format((obj.amount_donated.amount / obj.target.amount) * 100)
+            return '{:.2f}%'.format((old_div(obj.amount_donated.amount, obj.target.amount)) * 100)
         else:
             return '0%'
     percentage_donated.short_description = _('% donated')
 
     def percentage_matching(self, obj):
         if obj.amount_matching and obj.amount_matching.amount:
-            return '{:.2f}%'.format((obj.amount_matching.amount / obj.target.amount) * 100)
+            return '{:.2f}%'.format((old_div(obj.amount_matching.amount, obj.target.amount)) * 100)
         else:
             return '0%'
     percentage_matching.short_description = _('% matching')
@@ -211,7 +214,7 @@ class FundingAdmin(ActivityChildAdmin):
 
 
 class DonationAdminForm(StateMachineModelForm):
-    class Meta:
+    class Meta(object):
         model = Donation
         exclude = ()
 
@@ -232,7 +235,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
 
     raw_id_fields = ['activity', 'payout', 'user']
     readonly_fields = ContributionChildAdmin.readonly_fields + [
-        'payment_link', 'payment_link', 'amount', 'payout_amount',
+        'payment_link', 'payment_link', 'payout_amount',
     ]
     list_display = ['contribution_date', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
     list_filter = [
@@ -243,6 +246,11 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     date_hierarchy = 'contribution_date'
 
     inlines = [DonationWallpostInline]
+
+    superadmin_fields = [
+        'force_status',
+        'amount'
+    ]
 
     fields = [
         'contribution_date', 'created',

@@ -1,3 +1,4 @@
+from builtins import object
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
@@ -6,11 +7,13 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import (
     CreationDateTimeField, ModificationDateTimeField
 )
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 
 
+@python_2_unicode_compatible
 class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
     """
     Organizations can run Projects. An organization has one or more members.
@@ -34,7 +37,7 @@ class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
 
     required_fields = ['name', 'website']
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
@@ -42,7 +45,7 @@ class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
 
         super(Organization, self).save(*args, **kwargs)
 
-    class Meta:
+    class Meta(object):
         ordering = ['name']
         verbose_name = _("partner organization")
         verbose_name_plural = _("partner organizations")
@@ -65,6 +68,9 @@ class OrganizationContact(ValidatedModelMixin, models.Model):
 
     required_fields = ['name', 'email']
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Partner Organization Contact')
         verbose_name_plural = _('Partner Organization Contacts')
+
+    def __str__(self):
+        return self.name

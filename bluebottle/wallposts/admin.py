@@ -1,4 +1,6 @@
-import urlparse
+from future import standard_library
+standard_library.install_aliases()
+import urllib.parse
 
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
@@ -96,8 +98,8 @@ class MediaWallpostAdmin(BaseWallpostAdmin):
             data['video_url'] = obj.video_url
             if 'youtube.com' in obj.video_url:
                 try:
-                    urlparts = urlparse.urlparse(obj.video_url)
-                    data['youtubeid'] = urlparse.parse_qs(urlparts.query)['v'][
+                    urlparts = urllib.parse.urlparse(obj.video_url)
+                    data['youtubeid'] = urllib.parse.parse_qs(urlparts.query)['v'][
                         0]
                 except (KeyError, ValueError, IndexError):
                     pass

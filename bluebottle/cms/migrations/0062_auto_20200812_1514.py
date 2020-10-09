@@ -15,7 +15,6 @@ def remove_old_statistic_block_from_homepage(apps, schema_editor):
 
     for stats_content in StatsContent.objects.all():
         if stats_content.placeholder and stats_content.placeholder.parent_type.model == 'homepage':
-            print stats_content
             stats_content.stats.all().delete()
             with connection.cursor() as c:
                 c.execute(

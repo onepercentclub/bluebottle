@@ -54,7 +54,7 @@ class TokenLoginView(View):
         try:
             user, created = auth.authenticate()
             user.backend = 'django.contrib.auth.backends.ModelBackend'
-        except TokenAuthenticationError, e:
+        except TokenAuthenticationError as e:
             url = '/token/error?message={0}'.format(e)
             return HttpResponseRedirect(url)
 

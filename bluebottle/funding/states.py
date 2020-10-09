@@ -213,7 +213,8 @@ class FundingStateMachine(ActivityStateMachine):
         description=_("The campaign will be extended and can receive more donations."),
         automatic=True,
         conditions=[
-            without_approved_payouts
+            without_approved_payouts,
+            deadline_in_future
         ],
         effects=[
             DeletePayoutsEffect,
@@ -648,7 +649,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
     verify = Transition(
-        [new, incomplete, rejected],
+        [new, incomplete, rejected, pending],
         verified,
         name=_('Verify'),
         description=_("Verify the payout account."),

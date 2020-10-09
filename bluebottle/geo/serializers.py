@@ -1,3 +1,4 @@
+from builtins import object
 from django.conf import settings
 
 from django.contrib.gis.geos import Point
@@ -40,7 +41,7 @@ class CountrySerializer(serializers.ModelSerializer):
     code = serializers.CharField(source='alpha2_code')
     oda = serializers.BooleanField(source='oda_recipient')
 
-    class Meta:
+    class Meta(object):
         model = Country
         fields = ('id', 'name', 'code', 'oda')
 
@@ -52,16 +53,16 @@ class LocationSerializer(serializers.ModelSerializer):
 
     static_map_url = StaticMapsField(source='position')
 
-    class Meta:
+    class Meta(object):
         model = Location
         fields = ('id', 'name', 'description', 'image', 'latitude', 'longitude', 'static_map_url')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'locations'
 
 
 class PlaceSerializer(serializers.ModelSerializer):
-    class Meta:
+    class Meta(object):
         model = Place
         fields = (
             'id', 'street', 'street_number', 'locality', 'province', 'country',
@@ -73,11 +74,11 @@ class InitiativeCountrySerializer(ModelSerializer):
     code = serializers.CharField(source='alpha2_code')
     oda = serializers.BooleanField(source='oda_recipient')
 
-    class Meta:
+    class Meta(object):
         model = Country
         fields = ('id', 'name', 'code', 'oda')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'countries'
 
 
@@ -88,14 +89,14 @@ class InitiativePlaceSerializer(ModelSerializer):
         'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
     }
 
-    class Meta:
+    class Meta(object):
         model = InitiativePlace
         fields = (
             'id', 'street', 'street_number', 'locality', 'province', 'country',
             'position', 'formatted_address',
         )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = ['country', ]
         resource_name = 'places'
 
@@ -135,7 +136,7 @@ class GeolocationSerializer(ModelSerializer):
         'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer'
     }
 
-    class Meta:
+    class Meta(object):
         model = Geolocation
         fields = (
             'id', 'street', 'street_number',
@@ -146,7 +147,7 @@ class GeolocationSerializer(ModelSerializer):
             'formatted_address',
         )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = [
             'country',
             'position'

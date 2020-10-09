@@ -1,4 +1,7 @@
 import csv
+import six
+from builtins import object
+from builtins import str
 
 from adminfilters.multiselect import UnionFieldListFilter
 from django.conf import settings
@@ -16,6 +19,8 @@ from django.http import HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
 from django_singleton_admin.admin import SingletonAdmin
+from django.utils.encoding import smart_str
+
 from moneyed import Money
 from parler.admin import TranslatableAdmin
 
@@ -23,10 +28,9 @@ from bluebottle.activities.models import Contribution
 from bluebottle.clients import properties
 from bluebottle.fsm import TransitionNotPossible
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
-from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
-from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.forms import FSMModelForm
 from bluebottle.utils.forms import TransitionConfirmationForm
+from bluebottle.utils.exchange_rates import convert
 from .models import Language, TranslationPlatformSettings
 
 
@@ -54,19 +58,21 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
     attr = getattr(obj, field)
 
-    if isinstance(attr, (FieldFile,)):
+    if isinstance(attr, FieldFile):
         attr = request.build_absolute_uri(attr.url)
 
     output = attr() if callable(attr) else attr
 
     if isinstance(output, (list, tuple, QuerySet)):
         output = manyToManySep.join([str(item) for item in output])
-    return unicode(output).encode('utf-8') if output else ""
+    return output if output else ""
 
 
 def escape_csv_formulas(item):
-    if item and item[0] in ['=', '+', '-', '@']:
-        return "'" + item
+    if item and isinstance(item, six.string_types):
+        if item[0] in ['=', '+', '-', '@']:
+            item = u"'" + item
+        return smart_str(item)
     else:
         return item
 
@@ -96,7 +102,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
-            unicode(opts).replace('.', '_')
+            str(opts).replace('.', '_')
         )
 
         writer = csv.writer(response)
@@ -110,29 +116,24 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 
         for obj in queryset:
             row = [prep_field(request, obj, field, manyToManySep) for field in field_names]
+
             # Write extra field data
-            if queryset.model is Project:
-                for field in CustomProjectFieldSettings.objects.all():
-                    try:
-                        value = obj.extra.get(field=field).value
-                    except CustomProjectField.DoesNotExist:
-                        value = ''
-                    row.append(value)
             if queryset.model is Member:
                 for field in CustomMemberFieldSettings.objects.all():
                     try:
                         value = obj.extra.get(field=field).value
                     except CustomMemberField.DoesNotExist:
                         value = ''
-                    row.append(value.encode('utf-8'))
+                    row.append(value)
             if isinstance(obj, Contribution):
                 for field in CustomMemberFieldSettings.objects.all():
                     try:
                         value = obj.user.extra.get(field=field).value
                     except CustomMemberField.DoesNotExist:
                         value = ''
-                    row.append(value.encode('utf-8'))
-            writer.writerow([escape_csv_formulas(item) for item in row])
+                    row.append(value)
+            escaped_row = [escape_csv_formulas(item) for item in row]
+            writer.writerow(escaped_row)
         return response
 
     export_as_csv.short_description = description
@@ -161,7 +162,7 @@ class TotalAmountAdminChangeList(ChangeList):
 
 class LatLongMapPickerMixin(object):
 
-    class Media:
+    class Media(object):
         if hasattr(settings, 'MAPS_API_KEY') and settings.MAPS_API_KEY:
             css = {
                 'all': ('css/admin/location_picker.css',),
@@ -191,7 +192,7 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
         user_id=user.id,
         content_type_id=ContentType.objects.get_for_model(obj).pk,
         object_id=obj.pk,
-        object_repr=unicode(obj),
+        object_repr=str(obj),
         action_flag=action_flag,
         change_message=change_message
     )

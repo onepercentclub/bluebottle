@@ -1,3 +1,7 @@
+from builtins import str
+from builtins import zip
+from builtins import range
+from builtins import object
 import mimetypes
 import xml.etree.cElementTree as et
 
@@ -90,7 +94,7 @@ class DutchBankAccountFieldValidator(RegexValidator):
                 value = "0" + value
 
             eleven_test_sum = sum(
-                [int(a) * b for a, b in zip(value, range(1, 11))])
+                [int(a) * b for a, b in zip(value, list(range(1, 11)))])
             if eleven_test_sum % 11 != 0:
                 raise ValidationError(_("Invalid Dutch bank account number."))
 
@@ -172,7 +176,7 @@ class SafeField(serializers.CharField):
         """
         data = data.replace("&lt;;", "<").replace("&gt;;", ">")
         data = data.replace("&lt;", "<").replace("&gt;", ">")
-        return unicode(clean_html(data))
+        return str(clean_html(data))
 
 
 class PrivateFileField(models.FileField):
@@ -180,7 +184,7 @@ class PrivateFileField(models.FileField):
     def __init__(self, verbose_name=None, name=None, upload_to='', storage=None, **kwargs):
         # Check if upload_to already has private path
         # This fixes loops and randomly added migrations
-        if not upload_to.startswith('private'):
+        if not upload_to.startswith(b'private'):
             upload_to = 'private/{}'.format(upload_to)
         super(PrivateFileField, self).__init__(
             verbose_name=verbose_name, name=name, upload_to=upload_to, storage=storage, **kwargs
@@ -223,7 +227,7 @@ class ValidationErrorsField(serializers.ReadOnlyField):
     def to_representation(self, value):
         return [
             {
-                'title': error.message,
+                'title': str(error),
                 'code': error.code,
                 'source': {
                     'pointer': '/data/attributes/{}'.format(inflection.dasherize(error.field).replace('.', '/'))

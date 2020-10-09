@@ -1,3 +1,4 @@
+from builtins import object
 from rest_framework import serializers
 
 from bluebottle.segments.models import Segment, SegmentType
@@ -10,11 +11,11 @@ class SegmentTypeSerializer(serializers.ModelSerializer):
         'segments': 'bluebottle.segments.serializers.SegmentSerializer',
     }
 
-    class Meta:
+    class Meta(object):
         model = SegmentType
         fields = ('id', 'name', 'slug', 'enable_search', 'segments')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = ['segments', ]
         resource_name = 'segment-types'
 
@@ -26,10 +27,10 @@ class SegmentSerializer(serializers.ModelSerializer):
         'type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
     }
 
-    class Meta:
+    class Meta(object):
         model = Segment
         fields = ('id', 'name', 'type')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = ['type', ]
         resource_name = 'segments'

@@ -1,3 +1,4 @@
+from builtins import str
 import django.contrib.admin.utils as admin_utils
 import django.contrib.admin.helpers as admin_helpers
 import django.contrib.admin.templatetags.admin_list as admin_list
@@ -12,7 +13,7 @@ original_display_for_field = admin_utils.display_for_field
 
 def display_for_field(value, field, empty):
     if isinstance(field, MoneyField):
-        return unicode(value)
+        return str(value)
 
     return original_display_for_field(value, field, empty)
 

@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import Max
@@ -5,6 +7,7 @@ from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
+from future.utils import python_2_unicode_compatible
 from moneyed import Money
 from multiselectfield import MultiSelectField
 
@@ -21,6 +24,7 @@ from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, A
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
+@python_2_unicode_compatible
 class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.Model):
     status = models.CharField(max_length=40)
     title = models.CharField(_('title'), max_length=255)
@@ -111,8 +115,9 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
+    wallposts = GenericRelation('wallposts.Wallpost', related_query_name='initiative_wallposts')
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("Initiative")
         verbose_name_plural = _("Initiatives")
         permissions = (
@@ -128,10 +133,10 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'initiatives'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title or str(_('-empty-'))
 
     @property
@@ -265,7 +270,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
     enable_impact = models.BooleanField(default=False)
 
-    class Meta:
+    class Meta(object):
         verbose_name_plural = _('initiative settings')
         verbose_name = _('initiative settings')
 

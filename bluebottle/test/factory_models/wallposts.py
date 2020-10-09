@@ -1,18 +1,18 @@
+from builtins import object
 import factory
-
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from bluebottle.wallposts.models import TextWallpost, Reaction, SystemWallpost, MediaWallpost, MediaWallpostPhoto
-
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.wallposts.models import (
+    TextWallpost, Reaction, SystemWallpost, MediaWallpost, MediaWallpostPhoto)
 from .accounts import BlueBottleUserFactory
-from .projects import ProjectFactory
 
 
 class TextWallpostFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = TextWallpost
 
-    content_object = factory.SubFactory(ProjectFactory)
+    content_object = factory.SubFactory(InitiativeFactory)
     author = factory.SubFactory(BlueBottleUserFactory)
     editor = factory.SubFactory(BlueBottleUserFactory)
     ip_address = "127.0.0.1"
@@ -33,7 +33,7 @@ class MediaWallpostFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = MediaWallpost
 
-    content_object = factory.SubFactory(ProjectFactory)
+    content_object = factory.SubFactory(InitiativeFactory)
     author = factory.SubFactory(BlueBottleUserFactory)
     editor = factory.SubFactory(BlueBottleUserFactory)
     ip_address = "127.0.0.1"

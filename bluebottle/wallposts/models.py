@@ -1,12 +1,13 @@
-from django.db import models
+from builtins import object
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import fields
-from django_extensions.db.fields import (ModificationDateTimeField,
-                                         CreationDateTimeField)
+from django.contrib.contenttypes.models import ContentType
+from django.db import models
 from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
-
+from django_extensions.db.fields import (ModificationDateTimeField,
+                                         CreationDateTimeField)
+from future.utils import python_2_unicode_compatible
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.utils.models import AnonymizationMixin
@@ -17,6 +18,7 @@ WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH',
                                        1000)
 
 
+@python_2_unicode_compatible
 class Wallpost(AnonymizationMixin, PolymorphicModel):
     """
     The Wallpost base class. This class will never be used directly because the
@@ -84,7 +86,7 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
     def parent(self):
         return self.content_object
 
-    class Analytics:
+    class Analytics(object):
         type = 'wallpost'
         tags = {}
         fields = {
@@ -103,7 +105,7 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
             else:
                 return obj.updated
 
-    class Meta:
+    class Meta(object):
         ordering = ('created',)
         base_manager_name = 'objects_with_deleted'
         permissions = (
@@ -118,12 +120,11 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
             ('api_delete_own_wallpost', 'Can own wallposts documents through the API'),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return "{} #{}".format(self.polymorphic_ctype, self.id)
 
 
 class MediaWallpost(Wallpost):
-    # The content of the wall post.
 
     @property
     def wallpost_type(self):
@@ -133,9 +134,6 @@ class MediaWallpost(Wallpost):
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH, blank=True,
                             default='')
     video_url = models.URLField(max_length=100, blank=True, default='')
-
-    def __unicode__(self):
-        return Truncator(self.text).words(10)
 
     class Meta(Wallpost.Meta):
         permissions = (
@@ -196,6 +194,9 @@ class MediaWallpostPhoto(models.Model):
     def parent(self):
         return self.mediawallpost.content_object
 
+    def __str__(self):
+        return "Wallpost photo #{}".format(self.id)
+
 
 class TextWallpost(Wallpost):
     # The content of the wall post.
@@ -213,9 +214,6 @@ class TextWallpost(Wallpost):
 
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH)
 
-    def __unicode__(self):
-        return Truncator(self.text).words(10)
-
 
 class SystemWallpost(Wallpost):
     # The content of the wall post.
@@ -231,10 +229,8 @@ class SystemWallpost(Wallpost):
     related_id = models.PositiveIntegerField(_('related ID'))
     related_object = fields.GenericForeignKey('related_type', 'related_id')
 
-    def __unicode__(self):
-        return Truncator(self.text).words(10) or super(SystemWallpost, self).__unicode__()
 
-
+@python_2_unicode_compatible
 class Reaction(AnonymizationMixin, models.Model):
     """
     A user reaction or comment to a Wallpost. This model is based on
@@ -271,7 +267,11 @@ class Reaction(AnonymizationMixin, models.Model):
     def owner(self):
         return self.author
 
-    class Analytics:
+    @property
+    def parent(self):
+        return self.wallpost.parent
+
+    class Analytics(object):
         type = 'wallpost'
         tags = {}
 
@@ -291,7 +291,7 @@ class Reaction(AnonymizationMixin, models.Model):
             else:
                 return obj.updated
 
-    class Meta:
+    class Meta(object):
         ordering = ('created',)
         base_manager_name = 'objects_with_deleted'
         verbose_name = _('Reaction')
@@ -308,7 +308,7 @@ class Reaction(AnonymizationMixin, models.Model):
             ('api_delete_own_reaction', 'Can delete own reactions documents through the API'),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         s = self.text
         return Truncator(s).words(10)
 

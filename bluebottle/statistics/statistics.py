@@ -1,3 +1,4 @@
+from builtins import object
 from django.db.models import Q
 from django.db.models.aggregates import Sum
 
@@ -6,7 +7,6 @@ from memoize import memoize
 from moneyed.classes import Money
 
 from bluebottle.clients import properties
-from bluebottle.utils.exchange_rates import convert
 
 from bluebottle.initiatives.models import Initiative
 from bluebottle.activities.models import Contribution, Activity
@@ -15,7 +15,7 @@ from bluebottle.events.models import Event, Participant
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.funding.models import Donation, Funding
 from bluebottle.funding_pledge.models import PledgePayment
-from bluebottle.votes.models import Vote
+from bluebottle.utils.exchange_rates import convert
 
 
 class Statistics(object):
@@ -158,7 +158,7 @@ class Statistics(object):
     @property
     @memoize(timeout=timeout)
     def activities_online(self):
-        """ Total number of projects that have been in campaign mode"""
+        """ Total number of activities that have been in campaign mode"""
         return Activity.objects.filter(
             self.date_filter('transition_date'),
             status__in=('open', 'full', 'running', )
@@ -167,7 +167,7 @@ class Statistics(object):
     @property
     @memoize(timeout=timeout)
     def donated_total(self):
-        """ Total amount donated to all projects"""
+        """ Total amount donated to all activities"""
         donations = Donation.objects.filter(
             self.date_filter('contribution_date'),
             status='succeeded'
@@ -196,11 +196,6 @@ class Statistics(object):
         ).aggregate(total_time_spent=Sum('time_spent'))['total_time_spent'] or 0
 
         return participants + applicants
-
-    @property
-    @memoize(timeout=timeout)
-    def votes_cast(self):
-        return len(Vote.objects.filter(self.date_filter()))
 
     @property
     @memoize(timeout=timeout)
@@ -238,7 +233,7 @@ class Statistics(object):
     @property
     @memoize(timeout=timeout)
     def amount_matched(self):
-        """ Total amount matched on realized (done and incomplete) projects """
+        """ Total amount matched on realized (done and incomplete) activities """
         totals = Funding.objects.filter(
             self.date_filter('transition_date'),
             status='succeeded'
@@ -255,8 +250,8 @@ class Statistics(object):
     @property
     @memoize(timeout=timeout)
     def participants(self):
-        """ Total numbers of participants (members that started a project, or where a realized task member) """
-        project_owner_count = len(
+        """ Total numbers of participants (members that started a initiative, or where a realized task member) """
+        initiative_owner_count = len(
             Initiative.objects.filter(
                 self.date_filter('created'),
                 status='approved'
@@ -265,7 +260,7 @@ class Statistics(object):
             ).distinct('owner').values_list('owner_id', flat=True)
         )
 
-        return project_owner_count + self.event_members + self.assignment_members
+        return initiative_owner_count + self.event_members + self.assignment_members
 
     @property
     @memoize(timeout=timeout)

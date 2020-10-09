@@ -136,7 +136,7 @@ class ManageProfileDetail(generics.RetrieveUpdateDestroyAPIView):
         try:
             # Read only properties come from the TOKEN_AUTH / SAML settings
             assertion_mapping = properties.TOKEN_AUTH['assertion_mapping']
-            user_properties = assertion_mapping.keys()
+            user_properties = list(assertion_mapping.keys())
 
             # Ensure read-only user properties are not being changed
             for prop in [prop for prop in user_properties if prop in serializer.validated_data]:

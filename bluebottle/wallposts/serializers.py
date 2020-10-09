@@ -1,6 +1,6 @@
+from builtins import object
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-
 from rest_framework import serializers
 
 from bluebottle.assignments.models import Assignment
@@ -8,13 +8,9 @@ from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ContentTextField, PhotoSerializer)
 from bluebottle.events.models import Event
 from bluebottle.funding.models import Funding, Donation
-from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import UserPreviewSerializer
-from bluebottle.projects.models import Project
-from bluebottle.tasks.models import Task
 from bluebottle.utils.serializers import MoneySerializer
-
 from .models import Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, Reaction
 
 
@@ -26,7 +22,7 @@ class ReactionSerializer(serializers.ModelSerializer):
     text = ContentTextField()
     wallpost = serializers.PrimaryKeyRelatedField(queryset=Wallpost.objects)
 
-    class Meta:
+    class Meta(object):
         model = Reaction
         fields = ('created', 'author', 'text', 'id', 'wallpost')
 
@@ -42,38 +38,15 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
         return ContentType.objects
 
     def to_internal_value(self, data):
-        if data == 'task':
-            data = ContentType.objects.get_for_model(Task)
-        if data == 'project':
-            data = ContentType.objects.get_for_model(Project)
-        if data == 'fundraiser':
-            data = ContentType.objects.get_for_model(Fundraiser)
         if data == 'initiative':
             data = ContentType.objects.get_for_model(Initiative)
-        if data == 'event':
+        elif data == 'event':
             data = ContentType.objects.get_for_model(Event)
-        if data == 'assignment':
+        elif data == 'assignment':
             data = ContentType.objects.get_for_model(Assignment)
-        if data == 'funding':
+        elif data == 'funding':
             data = ContentType.objects.get_for_model(Funding)
         return data
-
-
-class WallpostParentIdField(serializers.IntegerField):
-    """
-    Field to save object_id on wall-posts.
-    """
-
-    # Make an exception for project slugs.
-    def to_internal_value(self, value):
-        if not isinstance(value, int) and not value.isdigit():
-            # Assume a project slug here
-            try:
-                project = Project.objects.get(slug=value)
-            except Project.DoesNotExist:
-                raise ValidationError("Project not found: {}".format(value))
-            value = project.id
-        return value
 
 
 class WallpostDonationSerializer(serializers.ModelSerializer):
@@ -81,7 +54,7 @@ class WallpostDonationSerializer(serializers.ModelSerializer):
     user = UserPreviewSerializer()
     type = serializers.SerializerMethodField()
 
-    class Meta:
+    class Meta(object):
         model = Donation
         fields = (
             'type',
@@ -115,7 +88,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
     author = UserPreviewSerializer(read_only=True)
     parent_type = WallpostContentTypeField(slug_field='model',
                                            source='content_type')
-    parent_id = WallpostParentIdField(source='object_id')
+    parent_id = serializers.IntegerField(source='object_id')
     reactions = ReactionSerializer(many=True, read_only=True, required=False)
 
     donation = serializers.PrimaryKeyRelatedField(queryset=Donation.objects, required=False, allow_null=True)
@@ -128,7 +101,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
             response['donation'] = WallpostDonationSerializer(instance.donation, context=self.context).data
         return response
 
-    class Meta:
+    class Meta(object):
         fields = ('id', 'type', 'author', 'created', 'reactions',
                   'parent_type', 'parent_id', 'pinned', 'donation',
                   'email_followers', 'share_with_facebook',
@@ -147,7 +120,7 @@ class MediaWallpostPhotoSerializer(serializers.ModelSerializer):
 
         return data
 
-    class Meta:
+    class Meta(object):
         model = MediaWallpostPhoto
         fields = ('id', 'photo', 'mediawallpost')
 
@@ -165,7 +138,7 @@ class MediaWallpostSerializer(WallpostSerializerBase):
     photos = MediaWallpostPhotoSerializer(many=True, required=False)
     video_url = serializers.CharField(required=False, allow_blank=True)
 
-    class Meta:
+    class Meta(object):
         model = MediaWallpost
         fields = WallpostSerializerBase.Meta.fields + ('text', 'video_html',
                                                        'video_url', 'photos')
@@ -179,7 +152,7 @@ class TextWallpostSerializer(WallpostSerializerBase):
     """
     text = ContentTextField()
 
-    class Meta:
+    class Meta(object):
         model = TextWallpost
         fields = WallpostSerializerBase.Meta.fields + ('text',)
 
@@ -209,7 +182,7 @@ class SystemWallpostSerializer(WallpostSerializerBase):
     # related_type = serializers.CharField(source='related_type.model')
     # related_object = WallpostRelatedField(source='related_object')
 
-    class Meta:
+    class Meta(object):
         model = TextWallpost
         fields = WallpostSerializerBase.Meta.fields + ('text',)
 
@@ -230,7 +203,7 @@ class WallpostSerializer(serializers.ModelSerializer):
             return SystemWallpostSerializer(obj, context=self.context).to_representation(obj)
         return super(WallpostSerializer, self).to_representation(obj)
 
-    class Meta:
+    class Meta(object):
         model = Wallpost
         fields = ('id', 'type', 'author', 'created',
                   'email_followers', 'share_with_facebook',

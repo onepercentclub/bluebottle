@@ -2,6 +2,7 @@ from django import forms
 from django.core.urlresolvers import reverse
 from django.forms.models import ModelFormMetaclass
 from django.utils.translation import ugettext_lazy as _
+from future.utils import with_metaclass
 
 
 class ButtonSelectWidget(forms.Select):
@@ -21,9 +22,7 @@ class FSMModelFormMetaClass(ModelFormMetaclass):
         return super(FSMModelFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
-class FSMModelForm(forms.ModelForm):
-    __metaclass__ = FSMModelFormMetaClass
-
+class FSMModelForm(with_metaclass(FSMModelFormMetaClass, forms.ModelForm)):
     def __init__(self, *args, **kwargs):
         super(FSMModelForm, self).__init__(*args, **kwargs)
         for fsm_field in self.fsm_fields:

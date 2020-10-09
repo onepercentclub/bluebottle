@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -16,7 +18,7 @@ class PledgePaymentProvider(PaymentProvider):
     def payment_methods(self):
         return []
 
-    class Meta:
+    class Meta(object):
         verbose_name = 'Pledge payment provider'
 
 
@@ -52,12 +54,12 @@ class PledgeBankAccount(BankAccount):
     def save(self, *args, **kwargs):
         super(PledgeBankAccount, self).save(*args, **kwargs)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _('Pledge bank account')
         verbose_name_plural = _('Pledge bank accounts')
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'payout-accounts/pledge-external-accounts'
 
 
-from states import *  # noqa
+from .states import *  # noqa

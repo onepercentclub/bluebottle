@@ -1,29 +1,31 @@
-import datetime
-from HTMLParser import HTMLParser
+from __future__ import absolute_import
+from future.utils import python_2_unicode_compatible
 
+import datetime
+from urllib.parse import urlencode
+
+import pytz
+from builtins import object
 from django.db import models, connection
 from django.db.models import Count, Sum
 from django.utils.html import strip_tags
-from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import utc
-
-from requests.models import PreparedRequest
-
+from django.utils.translation import ugettext_lazy as _
+from future import standard_library
+from html.parser import HTMLParser
 from timezonefinder import TimezoneFinder
-
-import pytz
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.events.validators import RegistrationDeadlineValidator
 from bluebottle.geo.models import Geolocation
 
+standard_library.install_aliases()
 
 tf = TimezoneFinder()
 
 
 class Event(Activity):
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
-    automatically_accept = models.BooleanField(default=True)
 
     is_online = models.NullBooleanField(_('is online'), null=True, default=None)
     location = models.ForeignKey(Geolocation, verbose_name=_('location'),
@@ -50,7 +52,7 @@ class Event(Activity):
 
     @property
     def stats(self):
-        from states import ParticipantStateMachine
+        from .states import ParticipantStateMachine
         contributions = self.contributions.instance_of(Participant)
 
         stats = contributions.filter(
@@ -67,13 +69,22 @@ class Event(Activity):
         return stats
 
     @property
-    def local_start(self):
+    def local_timezone(self):
         if self.location and self.location.position:
             tz_name = tf.timezone_at(
                 lng=self.location.position.x,
                 lat=self.location.position.y
             )
-            tz = pytz.timezone(tz_name)
+            return pytz.timezone(tz_name)
+
+    @property
+    def local_timezone_name(self):
+        return self.local_timezone.tzname(self.local_start)
+
+    @property
+    def local_start(self):
+        tz = self.local_timezone
+        if tz:
             return self.start.astimezone(tz).replace(tzinfo=None)
         else:
             return self.start
@@ -82,7 +93,7 @@ class Event(Activity):
     def contribution_date(self):
         return self.start
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("Event")
         verbose_name_plural = _("Events")
         permissions = (
@@ -97,7 +108,7 @@ class Event(Activity):
             ('api_delete_own_event', 'Can delete own event through the API'),
         )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'activities/events'
 
     @property
@@ -112,7 +123,7 @@ class Event(Activity):
 
     @property
     def participants(self):
-        from states import ParticipantStateMachine
+        from .states import ParticipantStateMachine
         return self.contributions.filter(
             status__in=[
                 ParticipantStateMachine.new.value,
@@ -130,13 +141,11 @@ class Event(Activity):
             if date:
                 return date.astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
 
-        prepared_request = PreparedRequest()
-
-        url = 'https://calendar.google.com/calendar/render'
+        url = u'https://calendar.google.com/calendar/render'
         params = {
-            'action': 'TEMPLATE',
+            'action': u'TEMPLATE',
             'text': self.title,
-            'dates': '{}/{}'.format(
+            'dates': u'{}/{}'.format(
                 format_date(self.start), format_date(self.end)
             ),
             'details': HTMLParser().unescape(
@@ -150,8 +159,7 @@ class Event(Activity):
         if self.location:
             params['location'] = self.location.formatted_address
 
-        prepared_request.prepare_url(url, params)
-        return prepared_request.url
+        return u'{}?{}'.format(url, urlencode(params))
 
     @property
     def outlook_link(self):
@@ -159,7 +167,6 @@ class Event(Activity):
             if date:
                 return date.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
 
-        prepared_request = PreparedRequest()
         url = 'https://outlook.live.com/owa/'
 
         params = {
@@ -179,14 +186,14 @@ class Event(Activity):
         if self.location:
             params['location'] = self.location.formatted_address
 
-        prepared_request.prepare_url(url, params)
-        return prepared_request.url
+        return u'{}?{}'.format(url, urlencode(params))
 
 
+@python_2_unicode_compatible
 class Participant(Contribution):
     time_spent = models.FloatField(default=0)
 
-    class Meta:
+    class Meta(object):
         verbose_name = _("Participant")
         verbose_name_plural = _("Participants")
 
@@ -202,7 +209,7 @@ class Participant(Contribution):
             ('api_delete_own_participant', 'Can delete own participant through the API'),
         )
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         resource_name = 'contributions/participants'
 
     def save(self, *args, **kwargs):
@@ -211,7 +218,7 @@ class Participant(Contribution):
 
         super(Participant, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.user.full_name
 
 

@@ -1,9 +1,14 @@
+
+from future import standard_library
+standard_library.install_aliases()
+
+from urllib.parse import urlencode
+from builtins import chr
 import base64
 import hashlib
 import hmac
 import logging
 import re
-import urllib
 from datetime import timedelta
 import string
 from datetime import datetime
@@ -39,7 +44,7 @@ def _encode_message(message):
     cipher = AES.new(aes_key, AES.MODE_CBC, init_vector)
     padded_message = pad(message)
     aes_message = init_vector + cipher.encrypt(padded_message)
-    hmac_digest = hmac.new(str(hmac_key), str(aes_message), hashlib.sha1)
+    hmac_digest = hmac.new(bytes(hmac_key), bytes(aes_message), hashlib.sha1)
 
     return aes_message, hmac_digest
 
@@ -75,13 +80,14 @@ class TokenAuthentication(BaseTokenAuthentication):
     5. Read the timestamp included in the message to check if the token already
     expired or if its finally valid.
     """
+
     def check_hmac_signature(self, message):
         """
         Checks the HMAC-SHA1 signature of the message.
         """
         data = message[:-20]
         checksum = message[-20:]
-        hmac_data = hmac.new(str(self.settings['hmac_key']), str(data), hashlib.sha1)
+        hmac_data = hmac.new(bytes(self.settings['hmac_key']), bytes(data), hashlib.sha1)
 
         return True if hmac_data.digest() == checksum else False
 
@@ -124,7 +130,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         """
         Decrypts the AES encoded message.
         """
-        token = str(self.args['token'])
+        token = bytes(self.args['token'].encode('utf-8'))
         message = base64.urlsafe_b64decode(token)
 
         # Check that the message is valid (HMAC-SHA1 checking).
@@ -134,8 +140,8 @@ class TokenAuthentication(BaseTokenAuthentication):
         init_vector = message[:16]
         enc_message = message[16:-20]
 
-        aes = AES.new(str(self.settings['aes_key']), AES.MODE_CBC, init_vector)
-        message = aes.decrypt(enc_message)
+        aes = AES.new(bytes(self.settings['aes_key']), AES.MODE_CBC, init_vector)
+        message = aes.decrypt(enc_message).decode('utf-8')
 
         # Get the login data in an easy-to-use tuple.
         try:
@@ -150,7 +156,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         parts.pop(0)
         last_name = " ".join(parts)
         email = login_data[3].strip()
-        email = filter(lambda x: x in string.printable, email)
+        email = ''.join(x for x in email if x in string.printable)
 
         data = {
             'timestamp': login_data[0],
@@ -170,7 +176,7 @@ class TokenAuthentication(BaseTokenAuthentication):
     def sso_url(self, target_url=None):
         url = self.settings['sso_url']
         if target_url:
-            url += '?{}'.format(urllib.urlencode({'url': target_url.encode('utf-8')}))
+            url += '?{}'.format(urlencode({'url': target_url.encode('utf-8')}))
 
         return url
 

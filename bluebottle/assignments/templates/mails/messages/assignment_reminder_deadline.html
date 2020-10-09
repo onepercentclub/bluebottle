@@ -4,10 +4,12 @@
     {% blocktrans with recipient_name=to.first_name title=obj.title deadline=obj.date|date context 'email' %}
     Hi {{ recipient_name }},
         <br><br>
-        On {{ deadline }} your task "{{ title }}" is due. That's in 5 days!
-        <br><br>
-        If you still have some work to do, this is the moment.
+        On {{ deadline }} your task "{{ title }}" is due. That's in a couple of days!
         <br>
+        Visit the task page to read the latest updates.
+        <br><br>
+        <i>If you are not yet accepted, you can reach out to the activity manager listed on the task page to find out if there’s still a possibility to take part.</i>
+        <br><br>
         <i>If you are unable to participate, please withdraw via the platform so that others can take your place.</i>
     {% endblocktrans %}
 {% endblock %}

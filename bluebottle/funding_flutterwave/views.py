@@ -9,6 +9,7 @@ from bluebottle.funding.views import PaymentList
 from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwaveBankAccount
 from bluebottle.funding_flutterwave.serializers import FlutterwavePaymentSerializer, FlutterwaveBankAccountSerializer
 from bluebottle.funding_flutterwave.utils import check_payment_status
+from bluebottle.funding.exception import PaymentException
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import ListCreateAPIView, JsonApiViewMixin, RetrieveUpdateAPIView
 
@@ -25,15 +26,21 @@ class FlutterwavePaymentList(PaymentList):
 class FlutterwaveWebhookView(View):
 
     def post(self, request, **kwargs):
-        data = json.loads(request.body)
         try:
-            payment = FlutterwavePayment.objects.get(tx_ref=data['txRef'])
+            data = json.loads(request.body)
+        except ValueError:
+            raise PaymentException('Error parsing Flutterwave webhook: {}'.format(request.body))
+        try:
+            tx_ref = data['data']['tx_ref']
+            payment = FlutterwavePayment.objects.get(tx_ref=tx_ref)
+        except KeyError:
+            raise PaymentException('Error parsing Flutterwave webhook: {}'.format(request.body))
         except FlutterwavePayment.DoesNotExist:
             try:
-                donation = Donation.objects.get(id=data['txRef'])
+                donation = Donation.objects.get(id=tx_ref)
                 payment = FlutterwavePayment.objects.create(
                     donation=donation,
-                    tx_ref=donation.id
+                    tx_ref=tx_ref
                 )
                 payment.save()
             except Donation.DoesNotExist:

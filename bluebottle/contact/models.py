@@ -6,11 +6,13 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, \
     ModificationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
+from future.utils import python_2_unicode_compatible
 
 from .mails import send_contact_email
 from bluebottle.clients import properties
 
 
+@python_2_unicode_compatible
 class ContactMessage(models.Model):
     """
     Message sent from Contact Page
@@ -34,7 +36,7 @@ class ContactMessage(models.Model):
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.message[0:30]
 
 

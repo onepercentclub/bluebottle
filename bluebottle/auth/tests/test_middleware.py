@@ -17,4 +17,4 @@ class LockdownTestCase(BluebottleTestCase):
         request.session = type("MockSession", (object, ), {"get": lambda self, prop: "bla"})()
         response = mw.process_request(request)
         self.assertEqual(response.status_code, 401)
-        self.assertTrue('<style>' in response.content)
+        self.assertTrue('<style>' in response.content.decode())

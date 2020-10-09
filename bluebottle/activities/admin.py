@@ -38,6 +38,7 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields
+    superadmin_fields = ['force_status']
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
@@ -45,7 +46,7 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         )
         if request.user.is_superuser:
             fieldsets += (
-                (_('Super admin'), {'fields': ['force_status']}),
+                (_('Super admin'), {'fields': self.superadmin_fields}),
             )
         return fieldsets
 
@@ -303,7 +304,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter, 'highlight')
     list_editable = ('highlight',)
 
-    list_display = ['__unicode__', 'created', 'type', 'state_name',
+    list_display = ['__str__', 'created', 'type', 'state_name',
                     'link', 'highlight']
 
     search_fields = ('title', 'description',

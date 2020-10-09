@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
 from bluebottle.utils.models import PublishableModel
@@ -12,6 +13,7 @@ def get_languages():
     return properties.LANGUAGES
 
 
+@python_2_unicode_compatible
 class Quote(PublishableModel):
     """
     Slides for homepage
@@ -29,5 +31,8 @@ class Quote(PublishableModel):
                              verbose_name=_('Quoted member'),
                              related_name="quote_user")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.quote
+
+    class Meta:
+        ordering = ('-publication_date',)

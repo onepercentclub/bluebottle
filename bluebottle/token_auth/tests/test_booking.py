@@ -1,3 +1,4 @@
+from builtins import chr
 import base64
 import hashlib
 import hmac
@@ -23,8 +24,8 @@ TOKEN_AUTH_SETTINGS = {
     'backend': 'token_auth.auth.booking.TokenAuthentication',
     'sso_url': 'https://example.org',
     'token_expiration': 600,
-    'hmac_key': 'bbbbbbbbbbbbbbbb',
-    'aes_key': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    'hmac_key': b'bbbbbbbbbbbbbbbb',
+    'aes_key': b'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 }
 
 
@@ -32,6 +33,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
     """
     Tests the Token Authentication backend.
     """
+
     def setUp(self):
         super(TestBookingTokenAuthentication, self).setUp()
 
@@ -49,8 +51,10 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
             self.auth_backend = TokenAuthentication(self.request, token=self.token)
 
             self.checked_token = CheckedTokenFactory.create()
-            self.data = 'time=2013-12-23 17:51:15|username=johndoe|name=John Doe' \
-                        '|email=john.doe@example.com'
+            self.data = (
+                'time=2013-12-23 17:51:15|username=johndoe|name=John Doe'
+                '|email=john.doe@example.com'
+            )
 
             # Get the new security keys to use it around in the tests.
             self.hmac_key = self.auth_backend.settings['hmac_key']
@@ -71,7 +75,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
             AES.block_size - len(s) % AES.block_size)
         init_vector = Random.new().read(AES.block_size)
         cipher = AES.new(self.aes_key, AES.MODE_CBC, init_vector)
-        padded_message = pad(message)
+        padded_message = pad(message).encode('utf-8')
         aes_message = init_vector + cipher.encrypt(padded_message)
         hmac_digest = hmac.new(self.hmac_key, aes_message, hashlib.sha1)
 
@@ -118,7 +122,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
         """
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             aes_message, hmac_digest = self._encode_message(self.data)
-            token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest())
+            token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest()).decode('utf-8')
             auth_backend = TokenAuthentication(self.request, token=token)
             message = auth_backend.decrypt_message()
 
@@ -216,7 +220,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
             message = 'xxxx=2013-12-18 11:51:15|xxxxxxxx=johndoe|xxxx=John Doe|' \
                       'xxxxx=john.doe@example.com'
             aes_message, hmac_digest = self._encode_message(message)
-            token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest())
+            token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest()).decode('utf-8')
             auth_backend = TokenAuthentication(self.request, token=token)
 
             self.assertRaisesMessage(
@@ -234,7 +238,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
             message = 'time=2012-12-18 11:51:15|username=johndoe|name=John Doe|' \
                       'email=john.doe@example.com'
             aes_message, hmac_digest = self._encode_message(message)
-            token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest())
+            token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest()).decode('utf-8')
 
             auth_backend = TokenAuthentication(self.request, token=token)
 
@@ -252,7 +256,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
             message = 'time={0}|username=johndoe|name=John Doe|' \
                       'email=john.doe@example.com'.format(timestamp)
             aes_message, hmac_digest = self._encode_message(message)
-            token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest())
+            token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest()).decode('utf-8')
 
             auth_backend = TokenAuthentication(self.request, token=token)
             user, created = auth_backend.authenticate()
@@ -276,7 +280,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
             message = 'time={0}|username=johndoe|name=John Doe|' \
                       'email=john.doe@example.com'.format(timestamp)
             aes_message, hmac_digest = self._encode_message(message)
-            token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest())
+            token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest()).decode('utf-8')
 
             login_url = reverse('token-login', kwargs={'token': token})
             response = self.client.get(login_url)
@@ -296,7 +300,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
             message = 'time={0}|username=johndoe|name=John Doe|' \
                       'email=john.doe@example.com'.format(timestamp)
             aes_message, hmac_digest = self._encode_message(message)
-            token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest())
+            token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest()).decode('utf-8')
 
             login_url = reverse('token-login-link', kwargs={'token': token, 'link': '/projects/my-project'})
             response = self.client.get(login_url)

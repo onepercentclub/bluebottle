@@ -3,6 +3,7 @@ import functools
 import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
+from builtins import object
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -21,6 +22,7 @@ from django.utils.html import format_html
 from django.utils.http import int_to_base36
 from django.utils.translation import ugettext_lazy as _
 from permissions_widget.forms import PermissionSelectMultipleField
+from rest_framework.authtoken.models import Token
 
 from bluebottle.assignments.models import Applicant
 from bluebottle.bb_accounts.utils import send_welcome_mail
@@ -71,7 +73,7 @@ class MemberForm(forms.ModelForm):
             initial=Group.objects.filter(name='Authenticated')
         )
 
-    class Meta:
+    class Meta(object):
         model = Member
         # Mind you these fields are also set in MemberAdmin.add_fieldsets
         fields = '__all__'
@@ -146,7 +148,7 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm))
     email = forms.EmailField(label=_("email address"), max_length=254,
                              help_text=_("A valid, unique email address."))
 
-    class Meta:
+    class Meta(object):
         model = Member
         exclude = ()
 
@@ -331,10 +333,11 @@ class MemberAdmin(UserAdmin):
         ('first_name', 'first_name'),
         ('last_name', 'last name'),
         ('date_joined', 'date joined'),
+
         ('is_initiator', 'is initiator'),
         ('is_supporter', 'is supporter'),
-        ('amount_donated', 'amount donated'),
         ('is_volunteer', 'is volunteer'),
+        ('amount_donated', 'amount donated'),
         ('time_spent', 'time spent'),
         ('subscribed', 'subscribed to matching projects'),
     )
@@ -555,14 +558,24 @@ class GroupsAdmin(GroupAdmin):
     list_display = ["name", ]
     form = NewGroupChangeForm
 
-    class Media:
+    class Media(object):
         css = {
             'all': ('css/admin/permissions-table.css',)
         }
 
-    class Meta:
+    class Meta(object):
         model = Group
 
 
 admin.site.unregister(Group)
 admin.site.register(Group, GroupsAdmin)
+
+
+class TokenAdmin(admin.ModelAdmin):
+    raw_id_fields = ('user',)
+    readonly_fields = ('key',)
+    fields = ('user', 'key')
+
+
+admin.site.unregister(Token)
+admin.site.register(Token, TokenAdmin)

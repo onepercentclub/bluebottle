@@ -1,8 +1,16 @@
+# -*- coding: utf-8 -*-
+from builtins import str
+from builtins import object
 import dkim
 import mock
 import unittest
 import uuid
 
+from bluebottle.events.models import Event
+
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+
+from bluebottle.initiatives.models import Initiative
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Permission
@@ -17,10 +25,7 @@ from moneyed import Money
 
 from bluebottle.clients import properties
 from bluebottle.members.models import Member
-from bluebottle.projects.models import Project
-from bluebottle.rewards.models import Reward
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.fields import RestrictedImageFormField
 from bluebottle.utils.monkey_patch_parler import TenantAwareParlerAppsettings
@@ -56,7 +61,7 @@ def mock_attr(self, k):
 
 class CustomSettingsTestCase(TestCase):
     """
-    A TestCase which makes extra models available in the Django project, just
+    A TestCase which makes extra models available in the Django initiative, just
     for testing.
     Based on http://djangosnippets.org/snippets/1011/ in Django 1.4 style.
     """
@@ -297,12 +302,12 @@ class TestTenantAwareMailServer(unittest.TestCase):
                         new=mock.Mock([])) as properties:
             properties.MAIL_CONFIG = {'HOST': 'tenanthost', 'PORT': 4242}
 
-            properties.DKIM_SELECTOR = "key2"
-            properties.DKIM_DOMAIN = "testserver"
+            properties.DKIM_SELECTOR = b"key2"
+            properties.DKIM_DOMAIN = b"testserver"
             properties.DKIM_PRIVATE_KEY = DKIM_PRIVATE_KEY
 
             be = TenantAwareBackend()
-            msg = EmailMultiAlternatives(subject="test", body="test",
+            msg = EmailMultiAlternatives(subject=u"test€", body=u"test€",
                                          to=["test@example.com"])
 
             be.open()
@@ -312,15 +317,18 @@ class TestTenantAwareMailServer(unittest.TestCase):
             to_bytes = lambda s: force_bytes(s, 'utf-8')
 
             def _plain_key(s):
-                return b"".join([l for l in s.split(b'\n') if not l.startswith(b'---')])
+                return b"".join([part for part in s.split(b'\n') if not part.startswith(b'---')])
 
             signed_msg = connection.sendmail.call_args[0][2]
             dkim_message = dkim.DKIM(message=to_bytes(signed_msg))
-            dkim_check = dkim_message.verify(dnsfunc=lambda name: b"".join([b"v=DKIM1; p=",
-                                                                            _plain_key(DKIM_PUBLIC_KEY)]))
+            dkim_check = dkim_message.verify(
+                dnsfunc=lambda name, timeout=0: b"".join(
+                    [b"v=DKIM1; p=", _plain_key(DKIM_PUBLIC_KEY)]
+                )
+            )
 
-            self.assertTrue(signed_msg.find("d=testserver") >= 0)
-            self.assertTrue(signed_msg.find("s=key2") >= 0)
+            self.assertTrue(signed_msg.find(b"d=testserver") >= 0)
+            self.assertTrue(signed_msg.find(b"s=key2") >= 0)
             self.assertTrue(dkim_check, "Email should be signed by tenant")
 
     @override_settings(
@@ -430,20 +438,20 @@ class TestResourcePermission(BluebottleTestCase):
         self.user.groups.clear()
 
         self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_project')
+            Permission.objects.get(codename='api_read_initiative')
         )
 
     def test_permission(self):
         self.assertTrue(
             self.permission.has_action_permission(
-                'GET', self.user, Project
+                'GET', self.user, Initiative
             )
         )
 
     def test_permission_create(self):
         self.assertFalse(
             self.permission.has_action_permission(
-                'POST', self.user, Project
+                'POST', self.user, Initiative
             )
         )
 
@@ -455,20 +463,20 @@ class TestResourceOwnerPermission(BluebottleTestCase):
         self.user.groups.clear()
 
         self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_own_project')
+            Permission.objects.get(codename='api_read_own_initiative')
         )
 
     def test_permission(self):
         self.assertTrue(
             self.permission.has_action_permission(
-                'GET', self.user, Project
+                'GET', self.user, Initiative
             )
         )
 
     def test_object_permission(self):
         self.assertTrue(
             self.permission.has_object_action_permission(
-                'GET', self.user, Project(owner=self.user)
+                'GET', self.user, Initiative(owner=self.user)
             )
         )
 
@@ -476,21 +484,21 @@ class TestResourceOwnerPermission(BluebottleTestCase):
         other_user = BlueBottleUserFactory.create()
         self.assertFalse(
             self.permission.has_object_action_permission(
-                'GET', self.user, Project(owner=other_user)
+                'GET', self.user, Initiative(owner=other_user)
             )
         )
 
     def test_permission_create(self):
         self.assertFalse(
             self.permission.has_action_permission(
-                'POST', self.user, Project
+                'POST', self.user, Initiative
             )
         )
 
     def test_object_permission_create(self):
         self.assertFalse(
             self.permission.has_action_permission(
-                'POST', self.user, Project
+                'POST', self.user, Initiative
             )
         )
 
@@ -499,53 +507,31 @@ class TestRelatedResourceOwnerPermission(BluebottleTestCase):
     def setUp(self):
         self.permission = RelatedResourceOwnerPermission()
         self.user = BlueBottleUserFactory.create()
-        self.project = ProjectFactory.create(owner=self.user)
+        self.initiative = InitiativeFactory.create(owner=self.user)
         self.user.groups.clear()
 
         self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_own_reward')
+            Permission.objects.get(codename='api_read_own_event')
         )
 
     def test_permission(self):
         self.assertTrue(
             self.permission.has_action_permission(
-                'GET', self.user, Reward
-            )
-        )
-
-    def test_object_permission(self):
-        self.assertTrue(
-            self.permission.has_object_action_permission(
-                'GET', self.user, obj=Reward(project=self.project)
-            )
-        )
-
-    def test_object_permission_non_owner(self):
-        other_project = ProjectFactory.create()
-        self.assertFalse(
-            self.permission.has_object_action_permission(
-                'GET', self.user, obj=Reward(project=other_project)
-            )
-        )
-
-    def test_object_permission_parent(self):
-        self.assertTrue(
-            self.permission.has_parent_permission(
-                'GET', self.user, self.project
+                'GET', self.user, Event
             )
         )
 
     def test_permission_create(self):
         self.assertFalse(
             self.permission.has_action_permission(
-                'POST', self.user, Reward
+                'POST', self.user, Event
             )
         )
 
     def test_object_permission_create(self):
         self.assertFalse(
             self.permission.has_action_permission(
-                'POST', self.user, Reward
+                'POST', self.user, Event
             )
         )
 
@@ -556,65 +542,65 @@ class TestOneOfPermission(BluebottleTestCase):
             ResourceOwnerPermission, ResourcePermission
         )()
         self.user = BlueBottleUserFactory.create()
-        self.project = ProjectFactory.create(owner=self.user)
+        self.initiative = InitiativeFactory.create(owner=self.user)
         self.user.groups.clear()
 
     def test_permission_owner(self):
         self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_own_project')
+            Permission.objects.get(codename='api_read_own_initiative')
         )
 
         self.assertTrue(
             self.permission.has_action_permission(
-                'GET', self.user, Project
+                'GET', self.user, Initiative
             )
         )
 
     def test_permission(self):
         self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_project')
+            Permission.objects.get(codename='api_read_initiative')
         )
 
         self.assertTrue(
             self.permission.has_action_permission(
-                'GET', self.user, Project
+                'GET', self.user, Initiative
             )
         )
 
     def test_object_permission(self):
         self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_own_project')
+            Permission.objects.get(codename='api_read_own_initiative')
         )
 
         self.assertTrue(
             self.permission.has_object_action_permission(
-                'GET', self.user, obj=self.project
+                'GET', self.user, obj=self.initiative
             )
         )
 
     def test_object_permission_no_owner_permission(self):
         self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_project')
+            Permission.objects.get(codename='api_read_initiative')
         )
         self.user.save()
 
         self.assertTrue(
             self.permission.has_object_action_permission(
-                'GET', self.user, obj=self.project
+                'GET', self.user, obj=self.initiative
             )
         )
 
     def test_object_permission_no_owner(self):
-        self.project.owner = BlueBottleUserFactory.create()
-        self.project.save()
+        self.initiative.owner = BlueBottleUserFactory.create()
+        self.initiative.save()
 
         self.user.user_permissions.add(
-            Permission.objects.get(codename='api_read_own_project')
+            Permission.objects.get(codename='api_read_own_initiative')
         )
 
         self.assertFalse(
             self.permission.has_object_action_permission(
-                'GET', self.user, obj=self.project
+                'GET', self.user, obj=self.initiative
             )
         )
 
@@ -626,49 +612,49 @@ class RestrictedImageFormFieldTestCase(TestCase):
         self.field = RestrictedImageFormField()
 
     def test_image(self):
-        with open('./bluebottle/utils/tests/test_images/upload.png') as image:
+        with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
             image_file = SimpleUploadedFile('upload.png', image.read(), content_type='image/png')
             result = self.field.to_python(image_file)
 
         self.assertEqual(result, image_file)
 
     def test_image_suffix_capitals(self):
-        with open('./bluebottle/utils/tests/test_images/upload.png') as image:
+        with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
             image_file = SimpleUploadedFile('upload.PNG', image.read(), content_type='image/png')
             result = self.field.to_python(image_file)
 
         self.assertEqual(result, image_file)
 
     def test_non_image(self):
-        with open('./bluebottle/utils/tests/test_images/non-image.svg') as image:
+        with open('./bluebottle/utils/tests/test_images/non-image.svg', 'rb') as image:
             image_file = SimpleUploadedFile('upload.png', image.read(), content_type='image/png')
 
             with self.assertRaises(ValidationError):
                 self.field.to_python(image_file)
 
     def test_svg(self):
-        with open('./bluebottle/utils/tests/test_images/upload.svg') as image:
+        with open('./bluebottle/utils/tests/test_images/upload.svg', 'rb') as image:
             image_file = SimpleUploadedFile('upload.svg', image.read(), content_type='image/svg+xml')
             result = self.field.to_python(image_file)
 
         self.assertEqual(result, image_file)
 
     def test_non_image_svg_mime(self):
-        with open('./bluebottle/utils/tests/test_images/non-image.svg') as image:
+        with open('./bluebottle/utils/tests/test_images/non-image.svg', 'rb') as image:
             image_file = SimpleUploadedFile('upload.svg', image.read(), content_type='image/svg+xml')
 
             with self.assertRaises(ValidationError):
                 self.field.to_python(image_file)
 
     def test_image_incorrect_suffix(self):
-        with open('./bluebottle/utils/tests/test_images/upload.png') as image:
+        with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
             image_file = SimpleUploadedFile('upload.html', image.read(), content_type='image/png')
 
             with self.assertRaises(ValidationError):
                 self.field.to_python(image_file)
 
     def test_image_incorrect_suffix_capitals(self):
-        with open('./bluebottle/utils/tests/test_images/upload.png') as image:
+        with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
             image_file = SimpleUploadedFile('upload.HTML', image.read(), content_type='image/png')
 
             with self.assertRaises(ValidationError):

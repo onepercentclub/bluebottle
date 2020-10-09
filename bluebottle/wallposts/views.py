@@ -1,32 +1,30 @@
+import django_filters
+from builtins import object
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
-
-import django_filters
 from rest_framework.generics import RetrieveDestroyAPIView
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
+from bluebottle.utils.permissions import (
+    OneOf, ResourcePermission, RelatedResourceOwnerPermission, ResourceOwnerPermission
+)
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, OwnerListViewMixin,
     CreateAPIView)
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, RelatedResourceOwnerPermission, ResourceOwnerPermission
-)
-from bluebottle.projects.models import Project
 from bluebottle.wallposts.permissions import RelatedManagementOrReadOnlyPermission
-
 from .models import TextWallpost, MediaWallpost, MediaWallpostPhoto, Wallpost, Reaction
+from .permissions import DonationOwnerPermission
 from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
                           MediaWallpostPhotoSerializer, ReactionSerializer,
                           WallpostSerializer)
-from .permissions import DonationOwnerPermission
 
 
 class WallpostFilter(django_filters.FilterSet):
     parent_type = django_filters.CharFilter(name="content_type__name")
     parent_id = django_filters.NumberFilter(name="object_id")
 
-    class Meta:
+    class Meta(object):
         model = Wallpost
         fields = ['parent_type', 'parent_id']
 
@@ -44,26 +42,6 @@ class SetAuthorMixin(object):
         serializer.save(editor=self.request.user, ip_address=get_client_ip(self.request))
 
 
-class FilterQSParams(object):
-
-    def get_qs(self, qs):
-        parent_id = self.request.query_params.get('parent_id', None)
-        parent_type = self.request.query_params.get('parent_type', None)
-        if parent_type == 'project':
-            qs = qs.filter(conten_object__slug=parent_id)
-        elif parent_id:
-            qs = qs.filter(conten_object__id=parent_id)
-        text = self.request.query_params.get('text', None)
-        if text:
-            qs = qs.filter(Q(title__icontains=text) |
-                           Q(description__icontains=text))
-
-        status = self.request.query_params.get('status', None)
-        if status:
-            qs = qs.filter(status=status)
-        return qs
-
-
 class WallpostOwnerFilterMixin(object):
     def get_queryset(self):
         qs = super(WallpostOwnerFilterMixin, self).get_queryset()
@@ -74,11 +52,8 @@ class WallpostOwnerFilterMixin(object):
         if not self.request.user.has_perm(permission):
             user = self.request.user if self.request.user.is_authenticated else None
             qs = qs.filter(
-                Q(project_wallposts__owner=user) |
-                Q(task_wallposts__author=user) |
-                Q(task_wallposts__project__owner=user) |
-                Q(task_wallposts__project__promoter=user) |
-                Q(fundraiser_wallposts__owner=user)
+                Q(activity_wallposts__owner=user) |
+                Q(initiative_wallposts__owner=user)
             )
         return qs
 
@@ -99,23 +74,10 @@ class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
         # Some custom filtering projects slugs.
         parent_type = self.request.query_params.get('parent_type', None)
         parent_id = self.request.query_params.get('parent_id', None)
-        if parent_type == 'project':
-            content_type = ContentType.objects.get_for_model(Project)
-        else:
-            white_listed_apps = ['projects', 'tasks', 'fundraisers', 'initiatives',
-                                 'assignments', 'events', 'funding']
-            content_type = ContentType.objects.filter(
-                app_label__in=white_listed_apps).get(model=parent_type)
+        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
+        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
         queryset = queryset.filter(content_type=content_type)
-
-        if parent_type == 'project' and parent_id:
-            try:
-                project = Project.objects.get(slug=parent_id)
-            except Project.DoesNotExist:
-                return Wallpost.objects.none()
-            queryset = queryset.filter(object_id=project.id)
-        else:
-            queryset = queryset.filter(object_id=parent_id)
+        queryset = queryset.filter(object_id=parent_id)
         queryset = queryset.order_by('-pinned', '-created')
         return queryset
 
@@ -124,7 +86,7 @@ class WallpostPagination(BluebottlePagination):
     page_size = 5
 
 
-class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIView, FilterQSParams):
+class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIView):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
@@ -138,18 +100,21 @@ class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIVi
 
     def get_queryset(self, queryset=None):
         queryset = super(TextWallpostList, self).get_queryset()
-        # Some custom filtering projects slugs.
         parent_type = self.request.query_params.get('parent_type', None)
         parent_id = self.request.query_params.get('parent_id', None)
-        if parent_type == 'project' and parent_id:
-            try:
-                # project = Project.objects.get(slug=parent_id)
-                parent_id = Project.objects.get(slug=parent_id).id
-            except Project.DoesNotExist:
-                return Wallpost.objects.none()
-            queryset = queryset.filter(object_id=parent_id)
+        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
+        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
+        queryset = queryset.filter(content_type=content_type)
+        queryset = queryset.filter(object_id=parent_id)
         queryset = queryset.order_by('-created')
         return queryset
+
+    def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(author=self.request.user, **serializer.validated_data)
+        )
+        return super(TextWallpostList, self).perform_create(serializer)
 
 
 class TextWallpostDetail(RetrieveUpdateDestroyAPIView, SetAuthorMixin):
@@ -158,7 +123,7 @@ class TextWallpostDetail(RetrieveUpdateDestroyAPIView, SetAuthorMixin):
     permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission), )
 
 
-class MediaWallpostList(TextWallpostList, SetAuthorMixin):
+class MediaWallpostList(TextWallpostList):
     queryset = MediaWallpost.objects.all()
     serializer_class = MediaWallpostSerializer
     filter_class = WallpostFilter
@@ -172,7 +137,7 @@ class MediaWallpostList(TextWallpostList, SetAuthorMixin):
     def perform_create(self, serializer):
         self.check_object_permissions(
             self.request,
-            serializer.Meta.model(**serializer.validated_data)
+            serializer.Meta.model(author=self.request.user, **serializer.validated_data)
         )
         return super(MediaWallpostList, self).perform_create(serializer)
 
@@ -186,7 +151,11 @@ class WallpostDetail(RetrieveDestroyAPIView, SetAuthorMixin):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
+        OneOf(
+            ResourcePermission,
+            ResourceOwnerPermission,
+            RelatedManagementOrReadOnlyPermission
+        ),
     )
 
 
@@ -238,7 +207,12 @@ class ReactionList(OwnerListViewMixin, SetAuthorMixin, CreateAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
 
-    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission), )
+    permission_classes = (
+        OneOf(
+            ResourcePermission,
+            ResourceOwnerPermission,
+        ),
+    )
     pagination_class = BluebottlePagination
     filter_fields = ('wallpost',)
 
@@ -248,4 +222,10 @@ class ReactionList(OwnerListViewMixin, SetAuthorMixin, CreateAPIView):
 class ReactionDetail(SetAuthorMixin, RetrieveUpdateDestroyAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
-    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission), )
+    permission_classes = (
+        OneOf(
+            ResourcePermission,
+            ResourceOwnerPermission,
+            RelatedManagementOrReadOnlyPermission
+        ),
+    )

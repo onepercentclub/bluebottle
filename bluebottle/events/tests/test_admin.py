@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from builtins import str
 from datetime import timedelta
 
 from django.contrib.admin.sites import AdminSite

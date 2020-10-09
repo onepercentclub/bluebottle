@@ -1,3 +1,4 @@
+from builtins import str
 import uuid
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
@@ -13,7 +14,6 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Funding
-from bluebottle.activities.models import Activity
 from bluebottle.files.models import RelatedImage
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.filters import InitiativeSearchFilter
@@ -25,14 +25,13 @@ from bluebottle.initiatives.serializers import (
     RelatedInitiativeImageSerializer, ThemeSerializer
 )
 from bluebottle.bb_projects.models import ProjectTheme
-from bluebottle.tasks.models import Task
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
     ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView, ListAPIView, TranslatedApiViewMixin
+    CreateAPIView, ListAPIView, TranslatedApiViewMixin, RetrieveAPIView
 )
 
 
@@ -177,6 +176,12 @@ class ThemeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     pagination_class = ThemePagination
 
 
+class ThemeDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
+    serializer_class = ThemeSerializer
+    queryset = ProjectTheme.objects.filter(disabled=False)
+    permission_classes = [TenantConditionalOpenClose, ]
+
+
 from collections import namedtuple
 Instance = namedtuple('Instance', 'pk, route, params, target_params, target_route')
 
@@ -199,13 +204,6 @@ class InitiativeRedirectList(JsonApiViewMixin, CreateAPIView):
                 except IndexError:
                     data['target_route'] = 'initiatives.details'
                     data['target_params'] = [initiative.pk, initiative.slug]
-            elif data['route'] == 'task':
-                task = Task.objects.get(id=data['params']['task_id'])
-                activity = Activity.objects.get(pk=task.activity_id)
-                data['target_route'] = 'initiatives.activities.details.{}'.format(
-                    'event' if task.type == 'event' else 'assignment'
-                )
-                data['target_params'] = [activity.pk, activity.slug]
             else:
                 raise NotFound()
 

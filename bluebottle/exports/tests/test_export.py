@@ -93,21 +93,24 @@ class TestExportAdmin(BluebottleTestCase):
     def test_export_custom_user_fields(self):
         from_date = now() - timedelta(weeks=2)
         to_date = now() + timedelta(weeks=1)
-        users = BlueBottleUserFactory.create_batch(5)
+
         colour = CustomMemberFieldSettings.objects.create(
             name='colour',
             description='Favourite colour'
         )
-        for user in users:
-            CustomMemberField.objects.create(
-                member=user,
-                field=colour,
-                value='Parblue Yellow'
-            )
-        initiative = InitiativeFactory.create(owner=users[0])
-        assignment = AssignmentFactory.create(
-            owner=users[1], initiative=initiative)
-        ApplicantFactory.create(activity=assignment, user=users[2])
+
+        BlueBottleUserFactory.create_batch(2)
+        user = BlueBottleUserFactory.create(email='markies@decanteclaer.nl')
+        BlueBottleUserFactory.create_batch(2)
+
+        CustomMemberField.objects.create(
+            member=user,
+            field=colour,
+            value='Parblue Yellow'
+        )
+        initiative = InitiativeFactory.create(owner=user)
+        assignment = AssignmentFactory.create(owner=user, initiative=initiative)
+        ApplicantFactory.create(activity=assignment, user=user)
 
         data = {
             'from_date': from_date,
@@ -122,14 +125,15 @@ class TestExportAdmin(BluebottleTestCase):
             book.sheet_by_name('Users').ncols,
             12
         )
-        self.assertEqual(
-            book.sheet_by_name('Users').cell(0, 11).value,
-            'Favourite colour'
-        )
-        self.assertEqual(
-            book.sheet_by_name('Users').cell(1, 11).value,
-            'Parblue Yellow'
-        )
+        t = 1
+        while t < book.sheet_by_name('Users').nrows:
+            if book.sheet_by_name('Users').cell(t, 5).value == 'markies@decanteclaer.nl':
+                self.assertEqual(
+                    book.sheet_by_name('Users').cell(t, 11).value,
+                    'Parblue Yellow'
+                )
+            t += 1
+
         self.assertEqual(
             book.sheet_by_name('Task contributions').cell(0, 13).value,
             'Favourite colour'
@@ -173,18 +177,29 @@ class TestExportAdmin(BluebottleTestCase):
             book.sheet_by_name('Users').cell(0, 11).value,
             'Department'
         )
-        self.assertEqual(
-            book.sheet_by_name('Users').cell(1, 11).value,
-            'Engineering'
-        )
+
+        t = 0
+        while t < book.sheet_by_name('Users').nrows:
+            if book.sheet_by_name('Users').cell(t, 5).value == users[0].email:
+                self.assertEqual(
+                    book.sheet_by_name('Users').cell(t, 11).value,
+                    'Engineering'
+                )
+            t += 1
+
         self.assertEqual(
             book.sheet_by_name('Tasks').cell(0, 23).value,
             'Department'
         )
-        self.assertTrue(
-            book.sheet_by_name('Tasks').cell(1, 23).value in
-            ['Engineering, Rubbish', 'Rubbish, Engineering']
-        )
+
+        t = 0
+        while t < book.sheet_by_name('Users').nrows:
+            if book.sheet_by_name('Users').cell(t, 5).value == users[0].email:
+                self.assertTrue(
+                    book.sheet_by_name('Tasks').cell(t, 23).value in
+                    ['Engineering, Rubbish', 'Rubbish, Engineering']
+                )
+            t += 1
 
     def test_export_impact(self):
         from_date = now() - timedelta(weeks=2)

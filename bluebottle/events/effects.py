@@ -1,3 +1,4 @@
+from builtins import str
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.effects import Effect
@@ -18,11 +19,11 @@ class SetTimeSpent(Effect):
     def time_spent(self):
         return self.instance.activity.duration
 
-    def __unicode__(self):
+    def __str__(self):
         participant = self.instance
         if not self.instance.id:
             participant = _('participant')
-        return unicode(_('Set time spent to {duration} on {participant}').format(
+        return str(_('Set time spent to {duration} on {participant}').format(
             duration=self.instance.activity.duration or _('event duration'),
             participant=participant
         ))
@@ -43,7 +44,7 @@ class ResetTimeSpent(Effect):
     def is_valid(self):
         return self.instance.time_spent != 0
 
-    def __unicode__(self):
+    def __str__(self):
         participant = self.instance
         if not self.instance.id:
             participant = _('participant')

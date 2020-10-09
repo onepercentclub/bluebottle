@@ -1,4 +1,5 @@
-import md5
+from builtins import object
+import hashlib
 import os
 
 from django.core.urlresolvers import reverse
@@ -63,12 +64,12 @@ class FileSerializer(ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    class Meta:
+    class Meta(object):
         model = Document
         fields = ('id', 'file', 'filename', 'owner', )
         meta_fields = ['filename']
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = ['owner', ]
 
     def get_filename(self, instance):
@@ -77,7 +78,7 @@ class FileSerializer(ModelSerializer):
 
 class PrivateFileSerializer(FileSerializer):
 
-    class Meta:
+    class Meta(object):
         model = PrivateDocument
         fields = ('id', 'file', 'filename', 'owner', )
         meta_fields = ['filename']
@@ -104,12 +105,12 @@ class DocumentSerializer(ModelSerializer):
     def get_filename(self, instance):
         return os.path.basename(instance.file.name)
 
-    class Meta:
+    class Meta(object):
         model = Document
         fields = ('id', 'file', 'filename', 'owner', 'link',)
         meta_fields = ['filename']
 
-    class JSONAPIMeta:
+    class JSONAPIMeta(object):
         included_resources = ['owner', ]
 
 
@@ -119,7 +120,7 @@ class PrivateDocumentSerializer(DocumentSerializer):
         parent_id = getattr(obj, self.relationship).get().pk
         return reverse_signed(self.content_view_name, args=(parent_id, ))
 
-    class Meta:
+    class Meta(object):
         model = PrivateDocument
         fields = ('id', 'file', 'filename', 'owner', 'link',)
         meta_fields = ['filename']
@@ -137,17 +138,17 @@ class ImageSerializer(DocumentSerializer):
             try:
                 relationship = getattr(obj, self.relationship)
                 parent_id = getattr(obj, self.relationship).get().pk
-                hash = md5.new(obj.file.name.encode('utf-8')).hexdigest()
+                hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
                 return dict(
                     (
                         key,
                         reverse(self.content_view_name, args=(parent_id, size, )) + '?_={}'.format(hash)
-                    ) for key, size in self.sizes.items()
+                    ) for key, size in list(self.sizes.items())
                 )
             except relationship.model.DoesNotExist:
                 return {}
 
-    class Meta:
+    class Meta(object):
         model = Image
         fields = ('id', 'file', 'filename', 'owner', 'links',)
         meta_fields = ['filename']

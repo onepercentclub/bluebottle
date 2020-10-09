@@ -1,3 +1,4 @@
+from builtins import object
 from datetime import timedelta
 
 from bluebottle.members.models import CustomMemberFieldSettings

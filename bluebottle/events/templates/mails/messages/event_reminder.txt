@@ -4,7 +4,7 @@
 {% block content %}
 {% blocktrans with recipient_name=to.first_name event_title=obj.title url=obj.get_absolute_url context 'email' %}
 Hi {{ recipient_name }},
-"{{ event_title }}" will take place in 5 days.
+"{{ event_title }}" will take place in a couple of days.
 
 Want to know about the latest updates? Check out the event on {{url}} to stay informed.
 

@@ -1,3 +1,4 @@
+from builtins import object
 from adminsortable.admin import SortableAdmin
 from django.contrib import admin
 from django import forms
@@ -36,7 +37,7 @@ class IconWidget(forms.RadioSelect):
 
 class ManualStatisticForm(TranslatableModelForm):
 
-    class Meta:
+    class Meta(object):
         model = ManualStatistic
         widgets = {
             'icon': IconWidget(),

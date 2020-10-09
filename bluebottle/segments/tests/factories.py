@@ -1,4 +1,5 @@
 
+from builtins import object
 import factory
 
 from bluebottle.segments.models import Segment, SegmentType

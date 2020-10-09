@@ -18,7 +18,7 @@ class Command(BaseCommand):
                 "float": float
             }
             for opt in self.option_list:
-                option = {k: v for k, v in opt.__dict__.items() if v is not None}
+                option = {k: v for k, v in list(opt.__dict__.items()) if v is not None}
                 flags = (option.get("_long_opts", []) + option.get("_short_opts", []))
                 if option.get('default') == ('NO', 'DEFAULT'):
                     option['default'] = None

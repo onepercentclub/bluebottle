@@ -273,7 +273,6 @@ SHARED_APPS = (
     'lockdown',
     'django_extensions',
     'raven.contrib.django',
-    'djcelery',
     'micawber.contrib.mcdjango',  # Embedding videos
     'loginas',
     'geoposition',

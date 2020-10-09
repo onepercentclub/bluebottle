@@ -28,7 +28,6 @@ install_requires = [
     'django-adminfilters==0.3',
     'django-appconf==1.0.3',
     'django-axes==4.5.4',
-    'django-celery==3.3.0',
     'django-choices==1.5.0',
     'django-cors-headers==2.1.0',
     'django-daterange-filter==1.3.0',
@@ -137,7 +136,8 @@ tests_requires = [
     'tblib==1.3.2',
     'tdaemon==0.1.1',
     'WebTest==2.0.27',
-    'sniffer==0.4.0'
+    'sniffer==0.4.0',
+    'vine==1.3.0'
 ]
 
 dev_requires = [

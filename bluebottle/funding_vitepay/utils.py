@@ -74,11 +74,11 @@ def get_payment_url(payment):
     headers = {'Content-Type': 'application/json'}
     response = requests.post(url, data=json.dumps(data), headers=headers, verify=False)
     if response.status_code == 200:
-        payment.payment_url = response.content
+        payment.payment_url = response.content.decode()
         payment.save()
     else:
         raise PaymentException('Error creating payment: {0}'.format(response.content))
-    return response.content
+    return response.content.decode()
 
 
 def update_payment_status(payment, authenticity, success, failure):

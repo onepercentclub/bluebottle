@@ -31,7 +31,7 @@ class Event(Activity):
     location = models.ForeignKey(Geolocation, verbose_name=_('location'),
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
-    online_meeting_url = models.CharField(_('Online Meeting URL'), max_length=200, blank=True)
+    online_meeting_url = models.CharField(_('Online Meeting URL'), max_length=200, blank=True, default='')
 
     start_date = models.DateField(_('start date'), null=True, blank=True)
     start_time = models.TimeField(_('start time'), null=True, blank=True)

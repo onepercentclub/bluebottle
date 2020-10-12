@@ -6,6 +6,10 @@ from django.db import migrations, connection
 from django.core.management import call_command
 
 
+def migrate_homepage(apps, schema_editor):
+    call_command('migrate_homepage', tenant=connection.tenant.schema_name)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -13,4 +17,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(migrate_homepage)
     ]

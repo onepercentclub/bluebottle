@@ -260,7 +260,7 @@ class EventListAPITestCase(BluebottleTestCase):
 
 class EventIcalTestCase(BluebottleTestCase):
     def test_get(self):
-        event = EventFactory.create(title='Pollute Katwijk Beach')
+        event = EventFactory.create(title='Pollute Katwijk Beach', is_online=True)
 
         event_url = reverse('event-detail', args=(event.pk,))
         response = self.client.get(event_url)
@@ -287,7 +287,11 @@ class EventIcalTestCase(BluebottleTestCase):
             self.assertEqual(str(ical_event['summary']), event.title)
             self.assertEqual(
                 str(ical_event['description']),
-                '{}\n{}'.format(event.description, event.get_absolute_url())
+                '{}\n{}\nJoin: {}'.format(
+                    event.description,
+                    event.get_absolute_url(),
+                    event.online_meeting_url
+                )
             )
             self.assertEqual(str(ical_event['url']), event.get_absolute_url())
             self.assertEqual(str(ical_event['organizer']), 'MAILTO:{}'.format(event.owner.email))

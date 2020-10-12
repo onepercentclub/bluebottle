@@ -120,6 +120,25 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
             'outlook': instance.outlook_link,
         }
 
+    def get_fields(self):
+        fields = super(EventSerializer, self).get_fields()
+        user = self.context['request'].user
+
+        if (
+            not user.is_authenticated or (
+                user not in [
+                self.instance.owner,
+                self.instance.initiative.owner,
+                self.instance.initiative.activity_manager
+                ] and
+                not len(self.instance.participants.filter(user=user))
+
+            )
+        ):
+            del fields['online_meeting_url']
+
+        return fields
+
     class Meta(BaseActivitySerializer.Meta):
         model = Event
         fields = BaseActivitySerializer.Meta.fields + (
@@ -128,6 +147,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
             'local_start',
             'duration',
             'is_online',
+            'online_meeting_url',
             'location',
             'location_hint',
             'permissions',

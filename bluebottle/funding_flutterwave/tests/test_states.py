@@ -1,5 +1,7 @@
 from bluebottle.files.tests.factories import PrivateDocumentFactory
-from bluebottle.funding.tests.factories import FundingFactory, PlainPayoutAccountFactory, BudgetLineFactory
+from bluebottle.funding.tests.factories import (
+    FundingFactory, PlainPayoutAccountFactory, BudgetLineFactory
+)
 from bluebottle.funding_flutterwave.tests.factories import FlutterwaveBankAccountFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.initiatives.tests.factories import InitiativeFactory

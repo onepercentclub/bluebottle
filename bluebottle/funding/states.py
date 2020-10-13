@@ -594,6 +594,67 @@ class PayoutStateMachine(ModelStateMachine):
     )
 
 
+class BankAccountStateMachine(ModelStateMachine):
+    unverified = State(
+        _('unverified'),
+        'unverified',
+        _("Bank account still needs to be verified")
+    )
+    incomplete = State(
+        _('incomplete'),
+        'incomplete',
+        _("Bank account details are missing or incorrect")
+    )
+    verified = State(
+        _('verified'),
+        'verified',
+        _("Bank account is verified")
+    )
+    rejected = State(
+        _('rejected'),
+        'rejected',
+        _("Bank account is rejected")
+    )
+
+    initiate = Transition(
+        EmptyState(),
+        unverified,
+        name=_("Initiate"),
+        description=_("Bank account details are entered.")
+    )
+
+    request_changes = Transition(
+        [verified, unverified],
+        incomplete,
+        name=_('Request changes'),
+        description=_("Bank account is missing details"),
+        automatic=False
+    )
+
+    reject = Transition(
+        [verified, unverified, incomplete],
+        rejected,
+        name=_('Reject'),
+        description=_("Reject bank account"),
+        automatic=False,
+        effects=[
+            RelatedTransitionEffect('connect_account', 'reject')
+        ]
+    )
+
+    verify = Transition(
+        [incomplete, unverified],
+        verified,
+        name=_('Verify'),
+        description=_("Verify that the bank account is complete."),
+        automatic=False,
+        effects=[
+            SubmitConnectedActivitiesEffect,
+            RelatedTransitionEffect('connect_account', 'verify')
+        ]
+    )
+
+
 class PayoutAccountStateMachine(ModelStateMachine):
     new = State(
         _('new'),
@@ -657,7 +718,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
         permission=can_approve,
         effects=[
             NotificationEffect(PayoutAccountVerified),
-            SubmitConnectedActivitiesEffect
+            RelatedTransitionEffect('external_accounts', 'verify')
         ]
     )
 
@@ -668,7 +729,8 @@ class PayoutAccountStateMachine(ModelStateMachine):
         description=_("Reject the payout account."),
         automatic=False,
         effects=[
-            NotificationEffect(PayoutAccountRejected)
+            NotificationEffect(PayoutAccountRejected),
+            RelatedTransitionEffect('external_accounts', 'reject')
         ]
     )
 
@@ -683,25 +745,23 @@ class PayoutAccountStateMachine(ModelStateMachine):
 
 class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
     model = PlainPayoutAccount
-
     verify = Transition(
         [
             PayoutAccountStateMachine.new,
+            PayoutAccountStateMachine.pending,
             PayoutAccountStateMachine.incomplete,
             PayoutAccountStateMachine.rejected
         ],
         PayoutAccountStateMachine.verified,
         name=_('Verify'),
-        description=_("Verify the payout account."),
+        description=_("Verify the KYC account. You will hereby confirm that you verified the users identity."),
         automatic=False,
         permission=PayoutAccountStateMachine.can_approve,
         effects=[
             NotificationEffect(PayoutAccountVerified),
-            SubmitConnectedActivitiesEffect,
             DeleteDocumentEffect
         ]
     )
-
     reject = Transition(
         [
             PayoutAccountStateMachine.new,
@@ -710,7 +770,8 @@ class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
         ],
         PayoutAccountStateMachine.rejected,
         name=_('Reject'),
-        description=_("Reject the payout account."),
+        description=_("Reject the payout account. The uploaded ID scan "
+                      "will be removed with this step."),
         automatic=False,
         effects=[
             NotificationEffect(PayoutAccountRejected),

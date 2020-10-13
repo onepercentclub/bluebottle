@@ -381,17 +381,12 @@ class FundingDetailTestCase(BluebottleTestCase):
         BudgetLineFactory.create(activity=self.funding)
 
         self.funding.bank_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id'
+            account_id='some-external-account-id',
+            status='verified'
         )
         self.funding.save()
-
-        with mock.patch(
-            'bluebottle.funding_stripe.models.ExternalAccount.verified', new_callable=mock.PropertyMock
-        ) as verified:
-            verified.return_value = True
-
-            self.funding.states.submit()
-            self.funding.states.approve()
+        self.funding.states.submit()
+        self.funding.states.approve(save=True)
 
         self.funding_url = reverse('funding-detail', args=(self.funding.pk, ))
         self.data = {
@@ -484,7 +479,8 @@ class FundingDetailTestCase(BluebottleTestCase):
 
     def test_get_bank_account(self):
         self.funding.bank_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id'
+            account_id='some-external-account-id',
+            status='verified'
         )
         self.funding.save()
 
@@ -514,7 +510,8 @@ class FundingDetailTestCase(BluebottleTestCase):
         DonationFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')
 
         self.funding.bank_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id'
+            account_id='some-external-account-id',
+            status='verified'
         )
         self.funding.save()
         connect_account = stripe.Account('some-connect-id')
@@ -551,7 +548,8 @@ class FundingDetailTestCase(BluebottleTestCase):
 
     def test_update_bank_account(self):
         external_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id'
+            account_id='some-external-account-id',
+            status='verified'
         )
         connect_account = stripe.Account('some-connect-id')
         connect_account.update({
@@ -1185,12 +1183,11 @@ class PayoutAccountTestCase(BluebottleTestCase):
         cur.default4 = 10000
         cur.save()
         self.stripe_account = StripePayoutAccountFactory.create()
-        self.stripe_bank = ExternalAccountFactory.create(connect_account=self.stripe_account)
+        self.stripe_bank = ExternalAccountFactory.create(connect_account=self.stripe_account, status='verified')
 
         self.funding = FundingFactory.create(
             bank_account=self.stripe_bank,
             target=Money(5000, 'EUR'),
-            review_status='approved',
             status='open'
         )
         self.funding_url = reverse('funding-detail', args=(self.funding.id,))
@@ -1312,7 +1309,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
 
     def test_get_stripe_payout(self):
         self.funding.bank_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id'
+            account_id='some-external-account-id',
+            status='verified'
         )
         self.funding.save()
 
@@ -1403,7 +1401,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.bank_account = VitepayBankAccountFactory.create(
             account_name='Test Tester',
             mobile_number='12345',
-            reviewed=True
+            status='verified'
         )
         self.funding.states.submit()
         self.funding.states.approve(save=True)
@@ -1445,7 +1443,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         LipishaPaymentProvider.objects.all().delete()
         LipishaPaymentProviderFactory.create()
         self.funding.bank_account = LipishaBankAccountFactory.create(
-            reviewed=True
+            status='verified'
         )
         self.funding.states.submit()
         self.funding.states.approve(save=True)
@@ -1486,7 +1484,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
     def test_get_flutterwave_payout(self):
         FlutterwavePaymentProviderFactory.create()
         self.funding.bank_account = FlutterwaveBankAccountFactory.create(
-            reviewed=True
+            status='verified'
         )
 
         self.funding.states.submit()
@@ -1528,7 +1526,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
     def test_get_pledge_payout(self):
         PledgePaymentProviderFactory.create()
         self.funding.bank_account = PledgeBankAccountFactory.create(
-            reviewed=True
+            status='verified'
         )
 
         self.funding.states.submit()
@@ -1570,7 +1568,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
     def test_put(self):
         PledgePaymentProviderFactory.create()
         self.funding.bank_account = PledgeBankAccountFactory.create(
-            reviewed=True
+            status='verified'
         )
         BudgetLineFactory.create(activity=self.funding)
 

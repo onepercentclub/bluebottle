@@ -51,7 +51,7 @@ class Assignment(Activity):
 
     is_online = models.NullBooleanField(null=True, default=None)
 
-    online_meeting_url = models.CharField(_('Online Meeting URL'), max_length=200, blank=True, null=True)
+    online_meeting_url = models.TextField(_('Online Meeting URL'), blank=True, null=True)
 
     location = models.ForeignKey(
         Geolocation, verbose_name=_('task location'),

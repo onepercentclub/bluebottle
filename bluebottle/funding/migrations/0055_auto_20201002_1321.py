@@ -10,8 +10,10 @@ def migrate_status(apps, schema_editor):
     for bank in BankAccount.objects.all():
         if bank.reviewed:
             bank.status = 'verified'
-        elif bank.connect_account.status == 'verified':
+        elif bank.connect_account and bank.connect_account.status == 'verified':
             bank.status = 'verified'
+        else:
+            bank.status = 'unverified'
         bank.save()
 
 

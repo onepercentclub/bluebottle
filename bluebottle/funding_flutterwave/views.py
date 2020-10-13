@@ -27,7 +27,7 @@ class FlutterwaveWebhookView(View):
 
     def post(self, request, **kwargs):
         try:
-            data = json.loads(request.body)
+            data = json.loads(request.body.decode())
         except ValueError:
             raise PaymentException('Error parsing Flutterwave webhook: {}'.format(request.body))
         try:

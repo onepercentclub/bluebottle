@@ -1,5 +1,6 @@
+from bluebottle.funding_flutterwave.views import FlutterwaveWebhookView
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings
+from django.test.utils import override_settings, SimpleNamespace
 from mock import patch
 from rest_framework.status import HTTP_200_OK
 
@@ -71,7 +72,7 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
             }
         }
         with patch('bluebottle.funding_flutterwave.utils.post', return_value=payload):
-            response = self.client.post(self.webhook_url, data=payload)
+            response = self.client.post(self.webhook_url, data=payload['data'])
         self.assertEqual(response.status_code, HTTP_200_OK)
         payment.refresh_from_db()
         donation.refresh_from_db()
@@ -95,7 +96,7 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
             "event": "charge.completed"
         }
         with patch('bluebottle.funding_flutterwave.utils.post', return_value=payload):
-            response = self.client.post(self.webhook_url, data=payload)
+            response = self.client.post(self.webhook_url, data=payload['data'])
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(donation.payment.status, 'succeeded')
         donation.refresh_from_db()
@@ -119,7 +120,7 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
             "event": "charge.completed"
         }
         with patch('bluebottle.funding_flutterwave.utils.post', return_value=payload):
-            response = self.client.post(self.webhook_url, data=payload)
+            response = self.client.post(self.webhook_url, data=payload['data'])
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(donation.payment.status, 'succeeded')
         donation.refresh_from_db()
@@ -167,8 +168,61 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
             }
         }
         with patch('bluebottle.funding_flutterwave.utils.post', return_value=payload):
-            response = self.client.post(self.webhook_url, data=payload)
+            response = self.client.post(self.webhook_url, data=payload['data'])
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(donation.payment.status, 'succeeded')
         donation.refresh_from_db()
+        self.assertEqual(donation.status, 'succeeded')
+
+    def test_webhook_view(self):
+        donation = DonationFactory.create()
+        payment = FlutterwavePaymentFactory.create(
+            donation=donation,
+            tx_ref=donation.id
+        )
+        payload = {
+            "event": "charge.completed",
+            "data": {
+                "id": 313646423,
+                "tx_ref": donation.id,
+                "flw_ref": "2Scale/FLW336518359",
+                "device_fingerprint": "8a3ceecb7ac72d8b0e7e0e7b5627f966",
+                "amount": 50000,
+                "currency": "NGN",
+                "charged_amount": 50700,
+                "app_fee": 700,
+                "merchant_fee": 0,
+                "processor_response": "Approved by Financial Institution",
+                "auth_model": "PIN",
+                "ip": "160.152.228.40",
+                "narration": "CARD Transaction ",
+                "status": "successful",
+                "payment_type": "card",
+                "created_at": "2020-09-29T14:27:45.000Z",
+                "account_id": 179031,
+                "customer": {
+                    "id": 225543006,
+                    "name": "Anonymous customer",
+                    "phone_number": "unknown",
+                    "email": "henk@gmail.com",
+                    "created_at": "2020-09-29T14:24:30.000Z"
+                },
+                "card": {
+                    "first_6digits": "123456",
+                    "last_4digits": "7890",
+                    "issuer": "MASTERCARD ZENITH BANK DEBIT STANDARD",
+                    "country": "NG",
+                    "type": "MASTERCARD",
+                    "expiry": "08/23"
+                }
+            }
+        }
+        with patch('bluebottle.funding_flutterwave.utils.post', return_value=payload):
+            view = FlutterwaveWebhookView()
+            req = SimpleNamespace(body='{{"tx_ref": "{}"}}'.format(donation.id).encode('utf-8'))
+            response = view.post(request=req)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        payment.refresh_from_db()
+        donation.refresh_from_db()
+        self.assertEqual(payment.status, 'succeeded')
         self.assertEqual(donation.status, 'succeeded')

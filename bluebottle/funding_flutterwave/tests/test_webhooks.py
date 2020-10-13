@@ -1,11 +1,11 @@
-from bluebottle.funding_flutterwave.views import FlutterwaveWebhookView
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings, SimpleNamespace
+from django.test.utils import override_settings
 from mock import patch
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.funding.tests.factories import DonationFactory
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
+from bluebottle.funding_flutterwave.views import FlutterwaveWebhookView
 from bluebottle.test.utils import BluebottleTestCase
 
 flutterwave_settings = {
@@ -219,7 +219,7 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
         }
         with patch('bluebottle.funding_flutterwave.utils.post', return_value=payload):
             view = FlutterwaveWebhookView()
-            req = SimpleNamespace(body='{{"tx_ref": "{}"}}'.format(donation.id).encode('utf-8'))
+            req = type('obj', (object,), {'body': '{{"tx_ref": "{}"}}'.format(donation.id).encode('utf-8')})
             response = view.post(request=req)
         self.assertEqual(response.status_code, HTTP_200_OK)
         payment.refresh_from_db()

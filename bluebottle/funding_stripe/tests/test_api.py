@@ -817,6 +817,7 @@ class ExternalAccountsTestCase(BluebottleTestCase):
             response = self.client.post(
                 self.external_account_url, data=json.dumps(data), user=self.user
             )
+            self.assertEqual(response.status_code, 201)
 
         data = json.loads(response.content)
         external_account = data['data']['attributes']
@@ -889,3 +890,56 @@ class ExternalAccountsTestCase(BluebottleTestCase):
             user=BlueBottleUserFactory.create()
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_new_extenal(self):
+        data = {
+            'data': {
+                "attributes": {
+                    "account-holder-name": "Tes Ting",
+                    "token": "btok_1234"
+                },
+                "type": "payout-accounts/stripe-external-accounts",
+                "relationships": {
+                    "connect-account": {
+                        "data": {
+                            "type": "payout-accounts/stripes",
+                            "id": self.connect_account.id
+                        }
+                    }
+                }
+            }
+        }
+
+        connect_external_account = stripe.BankAccount('some-bank-token')
+        connect_external_account.update(munch.munchify({
+            'object': 'bank_account',
+            'account_holder_name': 'Jane Austen',
+            'account_holder_type': 'individual',
+            'bank_name': 'STRIPE TEST BANK',
+            'country': 'US',
+            'currency': 'usd',
+            'fingerprint': '1JWtPxqbdX5Gamtc',
+            'last4': '6789',
+            'metadata': {
+                'order_id': '6735'
+            },
+            'routing_number': '110000000',
+            'status': 'new',
+            'account': 'acct_1032D82eZvKYlo2C'
+        }))
+
+        with mock.patch(
+            'stripe.CountrySpec.retrieve', return_value=self.country_spec
+        ), mock.patch(
+            'stripe.Account.retrieve', return_value=self.stripe_connect_account
+        ), mock.patch(
+            'stripe.Account.create_external_account', return_value=connect_external_account
+        ):
+            response = self.client.post(
+                self.external_account_url, data=json.dumps(data), user=self.user
+            )
+            self.assertEqual(response.status_code, 201)
+
+        data = json.loads(response.content)
+        external_account = data['data']['attributes']
+        self.assertEqual(external_account['status'], 'unverified')

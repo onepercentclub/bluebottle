@@ -287,9 +287,8 @@ class PhotoSerializer(RestrictedImageField):
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
         try:
-            full = settings.MEDIA_URL + str(get_thumbnail(value, '800x600'))
-            small = settings.MEDIA_URL + str(
-                get_thumbnail(value, '120x120', crop=self.crop))
+            full = settings.MEDIA_URL + get_thumbnail(value, '800x600').name
+            small = settings.MEDIA_URL + get_thumbnail(value, '120x120', crop=self.crop).name
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
                 raise

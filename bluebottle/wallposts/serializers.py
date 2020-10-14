@@ -110,9 +110,11 @@ class WallpostSerializerBase(serializers.ModelSerializer):
 
 class MediaWallpostPhotoSerializer(serializers.ModelSerializer):
     photo = PhotoSerializer(required=False)
-    mediawallpost = serializers.PrimaryKeyRelatedField(required=False,
-                                                       read_only=False,
-                                                       queryset=MediaWallpost.objects)
+    mediawallpost = serializers.PrimaryKeyRelatedField(
+        required=False,
+        read_only=False,
+        queryset=MediaWallpost.objects
+    )
 
     def validate(self, data):
         if 'mediawallpost' in data and data['mediawallpost'].author != self.instance.author:
@@ -132,9 +134,11 @@ class MediaWallpostSerializer(WallpostSerializerBase):
     model it's a Wallpost about. See ProjectMediaWallpost for an example.
     """
     text = ContentTextField(required=False)
-    video_html = OEmbedField(source='video_url',
-                             maxwidth='560',
-                             maxheight='315')
+    video_html = OEmbedField(
+        source='video_url',
+        maxwidth='560',
+        maxheight='315'
+    )
     photos = MediaWallpostPhotoSerializer(many=True, required=False)
     video_url = serializers.CharField(required=False, allow_blank=True)
 

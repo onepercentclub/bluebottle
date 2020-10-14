@@ -342,6 +342,7 @@ TENANT_APPS = (
     'bluebottle.follow',
     'bluebottle.activities',
     'bluebottle.initiatives',
+    'bluebottle.time_based',
     'bluebottle.events',
     'bluebottle.assignments',
     'bluebottle.funding',

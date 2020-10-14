@@ -46,7 +46,7 @@ class EventListAPITestCase(BluebottleTestCase):
                     'title': 'Beach clean-up Katwijk',
                     'start': str(start),
                     'duration': 4,
-                    'is_online': True,
+                    'is-online': True,
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
                     'description': 'We will clean up the beach south of Katwijk'

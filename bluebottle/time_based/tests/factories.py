@@ -38,8 +38,13 @@ class WithADeadlineActivityFactory(TimeBasedFactory):
         model = WithADeadlineActivity
 
     deadline = (now() + timedelta(weeks=4))
+    duration = 20
+    duration_period = 'overall'
 
 
 class OngoingActivityFactory(TimeBasedFactory):
     class Meta:
         model = OngoingActivity
+
+    duration = 20
+    duration_period = 'overall'

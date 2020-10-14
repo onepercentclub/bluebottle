@@ -79,13 +79,20 @@ def check_payment_status(payment):
         except TransitionNotPossible:
             pass
         payment.save()
-        raise PaymentException('Payment could not be verified yet. Payment not found.')
+        raise PaymentException(
+            'Payment could not be verified yet. Payment not found.'
+        )
+    elif len(data) > 1:
+        raise PaymentException(
+            'Found two payments with codes {} or {}.'.format(payment.unique_id, payment.transaction)
+        )
     else:
         data = data[0]
         if data['transaction_amount'] != payment.donation.amount.amount:
             # Update donation amount based on the amount registered at Lipisha
             amount = Money(data['transaction_amount'], 'KES')
             payment.donation.amount = amount
+            payment.donation.payout_amount = amount
         payment.donation.name = data['transaction_name'].replace('+', ' ').title()
         payment.donation.save()
 

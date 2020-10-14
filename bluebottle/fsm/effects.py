@@ -150,6 +150,7 @@ def TransitionEffect(transition_name, field='states', conditions=None, save=Fals
 class BaseRelatedTransitionEffect(Effect):
     post_save = True
     display = False
+    description = None
 
     transition_effect_class = None
 
@@ -197,32 +198,32 @@ class BaseRelatedTransitionEffect(Effect):
         return result
 
     def __str__(self):
-        return '{} related {}'.format(
-            self.transition_effect_class.name,
-            self.relation
+        if self.description:
+            return self.description
+        return _('{transition} related {object}').format(
+            transition=self.transition_effect_class.name,
+            object=self.relation
         )
 
     def to_html(self):
         if self.conditions:
-            return _('{transition} related {object} if {conditions}').format(
-                transition=self.transition_effect_class.name,
-                object=str(self.relation),
+            return _('{effect} if {conditions}').format(
+                effect=str(self),
                 conditions=" and ".join([c.__doc__ for c in self.conditions])
             )
-        return _('{transition} related {object}').format(
-            transition=self.transition_effect_class.name,
-            object=str(self.relation)
-        )
+        return str(self)
 
 
-def RelatedTransitionEffect(_relation, transition_name, field='states', conditions=None):
+def RelatedTransitionEffect(_relation, transition_name, field='states', conditions=None, description=None):
     _transition_effect_class = TransitionEffect(transition_name, field, save=True, post_save=True)
     _conditions = conditions or []
+    _description = description
 
     class _RelatedTransitionEffect(BaseRelatedTransitionEffect):
         transition_effect_class = _transition_effect_class
         relation = _relation
         conditions = _conditions
+        description = _description
         field = 'states'
 
     return _RelatedTransitionEffect

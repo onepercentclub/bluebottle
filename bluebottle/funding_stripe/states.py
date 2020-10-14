@@ -92,6 +92,7 @@ class StripeBankAccountStateMachine(BankAccountStateMachine):
     model = ExternalAccount
 
     def account_verified(self):
+        """the related connect account is verified"""
         return self.instance.connect_account and self.instance.connect_account.status == 'verified'
 
     initiate = Transition(

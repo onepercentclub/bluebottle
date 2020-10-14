@@ -1,7 +1,7 @@
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger
 from bluebottle.funding.effects import UpdateFundingAmountsEffect
-from bluebottle.funding.models import Funding, PlainPayoutAccount, Donation, BankAccount
+from bluebottle.funding.models import Funding, PlainPayoutAccount, Donation
 from bluebottle.funding.states import FundingStateMachine, PlainPayoutAccountStateMachine
 
 
@@ -95,27 +95,3 @@ class DonationAmountChangedTrigger(ModelChangedTrigger):
 
 
 Donation.triggers = [DonationAmountChangedTrigger]
-
-
-class BankAccountVerifiedTrigger(ModelChangedTrigger):
-    field = 'reviewed'
-
-    def is_verified(self):
-        return self.instance.reviewed
-
-    def is_not_verified(self):
-        return not self.instance.reviewed
-
-    effects = [
-        TransitionEffect(
-            'verify',
-            conditions=[is_verified]
-        ),
-        TransitionEffect(
-            'request_changes',
-            conditions=[is_not_verified]
-        ),
-    ]
-
-
-BankAccount.triggers = [BankAccountVerifiedTrigger]

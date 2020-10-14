@@ -64,6 +64,25 @@ JET_SIDE_MENU_ITEMS = [
         ]
     },
     {
+        'label': _('Time Based'),
+        'app_label': 'time_based',
+        'permissions': ['activities.change_activity'],
+        'items': [
+            {
+                'name': 'time_based.onadateactivity',
+                'permissions': ['time_based.change_onadateactivity']
+            },
+            {
+                'name': 'time_based.withadeadlineactivity',
+                'permissions': ['events.change_withadeadlineactivity']
+            },
+            {
+                'name': 'time_based.ongoingactivity',
+                'permissions': ['events.change_ongoingactivity']
+            },
+        ]
+    },
+    {
         'label': _('Tasks'),
         'app_label': 'assignments',
         'permissions': ['activities.change_activity'],

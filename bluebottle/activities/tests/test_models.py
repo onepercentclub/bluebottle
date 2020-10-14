@@ -32,8 +32,6 @@ class ActivitySegmentsTestCase(TestCase):
         self.user.segments.remove(self.team)
         self.user.segments.add(self.other_team)
 
-        activity.save()
-
         self.assertTrue(self.unit in activity.segments.all())
         self.assertTrue(self.team in activity.segments.all())
         self.assertFalse(self.other_team in activity.segments.all())
@@ -43,8 +41,6 @@ class ActivitySegmentsTestCase(TestCase):
         self.user.segments.remove(self.team)
         self.user.segments.add(self.other_team)
 
-        activity.save()
-
         self.assertTrue(self.unit in activity.segments.all())
         self.assertTrue(self.other_team in activity.segments.all())
         self.assertFalse(self.team in activity.segments.all())
@@ -53,8 +49,6 @@ class ActivitySegmentsTestCase(TestCase):
         activity = EventFactory.create(owner=self.user, status='draft')
         self.user.segments.remove(self.team)
         self.user.segments.add(self.other_team)
-
-        activity.save()
 
         self.assertTrue(self.unit in activity.segments.all())
         self.assertTrue(self.other_team in activity.segments.all())

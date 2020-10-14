@@ -143,7 +143,11 @@ class LipishaPaymentUpdateTestCase(BluebottleTestCase):
     @patch('lipisha.Lipisha._make_api_call', return_value=lipisha_not_found_response)
     def test_not_found(self, mock_client):
         payment = LipishaPaymentFactory.create()
-        check_payment_status(payment)
+        with self.assertRaisesMessage(
+                PaymentException,
+                "Payment could not be verified yet. Payment not found."
+        ):
+            check_payment_status(payment)
         payment.refresh_from_db()
         self.assertEqual(payment.status, 'failed')
 
@@ -155,3 +159,5 @@ class LipishaPaymentUpdateTestCase(BluebottleTestCase):
                 "Found multiple payments with code {}.".format(payment.unique_id)
         ):
             check_payment_status(payment)
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, 'new')

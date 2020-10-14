@@ -84,7 +84,7 @@ def check_payment_status(payment):
         )
     elif len(data) > 1:
         raise PaymentException(
-            'Found two payments with codes {} or {}.'.format(payment.unique_id, payment.transaction)
+            'Found multiple payments with code {}.'.format(payment.transaction or payment.unique_id)
         )
     else:
         data = data[0]

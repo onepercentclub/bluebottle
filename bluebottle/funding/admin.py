@@ -475,7 +475,7 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixi
     base_model = BankAccount
     raw_id_fields = ('connect_account',)
     readonly_fields = ('document', 'funding_links', 'created', 'updated')
-    fields = ('connect_account', 'reviewed', 'status', 'states') + readonly_fields
+    fields = ('funding_links', 'connect_account', 'document', 'status', 'states', 'created', 'updated')
     show_in_index = True
 
     def document(self, obj):

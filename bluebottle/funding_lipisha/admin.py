@@ -20,7 +20,7 @@ class LipishaPaymentProviderAdmin(PaymentProviderChildAdmin):
 
 @admin.register(LipishaBankAccount)
 class LipishaBankAccountAdmin(BankAccountChildAdmin):
-    fields = BankAccountChildAdmin.fields + (
+    fields = (
         'mpesa_code',
         'account_number',
         'account_name',
@@ -30,7 +30,7 @@ class LipishaBankAccountAdmin(BankAccountChildAdmin):
         'branch_code',
         'address',
         'swift'
-    )
+    ) + BankAccountChildAdmin.fields
     list_filter = ['reviewed']
     search_fields = ['mpesa_code', 'account_number', 'account_name']
     list_display = ['created', 'account_name', 'account_number', 'mpesa_code', 'reviewed']

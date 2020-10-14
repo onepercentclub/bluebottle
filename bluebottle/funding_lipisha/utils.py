@@ -68,7 +68,7 @@ def check_payment_status(payment):
     else:
         response = client.get_transactions(
             transaction_type='Payment',
-            transaction_merchant_reference=payment.unique_id
+            transaction_reference=payment.unique_id
         )
 
     payment.update_response = json.dumps(response)

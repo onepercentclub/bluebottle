@@ -26,7 +26,7 @@ class PledgePaymentProviderAdmin(PaymentProviderChildAdmin):
 @admin.register(PledgeBankAccount)
 class PledgeBankAccountAdmin(BankAccountChildAdmin):
     model = PledgeBankAccount
-    fields = BankAccountChildAdmin.fields + (
+    fields = (
         'account_holder_name',
         'account_holder_address',
         'account_holder_postal_code',
@@ -35,7 +35,7 @@ class PledgeBankAccountAdmin(BankAccountChildAdmin):
         'account_number',
         'account_details',
         'account_bank_country'
-    )
+    ) + BankAccountChildAdmin.fields
     list_filter = ['reviewed']
     search_fields = ['account_holder_name', 'account_number']
     list_display = ['created', 'account_holder_name', 'account_number', 'reviewed']

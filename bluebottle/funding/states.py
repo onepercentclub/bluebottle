@@ -595,20 +595,20 @@ class PayoutStateMachine(ModelStateMachine):
 
 
 class BankAccountStateMachine(ModelStateMachine):
-    unverified = State(
-        _('unverified'),
-        'unverified',
-        _("Bank account still needs to be verified")
+    verified = State(
+        _('verified'),
+        'verified',
+        _("Bank account is verified")
     )
     incomplete = State(
         _('incomplete'),
         'incomplete',
         _("Bank account details are missing or incorrect")
     )
-    verified = State(
-        _('verified'),
-        'verified',
-        _("Bank account is verified")
+    unverified = State(
+        _('unverified'),
+        'unverified',
+        _("Bank account still needs to be verified")
     )
     rejected = State(
         _('rejected'),

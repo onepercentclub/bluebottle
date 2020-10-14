@@ -137,6 +137,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'video_url',
         'initiative',
         'owner',
+        'highlight',
         'created',
         'updated',
         'stats_data',
@@ -167,8 +168,13 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     detail_fields = (
         'description',
-        'highlight'
     )
+
+    list_display = [
+        '__str__', 'initiative', 'created', 'state_name',
+        'highlight'
+
+    ]
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (

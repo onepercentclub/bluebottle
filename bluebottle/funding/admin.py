@@ -145,9 +145,8 @@ class FundingAdmin(ActivityChildAdmin):
         'donations_link', 'started',
     ]
 
-    list_display = [
-        '__str__', 'initiative', 'created', 'state_name',
-        'highlight', 'deadline', 'percentage_donated', 'percentage_matching'
+    list_display = ActivityChildAdmin.list_display + [
+        'deadline', 'percentage_donated', 'percentage_matching'
 
     ]
 
@@ -183,7 +182,6 @@ class FundingAdmin(ActivityChildAdmin):
         'amount_raised',
         'donations_link',
         'bank_account',
-        'highlight',
     )
 
     export_to_csv_fields = (

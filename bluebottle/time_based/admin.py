@@ -11,13 +11,19 @@ from bluebottle.utils.admin import export_as_csv_action
 
 class TimeBasedAdmin(ActivityChildAdmin):
     inlines = ActivityChildAdmin.inlines + (MessageAdminInline, )
-    list_display = [
-        '__str__', 'initiative', 'state_name',
-        'highlight',
-    ]
 
     search_fields = ['title', 'description']
     list_filter = [StateMachineFilter, 'is_online']
+
+    detail_fields = ActivityChildAdmin.detail_fields + (
+        'capacity',
+        'duration',
+        'is_online',
+        'location',
+        'location_hint',
+        'review',
+        'registration_deadline',
+    )
 
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
 
@@ -47,18 +53,9 @@ class OnADateActivityAdmin(TimeBasedAdmin):
         'start', 'duration',
     ]
 
-    detail_fields = (
-        'description',
-        'capacity',
-        'duration',
-        'registration_deadline',
+    detail_fields = TimeBasedAdmin.detail_fields + (
         'start',
-        'duration',
-        'is_online',
-        'location',
-        'location_hint',
-        'review',
-        'highlight',
+        'duration'
     )
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
@@ -77,19 +74,10 @@ class WithADeadlineActivityAdmin(TimeBasedAdmin):
         'deadline', 'duration', 'duration_period'
     ]
 
-    detail_fields = (
-        'description',
-        'capacity',
-        'duration',
-        'registration_deadline',
+    detail_fields = TimeBasedAdmin.detail_fields + (
         'deadline',
         'duration',
         'duration_period',
-        'is_online',
-        'location',
-        'location_hint',
-        'review',
-        'highlight',
     )
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
@@ -108,18 +96,9 @@ class OngoingActivityAdmin(TimeBasedAdmin):
         'duration', 'duration_period'
     ]
 
-    detail_fields = (
-        'description',
-        'capacity',
-        'duration',
-        'registration_deadline',
+    detail_fields = TimeBasedAdmin.detail_fields + (
         'duration',
         'duration_period',
-        'is_online',
-        'location',
-        'location_hint',
-        'review',
-        'highlight',
     )
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (

@@ -1,8 +1,11 @@
 from rest_framework import serializers
+from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer,
 )
+
+from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.utils.serializers import NoCommitMixin
 from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity, OngoingActivity
 
@@ -69,3 +72,36 @@ class OngoingActivitySerializer(TimeBasedSerializer):
 
     class JSONAPIMeta(TimeBasedSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/ongoing'
+
+
+class OnADateTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=OnADateActivity.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.OnADateActivitySerializer',
+    }
+
+    class JSONAPIMeta(object):
+        included_resources = ['resource', ]
+        resource_name = 'activities/time-based/on-a-date-transitions'
+
+
+class WithADeadlineTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=WithADeadlineActivity.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.WithADeadlineActivitySerializer',
+    }
+
+    class JSONAPIMeta(object):
+        included_resources = ['resource', ]
+        resource_name = 'activities/time-based/with-a-deadline-transitions'
+
+
+class OngoingTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=OngoingActivity.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.OngoingActivitySerializer',
+    }
+
+    class JSONAPIMeta(object):
+        included_resources = ['resource', ]
+        resource_name = 'activities/time-based/ongoing-transitions'

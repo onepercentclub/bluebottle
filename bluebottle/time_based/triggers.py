@@ -26,7 +26,7 @@ def is_finished(effect):
     return (
         effect.instance.start and
         effect.instance.duration and
-        effect.start + timedelta(hours=effect.instance.duration) > now()
+        effect.instance.start + timedelta(hours=effect.instance.duration) > now()
     )
 
 
@@ -34,7 +34,7 @@ def is_not_finished(effect):
     return (
         effect.instance.start and
         effect.instance.duration and
-        effect.start + timedelta(hours=effect.instance.duration) < now()
+        effect.instance.start + timedelta(hours=effect.instance.duration) < now()
     )
 
 
@@ -42,8 +42,8 @@ def is_running(effect):
     return (
         effect.instance.start and
         effect.instance.duration and
-        effect.start > now() and
-        effect.start + timedelta(hours=effect.instance.duration) < now()
+        effect.instance.start > now() and
+        effect.instance.start + timedelta(hours=effect.instance.duration) < now()
     )
 
 

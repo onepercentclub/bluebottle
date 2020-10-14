@@ -5,8 +5,14 @@ from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity,
 from bluebottle.time_based.serializers import (
     OnADateActivitySerializer,
     WithADeadlineActivitySerializer,
-    OngoingActivitySerializer
+    OngoingActivitySerializer,
+    OnADateTransitionSerializer,
+    WithADeadlineTransitionSerializer,
+    OngoingTransitionSerializer
 )
+
+from bluebottle.transitions.views import TransitionList
+
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission
 )
@@ -70,3 +76,18 @@ class WithADeadlineActivityDetailView(TimeBasedActivityDetailView):
 class OngoingActivityDetailView(TimeBasedActivityDetailView):
     queryset = OngoingActivity.objects.all()
     serializer_class = OngoingActivitySerializer
+
+
+class OnADateTransitionList(TransitionList):
+    serializer_class = OnADateTransitionSerializer
+    queryset = OnADateActivity.objects.all()
+
+
+class WithADeadlineTransitionList(TransitionList):
+    serializer_class = WithADeadlineTransitionSerializer
+    queryset = WithADeadlineActivity.objects.all()
+
+
+class OngoingTransitionList(TransitionList):
+    serializer_class = OngoingTransitionSerializer
+    queryset = OngoingActivity.objects.all()

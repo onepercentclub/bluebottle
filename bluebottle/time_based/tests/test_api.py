@@ -277,3 +277,97 @@ class WithADeadlineDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, Bluebot
 class OngoingDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
     type = 'ongoing'
     factory = OngoingActivityFactory
+
+
+class TimeBasedTransitionAPIViewTestCase():
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.activity = self.factory.create()
+
+        self.url = reverse('{}-transition-list'.format(self.type))
+        self.data = {
+            'data': {
+                'type': 'activities/time-based/{}-transitions'.format(self.type),
+                'attributes': {},
+                'relationships': {
+                    'resource': {
+                        'data': {
+                            'type': 'activities/time-based/{}'.format(self.type),
+                            'id': self.activity.pk
+                        }
+                    }
+                }
+            }
+        }
+
+    def test_delete_by_owner(self):
+        # Owner can delete the event
+        self.data['data']['attributes']['transition'] = 'delete'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data['included'][0]['type'],
+            'activities/time-based/{}'.format(self.type)
+        )
+        self.assertEqual(data['included'][0]['attributes']['status'], 'deleted')
+
+    def test_delete_by_other_user(self):
+        self.data['data']['attributes']['transition'] = 'delete'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=BlueBottleUserFactory.create()
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = json.loads(response.content)
+        self.assertEqual(data['errors'][0], "Transition is not available")
+
+    def test_reject(self):
+        self.data['data']['attributes']['transition'] = 'reject'
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = json.loads(response.content)
+        self.assertEqual(data['errors'][0], "Transition is not available")
+
+    def test_approve(self):
+        self.data['data']['attributes']['transition'] = 'approve'
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = json.loads(response.content)
+        self.assertEqual(data['errors'][0], "Transition is not available")
+
+
+class OnADatteTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
+    type = 'on-a-date'
+    factory = OnADateActivityFactory
+
+
+class WithADeadlineTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
+    type = 'with-a-deadline'
+    factory = WithADeadlineActivityFactory
+
+
+class OngoingTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
+    type = 'ongoing'
+    factory = OngoingActivityFactory

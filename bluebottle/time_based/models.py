@@ -101,7 +101,7 @@ class WithADeadlineActivity(TimeBasedActivity):
     def required_fields(self):
         fields = super().required_fields
 
-        return fields + ['deadline']
+        return fields + ['deadline', 'duration', 'duration_period']
 
 
 class OngoingActivity(TimeBasedActivity):
@@ -131,3 +131,9 @@ class OngoingActivity(TimeBasedActivity):
 
     class JSONAPIMeta:
         resource_name = 'activities/time-based/ongoing'
+
+    @property
+    def required_fields(self):
+        fields = super().required_fields
+
+        return fields + ['duration', 'duration_period']

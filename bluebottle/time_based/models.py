@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from djchoices.choices import DjangoChoices, ChoiceItem
+
 from bluebottle.activities.models import Activity
 from bluebottle.geo.models import Geolocation
 
@@ -59,8 +61,23 @@ class OnADateActivity(TimeBasedActivity):
         return fields + ['start', 'duration']
 
 
+class DurationPeriodChoices(DjangoChoices):
+    overall = ChoiceItem('overall', label=_("overall"))
+    week = ChoiceItem('week', label=_("per week"))
+    month = ChoiceItem('month', label=_("per month"))
+
+
 class WithADeadlineActivity(TimeBasedActivity):
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
+
+    duration = models.FloatField(_('duration'), null=True, blank=True)
+    duration_period = models.CharField(
+        _('duration period'),
+        max_length=20,
+        blank=True,
+        null=True,
+        choices=DurationPeriodChoices.choices,
+    )
 
     class Meta:
         verbose_name = _("Activity with a deadline")
@@ -88,6 +105,15 @@ class WithADeadlineActivity(TimeBasedActivity):
 
 
 class OngoingActivity(TimeBasedActivity):
+    duration = models.FloatField(_('duration'), null=True, blank=True)
+    duration_period = models.CharField(
+        _('duration period'),
+        max_length=20,
+        blank=True,
+        null=True,
+        choices=DurationPeriodChoices.choices,
+    )
+
     class Meta:
         verbose_name = _("Ongoing activity")
         verbose_name_plural = _("Ongoing activities")

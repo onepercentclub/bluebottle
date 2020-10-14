@@ -52,7 +52,7 @@ class WithADeadlineActivitySerializer(TimeBasedSerializer):
     class Meta(TimeBasedSerializer.Meta):
         model = WithADeadlineActivity
         fields = TimeBasedSerializer.Meta.fields + (
-            'deadline',
+            'deadline', 'duration', 'duration_type',
         )
 
     class JSONAPIMeta(TimeBasedSerializer.JSONAPIMeta):
@@ -62,6 +62,10 @@ class WithADeadlineActivitySerializer(TimeBasedSerializer):
 class OngoingActivitySerializer(TimeBasedSerializer):
     class Meta(TimeBasedSerializer.Meta):
         model = OngoingActivity
+
+        fields = TimeBasedSerializer.Meta.fields + (
+            'duration', 'duration_type',
+        )
 
     class JSONAPIMeta(TimeBasedSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/ongoing'

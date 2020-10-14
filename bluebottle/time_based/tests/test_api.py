@@ -145,12 +145,22 @@ class WithADeadlineListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleT
 
         self.data['data']['attributes'].update({
             'deadline': str(now() + timedelta(days=21)),
+            'duration': 4,
+            'duration_period': 'overall',
         })
 
 
 class OngoingListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
     type = 'ongoing'
     factory = OngoingActivityFactory
+
+    def setUp(self):
+        super().setUp()
+
+        self.data['data']['attributes'].update({
+            'duration': 4,
+            'duration_period': 'overall',
+        })
 
 
 class TimeBasedDetailAPIViewTestCase():

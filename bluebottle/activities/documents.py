@@ -24,9 +24,6 @@ class ActivityDocument(DocType):
     status_score = fields.FloatField()
     created = fields.DateField()
 
-    date = fields.DateField()
-    deadline = fields.DateField()
-
     type = fields.KeywordField()
 
     owner = fields.NestedField(properties={
@@ -92,7 +89,8 @@ class ActivityDocument(DocType):
     contributions = fields.DateField()
     contribution_count = fields.IntegerField()
 
-    activity_date = fields.DateField()
+    start = fields.DateField()
+    end = fields.DateField()
 
     class Meta(object):
         model = Activity
@@ -147,5 +145,8 @@ class ActivityDocument(DocType):
     def prepare_deadline(self, instance):
         return None
 
-    def prepare_date(self, instance):
+    def prepare_start(self, instance):
+        return None
+
+    def prepare_end(self, instance):
         return None

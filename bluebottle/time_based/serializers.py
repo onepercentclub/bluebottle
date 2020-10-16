@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer,
+    BaseActivitySerializer, BaseActivityListSerializer
 )
 
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -48,7 +48,7 @@ class OnADateActivitySerializer(TimeBasedSerializer):
         )
 
     class JSONAPIMeta(TimeBasedSerializer.JSONAPIMeta):
-        resource_name = 'activities/time-based/on-a-date'
+        resource_name = 'activities/time-based/on-a-dates'
 
 
 class WithADeadlineActivitySerializer(TimeBasedSerializer):
@@ -59,7 +59,7 @@ class WithADeadlineActivitySerializer(TimeBasedSerializer):
         )
 
     class JSONAPIMeta(TimeBasedSerializer.JSONAPIMeta):
-        resource_name = 'activities/time-based/with-a-deadline'
+        resource_name = 'activities/time-based/with-a-deadlines'
 
 
 class OngoingActivitySerializer(TimeBasedSerializer):
@@ -71,7 +71,7 @@ class OngoingActivitySerializer(TimeBasedSerializer):
         )
 
     class JSONAPIMeta(TimeBasedSerializer.JSONAPIMeta):
-        resource_name = 'activities/time-based/ongoing'
+        resource_name = 'activities/time-based/ongoings'
 
 
 class OnADateTransitionSerializer(TransitionSerializer):
@@ -105,3 +105,63 @@ class OngoingTransitionSerializer(TransitionSerializer):
     class JSONAPIMeta(object):
         included_resources = ['resource', ]
         resource_name = 'activities/time-based/ongoing-transitions'
+
+
+class TimeBasedActivityListSerializer(BaseActivityListSerializer):
+    class Meta(BaseActivityListSerializer.Meta):
+        fields = BaseActivityListSerializer.Meta.fields + (
+            'capacity',
+            'duration',
+            'is_online',
+            'location',
+            'location_hint',
+            'expertise',
+            'registration_deadline',
+        )
+
+    class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
+        included_resources = [
+            'location', 'expertise',
+        ]
+
+    included_serializers = dict(
+        BaseActivitySerializer.included_serializers,
+        **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
+        }
+    )
+
+
+class OnADateActivityListSerializer(TimeBasedActivityListSerializer):
+    class Meta(TimeBasedActivityListSerializer.Meta):
+        model = OnADateActivity
+        fields = TimeBasedActivityListSerializer.Meta.fields + (
+            'start', 'duration',
+        )
+
+    class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):
+        resource_name = 'activities/time-based/on-a-dates'
+
+
+class WithADeadlineActivityListSerializer(TimeBasedActivityListSerializer):
+    class Meta(TimeBasedActivityListSerializer.Meta):
+        model = WithADeadlineActivity
+        fields = TimeBasedActivityListSerializer.Meta.fields + (
+            'deadline', 'duration', 'duration_period',
+        )
+
+    class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):
+        resource_name = 'activities/time-based/with-a-deadlines'
+
+
+class OngoingActivityListSerializer(TimeBasedActivityListSerializer):
+    class Meta(TimeBasedActivityListSerializer.Meta):
+        model = OngoingActivity
+
+        fields = TimeBasedActivityListSerializer.Meta.fields + (
+            'duration', 'duration_period',
+        )
+
+    class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):
+        resource_name = 'activities/time-based/ongoings'

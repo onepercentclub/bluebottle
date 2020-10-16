@@ -158,11 +158,13 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
         return score
 
-    def get_date_filter(self, value, request):
+    def get_start_filter(self, value, request):
         date = dateutil.parser.parse(value).date()
-        start = date.replace(date.year, date.month, 1)
-        end = start + dateutil.relativedelta.relativedelta(day=31)
-        return Range(activity_date={'gte': start, 'lte': end})
+        return Range(start={'gte': date})
+
+    def get_end_filter(self, value, request):
+        date = dateutil.parser.parse(value).date()
+        return Range(end_={'lte': date})
 
     def get_filters(self, request):
         filters = super(ActivitySearchFilter, self).get_filters(request)

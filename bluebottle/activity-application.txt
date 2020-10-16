@@ -1,0 +1,32 @@
+Currently when a user joins an activity, we created a contribition. Somewhere later in time, this contribution is set to succeeded. Donation become succesfull when the payments is marked as succeeded. Tasks and Assignments are succeeded when the activity ends.
+
+For ongoing activities (both deeds and time based), this does not work. No contribution would be marked succesfull, since the activity never ends. For activities on multiple dates, there is also an issue, since ucurrently it is only possible to have on contribution, which is never automatically changed after becoming succesfull.
+
+Proposal:
+
+Contributing to an activity involves first joining the contribution. Certain events on the activity will create a contribution for certain users that joined the activity.
+
+Examples:
+
+When a user starts a donation, the user join the funding activity. A payment is created that references the user and the activity. When the payment becomes succesfull, a contribution is created, and marked as succesfull.
+
+When a user joins a deed activity with one deed. A contribution is automatically created and marked succesfull.
+
+When  user joins a deed activity with multiple deeds, no contribution is created. When the user marks a deed as completed, we create a contribution and mark it as succeeded. For every deed in the activity that the user marks as completed, we create a contribution. 
+
+When a user joins a time based activity with only one time slot, we automatically create a contribution for that activity. We mark is as new, and mark it as succeeded after the time slot has passed. The time-slot is marked as the period of the contribution.
+
+When a user joins a time based activity with multiple time slots, we create a contribution for each time slot the user joins. These contributions are marked as succeeded when the specific time slot has passed. The time-slot is marked as the period of the contribution.
+
+When a user joins a time based activity that has a deadline that takes 8 hours per month, no contribution is created. A contribution for 8 hours is created every month until the deadline passes or until the user withdraw or is rejected. These contributions are marked with that month as the period. 
+
+
+When a user joins an ongoing time based activity that takes 8 hours per month, no contribution is created. A contribution for 8 hours is created every month until the activity is ended or until the user withdraw or is rejected. These contributions are marked with that month as the period. 
+
+Overview:
+
+So all activities has applicants. The applicants mark the fact that the user has joined the activity. Applicants point to a user and an activity and have a status.
+
+Applicants generate contributions. For some applicants the contribution is created at the moment the applicant is created. For others, the contributions are created once a certain event has passed. This might mean that the user ticks a box, or if a certain date has passed. 
+
+There are several types of contributions: Time based contributions, Money based contributions, and act based contributions. In theory it is possible to have an activity that generates multiple types of contributions. The organizer contribution or example is time-based, even if the activity is not time based.

@@ -48,7 +48,8 @@ class OnADateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         return instance.start
 
     def prepare_end(self, instance):
-        return instance.start + datetime.timedelta(hours=instance.duration)
+        if instance.start and instance.duration:
+            return instance.start + datetime.timedelta(hours=instance.duration)
 
 
 @activity.doc_type

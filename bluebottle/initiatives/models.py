@@ -240,6 +240,10 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('funding', _('Funding')),
         ('event', _('Events')),
         ('assignment', _('Assignment')),
+
+        ('withadeadlineactivity', _('Activity with a deadline')),
+        ('onadateactivity', _('Activity on a specific date')),
+        ('ongoingactivity', _('Ongoing activity')),
     )
     ACTIVITY_SEARCH_FILTERS = (
         ('location', _('Office location')),

@@ -76,13 +76,14 @@ class AssignmentSerializer(BaseActivitySerializer):
 
         if (
             not user.is_authenticated or (
-                user not in [
-                self.instance.owner,
-                self.instance.initiative.owner,
-                self.instance.initiative.activity_manager
-                ] and
-                not len(self.instance.applicants.filter(user=user))
-
+                self.instance and (
+                    user not in [
+                        self.instance.owner,
+                        self.instance.initiative.owner,
+                        self.instance.initiative.activity_manager
+                    ] and
+                    not len(self.instance.applicants.filter(user=user))
+                )
             )
         ):
             del fields['online_meeting_url']

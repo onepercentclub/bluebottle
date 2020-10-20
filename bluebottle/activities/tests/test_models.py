@@ -28,7 +28,7 @@ class ActivitySegmentsTestCase(TestCase):
         self.assertTrue(self.team in activity.segments.all())
 
     def test_segments_already_set(self):
-        activity = EventFactory.create(owner=self.user, status='succeeded')
+        activity = EventFactory.create(owner=self.user)
         self.user.segments.remove(self.team)
         self.user.segments.add(self.other_team)
 
@@ -37,25 +37,3 @@ class ActivitySegmentsTestCase(TestCase):
         self.assertTrue(self.unit in activity.segments.all())
         self.assertTrue(self.team in activity.segments.all())
         self.assertFalse(self.other_team in activity.segments.all())
-
-    def test_segments_already_set_open(self):
-        activity = EventFactory.create(owner=self.user, status='open')
-        self.user.segments.remove(self.team)
-        self.user.segments.add(self.other_team)
-
-        activity.save()
-
-        self.assertTrue(self.unit in activity.segments.all())
-        self.assertTrue(self.other_team in activity.segments.all())
-        self.assertFalse(self.team in activity.segments.all())
-
-    def test_segments_already_set_draft(self):
-        activity = EventFactory.create(owner=self.user, status='draft')
-        self.user.segments.remove(self.team)
-        self.user.segments.add(self.other_team)
-
-        activity.save()
-
-        self.assertTrue(self.unit in activity.segments.all())
-        self.assertTrue(self.other_team in activity.segments.all())
-        self.assertFalse(self.team in activity.segments.all())

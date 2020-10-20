@@ -154,20 +154,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             start=after
         )
 
-        on_date_assignment = WithADeadlineActivityFactory.create(
+        assignment = WithADeadlineActivityFactory.create(
             status='open',
-            date=next_month,
-            end_date_type='on_date'
+            deadline=next_month
         )
         WithADeadlineActivityFactory.create(
             status='open',
-            date=after,
-            end_date_type='on_date'
-        )
-        deadline_assignment = WithADeadlineActivityFactory.create(
-            status='open',
-            date=next_month,
-            end_date_type='deadline'
+            deadline=after
         )
 
         # Feature is not dealing with time. Disabling timezone check for test
@@ -180,32 +173,40 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             deadline=after
         )
 
+        start = next_month - dateutil.relativedelta.relativedelta(weeks=2)
+        end = next_month + dateutil.relativedelta.relativedelta(weeks=2)
         response = self.client.get(
             self.url + '?filter[start]={}-{}-{}&filter[end]={}-{}-{}'.format(
-                after.year, after.month, after.day,
-                after.year, after.month + 1, after.day),
+                start.year, start.month, start.day,
+                end.year, end.month, end.day),
+            user=self.owner
+        )
+
+        data = json.loads(response.content)
+        self.assertEqual(data['meta']['pagination']['count'], 5)
+
+        found = [item['id'] for item in data['data']]
+        self.assertTrue(str(event.pk) in found)
+        self.assertTrue(str(assignment.pk) in found)
+        self.assertTrue(str(funding.pk) in found)
+
+        start = after - dateutil.relativedelta.relativedelta(weeks=2)
+        end = after + dateutil.relativedelta.relativedelta(weeks=2)
+
+        response = self.client.get(
+            self.url + '?filter[start]={}-{}-{}&filter[end]={}-{}-{}'.format(
+                start.year, start.month, start.day,
+                end.year, end.month, end.day),
             user=self.owner
         )
 
         data = json.loads(response.content)
         self.assertEqual(data['meta']['pagination']['count'], 3)
 
-        response = self.client.get(
-            self.url + '?filter[date]={}-{}-{}'.format(
-                next_month.year, next_month.month, next_month.day
-            ),
-            user=self.owner
-        )
-
-        data = json.loads(response.content)
-        self.assertEqual(data['meta']['pagination']['count'], 4)
-
         found = [item['id'] for item in data['data']]
-
-        self.assertTrue(str(event.pk) in found)
-        self.assertTrue(str(on_date_assignment.pk) in found)
-        self.assertTrue(str(deadline_assignment.pk) in found)
-        self.assertTrue(str(funding.pk) in found)
+        self.assertTrue(str(event.pk) not in found)
+        self.assertTrue(str(assignment.pk) not in found)
+        self.assertTrue(str(funding.pk) not in found)
 
     def test_filter_segment(self):
         segment = SegmentFactory.create()

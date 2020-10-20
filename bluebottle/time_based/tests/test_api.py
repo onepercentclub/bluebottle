@@ -29,7 +29,7 @@ class TimeBasedListAPIViewTestCase():
 
         self.data = {
             'data': {
-                'type': 'activities/time-based/{}'.format(self.type),
+                'type': 'activities/time-based/{}s'.format(self.type),
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
                     'review': False,
@@ -178,7 +178,7 @@ class TimeBasedDetailAPIViewTestCase():
 
         self.data = {
             'data': {
-                'type': 'activities/time-based/{}'.format(self.type),
+                'type': 'activities/time-based/{}s'.format(self.type),
                 'id': str(self.activity.pk),
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
@@ -294,7 +294,7 @@ class TimeBasedTransitionAPIViewTestCase():
                 'relationships': {
                     'resource': {
                         'data': {
-                            'type': 'activities/time-based/{}'.format(self.type),
+                            'type': 'activities/time-based/{}s'.format(self.type),
                             'id': self.activity.pk
                         }
                     }

@@ -31,7 +31,8 @@ class ActivitySearchFilter(ElasticSearchFilter):
         'expertise.id',
         'type',
         'status',
-        'date',
+        'start',
+        'end',
         'initiative_location.id',
         'segment',
     )
@@ -160,11 +161,11 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
     def get_start_filter(self, value, request):
         date = dateutil.parser.parse(value).date()
-        return Range(start={'gte': date})
+        return Range(end={'gte': date}) | ~Q('exists', field='end')
 
     def get_end_filter(self, value, request):
         date = dateutil.parser.parse(value).date()
-        return Range(end_={'lte': date})
+        return Range(start={'lte': date}) | ~Q('exists', field='start')
 
     def get_filters(self, request):
         filters = super(ActivitySearchFilter, self).get_filters(request)

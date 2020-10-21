@@ -139,7 +139,6 @@ class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
     transition_date = models.DateTimeField(null=True, blank=True)
-    contribution_date = models.DateTimeField()
 
     activity = models.ForeignKey(Activity, related_name='contributions', on_delete=NON_POLYMORPHIC_CASCADE)
     user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True, blank=True)
@@ -151,12 +150,6 @@ class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     @property
     def date(self):
         return self.activity.contribution_date
-
-    def save(self, *args, **kwargs):
-        if not self.contribution_date:
-            self.contribution_date = self.date
-
-        super(Contribution, self).save(*args, **kwargs)
 
     class Meta(object):
         ordering = ('-created',)
@@ -173,12 +166,6 @@ class Organizer(Contribution):
 
     class JSONAPIMeta(object):
         resource_name = 'contributions/organizers'
-
-    def save(self, *args, **kwargs):
-        if not self.contribution_date:
-            self.contribution_date = self.activity.created
-
-        super(Organizer, self).save()
 
     def __str__(self):
         if self.user:

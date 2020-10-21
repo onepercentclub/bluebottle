@@ -7,7 +7,8 @@ from django.utils.timezone import now
 from rest_framework import status
 
 from bluebottle.time_based.tests.factories import (
-    OnADateActivityFactory, WithADeadlineActivityFactory, OngoingActivityFactory
+    OnADateActivityFactory, WithADeadlineActivityFactory, OngoingActivityFactory,
+    ApplicationFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -51,9 +52,10 @@ class TimeBasedListAPIViewTestCase():
     def test_create_complete(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
 
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
         data = response.json()['data']
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(data['attributes']['status'], 'draft')
         self.assertEqual(data['attributes']['title'], self.data['data']['attributes']['title'])
         self.assertEqual(
@@ -423,5 +425,186 @@ class WithADeadlineTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase,
 
 
 class OngoingTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
+    type = 'ongoing'
+    factory = OngoingActivityFactory
+
+
+class ApplicationDetailViewTestCase():
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.activity = self.factory.create()
+
+        self.url = reverse('application-list')
+
+        self.data = {
+            'data': {
+                'type': 'contributions/time-based/applications',
+                'attributes': {},
+                'relationships': {
+                    'activity': {
+                        'data': {
+                            'type': 'activities/time-based/{}s'.format(self.type),
+                            'id': self.activity.pk
+                        }
+                    }
+                }
+            }
+        }
+
+    def test_create(self):
+        response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()['data']
+        self.assertEqual(
+            data['relationships']['user']['data']['id'],
+            str(self.user.pk)
+        )
+
+        self.assertEqual(
+            data['meta']['permissions']['GET'],
+            True
+        )
+
+        self.assertEqual(
+            data['meta']['permissions']['PUT'],
+            True
+        )
+
+        self.assertEqual(
+            data['meta']['permissions']['PATCH'],
+            True
+        )
+
+    def test_create_duplicate(self):
+        self.client.post(self.url, json.dumps(self.data), user=self.user)
+        response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()['errors'][0]['detail'],
+            'The fields activity, user must make a unique set.'
+        )
+
+    def test_create_anonymous(self):
+        response = self.client.post(self.url, json.dumps(self.data))
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class OnADateApplicationListAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
+    type = 'on-a-date'
+    factory = OnADateActivityFactory
+
+
+class WithADeadlineApplicationListAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
+    type = 'with-a-deadline'
+    factory = WithADeadlineActivityFactory
+
+
+class OngoingApplicationListAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
+    type = 'ongoing'
+    factory = OngoingActivityFactory
+
+
+class ApplicationTransitionAPIViewTestCase():
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.activity = self.factory.create()
+        self.application = ApplicationFactory.create(
+            activity=self.activity
+        )
+
+        self.url = reverse('application-transition-list')
+        self.data = {
+            'data': {
+                'type': 'contributions/time-based/application-transitions',
+                'attributes': {},
+                'relationships': {
+                    'resource': {
+                        'data': {
+                            'type': 'contributions/time-based/applications',
+                            'id': self.application.pk
+                        }
+                    }
+                }
+            }
+        }
+
+    def test_withdraw_by_user(self):
+        # Owner can delete the event
+        self.data['data']['attributes']['transition'] = 'withdraw'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.application.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data['included'][0]['type'],
+            'activities/time-based/{}'.format(self.type)
+        )
+        self.assertEqual(data['included'][1]['attributes']['status'], 'withdrawn')
+
+    def test_withdraw_by_other_user(self):
+        # Owner can delete the event
+        self.data['data']['attributes']['transition'] = 'withdraw'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_reject_by_activity_owner(self):
+        # Owner can delete the event
+        self.data['data']['attributes']['transition'] = 'reject'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.activity.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data['included'][0]['type'],
+            'activities/time-based/{}'.format(self.type)
+        )
+        self.assertEqual(data['included'][1]['attributes']['status'], 'rejected')
+
+    def test_reject_by_user(self):
+        # Owner can delete the event
+        self.data['data']['attributes']['transition'] = 'reject'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.application.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class OnADateApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
+    type = 'on-a-date'
+    factory = OnADateActivityFactory
+
+
+class WithADeadlineApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
+    type = 'with-a-deadline'
+    factory = WithADeadlineActivityFactory
+
+
+class OngoingApplicationTransitionListAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'ongoing'
     factory = OngoingActivityFactory

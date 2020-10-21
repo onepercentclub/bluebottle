@@ -32,7 +32,6 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     show_in_index = True
 
     readonly_fields = [
-        'contribution_date',
         'created',
         'activity_link',
     ]
@@ -69,7 +68,7 @@ class OrganizerAdmin(ContributionChildAdmin):
     readonly_fields = ContributionChildAdmin.readonly_fields + \
         ['status', 'created', 'transition_date']
 
-    date_hierarchy = 'contribution_date'
+    date_hierarchy = 'created'
 
     export_to_csv_fields = (
         ('status', 'Status'),
@@ -77,7 +76,6 @@ class OrganizerAdmin(ContributionChildAdmin):
         ('activity', 'Activity'),
         ('user__full_name', 'Owner'),
         ('user__email', 'Email'),
-        ('contribution_date', 'Contribution Date'),
     )
 
 
@@ -85,10 +83,9 @@ class OrganizerAdmin(ContributionChildAdmin):
 class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Contribution
     child_models = (Participant, Donation, Applicant, Organizer)
-    list_display = ['created', 'contribution_date',
-                    'owner', 'type', 'activity', 'state_name']
+    list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
-    date_hierarchy = 'contribution_date'
+    date_hierarchy = 'created'
 
     ordering = ('-created', )
 

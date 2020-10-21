@@ -44,6 +44,8 @@ class OnADateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     class Meta(TimeBasedActivityDocument):
         model = OnADateActivity
 
+    date_field = 'start'
+
     def prepare_start(self, instance):
         return instance.start
 
@@ -56,6 +58,8 @@ class OnADateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 class WithADeadlineActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     class Meta(TimeBasedActivityDocument):
         model = WithADeadlineActivity
+
+    date_field = 'deadline'
 
     def prepare_end(self, instance):
         return instance.deadline

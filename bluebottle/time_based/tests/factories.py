@@ -3,7 +3,10 @@ from datetime import timedelta
 import factory.fuzzy
 from django.utils.timezone import now
 
-from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity, OngoingActivity
+from bluebottle.time_based.models import (
+    OnADateActivity, WithADeadlineActivity, OngoingActivity,
+    Application
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
@@ -48,3 +51,11 @@ class OngoingActivityFactory(TimeBasedFactory):
 
     duration = 20
     duration_period = 'overall'
+
+
+class ApplicationFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = Application
+
+    activity = factory.SubFactory(OnADateActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)

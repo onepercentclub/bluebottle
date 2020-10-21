@@ -42,7 +42,7 @@ class ActivityStatusPermission(ResourcePermission):
         return True
 
 
-class ApplicantPermission(ResourcePermission):
+class ContributionPermission(ResourcePermission):
 
     perms_map = {
         'GET': ['%(app_label)s.api_read_%(model_name)s'],

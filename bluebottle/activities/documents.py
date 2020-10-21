@@ -91,9 +91,12 @@ class ActivityDocument(DocType):
 
     start = fields.DateField()
     end = fields.DateField()
+    date = fields.DateField()
 
     class Meta(object):
         model = Activity
+
+    date_field = None
 
     def get_queryset(self):
         return super(ActivityDocument, self).get_queryset().select_related(
@@ -142,11 +145,12 @@ class ActivityDocument(DocType):
     def prepare_position(self, instance):
         return None
 
-    def prepare_deadline(self, instance):
+    def prepare_end(self, instance):
         return None
 
     def prepare_start(self, instance):
         return None
 
-    def prepare_end(self, instance):
-        return None
+    def prepare_date(self, instance):
+        if self.date_field:
+            return getattr(instance, self.date_field)

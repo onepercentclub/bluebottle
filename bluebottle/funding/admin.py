@@ -119,7 +119,7 @@ class FundingAdminForm(StateMachineModelForm):
 
     class Meta(object):
         model = Funding
-        exclude = ('contribution_date', )
+        fields = '__all__'
         widgets = {
             'description': SummernoteWidget(attrs={'height': 400})
         }
@@ -235,13 +235,13 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     readonly_fields = ContributionChildAdmin.readonly_fields + [
         'payment_link', 'payment_link', 'payout_amount',
     ]
-    list_display = ['contribution_date', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
+    list_display = ['payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
     list_filter = [
         DonationAdminStatusFilter,
         DonationAdminCurrencyFilter,
         DonationAdminPledgeFilter,
     ]
-    date_hierarchy = 'contribution_date'
+    date_hierarchy = 'created'
 
     inlines = [DonationWallpostInline]
 
@@ -251,8 +251,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     ]
 
     fields = [
-        'contribution_date', 'created',
-        'activity', 'payout', 'user', 'payout_amount',
+        'created', 'activity', 'payout', 'user', 'payout_amount',
         'reward', 'anonymous', 'name', 'status', 'payment_link'
     ]
 
@@ -267,7 +266,6 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
         ('fundraiser', 'Fundraiser'),
         ('name', 'name'),
         ('anonymous', 'Anonymous'),
-        ('contribution_date', 'Contribution Date'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

@@ -5,9 +5,11 @@ from bluebottle.fsm.triggers import register, ModelChangedTrigger
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
 
-from bluebottle.activities.triggers import ActivityTriggers
+from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
 
-from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity, OngoingActivity
+from bluebottle.time_based.models import (
+    OnADateActivity, WithADeadlineActivity, OngoingActivity, Application
+)
 from bluebottle.time_based.messages import DateChanged
 from bluebottle.time_based.states import TimeBasedStateMachine, OnADateStateMachine
 
@@ -111,4 +113,9 @@ class WithADeadlineTriggers(TimeBasedTriggers):
 
 @register(OngoingActivity)
 class OngoingTriggers(TimeBasedTriggers):
+    pass
+
+
+@register(Application)
+class ApplicationTriggers(ContributionTriggers):
     pass

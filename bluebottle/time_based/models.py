@@ -3,7 +3,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from bluebottle.activities.models import Activity
+from bluebottle.activities.models import Activity, Contribution
+from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
 
 
@@ -137,3 +138,29 @@ class OngoingActivity(TimeBasedActivity):
         fields = super().required_fields
 
         return fields + ['duration', 'duration_period']
+
+
+class Application(Contribution):
+    motivation = models.TextField(blank=True)
+    document = PrivateDocumentField(blank=True, null=True)
+
+    class Meta(object):
+        verbose_name = _("Application")
+        verbose_name_plural = _("Application")
+        permissions = (
+            ('api_read_application', 'Can view application through the API'),
+            ('api_add_application', 'Can add application through the API'),
+            ('api_change_application', 'Can change application through the API'),
+            ('api_delete_application', 'Can delete application through the API'),
+
+            ('api_read_own_application', 'Can view own application through the API'),
+            ('api_add_own_application', 'Can add own application through the API'),
+            ('api_change_own_application', 'Can change own application through the API'),
+            ('api_delete_own_application', 'Can delete own application through the API'),
+        )
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributions/applications'
+
+    def __str__(self):
+        return self.user.full_name

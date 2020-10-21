@@ -3,7 +3,9 @@ from django.conf.urls import url
 from bluebottle.time_based.views import (
     OnADateActivityListView, WithADeadlineActivityListView, OngoingActivityListView,
     OnADateActivityDetailView, WithADeadlineActivityDetailView, OngoingActivityDetailView,
-    OnADateTransitionList, WithADeadlineTransitionList, OngoingTransitionList
+    OnADateTransitionList, WithADeadlineTransitionList, OngoingTransitionList,
+    ApplicationList, ApplicationDetail, ApplicationTransitionList,
+    ApplicationDocumentDetail
 )
 
 urlpatterns = [
@@ -44,4 +46,19 @@ urlpatterns = [
     url(r'^/ongoing/transitions$',
         OngoingTransitionList.as_view(),
         name='ongoing-transition-list'),
+
+
+    url(r'^/applications$',
+        ApplicationList.as_view(),
+        name='application-list'),
+    url(r'^/applications/(?P<pk>\d+)$',
+        ApplicationDetail.as_view(),
+        name='application-detail'),
+    url(r'^/applications/transitions$',
+        ApplicationTransitionList.as_view(),
+        name='application-transition-list'),
+
+    url(r'^/application/(?P<pk>\d+)/document$',
+        ApplicationDocumentDetail.as_view(),
+        name='application-document')
 ]

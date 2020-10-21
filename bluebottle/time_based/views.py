@@ -1,23 +1,30 @@
 from bluebottle.activities.permissions import (
-    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission
+    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
+    ContributionPermission
 )
-from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity, OngoingActivity
+from bluebottle.time_based.models import (
+    OnADateActivity, WithADeadlineActivity, OngoingActivity,
+    Application
+)
 from bluebottle.time_based.serializers import (
     OnADateActivitySerializer,
     WithADeadlineActivitySerializer,
     OngoingActivitySerializer,
     OnADateTransitionSerializer,
     WithADeadlineTransitionSerializer,
-    OngoingTransitionSerializer
+    OngoingTransitionSerializer,
+    ApplicationSerializer,
+    ApplicationTransitionSerializer
 )
 
 from bluebottle.transitions.views import TransitionList
 
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission
+    OneOf, ResourcePermission, ResourceOwnerPermission
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateAPIView, ListCreateAPIView, JsonApiViewMixin
+    RetrieveUpdateAPIView, ListCreateAPIView, JsonApiViewMixin,
+    PrivateFileView
 )
 
 
@@ -91,3 +98,61 @@ class WithADeadlineTransitionList(TransitionList):
 class OngoingTransitionList(TransitionList):
     serializer_class = OngoingTransitionSerializer
     queryset = OngoingActivity.objects.all()
+
+
+class ApplicationList(JsonApiViewMixin, ListCreateAPIView):
+    queryset = Application.objects.all()
+    serializer_class = ApplicationSerializer
+
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+
+    prefetch_for_includes = {
+        'assignment': ['assignment'],
+        'user': ['user'],
+        'document': ['document'],
+    }
+
+    def perform_create(self, serializer):
+        self.check_related_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        serializer.save(user=self.request.user)
+
+
+class ApplicationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+    queryset = Application.objects.all()
+    serializer_class = ApplicationSerializer
+
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission, ContributionPermission),
+    )
+
+    prefetch_for_includes = {
+        'activity': ['activity'],
+        'user': ['user'],
+        'document': ['document'],
+    }
+
+
+class ApplicationTransitionList(TransitionList):
+    serializer_class = ApplicationTransitionSerializer
+    queryset = Application.objects.all()
+    prefetch_for_includes = {
+        'resource': ['participant', 'participant__activity'],
+    }
+
+
+class ApplicationDocumentDetail(PrivateFileView):
+    max_age = 15 * 60  # 15 minutes
+    queryset = Application.objects
+    relation = 'document'
+    field = 'file'

@@ -18,6 +18,8 @@ class FundingDocument(ActivityDocument):
         model = Funding
         related_models = (Initiative, Member, Donation)
 
+    date_field = 'deadline'
+
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, Initiative):
             return Funding.objects.filter(initiative=related_instance)

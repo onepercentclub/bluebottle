@@ -257,6 +257,18 @@ class ApplicationSerializer(BaseContributionSerializer):
         queryset=TimeBasedActivity.objects.all()
     )
 
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+        if self.context['request'].user not in [
+            instance.user,
+            instance.activity.owner,
+            instance.activity.initiative.activity_manager
+        ]:
+            del result['motivation']
+            del result['document']
+
+        return result
+
     class Meta(BaseContributionSerializer.Meta):
         model = Application
         fields = BaseContributionSerializer.Meta.fields + (

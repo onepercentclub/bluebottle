@@ -429,7 +429,7 @@ class OngoingTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, Blueb
     factory = OngoingActivityFactory
 
 
-class ApplicationDetailViewTestCase():
+class ApplicationListViewTestCase():
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
@@ -437,6 +437,9 @@ class ApplicationDetailViewTestCase():
         self.activity = self.factory.create()
 
         self.url = reverse('application-list')
+
+        self.private_document_url = reverse('private-document-list')
+        self.png_document_path = './bluebottle/files/tests/files/test-image.png'
 
         self.data = {
             'data': {
@@ -479,6 +482,34 @@ class ApplicationDetailViewTestCase():
             True
         )
 
+    def test_create_with_document(self):
+        with open(self.png_document_path, 'rb') as test_file:
+            document_response = self.client.post(
+                self.private_document_url,
+                test_file.read(),
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="test.rtf"',
+                user=self.user
+            )
+
+            self.assertEqual(document_response.status_code, 201)
+            document_data = json.loads(document_response.content)
+
+        self.data['data']['relationships']['document'] = {
+            'data': {
+                'type': 'private-documents',
+                'id': document_data['data']['id']
+            }
+        }
+
+        response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+
+        data = response.json()['data']
+        self.assertEqual(
+            data['relationships']['document']['data']['id'],
+            document_data['data']['id']
+        )
+
     def test_create_duplicate(self):
         self.client.post(self.url, json.dumps(self.data), user=self.user)
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
@@ -495,17 +526,179 @@ class ApplicationDetailViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class OnADateApplicationListAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
+class OnADateApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
     type = 'on-a-date'
     factory = OnADateActivityFactory
 
 
-class WithADeadlineApplicationListAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
+class WithADeadlineApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
     type = 'with-a-deadline'
     factory = WithADeadlineActivityFactory
 
 
-class OngoingApplicationListAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
+class OngoingApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
+    type = 'ongoing'
+    factory = OngoingActivityFactory
+
+
+class ApplicationDetailViewTestCase():
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.user = BlueBottleUserFactory()
+        self.activity = self.factory.create()
+        self.application = ApplicationFactory(
+            activity=self.activity,
+            motivation='My motivation'
+        )
+
+        self.url = reverse('application-detail', args=(self.application.pk, ))
+
+        self.private_document_url = reverse('private-document-list')
+        self.png_document_path = './bluebottle/files/tests/files/test-image.png'
+
+        self.data = {
+            'data': {
+                'type': 'contributions/time-based/applications',
+                'id': self.application.pk,
+                'attributes': {'motivation': 'Let\'s go!!!'},
+            }
+        }
+
+    def test_get_user(self):
+        response = self.client.get(self.url, user=self.application.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+
+        self.assertEqual(
+            data['attributes']['motivation'],
+            self.application.motivation
+        )
+
+        self.assertEqual(
+            data['relationships']['user']['data']['id'],
+            str(self.application.user.pk)
+        )
+
+        self.assertEqual(
+            data['meta']['permissions']['GET'],
+            True
+        )
+
+        self.assertEqual(
+            data['meta']['permissions']['PUT'],
+            True
+        )
+
+        self.assertEqual(
+            data['meta']['permissions']['PATCH'],
+            True
+        )
+
+    def test_get_owner(self):
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+
+        self.assertEqual(
+            data['attributes']['motivation'],
+            self.application.motivation
+        )
+
+    def test_get_activity_manager(self):
+        response = self.client.get(self.url, user=self.activity.initiative.activity_manager)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+
+        self.assertEqual(
+            data['attributes']['motivation'],
+            self.application.motivation
+        )
+
+    def test_get_other_user(self):
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+
+        self.assertIsNone(
+            data['attributes']['motivation']
+        )
+
+    def test_patch_user(self):
+        response = self.client.patch(self.url, json.dumps(self.data), user=self.application.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+
+        self.assertEqual(
+            data['attributes']['motivation'],
+            self.data['data']['attributes']['motivation']
+        )
+
+    def test_patch_document(self):
+        with open(self.png_document_path, 'rb') as test_file:
+            document_response = self.client.post(
+                self.private_document_url,
+                test_file.read(),
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="test.rtf"',
+                user=self.user
+            )
+
+            self.assertEqual(document_response.status_code, 201)
+            document_data = json.loads(document_response.content)
+
+        self.data['data']['relationships'] = {
+            'document': {
+                'data': {
+                    'type': 'private-documents',
+                    'id': document_data['data']['id']
+                }
+            }
+        }
+
+        response = self.client.patch(self.url, json.dumps(self.data), user=self.application.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()['data']
+
+        self.assertEqual(
+            data['relationships']['document']['data']['id'],
+            document_data['data']['id']
+        )
+
+    def test_patch_other_user(self):
+        response = self.client.patch(self.url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch_anonymous(self):
+        response = self.client.patch(self.url, json.dumps(self.data))
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class OnADateApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
+    type = 'on-a-date'
+    factory = OnADateActivityFactory
+
+
+class WithADeadlineApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
+    type = 'with-a-deadline'
+    factory = WithADeadlineActivityFactory
+
+
+class OngoingApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
     type = 'ongoing'
     factory = OngoingActivityFactory
 

@@ -6,6 +6,9 @@ from rest_framework import status
 
 from bluebottle.assignments.tests.factories import AssignmentFactory
 from bluebottle.events.tests.factories import EventFactory
+from bluebottle.time_based.tests.factories import (
+    OnADateActivityFactory
+)
 from bluebottle.funding.tests.factories import DonationFactory, FundingFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -26,6 +29,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
         self.event = EventFactory.create(owner=self.owner)
+        self.on_a_data_activity = OnADateActivityFactory.create(owner=self.owner)
         self.assignment = AssignmentFactory.create(owner=self.owner)
 
         self.other_user = BlueBottleUserFactory.create()
@@ -134,6 +138,21 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         """
         wallpost_data = {'parent_id': str(self.event.id),
                          'parent_type': 'event',
+                         'text': 'I can share stuff!',
+                         'share_with_facebook': True}
+
+        # Non-owner users can't share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.other_token)
+        self.assertEqual(wallpost.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_permissions_on_on_a_date_wallpost_sharing(self):
+        """
+        Tests that only the event creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': str(self.on_a_data_activity.id),
+                         'parent_type': 'on-a-date',
                          'text': 'I can share stuff!',
                          'share_with_facebook': True}
 
@@ -415,6 +434,7 @@ class TestDonationWallpost(BluebottleTestCase):
     Test that a wallpost is created after making a donation and that
     the system wallposts is removed if we post a comment.
     """
+
     def setUp(self):
         super(TestDonationWallpost, self).setUp()
 
@@ -545,6 +565,7 @@ class InitiativeWallpostTest(BluebottleTestCase):
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
         self.event = EventFactory.create(owner=self.owner)
+        self.on_a_data_activity = OnADateActivityFactory.create(owner=self.owner)
 
         self.other_user = BlueBottleUserFactory.create()
         self.other_token = "JWT {0}".format(
@@ -595,12 +616,12 @@ class InitiativeWallpostTest(BluebottleTestCase):
         response = self.client.get(self.wallpost_url, params)
         self.assertEqual(response.data['count'], 2)
 
-    def test_create_event_wallpost(self):
+    def test_create_on_a_date_wallpost(self):
         """
         Tests that only the event creator can share a wallpost.
         """
-        wallpost_data = {'parent_id': self.event.id,
-                         'parent_type': 'event',
+        wallpost_data = {'parent_id': self.on_a_data_activity.id,
+                         'parent_type': 'on-a-date',
                          'text': 'I can share stuff!',
                          'share_with_twitter': True}
 

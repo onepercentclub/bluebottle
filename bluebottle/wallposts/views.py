@@ -74,7 +74,7 @@ class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
         # Some custom filtering projects slugs.
         parent_type = self.request.query_params.get('parent_type', None)
         parent_id = self.request.query_params.get('parent_id', None)
-        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
+        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding', 'time_based']
         content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
         queryset = queryset.filter(content_type=content_type)
         queryset = queryset.filter(object_id=parent_id)
@@ -102,7 +102,7 @@ class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIVi
         queryset = super(TextWallpostList, self).get_queryset()
         parent_type = self.request.query_params.get('parent_type', None)
         parent_id = self.request.query_params.get('parent_id', None)
-        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
+        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding', 'time_based']
         content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
         queryset = queryset.filter(content_type=content_type)
         queryset = queryset.filter(object_id=parent_id)

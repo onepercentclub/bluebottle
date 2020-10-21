@@ -20,7 +20,6 @@ class ApplicationListFilter(DjangoFilterBackend):
                 Q(status__in=[
                     ApplicationStateMachine.new.value,
                     ApplicationStateMachine.accepted.value,
-                    ApplicationStateMachine.active.value,
                     ApplicationStateMachine.succeeded.value
                 ])
             )
@@ -28,7 +27,6 @@ class ApplicationListFilter(DjangoFilterBackend):
             queryset = queryset.instance_of(Application).filter(status__in=[
                 ApplicationStateMachine.new.value,
                 ApplicationStateMachine.accepted.value,
-                ApplicationStateMachine.active.value,
                 ApplicationStateMachine.succeeded.value
             ])
         return super().filter_queryset(request, queryset, view)

@@ -35,12 +35,16 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'registration_deadline',
             'expertise',
             'review',
+            'contributions'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'location',
             'expertise',
+            'contributions',
+            'contributions.user',
+            'contributions.document'
         ]
 
     included_serializers = dict(
@@ -48,6 +52,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         **{
             'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'contributions': 'bluebottle.time_based.serializers.ApplicationSerializer',
         }
     )
 

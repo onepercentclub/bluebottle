@@ -6,7 +6,7 @@ from bluebottle.activities.utils import (
 )
 
 from bluebottle.fsm.serializers import TransitionSerializer
-from bluebottle.utils.serializers import NoCommitMixin
+from bluebottle.utils.serializers import NoCommitMixin, ResourcePermissionField
 from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity, OngoingActivity
 
 
@@ -41,6 +41,8 @@ class TimeBasedSerializer(NoCommitMixin, BaseActivitySerializer):
 
 
 class OnADateActivitySerializer(TimeBasedSerializer):
+    permissions = ResourcePermissionField('on-a-date-detail', view_args=('pk',))
+
     class Meta(TimeBasedSerializer.Meta):
         model = OnADateActivity
         fields = TimeBasedSerializer.Meta.fields + (
@@ -52,6 +54,8 @@ class OnADateActivitySerializer(TimeBasedSerializer):
 
 
 class WithADeadlineActivitySerializer(TimeBasedSerializer):
+    permissions = ResourcePermissionField('with-a-deadline-detail', view_args=('pk',))
+
     class Meta(TimeBasedSerializer.Meta):
         model = WithADeadlineActivity
         fields = TimeBasedSerializer.Meta.fields + (
@@ -63,6 +67,8 @@ class WithADeadlineActivitySerializer(TimeBasedSerializer):
 
 
 class OngoingActivitySerializer(TimeBasedSerializer):
+    permissions = ResourcePermissionField('ongoing-detail', view_args=('pk',))
+
     class Meta(TimeBasedSerializer.Meta):
         model = OngoingActivity
 
@@ -134,6 +140,8 @@ class TimeBasedActivityListSerializer(BaseActivityListSerializer):
 
 
 class OnADateActivityListSerializer(TimeBasedActivityListSerializer):
+    permissions = ResourcePermissionField('on-a-date-detail', view_args=('pk',))
+
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = OnADateActivity
         fields = TimeBasedActivityListSerializer.Meta.fields + (
@@ -145,6 +153,8 @@ class OnADateActivityListSerializer(TimeBasedActivityListSerializer):
 
 
 class WithADeadlineActivityListSerializer(TimeBasedActivityListSerializer):
+    permissions = ResourcePermissionField('with-a-deadline-detail', view_args=('pk',))
+
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = WithADeadlineActivity
         fields = TimeBasedActivityListSerializer.Meta.fields + (
@@ -156,6 +166,8 @@ class WithADeadlineActivityListSerializer(TimeBasedActivityListSerializer):
 
 
 class OngoingActivityListSerializer(TimeBasedActivityListSerializer):
+    permissions = ResourcePermissionField('ongoing-detail', view_args=('pk',))
+
     class Meta(TimeBasedActivityListSerializer.Meta):
         model = OngoingActivity
 

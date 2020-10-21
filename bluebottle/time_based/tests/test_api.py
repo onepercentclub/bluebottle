@@ -51,15 +51,31 @@ class TimeBasedListAPIViewTestCase():
     def test_create_complete(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
 
+        data = response.json()['data']
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['status'], 'draft')
-        self.assertEqual(response.data['title'], self.data['data']['attributes']['title'])
+        self.assertEqual(data['attributes']['status'], 'draft')
+        self.assertEqual(data['attributes']['title'], self.data['data']['attributes']['title'])
         self.assertEqual(
             {
                 transition['name'] for transition in
-                response.json()['data']['meta']['transitions']
+                data['meta']['transitions']
             },
             {'submit', 'delete'}
+        )
+        self.assertEqual(
+            data['meta']['permissions']['GET'],
+            True
+        )
+
+        self.assertEqual(
+            data['meta']['permissions']['PUT'],
+            True
+        )
+
+        self.assertEqual(
+            data['meta']['permissions']['PATCH'],
+            True
         )
 
     def test_create_duplicate_title(self):
@@ -201,8 +217,46 @@ class TimeBasedDetailAPIViewTestCase():
     def test_get_owner(self):
         response = self.client.get(self.url, user=self.activity.owner)
 
+        data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()['data']['attributes']['title'], self.activity.title)
+        self.assertEqual(data['attributes']['title'], self.activity.title)
+
+        self.assertEqual(
+            data['meta']['permissions']['GET'],
+            True
+        )
+
+        self.assertEqual(
+            data['meta']['permissions']['PUT'],
+            True
+        )
+
+        self.assertEqual(
+            data['meta']['permissions']['PATCH'],
+            True
+        )
+
+    def test_get_non_anonymous(self):
+        response = self.client.get(self.url)
+
+        data = response.json()['data']
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data['attributes']['title'], self.activity.title)
+
+        self.assertEqual(
+            data['meta']['permissions']['GET'],
+            True
+        )
+
+        self.assertEqual(
+            data['meta']['permissions']['PUT'],
+            False
+        )
+
+        self.assertEqual(
+            data['meta']['permissions']['PATCH'],
+            False
+        )
 
     def test_update_owner(self):
         response = self.client.put(self.url, json.dumps(self.data), user=self.activity.owner)

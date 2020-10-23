@@ -31,6 +31,10 @@ class TimeBasedActivity(Activity):
 
         return fields
 
+    @property
+    def accepted_applications(self):
+        return self.contributions.instance_of(Application).filter(status='accepted')
+
 
 class OnADateActivity(TimeBasedActivity):
     start = models.DateTimeField(_('end date and time'), null=True, blank=True)
@@ -64,6 +68,7 @@ class OnADateActivity(TimeBasedActivity):
 
 class DurationPeriodChoices(DjangoChoices):
     overall = ChoiceItem('overall', label=_("overall"))
+    day = ChoiceItem('day', label=_("per day"))
     week = ChoiceItem('week', label=_("per week"))
     month = ChoiceItem('month', label=_("per month"))
 

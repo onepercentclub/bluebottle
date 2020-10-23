@@ -37,7 +37,7 @@ class TimeBasedActivity(Activity):
 
 
 class OnADateActivity(TimeBasedActivity):
-    start = models.DateTimeField(_('end date and time'), null=True, blank=True)
+    start = models.DateTimeField(_('activity date'), null=True, blank=True)
 
     duration = models.FloatField(_('duration'), null=True, blank=True)
 
@@ -74,6 +74,8 @@ class DurationPeriodChoices(DjangoChoices):
 
 
 class WithADeadlineActivity(TimeBasedActivity):
+    start = models.DateField(_('Start of activity'), null=True, blank=True)
+
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
     duration = models.FloatField(_('duration'), null=True, blank=True)
@@ -111,6 +113,8 @@ class WithADeadlineActivity(TimeBasedActivity):
 
 
 class OngoingActivity(TimeBasedActivity):
+    start = models.DateField(_('Start of activity'), null=True, blank=True)
+
     duration = models.FloatField(_('duration'), null=True, blank=True)
     duration_period = models.CharField(
         _('duration period'),

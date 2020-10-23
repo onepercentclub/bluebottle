@@ -75,6 +75,7 @@ class WithADeadlineActivityAdmin(TimeBasedAdmin):
     ]
 
     detail_fields = TimeBasedAdmin.detail_fields + (
+        'start',
         'deadline',
         'duration',
         'duration_period',
@@ -97,6 +98,7 @@ class OngoingActivityAdmin(TimeBasedAdmin):
     ]
 
     detail_fields = TimeBasedAdmin.detail_fields + (
+        'start',
         'duration',
         'duration_period',
     )

@@ -32,6 +32,13 @@ class TimeBasedStateMachine(ActivityStateMachine):
         )
     )
 
+    succeed = Transition(
+        [ActivityStateMachine.open, ActivityStateMachine.cancelled, full],
+        ActivityStateMachine.succeeded,
+        name=_('Succeed'),
+        automatic=True,
+    )
+
 
 @register(OnADateActivity)
 class OnADateStateMachine(TimeBasedStateMachine):
@@ -65,7 +72,16 @@ class OnADateStateMachine(TimeBasedStateMachine):
 
 @register(WithADeadlineActivity)
 class WithADeadlineStateMachine(TimeBasedStateMachine):
-    pass
+
+    reschedule = Transition(
+        [
+            ActivityStateMachine.cancelled,
+            ActivityStateMachine.succeeded
+        ],
+        ActivityStateMachine.open,
+        name=_("Reschedule"),
+        description=_("People can join the event again, because the date has changed."),
+    )
 
 
 @register(OngoingActivity)
@@ -141,14 +157,6 @@ class ApplicationStateMachine(ContributionStateMachine):
         description=_("Application was rejected."),
         automatic=False,
         permission=can_accept_application,
-    )
-
-    reaccept = Transition(
-        rejected,
-        accepted,
-        name=_('Accept'),
-        description=_("Application was accepted."),
-        automatic=True,
     )
 
     withdraw = Transition(

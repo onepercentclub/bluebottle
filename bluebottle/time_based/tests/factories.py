@@ -33,7 +33,7 @@ class OnADateActivityFactory(TimeBasedFactory):
         model = OnADateActivity
 
     start = (now() + timedelta(weeks=4))
-    duration = 100
+    duration = 2
 
 
 class WithADeadlineActivityFactory(TimeBasedFactory):

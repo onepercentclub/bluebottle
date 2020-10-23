@@ -12,5 +12,20 @@ class DateChanged(TransitionMessage):
 
     def get_recipients(self):
         """participants that signed up"""
-        import ipdb
-        ipdb.set_trace()
+        return [
+            application.user for application in self.obj.accepted_applications
+        ]
+
+
+class DeadlineChanged(TransitionMessage):
+    subject = _('The deadline for your activity "{title}" changed')
+    template = 'messages/deadline_changed'
+    context = {
+        'title': 'title'
+    }
+
+    def get_recipients(self):
+        """participants that signed up"""
+        return [
+            application.user for application in self.obj.accepted_applications
+        ]

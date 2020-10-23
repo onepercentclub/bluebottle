@@ -1,8 +1,8 @@
 from datetime import timedelta
 from django.utils.timezone import now
 
-from bluebottle.fsm.triggers import register, ModelChangedTrigger
-from bluebottle.fsm.effects import TransitionEffect
+from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTrigger
+from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
 
 from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
@@ -10,27 +10,36 @@ from bluebottle.activities.triggers import ActivityTriggers, ContributionTrigger
 from bluebottle.time_based.models import (
     OnADateActivity, WithADeadlineActivity, OngoingActivity, Application
 )
-from bluebottle.time_based.messages import DateChanged
-from bluebottle.time_based.states import TimeBasedStateMachine, OnADateStateMachine
+from bluebottle.time_based.messages import DateChanged, DeadlineChanged
+from bluebottle.time_based.states import (
+    TimeBasedStateMachine, OnADateStateMachine, WithADeadlineStateMachine,
+    ApplicationStateMachine
+)
 
 
 def is_full(effect):
     "the activity is full"
-    return False
-    return effect.instance.capacity == len(effect.instance.applications)
+    return effect.instance.capacity == len(effect.instance.accepted_applications)
 
 
 def is_not_full(effect):
     "the activity is not full"
-    return False
-    return effect.instance.capacity > len(effect.instance.applications)
+    return effect.instance.capacity > len(effect.instance.accepted_applications)
+
+
+def has_applications(effect):
+    return len(effect.instance.accepted_applications) > 0
+
+
+def has_no_applications(effect):
+    return len(effect.instance.accepted_applications) == 0
 
 
 def is_finished(effect):
     return (
         effect.instance.start and
         effect.instance.duration and
-        effect.instance.start + timedelta(hours=effect.instance.duration) > now()
+        effect.instance.start + timedelta(hours=effect.instance.duration) < now()
     )
 
 
@@ -38,7 +47,21 @@ def is_not_finished(effect):
     return (
         effect.instance.start and
         effect.instance.duration and
-        effect.instance.start + timedelta(hours=effect.instance.duration) < now()
+        effect.instance.start + timedelta(hours=effect.instance.duration) > now()
+    )
+
+
+def deadline_is_passed(effect):
+    return (
+        effect.instance.deadline and
+        effect.instance.deadline < now()
+    )
+
+
+def deadline_is_not_passed(effect):
+    return (
+        effect.instance.deadline and
+        effect.instance.deadline > now()
     )
 
 
@@ -67,9 +90,15 @@ class TimeBasedTriggers(ActivityTriggers):
     ]
 
 
-@register(OnADateActivity)
+@ register(OnADateActivity)
 class OnADateTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
+        TransitionTrigger(
+            OnADateStateMachine.reschedule,
+            effects=[
+                TransitionEffect(TimeBasedStateMachine.lock, conditions=[is_full])
+            ]
+        ),
         ModelChangedTrigger(
             'start',
             effects=[
@@ -82,19 +111,13 @@ class OnADateTriggers(TimeBasedTriggers):
                 TransitionEffect(
                     OnADateStateMachine.succeed,
                     conditions=[
-                        is_finished
-                    ]
-                ),
-                TransitionEffect(
-                    OnADateStateMachine.start,
-                    conditions=[
-                        is_running,
+                        is_finished, has_applications
                     ]
                 ),
                 TransitionEffect(
                     OnADateStateMachine.expire,
                     conditions=[
-                        is_finished
+                        is_finished, has_no_applications
                     ]
                 ),
                 TransitionEffect(
@@ -108,16 +131,147 @@ class OnADateTriggers(TimeBasedTriggers):
     ]
 
 
-@register(WithADeadlineActivity)
+@ register(WithADeadlineActivity)
 class WithADeadlineTriggers(TimeBasedTriggers):
-    pass
+
+    triggers = TimeBasedTriggers.triggers + [
+        TransitionTrigger(
+            WithADeadlineStateMachine.reschedule,
+            effects=[
+                TransitionEffect(TimeBasedStateMachine.lock, conditions=[is_full])
+            ]
+        ),
+        ModelChangedTrigger(
+            'deadline',
+            effects=[
+                NotificationEffect(
+                    DeadlineChanged,
+                    conditions=[
+                        deadline_is_not_passed
+                    ]
+                ),
+                TransitionEffect(
+                    OnADateStateMachine.succeed,
+                    conditions=[
+                        deadline_is_passed, has_applications
+                    ]
+                ),
+                TransitionEffect(
+                    OnADateStateMachine.expire,
+                    conditions=[
+                        deadline_is_passed, has_no_applications
+                    ]
+                ),
+                TransitionEffect(
+                    WithADeadlineStateMachine.reschedule,
+                    conditions=[
+                        deadline_is_not_passed
+                    ]
+                ),
+            ]
+        )
+    ]
 
 
-@register(OngoingActivity)
+@ register(OngoingActivity)
 class OngoingTriggers(TimeBasedTriggers):
     pass
 
 
-@register(Application)
+def automatically_accept(effect):
+    return not effect.instance.activity.review
+
+
+def activity_will_be_full(effect):
+    "the activity is full"
+    activity = effect.instance.activity
+    return activity.capacity == len(activity.accepted_applications) + 1
+
+
+def activity_will_not_be_full(effect):
+    "the activity is full"
+    activity = effect.instance.activity
+    return activity.capacity == len(activity.accepted_applications)
+
+
+def activity_is_finished(effect):
+    activity = effect.instance.activity
+
+    if isinstance(activity, OnADateActivity):
+        return (
+            activity.start and
+            activity.duration and
+            activity.start + timedelta(hours=activity.duration) < now()
+        )
+    elif isinstance(activity, WithADeadlineActivity):
+        return (
+            activity.deadline and
+            activity.deadline < now()
+        )
+    else:
+        return False
+
+
+@ register(Application)
 class ApplicationTriggers(ContributionTriggers):
-    pass
+    triggers = ContributionTriggers.triggers + [
+        TransitionTrigger(
+            ApplicationStateMachine.initiate,
+            effects=[
+                TransitionEffect(
+                    ApplicationStateMachine.accept,
+                    conditions=[automatically_accept]
+                ),
+
+            ]
+        ),
+
+        TransitionTrigger(
+            ApplicationStateMachine.reapply,
+            effects=[
+                TransitionEffect(
+                    ApplicationStateMachine.accept,
+                    conditions=[automatically_accept]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            ApplicationStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.lock,
+                    conditions=[activity_will_be_full]
+                ),
+
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.succeed,
+                    conditions=[activity_is_finished]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            ApplicationStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.reopen,
+                    conditions=[activity_will_not_be_full]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            ApplicationStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.reopen,
+                    conditions=[activity_will_not_be_full]
+                )
+            ]
+        ),
+    ]

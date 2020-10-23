@@ -191,7 +191,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     delete = Transition(
-        [draft],
+        [draft, needs_work],
         deleted,
         name=_('Delete'),
         automatic=False,

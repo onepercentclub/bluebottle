@@ -1,5 +1,5 @@
 from bluebottle.fsm.triggers import TriggerManager, TransitionTrigger
-from bluebottle.fsm.effects import RelatedTransitionEffect
+from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 
 from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine
 from bluebottle.activities.effects import CreateOrganizer
@@ -12,6 +12,16 @@ def initiative_is_approved(effect):
 class ActivityTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(ActivityStateMachine.initiate, effects=[CreateOrganizer]),
+
+        TransitionTrigger(
+            ActivityStateMachine.submit,
+            effects=[
+                TransitionEffect(
+                    ActivityStateMachine.auto_approve,
+                    conditions=[initiative_is_approved]
+                )
+            ]
+        ),
 
         TransitionTrigger(
             ActivityStateMachine.reject,

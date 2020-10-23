@@ -16,12 +16,14 @@ from bluebottle.time_based.states import TimeBasedStateMachine, OnADateStateMach
 
 def is_full(effect):
     "the activity is full"
-    return effect.instance.capacity == len(effect.instance.participants)
+    return False
+    return effect.instance.capacity == len(effect.instance.applications)
 
 
 def is_not_full(effect):
     "the activity is not full"
-    return effect.instance.capacity > len(effect.instance.participants)
+    return False
+    return effect.instance.capacity > len(effect.instance.applications)
 
 
 def is_finished(effect):

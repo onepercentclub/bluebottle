@@ -32,7 +32,7 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
         )
         BudgetLineFactory.create(activity=self.funding)
         payout_account = StripePayoutAccountFactory.create(status='verified')
-        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
+        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = self.bank_account
         self.funding.save()
         self.funding.states.submit()

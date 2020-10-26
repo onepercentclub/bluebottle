@@ -78,6 +78,32 @@ models = [
         'page_id': '750911678'
     },
 
+    {
+        'title': 'States - Funding - Stripe External Account',
+        'model': 'bluebottle.funding_stripe.models.ExternalAccount',
+        'page_id': '1051688967'
+    },
+    {
+        'title': 'States - Funding - Pledge Bank Account',
+        'model': 'bluebottle.funding_pledge.models.PledgeBankAccount',
+        'page_id': '1050116137'
+    },
+    {
+        'title': 'States - Funding - Flutterwave Bank Account',
+        'model': 'bluebottle.funding_flutterwave.models.FlutterwaveBankAccount',
+        'page_id': '1050116130'
+    },
+    {
+        'title': 'States - Funding - Lipisha Bank Account',
+        'model': 'bluebottle.funding_lipisha.models.LipishaBankAccount',
+        'page_id': '1050279943'
+    },
+    {
+        'title': 'States - Funding - Vitepay Bank Account',
+        'model': 'bluebottle.funding_vitepay.models.VitepayBankAccount',
+        'page_id': '1050148912'
+    },
+
     # Events
     {
         'title': 'States - Event',

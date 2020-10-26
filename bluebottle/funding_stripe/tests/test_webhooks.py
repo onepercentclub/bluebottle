@@ -794,9 +794,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.assertTrue(
             self.funding.get_absolute_url() in message.body
         )
-
         self.funding.refresh_from_db()
-
         self.assertEqual(self.funding.status, 'submitted')
 
     def test_incomplete(self):

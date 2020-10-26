@@ -610,7 +610,7 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, Polym
 
 
 class PlainPayoutAccount(PayoutAccount):
-    document = PrivateDocumentField(blank=True, null=True)
+    document = PrivateDocumentField(blank=True, null=True, on_delete=models.deletion.SET_NULL)
 
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
 
@@ -619,8 +619,8 @@ class PlainPayoutAccount(PayoutAccount):
         return self.reviewed
 
     class Meta(object):
-        verbose_name = _('Without payment account')
-        verbose_name_plural = _('Without payment accounts')
+        verbose_name = _('Plain KYC account')
+        verbose_name_plural = _('Plain KYC accounts')
 
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/plains'
@@ -632,9 +632,12 @@ class PlainPayoutAccount(PayoutAccount):
             required.append('document')
         return required
 
+    def __str__(self):
+        return "KYC account for {}".format(self.owner.full_name)
+
 
 @python_2_unicode_compatible
-class BankAccount(PolymorphicModel):
+class BankAccount(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
@@ -644,13 +647,11 @@ class BankAccount(PolymorphicModel):
         null=True, blank=True,
         related_name='external_accounts')
 
+    status = models.CharField(max_length=40)
+
     @property
     def parent(self):
         return self.connect_account
-
-    @property
-    def verified(self):
-        return (self.connect_account and self.connect_account.verified) and self.reviewed
 
     @property
     def ready(self):

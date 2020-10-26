@@ -9,7 +9,7 @@ Project Bluebottle
    :target: https://requires.io/github/onepercentclub/bluebottle/requirements/?branch=master
 
 The repository for Project Bluebottle, the crowdsourcing framework initiated
-by the 1%Club.
+by GoodUp.
 
 Contributors
 ------------

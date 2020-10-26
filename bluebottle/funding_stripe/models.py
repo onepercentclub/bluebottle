@@ -575,6 +575,9 @@ class StripePayoutAccount(PayoutAccount):
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripes'
 
+    def __str__(self):
+        return u"Stripe connect account {}".format(self.account_id)
+
 
 @python_2_unicode_compatible
 class ExternalAccount(BankAccount):

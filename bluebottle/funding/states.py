@@ -638,7 +638,11 @@ class BankAccountStateMachine(ModelStateMachine):
         description=_("Reject bank account"),
         automatic=False,
         effects=[
-            RelatedTransitionEffect('connect_account', 'reject')
+            RelatedTransitionEffect(
+                'connect_account',
+                'reject',
+                description='Reject connected KYC account'
+            )
         ]
     )
 
@@ -650,7 +654,11 @@ class BankAccountStateMachine(ModelStateMachine):
         automatic=False,
         effects=[
             SubmitConnectedActivitiesEffect,
-            RelatedTransitionEffect('connect_account', 'verify')
+            RelatedTransitionEffect(
+                'connect_account',
+                'verify',
+                description='Verify connected KYC account'
+            )
         ]
     )
 

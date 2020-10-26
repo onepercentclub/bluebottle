@@ -2,7 +2,7 @@ import mimetypes
 
 import magic
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated
@@ -79,15 +79,17 @@ class ImageContentView(FileContentView):
         instance = self.get_object()
 
         file = getattr(instance, self.field).file
-
         thumbnail = get_thumbnail(file, self.kwargs['size'])
         content_type = mimetypes.guess_type(file.name)[0]
 
-        if settings.DEBUG:
-            response = HttpResponse(content=thumbnail.read())
-        else:
-            response = HttpResponse()
-            response['X-Accel-Redirect'] = thumbnail.url
+        try:
+            if settings.DEBUG:
+                response = HttpResponse(content=thumbnail.read())
+            else:
+                response = HttpResponse()
+                response['X-Accel-Redirect'] = thumbnail.url
+        except FileNotFoundError:
+            return HttpResponseNotFound()
 
         response['Content-Type'] = content_type
 

@@ -69,3 +69,7 @@ class ActivityTriggers(TriggerManager):
 
 class ContributionTriggers(TriggerManager):
     triggers = []
+
+
+class ContributionValueTriggers(TriggerManager):
+    triggers = []

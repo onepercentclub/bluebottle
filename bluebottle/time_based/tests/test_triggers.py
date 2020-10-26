@@ -144,10 +144,15 @@ class OnADateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottl
 
         self.activity.refresh_from_db()
 
-        ApplicationFactory.create(
+        self.accepted = ApplicationFactory.create(
             activity=self.activity,
-            status='accepted'
         )
+
+        self.rejected = ApplicationFactory.create(
+            activity=self.activity,
+        )
+        self.rejected.states.reject(save=True)
+
         self.assertEqual(self.activity.status, 'open')
 
         self.activity.start = now() - timedelta(days=1)
@@ -155,12 +160,31 @@ class OnADateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottl
 
         self.assertEqual(self.activity.status, 'succeeded')
 
+        self.assertEqual(
+            self.rejected.contribution_values.get().status, 'failed'
+        )
+
+        self.assertEqual(
+            self.accepted.contribution_values.get().status, 'succeeded'
+        )
+
+    def test_change_start_back_again(self):
+        self.test_change_start_with_contributions()
+
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
         self.activity.start = now() + timedelta(days=1)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'open')
+
+        self.assertEqual(
+            self.rejected.contribution_values.get().status, 'failed'
+        )
+
+        self.assertEqual(
+            self.accepted.contribution_values.get().status, 'new'
+        )
 
     def test_change_start_full(self):
         self.initiative.states.submit(save=True)
@@ -393,45 +417,52 @@ class ApplicationTriggerTestCase():
         self.assertEqual(self.review_activity.status, 'full')
 
     def test_reject(self):
-        applications = ApplicationFactory.create_batch(
+        self.applications = ApplicationFactory.create_batch(
             self.activity.capacity, activity=self.activity
         )
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'full')
-        applications[0].states.reject(save=True)
+        self.applications[0].states.reject(save=True)
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'open')
 
-        applications[0].states.accept(save=True)
+    def test_reaccept(self):
+        self.test_reject()
+
+        self.applications[0].states.accept(save=True)
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'full')
 
     def test_withdraw(self):
-        applications = ApplicationFactory.create_batch(
+        self.applications = ApplicationFactory.create_batch(
             self.activity.capacity, activity=self.activity
         )
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'full')
 
-        applications[0].states.withdraw(save=True)
+        self.applications[0].states.withdraw(save=True)
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'open')
 
-        applications[0].states.reapply(save=True)
+    def test_reapply(self):
+        self.test_withdraw()
+
+        self.applications[0].states.reapply(save=True)
 
         self.activity.refresh_from_db()
+
         self.assertEqual(self.activity.status, 'full')
 
 
 class OnADateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTestCase):
     factory = OnADateActivityFactory
 
-    def test_no_review_succeed(self):
+    def test_no_review_succeed_after_cancel(self):
         self.activity.start = now() - timedelta(days=1)
         self.activity.save()
 
@@ -442,6 +473,54 @@ class OnADateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTe
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'succeeded')
+
+    def test_initial_no_review(self):
+        super().test_initial_no_review()
+
+        self.assertEqual(
+            self.activity.accepted_applications.get().contribution_values.get().status,
+            'new'
+        )
+
+    def test_initial_review(self):
+        super().test_initial_review()
+
+        self.assertEqual(
+            self.review_activity.applications.get().contribution_values.get().status,
+            'new'
+        )
+
+    def test_withdraw(self):
+        super().test_withdraw()
+
+        self.assertEqual(
+            self.applications[0].contribution_values.get().status,
+            'failed'
+        )
+
+    def test_reapply(self):
+        super().test_reapply()
+
+        self.assertEqual(
+            self.applications[0].contribution_values.get().status,
+            'new'
+        )
+
+    def test_reject(self):
+        super().test_reject()
+
+        self.assertEqual(
+            self.applications[0].contribution_values.get().status,
+            'failed'
+        )
+
+    def test_reaccept(self):
+        super().test_reaccept()
+
+        self.assertEqual(
+            self.applications[0].contribution_values.get().status,
+            'new'
+        )
 
 
 class WithADeadlineApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTestCase):

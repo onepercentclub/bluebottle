@@ -245,6 +245,54 @@ class ContributionStateMachine(ModelStateMachine):
     )
 
 
+class ContributionValueStateMachine(ModelStateMachine):
+    new = State(
+        _('new'),
+        'new',
+        _("The user started a contribution")
+    )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _("The contribution was successful.")
+    )
+    failed = State(
+        _('failed'),
+        'failed',
+        _("The contribution failed.")
+    )
+
+    def is_user(self, user):
+        return self.instance.user == user
+
+    initiate = Transition(
+        EmptyState(),
+        new,
+        name=_('initiate'),
+        description=_('The contribution was created.')
+    )
+    fail = Transition(
+        (new, succeeded, ),
+        failed,
+        name=_('fail'),
+        description=_("The contribution failed. It will not be visible in reports."),
+    )
+
+    succeed = Transition(
+        new,
+        succeeded,
+        name=_('succeeded'),
+        description=_("The contribution succeeded. It will be visible in reports."),
+    )
+
+    reset = Transition(
+        [failed, succeeded],
+        new,
+        name=_('reset'),
+        description=_("The contribution is reset."),
+    )
+
+
 @register(Organizer)
 class OrganizerStateMachine(ContributionStateMachine):
     succeed = Transition(

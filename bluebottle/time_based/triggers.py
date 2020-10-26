@@ -5,15 +5,18 @@ from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTri
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
 
-from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
+from bluebottle.activities.triggers import (
+    ActivityTriggers, ContributionTriggers, ContributionValueTriggers
+)
 
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity, Application
+    OnADateActivity, WithADeadlineActivity, OngoingActivity, Application, ContributionDuration
 )
+from bluebottle.time_based.effects import CreateOveralDurationEffect
 from bluebottle.time_based.messages import DateChanged, DeadlineChanged
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, OnADateStateMachine, WithADeadlineStateMachine,
-    ApplicationStateMachine
+    ApplicationStateMachine, ContributionDurationStateMachine
 )
 
 
@@ -121,7 +124,7 @@ class TimeBasedTriggers(ActivityTriggers):
     ]
 
 
-@ register(OnADateActivity)
+@register(OnADateActivity)
 class OnADateTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
         TransitionTrigger(
@@ -130,6 +133,27 @@ class OnADateTriggers(TimeBasedTriggers):
                 TransitionEffect(TimeBasedStateMachine.lock, conditions=[is_full]),
             ]
         ),
+
+        TransitionTrigger(
+            OnADateStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    'accepted_application_durations',
+                    ContributionDurationStateMachine.succeed
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            OnADateStateMachine.reschedule,
+            effects=[
+                RelatedTransitionEffect(
+                    'accepted_application_durations',
+                    ContributionDurationStateMachine.reset
+                )
+            ]
+        ),
+
         ModelChangedTrigger(
             'start',
             effects=[
@@ -277,6 +301,7 @@ class ApplicationTriggers(ContributionTriggers):
         TransitionTrigger(
             ApplicationStateMachine.initiate,
             effects=[
+                CreateOveralDurationEffect,
                 TransitionEffect(
                     ApplicationStateMachine.accept,
                     conditions=[automatically_accept]
@@ -291,6 +316,11 @@ class ApplicationTriggers(ContributionTriggers):
                 TransitionEffect(
                     ApplicationStateMachine.accept,
                     conditions=[automatically_accept]
+                ),
+
+                RelatedTransitionEffect(
+                    'contribution_values',
+                    ContributionDurationStateMachine.reset,
                 )
             ]
         ),
@@ -308,6 +338,11 @@ class ApplicationTriggers(ContributionTriggers):
                     'activity',
                     TimeBasedStateMachine.succeed,
                     conditions=[activity_is_finished]
+                ),
+
+                RelatedTransitionEffect(
+                    'contribution_values',
+                    ContributionDurationStateMachine.reset,
                 )
             ]
         ),
@@ -319,6 +354,11 @@ class ApplicationTriggers(ContributionTriggers):
                     'activity',
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
+                ),
+
+                RelatedTransitionEffect(
+                    'contribution_values',
+                    ContributionDurationStateMachine.fail,
                 )
             ]
         ),
@@ -330,7 +370,21 @@ class ApplicationTriggers(ContributionTriggers):
                     'activity',
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
+                ),
+
+                RelatedTransitionEffect(
+                    'contribution_values',
+                    ContributionDurationStateMachine.fail,
                 )
             ]
         ),
     ]
+
+
+def is_overall(effect):
+    return effect.instance.duration_period == 'overall'
+
+
+@ register(ContributionDuration)
+class ContributionDurationTriggers(ContributionValueTriggers):
+    pass

@@ -174,6 +174,25 @@ class Organizer(Contribution):
             return _('Activity owner')
 
 
+class ContributionValue(TriggerMixin, PolymorphicModel):
+    status = models.CharField(max_length=40)
+
+    created = models.DateTimeField(default=timezone.now)
+    contribution = models.ForeignKey(
+        Contribution, related_name='contribution_values', on_delete=NON_POLYMORPHIC_CASCADE
+    )
+
+    @property
+    def owner(self):
+        return self.contribution.user
+
+    class Meta(object):
+        ordering = ('-created',)
+
+    def __str__(self):
+        return str(_('Contribution value'))
+
+
 from bluebottle.activities.signals import *  # noqa
 from bluebottle.activities.wallposts import *  # noqa
 from bluebottle.activities.states import *  # noqa

@@ -1,8 +1,10 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
+from bluebottle.activities.states import (
+    ActivityStateMachine, ContributionStateMachine, ContributionValueStateMachine
+)
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity, Application
+    OnADateActivity, WithADeadlineActivity, OngoingActivity, Application, ContributionDuration
 )
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 
@@ -194,3 +196,8 @@ class ApplicationStateMachine(ContributionStateMachine):
         automatic=False,
         permission=can_accept_application,
     )
+
+
+@register(ContributionDuration)
+class ContributionDurationStateMachine(ContributionValueStateMachine):
+    pass

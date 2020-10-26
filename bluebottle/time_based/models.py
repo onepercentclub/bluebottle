@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from bluebottle.activities.models import Activity, Contribution
+from bluebottle.activities.models import Activity, Contribution, ContributionValue
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
 
@@ -32,14 +32,27 @@ class TimeBasedActivity(Activity):
         return fields
 
     @property
+    def applications(self):
+        return self.contributions.instance_of(Application)
+
+    @property
     def accepted_applications(self):
-        return self.contributions.instance_of(Application).filter(status='accepted')
+        return self.applications.filter(status='accepted')
+
+    @property
+    def accepted_application_durations(self):
+        return ContributionDuration.objects.filter(
+            contribution__activity=self,
+            contribution__status='accepted'
+        )
 
 
 class OnADateActivity(TimeBasedActivity):
     start = models.DateTimeField(_('activity date'), null=True, blank=True)
 
     duration = models.FloatField(_('duration'), null=True, blank=True)
+
+    duration_period = 'overall'
 
     class Meta:
         verbose_name = _("On a date activity")
@@ -74,7 +87,7 @@ class DurationPeriodChoices(DjangoChoices):
 
 
 class WithADeadlineActivity(TimeBasedActivity):
-    start = models.DateField(_('Start of activity'), null=True, blank=True)
+    start = models.DateField(_('start'), null=True, blank=True)
 
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
@@ -173,3 +186,14 @@ class Application(Contribution):
 
     def __str__(self):
         return self.user.full_name
+
+
+class ContributionDuration(ContributionValue):
+    duration = models.FloatField(_('duration'), null=True, blank=True)
+    duration_period = models.CharField(
+        _('duration period'),
+        max_length=20,
+        blank=True,
+        null=True,
+        choices=DurationPeriodChoices.choices,
+    )

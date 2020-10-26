@@ -44,6 +44,8 @@ class WithADeadlineActivityFactory(TimeBasedFactory):
     duration = 20
     duration_period = 'overall'
 
+    start = (now() + timedelta(weeks=4)).date()
+
 
 class OngoingActivityFactory(TimeBasedFactory):
     class Meta:
@@ -51,6 +53,8 @@ class OngoingActivityFactory(TimeBasedFactory):
 
     duration = 20
     duration_period = 'overall'
+
+    start = (now() + timedelta(weeks=4)).date()
 
 
 class ApplicationFactory(factory.DjangoModelFactory):

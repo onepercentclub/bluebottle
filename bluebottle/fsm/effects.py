@@ -142,7 +142,10 @@ class BaseRelatedTransitionEffect(Effect):
 
     def pre_save(self, effects):
         for instance in self.instances:
-            effect = self.transition_effect_class(instance)
+
+            effect = self.transition_effect_class(
+                instance, parent=self.instance, **self.options
+            )
 
             if effect not in effects and effect.is_valid and self.transition in effect.machine.transitions.values():
                 self.executed = True

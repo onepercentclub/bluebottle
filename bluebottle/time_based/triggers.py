@@ -19,7 +19,7 @@ from bluebottle.time_based.states import (
 
 def is_full(effect):
     "the activity is full"
-    return effect.instance.capacity == len(effect.instance.accepted_applications)
+    return effect.instance.capacity <= len(effect.instance.accepted_applications)
 
 
 def is_not_full(effect):
@@ -51,6 +51,20 @@ def is_not_finished(effect):
     )
 
 
+def registration_deadline_is_passed(effect):
+    return (
+        effect.instance.registration_deadline and
+        effect.instance.registration_deadline < now().date()
+    )
+
+
+def registration_deadline_is_not_passed(effect):
+    return (
+        effect.instance.registration_deadline and
+        effect.instance.registration_deadline > now().date()
+    )
+
+
 def deadline_is_passed(effect):
     return (
         effect.instance.deadline and
@@ -65,12 +79,17 @@ def deadline_is_not_passed(effect):
     )
 
 
-def is_running(effect):
+def is_started(effect):
     return (
         effect.instance.start and
-        effect.instance.duration and
-        effect.instance.start > now() and
-        effect.instance.start + timedelta(hours=effect.instance.duration) < now()
+        effect.instance.start < now().date()
+    )
+
+
+def is_not_started(effect):
+    return (
+        effect.instance.start and
+        effect.instance.start > now().date()
     )
 
 
@@ -87,6 +106,18 @@ class TimeBasedTriggers(ActivityTriggers):
                 ]),
             ]
         ),
+
+        ModelChangedTrigger(
+            'registration_deadline',
+            effects=[
+                TransitionEffect(TimeBasedStateMachine.lock, conditions=[
+                    registration_deadline_is_passed
+                ]),
+                TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
+                    registration_deadline_is_not_passed
+                ]),
+            ]
+        ),
     ]
 
 
@@ -96,7 +127,7 @@ class OnADateTriggers(TimeBasedTriggers):
         TransitionTrigger(
             OnADateStateMachine.reschedule,
             effects=[
-                TransitionEffect(TimeBasedStateMachine.lock, conditions=[is_full])
+                TransitionEffect(TimeBasedStateMachine.lock, conditions=[is_full]),
             ]
         ),
         ModelChangedTrigger(
@@ -138,7 +169,35 @@ class WithADeadlineTriggers(TimeBasedTriggers):
         TransitionTrigger(
             WithADeadlineStateMachine.reschedule,
             effects=[
-                TransitionEffect(TimeBasedStateMachine.lock, conditions=[is_full])
+                TransitionEffect(TimeBasedStateMachine.lock, conditions=[is_full]),
+                TransitionEffect(
+                    TimeBasedStateMachine.lock, conditions=[registration_deadline_is_passed]
+                )
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'start',
+            effects=[
+                TransitionEffect(
+                    OnADateStateMachine.start,
+                    conditions=[is_started]
+                ),
+
+                TransitionEffect(
+                    OnADateStateMachine.reopen,
+                    conditions=[is_not_started, is_not_full]
+                ),
+
+                TransitionEffect(
+                    OnADateStateMachine.lock,
+                    conditions=[is_not_started, is_full]
+                ),
+
+                TransitionEffect(
+                    TimeBasedStateMachine.lock,
+                    conditions=[is_not_started, registration_deadline_is_passed]
+                )
             ]
         ),
         ModelChangedTrigger(
@@ -191,7 +250,7 @@ def activity_will_be_full(effect):
 def activity_will_not_be_full(effect):
     "the activity is full"
     activity = effect.instance.activity
-    return activity.capacity == len(activity.accepted_applications)
+    return activity.capacity >= len(activity.accepted_applications)
 
 
 def activity_is_finished(effect):

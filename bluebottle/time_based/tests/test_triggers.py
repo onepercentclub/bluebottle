@@ -97,6 +97,23 @@ class TimeBasedActivityTriggerTestCase():
 
         self.assertEqual(self.activity.status, 'open')
 
+    def change_registration_deadline(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.activity.registration_deadline = (now() - timedelta(days=1)).date()
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'full')
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.registration_deadline = (now() + timedelta(days=1)).date()
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'open')
+
 
 class OnADateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
     factory = OnADateActivityFactory
@@ -247,6 +264,76 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
 
         self.assertEqual(self.activity.status, 'full')
 
+    def test_change_start(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.activity.start = (now() - timedelta(days=1)).date()
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'running')
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+
+        self.activity.start = (now() + timedelta(days=2)).date()
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'open')
+
+    def test_change_start_after_registration_deadline(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.activity.registration_deadline = (now() - timedelta(days=4)).date()
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'full')
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.start = (now() - timedelta(days=1)).date()
+
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'running')
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+
+        self.activity.start = (now() + timedelta(days=2)).date()
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'full')
+
+    def test_change_start_after_full(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        ApplicationFactory.create_batch(
+            self.activity.capacity,
+            activity=self.activity,
+        )
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
+
+        self.activity.start = (now() - timedelta(days=1)).date()
+
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'running')
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+
+        self.activity.start = (now() + timedelta(days=2)).date()
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'full')
+
 
 class OngoingActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
     factory = OngoingActivityFactory
@@ -329,6 +416,7 @@ class ApplicationTriggerTestCase():
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'full')
+
         applications[0].states.withdraw(save=True)
 
         self.activity.refresh_from_db()

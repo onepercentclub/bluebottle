@@ -9,11 +9,13 @@ from bluebottle.fsm.state import register, State, Transition, EmptyState
 
 class TimeBasedStateMachine(ActivityStateMachine):
     full = State(_('full'), 'full', _('The event is full, users can no longer apply.'))
+    running = State(_('running'), 'running', _('The event is running, users can no longer apply.'))
 
     lock = Transition(
         [
             ActivityStateMachine.open,
-            ActivityStateMachine.succeeded
+            ActivityStateMachine.succeeded,
+            running
         ],
         full,
         name=_("Lock"),
@@ -23,7 +25,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
     )
 
     reopen = Transition(
-        full,
+        [running, full],
         ActivityStateMachine.open,
         name=_("Reopen"),
         description=_(
@@ -33,34 +35,28 @@ class TimeBasedStateMachine(ActivityStateMachine):
     )
 
     succeed = Transition(
-        [ActivityStateMachine.open, ActivityStateMachine.cancelled, full],
+        [ActivityStateMachine.open, ActivityStateMachine.cancelled, full, running],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
     )
 
-
-@register(OnADateActivity)
-class OnADateStateMachine(TimeBasedStateMachine):
-    running = State(
-        _('running'),
-        'running',
-        _('The event is taking place and people can\'t join any more.')
-    )
-
     start = Transition(
         [
             ActivityStateMachine.open,
-            TimeBasedStateMachine.full
+            full
         ],
         running,
         name=_("Start"),
         description=_("Start the event.")
     )
 
+
+@register(OnADateActivity)
+class OnADateStateMachine(TimeBasedStateMachine):
     reschedule = Transition(
         [
-            running,
+            TimeBasedStateMachine.running,
             ActivityStateMachine.cancelled,
             ActivityStateMachine.succeeded
         ],

@@ -79,16 +79,15 @@ class ImageContentView(FileContentView):
         instance = self.get_object()
 
         file = getattr(instance, self.field).file
-        thumbnail = get_thumbnail(file, self.kwargs['size'])
-        content_type = mimetypes.guess_type(file.name)[0]
-
         try:
+            thumbnail = get_thumbnail(file, self.kwargs['size'])
+            content_type = mimetypes.guess_type(file.name)[0]
             if settings.DEBUG:
                 response = HttpResponse(content=thumbnail.read())
             else:
                 response = HttpResponse()
                 response['X-Accel-Redirect'] = thumbnail.url
-        except FileNotFoundError:
+        except IOError:
             return HttpResponseNotFound()
 
         response['Content-Type'] = content_type

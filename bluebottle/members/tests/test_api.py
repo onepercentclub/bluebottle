@@ -108,7 +108,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
         member = Member.objects.get(email=email)
         self.assertTrue('{}:'.format(member.pk) in mail.outbox[0].body)
-        self.assertEqual('Your activation link for Test', mail.outbox[0].subject)
+        self.assertEqual('Activate your account for Test', mail.outbox[0].subject)
         self.assertFalse(member.is_active)
 
     def test_create_twice(self):

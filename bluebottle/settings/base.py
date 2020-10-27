@@ -288,7 +288,6 @@ SHARED_APPS = (
     'multiselectfield',
 
     'djmoney.contrib.exchange',
-    'django_clamd',
 )
 
 TENANT_APPS = (

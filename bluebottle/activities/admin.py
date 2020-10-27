@@ -13,6 +13,7 @@ from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
 from bluebottle.activities.models import Activity, Contribution, Organizer
 from bluebottle.assignments.models import Assignment, Applicant
+from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity, OngoingActivity
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
@@ -371,8 +372,30 @@ class ActivityAdminInline(StackedPolymorphicInline):
         fields = readonly_fields
         model = Assignment
 
+    class OnADateInline(ActivityInlineChild):
+        readonly_fields = ['activity_link',
+                           'link', 'start', 'duration', 'state_name']
+
+        fields = readonly_fields
+        model = OnADateActivity
+
+    class WithADeadlineInline(ActivityInlineChild):
+        readonly_fields = ['activity_link',
+                           'link', 'start', 'deadline', 'state_name']
+        fields = readonly_fields
+        model = WithADeadlineActivity
+
+    class OngoingInline(ActivityInlineChild):
+        readonly_fields = ['activity_link',
+                           'link', 'start', 'deadline', 'state_name']
+        fields = readonly_fields
+        model = OngoingActivity
+
     child_inlines = (
         EventInline,
         FundingInline,
-        AssignmentInline
+        AssignmentInline,
+        WithADeadlineInline,
+        OnADateInline,
+        OngoingInline
     )

@@ -145,7 +145,7 @@ class Event(Activity):
         )
 
         if self.is_online and self.online_meeting_url:
-            details += _('\nJoin: {url}').format({'url': self.online_meeting_url})
+            details += _('\nJoin: {url}').format(url=self.online_meeting_url)
 
         return details
 

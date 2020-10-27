@@ -387,7 +387,7 @@ class ActivityAdminInline(StackedPolymorphicInline):
 
     class OngoingInline(ActivityInlineChild):
         readonly_fields = ['activity_link',
-                           'link', 'start', 'deadline', 'state_name']
+                           'link', 'start', 'state_name']
         fields = readonly_fields
         model = OngoingActivity
 

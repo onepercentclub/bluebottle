@@ -33,9 +33,3 @@ class Follow(models.Model):
     def save(self, *args, **kwargs):
         if self.validate_unique():
             super(Follow, self).save(*args, **kwargs)
-
-
-def _create_follow_object(followed_object, user):
-    content_type = ContentType.objects.get_for_model(followed_object)
-    if not Follow.objects.filter(user=user, object_id=followed_object.id, content_type=content_type).count():
-        Follow.objects.create(user=user, object_id=followed_object.id, content_type=content_type)

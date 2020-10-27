@@ -14,7 +14,6 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.template import defaultfilters
 from django.template.defaultfilters import linebreaks
-from django.utils.encoding import smart_str
 from django.utils.html import strip_tags, urlize
 
 from micawber.contrib.mcdjango import providers
@@ -150,78 +149,6 @@ class OEmbedField(serializers.Field):
             return html
 
 
-class PrimaryKeyGenericRelatedField(serializers.RelatedField):
-    """ A field serializer for the object_id field in a GenericForeignKey. """
-
-    read_only = False
-
-    def __init__(self, to_model, *args, **kwargs):
-        self.to_model = to_model
-        queryset = self.to_model.objects.order_by('id').all()
-        super(PrimaryKeyGenericRelatedField, self).__init__(queryset=queryset)
-
-    def label_from_instance(self, obj):
-        return "{0} - {1}".format(smart_str(self.to_model.__str__(obj)),
-                                  str(obj.id))
-
-    def prepare_value(self, obj):
-        # Called when preparing the ChoiceField widget from the to_model queryset.
-        return obj.serializable_value('id')
-
-    def to_representation(self, obj):
-        # Serialize using self.source (i.e. 'object_id').
-        return obj.serializable_value(self.source)
-
-    def to_internal_value(self, value):
-        try:
-            to_instance = self.to_model.objects.get(pk=value)
-        except self.to_model.DoesNotExist:
-            raise ValidationError(self.error_messages['invalid'])
-        else:
-            return to_instance.id
-
-
-class SlugGenericRelatedField(serializers.RelatedField):
-    """
-    A field serializer for the object_id field in a GenericForeignKey
-    based on the related model slug.
-    """
-
-    read_only = False
-
-    def __init__(self, to_model, *args, **kwargs):
-        self.to_model = to_model
-        queryset = self.to_model.objects.order_by('id').all()
-        super(SlugGenericRelatedField, self).__init__(*args, source='object_id',
-                                                      queryset=queryset,
-                                                      **kwargs)
-
-    def label_from_instance(self, obj):
-        return "{0} - {1}".format(smart_str(self.to_model.__str__(obj)),
-                                  obj.slug)
-
-    def prepare_value(self, to_instance):
-        # Called when preparing the ChoiceField widget from the to_model queryset.
-        return to_instance.serializable_value('slug')
-
-    def to_representation(self, obj):
-        # Serialize using self.source (i.e. 'object_id').
-        try:
-            to_instance = self.to_model.objects.get(
-                id=getattr(obj, self.source))
-        except self.to_model.DoesNotExist:
-            return None
-        return to_instance.serializable_value('slug')
-
-    def to_internal_value(self, value):
-        try:
-            to_instance = self.to_model.objects.get(slug=value)
-        except self.to_model.DoesNotExist:
-            raise ValidationError(self.error_messages['invalid'])
-        else:
-            return to_instance.id
-
-
 class FileSerializer(serializers.FileField):
     def to_representation(self, value):
         if value:
@@ -287,9 +214,8 @@ class PhotoSerializer(RestrictedImageField):
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
         try:
-            full = settings.MEDIA_URL + str(get_thumbnail(value, '800x600'))
-            small = settings.MEDIA_URL + str(
-                get_thumbnail(value, '120x120', crop=self.crop))
+            full = settings.MEDIA_URL + get_thumbnail(value, '800x600').name
+            small = settings.MEDIA_URL + get_thumbnail(value, '120x120', crop=self.crop).name
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
                 raise

@@ -398,8 +398,6 @@ TENANT_APPS = (
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
     'bluebottle.bb_projects',
-    'bluebottle.bb_fundraisers',
-    'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
 

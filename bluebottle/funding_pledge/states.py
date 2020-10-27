@@ -1,8 +1,8 @@
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.state import Transition
-from bluebottle.funding.states import BasePaymentStateMachine
-from bluebottle.funding_pledge.models import PledgePayment
+from bluebottle.funding.states import BasePaymentStateMachine, BankAccountStateMachine
+from bluebottle.funding_pledge.models import PledgePayment, PledgeBankAccount
 
 
 class PledgePaymentStateMachine(BasePaymentStateMachine):
@@ -15,3 +15,7 @@ class PledgePaymentStateMachine(BasePaymentStateMachine):
         name=_('Request refund'),
         automatic=False
     )
+
+
+class PledgeBankAccountStateMachine(BankAccountStateMachine):
+    model = PledgeBankAccount

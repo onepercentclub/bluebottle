@@ -156,11 +156,10 @@ class SubmitConnectedActivitiesEffect(Effect):
     template = 'admin/submit_connected_activities_effect.html'
 
     def execute(self, **kwargs):
-        for external_account in self.instance.external_accounts.all():
-            for funding in external_account.funding_set.filter(
-                    status__in=('draft', 'needs_work')
-            ):
-                funding.states.submit(save=True)
+        for funding in self.instance.funding_set.filter(
+                status__in=('draft', 'needs_work')
+        ):
+            funding.states.submit(save=True)
 
     def __str__(self):
         return _('Submit connected activities')

@@ -1,5 +1,5 @@
-from bluebottle.funding.states import BasePaymentStateMachine
-from bluebottle.funding_telesom.models import TelesomPayment
+from bluebottle.funding.states import BasePaymentStateMachine, BankAccountStateMachine
+from bluebottle.funding_telesom.models import TelesomPayment, TelesomBankAccount
 
 
 class TelesomPaymentStateMachine(BasePaymentStateMachine):
@@ -7,3 +7,7 @@ class TelesomPaymentStateMachine(BasePaymentStateMachine):
 
     request_refund = None
     refund_requested = None
+
+
+class TelesomBankAccountStateMachine(BankAccountStateMachine):
+    model = TelesomBankAccount

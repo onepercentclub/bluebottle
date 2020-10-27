@@ -339,7 +339,7 @@ class FundingStatisticsTest(StatisticsTest):
     def setUp(self):
         super(FundingStatisticsTest, self).setUp()
         payout_account = PlainPayoutAccountFactory.create()
-        bank_account = BankAccountFactory.create(connect_account=payout_account)
+        bank_account = BankAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding = FundingFactory.create(
             owner=self.some_user,
             bank_account=bank_account,

@@ -20,6 +20,7 @@ from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFactory
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
@@ -429,7 +430,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
 
     def test_get_activities(self):
-        event = EventFactory.create(initiative=self.initiative)
+        event = EventFactory.create(initiative=self.initiative, image=ImageFactory.create())
         response = self.client.get(
             self.url,
             user=self.owner
@@ -451,6 +452,15 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertTrue(
             activity_location in (
                 {'type': included['type'], 'id': included['id']} for included in response.json()['included']
+            )
+        )
+
+        activity_image = activity_data['relationships']['image']['data']
+
+        self.assertTrue(
+            activity_image in (
+                {'type': included['type'], 'id': included['id']} for included in
+                response.json()['included']
             )
         )
 

@@ -24,8 +24,8 @@ TOKEN_AUTH_SETTINGS = {
     'backend': 'token_auth.auth.booking.TokenAuthentication',
     'sso_url': 'https://example.org',
     'token_expiration': 600,
-    'hmac_key': b'bbbbbbbbbbbbbbbb',
-    'aes_key': b'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    'hmac_key': 'bbbbbbbbbbbbbbbb',
+    'aes_key': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 }
 
 
@@ -57,8 +57,8 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
             )
 
             # Get the new security keys to use it around in the tests.
-            self.hmac_key = self.auth_backend.settings['hmac_key']
-            self.aes_key = self.auth_backend.settings['aes_key']
+            self.hmac_key = self.auth_backend.settings['hmac_key'].encode('utf-8')
+            self.aes_key = self.auth_backend.settings['aes_key'].encode('utf-8')
 
     def _encode_message(self, message):
         """

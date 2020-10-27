@@ -1,17 +1,21 @@
 import json
+import logging
 
 from django.http import HttpResponse, HttpResponseNotFound
 from django.views.generic import View
 from rest_framework_json_api.views import AutoPrefetchMixin
 
+from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donation
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwaveBankAccount
 from bluebottle.funding_flutterwave.serializers import FlutterwavePaymentSerializer, FlutterwaveBankAccountSerializer
 from bluebottle.funding_flutterwave.utils import check_payment_status
-from bluebottle.funding.exception import PaymentException
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import ListCreateAPIView, JsonApiViewMixin, RetrieveUpdateAPIView
+
+
+logger = logging.getLogger(__name__)
 
 
 class FlutterwavePaymentList(PaymentList):
@@ -26,6 +30,7 @@ class FlutterwavePaymentList(PaymentList):
 class FlutterwaveWebhookView(View):
 
     def post(self, request, **kwargs):
+        logger.debug('Flutterwave webhook: {}'.format(request.body))
         try:
             data = json.loads(request.body.decode())
         except ValueError:

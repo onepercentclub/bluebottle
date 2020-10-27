@@ -47,6 +47,7 @@ class EventListAPITestCase(BluebottleTestCase):
                     'start': str(start),
                     'duration': 4,
                     'is_online': True,
+                    'online_meeting_url': 'https://example.com',
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
                     'description': 'We will clean up the beach south of Katwijk'
@@ -65,6 +66,7 @@ class EventListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], 'draft')
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
+        self.assertEqual(response.data['online_meeting_url'], 'https://example.com')
         self.assertEqual(
             {
                 transition['name'] for transition in
@@ -258,7 +260,7 @@ class EventListAPITestCase(BluebottleTestCase):
 
 class EventIcalTestCase(BluebottleTestCase):
     def test_get(self):
-        event = EventFactory.create(title='Pollute Katwijk Beach')
+        event = EventFactory.create(title='Pollute Katwijk Beach', is_online=True)
 
         event_url = reverse('event-detail', args=(event.pk,))
         response = self.client.get(event_url)
@@ -285,7 +287,11 @@ class EventIcalTestCase(BluebottleTestCase):
             self.assertEqual(str(ical_event['summary']), event.title)
             self.assertEqual(
                 str(ical_event['description']),
-                '{}\n{}'.format(event.description, event.get_absolute_url())
+                '{}\n{}\nJoin: {}'.format(
+                    event.description,
+                    event.get_absolute_url(),
+                    event.online_meeting_url
+                )
             )
             self.assertEqual(str(ical_event['url']), event.get_absolute_url())
             self.assertEqual(str(ical_event['organizer']), 'MAILTO:{}'.format(event.owner.email))
@@ -321,6 +327,7 @@ class EventDetailTestCase(BluebottleTestCase):
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
                     'start': str(now() + timedelta(days=21)),
+                    'online_meeting_url': 'https://example.com',
                     'duration': 4,
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
@@ -341,6 +348,29 @@ class EventDetailTestCase(BluebottleTestCase):
         response = self.client.get(self.url, user=self.event.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['data']['attributes']['title'], self.event.title)
+        self.assertEqual(
+            self.event.online_meeting_url,
+            response.json()['data']['attributes']['online-meeting-url']
+        )
+
+    def test_get_participant(self):
+        participant = ParticipantFactory.create(activity=self.event)
+
+        response = self.client.get(self.url, user=participant.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['data']['attributes']['title'], self.event.title)
+        self.assertEqual(
+            self.event.online_meeting_url,
+            response.json()['data']['attributes']['online-meeting-url']
+        )
+
+    def test_get_non_owner(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['data']['attributes']['title'], self.event.title)
+        self.assertTrue(
+            'online-meeting-url' not in response.json()['data']['attributes']
+        )
 
     def test_get_event_calendar_links(self):
         self.event.description = u"Just kidding, <br/>we're going&nbsp;to clean it up of course 😉"
@@ -401,6 +431,11 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(
             response.json()['data']['attributes']['title'],
             self.data['data']['attributes']['title']
+        )
+
+        self.assertEqual(
+            response.json()['data']['attributes']['online-meeting-url'],
+            self.data['data']['attributes']['online_meeting_url']
         )
 
     def test_update_unauthenticated(self):

@@ -200,3 +200,41 @@ class EventTestCase(BluebottleTestCase):
             description='<img src="test" onerror="alert(\'XSS\')">',
         )
         self.assertEqual(event.description, '<img src="test">')
+
+    def test_details(self):
+        event = EventFactory(
+            is_online=True
+        )
+        self.assertEqual(
+            event.details,
+            "{}\n{}\nJoin: {}".format(
+                event.description,
+                event.get_absolute_url(),
+                event.online_meeting_url
+            )
+        )
+
+    def test_details_offline(self):
+        event = EventFactory(
+            is_online=False
+        )
+        self.assertEqual(
+            event.details,
+            "{}\n{}".format(
+                event.description,
+                event.get_absolute_url(),
+            )
+        )
+
+    def test_details_no_url(self):
+        event = EventFactory(
+            is_online=True,
+            online_meeting_url=''
+        )
+        self.assertEqual(
+            event.details,
+            "{}\n{}".format(
+                event.description,
+                event.get_absolute_url(),
+            )
+        )

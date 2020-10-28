@@ -236,7 +236,7 @@ class Statistics(object):
         """ Total amount matched on realized (done and incomplete) activities """
         totals = Funding.objects.filter(
             self.date_filter('transition_date'),
-            status='succeeded'
+            status__in=['succeeded', 'open', 'partial']
         ).filter(
             amount_matching__gt=0
         ).values('amount_matching_currency').annotate(total=Sum('amount_matching'))

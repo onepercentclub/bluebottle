@@ -351,6 +351,8 @@ class FundingStatisticsTest(StatisticsTest):
         self.funding.states.approve(save=True)
 
     def test_open(self):
+        self.funding.amount_matching = Money(100, 'EUR')
+        self.funding.save()
         self.assertEqual(
             self.stats.activities_online, 1
         )
@@ -362,6 +364,9 @@ class FundingStatisticsTest(StatisticsTest):
         )
         self.assertEqual(
             self.stats.people_involved, 1
+        )
+        self.assertEqual(
+            self.stats.amount_matched, Money(100, 'EUR')
         )
 
     def test_succeeded(self):

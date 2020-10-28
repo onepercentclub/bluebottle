@@ -935,6 +935,34 @@ class InitiativeRedirectTest(TestCase):
             response.json()['data']['attributes']['target-params'], [initiative.pk, initiative.slug]
         )
 
+    def test_initiative_duplicate(self):
+        initiative = InitiativeFactory.create()
+        InitiativeFactory.create(slug=initiative.slug)
+
+        data = {
+            'data': {
+                'type': 'initiative-redirects',
+                'attributes': {
+                    'route': 'project',
+                    'params': {'project_id': initiative.slug}
+                },
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(
+            response.json()['data']['attributes']['target-route'], 'initiatives.details'
+        )
+
+        self.assertEqual(
+            response.json()['data']['attributes']['target-params'], [initiative.pk, initiative.slug]
+        )
+
     def test_initiative_with_funding(self):
         initiative = InitiativeFactory.create()
         funding = FundingFactory.create(initiative=initiative)

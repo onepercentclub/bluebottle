@@ -150,7 +150,7 @@ class OnADateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCas
 
         self.data['data']['attributes'].update({
             'start': str(now() + timedelta(days=21)),
-            'duration': 4,
+            'duration': '4:00:00',
         })
 
 
@@ -219,8 +219,8 @@ class TimeBasedDetailAPIViewTestCase():
     def test_get_owner(self):
         response = self.client.get(self.url, user=self.activity.owner)
 
-        data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
         self.assertEqual(data['attributes']['title'], self.activity.title)
 
         self.assertEqual(
@@ -336,7 +336,7 @@ class OnADateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTes
 
         self.data['data']['attributes'].update({
             'start': str(now() + timedelta(days=21)),
-            'duration': 4,
+            'duration': '4:00',
         })
 
 

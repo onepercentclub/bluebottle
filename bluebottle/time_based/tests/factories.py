@@ -33,7 +33,7 @@ class OnADateActivityFactory(TimeBasedFactory):
         model = OnADateActivity
 
     start = (now() + timedelta(weeks=4))
-    duration = 2
+    duration = timedelta(hours=2)
 
 
 class WithADeadlineActivityFactory(TimeBasedFactory):
@@ -41,7 +41,7 @@ class WithADeadlineActivityFactory(TimeBasedFactory):
         model = WithADeadlineActivity
 
     deadline = (now() + timedelta(weeks=4))
-    duration = 20
+    duration = timedelta(hours=20)
     duration_period = 'overall'
 
     start = (now() + timedelta(weeks=4)).date()
@@ -51,7 +51,7 @@ class OngoingActivityFactory(TimeBasedFactory):
     class Meta:
         model = OngoingActivity
 
-    duration = 20
+    duration = timedelta(hours=20)
     duration_period = 'overall'
 
     start = (now() + timedelta(weeks=4)).date()

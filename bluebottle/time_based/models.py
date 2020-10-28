@@ -50,7 +50,7 @@ class TimeBasedActivity(Activity):
 class OnADateActivity(TimeBasedActivity):
     start = models.DateTimeField(_('activity date'), null=True, blank=True)
 
-    duration = models.FloatField(_('duration'), null=True, blank=True)
+    duration = models.DurationField(_('duration'), null=True, blank=True)
 
     duration_period = 'overall'
 
@@ -89,9 +89,9 @@ class DurationPeriodChoices(DjangoChoices):
 class WithADeadlineActivity(TimeBasedActivity):
     start = models.DateField(_('start'), null=True, blank=True)
 
-    deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
+    deadline = models.DateField(_('deadline'), null=True, blank=True)
 
-    duration = models.FloatField(_('duration'), null=True, blank=True)
+    duration = models.DurationField(_('duration'), null=True, blank=True)
     duration_period = models.CharField(
         _('duration period'),
         max_length=20,
@@ -128,7 +128,7 @@ class WithADeadlineActivity(TimeBasedActivity):
 class OngoingActivity(TimeBasedActivity):
     start = models.DateField(_('Start of activity'), null=True, blank=True)
 
-    duration = models.FloatField(_('duration'), null=True, blank=True)
+    duration = models.DurationField(_('duration'), null=True, blank=True)
     duration_period = models.CharField(
         _('duration period'),
         max_length=20,
@@ -189,7 +189,7 @@ class Application(Contribution):
 
 
 class ContributionDuration(ContributionValue):
-    duration = models.FloatField(_('duration'), null=True, blank=True)
+    duration = models.DurationField(_('duration'), null=True, blank=True)
     duration_period = models.CharField(
         _('duration period'),
         max_length=20,
@@ -197,3 +197,6 @@ class ContributionDuration(ContributionValue):
         null=True,
         choices=DurationPeriodChoices.choices,
     )
+
+
+from bluebottle.time_based.periodic_tasks import *  # noqa

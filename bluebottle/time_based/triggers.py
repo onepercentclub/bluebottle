@@ -1,4 +1,3 @@
-from datetime import timedelta
 from django.utils.timezone import now
 
 from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTrigger
@@ -42,7 +41,7 @@ def is_finished(effect):
     return (
         effect.instance.start and
         effect.instance.duration and
-        effect.instance.start + timedelta(hours=effect.instance.duration) < now()
+        effect.instance.start + effect.instance.duration
     )
 
 
@@ -50,7 +49,7 @@ def is_not_finished(effect):
     return (
         effect.instance.start and
         effect.instance.duration and
-        effect.instance.start + timedelta(hours=effect.instance.duration) > now()
+        effect.instance.start + effect.instance.duration > now()
     )
 
 
@@ -284,7 +283,7 @@ def activity_is_finished(effect):
         return (
             activity.start and
             activity.duration and
-            activity.start + timedelta(hours=activity.duration) < now()
+            activity.start + activity.duration < now()
         )
     elif isinstance(activity, WithADeadlineActivity):
         return (

@@ -68,11 +68,17 @@ class AssignmentStateMachine(ActivityStateMachine):
 
     def is_not_full(self):
         """the task is not full"""
-        return self.instance.capacity > len(self.instance.accepted_applicants)
+        return (
+            self.instance.capacity and
+            self.instance.capacity > len(self.instance.accepted_applicants)
+        )
 
     def is_full(self):
         """the task is full"""
-        return self.instance.capacity <= len(self.instance.accepted_applicants)
+        return (
+            self.instance.capacity and
+            self.instance.capacity <= len(self.instance.accepted_applicants)
+        )
 
     start = Transition(
         [ActivityStateMachine.open, full],

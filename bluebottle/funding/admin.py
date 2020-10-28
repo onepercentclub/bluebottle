@@ -1,4 +1,5 @@
 from __future__ import division
+
 from past.utils import old_div
 from builtins import object
 import logging
@@ -237,7 +238,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
 
     raw_id_fields = ['activity', 'payout', 'user']
     readonly_fields = ContributionChildAdmin.readonly_fields + [
-        'payment_link', 'payment_link', 'payout_amount',
+        'payment_link', 'payment_link', 'payout_amount', 'sync_payment_link'
     ]
     list_display = ['contribution_date', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
     list_filter = [
@@ -251,7 +252,8 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
 
     superadmin_fields = [
         'force_status',
-        'amount'
+        'amount',
+        'sync_payment_link'
     ]
 
     fields = [
@@ -289,6 +291,69 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     def get_changelist(self, request, **kwargs):
         self.total_column = 'amount'
         return TotalAmountAdminChangeList
+
+    def get_urls(self):
+        urls = super(StateMachineAdminMixin, self).get_urls()
+        custom_urls = [
+            url(
+                r'^(?P<pk>.+)/sync/$',
+                self.admin_site.admin_view(self.sync_payment),
+                name='funding_donation_sync',
+            )
+        ]
+        return custom_urls + urls
+
+    def sync_payment(self, request, pk=None):
+        donation = Donation.objects.get(pk=pk)
+        if str(donation.amount.currency) == 'NGN':
+            try:
+                donation.payment
+            except Payment.DoesNotExist:
+                payment = FlutterwavePayment.objects.create(
+                    donation=donation,
+                    tx_ref=donation.pk
+                )
+                payment.save()
+                self.message_user(
+                    request,
+                    'Generated missing payment',
+                    level='SUCCESS'
+                )
+            donation.payment.update()
+            self.message_user(
+                request,
+                'Checked payment status for {}'.format(donation.payment),
+                level='INFO'
+            )
+        else:
+            try:
+                if donation.payment.update:
+                    donation.payment.update()
+                    self.message_user(
+                        request,
+                        'Checked payment status for {}'.format(donation.payment),
+                        level='INFO'
+                    )
+                else:
+                    self.message_user(
+                        request,
+                        'Warning cannot check status for {}'.format(donation.payment),
+                        level='INFO'
+                    )
+            except Payment.DoesNotExist:
+                self.message_user(
+                    request,
+                    'Payment not found',
+                    level='WARNING'
+                )
+
+        donation_url = reverse('admin:funding_donation_change', args=(donation.id,))
+        response = HttpResponseRedirect(donation_url)
+        return response
+
+    def sync_payment_link(self, obj):
+        sync_url = reverse('admin:funding_donation_sync', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', sync_url, _('Sync donation with payment.'))
 
 
 class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):

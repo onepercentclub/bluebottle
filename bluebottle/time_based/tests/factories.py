@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date
 
 import factory.fuzzy
 from django.utils.timezone import now
@@ -40,7 +40,7 @@ class WithADeadlineActivityFactory(TimeBasedFactory):
     class Meta:
         model = WithADeadlineActivity
 
-    deadline = (now() + timedelta(weeks=4))
+    deadline = date.today() + timedelta(weeks=4)
     duration = timedelta(hours=20)
     duration_period = 'overall'
 
@@ -54,7 +54,7 @@ class OngoingActivityFactory(TimeBasedFactory):
     duration = timedelta(hours=20)
     duration_period = 'overall'
 
-    start = (now() + timedelta(weeks=4)).date()
+    start = date.today() + timedelta(weeks=4)
 
 
 class ApplicationFactory(factory.DjangoModelFactory):

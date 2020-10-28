@@ -1,3 +1,4 @@
+from datetime import date
 from django.utils.timezone import now
 
 from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTrigger
@@ -9,13 +10,13 @@ from bluebottle.activities.triggers import (
 )
 
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity, Application, ContributionDuration
+    OnADateActivity, WithADeadlineActivity, OngoingActivity, Application, Duration
 )
 from bluebottle.time_based.effects import CreateOveralDurationEffect
 from bluebottle.time_based.messages import DateChanged, DeadlineChanged
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, OnADateStateMachine, WithADeadlineStateMachine,
-    ApplicationStateMachine, ContributionDurationStateMachine
+    ApplicationStateMachine, DurationStateMachine
 )
 
 
@@ -56,42 +57,53 @@ def is_not_finished(effect):
 def registration_deadline_is_passed(effect):
     return (
         effect.instance.registration_deadline and
-        effect.instance.registration_deadline < now().date()
+        effect.instance.registration_deadline < date.today()
     )
 
 
 def registration_deadline_is_not_passed(effect):
     return (
         effect.instance.registration_deadline and
-        effect.instance.registration_deadline > now().date()
+        effect.instance.registration_deadline > date.today()
     )
 
 
 def deadline_is_passed(effect):
+
     return (
         effect.instance.deadline and
-        effect.instance.deadline < now()
+        effect.instance.deadline < date.today()
     )
 
 
 def deadline_is_not_passed(effect):
     return (
         effect.instance.deadline and
-        effect.instance.deadline > now()
+        effect.instance.deadline > date.today()
     )
 
 
 def is_started(effect):
+    to_compare = now()
+
+    if not isinstance(effect.instance, OnADateActivity):
+        to_compare = to_compare.date()
+
     return (
         effect.instance.start and
-        effect.instance.start < now().date()
+        effect.instance.start < to_compare
     )
 
 
 def is_not_started(effect):
+    to_compare = now()
+
+    if not isinstance(effect.instance, OnADateActivity):
+        to_compare = to_compare.date()
+
     return (
         effect.instance.start and
-        effect.instance.start > now().date()
+        effect.instance.start > to_compare
     )
 
 
@@ -138,7 +150,7 @@ class OnADateTriggers(TimeBasedTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'accepted_application_durations',
-                    ContributionDurationStateMachine.succeed
+                    DurationStateMachine.succeed
                 )
             ]
         ),
@@ -148,7 +160,7 @@ class OnADateTriggers(TimeBasedTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'accepted_application_durations',
-                    ContributionDurationStateMachine.reset
+                    DurationStateMachine.reset
                 )
             ]
         ),
@@ -288,7 +300,7 @@ def activity_is_finished(effect):
     elif isinstance(activity, WithADeadlineActivity):
         return (
             activity.deadline and
-            activity.deadline < now()
+            activity.deadline < date.today()
         )
     else:
         return False
@@ -319,7 +331,7 @@ class ApplicationTriggers(ContributionTriggers):
 
                 RelatedTransitionEffect(
                     'contribution_values',
-                    ContributionDurationStateMachine.reset,
+                    DurationStateMachine.reset,
                 )
             ]
         ),
@@ -341,7 +353,7 @@ class ApplicationTriggers(ContributionTriggers):
 
                 RelatedTransitionEffect(
                     'contribution_values',
-                    ContributionDurationStateMachine.reset,
+                    DurationStateMachine.reset,
                 )
             ]
         ),
@@ -357,7 +369,7 @@ class ApplicationTriggers(ContributionTriggers):
 
                 RelatedTransitionEffect(
                     'contribution_values',
-                    ContributionDurationStateMachine.fail,
+                    DurationStateMachine.fail,
                 )
             ]
         ),
@@ -373,7 +385,7 @@ class ApplicationTriggers(ContributionTriggers):
 
                 RelatedTransitionEffect(
                     'contribution_values',
-                    ContributionDurationStateMachine.fail,
+                    DurationStateMachine.fail,
                 )
             ]
         ),
@@ -384,6 +396,6 @@ def is_overall(effect):
     return effect.instance.duration_period == 'overall'
 
 
-@ register(ContributionDuration)
-class ContributionDurationTriggers(ContributionValueTriggers):
+@ register(Duration)
+class DurationTriggers(ContributionValueTriggers):
     pass

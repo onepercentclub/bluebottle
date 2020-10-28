@@ -1,5 +1,5 @@
 import json
-from datetime import timedelta
+from datetime import timedelta, date
 
 from django.urls import reverse
 from django.utils.timezone import now
@@ -35,7 +35,7 @@ class TimeBasedListAPIViewTestCase():
                     'title': 'Beach clean-up Katwijk',
                     'review': False,
                     'is-online': True,
-                    'registration-deadline': str((now() + timedelta(days=14)).date()),
+                    'registration-deadline': str(date.today() + timedelta(days=14)),
                     'capacity': 10,
                     'description': 'We will clean up the beach south of Katwijk'
                 },
@@ -162,8 +162,8 @@ class WithADeadlineListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleT
         super().setUp()
 
         self.data['data']['attributes'].update({
-            'deadline': str(now() + timedelta(days=21)),
-            'duration': 4,
+            'deadline': str(date.today() + timedelta(days=21)),
+            'duration': '4:00:00',
             'duration_period': 'overall',
         })
 
@@ -176,7 +176,7 @@ class OngoingListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCas
         super().setUp()
 
         self.data['data']['attributes'].update({
-            'duration': 4,
+            'duration': '4:00:00',
             'duration_period': 'overall',
         })
 
@@ -202,7 +202,7 @@ class TimeBasedDetailAPIViewTestCase():
                     'title': 'Beach clean-up Katwijk',
                     'review': False,
                     'is-online': True,
-                    'registration-deadline': str((now() + timedelta(days=14)).date()),
+                    'registration-deadline': str(date.today() + timedelta(days=14)),
                     'capacity': 10,
                     'description': 'We will clean up the beach south of Katwijk'
                 },
@@ -348,7 +348,7 @@ class WithADeadlineDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, Bluebot
         super().setUp()
 
         self.data['data']['attributes'].update({
-            'deadline': str(now() + timedelta(days=21)),
+            'deadline': str(date.today() + timedelta(days=21)),
         })
 
 

@@ -41,7 +41,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def accepted_application_durations(self):
-        return ContributionDuration.objects.filter(
+        return Duration.objects.filter(
             contribution__activity=self,
             contribution__status='accepted'
         )
@@ -188,10 +188,10 @@ class Application(Contribution):
         return self.user.full_name
 
 
-class ContributionDuration(ContributionValue):
-    duration = models.DurationField(_('duration'), null=True, blank=True)
-    duration_period = models.CharField(
-        _('duration period'),
+class Duration(ContributionValue):
+    value = models.DurationField(_('duration'), null=True, blank=True)
+    period = models.CharField(
+        _('period'),
         max_length=20,
         blank=True,
         null=True,

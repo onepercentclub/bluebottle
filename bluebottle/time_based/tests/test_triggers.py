@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date
 
 from django.utils.timezone import now
 
@@ -103,13 +103,13 @@ class TimeBasedActivityTriggerTestCase():
 
         self.activity.refresh_from_db()
 
-        self.activity.registration_deadline = (now() - timedelta(days=1)).date()
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'full')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
-        self.activity.registration_deadline = (now() + timedelta(days=1)).date()
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'open')
@@ -225,14 +225,14 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
 
         self.assertEqual(self.activity.status, 'open')
 
-        self.activity.deadline = now() - timedelta(days=1)
+        self.activity.deadline = date.today() - timedelta(days=1)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'cancelled')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
-        self.activity.deadline = now() + timedelta(days=1)
+        self.activity.deadline = date.today() + timedelta(days=1)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'open')
@@ -249,14 +249,14 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
         )
         self.assertEqual(self.activity.status, 'open')
 
-        self.activity.deadline = now() - timedelta(days=1)
+        self.activity.deadline = date.today() - timedelta(days=1)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'succeeded')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
-        self.activity.deadline = now() + timedelta(days=1)
+        self.activity.deadline = date.today() + timedelta(days=1)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'open')
@@ -276,14 +276,14 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
 
         self.assertEqual(self.activity.status, 'full')
 
-        self.activity.deadline = now() - timedelta(days=1)
+        self.activity.deadline = date.today() - timedelta(days=1)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'succeeded')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
-        self.activity.deadline = now() + timedelta(days=1)
+        self.activity.deadline = date.today() + timedelta(days=1)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'full')
@@ -294,14 +294,14 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
 
         self.activity.refresh_from_db()
 
-        self.activity.start = (now() - timedelta(days=1)).date()
+        self.activity.start = date.today() - timedelta(days=1)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'running')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
-        self.activity.start = (now() + timedelta(days=2)).date()
+        self.activity.start = date.today() + timedelta(days=2)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'open')
@@ -312,13 +312,13 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
 
         self.activity.refresh_from_db()
 
-        self.activity.registration_deadline = (now() - timedelta(days=4)).date()
+        self.activity.registration_deadline = date.today() - timedelta(days=4)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'full')
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
-        self.activity.start = (now() - timedelta(days=1)).date()
+        self.activity.start = date.today() - timedelta(days=1)
 
         self.activity.save()
 
@@ -326,7 +326,7 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
-        self.activity.start = (now() + timedelta(days=2)).date()
+        self.activity.start = date.today() + timedelta(days=2)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'full')
@@ -345,7 +345,7 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'full')
 
-        self.activity.start = (now() - timedelta(days=1)).date()
+        self.activity.start = date.today() - timedelta(days=1)
 
         self.activity.save()
 
@@ -353,7 +353,7 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
-        self.activity.start = (now() + timedelta(days=2)).date()
+        self.activity.start = date.today() + timedelta(days=2)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'full')
@@ -527,7 +527,7 @@ class WithADeadlineApplicationTriggerTestCase(ApplicationTriggerTestCase, Bluebo
     factory = WithADeadlineActivityFactory
 
     def test_no_review_succeed(self):
-        self.activity.deadline = now() - timedelta(days=1)
+        self.activity.deadline = date.today() - timedelta(days=1)
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'cancelled')

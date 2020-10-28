@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.time_based.models import ContributionDuration
+from bluebottle.time_based.models import Duration
 
 
 def is_overall(effect):
@@ -13,10 +13,10 @@ class CreateOveralDurationEffect(Effect):
     title = _('Create contribution duration')
 
     def post_save(self, **kwargs):
-        ContributionDuration.objects.create(
+        Duration.objects.create(
             contribution=self.instance,
-            duration=self.instance.activity.duration,
-            duration_period='overall'
+            value=self.instance.activity.duration,
+            period='overall'
         )
 
     def __str__(self):

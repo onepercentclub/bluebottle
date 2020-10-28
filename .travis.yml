@@ -31,7 +31,7 @@ before_install:
 install:
   - pip install --upgrade pip
   - pip install --upgrade wheel setuptools mercurial
-  - pip install --upgrade -I flake8==2.6.2
+  - pip install --upgrade -I flake8==3.8.4
   - pip install -e .[test] --trusted-host github.com
 before_script:
   - flake8 .

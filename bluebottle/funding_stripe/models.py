@@ -190,7 +190,7 @@ class StripeSourcePayment(Payment):
                         self.states.succeed(save=True)
 
         except StripeError as error:
-            raise PaymentException(error.message)
+            raise PaymentException(error)
 
     def save(self, *args, **kwargs):
         created = not self.pk

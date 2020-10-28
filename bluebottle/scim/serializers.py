@@ -1,4 +1,3 @@
-from builtins import object
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
@@ -12,7 +11,7 @@ from bluebottle.members.models import Member
 class NonNestedSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         kwargs['source'] = '*'
-        super(NonNestedSerializer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class NameSerializer(NonNestedSerializer):
@@ -30,7 +29,7 @@ class EmailsField(serializers.CharField):
     }
 
     def to_representation(self, value):
-        value = super(EmailsField, self).to_representation(value)
+        value = super().to_representation(value)
         return [{
             'primary': True,
             'type': 'work',
@@ -39,7 +38,7 @@ class EmailsField(serializers.CharField):
         }]
 
     def to_internal_value(self, value):
-        return super(EmailsField, self).to_internal_value(value[0]['value'])
+        return super().to_internal_value(value[0]['value'])
 
     def run_validation(self, data=None):
         if not isinstance(data, list) or not isinstance(data[0], dict) or 'value' not in data[0]:
@@ -48,7 +47,7 @@ class EmailsField(serializers.CharField):
         if not data[0].get('value'):
             self.fail('blank')
 
-        return super(EmailsField, self).run_validation(data)
+        return super().run_validation(data)
 
 
 class SchemaSerializer(NonNestedSerializer):
@@ -67,23 +66,23 @@ class LocationField(serializers.CharField):
 class SCIMIdField(serializers.CharField):
     def __init__(self, type, *args, **kwargs):
         self.type = type
-        super(SCIMIdField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def to_internal_value(self, value):
-        value = super(SCIMIdField, self).to_internal_value(value)
-        return value.replace('goodup-{}-'.format(self.type), '')
+        value = super().to_internal_value(value)
+        return value.replace(f'goodup-{self.type}-', '')
 
     def to_representation(self, id):
-        result = super(SCIMIdField, self).to_representation(id)
+        result = super().to_representation(id)
 
-        return 'goodup-{}-{}'.format(self.type, result)
+        return f'goodup-{self.type}-{result}'
 
 
 class MetaSerializer(NonNestedSerializer):
     location = LocationField(source='id', read_only=True)
 
     def to_representation(self, obj):
-        representation = super(MetaSerializer, self).to_representation(obj)
+        representation = super().to_representation(obj)
         representation['resourceType'] = self.parent.resource_type
         return representation
 
@@ -91,7 +90,7 @@ class MetaSerializer(NonNestedSerializer):
 class UserGroupSerializer(serializers.ModelSerializer):
     id = SCIMIdField('group')
 
-    class Meta(object):
+    class Meta:
         model = Group
         fields = ('id', 'name',)
 
@@ -118,7 +117,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['welcome_email_is_sent'] = True
-        instance = super(SCIMMemberSerializer, self).create(validated_data)
+        instance = super().create(validated_data)
 
         return instance
 
@@ -131,14 +130,14 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
             read_only=True
         ).data
 
-    class Meta(object):
+    class Meta:
         model = Member
         fields = ('id', 'externalId', 'userName', 'name', 'emails', 'active', 'groups', 'schemas', 'meta')
 
 
 class GroupMemberListSerializer(serializers.ListSerializer):
     def to_representation(self, data):
-        return super(GroupMemberListSerializer, self).to_representation(
+        return super().to_representation(
             data.filter(
                 is_superuser=False, is_anonymized=False
             ).exclude(email='devteam+accounting@onepercentclub.com')
@@ -157,12 +156,12 @@ class GroupMemberSerializer(serializers.ModelSerializer):
         return 'User'
 
     def get_fields(self):
-        result = super(GroupMemberSerializer, self).get_fields()
+        result = super().get_fields()
 
         result['$ref'] = result.pop('ref')
         return result
 
-    class Meta(object):
+    class Meta:
         model = Member
         list_serializer_class = GroupMemberListSerializer
         fields = ('value', 'ref', 'type')
@@ -179,7 +178,7 @@ class SCIMGroupSerializer(serializers.ModelSerializer):
     schemas = SchemaSerializer(read_only=False, required=False)
     meta = MetaSerializer(required=False)
 
-    class Meta(object):
+    class Meta:
         model = Group
         fields = ('id', 'displayName', 'schemas', 'meta', 'members', )
 
@@ -198,4 +197,4 @@ class SCIMGroupSerializer(serializers.ModelSerializer):
             except ValueError:
                 pass
 
-        return super(SCIMGroupSerializer, self).update(obj, data)
+        return super().update(obj, data)

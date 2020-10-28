@@ -14,7 +14,7 @@ class CategoriesTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(CategoriesTestCase, self).setUp()
+        super().setUp()
         self.init_projects()
 
     def test_partner_project(self):

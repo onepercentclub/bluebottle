@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import Max
@@ -117,7 +115,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     follows = GenericRelation(Follow, object_id_field='instance_id')
     wallposts = GenericRelation('wallposts.Wallpost', related_query_name='initiative_wallposts')
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Initiative")
         verbose_name_plural = _("Initiatives")
         permissions = (
@@ -133,7 +131,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'initiatives'
 
     def __str__(self):
@@ -188,13 +186,13 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        link = '{}/{}/initiatives/details/{}/{}'.format(domain, language, self.id, self.slug)
+        link = f'{domain}/{language}/initiatives/details/{self.id}/{self.slug}'
         return link
 
     def get_admin_url(self):
         domain = get_current_host()
         url = reverse('admin:initiatives_initiative_change', args=(self.id,))
-        link = '{}/{}'.format(domain, url)
+        link = f'{domain}/{url}'
         return link
 
     def save(self, **kwargs):
@@ -232,7 +230,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
 
         self.story = clean_html(self.story)
 
-        super(Initiative, self).save(**kwargs)
+        super().save(**kwargs)
 
 
 class InitiativePlatformSettings(BasePlatformSettings):
@@ -270,7 +268,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
     enable_impact = models.BooleanField(default=False)
 
-    class Meta(object):
+    class Meta:
         verbose_name_plural = _('initiative settings')
         verbose_name = _('initiative settings')
 

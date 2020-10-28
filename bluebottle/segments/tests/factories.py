@@ -1,5 +1,3 @@
-
-from builtins import object
 import factory
 
 from bluebottle.segments.models import Segment, SegmentType
@@ -7,7 +5,7 @@ from bluebottle.segments.models import Segment, SegmentType
 
 class SegmentTypeFactory(factory.DjangoModelFactory):
 
-    class Meta(object):
+    class Meta:
         model = SegmentType
 
     name = factory.Faker('word')
@@ -16,7 +14,7 @@ class SegmentTypeFactory(factory.DjangoModelFactory):
 
 class SegmentFactory(factory.DjangoModelFactory):
 
-    class Meta(object):
+    class Meta:
         model = Segment
 
     name = factory.Faker('word')

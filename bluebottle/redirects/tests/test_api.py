@@ -9,7 +9,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class RedirectApiTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(RedirectApiTestCase, self).setUp()
+        super().setUp()
         self.redirect_url = reverse('redirect-list')
 
     def test_redirect_api(self):

@@ -1,11 +1,8 @@
-# coding=utf-8
-
 from future import standard_library
 
 standard_library.install_aliases()
 
 from urllib.parse import urlparse, parse_qs
-from builtins import str
 import json
 from datetime import timedelta
 
@@ -26,7 +23,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_inc
 class EventListAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(EventListAPITestCase, self).setUp()
+        super().setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
             activity_types=['event']
         )
@@ -239,7 +236,7 @@ class EventListAPITestCase(BluebottleTestCase):
                 'type': 'activities/events',
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
-                    'start': str((now() + timedelta(days=21))),
+                    'start': str(now() + timedelta(days=21)),
                     'registration_deadline': str((now() + timedelta(days=14)).date()),
                     'capacity': 10,
                     'address': 'Zuid-Boulevard Katwijk aan Zee',
@@ -272,7 +269,7 @@ class EventIcalTestCase(BluebottleTestCase):
         self.assertEqual(response.get('content-type'), 'text/calendar')
         self.assertEqual(
             response.get('content-disposition'),
-            'attachment; filename="{}.ics"'.format(event.slug)
+            f'attachment; filename="{event.slug}.ics"'
         )
 
         calendar = icalendar.Calendar.from_ical(response.content)
@@ -294,7 +291,7 @@ class EventIcalTestCase(BluebottleTestCase):
                 )
             )
             self.assertEqual(str(ical_event['url']), event.get_absolute_url())
-            self.assertEqual(str(ical_event['organizer']), 'MAILTO:{}'.format(event.owner.email))
+            self.assertEqual(str(ical_event['organizer']), f'MAILTO:{event.owner.email}')
 
     def test_get_no_signature(self):
         event = EventFactory.create(title='Pollute Katwijk Beach')
@@ -307,13 +304,13 @@ class EventIcalTestCase(BluebottleTestCase):
         event = EventFactory.create(title='Pollute Katwijk Beach')
 
         ical_url = reverse('event-ical', args=(event.pk,))
-        response = self.client.get('{}?signature=ewiorjewoijical_url'.format(ical_url))
+        response = self.client.get(f'{ical_url}?signature=ewiorjewoijical_url')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class EventDetailTestCase(BluebottleTestCase):
     def setUp(self):
-        super(EventDetailTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create(owner=self.owner)
@@ -373,7 +370,7 @@ class EventDetailTestCase(BluebottleTestCase):
         )
 
     def test_get_event_calendar_links(self):
-        self.event.description = u"Just kidding, <br/>we're going&nbsp;to clean it up of course 😉"
+        self.event.description = "Just kidding, <br/>we're going&nbsp;to clean it up of course 😉"
         self.event.save()
         response = self.client.get(self.url, user=self.event.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -388,14 +385,14 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(google_query['action'][0], 'TEMPLATE')
         self.assertEqual(google_query['location'][0], self.event.location.formatted_address)
         self.assertEqual(google_query['text'][0], self.event.title)
-        self.assertEqual(google_query['uid'][0], 'test-event-{}'.format(self.event.pk))
-        details = u"Just kidding, we're going to clean it up of course 😉\n" \
-                  u"http://testserver/en/initiatives/activities/details/" \
-                  u"event/{}/{}".format(self.event.pk, self.event.slug)
+        self.assertEqual(google_query['uid'][0], f'test-event-{self.event.pk}')
+        details = "Just kidding, we're going to clean it up of course 😉\n" \
+                  "http://testserver/en/initiatives/activities/details/" \
+                  "event/{}/{}".format(self.event.pk, self.event.slug)
         self.assertEqual(google_query['details'][0], details)
         self.assertEqual(
             google_query['dates'][0],
-            u'{}/{}'.format(
+            '{}/{}'.format(
                 self.event.start.astimezone(utc).strftime('%Y%m%dT%H%M%SZ'),
                 self.event.end.astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
             )
@@ -408,7 +405,7 @@ class EventDetailTestCase(BluebottleTestCase):
         self.assertEqual(outlook_link.path, '/owa/')
 
         self.assertEqual(outlook_query['rru'][0], 'addevent')
-        self.assertEqual(outlook_query['path'][0], u'/calendar/action/compose&rru=addevent')
+        self.assertEqual(outlook_query['path'][0], '/calendar/action/compose&rru=addevent')
         self.assertEqual(outlook_query['location'][0], self.event.location.formatted_address)
         self.assertEqual(outlook_query['subject'][0], self.event.title)
         self.assertEqual(outlook_query['body'][0], details)
@@ -544,7 +541,7 @@ class EventDetailTestCase(BluebottleTestCase):
 class EventTransitionTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(EventTransitionTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory()
         self.manager = BlueBottleUserFactory()
@@ -585,12 +582,12 @@ class EventTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertTrue(
-            {u'available': True, u'name': u'delete', u'target': u'deleted'}
+            {'available': True, 'name': 'delete', 'target': 'deleted'}
             in data['data']['meta']['transitions']
         )
 
         self.assertTrue(
-            {u'available': True, u'name': u'submit', u'target': u'submitted'}
+            {'available': True, 'name': 'submit', 'target': 'submitted'}
             in data['data']['meta']['transitions']
         )
 
@@ -652,7 +649,7 @@ class EventTransitionTestCase(BluebottleTestCase):
 class ParticipantListTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(ParticipantListTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.participant = BlueBottleUserFactory()
 
@@ -740,7 +737,7 @@ class ParticipantListTestCase(BluebottleTestCase):
 
 class ParticipantListFilterCase(BluebottleTestCase):
     def setUp(self):
-        super(ParticipantListFilterCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 
@@ -833,7 +830,7 @@ class ParticipantListFilterCase(BluebottleTestCase):
 
 class ParticipantDetailTestCase(BluebottleTestCase):
     def setUp(self):
-        super(ParticipantDetailTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
 
         self.user = BlueBottleUserFactory.create()
@@ -861,7 +858,7 @@ class ParticipantDetailTestCase(BluebottleTestCase):
                 transition['name'] for transition in data['data']['meta']['transitions']
                 if transition['available']
             ],
-            [u'withdraw']
+            ['withdraw']
         )
 
     def test_possible_transitions_other_user(self):
@@ -879,7 +876,7 @@ class ParticipantDetailTestCase(BluebottleTestCase):
 class ParticipantTransitionTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(ParticipantTransitionTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.url = reverse('event-list')
         self.participant_user = BlueBottleUserFactory()

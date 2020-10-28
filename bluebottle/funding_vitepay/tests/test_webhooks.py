@@ -1,4 +1,3 @@
-from builtins import object
 import munch
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK
@@ -10,7 +9,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
-class MockEvent(object):
+class MockEvent:
     def __init__(self, type, data):
         self.type = type
         self.data = munch.munchify(data)
@@ -19,7 +18,7 @@ class MockEvent(object):
 class VitepayPaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(VitepayPaymentTestCase, self).setUp()
+        super().setUp()
         VitepayPaymentProvider.objects.all().delete()
         VitepayPaymentProviderFactory.create()
 

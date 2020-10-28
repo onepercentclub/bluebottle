@@ -95,7 +95,7 @@ class LocationAdmin(admin.ModelAdmin):
 
     def initiatives(self, obj):
         return format_html(
-            u'<a href="{}?location={}">{}</a>',
+            '<a href="{}?location={}">{}</a>',
             reverse('admin:initiatives_initiative_changelist'),
             obj.id,
             len(Initiative.objects.filter(location=obj))

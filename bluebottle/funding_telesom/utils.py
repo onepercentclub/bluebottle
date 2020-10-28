@@ -37,7 +37,7 @@ def initiate_payment(payment):
                 "invoiceId": payment.unique_id,
                 "amount": payment.amount,
                 "currency": payment.currency,
-                "description": "donation {}".format(payment.donation_id)
+                "description": f"donation {payment.donation_id}"
             }
         }
     }

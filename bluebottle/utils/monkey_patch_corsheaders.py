@@ -1,11 +1,10 @@
-from builtins import object
 import corsheaders.defaults
 from bluebottle.clients import properties
 
 defaults = corsheaders.defaults
 
 
-class TenantAwareCorsDefaults(object):
+class TenantAwareCorsDefaults:
     def __getattr__(self, attr):
         try:
             return getattr(properties, attr)

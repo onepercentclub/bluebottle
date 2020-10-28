@@ -1,5 +1,4 @@
 import django_filters
-from builtins import object
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
 from rest_framework.generics import RetrieveDestroyAPIView
@@ -24,12 +23,12 @@ class WallpostFilter(django_filters.FilterSet):
     parent_type = django_filters.CharFilter(name="content_type__name")
     parent_id = django_filters.NumberFilter(name="object_id")
 
-    class Meta(object):
+    class Meta:
         model = Wallpost
         fields = ['parent_type', 'parent_id']
 
 
-class SetAuthorMixin(object):
+class SetAuthorMixin:
     def perform_create(self, serializer):
         self.check_object_permissions(
             self.request,
@@ -42,9 +41,9 @@ class SetAuthorMixin(object):
         serializer.save(editor=self.request.user, ip_address=get_client_ip(self.request))
 
 
-class WallpostOwnerFilterMixin(object):
+class WallpostOwnerFilterMixin:
     def get_queryset(self):
-        qs = super(WallpostOwnerFilterMixin, self).get_queryset()
+        qs = super().get_queryset()
         permission = '{}.api_read_{}'.format(
             self.model._meta.app_label, self.model._meta.model_name
         )
@@ -69,7 +68,7 @@ class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
     )
 
     def get_queryset(self, queryset=queryset):
-        queryset = super(WallpostList, self).get_queryset()
+        queryset = super().get_queryset()
 
         # Some custom filtering projects slugs.
         parent_type = self.request.query_params.get('parent_type', None)
@@ -99,7 +98,7 @@ class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIVi
     )
 
     def get_queryset(self, queryset=None):
-        queryset = super(TextWallpostList, self).get_queryset()
+        queryset = super().get_queryset()
         parent_type = self.request.query_params.get('parent_type', None)
         parent_id = self.request.query_params.get('parent_id', None)
         white_listed_apps = ['initiatives', 'assignments', 'events', 'funding']
@@ -114,7 +113,7 @@ class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIVi
             self.request,
             serializer.Meta.model(author=self.request.user, **serializer.validated_data)
         )
-        return super(TextWallpostList, self).perform_create(serializer)
+        return super().perform_create(serializer)
 
 
 class TextWallpostDetail(RetrieveUpdateDestroyAPIView, SetAuthorMixin):
@@ -139,7 +138,7 @@ class MediaWallpostList(TextWallpostList):
             self.request,
             serializer.Meta.model(author=self.request.user, **serializer.validated_data)
         )
-        return super(MediaWallpostList, self).perform_create(serializer)
+        return super().perform_create(serializer)
 
 
 class MediaWallpostDetail(TextWallpostDetail):
@@ -191,9 +190,9 @@ class MediaWallpostPhotoList(OwnerListViewMixin, SetAuthorMixin, ListCreateAPIVi
         Ember itself.
         """
         post = request.POST.get('mediawallpost', False)
-        if post and post == u'null':
-            request.POST['mediawallpost'] = u''
-        return super(MediaWallpostPhotoList, self).create(request, *args, **kwargs)
+        if post and post == 'null':
+            request.POST['mediawallpost'] = ''
+        return super().create(request, *args, **kwargs)
 
 
 class MediaWallpostPhotoDetail(RetrieveUpdateDestroyAPIView):

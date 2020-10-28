@@ -21,7 +21,7 @@ class TestPayoutApi(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(TestPayoutApi, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.plain_user = BlueBottleUserFactory.create()
         self.plain_token = Token.objects.create(user=self.plain_user)
@@ -68,14 +68,14 @@ class TestPayoutApi(BluebottleTestCase):
         """
         """
         response = self.client.get(self.payout_url,
-                                   HTTP_AUTHORIZATION="Token {}".format(self.plain_token))
+                                   HTTP_AUTHORIZATION=f"Token {self.plain_token}")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_payouts_api_access_granted_for_power_user(self):
         """
         """
         response = self.client.get(self.payout_url,
-                                   HTTP_AUTHORIZATION="Token {}".format(self.token))
+                                   HTTP_AUTHORIZATION=f"Token {self.token}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_payouts_api_update_payout_status(self):
@@ -107,7 +107,7 @@ class TestPayoutApi(BluebottleTestCase):
             })
             response = self.client.put(
                 payout_url, data,
-                HTTP_AUTHORIZATION="Token {}".format(self.token))
+                HTTP_AUTHORIZATION=f"Token {self.token}")
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.payout.refresh_from_db()
             self.assertEqual(self.payout.status, local_status)
@@ -130,7 +130,7 @@ class TestPayoutApi(BluebottleTestCase):
 
         response = self.client.put(
             payout_url, data,
-            HTTP_AUTHORIZATION="Token {}".format(self.token))
+            HTTP_AUTHORIZATION=f"Token {self.token}")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.payout.refresh_from_db()
@@ -149,7 +149,7 @@ class TestPayoutApi(BluebottleTestCase):
 
         response = self.client.put(
             payout_url, data,
-            HTTP_AUTHORIZATION="Token {}".format(self.token))
+            HTTP_AUTHORIZATION=f"Token {self.token}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.payout.refresh_from_db()
         self.assertEqual(self.payout.status, 'succeeded')
@@ -166,7 +166,7 @@ class TestPayoutApi(BluebottleTestCase):
         })
         response = self.client.put(
             payout_url, data,
-            HTTP_AUTHORIZATION="Token {}".format(self.token))
+            HTTP_AUTHORIZATION=f"Token {self.token}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.payout.refresh_from_db()
         self.assertEqual(self.payout.status, 'scheduled')

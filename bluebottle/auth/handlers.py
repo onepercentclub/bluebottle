@@ -13,7 +13,7 @@ def resource_access_handler(request, resource):
     # get view to assess
     if isinstance(resource, basestring):
         try:
-            resolver_match = resolve('/{}/'.format(resource))
+            resolver_match = resolve(f'/{resource}/')
             view = resolver_match.func
         except Exception:
             return False

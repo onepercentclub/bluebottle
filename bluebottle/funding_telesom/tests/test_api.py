@@ -1,8 +1,7 @@
-from builtins import object
 import json
 
 from django.urls import reverse
-from mock import patch
+from unittest.mock import patch
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
@@ -13,7 +12,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
-class MockReponse(object):
+class MockReponse:
     status_code = 200,
 
     def json(self):
@@ -23,7 +22,7 @@ class MockReponse(object):
 class TelesomPaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(TelesomPaymentTestCase, self).setUp()
+        super().setUp()
         TelesomPaymentProvider.objects.all().delete()
         TelesomPaymentProviderFactory.create()
 

@@ -17,7 +17,7 @@ class TestPayoutAdapter(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(TestPayoutAdapter, self).setUp()
+        super().setUp()
         self.funding = FundingFactory.create(target=Money(500, 'EUR'), status='open')
         donations = DonationFactory.create_batch(
             7,

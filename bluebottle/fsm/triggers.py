@@ -1,12 +1,9 @@
-from builtins import str
-from builtins import zip
-from builtins import object
 from django.utils.translation import ugettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 
 @python_2_unicode_compatible
-class ModelTrigger(object):
+class ModelTrigger:
     def __init__(self, instance):
         self.instance = instance
 
@@ -31,7 +28,7 @@ class ModelChangedTrigger(ModelTrigger):
 
     @property
     def title(self):
-        return 'change the {}'.format(self.field)
+        return f'change the {self.field}'
 
     @property
     def is_valid(self):
@@ -58,12 +55,12 @@ class ModelDeletedTrigger(ModelTrigger):
         return str(_("Model has been deleted"))
 
 
-class TriggerMixin(object):
+class TriggerMixin:
     triggers = []
     periodic_tasks = []
 
     def __init__(self, *args, **kwargs):
-        super(TriggerMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._effects = []
 
         if hasattr(self, '_state_machines'):
@@ -72,11 +69,11 @@ class TriggerMixin(object):
 
                 setattr(self, name, machine)
 
-        self._initial_values = dict(
-            (field.name, getattr(self, field.name))
+        self._initial_values = {
+            field.name: getattr(self, field.name)
             for field in self._meta.fields
             if not field.is_relation
-        )
+        }
 
     @classmethod
     def get_periodic_tasks(cls):
@@ -94,8 +91,7 @@ class TriggerMixin(object):
     @property
     def current_effects(self):
         for trigger in self.current_triggers:
-            for effect in trigger.current_effects:
-                yield effect
+            yield from trigger.current_effects
 
     @property
     def all_effects(self):
@@ -108,7 +104,7 @@ class TriggerMixin(object):
 
     @classmethod
     def from_db(cls, db, field_names, values):
-        instance = super(TriggerMixin, cls).from_db(db, field_names, values)
+        instance = super().from_db(db, field_names, values)
         instance._initial_values = dict(list(zip(field_names, values)))
 
         return instance
@@ -130,7 +126,7 @@ class TriggerMixin(object):
         for effect in effects:
             effect.do(post_save=False, send_messages=send_messages)
 
-        super(TriggerMixin, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
         for effect in effects:
             effect.do(post_save=True, send_messages=send_messages)
@@ -144,4 +140,4 @@ class TriggerMixin(object):
                     for effect in current_effect.all_effects():
                         effect.do(post_save=True)
 
-        return super(TriggerMixin, self).delete(*args, **kwargs)
+        return super().delete(*args, **kwargs)

@@ -1,4 +1,3 @@
-from builtins import object
 from django.db.models import Q
 from django.db.models.aggregates import Sum
 
@@ -18,7 +17,7 @@ from bluebottle.funding_pledge.models import PledgePayment
 from bluebottle.utils.exchange_rates import convert
 
 
-class Statistics(object):
+class Statistics:
     def __init__(self, start=None, end=None):
         self.start = start
         self.end = end
@@ -27,11 +26,11 @@ class Statistics(object):
 
     def date_filter(self, field='created'):
         if self.start and self.end:
-            filter_args = {'{}__range'.format(field): (self.start, self.end)}
+            filter_args = {f'{field}__range': (self.start, self.end)}
         elif self.start:
-            filter_args = {'{}__gte'.format(field): self.start}
+            filter_args = {f'{field}__gte': self.start}
         elif self.end:
-            filter_args = {'{}__lte'.format(field): self.end}
+            filter_args = {f'{field}__lte': self.end}
         else:
             filter_args = {}
 
@@ -295,4 +294,4 @@ class Statistics(object):
     def __repr__(self):
         start = self.start.strftime('%s') if self.start else 'none'
         end = self.end.strftime('%s') if self.end else 'none'
-        return 'Statistics({},{})'.format(start, end)
+        return f'Statistics({start},{end})'

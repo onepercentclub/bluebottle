@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 from datetime import timedelta
 from django.core import mail
 from django.db import connection
@@ -49,7 +49,7 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your crowdfunding campaign has expired'
+            'Your crowdfunding campaign has expired'
         )
 
     def test_funding_scheduled_task_succeed(self):
@@ -70,7 +70,7 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your campaign "{}" has been successfully completed! \U0001f389'.format(self.funding.title)
+            f'Your campaign "{self.funding.title}" has been successfully completed! \U0001f389'
         )
 
     def test_funding_scheduled_task_partial(self):
@@ -91,5 +91,5 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your crowdfunding campaign deadline passed'
+            'Your crowdfunding campaign deadline passed'
         )

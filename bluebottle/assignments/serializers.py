@@ -1,4 +1,3 @@
-from builtins import object
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
@@ -71,7 +70,7 @@ class AssignmentSerializer(BaseActivitySerializer):
     contributions = FilteredRelatedField(many=True, filter_backend=ApplicantListFilter)
 
     def get_fields(self):
-        fields = super(AssignmentSerializer, self).get_fields()
+        fields = super().get_fields()
         user = self.context['request'].user
 
         if (
@@ -136,7 +135,7 @@ class AssignmentTransitionSerializer(TransitionSerializer):
         'resource': 'bluebottle.assignments.serializers.AssignmentSerializer',
     }
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = ['resource', ]
         resource_name = 'assignment-transitions'
 
@@ -206,7 +205,7 @@ class ApplicantTransitionSerializer(TransitionSerializer):
         'resource.activity': 'bluebottle.assignments.serializers.AssignmentSerializer',
     }
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'contributions/applicant-transitions'
         included_resources = [
             'resource',
@@ -217,10 +216,10 @@ class ApplicantTransitionSerializer(TransitionSerializer):
 class SkillSerializer(serializers.ModelSerializer):
     name = serializers.CharField()
 
-    class Meta(object):
+    class Meta:
         model = Skill
         fields = ('id', 'name', 'expertise')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = ['resource', ]
         resource_name = 'skills'

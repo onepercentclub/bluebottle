@@ -1,5 +1,3 @@
-# coding=utf-8
-
 from django.test.client import RequestFactory
 from jet.dashboard.dashboard import DefaultAppIndexDashboard
 from tenant_schemas.urlresolvers import reverse
@@ -14,7 +12,7 @@ class MainDashboardTest(BluebottleAdminTestCase):
     """
 
     def setUp(self):
-        super(MainDashboardTest, self).setUp()
+        super().setUp()
         self.init_projects()
         self.client.force_login(self.superuser)
         self.admin_url = reverse('admin:index')
@@ -33,7 +31,7 @@ class CustomAppDashboardTest(BluebottleAdminTestCase):
     """
 
     def setUp(self):
-        super(CustomAppDashboardTest, self).setUp()
+        super().setUp()
         self.client.force_login(self.superuser)
         self.admin_url = reverse('admin:index')
         self.request = RequestFactory().get(self.admin_url)

@@ -1,4 +1,3 @@
-# coding=utf-8
 import datetime
 from django.utils import timezone
 from django.test.utils import override_settings
@@ -23,7 +22,7 @@ from bluebottle.test.utils import BluebottleTestCase
 )
 class StatisticsModelTestCase(BluebottleTestCase):
     def setUp(self):
-        super(StatisticsModelTestCase, self).setUp()
+        super().setUp()
 
     def test_manual(self):
         stat = ManualStatisticFactory.create(name='Test', value=100)

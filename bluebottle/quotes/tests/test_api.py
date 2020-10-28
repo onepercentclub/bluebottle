@@ -16,7 +16,7 @@ class QuoteTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(QuoteTestCase, self).setUp()
+        super().setUp()
 
         self.author = BlueBottleUserFactory.create()
         self.user = BlueBottleUserFactory.create()

@@ -1,4 +1,3 @@
-from builtins import object
 from datetime import timedelta
 
 import factory
@@ -9,12 +8,12 @@ from .accounts import BlueBottleUserFactory
 
 
 class PageFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Page
 
     language = 'en'
-    title = factory.Sequence(lambda n: 'Page Title {0}'.format(n))
+    title = factory.Sequence(lambda n: f'Page Title {n}')
     author = factory.SubFactory(BlueBottleUserFactory)
-    slug = factory.Sequence(lambda n: 'slug-{0}'.format(n))
+    slug = factory.Sequence(lambda n: f'slug-{n}')
     status = Page.PageStatus.published
     publication_date = now() - timedelta(days=4)

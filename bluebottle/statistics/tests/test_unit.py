@@ -1,6 +1,5 @@
 import datetime
 
-from builtins import range
 from django.test.utils import override_settings
 from django.utils import timezone
 from moneyed.classes import Money
@@ -20,7 +19,7 @@ from bluebottle.test.utils import BluebottleTestCase
 
 class InitialStatisticsTest(BluebottleTestCase):
     def setUp(self):
-        super(InitialStatisticsTest, self).setUp()
+        super().setUp()
         self.stats = Statistics()
         Member.objects.all().delete()
 
@@ -49,7 +48,7 @@ class InitialStatisticsTest(BluebottleTestCase):
 )
 class StatisticsTest(BluebottleTestCase):
     def setUp(self):
-        super(StatisticsTest, self).setUp()
+        super().setUp()
         self.stats = Statistics()
         Member.objects.all().delete()
 
@@ -65,7 +64,7 @@ class StatisticsTest(BluebottleTestCase):
 
 class EventStatisticsTest(StatisticsTest):
     def setUp(self):
-        super(EventStatisticsTest, self).setUp()
+        super().setUp()
         self.event = EventFactory.create(
             initiative=self.initiative,
             owner=self.some_user,
@@ -199,7 +198,7 @@ class EventStatisticsTest(StatisticsTest):
 
 class AssignmentStatisticsTest(StatisticsTest):
     def setUp(self):
-        super(AssignmentStatisticsTest, self).setUp()
+        super().setUp()
         self.assignment = AssignmentFactory.create(
             owner=self.some_user,
             initiative=self.initiative,
@@ -337,7 +336,7 @@ class AssignmentStatisticsTest(StatisticsTest):
 
 class FundingStatisticsTest(StatisticsTest):
     def setUp(self):
-        super(FundingStatisticsTest, self).setUp()
+        super().setUp()
         payout_account = PlainPayoutAccountFactory.create()
         bank_account = BankAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding = FundingFactory.create(
@@ -601,7 +600,7 @@ class FundingStatisticsTest(StatisticsTest):
 )
 class StatisticsDateTest(BluebottleTestCase):
     def setUp(self):
-        super(StatisticsDateTest, self).setUp()
+        super().setUp()
 
         user = BlueBottleUserFactory.create()
         other_user = BlueBottleUserFactory.create()

@@ -1,4 +1,3 @@
-from builtins import object
 import factory.fuzzy
 
 from bluebottle.funding.tests.factories import DonationFactory, PlainPayoutAccountFactory
@@ -7,14 +6,14 @@ from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBan
 
 
 class LipishaPaymentFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = LipishaPayment
     donation = factory.SubFactory(DonationFactory)
 
 
 class LipishaPaymentProviderFactory(factory.DjangoModelFactory):
 
-    class Meta(object):
+    class Meta:
         model = LipishaPaymentProvider
 
     api_signature = '123456789012345678901234567890123456789012345678901234567890'
@@ -35,5 +34,5 @@ class LipishaBankAccountFactory(factory.DjangoModelFactory):
     reviewed = True
     connect_account = factory.SubFactory(PlainPayoutAccountFactory)
 
-    class Meta(object):
+    class Meta:
         model = LipishaBankAccount

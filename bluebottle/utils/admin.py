@@ -1,7 +1,5 @@
 import csv
 
-import six
-from builtins import str
 from django.contrib import admin
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.admin.views.main import ChangeList
@@ -57,9 +55,9 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
 
 def escape_csv_formulas(item):
-    if item and isinstance(item, six.string_types):
+    if item and isinstance(item, str):
         if item[0] in ['=', '+', '-', '@']:
-            item = u"'" + item
+            item = "'" + item
         return smart_str(item)
     else:
         return item
@@ -132,10 +130,10 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 class TotalAmountAdminChangeList(ChangeList):
     def get_results(self, *args, **kwargs):
         self.model_admin.change_list_template = 'utils/admin/total_amount_change_list.html'
-        super(TotalAmountAdminChangeList, self).get_results(*args, **kwargs)
+        super().get_results(*args, **kwargs)
 
         total_column = self.model_admin.total_column or 'amount'
-        currency_column = '{}_currency'.format(total_column)
+        currency_column = f'{total_column}_currency'
 
         totals = self.queryset.values(
             currency_column

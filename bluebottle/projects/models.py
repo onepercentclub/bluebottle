@@ -1,4 +1,3 @@
-from builtins import object
 import logging
 
 from django.utils.translation import ugettext_lazy as _
@@ -15,7 +14,7 @@ class ProjectImage(AbstractAttachment):
 
     """
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('project image')
         verbose_name_plural = _('project images')
         permissions = (
@@ -34,4 +33,4 @@ class ProjectImage(AbstractAttachment):
         if project_id:
             self.project_id = int(project_id[0])
 
-        super(ProjectImage, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)

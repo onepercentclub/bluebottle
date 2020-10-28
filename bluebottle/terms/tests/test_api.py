@@ -11,13 +11,13 @@ class TermsAPITest(BluebottleTestCase):
     """ Integration tests for the Terms API. """
 
     def setUp(self):
-        super(TermsAPITest, self).setUp()
+        super().setUp()
 
         self.user_1 = BlueBottleUserFactory.create()
-        self.user_1_token = 'JWT {0}'.format(self.user_1.get_jwt_token())
+        self.user_1_token = f'JWT {self.user_1.get_jwt_token()}'
 
         self.user_2 = BlueBottleUserFactory.create()
-        self.user_2_token = 'JWT {0}'.format(self.user_2.get_jwt_token())
+        self.user_2_token = f'JWT {self.user_2.get_jwt_token()}'
 
         self.terms = TermsFactory.create(contents='Awesome terms!')
 

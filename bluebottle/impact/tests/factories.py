@@ -1,4 +1,3 @@
-from builtins import object
 import factory.fuzzy
 
 from bluebottle.impact.models import ImpactType, ImpactGoal
@@ -7,7 +6,7 @@ from bluebottle.events.tests.factories import EventFactory
 
 class ImpactTypeFactory(factory.DjangoModelFactory):
 
-    class Meta(object):
+    class Meta:
         model = ImpactType
 
     name = factory.Faker('sentence')
@@ -23,7 +22,7 @@ class ImpactTypeFactory(factory.DjangoModelFactory):
 
 
 class ImpactGoalFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = ImpactGoal
 
     target = factory.fuzzy.FuzzyInteger(10, 20)

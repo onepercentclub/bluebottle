@@ -1,6 +1,3 @@
-from __future__ import absolute_import
-from builtins import str
-from builtins import object
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
@@ -45,9 +42,9 @@ class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
 
-        super(Organization, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
-    class Meta(object):
+    class Meta:
         ordering = ['name']
         verbose_name = _("partner organization")
         verbose_name_plural = _("partner organizations")
@@ -70,7 +67,7 @@ class OrganizationContact(ValidatedModelMixin, models.Model):
 
     required_fields = ['name', 'email']
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Partner Organization Contact')
         verbose_name_plural = _('Partner Organization Contacts')
 

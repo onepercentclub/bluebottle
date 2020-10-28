@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from bluebottle.assignments.tests.factories import AssignmentFactory
 
 from bluebottle.events.tests.factories import EventFactory
@@ -16,7 +15,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 class TestWallpostAdmin(BluebottleAdminTestCase):
 
     def setUp(self):
-        super(TestWallpostAdmin, self).setUp()
+        super().setUp()
         self.client.force_login(self.superuser)
         self.media_wallpost_url = '/en/admin/wallposts/mediawallpost/'
 

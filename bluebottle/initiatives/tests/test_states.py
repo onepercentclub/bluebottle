@@ -20,7 +20,7 @@ from bluebottle.test.factory_models.organizations import OrganizationFactory, Or
 
 class InitiativeReviewStateMachineTests(BluebottleTestCase):
     def setUp(self):
-        super(InitiativeReviewStateMachineTests, self).setUp()
+        super().setUp()
         self.user = BlueBottleUserFactory.create(first_name='Bart', last_name='Lacroix')
         self.initiative = InitiativeFactory.create(
             has_organization=False,
@@ -246,7 +246,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             self.initiative.status, ReviewStateMachine.approved.value
         )
         self.assertEqual(len(mail.outbox), 1)
-        subject = 'Your initiative "{}" has been approved!'.format(self.initiative.title)
+        subject = f'Your initiative "{self.initiative.title}" has been approved!'
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
 
@@ -282,7 +282,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
         self.assertEqual(len(mail.outbox), 1)
 
-        subject = 'Your initiative "{}" has been rejected.'.format(self.initiative.title)
+        subject = f'Your initiative "{self.initiative.title}" has been rejected.'
 
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
@@ -311,7 +311,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
         self.assertEqual(len(mail.outbox), 1)
 
-        subject = 'The initiative "{}" has been cancelled.'.format(self.initiative.title)
+        subject = f'The initiative "{self.initiative.title}" has been cancelled.'
 
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import xlrd
 from datetime import timedelta
 from django.db import connection
@@ -25,7 +24,7 @@ TEST_EXPORT_SETTINGS = {
 @override_settings(**TEST_EXPORT_SETTINGS)
 class TestExportAdmin(BluebottleTestCase):
     def setUp(self):
-        super(TestExportAdmin, self).setUp()
+        super().setUp()
 
     def test_export(self):
         from_date = now() - timedelta(weeks=2)
@@ -233,7 +232,7 @@ class TestExportAdmin(BluebottleTestCase):
 
         self.assertEqual(
             book.sheet_by_name('Tasks').cell(0, 23).value,
-            u'Reduce CO\u2082 emissions'
+            'Reduce CO\u2082 emissions'
         )
         self.assertEqual(
             book.sheet_by_name('Tasks').cell(1, 23).value,
@@ -241,7 +240,7 @@ class TestExportAdmin(BluebottleTestCase):
         )
         self.assertEqual(
             book.sheet_by_name('Tasks').cell(0, 24).value,
-            u'Save water'
+            'Save water'
         )
         self.assertEqual(
             book.sheet_by_name('Tasks').cell(1, 24).value,

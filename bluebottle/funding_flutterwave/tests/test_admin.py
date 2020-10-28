@@ -1,7 +1,7 @@
 from django.contrib.messages import get_messages
 from django.urls import reverse
 from djmoney.money import Money
-from mock import patch
+from unittest.mock import patch
 
 from bluebottle.funding.tests.factories import (
     DonationFactory, FundingFactory
@@ -21,7 +21,7 @@ success_response = {
 
 class FlutterwavePaymentAdminTestCase(BluebottleAdminTestCase):
     def setUp(self):
-        super(FlutterwavePaymentAdminTestCase, self).setUp()
+        super().setUp()
         bank_account = FlutterwaveBankAccountFactory.create()
         funding = FundingFactory.create(bank_account=bank_account)
         self.client.force_login(self.superuser)
@@ -41,5 +41,5 @@ class FlutterwavePaymentAdminTestCase(BluebottleAdminTestCase):
             'Generated missing payment')
         self.assertEqual(
             messages[1].message,
-            'Checked payment status for {}'.format((self.donation.payment)))
+            f'Checked payment status for {self.donation.payment}')
         self.assertEqual(self.donation.status, 'succeeded')

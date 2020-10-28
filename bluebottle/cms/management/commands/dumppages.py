@@ -1,4 +1,3 @@
-from __future__ import print_function
 import json
 
 from django.core.management.base import BaseCommand

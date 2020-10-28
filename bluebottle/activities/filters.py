@@ -165,8 +165,8 @@ class ActivitySearchFilter(ElasticSearchFilter):
         return Range(activity_date={'gte': start, 'lte': end})
 
     def get_filters(self, request):
-        filters = super(ActivitySearchFilter, self).get_filters(request)
-        regex = re.compile('^filter\[segment\.(?P<type>[\w\-]+)\]$')
+        filters = super().get_filters(request)
+        regex = re.compile(r'^filter\[segment\.(?P<type>[\w\-]+)\]$')
         for key, value in list(request.GET.items()):
             matches = regex.match(key)
             if matches:
@@ -222,4 +222,4 @@ class ActivityFilter(DjangoFilterBackend):
         else:
             queryset = queryset.filter(status__in=self.public_statuses)
 
-        return super(ActivityFilter, self).filter_queryset(request, queryset, view)
+        return super().filter_queryset(request, queryset, view)

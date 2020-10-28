@@ -1,4 +1,3 @@
-from builtins import object
 from django_elasticsearch_dsl import DocType, fields
 
 from bluebottle.utils.documents import MultiTenantIndex
@@ -85,14 +84,14 @@ class InitiativeDocument(DocType):
         }
     )
 
-    class Meta(object):
+    class Meta:
         model = Initiative
         related_models = (
             Geolocation, Member, ProjectTheme, Event, Funding, Assignment
         )
 
     def get_queryset(self):
-        return super(InitiativeDocument, self).get_queryset().select_related(
+        return super().get_queryset().select_related(
             'theme', 'place', 'owner', 'promoter',
         )
 

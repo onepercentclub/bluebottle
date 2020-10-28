@@ -1,4 +1,3 @@
-from builtins import object
 import mimetypes
 import os
 
@@ -56,14 +55,14 @@ class TagSearch(views.APIView):
         return response.Response(data)
 
 
-class ModelTranslationViewMixin(object):
+class ModelTranslationViewMixin:
     def get(self, request, *args, **kwargs):
         language = request.query_params.get('language', properties.LANGUAGE_CODE)
         translation.activate(language)
-        return super(ModelTranslationViewMixin, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
-class ViewPermissionsMixin(object):
+class ViewPermissionsMixin:
     """ View mixin with permission checks added from the DRF APIView """
     @property
     def model(self):
@@ -108,12 +107,12 @@ class RetrieveAPIView(ViewPermissionsMixin, generics.RetrieveAPIView):
     permission_classes = (ResourcePermission,)
 
 
-class RelatedPermissionMixin(object):
+class RelatedPermissionMixin:
     related_permission_classes = {}
 
     def check_object_permissions(self, request, obj):
         self.check_related_object_permissions(request, obj)
-        super(RelatedPermissionMixin, self).check_object_permissions(
+        super().check_object_permissions(
             request, obj
         )
 
@@ -183,7 +182,7 @@ class PrivateFileView(DetailView):
         if not url == self.request.path:
             raise Http404()
 
-        return super(PrivateFileView, self).get_object()
+        return super().get_object()
 
     def get(self, request, *args, **kwargs):
         if self.relation:
@@ -201,17 +200,17 @@ class PrivateFileView(DetailView):
         )
         try:
             response['Content-Type'] = mime.from_file(field.path)
-        except IOError:
+        except OSError:
             pass
 
         return response
 
 
-class OwnerListViewMixin(object):
+class OwnerListViewMixin:
     def get_queryset(self):
-        qs = super(OwnerListViewMixin, self).get_queryset()
+        qs = super().get_queryset()
 
-        model = super(OwnerListViewMixin, self).model
+        model = super().model
         permission = '{}.api_read_{}'.format(
             model._meta.app_label, model._meta.model_name
         )
@@ -223,9 +222,9 @@ class OwnerListViewMixin(object):
         return qs
 
 
-class TranslatedApiViewMixin(object):
+class TranslatedApiViewMixin:
     def get_queryset(self):
-        qs = super(TranslatedApiViewMixin, self).get_queryset().language(
+        qs = super().get_queryset().language(
             get_language()
         )
         qs = qs.order_by(*qs.model._meta.ordering)

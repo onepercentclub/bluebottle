@@ -2,7 +2,7 @@ from future import standard_library
 standard_library.install_aliases()
 import urllib.parse
 import os
-from mock import patch
+from unittest.mock import patch
 
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import TestCase, RequestFactory
@@ -373,10 +373,10 @@ class TestSAMLTokenAuthentication(TestCase):
                 auth_backend.authenticate
             )
 
-            error.assert_called_with((
+            error.assert_called_with(
                 'Saml login error: SAML Response not found, '
                 'Only supported HTTP_POST Binding'
-            ))
+            )
 
     def test_saml_request_omits_name_id_policy(self):
         # Make sure NameIDPolicy doesn't show up in SAMLReuqest

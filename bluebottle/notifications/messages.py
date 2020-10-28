@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from builtins import str
-from builtins import object
 from operator import attrgetter
 
 from django.contrib.admin.options import get_content_type_for_model
@@ -16,7 +13,7 @@ from django.utils.translation import ugettext_lazy as _
 
 
 @python_2_unicode_compatible
-class TransitionMessage(object):
+class TransitionMessage:
     """
     Base model for sending message
     When the subject contains a variable it should be specified in context, e.g.
@@ -55,7 +52,7 @@ class TransitionMessage(object):
     @property
     def generic_content(self):
         context = self.get_generic_context()
-        template = loader.get_template("mails/{}.html".format(self.template))
+        template = loader.get_template(f"mails/{self.template}.html")
         return template.render(context)
 
     def get_context(self, recipient):
@@ -86,7 +83,7 @@ class TransitionMessage(object):
         return self.template
 
     def get_message_template(self):
-        path = "{}.{}".format(self.__module__, self.__class__.__name__)
+        path = f"{self.__module__}.{self.__class__.__name__}"
         return MessageTemplate.objects.filter(message=path).first()
 
     def get_messages(self):

@@ -1,4 +1,3 @@
-from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from future.utils import python_2_unicode_compatible
@@ -22,9 +21,9 @@ class Skill(SortableTranslatableModel):
     def __str__(self):
         return self.name
 
-    class Meta(object):
+    class Meta:
         permissions = (
             ('api_read_skill', 'Can view skills through the API'),
         )
-        verbose_name = _(u'Skill')
-        verbose_name_plural = _(u'Skills')
+        verbose_name = _('Skill')
+        verbose_name_plural = _('Skills')

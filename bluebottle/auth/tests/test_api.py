@@ -1,4 +1,4 @@
-from mock import patch
+from unittest.mock import patch
 
 from django.core.urlresolvers import reverse
 
@@ -12,10 +12,10 @@ from bluebottle.auth.middleware import authorization_logger
 
 class UserTokenTestCase(BluebottleTestCase):
     def setUp(self):
-        super(UserTokenTestCase, self).setUp()
+        super().setUp()
         self.init_projects()
         self.user = BlueBottleUserFactory.create(password='testing')
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = f"JWT {self.user.get_jwt_token()}"
 
     def user_last_seen(self):
         self.client.get(reverse('user-current'), token=self.user_token)
@@ -61,7 +61,7 @@ class UserTokenTestCase(BluebottleTestCase):
             self.assertEqual(response.status_code, 400)
 
             self.assertTrue(
-                'Authorization failed: {} 127.0.0.1'.format(self.user.email) in error.call_args[0]
+                f'Authorization failed: {self.user.email} 127.0.0.1' in error.call_args[0]
             )
 
     def test_login_failure_form_data_is_logged(self):
@@ -74,5 +74,5 @@ class UserTokenTestCase(BluebottleTestCase):
             self.assertEqual(response.status_code, 400)
 
             self.assertTrue(
-                'Authorization failed: {} 127.0.0.1'.format(self.user.email) in error.call_args[0]
+                f'Authorization failed: {self.user.email} 127.0.0.1' in error.call_args[0]
             )

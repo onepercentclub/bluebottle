@@ -1,4 +1,3 @@
-from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -14,7 +13,7 @@ class LookerEmbed(models.Model):
     type = models.CharField(_("type"), choices=EmbedTypes.choices, max_length=10)
     looker_id = models.IntegerField(_("Looker Id"))
 
-    class Meta(object):
+    class Meta:
         permissions = (
             ('access_looker_embeds', 'Can access looker embeds'),
         )

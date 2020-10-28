@@ -56,13 +56,13 @@ class PageAdmin(PlaceholderFieldAdmin):
 
     def get_urls(self):
         # Include extra API views in this admin page
-        base_urls = super(PageAdmin, self).get_urls()
+        base_urls = super().get_urls()
         info = self.model._meta.app_label, self.model._meta.model_name
         urlpatterns = [
             url(r'^(?P<pk>\d+)/preview/$',
                 self.admin_site.admin_view(
                     self.preview_canvas),
-                name="{0}_{1}_preview".format(*info)),
+                name="{}_{}_preview".format(*info)),
         ]
 
         return urlpatterns + base_urls
@@ -112,11 +112,13 @@ class PageAdmin(PlaceholderFieldAdmin):
                            form_url='', obj=None):
         info = self.model._meta.app_label, self.model._meta.model_name
         context.update({
-            'preview_canvas_url': reverse('admin:{0}_{1}_preview'.format(*info),
+            'preview_canvas_url': reverse('admin:{}_{}_preview'.format(*info),
                                           kwargs={'pk': obj.pk if obj else 0}),
         })
-        return super(PageAdmin, self).render_change_form(request, context, add,
-                                                         change, form_url, obj)
+        return super().render_change_form(
+            request, context, add,
+            change, form_url, obj
+        )
 
     def save_model(self, request, obj, form, change):
         # Automatically store the user in the author field.
@@ -136,7 +138,7 @@ class PageAdmin(PlaceholderFieldAdmin):
         icon = self.STATUS_ICONS[status]
         admin = settings.STATIC_URL + 'admin/img/'
         return format_html(
-            u'<img src="{}{}" width="10" height="10" alt="{}" title="{}" />',
+            '<img src="{}{}" width="10" height="10" alt="{}" title="{}" />',
             admin, icon, title, title)
 
     status_column.short_description = _('Status')
@@ -147,7 +149,7 @@ class PageAdmin(PlaceholderFieldAdmin):
         if rows_updated == 1:
             message = "1 entry was marked as published."
         else:
-            message = "{0} entries were marked as published.".format(
+            message = "{} entries were marked as published.".format(
                 rows_updated)
         self.message_user(request, message)
 

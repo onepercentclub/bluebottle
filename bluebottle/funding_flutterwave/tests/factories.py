@@ -1,4 +1,3 @@
-from builtins import object
 import factory
 
 from bluebottle.funding.tests.factories import DonationFactory, PlainPayoutAccountFactory
@@ -8,9 +7,9 @@ from bluebottle.funding_flutterwave.models import FlutterwavePayment, Flutterwav
 class FlutterwavePaymentFactory(factory.DjangoModelFactory):
 
     donation = factory.SubFactory(DonationFactory)
-    tx_ref = factory.Sequence(lambda n: 'uid-{0}'.format(n))
+    tx_ref = factory.Sequence(lambda n: f'uid-{n}')
 
-    class Meta(object):
+    class Meta:
         model = FlutterwavePayment
 
 
@@ -19,7 +18,7 @@ class FlutterwavePaymentProviderFactory(factory.DjangoModelFactory):
     pub_key = 'fyi'
     sec_key = 'sssht'
 
-    class Meta(object):
+    class Meta:
         model = FlutterwavePaymentProvider
 
 
@@ -33,5 +32,5 @@ class FlutterwaveBankAccountFactory(factory.DjangoModelFactory):
     reviewed = True
     connect_account = factory.SubFactory(PlainPayoutAccountFactory)
 
-    class Meta(object):
+    class Meta:
         model = FlutterwaveBankAccount

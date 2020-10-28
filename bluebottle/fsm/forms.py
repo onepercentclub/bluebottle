@@ -29,19 +29,19 @@ class StateMachineModelFormMetaClass(ModelFormMetaclass):
                 )
 
                 # Create a sto force setting state by super users
-                force_name = "force_{}".format(machine.field)
+                force_name = f"force_{machine.field}"
                 attrs[force_name] = forms.ChoiceField(
                     required=False,
                     choices=[(None, '---')] + [(s.value, s.name) for s in list(machine.states.values())],
                     widget=Select(),
                     help_text=_("Careful! This will change the status without triggering any side effects!")
                 )
-        return super(StateMachineModelFormMetaClass, cls).__new__(cls, name, bases, attrs)
+        return super().__new__(cls, name, bases, attrs)
 
 
 class StateMachineModelForm(with_metaclass(StateMachineModelFormMetaClass, forms.ModelForm)):
     def __init__(self, *args, **kwargs):
-        super(StateMachineModelForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         for field in self.state_machine_fields:
             machine = getattr(self.instance, field)
             transitions = machine.possible_transitions()
@@ -63,7 +63,7 @@ class StateMachineModelForm(with_metaclass(StateMachineModelFormMetaClass, forms
                 (get_url(transition.field), transition) for transition in transitions
                 if not transition.automatic and not transition.options.get('hide_from_admin')
             ]
-            force_field = "force_{}".format(machine.field)
+            force_field = f"force_{machine.field}"
             if machine.current_state:
                 self.fields[force_field].initial = machine.current_state.value
 
@@ -73,7 +73,7 @@ class StateMachineModelForm(with_metaclass(StateMachineModelFormMetaClass, forms
                 force_data = field.replace('force_', '')
                 if hasattr(self, 'cleaned_data') and self.cleaned_data[field]:
                     setattr(self.instance, force_data, self.cleaned_data[field])
-        return super(StateMachineModelForm, self).save(commit=commit)
+        return super().save(commit=commit)
 
     @property
     def state_machine_fields(self):

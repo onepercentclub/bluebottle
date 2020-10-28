@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 import stripe
 from moneyed import Money
 
@@ -34,7 +34,7 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
         )
 
         self.payment = StripePaymentFactory.create(donation=donation)
-        super(StripePaymentTransitionsTestCase, self).setUp()
+        super().setUp()
 
     def test_refund(self):
         self.payment.states.succeed(save=True)

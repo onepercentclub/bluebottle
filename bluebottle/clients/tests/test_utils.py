@@ -1,5 +1,4 @@
-from builtins import next
-from mock import patch
+from unittest.mock import patch
 
 from django.contrib.auth.models import Permission
 from django.contrib.auth import get_user_model
@@ -15,12 +14,12 @@ from bluebottle.clients.utils import get_user_site_links
 
 def _group_by_name(results, name):
     groups = results['groups']
-    return next((group for group in groups if group['name'] == name))
+    return next(group for group in groups if group['name'] == name)
 
 
 class TestSiteLinks(BluebottleTestCase):
     def setUp(self):
-        super(TestSiteLinks, self).setUp()
+        super().setUp()
 
         self.user1 = BlueBottleUserFactory.create()
         language_en = LanguageFactory.create(code='en')
@@ -33,7 +32,7 @@ class TestSiteLinks(BluebottleTestCase):
 
     def _add_link(self, group_name='main', **kwargs):
         if group_name not in self.link_groups:
-            self.link_groups[group_name] = LinkGroupFactory.create(title='{} Group'.format(group_name), name=group_name,
+            self.link_groups[group_name] = LinkGroupFactory.create(title=f'{group_name} Group', name=group_name,
                                                                    site_links=self.site_links)
 
         return LinkFactory.create(link_group=self.link_groups[group_name], **kwargs)

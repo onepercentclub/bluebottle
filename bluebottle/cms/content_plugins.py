@@ -1,4 +1,3 @@
-from builtins import object
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 from fluent_contents.extensions import plugin_pool, ContentPlugin
@@ -27,7 +26,7 @@ class CMSContentPlugin(ContentPlugin):
     form = CMSContentItemForm
     admin_form_template = 'admin/cms/content_item.html'
 
-    class Media(object):
+    class Media:
         css = {
             "all": ('admin/css/forms-nested.css', )
         }

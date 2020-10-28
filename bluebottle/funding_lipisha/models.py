@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -33,7 +31,7 @@ class LipishaPaymentProvider(PaymentProvider):
             'api_signature': self.api_signature
         }
 
-    class Meta(object):
+    class Meta:
         verbose_name = 'Lipisha payment provider'
 
 
@@ -51,8 +49,8 @@ class LipishaPayment(Payment):
     def save(self, *args, **kwargs):
         if not self.unique_id:
             provider = LipishaPaymentProvider.objects.get()
-            self.unique_id = "{}-{}".format(provider.prefix, self.donation.id)
-        super(LipishaPayment, self).save(*args, **kwargs)
+            self.unique_id = f"{provider.prefix}-{self.donation.id}"
+        super().save(*args, **kwargs)
 
 
 class LipishaBankAccount(BankAccount):
@@ -73,13 +71,13 @@ class LipishaBankAccount(BankAccount):
         unique=True, max_length=50, blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        super(LipishaBankAccount, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Lipisha bank account')
         verbose_name_plural = _('Lipisha bank accounts')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'payout-accounts/lipisha-external-accounts'
 
     @property

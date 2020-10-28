@@ -1,4 +1,3 @@
-from builtins import object
 import json
 import logging
 from calendar import timegm
@@ -33,7 +32,7 @@ def isAdminRequest(request):
     return request.path.startswith('/downloads') or base_path in ['jet', 'admin']
 
 
-class UserJwtTokenMiddleware(object):
+class UserJwtTokenMiddleware:
     """
     Custom middleware to set the User on the request when using
     Jwt Token authentication.
@@ -65,7 +64,7 @@ class UserJwtTokenMiddleware(object):
             return
 
 
-class SlidingJwtTokenMiddleware(object):
+class SlidingJwtTokenMiddleware:
     """
     Custom middleware to set a sliding window for the jwt auth token expiration.
     """
@@ -86,7 +85,7 @@ class SlidingJwtTokenMiddleware(object):
             # Get the payload details
             jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
             payload = jwt_decode_handler(_auth)
-            logging.debug('JWT payload found: {0}'.format(payload))
+            logging.debug(f'JWT payload found: {payload}')
 
             # Check whether we need to renew the token. This will happen if the token
             # hasn't been renewed in JWT_TOKEN_RENEWAL_DELTA
@@ -133,7 +132,7 @@ class SlidingJwtTokenMiddleware(object):
 
             # Attach the renewed token to the response
             jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-            response['Refresh-Token'] = "JWT {0}".format(
+            response['Refresh-Token'] = "JWT {}".format(
                 jwt_encode_handler(new_payload))
 
             logging.debug('JWT token has been renewed.')
@@ -155,13 +154,13 @@ class AdminOnlySessionMiddleware(SessionMiddleware):
 
     def process_request(self, request):
         if isAdminRequest(request):
-            super(AdminOnlySessionMiddleware, self).process_request(request)
+            super().process_request(request)
         else:
             return
 
     def process_response(self, request, response):
         if isAdminRequest(request):
-            return super(AdminOnlySessionMiddleware, self).process_response(
+            return super().process_response(
                 request, response)
         else:
             return response
@@ -175,10 +174,10 @@ class AdminOnlyAuthenticationMiddleware(AuthenticationMiddleware):
 
     def process_request(self, request):
         if isAdminRequest(request) and not hasattr(request, 'user'):
-            super(AdminOnlyAuthenticationMiddleware, self).process_request(request)
+            super().process_request(request)
 
 
-class AdminOnlyCsrf(object):
+class AdminOnlyCsrf:
     """
     Disable csrf for non-Admin requests, eg API
     """
@@ -254,7 +253,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
             querystring = request.GET.copy()
             del querystring[self.logout_key]
             if querystring:
-                url = '%s?%s' % (url, querystring.urlencode())
+                url = f'{url}?{querystring.urlencode()}'
             return self.redirect(request)
 
         # Don't lock down if the user is already authorized for previewing.
@@ -281,7 +280,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
 authorization_logger = logging.getLogger(__name__)
 
 
-class LogAuthFailureMiddleWare(object):
+class LogAuthFailureMiddleWare:
     def process_request(self, request):
         # TODO: Handle this more cleanly. The exception is raised when using IE11.
         #       Possibly related to the following issue:

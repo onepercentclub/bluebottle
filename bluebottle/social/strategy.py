@@ -10,4 +10,4 @@ class DRFStrategy(DjangoStrategy):
         try:
             return getattr(properties, name)
         except AttributeError:
-            return super(DRFStrategy, self).get_setting(name)
+            return super().get_setting(name)

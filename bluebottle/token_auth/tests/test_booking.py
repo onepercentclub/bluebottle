@@ -1,11 +1,10 @@
-from builtins import chr
 import base64
 import hashlib
 import hmac
 from datetime import datetime, timedelta
 from Crypto.Cipher import AES
 from Crypto import Random
-import mock
+from unittest import mock
 from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from django.test import RequestFactory
@@ -35,7 +34,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(TestBookingTokenAuthentication, self).setUp()
+        super().setUp()
 
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             self.request = RequestFactory().get('/api/sso/redirect')
@@ -95,7 +94,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
     def test_sso_url_custom_target_unicode(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             self.assertEqual(
-                self.auth_backend.sso_url(target_url=u'/test/\u2026/bla'),
+                self.auth_backend.sso_url(target_url='/test/\u2026/bla'),
                 TOKEN_AUTH_SETTINGS['sso_url'] + '?url=%2Ftest%2F%E2%80%A6%2Fbla'
             )
 
@@ -253,7 +252,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
         """
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            message = 'time={0}|username=johndoe|name=John Doe|' \
+            message = 'time={}|username=johndoe|name=John Doe|' \
                       'email=john.doe@example.com'.format(timestamp)
             aes_message, hmac_digest = self._encode_message(message)
             token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest()).decode('utf-8')
@@ -277,7 +276,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
         """
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            message = 'time={0}|username=johndoe|name=John Doe|' \
+            message = 'time={}|username=johndoe|name=John Doe|' \
                       'email=john.doe@example.com'.format(timestamp)
             aes_message, hmac_digest = self._encode_message(message)
             token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest()).decode('utf-8')
@@ -297,7 +296,7 @@ class TestBookingTokenAuthentication(BluebottleTestCase):
         """
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            message = 'time={0}|username=johndoe|name=John Doe|' \
+            message = 'time={}|username=johndoe|name=John Doe|' \
                       'email=john.doe@example.com'.format(timestamp)
             aes_message, hmac_digest = self._encode_message(message)
             token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest()).decode('utf-8')

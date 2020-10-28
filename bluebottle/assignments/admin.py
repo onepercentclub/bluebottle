@@ -1,4 +1,3 @@
-from builtins import object
 from django.contrib import admin
 from django_summernote.widgets import SummernoteWidget
 
@@ -13,7 +12,7 @@ from bluebottle.wallposts.admin import WallpostInline
 
 
 class AssignmentAdminForm(StateMachineModelForm):
-    class Meta(object):
+    class Meta:
         model = Assignment
         fields = '__all__'
         widgets = {
@@ -29,7 +28,7 @@ class ApplicantInline(ContributionInline):
 
 
 class ApplicantAdminForm(StateMachineModelForm):
-    class Meta(object):
+    class Meta:
         model = Applicant
         exclude = ('transition_date', )
 
@@ -127,4 +126,4 @@ class AssignmentAdmin(ActivityChildAdmin):
                 instance.time_spent = form.instance.duration
                 instance.status = ApplicantStateMachine.succeeded.value
             instance.save()
-        super(AssignmentAdmin, self).save_formset(request, form, formset, change)
+        super().save_formset(request, form, formset, change)

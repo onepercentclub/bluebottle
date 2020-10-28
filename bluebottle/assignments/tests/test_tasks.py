@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 from datetime import timedelta
 from django.core import mail
 from django.db import connection
@@ -19,7 +19,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 class AssignmentTasksTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(AssignmentTasksTestCase, self).setUp()
+        super().setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
             activity_types=['assignment']
         )
@@ -59,7 +59,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
                 self.assertFalse(applicant.user.email in recipients)
         self.assertEqual(
             mail.outbox[0].subject,
-            'The deadline for your task "{}" is getting close'.format(assignment.title)
+            f'The deadline for your task "{assignment.title}" is getting close'
         )
 
     def test_assignment_reminder_task_on_date(self):
@@ -94,7 +94,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
                 self.assertFalse(applicant.user.email in recipients)
         self.assertEqual(
             mail.outbox[0].subject,
-            '"{}" will take place in 5 days!'.format(assignment.title)
+            f'"{assignment.title}" will take place in 5 days!'
         )
 
     def test_assignment_reminder_task_twice(self):

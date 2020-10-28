@@ -13,7 +13,7 @@ class SCIMPlatformSettingsAdmin(BasePlatformSettingsAdmin):
     readonly_fields = ('bearer_token', )
 
     def get_urls(self):
-        urls = super(SCIMPlatformSettingsAdmin, self).get_urls()
+        urls = super().get_urls()
         custom_urls = [
             url(
                 r'^(?P<pk>.+)/reset-token/$',

@@ -52,8 +52,10 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment.date = assignment.date + timedelta(days=1)
         assignment.save()
 
-        messages = dict((message.to[0], message.body)
-                        for message in mail.outbox)
+        messages = {
+            message.to[0]: message.body
+            for message in mail.outbox
+        }
 
         for participant in assignment.contributions.instance_of(Applicant).all():
             if participant.status in ('new', 'accepted'):
@@ -82,8 +84,10 @@ class AssignmentTestCase(BluebottleTestCase):
         assignment.date = assignment.date - timedelta(days=4)
         assignment.save()
 
-        messages = dict((message.to[0], message.body)
-                        for message in mail.outbox)
+        messages = {
+            message.to[0]: message.body
+            for message in mail.outbox
+        }
 
         for participant in assignment.contributions.instance_of(Applicant).all():
             self.assertFalse(participant.user.email in messages)

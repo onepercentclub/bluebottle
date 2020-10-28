@@ -7,7 +7,7 @@ from bluebottle.utils.models import TranslationPlatformSettings
 
 class TestLanguageApi(BluebottleTestCase):
     def setUp(self):
-        super(TestLanguageApi, self).setUp()
+        super().setUp()
         self.language_url = reverse("utils_language_list")
 
     def test_languages(self):
@@ -19,7 +19,7 @@ class TestLanguageApi(BluebottleTestCase):
 class TranslationSettingsTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(TranslationSettingsTestCase, self).setUp()
+        super().setUp()
         self.settings_url = reverse('settings')
 
     def test_no_translations(self):
@@ -40,6 +40,6 @@ class TranslationSettingsTestCase(BluebottleTestCase):
             'Site'
         )
         self.assertEqual(
-            response.data['platform']['translations'][u'What\u2019s the location of your office?'],
+            response.data['platform']['translations']['What\u2019s the location of your office?'],
             'What is your office site'
         )

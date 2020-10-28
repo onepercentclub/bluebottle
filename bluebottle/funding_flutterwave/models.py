@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -48,7 +46,7 @@ class FlutterwavePaymentProvider(PaymentProvider):
             'prefix': self.prefix
         }
 
-    class Meta(object):
+    class Meta:
         verbose_name = 'Flutterwave payment provider'
 
 
@@ -101,15 +99,15 @@ class FlutterwaveBankAccount(BankAccount):
     account_number = models.CharField(
         _("account number"), max_length=255, null=True, blank=True)
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Flutterwave bank account')
         verbose_name_plural = _('Flutterwave bank accounts')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'payout-accounts/flutterwave-external-accounts'
 
     def __str__(self):
-        return "Flutterwave Bankaccount {}".format(self.account_holder_name)
+        return f"Flutterwave Bankaccount {self.account_holder_name}"
 
 
 from .states import *  # noqa

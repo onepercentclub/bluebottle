@@ -138,7 +138,7 @@ class EventIcalView(PrivateFileView):
         event.add('dtend', instance.end.astimezone(utc))
         event['uid'] = instance.uid
 
-        organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))
+        organizer = icalendar.vCalAddress(f'MAILTO:{instance.owner.email}')
         organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
 
         event['organizer'] = organizer

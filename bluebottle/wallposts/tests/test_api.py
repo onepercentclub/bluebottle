@@ -1,4 +1,3 @@
-from builtins import str
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from djmoney.money import Money
@@ -19,17 +18,17 @@ from bluebottle.utils.tests.test_unit import UserTestsMixin
 
 class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
     def setUp(self):
-        super(WallpostPermissionsTest, self).setUp()
+        super().setUp()
 
         self.owner = BlueBottleUserFactory.create(password='testing', first_name='someName', last_name='someLast')
-        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.owner_token = f"JWT {self.owner.get_jwt_token()}"
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
         self.event = EventFactory.create(owner=self.owner)
         self.assignment = AssignmentFactory.create(owner=self.owner)
 
         self.other_user = BlueBottleUserFactory.create()
-        self.other_token = "JWT {0}".format(
+        self.other_token = "JWT {}".format(
             self.other_user.get_jwt_token())
 
         self.media_wallpost_url = reverse('media_wallpost_list')
@@ -56,7 +55,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.initiative.promoter = BlueBottleUserFactory.create()
         self.initiative.save()
-        promoter_token = "JWT {0}".format(self.initiative.promoter.get_jwt_token())
+        promoter_token = f"JWT {self.initiative.promoter.get_jwt_token()}"
 
         response = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
@@ -94,7 +93,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.assignment.initiative.promoter = BlueBottleUserFactory.create()
         self.assignment.initiative.save()
-        promoter_token = "JWT {0}".format(self.assignment.initiative.promoter.get_jwt_token())
+        promoter_token = f"JWT {self.assignment.initiative.promoter.get_jwt_token()}"
 
         # Assignment owner can share a post
         wallpost = self.client.post(self.media_wallpost_url,
@@ -104,7 +103,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(wallpost.status_code,
                          status.HTTP_201_CREATED)
         # Promoters users can share a post
-        promoter_token = "JWT {0}".format(self.assignment.initiative.promoter.get_jwt_token())
+        promoter_token = f"JWT {self.assignment.initiative.promoter.get_jwt_token()}"
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
                                     token=promoter_token)
@@ -171,17 +170,17 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
 class WallpostDeletePermissionTest(BluebottleTestCase):
     def setUp(self):
-        super(WallpostDeletePermissionTest, self).setUp()
+        super().setUp()
 
         self.owner = BlueBottleUserFactory.create()
-        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.owner_token = f"JWT {self.owner.get_jwt_token()}"
 
         self.author_user = BlueBottleUserFactory.create()
-        self.author_token = "JWT {0}".format(
+        self.author_token = "JWT {}".format(
             self.author_user.get_jwt_token())
 
         self.other_user = BlueBottleUserFactory.create()
-        self.other_token = "JWT {0}".format(
+        self.other_token = "JWT {}".format(
             self.other_user.get_jwt_token())
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
@@ -227,10 +226,10 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(WallpostReactionApiIntegrationTest, self).setUp()
+        super().setUp()
 
         self.manager = BlueBottleUserFactory.create()
-        self.manager_token = "JWT {0}".format(
+        self.manager_token = "JWT {}".format(
             self.manager.get_jwt_token())
         self.event = EventFactory.create(owner=self.manager)
         self.some_wallpost = TextWallpostFactory.create(content_object=self.event)
@@ -238,12 +237,12 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
 
         self.some_user = BlueBottleUserFactory.create(
             password='testing', first_name='someName', last_name='someLast')
-        self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
+        self.some_token = f"JWT {self.some_user.get_jwt_token()}"
 
         self.another_user = BlueBottleUserFactory.create(
             password='testing2', first_name='anotherName',
             last_name='anotherLast')
-        self.another_token = "JWT {0}".format(
+        self.another_token = "JWT {}".format(
             self.another_user.get_jwt_token())
 
         self.wallpost_reaction_url = reverse('wallpost_reaction_list')
@@ -365,10 +364,10 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(TestWallpostAPIPermissions, self).setUp()
+        super().setUp()
 
         self.user = BlueBottleUserFactory.create()
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = f"JWT {self.user.get_jwt_token()}"
 
         self.some_initiative = InitiativeFactory.create(owner=self.user)
         self.some_wallpost = TextWallpostFactory.create(
@@ -416,10 +415,10 @@ class TestDonationWallpost(BluebottleTestCase):
     the system wallposts is removed if we post a comment.
     """
     def setUp(self):
-        super(TestDonationWallpost, self).setUp()
+        super().setUp()
 
         self.user = BlueBottleUserFactory.create(about_me="I like to give away all my moneys!")
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = f"JWT {self.user.get_jwt_token()}"
 
         self.funding = FundingFactory.create(status='open')
         self.wallpost_url = reverse('wallpost_list')
@@ -472,7 +471,7 @@ class TestDonationWallpost(BluebottleTestCase):
 
     def test_donation_wallposts_other_user(self):
         other_user = BlueBottleUserFactory.create()
-        other_user_token = "JWT {0}".format(other_user.get_jwt_token())
+        other_user_token = f"JWT {other_user.get_jwt_token()}"
         response = self.client.post(self.text_wallpost_url, self.data, token=other_user_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -493,13 +492,13 @@ class TestPinnedWallpost(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(TestPinnedWallpost, self).setUp()
+        super().setUp()
 
         self.initiator = BlueBottleUserFactory.create()
-        self.initiator_token = "JWT {0}".format(self.initiator.get_jwt_token())
+        self.initiator_token = f"JWT {self.initiator.get_jwt_token()}"
 
         self.user = BlueBottleUserFactory.create()
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = f"JWT {self.user.get_jwt_token()}"
 
         self.initiative = InitiativeFactory.create(owner=self.initiator)
 
@@ -538,16 +537,16 @@ class TestPinnedWallpost(BluebottleTestCase):
 
 class InitiativeWallpostTest(BluebottleTestCase):
     def setUp(self):
-        super(InitiativeWallpostTest, self).setUp()
+        super().setUp()
 
         self.owner = BlueBottleUserFactory.create()
-        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.owner_token = f"JWT {self.owner.get_jwt_token()}"
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
         self.event = EventFactory.create(owner=self.owner)
 
         self.other_user = BlueBottleUserFactory.create()
-        self.other_token = "JWT {0}".format(
+        self.other_token = "JWT {}".format(
             self.other_user.get_jwt_token())
 
         self.media_wallpost_url = reverse('media_wallpost_list')
@@ -574,7 +573,7 @@ class InitiativeWallpostTest(BluebottleTestCase):
 
         self.initiative.promoter = BlueBottleUserFactory.create()
         self.initiative.save()
-        promoter_token = "JWT {0}".format(self.initiative.promoter.get_jwt_token())
+        promoter_token = f"JWT {self.initiative.promoter.get_jwt_token()}"
 
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
@@ -650,10 +649,10 @@ class InitiativeWallpostTest(BluebottleTestCase):
 
 class FundingWallpostTest(BluebottleTestCase):
     def setUp(self):
-        super(FundingWallpostTest, self).setUp()
+        super().setUp()
 
         self.owner = BlueBottleUserFactory.create()
-        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.owner_token = f"JWT {self.owner.get_jwt_token()}"
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
         self.funding = FundingFactory.create(target=Money(5000, 'EUR'), status='open', initiative=self.initiative)
@@ -728,17 +727,17 @@ class FundingWallpostTest(BluebottleTestCase):
                 'parent_id': self.funding.pk,
                 'parent_type': 'funding'
             },
-            token="JWT {0}".format(author.get_jwt_token())
+            token=f"JWT {author.get_jwt_token()}"
         )
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class WallpostPhotoTest(BluebottleTestCase):
     def setUp(self):
-        super(WallpostPhotoTest, self).setUp()
+        super().setUp()
 
         self.owner = BlueBottleUserFactory.create()
-        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.owner_token = f"JWT {self.owner.get_jwt_token()}"
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
         self.funding = FundingFactory.create(target=Money(5000, 'EUR'), status='open', initiative=self.initiative)
@@ -758,7 +757,7 @@ class WallpostPhotoTest(BluebottleTestCase):
             data={
                 'mediawallpost': self.wallpost.pk
             },
-            token="JWT {0}".format(self.photo.author.get_jwt_token())
+            token=f"JWT {self.photo.author.get_jwt_token()}"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue('jpg' in response.data['photo']['full'])
@@ -774,6 +773,6 @@ class WallpostPhotoTest(BluebottleTestCase):
             data={
                 'mediawallpost': self.wallpost.pk
             },
-            token="JWT {0}".format(self.photo.author.get_jwt_token())
+            token=f"JWT {self.photo.author.get_jwt_token()}"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

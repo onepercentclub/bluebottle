@@ -1,10 +1,7 @@
-
 from future import standard_library
 standard_library.install_aliases()
 
 from urllib.parse import urlencode
-from builtins import range
-from builtins import object
 
 from django.contrib.auth.models import Group
 from django.core import mail
@@ -17,20 +14,20 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
-class SCIMEndpointTestCaseMixin(object):
+class SCIMEndpointTestCaseMixin:
     def setUp(self):
         self.token = 'Bearer {}'.format(
             SCIMPlatformSettings.objects.get().bearer_token
         )
-        super(SCIMEndpointTestCaseMixin, self).setUp()
+        super().setUp()
 
 
-class AuthenticatedSCIMEndpointTestCaseMixin(object):
+class AuthenticatedSCIMEndpointTestCaseMixin:
     def setUp(self):
         self.token = 'Bearer {}'.format(
             SCIMPlatformSettings.objects.get().bearer_token
         )
-        super(AuthenticatedSCIMEndpointTestCaseMixin, self).setUp()
+        super().setUp()
 
     def test_get_no_authentication(self):
         """
@@ -66,7 +63,7 @@ class AuthenticatedSCIMEndpointTestCaseMixin(object):
         user = BlueBottleUserFactory.create()
         response = self.client.get(
             self.url,
-            token="JWT {0}".format(user.get_jwt_token())
+            token=f"JWT {user.get_jwt_token()}"
         )
         data = response.data
 
@@ -282,7 +279,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         for i in range(10):
             BlueBottleUserFactory.create(is_superuser=False)
 
-        super(SCIMUserListTest, self).setUp()
+        super().setUp()
 
     def test_get(self):
         """
@@ -310,7 +307,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         })
 
         response = self.client.get(
-            '{}?{}'.format(self.url, params),
+            f'{self.url}?{params}',
             token=self.token
         )
         data = response.data
@@ -325,7 +322,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         })
 
         response = self.client.get(
-            '{}?{}'.format(self.url, params),
+            f'{self.url}?{params}',
             token=self.token
         )
         data = response.data
@@ -340,7 +337,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         })
 
         response = self.client.get(
-            '{}?{}'.format(self.url, params),
+            f'{self.url}?{params}',
             token=self.token
         )
         data = response.data
@@ -504,7 +501,7 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.user = BlueBottleUserFactory.create(is_superuser=False)
         self.user.groups.add(Group.objects.get(name='Staff'))
 
-        super(SCIMUserDetailTest, self).setUp()
+        super().setUp()
 
     def test_get(self):
         """
@@ -517,7 +514,7 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
 
         self.assertEqual(response.status_code, 200)
         data = response.data
-        self.assertEqual(data['id'], 'goodup-user-{}'.format(self.user.pk))
+        self.assertEqual(data['id'], f'goodup-user-{self.user.pk}')
         self.assertEqual(data['name']['givenName'], self.user.first_name)
         self.assertEqual(data['name']['familyName'], self.user.last_name)
         self.assertEqual(data['active'], True)
@@ -545,7 +542,7 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         """
         request_data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
-            'id': 'goodup-user-{}'.format(self.user.pk),
+            'id': f'goodup-user-{self.user.pk}',
             'externalId': '123',
             'active': False,
             'emails': [{
@@ -645,7 +642,7 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
         self.user = BlueBottleUserFactory.create()
         self.user.groups.add(self.group)
 
-        super(SCIMGroupDetailTest, self).setUp()
+        super().setUp()
 
     def test_get(self):
         """
@@ -658,10 +655,10 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
 
         self.assertEqual(response.status_code, 200)
         data = response.data
-        self.assertEqual(data['id'], 'goodup-group-{}'.format(self.group.id))
+        self.assertEqual(data['id'], f'goodup-group-{self.group.id}')
         self.assertEqual(data['displayName'], self.group.name)
         self.assertEqual(len(data['members']), 1)
-        self.assertEqual(data['members'][0]['value'], 'goodup-user-{}'.format(self.user.pk))
+        self.assertEqual(data['members'][0]['value'], f'goodup-user-{self.user.pk}')
         self.assertEqual(
             data['members'][0]['$ref'],
             reverse('scim-user-detail', args=(self.user.pk, ))
@@ -673,11 +670,11 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
     def test_put_add_to_group(self):
         new_user = BlueBottleUserFactory.create()
         request_data = {
-            'id': 'goodup-group-{}'.format(self.group.pk),
+            'id': f'goodup-group-{self.group.pk}',
             'displayName': self.group.name,
             'members': [
-                {'value': 'goodup-user-{}'.format(self.user.pk)},
-                {'value': 'goodup-user-{}'.format(new_user.pk)},
+                {'value': f'goodup-user-{self.user.pk}'},
+                {'value': f'goodup-user-{new_user.pk}'},
             ]
         }
         response = self.client.put(
@@ -699,10 +696,10 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
         group = Group.objects.get(name='Staff')
         url = reverse('scim-group-detail', args=(group.pk, ))
         request_data = {
-            'id': 'goodup-group-{}'.format(group.pk),
+            'id': f'goodup-group-{group.pk}',
             'displayName': group.name,
             'members': [
-                {'value': 'goodup-user-{}'.format(new_user.pk)},
+                {'value': f'goodup-user-{new_user.pk}'},
             ]
         }
         response = self.client.put(
@@ -722,7 +719,7 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
 
     def test_missing_members_are_removed(self):
         request_data = {
-            'id': 'goodup-group-{}'.format(self.group.pk),
+            'id': f'goodup-group-{self.group.pk}',
             'displayName': self.group.name,
             'members': [],
         }
@@ -738,7 +735,7 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
 
     def test_add_non_existant_user(self):
         request_data = {
-            'id': 'goodup-group-{}'.format(self.group.pk),
+            'id': f'goodup-group-{self.group.pk}',
             'displayName': self.group.name,
             'members': [
                 {'value': 1234},
@@ -756,7 +753,7 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
 
     def test_add_incorrect_id(self):
         request_data = {
-            'id': 'goodup-group-{}'.format(self.group.pk),
+            'id': f'goodup-group-{self.group.pk}',
             'displayName': self.group.name,
             'members': [
                 {'value': 'goodup-user-bla-bla-bla'},

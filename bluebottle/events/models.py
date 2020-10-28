@@ -1,11 +1,9 @@
-from __future__ import absolute_import
 from future.utils import python_2_unicode_compatible
 
 import datetime
 from urllib.parse import urlencode
 
 import pytz
-from builtins import object
 from django.db import models, connection
 from django.db.models import Count, Sum
 from django.utils.html import strip_tags
@@ -94,7 +92,7 @@ class Event(Activity):
     def contribution_date(self):
         return self.start
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Event")
         verbose_name_plural = _("Events")
         permissions = (
@@ -109,7 +107,7 @@ class Event(Activity):
             ('api_delete_own_event', 'Can delete own event through the API'),
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'activities/events'
 
     @property
@@ -120,7 +118,7 @@ class Event(Activity):
     def save(self, *args, **kwargs):
         self.end = self.current_end
 
-        super(Event, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     @property
     def participants(self):
@@ -139,7 +137,7 @@ class Event(Activity):
     @property
     def details(self):
         details = HTMLParser().unescape(
-            u'{}\n{}'.format(
+            '{}\n{}'.format(
                 strip_tags(self.description), self.get_absolute_url()
             )
         )
@@ -155,11 +153,11 @@ class Event(Activity):
             if date:
                 return date.astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
 
-        url = u'https://calendar.google.com/calendar/render'
+        url = 'https://calendar.google.com/calendar/render'
         params = {
-            'action': u'TEMPLATE',
+            'action': 'TEMPLATE',
             'text': self.title,
-            'dates': u'{}/{}'.format(
+            'dates': '{}/{}'.format(
                 format_date(self.start), format_date(self.end)
             ),
             'details': self.details,
@@ -169,7 +167,7 @@ class Event(Activity):
         if self.location:
             params['location'] = self.location.formatted_address
 
-        return u'{}?{}'.format(url, urlencode(params))
+        return '{}?{}'.format(url, urlencode(params))
 
     @property
     def outlook_link(self):
@@ -192,14 +190,14 @@ class Event(Activity):
         if self.location:
             params['location'] = self.location.formatted_address
 
-        return u'{}?{}'.format(url, urlencode(params))
+        return '{}?{}'.format(url, urlencode(params))
 
 
 @python_2_unicode_compatible
 class Participant(Contribution):
     time_spent = models.FloatField(default=0)
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Participant")
         verbose_name_plural = _("Participants")
 
@@ -215,14 +213,14 @@ class Participant(Contribution):
             ('api_delete_own_participant', 'Can delete own participant through the API'),
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'contributions/participants'
 
     def save(self, *args, **kwargs):
         if not self.contribution_date:
             self.contribution_date = self.activity.start
 
-        super(Participant, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.user.full_name

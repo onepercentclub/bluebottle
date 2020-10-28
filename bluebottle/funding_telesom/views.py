@@ -17,7 +17,7 @@ class TelesomPaymentList(PaymentList):
     serializer_class = TelesomPaymentSerializer
 
     def perform_create(self, serializer):
-        super(TelesomPaymentList, self).perform_create(serializer)
+        super().perform_create(serializer)
         initiate_payment(serializer.save())
 
 

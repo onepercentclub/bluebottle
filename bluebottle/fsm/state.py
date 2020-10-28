@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 from django.utils.translation import ugettext_lazy as _
 from django.dispatch import Signal
 from future.utils import with_metaclass
@@ -11,7 +9,7 @@ class TransitionNotPossible(Exception):
 
 
 @python_2_unicode_compatible
-class BaseTransition(object):
+class BaseTransition:
     def __init__(self, sources, target, name='', description='',
                  automatic=True, conditions=None, effects=None, **options):
         self.name = name
@@ -72,7 +70,7 @@ class BaseTransition(object):
             return self
 
     def __repr__(self):
-        return '<Transition from {} to {}>'.format(self.sources, self.target)
+        return f'<Transition from {self.sources} to {self.target}>'
 
     def __str__(self):
         return str(self.name or self.field)
@@ -85,10 +83,10 @@ post_state_transition = Signal(providing_args=['instance', 'transition', 'kwargs
 class Transition(BaseTransition):
     def __init__(self, sources, target, *args, **kwargs):
         self.permission = kwargs.get('permission')
-        super(Transition, self).__init__(sources, target, *args, **kwargs)
+        super().__init__(sources, target, *args, **kwargs)
 
     def can_execute(self, machine, user=None, **kwargs):
-        result = super(Transition, self).can_execute(machine, **kwargs)
+        result = super().can_execute(machine, **kwargs)
 
         if self.permission and user and not user.is_staff and not self.permission(machine, user):
             raise TransitionNotPossible(
@@ -106,7 +104,7 @@ class Transition(BaseTransition):
             **kwargs
         )
 
-        super(Transition, self).on_execute(machine)
+        super().on_execute(machine)
 
         if effects:
             for effect in self.effects:
@@ -126,7 +124,7 @@ class Transition(BaseTransition):
 
 
 @python_2_unicode_compatible
-class State(object):
+class State:
     transition_class = Transition
 
     def __init__(self, name, value=None, description=''):
@@ -135,7 +133,7 @@ class State(object):
         self.description = description
 
     def __repr__(self):
-        return '<State {}>'.format(self.name)
+        return f'<State {self.name}>'
 
     def __str__(self):
         return str(self.name)
@@ -146,15 +144,15 @@ class EmptyState(State):
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super(EmptyState, cls).__new__(
+            cls._instance = super().__new__(
                 cls, *args, **kwargs)
         return cls._instance
 
     def __init__(self):
-        super(EmptyState, self).__init__('empty', '')
+        super().__init__('empty', '')
 
     def __repr__(self):
-        return '<EmptyState {}>'.format(self.name)
+        return f'<EmptyState {self.name}>'
 
 
 class AllStates(State):
@@ -162,34 +160,34 @@ class AllStates(State):
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super(AllStates, cls).__new__(
+            cls._instance = super().__new__(
                 cls, *args, **kwargs)
 
         return cls._instance
 
     def __init__(self):
-        super(AllStates, self).__init__('all', '')
+        super().__init__('all', '')
 
     def __repr__(self):
-        return '<All States {}>'.format(self.name)
+        return f'<All States {self.name}>'
 
 
 class StateMachineMeta(type):
     def __new__(cls, name, bases, dct):
         result = type.__new__(cls, name, bases, dct)
 
-        states = dict(
-            (key, getattr(result, key))
+        states = {
+            key: getattr(result, key)
             for key in dir(result)
             if isinstance(getattr(result, key), State) and key != 'initial'
-        )
+        }
         result.states = states
 
-        transitions = dict(
-            (key, getattr(result, key))
+        transitions = {
+            key: getattr(result, key)
             for key in dir(result)
             if isinstance(getattr(result, key), Transition)
-        )
+        }
         for key, transition in list(transitions.items()):
             transition.field = key
 
@@ -255,7 +253,7 @@ class ModelStateMachine(with_metaclass(ModelStateMachineMeta, StateMachine)):
     def __init__(self, instance):
         self.instance = instance
 
-        super(ModelStateMachine, self).__init__()
+        super().__init__()
 
     @property
     def state(self):

@@ -1,7 +1,4 @@
-from builtins import object
-
-
-class BaseMessageAdapter(object):
+class BaseMessageAdapter:
 
     def __init__(self, message):
         self.message = message

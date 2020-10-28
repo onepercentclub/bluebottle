@@ -1,4 +1,3 @@
-from builtins import object
 import hashlib
 import os
 
@@ -26,7 +25,7 @@ class PrivateDocumentField(DocumentField):
 
     def __init__(self, permissions, **kwargs):
         self.permissions = permissions
-        super(PrivateDocumentField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def has_parent_permissions(self, parent):
         request = self.context['request']
@@ -36,7 +35,7 @@ class PrivateDocumentField(DocumentField):
         return True
 
     def get_queryset(self):
-        queryset = super(PrivateDocumentField, self).get_queryset()
+        queryset = super().get_queryset()
         parent = self.parent.instance
         if not self.has_parent_permissions(parent):
             return queryset.none()
@@ -52,7 +51,7 @@ class PrivateDocumentField(DocumentField):
         else:
             if not self.has_parent_permissions(parent):
                 return None
-        return super(PrivateDocumentField, self).to_representation(value)
+        return super().to_representation(value)
 
 
 class FileSerializer(ModelSerializer):
@@ -64,12 +63,12 @@ class FileSerializer(ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = Document
         fields = ('id', 'file', 'filename', 'owner', )
         meta_fields = ['filename']
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = ['owner', ]
 
     def get_filename(self, instance):
@@ -78,7 +77,7 @@ class FileSerializer(ModelSerializer):
 
 class PrivateFileSerializer(FileSerializer):
 
-    class Meta(object):
+    class Meta:
         model = PrivateDocument
         fields = ('id', 'file', 'filename', 'owner', )
         meta_fields = ['filename']
@@ -105,12 +104,12 @@ class DocumentSerializer(ModelSerializer):
     def get_filename(self, instance):
         return os.path.basename(instance.file.name)
 
-    class Meta(object):
+    class Meta:
         model = Document
         fields = ('id', 'file', 'filename', 'owner', 'link',)
         meta_fields = ['filename']
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = ['owner', ]
 
 
@@ -120,7 +119,7 @@ class PrivateDocumentSerializer(DocumentSerializer):
         parent_id = getattr(obj, self.relationship).get().pk
         return reverse_signed(self.content_view_name, args=(parent_id, ))
 
-    class Meta(object):
+    class Meta:
         model = PrivateDocument
         fields = ('id', 'file', 'filename', 'owner', 'link',)
         meta_fields = ['filename']
@@ -139,16 +138,16 @@ class ImageSerializer(DocumentSerializer):
                 relationship = getattr(obj, self.relationship)
                 parent_id = getattr(obj, self.relationship).get().pk
                 hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
-                return dict(
-                    (
-                        key,
-                        reverse(self.content_view_name, args=(parent_id, size, )) + '?_={}'.format(hash)
-                    ) for key, size in list(self.sizes.items())
-                )
+                return {
+                    key: reverse(
+                        self.content_view_name, args=(parent_id, size, )
+                    ) + f'?_={hash}'
+                    for key, size in list(self.sizes.items())
+                }
             except relationship.model.DoesNotExist:
                 return {}
 
-    class Meta(object):
+    class Meta:
         model = Image
         fields = ('id', 'file', 'filename', 'owner', 'links',)
         meta_fields = ['filename']

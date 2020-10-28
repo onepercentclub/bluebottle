@@ -30,4 +30,4 @@ class ApplicantListFilter(DjangoFilterBackend):
                 ApplicantStateMachine.active.value,
                 ApplicantStateMachine.succeeded.value
             ])
-        return super(ApplicantListFilter, self).filter_queryset(request, queryset, view)
+        return super().filter_queryset(request, queryset, view)

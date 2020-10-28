@@ -1,6 +1,3 @@
-# coding=utf-8
-from builtins import str
-from builtins import range
 from django.urls import reverse
 
 from rest_framework import status
@@ -15,7 +12,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 class SegmentTypeListAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(SegmentTypeListAPITestCase, self).setUp()
+        super().setUp()
 
         self.client = JSONAPITestClient()
 
@@ -43,8 +40,8 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
 
         self.assertEqual(segment_type.name, result['attributes']['name'])
         self.assertEqual(
-            set(relation['id'] for relation in result['relationships']['segments']['data']),
-            set(str(segment.pk) for segment in segment_type.segments.all())
+            {relation['id'] for relation in result['relationships']['segments']['data']},
+            {str(segment.pk) for segment in segment_type.segments.all()}
         )
 
     def test_list_anonymous(self):
@@ -78,7 +75,7 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
 class SegmentListAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(SegmentListAPITestCase, self).setUp()
+        super().setUp()
 
         self.client = JSONAPITestClient()
 

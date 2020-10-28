@@ -1,8 +1,6 @@
-from builtins import str
-from builtins import range
 import json
 from datetime import timedelta
-import mock
+from unittest import mock
 import munch
 
 import stripe
@@ -45,7 +43,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_inc
 
 class BudgetLineListTestCase(BluebottleTestCase):
     def setUp(self):
-        super(BudgetLineListTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
@@ -129,7 +127,7 @@ class BudgetLineListTestCase(BluebottleTestCase):
 
 class BudgetLineDetailTestCase(BluebottleTestCase):
     def setUp(self):
-        super(BudgetLineDetailTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
@@ -199,7 +197,7 @@ class BudgetLineDetailTestCase(BluebottleTestCase):
 
 class RewardListTestCase(BluebottleTestCase):
     def setUp(self):
-        super(RewardListTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
@@ -288,7 +286,7 @@ class RewardListTestCase(BluebottleTestCase):
 
 class RewardDetailTestCase(BluebottleTestCase):
     def setUp(self):
-        super(RewardDetailTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
@@ -358,7 +356,7 @@ class RewardDetailTestCase(BluebottleTestCase):
 
 class FundingDetailTestCase(BluebottleTestCase):
     def setUp(self):
-        super(FundingDetailTestCase, self).setUp()
+        super().setUp()
         StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
@@ -435,19 +433,19 @@ class FundingDetailTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             data['data']['attributes']['target'],
-            {u'currency': u'EUR', u'amount': 5000.0}
+            {'currency': 'EUR', 'amount': 5000.0}
         )
         self.assertEqual(
             data['data']['attributes']['amount-donated'],
-            {u'currency': u'EUR', u'amount': 1000.0}
+            {'currency': 'EUR', 'amount': 1000.0}
         )
         self.assertEqual(
             data['data']['attributes']['amount-matching'],
-            {u'currency': u'EUR', u'amount': 500.0}
+            {'currency': 'EUR', 'amount': 500.0}
         )
         self.assertEqual(
             data['data']['attributes']['amount-raised'],
-            {u'currency': u'EUR', u'amount': 1500.0}
+            {'currency': 'EUR', 'amount': 1500.0}
         )
 
         # Should only see the three successful donations
@@ -628,7 +626,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
 class FundingTestCase(BluebottleTestCase):
     def setUp(self):
-        super(FundingTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create(owner=self.user)
@@ -670,7 +668,7 @@ class FundingTestCase(BluebottleTestCase):
 
 class DonationTestCase(BluebottleTestCase):
     def setUp(self):
-        super(DonationTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
@@ -833,7 +831,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(
             data['errors'][0]['detail'],
-            u'User can only be set, not changed.'
+            'User can only be set, not changed.'
         )
 
     def test_update_wrong_user(self):
@@ -1117,7 +1115,7 @@ class DonationTestCase(BluebottleTestCase):
 
 class CurrencySettingsTestCase(BluebottleTestCase):
     def setUp(self):
-        super(CurrencySettingsTestCase, self).setUp()
+        super().setUp()
         self.settings_url = reverse('settings')
         stripe = StripePaymentProviderFactory.create()
         stripe.paymentcurrency_set.filter(code__in=['AUD', 'GBP']).all().delete()
@@ -1142,7 +1140,7 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                     'code': 'EUR',
                     'name': 'Euro',
                     'maxAmount': None,
-                    'symbol': u'\u20ac',
+                    'symbol': '\u20ac',
                     'minAmount': 5.00,
                     'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
                     'provider': 'stripe'
@@ -1160,7 +1158,7 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                     'code': 'NGN',
                     'name': 'Nigerian Naira',
                     'maxAmount': None,
-                    'symbol': u'\u20a6',
+                    'symbol': '\u20a6',
                     'minAmount': 1000.00,
                     'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
                     'provider': 'flutterwave'
@@ -1171,7 +1169,7 @@ class CurrencySettingsTestCase(BluebottleTestCase):
 
 class PayoutAccountTestCase(BluebottleTestCase):
     def setUp(self):
-        super(PayoutAccountTestCase, self).setUp()
+        super().setUp()
         StripePaymentProvider.objects.all().delete()
         self.stripe = StripePaymentProviderFactory.create()
         flutterwave_provider = FlutterwavePaymentProviderFactory.create()
@@ -1212,38 +1210,38 @@ class PayoutAccountTestCase(BluebottleTestCase):
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
         included = json.loads(response.content)['included']
 
-        payment_methods = [method['attributes'] for method in included if method['type'] == u'payments/payment-methods']
+        payment_methods = [method['attributes'] for method in included if method['type'] == 'payments/payment-methods']
 
         self.assertEqual(
             payment_methods,
             [
                 {
-                    u'code': u'bancontact',
-                    u'name': u'Bancontact',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR'],
-                    u'countries': [u'BE']
+                    'code': 'bancontact',
+                    'name': 'Bancontact',
+                    'provider': 'stripe',
+                    'currencies': ['EUR'],
+                    'countries': ['BE']
                 },
                 {
-                    u'code': u'credit-card',
-                    u'name': u'Credit card',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR', u'USD'],
-                    u'countries': []
+                    'code': 'credit-card',
+                    'name': 'Credit card',
+                    'provider': 'stripe',
+                    'currencies': ['EUR', 'USD'],
+                    'countries': []
                 },
                 {
-                    u'code': u'direct-debit',
-                    u'name': u'Direct debit',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR'],
-                    u'countries': []
+                    'code': 'direct-debit',
+                    'name': 'Direct debit',
+                    'provider': 'stripe',
+                    'currencies': ['EUR'],
+                    'countries': []
                 },
                 {
-                    u'code': u'ideal',
-                    u'name': u'iDEAL',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR'],
-                    u'countries': [u'NL']
+                    'code': 'ideal',
+                    'name': 'iDEAL',
+                    'provider': 'stripe',
+                    'currencies': ['EUR'],
+                    'countries': ['NL']
                 }
             ]
         )
@@ -1264,17 +1262,17 @@ class PayoutAccountTestCase(BluebottleTestCase):
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
         included = json.loads(response.content)['included']
 
-        payment_methods = [method['attributes'] for method in included if method['type'] == u'payments/payment-methods']
+        payment_methods = [method['attributes'] for method in included if method['type'] == 'payments/payment-methods']
 
         self.assertEqual(
             payment_methods,
             [
                 {
-                    u'code': u'credit-card',
-                    u'name': u'Credit card',
-                    u'currencies': [u'EUR', u'USD', u'GBP', u'AUD'],
-                    u'provider': u'stripe',
-                    u'countries': []
+                    'code': 'credit-card',
+                    'name': 'Credit card',
+                    'currencies': ['EUR', 'USD', 'GBP', 'AUD'],
+                    'provider': 'stripe',
+                    'countries': []
                 }
             ]
         )
@@ -1282,7 +1280,7 @@ class PayoutAccountTestCase(BluebottleTestCase):
 
 class PayoutDetailTestCase(BluebottleTestCase):
     def setUp(self):
-        super(PayoutDetailTestCase, self).setUp()
+        super().setUp()
         StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
@@ -1376,7 +1374,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
 
             response = self.client.get(
                 self.get_payout_url(self.funding.payouts.first()),
-                HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+                HTTP_AUTHORIZATION=f'Token {self.token.key}'
             )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1428,7 +1426,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
 
         response = self.client.get(
             self.get_payout_url(self.funding.payouts.first()),
-            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+            HTTP_AUTHORIZATION=f'Token {self.token.key}'
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1470,7 +1468,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
 
         response = self.client.get(
             self.get_payout_url(self.funding.payouts.first()),
-            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+            HTTP_AUTHORIZATION=f'Token {self.token.key}'
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1512,7 +1510,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
 
         response = self.client.get(
             self.get_payout_url(self.funding.payouts.first()),
-            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+            HTTP_AUTHORIZATION=f'Token {self.token.key}'
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1554,7 +1552,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
 
         response = self.client.get(
             self.get_payout_url(self.funding.payouts.first()),
-            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+            HTTP_AUTHORIZATION=f'Token {self.token.key}'
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1598,7 +1596,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
                     }
                 }
             }),
-            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+            HTTP_AUTHORIZATION=f'Token {self.token.key}'
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1610,7 +1608,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
 class FundingAPIPermissionsTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(FundingAPIPermissionsTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 

@@ -20,10 +20,10 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
 
     @method_decorator(cache_page(3600))
     def get(self, request, *args, **kwargs):
-        return super(CountryList, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        qs = super(CountryList, self).get_queryset().filter(
+        qs = super().get_queryset().filter(
             alpha2_code__isnull=False
         )
 
@@ -42,7 +42,7 @@ class CountryDetail(RetrieveAPIView):
     queryset = Country.objects.all()
 
     def get_queryset(self):
-        qs = super(CountryDetail, self).get_queryset()
+        qs = super().get_queryset()
         return qs
 
 

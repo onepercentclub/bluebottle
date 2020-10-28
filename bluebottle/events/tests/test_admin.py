@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from builtins import str
 from datetime import timedelta
 
 from django.contrib.admin.sites import AdminSite
@@ -14,7 +12,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 class TestEventAdmin(BluebottleAdminTestCase):
     def setUp(self):
-        super(TestEventAdmin, self).setUp()
+        super().setUp()
         self.site = AdminSite()
         self.event = EventFactory.create(
             registration_deadline=(now() + timedelta(weeks=2)).date(),

@@ -1,7 +1,7 @@
 import stripe
 from django.urls import reverse
 from djmoney.money import Money
-from mock import patch
+from unittest.mock import patch
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import (
@@ -14,7 +14,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 class StripeSourcePaymentAdminTestCase(BluebottleAdminTestCase):
     def setUp(self):
-        super(StripeSourcePaymentAdminTestCase, self).setUp()
+        super().setUp()
         account = generate_stripe_payout_account()
         bank_account = ExternalAccountFactory.create(connect_account=account)
         funding = FundingFactory.create(bank_account=bank_account)

@@ -23,7 +23,7 @@ class SegmentType(models.Model):
         if not self.slug:
             self.slug = slugify(self.name)
 
-        super(SegmentType, self).save(**kwargs)
+        super().save(**kwargs)
 
     def __str__(self):
         return self.name
@@ -50,10 +50,10 @@ class Segment(models.Model):
         if self.name not in self.alternate_names:
             self.alternate_names.append(self.name)
 
-        super(Segment, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return u'{}: {}'.format(self.type.name, self.name)
+        return f'{self.type.name}: {self.name}'
 
     class Meta:
         ordering = ('name',)

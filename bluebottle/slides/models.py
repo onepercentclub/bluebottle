@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 from django.conf import settings
 from django.db import models
 from django.utils.functional import lazy
@@ -80,10 +78,10 @@ class Slide(PublishableModel):
 
     @property
     def background_image_full_path(self):
-        return "{0}{1}".format(settings.MEDIA_URL, str(self.background_image))
+        return "{}{}".format(settings.MEDIA_URL, str(self.background_image))
 
     def __str__(self):
         return self.title
 
-    class Meta(object):
+    class Meta:
         ordering = ('language', 'sequence')

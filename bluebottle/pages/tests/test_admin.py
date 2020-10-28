@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from django.contrib.admin.sites import AdminSite
 from django.test.client import RequestFactory
 
@@ -12,7 +11,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 class TestPageAdmin(BluebottleAdminTestCase):
 
     def setUp(self):
-        super(TestPageAdmin, self).setUp()
+        super().setUp()
         self.client.force_login(self.superuser)
         self.init_projects()
         self.site = AdminSite()

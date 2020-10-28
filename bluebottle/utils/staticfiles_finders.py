@@ -21,9 +21,9 @@ class TenantStaticFilesFinder(FileSystemFinder):
             return []
 
         for tenant in tenants:
-            if "{0}/".format(tenant.client_name) in path:
-                tenant_path = path.replace('{0}/'.format(tenant.client_name),
-                                           '{0}/static/'.format(
+            if f"{tenant.client_name}/" in path:
+                tenant_path = path.replace(f'{tenant.client_name}/',
+                                           '{}/static/'.format(
                                                tenant.client_name))
                 local_path = safe_join(tenant_dir, tenant_path)
                 if os.path.exists(local_path):

@@ -34,9 +34,9 @@ class TenantProperties(local):
             execfile(props_mod, dict(settings=settings),
                      self.tenant_properties)
 
-        except (ImportError, AttributeError, IOError):
+        except (ImportError, AttributeError, OSError):
             if not isinstance(tenant, FakeTenant):
-                logger.debug('No tenant properties found for: {0}'.format(tenant.client_name))
+                logger.debug(f'No tenant properties found for: {tenant.client_name}')
 
             pass
 

@@ -61,7 +61,7 @@ class InitiativeWallpostTestCase(TestCase):
 
         self.assertEqual(
             owner_mail.subject,
-            "You have a new post on '{}'".format(self.initiative.title)
+            f"You have a new post on '{self.initiative.title}'"
         )
 
     def test_wallpost_owner(self):
@@ -76,7 +76,7 @@ class InitiativeWallpostTestCase(TestCase):
 
         self.assertEqual(
             follow_mail.subject,
-            "Update from '{}'".format(self.initiative.title)
+            f"Update from '{self.initiative.title}'"
         )
         self.assertTrue(
             '{} posted an update to {}'.format(
@@ -106,11 +106,11 @@ class InitiativeWallpostTestCase(TestCase):
 
         self.assertEqual(
             wallpost_owner_mail.subject,
-            "You have a new post on '{}'".format(self.initiative.title)
+            f"You have a new post on '{self.initiative.title}'"
         )
         owner_mail = mail.outbox[1]
 
         self.assertEqual(
             owner_mail.subject,
-            "You have a new post on '{}'".format(self.initiative.title)
+            f"You have a new post on '{self.initiative.title}'"
         )

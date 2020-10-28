@@ -2,7 +2,7 @@ import json
 
 from django.urls import reverse
 from djmoney.money import Money
-from mock import patch
+from unittest.mock import patch
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, PlainPayoutAccountFactory
@@ -33,7 +33,7 @@ failed_response = {
 class FlutterwavePaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(FlutterwavePaymentTestCase, self).setUp()
+        super().setUp()
         self.provider = FlutterwavePaymentProviderFactory.create()
 
         self.client = JSONAPITestClient()
@@ -46,7 +46,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
 
         self.payment_url = reverse('flutterwave-payment-list')
 
-        self.tx_ref = "{}-{}".format(self.provider.prefix, self.donation.id)
+        self.tx_ref = f"{self.provider.prefix}-{self.donation.id}"
 
         self.data = {
             'data': {
@@ -85,7 +85,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
             user=self.user,
             client_secret='348576245976234597'
         )
-        self.tx_ref = "{}-{}".format(self.provider.prefix, donation.id)
+        self.tx_ref = f"{self.provider.prefix}-{donation.id}"
 
         self.data = {
             'data': {
@@ -107,7 +107,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         response = self.client.post(
             self.payment_url,
             data=json.dumps(self.data),
-            HTTP_AUTHORIZATION='Donation {}'.format(donation.client_secret)
+            HTTP_AUTHORIZATION=f'Donation {donation.client_secret}'
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -146,7 +146,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
 class FlutterwavePayoutAccountTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(FlutterwavePayoutAccountTestCase, self).setUp()
+        super().setUp()
 
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()

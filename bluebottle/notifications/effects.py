@@ -19,18 +19,18 @@ class BaseNotificationEffect(Effect):
             ).compose_and_send()
 
     def __repr__(self):
-        return '<Effect: Send {}>'.format(self.message)
+        return f'<Effect: Send {self.message}>'
 
     def _content(self):
         message = self.message(self.instance)
 
         try:
             recipients = message.get_recipients()
-            recipients_text = (u', ').join(
+            recipients_text = (', ').join(
                 recipient.email for recipient in recipients[:2])
 
             if len(recipients) > 2:
-                recipients_text += u' ' + \
+                recipients_text += ' ' + \
                     _('(and {number} more)').format(
                         number=(len(recipients) - 2))
         except Exception:
@@ -55,17 +55,17 @@ class BaseNotificationEffect(Effect):
 
     @property
     def description(self):
-        return u'"{}"'.format(self.message(self.instance).generic_subject)
+        return '"{}"'.format(self.message(self.instance).generic_subject)
 
     @property
     def help(self):
         message = self.message(self.instance)
         recipients = message.get_recipients()
-        recipients_text = u', '.join(
+        recipients_text = ', '.join(
             recipient.email for recipient in recipients[:2])
 
         if len(recipients) > 2:
-            recipients_text += u' (and {} more)'.format(len(recipients) - 2)
+            recipients_text += ' (and {} more)'.format(len(recipients) - 2)
 
         return _('to {}').format(recipients_text)
 

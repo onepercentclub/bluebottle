@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 from bluebottle.clients.utils import LocalTenant
 
 from bluebottle.events.tasks import event_tasks
 from datetime import timedelta
-import mock
+from unittest import mock
 
 from django.core import mail
 from django.utils import timezone
@@ -74,10 +73,10 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.event.status, EventStateMachine.cancelled.value)
         self.assertEqual(
             mail.outbox[1].subject,
-            'Your event "{}" has been cancelled'.format(self.event.title)
+            f'Your event "{self.event.title}" has been cancelled'
         )
         self.assertTrue(
-            u'Unfortunately your event “{}” has been cancelled.'.format(
+            'Unfortunately your event “{}” has been cancelled.'.format(
                 self.event.title
             )
             in mail.outbox[1].body
@@ -337,10 +336,10 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
             mail.outbox[1].subject,
-            'Your event "{}" has been cancelled'.format(self.passed_event.title)
+            f'Your event "{self.passed_event.title}" has been cancelled'
         )
         self.assertTrue(
-            u'Unfortunately, nobody joined your event “{}”'.format(self.passed_event.title)
+            f'Unfortunately, nobody joined your event “{self.passed_event.title}”'
             in mail.outbox[1].body
         )
 
@@ -467,8 +466,8 @@ class ParticipantStateMachineTests(BluebottleTestCase):
         )
         self.assertEqual(
             [
-                'You were added to the event "{}"'.format(self.event.title),
-                'You were added to the event "{}"'.format(self.event.title)
+                f'You were added to the event "{self.event.title}"',
+                f'You were added to the event "{self.event.title}"'
             ],
             [
                 m.subject for m in self.messages(self.participant.user)
@@ -499,9 +498,9 @@ class ParticipantStateMachineTests(BluebottleTestCase):
         self.assertEqual(
 
             [
-                u'You were added to the event "{}"'.format(self.event.title),
-                u'You have been rejected for the event "{}"'.format(self.event.title),
-                u'You were added to the event "{}"'.format(self.event.title)
+                f'You were added to the event "{self.event.title}"',
+                f'You have been rejected for the event "{self.event.title}"',
+                f'You were added to the event "{self.event.title}"'
             ],
             [
                 m.subject for m in self.messages(self.participant.user)

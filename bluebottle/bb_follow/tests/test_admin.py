@@ -10,7 +10,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 class FollowAdminTest(BluebottleAdminTestCase):
     def setUp(self):
-        super(FollowAdminTest, self).setUp()
+        super().setUp()
         self.site = AdminSite()
         self.init_projects()
         self.follow_admin = FollowAdmin(Follow, self.site)

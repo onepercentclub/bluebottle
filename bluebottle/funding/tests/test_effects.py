@@ -1,4 +1,3 @@
-from builtins import str
 from datetime import timedelta
 
 from django.utils.timezone import now

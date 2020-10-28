@@ -1,5 +1,5 @@
 from datetime import timedelta
-import mock
+from unittest import mock
 
 from django.core import mail
 from django.db import connection
@@ -20,7 +20,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 class EventTasksTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(EventTasksTestCase, self).setUp()
+        super().setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
             activity_types=['event']
         )
@@ -91,7 +91,7 @@ class EventTasksTestCase(BluebottleTestCase):
         self.assertEqual(event.status, EventStateMachine.succeeded.value)
 
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, u'Your event "{}" took place! \U0001f389'.format(event.title))
+        self.assertEqual(mail.outbox[0].subject, f'Your event "{event.title}" took place! \U0001f389')
         self.assertTrue("Hi Nono,", mail.outbox[0].body)
 
     def test_event_reminder_task(self):

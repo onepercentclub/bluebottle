@@ -1,4 +1,3 @@
-from builtins import object
 import factory.fuzzy
 
 from bluebottle.test.factory_models.geo import CountryFactory
@@ -10,21 +9,21 @@ from bluebottle.funding_pledge.models import (
 
 class PledgePaymentFactory(factory.DjangoModelFactory):
 
-    class Meta(object):
+    class Meta:
         model = PledgePayment
 
     donation = factory.SubFactory(DonationFactory)
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
-        payment = super(PledgePaymentFactory, cls)._create(model_class, *args, **kwargs)
+        payment = super()._create(model_class, *args, **kwargs)
         payment.states.succeed(save=True)
         return payment
 
 
 class PledgePaymentProviderFactory(factory.DjangoModelFactory):
 
-    class Meta(object):
+    class Meta:
         model = PledgePaymentProvider
 
 
@@ -41,5 +40,5 @@ class PledgeBankAccountFactory(factory.DjangoModelFactory):
     reviewed = True
     connect_account = factory.SubFactory(PlainPayoutAccountFactory)
 
-    class Meta(object):
+    class Meta:
         model = PledgeBankAccount

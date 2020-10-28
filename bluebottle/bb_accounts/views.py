@@ -128,7 +128,7 @@ class ManageProfileDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def get_serializer(self, *args, **kwargs):
         kwargs['partial'] = True
-        return super(ManageProfileDetail, self).get_serializer(
+        return super().get_serializer(
             *args, **kwargs
         )
 
@@ -146,7 +146,7 @@ class ManageProfileDetail(generics.RetrieveUpdateDestroyAPIView):
         except (AttributeError, KeyError):
             pass
 
-        super(ManageProfileDetail, self).perform_update(serializer)
+        super().perform_update(serializer)
 
     def perform_destroy(self, instance):
         instance.anonymize()
@@ -314,7 +314,7 @@ class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
         self.request.user.last_logout = now()
         self.request.user.save()
 
-        return super(PasswordProtectedMemberUpdateApiView, self).perform_update(serializer)
+        return super().perform_update(serializer)
 
 
 class EmailSetView(PasswordProtectedMemberUpdateApiView):

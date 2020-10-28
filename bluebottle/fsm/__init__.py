@@ -1,4 +1,3 @@
-from builtins import object
 from functools import partial
 
 from django.db import models
@@ -11,7 +10,7 @@ pre_transition = Signal(providing_args=['instance', 'name', 'source', 'target', 
 post_transition = Signal(providing_args=['instance', 'name', 'source', 'target', 'options', 'kwargs'])
 
 
-class Transition(object):
+class Transition:
     """
     Object that represent FSM transitions
 
@@ -53,8 +52,7 @@ class Transition(object):
 
             if error:
                 if isinstance(error, (list, tuple)):
-                    for e in error:
-                        yield e
+                    yield from error
                 else:
                     yield error
 
@@ -167,7 +165,7 @@ class ModelTransitions(with_metaclass(ModelTransitionsMeta, object)):
             )
             if user:
                 from bluebottle.utils.admin import log_action
-                log_action(self.instance, user, 'Changed status to {} (API)'.format(transition.target))
+                log_action(self.instance, user, f'Changed status to {transition.target} (API)')
         except Exception:
             # the transition failed. Revert the value
             setattr(self.instance, self.field, transition.target)
@@ -190,7 +188,7 @@ class ModelTransitions(with_metaclass(ModelTransitionsMeta, object)):
         ]
 
 
-class TransitionManager(object):
+class TransitionManager:
     def __init__(self, *args):
         self.args = args
 
@@ -208,17 +206,17 @@ class FSMField(models.CharField):
 
     def __init__(self, protected=True, max_length=20, *args, **kwargs):
         self.protected = protected
-        super(FSMField, self).__init__(
+        super().__init__(
             max_length=max_length,
             *args,
             **kwargs
         )
 
 
-class TransitionsMixin(object):
+class TransitionsMixin:
     def __init__(self, *args, **kwargs):
         if hasattr(self, '_transitions'):
             for (name, cls, field) in self._transitions:
                 setattr(self, name, cls(self, field))
 
-        super(TransitionsMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)

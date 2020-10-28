@@ -17,7 +17,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 class ExportKeysTest(TestCase):
     def setUp(self):
-        super(ExportKeysTest, self).setUp()
+        super().setUp()
         for tenant in get_tenant_model().objects.all():
             connection.set_tenant(tenant)
             user = BlueBottleUserFactory.create(

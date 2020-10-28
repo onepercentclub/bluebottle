@@ -1,4 +1,3 @@
-from builtins import object
 import logging
 
 from django.contrib.auth import get_user_model
@@ -12,7 +11,7 @@ from bluebottle.token_auth.utils import get_settings
 logger = logging.getLogger(__name__)
 
 
-class BaseTokenAuthentication(object):
+class BaseTokenAuthentication:
     """
     Base class for TokenAuthentication.
     """
@@ -46,7 +45,7 @@ class BaseTokenAuthentication(object):
         on the user.
         """
         user_model = get_user_model()()
-        return dict([(key, value) for key, value in list(data.items()) if hasattr(user_model, key)])
+        return {key: value for key, value in list(data.items()) if hasattr(user_model, key)}
 
     def set_location(self, user, data):
         if 'location.slug' in data:
@@ -68,7 +67,7 @@ class BaseTokenAuthentication(object):
             try:
                 segment_type = SegmentType.objects.get(slug=type_slug)
             except SegmentType.DoesNotExist:
-                logger.info('SSO Error: Missing segment type: {}'.format(type_slug))
+                logger.info(f'SSO Error: Missing segment type: {type_slug}')
                 return
 
             try:
@@ -114,7 +113,7 @@ class BaseTokenAuthentication(object):
                         field=field, member=user, defaults={'value': value}
                     )
                 except CustomMemberFieldSettings.DoesNotExist:
-                    logger.error('SSO Error: Missing custom field: {}'.format(name))
+                    logger.error(f'SSO Error: Missing custom field: {name}')
 
     def get_or_create_user(self, data):
         """

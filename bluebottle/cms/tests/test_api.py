@@ -1,6 +1,4 @@
 import os
-from builtins import range
-from builtins import str
 from datetime import timedelta
 from decimal import Decimal
 
@@ -41,7 +39,7 @@ class ResultPageTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(ResultPageTestCase, self).setUp()
+        super().setUp()
         self.init_projects()
         image = File(open('./bluebottle/projects/test_images/upload.png', 'rb'))
         self.page = ResultPageFactory(title='Results last year', image=image)
@@ -261,7 +259,7 @@ class ResultPageTestCase(BluebottleTestCase):
         )
         response = self.client.get(
             self.url,
-            token='JWT {0}'.format(user.get_jwt_token())
+            token=f'JWT {user.get_jwt_token()}'
         )
         self.assertEqual(response.status_code, 403)
 
@@ -272,7 +270,7 @@ class HomePageTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(HomePageTestCase, self).setUp()
+        super().setUp()
         HomePage.objects.get(pk=1).delete()
         self.page = HomePageFactory(pk=1)
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
@@ -401,7 +399,7 @@ class HomePageTestCase(BluebottleTestCase):
 
         for step in response.data['blocks'][0]['steps']:
             self.assertEqual(
-                step['text'], u'<a href="http://example.com">link</a>'
+                step['text'], '<a href="http://example.com">link</a>'
             )
 
     def test_steps_unsafe(self):
@@ -422,7 +420,7 @@ class HomePageTestCase(BluebottleTestCase):
 
         for step in response.data['blocks'][0]['steps']:
             self.assertEqual(
-                step['text'], u'&lt;script src="http://example.com"&gt;&lt;/script&gt;Some text'
+                step['text'], '&lt;script src="http://example.com"&gt;&lt;/script&gt;Some text'
             )
 
     def test_welcome(self):
@@ -451,7 +449,7 @@ class NewsItemTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(NewsItemTestCase, self).setUp()
+        super().setUp()
         self.init_projects()
         self.news_item = NewsItemFactory.create(slug='new-news', language='en')
         self.placeholder = self.news_item.contents
@@ -484,7 +482,7 @@ class PageTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(PageTestCase, self).setUp()
+        super().setUp()
         self.init_projects()
         self.page = PageFactory.create(language='en', slug='about', title='About us')
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='blog_contents')
@@ -567,7 +565,7 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(SitePlatformSettingsTestCase, self).setUp()
+        super().setUp()
         self.init_projects()
 
     def test_site_platform_settings_header(self):

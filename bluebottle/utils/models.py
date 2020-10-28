@@ -1,4 +1,3 @@
-from builtins import object
 from datetime import timedelta
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -35,7 +34,7 @@ class Language(models.Model):
     language_name = models.CharField(max_length=100, blank=False)
     native_name = models.CharField(max_length=100, blank=False)
 
-    class Meta(object):
+    class Meta:
         ordering = ['language_name']
 
     def __str__(self):
@@ -54,7 +53,7 @@ class Address(models.Model):
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     postal_code = models.CharField(max_length=20, blank=True)
 
-    class Meta(object):
+    class Meta:
         abstract = True
 
     def __str__(self):
@@ -76,12 +75,12 @@ class BasePlatformSettings(models.Model):
 
     update = models.DateTimeField(auto_now=True)
 
-    class Meta(object):
+    class Meta:
         abstract = True
 
     def save(self, *args, **kwargs):
         self.__class__.objects.exclude(id=self.id).delete()
-        super(BasePlatformSettings, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     @classmethod
     def load(cls):
@@ -95,7 +94,7 @@ class BasePlatformSettings(models.Model):
 
 
 class SortableTranslatableModel(TranslatableModel):
-    class Meta(object):
+    class Meta:
         abstract = True
 
     objects = SortableTranslatableManager()
@@ -129,7 +128,7 @@ class PublishableModel(models.Model):
 
     objects = PublishedManager()
 
-    class Meta(object):
+    class Meta:
         abstract = True
 
 
@@ -138,10 +137,10 @@ class ValidatorError(Exception):
         self.field = field
         self.code = code
         self.message = message
-        super(ValidatorError, self).__init__(message)
+        super().__init__(message)
 
 
-class Validator(object):
+class Validator:
     def __init__(self, instance):
         self.instance = instance
 
@@ -152,7 +151,7 @@ class Validator(object):
             )
 
 
-class ValidatedModelMixin(object):
+class ValidatedModelMixin:
     validators = []
     required_fields = []
 
@@ -175,7 +174,7 @@ class ValidatedModelMixin(object):
                 yield field
 
 
-class AnonymizationMixin(object):
+class AnonymizationMixin:
 
     @property
     def anonymized(self):
@@ -201,12 +200,12 @@ class TranslationPlatformSettings(TranslatableModel, BasePlatformSettings):
             max_length=100, null=True, blank=True
         ),
         whats_the_location_of_your_office=models.CharField(
-            u'What\u2019s the location of your office?',
+            'What\u2019s the location of your office?',
             max_length=100, null=True, blank=True
         ),
 
     )
 
-    class Meta(object):
+    class Meta:
         verbose_name_plural = _('translation settings')
         verbose_name = _('translation settings')

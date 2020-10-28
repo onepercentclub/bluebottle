@@ -16,7 +16,7 @@ class NewsItemPreviewList(generics.ListAPIView):
     filter_fields = ('language',)
 
     def get_queryset(self, *args, **kwargs):
-        qs = super(NewsItemPreviewList, self).get_queryset()
+        qs = super().get_queryset()
         qs = qs.published()
         qs = qs.order_by('-publication_date')
         return qs
@@ -29,7 +29,7 @@ class NewsItemList(generics.ListAPIView):
     filter_fields = ('language',)
 
     def get_queryset(self, *args, **kwargs):
-        qs = super(NewsItemList, self).get_queryset()
+        qs = super().get_queryset()
         qs = qs.published()
         qs = qs.order_by('-publication_date')
         return qs
@@ -41,6 +41,6 @@ class NewsItemDetail(generics.RetrieveAPIView):
     lookup_field = 'slug'
 
     def get_queryset(self, *args, **kwargs):
-        qs = super(NewsItemDetail, self).get_queryset()
+        qs = super().get_queryset()
         qs = qs.published()
         return qs

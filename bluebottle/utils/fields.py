@@ -3,8 +3,6 @@ import xml.etree.cElementTree as et
 
 import inflection
 import sorl.thumbnail
-from builtins import object
-from builtins import str
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -25,7 +23,7 @@ class MoneyField(DjangoMoneyField):
                  **kwargs):
         default_currency = 'EUR'
         currency_choices = [('EUR', 'Euro')]
-        super(MoneyField, self).__init__(
+        super().__init__(
             verbose_name=verbose_name, name=name,
             max_digits=max_digits, decimal_places=decimal_places, default=default,
             default_currency=default_currency,
@@ -41,7 +39,7 @@ class MoneyField(DjangoMoneyField):
         return PaymentProvider.get_currency_choices()
 
     def deconstruct(self):
-        name, path, args, kwargs = super(MoneyField, self).deconstruct()
+        name, path, args, kwargs = super().deconstruct()
 
         if self.default is not None:
             kwargs['default'] = self.default.amount
@@ -57,7 +55,7 @@ class MoneyField(DjangoMoneyField):
         defaults.update(kwargs)
         self.default_currency = self.get_default_currency()
         self.currency_choices = self.get_currency_choices()
-        return super(MoneyField, self).formfield(**kwargs)
+        return super().formfield(**kwargs)
 
 
 class LegacyMoneyField(MoneyField):
@@ -80,7 +78,7 @@ class ImageField(sorl.thumbnail.fields.ImageField):
     def formfield(self, **kwargs):
         defaults = {'form_class': RestrictedImageFormField}
         defaults.update(kwargs)
-        return super(ImageField, self).formfield(**defaults)
+        return super().formfield(**defaults)
 
 
 class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
@@ -100,7 +98,7 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
             raise forms.ValidationError(self.error_messages['invalid_image'])
 
         try:
-            return super(RestrictedImageFormField, self).to_python(data)
+            return super().to_python(data)
         except ValidationError:
             test_file = super(sorl.thumbnail.fields.ImageFormField, self).to_python(data)
 
@@ -148,13 +146,13 @@ class PrivateFileField(models.FileField):
         # Check if upload_to already has private path
         # This fixes loops and randomly added migrations
         if not upload_to.startswith(b'private'):
-            upload_to = 'private/{}'.format(upload_to)
-        super(PrivateFileField, self).__init__(
+            upload_to = f'private/{upload_to}'
+        super().__init__(
             verbose_name=verbose_name, name=name, upload_to=upload_to, storage=storage, **kwargs
         )
 
 
-class FSMStatusValidator(object):
+class FSMStatusValidator:
     def set_context(self, serializers_field):
         self.instance = serializers_field.parent.instance
         self.source = serializers_field.source
@@ -162,7 +160,7 @@ class FSMStatusValidator(object):
     def __call__(self, value):
         available_transitions = getattr(
             self.instance,
-            'get_available_{}_transitions'.format(self.source)
+            f'get_available_{self.source}_transitions'
         )()
 
         transitions = [
@@ -181,7 +179,7 @@ class FSMStatusValidator(object):
 
 class FSMField(serializers.CharField):
     def __init__(self, **kwargs):
-        super(FSMField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         validator = FSMStatusValidator()
         self.validators.append(validator)
 

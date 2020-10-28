@@ -15,7 +15,7 @@ class FollowActivityEffect(Effect):
             follow(self.instance.user, self.instance.activity)
 
     def __repr__(self):
-        return '<Effect: Follow {} by {}>'.format(self.instance.activity, self.instance.user)
+        return f'<Effect: Follow {self.instance.activity} by {self.instance.user}>'
 
     def __str__(self):
         user = self.instance.user
@@ -35,7 +35,7 @@ class UnFollowActivityEffect(Effect):
             unfollow(self.instance.user, self.instance.activity)
 
     def __repr__(self):
-        return '<Effect: Unfollow {} by {}>'.format(self.instance.activity, self.instance.user)
+        return f'<Effect: Unfollow {self.instance.activity} by {self.instance.user}>'
 
     def __str__(self):
         user = self.instance.user

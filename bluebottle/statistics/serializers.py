@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 from rest_framework import serializers
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
@@ -26,21 +24,21 @@ class BaseStatisticSerializer(ModelSerializer):
 
 
 class ManualStatisticSerializer(BaseStatisticSerializer):
-    class Meta(object):
+    class Meta:
         model = ManualStatistic
         fields = ('id', 'value', 'name', 'icon')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'statistics/manual-statistics'
         fields = ('id', 'value', 'name', 'icon', )
 
 
 class DatabaseStatisticSerializer(BaseStatisticSerializer):
-    class Meta(object):
+    class Meta:
         model = DatabaseStatistic
         fields = ('id', 'value', 'name', 'query', 'icon', )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'statistics/database-statistics'
 
 
@@ -49,11 +47,11 @@ class ImpactStatisticSerializer(BaseStatisticSerializer):
         'impact_type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = ImpactStatistic
         fields = ('id', 'value', 'impact_type')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'statistics/impact-statistics'
         included_resources = ['impact_type']
 
@@ -65,8 +63,8 @@ class StatisticSerializer(PolymorphicModelSerializer):
         ImpactStatisticSerializer
     ]
 
-    class Meta(object):
+    class Meta:
         model = BaseStatistic
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = ['impact_type']

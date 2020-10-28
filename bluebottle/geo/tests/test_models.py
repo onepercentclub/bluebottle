@@ -1,11 +1,10 @@
-from builtins import object
 from django.core.exceptions import ValidationError
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.geo.models import Region, SubRegion, Country
 
 
-class GeoTestsMixin(object):
+class GeoTestsMixin:
     def create_region(self, name, numeric_code):
         region = Region(name=name, numeric_code=numeric_code)
         region.save()
@@ -46,7 +45,7 @@ class GeoTestCase(BluebottleTestCase):
     """ Tests for models in the geo app. """
 
     def setUp(self):
-        super(GeoTestCase, self).setUp()
+        super().setUp()
 
         # Start with a clean database for each test.
         Country.objects.all().delete()

@@ -1,4 +1,3 @@
-from builtins import str
 import datetime
 import json
 
@@ -39,7 +38,7 @@ class InitiativeAPITestCase(TestCase):
     """
 
     def setUp(self):
-        super(InitiativeAPITestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory.create()
         self.visitor = BlueBottleUserFactory.create()
@@ -47,7 +46,7 @@ class InitiativeAPITestCase(TestCase):
 
 class InitiativeListAPITestCase(InitiativeAPITestCase):
     def setUp(self):
-        super(InitiativeListAPITestCase, self).setUp()
+        super().setUp()
         self.theme = ProjectThemeFactory.create()
         self.url = reverse('initiative-list')
 
@@ -247,7 +246,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
 
 class InitiativeDetailAPITestCase(InitiativeAPITestCase):
     def setUp(self):
-        super(InitiativeDetailAPITestCase, self).setUp()
+        super().setUp()
         self.initiative = InitiativeFactory(
             owner=self.owner,
             place=GeolocationFactory(position=Point(23.6851594, 43.0579025))
@@ -348,7 +347,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             self.url,
             json.dumps(data),
             content_type="application/vnd.api+json",
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         self.assertEqual(response.status_code, 200)
@@ -415,9 +414,9 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(
             data['meta']['transitions'],
             [{
-                u'available': True,
-                u'name': u'request_changes',
-                u'target': u'needs_work'
+                'available': True,
+                'name': 'request_changes',
+                'target': 'needs_work'
             }])
         self.assertEqual(data['relationships']['theme']['data']['id'], str(self.initiative.theme.pk))
         self.assertEqual(data['relationships']['owner']['data']['id'], str(self.initiative.owner.pk))
@@ -521,7 +520,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 @tag('elasticsearch')
 class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
     def setUp(self):
-        super(InitiativeListSearchAPITestCase, self).setUp()
+        super().setUp()
         self.url = reverse('initiative-list')
 
     def test_no_filter(self):
@@ -530,7 +529,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url,
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
         data = json.loads(response.content)
 
@@ -542,7 +541,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url,
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
         data = json.loads(response.content)
 
@@ -563,7 +562,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url,
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
         data = json.loads(response.content)
 
@@ -585,8 +584,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            self.url + f'?filter[owner.id]={self.owner.pk}',
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
         data = json.loads(response.content)
 
@@ -601,7 +600,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url,
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
         data = json.loads(response.content)
 
@@ -613,8 +612,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create_batch(4, status='submitted')
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            self.url + f'?filter[owner.id]={self.owner.pk}',
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         data = json.loads(response.content)
@@ -629,8 +628,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         activity = EventFactory.create(owner=self.owner, initiative=with_activity)
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            self.url + f'?filter[owner.id]={self.owner.pk}',
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         data = json.loads(response.content)
@@ -644,8 +643,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create(status='approved')
 
         response = self.client.get(
-            self.url + '?filter[location.id]={}'.format(location.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            self.url + f'?filter[location.id]={location.pk}',
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         data = json.loads(response.content)
@@ -662,7 +661,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create_batch(3, status='approved')
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            self.url + f'?filter[owner.id]={self.owner.pk}',
             user=self.visitor
         )
 
@@ -679,8 +678,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create_batch(4, status='approved')
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            self.url + f'?filter[owner.id]={self.owner.pk}',
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         data = json.loads(response.content)
@@ -696,8 +695,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create_batch(4, status='approved')
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            self.url + f'?filter[owner.id]={self.owner.pk}',
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         data = json.loads(response.content)
@@ -713,8 +712,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         InitiativeFactory.create_batch(4, status='approved')
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            self.url + f'?filter[owner.id]={self.owner.pk}',
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         data = json.loads(response.content)
@@ -729,7 +728,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         data = json.loads(response.content)
@@ -744,7 +743,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         data = json.loads(response.content)
@@ -763,7 +762,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url + '?filter[search]=nameofoffice',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         data = json.loads(response.content)
@@ -779,7 +778,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url + '?sort=alphabetical',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         data = json.loads(response.content)
@@ -803,7 +802,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url + '?sort=date',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         data = json.loads(response.content)
@@ -846,7 +845,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
         response = self.client.get(
             self.url + '?sort=activity_date',
-            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            HTTP_AUTHORIZATION=f"JWT {self.owner.get_jwt_token()}"
         )
 
         data = json.loads(response.content)
@@ -859,7 +858,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
 
 class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
     def setUp(self):
-        super(InitiativeReviewTransitionListAPITestCase, self).setUp()
+        super().setUp()
 
         self.url = reverse('initiative-review-transition-list')
 
@@ -896,7 +895,7 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content)
-        self.assertEqual(data['errors'][0], u'Transition is not available')
+        self.assertEqual(data['errors'][0], 'Transition is not available')
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
         self.assertEqual(initiative.status, 'submitted')
@@ -904,7 +903,7 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
 
 class InitiativeRedirectTest(TestCase):
     def setUp(self):
-        super(InitiativeRedirectTest, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
 
         self.url = reverse('initiative-redirect-list')
@@ -1011,7 +1010,7 @@ class InitiativeRedirectTest(TestCase):
 
 class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
     def setUp(self):
-        super(InitiativeRelatedImageAPITestCase, self).setUp()
+        super().setUp()
         self.initiative = InitiativeFactory(
             owner=self.owner,
         )
@@ -1060,7 +1059,7 @@ class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
 
         self.assertEqual(
             response.json()['included'][0]['attributes']['links']['large'].split('?')[0],
-            u'/api/initiatives/{}/related-image/600'.format(response.json()['data']['id'])
+            '/api/initiatives/{}/related-image/600'.format(response.json()['data']['id'])
         )
 
     def test_create_non_owner(self):
@@ -1095,7 +1094,7 @@ class InitiativeRelatedImageAPITestCase(InitiativeAPITestCase):
 class ThemeAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(ThemeAPITestCase, self).setUp()
+        super().setUp()
 
         self.client = JSONAPITestClient()
         ProjectTheme.objects.all().delete()

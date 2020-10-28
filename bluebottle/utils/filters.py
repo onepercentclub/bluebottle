@@ -34,7 +34,7 @@ class ElasticSearchFilter(filters.SearchFilter):
         sort = self.get_sort(request)
         if sort:
             try:
-                scoring = getattr(self, 'get_sort_{}'.format(sort))(request)
+                scoring = getattr(self, f'get_sort_{sort}')(request)
                 search = search.query(scoring)
             except AttributeError:
                 search = search.sort(*sort)
@@ -43,7 +43,7 @@ class ElasticSearchFilter(filters.SearchFilter):
 
     def get_filter_fields(self, request):
         return [
-            field for field in self.filters if request.GET.get('filter[{}]'.format(field))
+            field for field in self.filters if request.GET.get(f'filter[{field}]')
         ]
 
     def get_filters(self, request):
@@ -77,7 +77,7 @@ class ElasticSearchFilter(filters.SearchFilter):
             return Bool(should=queries)
 
     def get_filter(self, request, field):
-        value = request.GET['filter[{}]'.format(field)]
+        value = request.GET[f'filter[{field}]']
 
         if '.' in field:
             path = field.split('.')[0]
@@ -85,7 +85,7 @@ class ElasticSearchFilter(filters.SearchFilter):
 
         else:
             try:
-                return getattr(self, 'get_{}_filter'.format(field))(value, request)
+                return getattr(self, f'get_{field}_filter')(value, request)
             except AttributeError:
                 return Term(**{field: value})
 

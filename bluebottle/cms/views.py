@@ -22,7 +22,7 @@ class ResultPageDetail(RetrieveAPIView):
     serializer_class = ResultPageSerializer
 
     def get_serializer_context(self):
-        context = super(ResultPageDetail, self).get_serializer_context()
+        context = super().get_serializer_context()
         obj = self.get_object()
         tz = timezone(settings.TIME_ZONE)
 

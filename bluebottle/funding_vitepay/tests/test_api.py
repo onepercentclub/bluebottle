@@ -1,7 +1,7 @@
 import json
 
 from django.urls import reverse
-from mock import patch
+from unittest.mock import patch
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
@@ -15,7 +15,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 class VitepayPaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(VitepayPaymentTestCase, self).setUp()
+        super().setUp()
         VitepayPaymentProvider.objects.all().delete()
         VitepayPaymentProviderFactory.create()
 

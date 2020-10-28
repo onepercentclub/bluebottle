@@ -101,7 +101,7 @@ class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
         if rows_updated == 1:
             message = "1 entry was marked as published."
         else:
-            message = "{0} entries were marked as published.".format(
+            message = "{} entries were marked as published.".format(
                 rows_updated)
         self.message_user(request, message)
 

@@ -1,7 +1,6 @@
-from builtins import str
 from datetime import timedelta
 
-import mock
+from unittest import mock
 from django.utils.timezone import now
 from moneyed import Money
 
@@ -86,9 +85,9 @@ class FundingTestCase(BluebottleTestCase):
         self.assertEqual(
             errors,
             [
-                u'Make sure your payout account is verified',
-                u'Make sure deadline is in the future',
-                u'Please specify a budget'
+                'Make sure your payout account is verified',
+                'Make sure deadline is in the future',
+                'Please specify a budget'
             ]
         )
 

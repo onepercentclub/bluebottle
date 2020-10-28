@@ -14,7 +14,7 @@ class SkillAdmin(TranslatableAdmin):
     ordering = ('translations__name',)
 
     def get_actions(self, request):
-        actions = super(SkillAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         if 'delete_selected' in actions:
             del actions['delete_selected']
         return actions

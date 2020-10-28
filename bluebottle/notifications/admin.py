@@ -1,4 +1,3 @@
-from builtins import object
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.options import csrf_protect_m
@@ -36,7 +35,7 @@ class NotificationPlatformSettingsAdmin(BasePlatformSettingsAdmin):
     pass
 
 
-class NotificationAdminMixin(object):
+class NotificationAdminMixin:
     change_confirmation_template = None
 
     @csrf_protect_m
@@ -67,7 +66,7 @@ class NotificationAdminMixin(object):
                 notifications += message_list
 
         if not new or confirm or not notifications:
-            response = super(NotificationAdminMixin, self).changeform_view(request, object_id, form_url, extra_context)
+            response = super().changeform_view(request, object_id, form_url, extra_context)
             if confirm and send_messages == 'on':
                 for message in notifications:
                     message.send()
@@ -90,7 +89,7 @@ class NotificationAdminMixin(object):
         )
 
         return TemplateResponse(request, self.change_confirmation_template or [
-            "admin/%s/%s/change_confirmation.html" % (app_label, opts.model_name),
+            f"admin/{app_label}/{opts.model_name}/change_confirmation.html",
             "admin/%s/change_confirmation.html" % app_label,
             "admin/change_confirmation.html",
             "admin/change_confirmation.html"
@@ -98,7 +97,7 @@ class NotificationAdminMixin(object):
 
 
 class MessageTemplateAdminCreateForm(forms.ModelForm):
-    class Meta(object):
+    class Meta:
         model = MessageTemplate
         fields = ['message']
 
@@ -111,7 +110,7 @@ class MessageTemplateAdminForm(TranslatableModelForm):
     )
     body_txt = TranslatedField(widget=Textarea(attrs={'rows': 12, 'cols': 80}))
 
-    class Meta(object):
+    class Meta:
         model = MessageTemplate
         fields = ['message', 'subject', 'body_html', 'body_txt']
 
@@ -128,7 +127,7 @@ class MessageTemplateAdmin(TranslatableAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj is None:
             return []
-        return super(MessageTemplateAdmin, self).get_readonly_fields(request, obj=obj)
+        return super().get_readonly_fields(request, obj=obj)
 
     def get_form(self, request, obj=None, **kwargs):
         """
@@ -138,7 +137,7 @@ class MessageTemplateAdmin(TranslatableAdmin):
         if obj is None:
             defaults['form'] = self.add_form
         defaults.update(kwargs)
-        return super(MessageTemplateAdmin, self).get_form(request, obj, **defaults)
+        return super().get_form(request, obj, **defaults)
 
     def placeholders(self, obj):
         data = {

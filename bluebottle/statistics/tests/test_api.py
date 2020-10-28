@@ -1,5 +1,3 @@
-
-from builtins import str
 import datetime
 
 from django.urls import reverse
@@ -31,7 +29,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 class ImpactTypeListAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(ImpactTypeListAPITestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.url = reverse('statistic-list')
         self.user = BlueBottleUserFactory()

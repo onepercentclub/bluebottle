@@ -1,4 +1,3 @@
-from builtins import object
 import factory
 from django.core.files.uploadedfile import SimpleUploadedFile
 
@@ -9,39 +8,39 @@ from .accounts import BlueBottleUserFactory
 
 
 class TextWallpostFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = TextWallpost
 
     content_object = factory.SubFactory(InitiativeFactory)
     author = factory.SubFactory(BlueBottleUserFactory)
     editor = factory.SubFactory(BlueBottleUserFactory)
     ip_address = "127.0.0.1"
-    text = factory.Sequence(lambda n: 'Text Wall Post {0}'.format(n))
+    text = factory.Sequence(lambda n: f'Text Wall Post {n}')
 
 
 class SystemWallpostFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = SystemWallpost
 
 
 class ReactionFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Reaction
 
 
 class MediaWallpostFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = MediaWallpost
 
     content_object = factory.SubFactory(InitiativeFactory)
     author = factory.SubFactory(BlueBottleUserFactory)
     editor = factory.SubFactory(BlueBottleUserFactory)
     ip_address = "127.0.0.1"
-    text = factory.Sequence(lambda n: 'Media Wall Post {0}'.format(n))
+    text = factory.Sequence(lambda n: f'Media Wall Post {n}')
 
 
 class MediaWallpostPhotoFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = MediaWallpostPhoto
 
     mediawallpost = factory.SubFactory(MediaWallpostFactory)

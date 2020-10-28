@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from datetime import timedelta
 
 from django.urls import reverse
@@ -19,7 +18,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 class FundingTestCase(BluebottleAdminTestCase):
     def setUp(self):
-        super(FundingTestCase, self).setUp()
+        super().setUp()
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
@@ -92,7 +91,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 class DonationAdminTestCase(BluebottleAdminTestCase):
 
     def setUp(self):
-        super(DonationAdminTestCase, self).setUp()
+        super().setUp()
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
@@ -117,7 +116,7 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         response = self.client.get(self.admin_url)
         self.assertTrue(
-            u'Total amount:  <b>0.60 €</b>'.encode('utf-8') in response.content
+            'Total amount:  <b>0.60 €</b>'.encode() in response.content
         )
 
     def test_donation_admin_pledge_filter(self):
@@ -157,7 +156,7 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
 class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
 
     def setUp(self):
-        super(PayoutAccountAdminTestCase, self).setUp()
+        super().setUp()
         self.payout_account = StripePayoutAccountFactory.create(status='verified')
         self.bank_account = ExternalAccountFactory.create(connect_account=self.payout_account, status='verified')
         self.payout_account_url = reverse('admin:funding_payoutaccount_change', args=(self.payout_account.id,))

@@ -1,7 +1,5 @@
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str
-from builtins import object
 import json
 from html.parser import HTMLParser
 
@@ -42,7 +40,7 @@ class MoneySerializer(serializers.DecimalField):
     }
 
     def __init__(self, max_digits=12, decimal_places=2, max_amount=None, min_amount=None, **kwargs):
-        super(MoneySerializer, self).__init__(
+        super().__init__(
             max_digits=max_digits,
             decimal_places=decimal_places,
             **kwargs
@@ -74,7 +72,7 @@ class MoneySerializer(serializers.DecimalField):
 
 
 class LanguageSerializer(serializers.ModelSerializer):
-    class Meta(object):
+    class Meta:
         model = Language
         fields = ('id', 'code', 'language_name', 'native_name')
 
@@ -106,7 +104,7 @@ class BasePermissionField(serializers.Field):
 
         kwargs['read_only'] = True
 
-        super(BasePermissionField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _get_view(self, value):
         args = [getattr(value, arg) for arg in self.view_args]
@@ -115,7 +113,7 @@ class BasePermissionField(serializers.Field):
         return view_func.view_class(**view_func.view_initkwargs)
 
     def _method_permissions(self, method, user, view, value):
-        message = '_method_permissions() must be implemented on {}'.format(self)
+        message = f'_method_permissions() must be implemented on {self}'
         raise NotImplementedError(message)
 
     def get_attribute(self, value):
@@ -184,10 +182,10 @@ class FilteredRelatedField(SerializerMethodResourceRelatedField):
     def __init__(self, **kwargs):
         self.filter_backend = kwargs.pop('filter_backend', None)
         kwargs['read_only'] = True
-        super(FilteredRelatedField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def get_attribute(self, instance):
-        queryset = super(FilteredRelatedField, self).get_attribute(instance)
+        queryset = super().get_attribute(instance)
         filter_backend = self.child_relation.filter_backend
         queryset = filter_backend().filter_queryset(
             request=self.context['request'],
@@ -214,10 +212,10 @@ class FilteredPolymorphicResourceRelatedField(SerializerMethodResourceRelatedFie
         self.polymorphic_serializer = kwargs.pop('polymorphic_serializer', None)
         self.filter_backend = kwargs.pop('filter_backend', None)
         kwargs['read_only'] = True
-        super(FilteredPolymorphicResourceRelatedField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def get_attribute(self, instance):
-        queryset = super(FilteredPolymorphicResourceRelatedField, self).get_attribute(instance)
+        queryset = super().get_attribute(instance)
         filter_backend = self.child_relation.filter_backend
         queryset = filter_backend().filter_queryset(
             request=self.context['request'],
@@ -229,7 +227,7 @@ class FilteredPolymorphicResourceRelatedField(SerializerMethodResourceRelatedFie
 
 class CaptchaField(serializers.CharField):
     def to_internal_value(self, data):
-        result = super(CaptchaField, self).to_internal_value(data)
+        result = super().to_internal_value(data)
 
         try:
             captcha = client.submit(
@@ -249,7 +247,7 @@ class CaptchaField(serializers.CharField):
         return result
 
 
-class NoCommitMixin(object):
+class NoCommitMixin:
     def update(self, instance, validated_data):
         serializers.raise_errors_on_nested_writes('update', self, validated_data)
         info = model_meta.get_field_info(instance)
@@ -275,7 +273,7 @@ class TruncatedCharField(serializers.CharField):
     def __init__(self, length, *args, **kwargs):
         self.length = length
 
-        super(TruncatedCharField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def to_internal_value(self, data):
         return data[:self.length]
@@ -283,7 +281,7 @@ class TruncatedCharField(serializers.CharField):
 
 class TranslationPlatformSettingsSerializer(serializers.ModelSerializer):
 
-    class Meta(object):
+    class Meta:
         model = TranslationPlatformSettings
         fields = '__all__'
 
@@ -293,13 +291,13 @@ class TranslationPlatformSettingsSerializer(serializers.ModelSerializer):
         except self.instance.DoesNotExist:
             return {}
 
-        result = dict(
-            (field.verbose_name, serializers.CharField(max_length=100, source=field.name))
+        result = {
+            field.verbose_name: serializers.CharField(max_length=100, source=field.name)
             for field in translation._meta.fields
             if isinstance(field, models.CharField) and field.name != 'language_code'
-        )
+        }
 
         return result
 
     def to_representation(self, obj):
-        return super(TranslationPlatformSettingsSerializer, self).to_representation(obj)
+        return super().to_representation(obj)

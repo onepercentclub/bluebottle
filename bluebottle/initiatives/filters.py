@@ -40,7 +40,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
     boost = {'title': 2}
 
     def get_default_filters(self, request):
-        fields = super(InitiativeSearchFilter, self).get_filter_fields(request)
+        fields = super().get_filter_fields(request)
 
         permission = 'initiatives.api_read_initiative'
 
@@ -66,7 +66,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
     def get_filter(self, request, field):
         # Also return activity_manger.id when filtering on owner.id
         if field == 'owner.id':
-            value = request.GET['filter[{}]'.format(field)]
+            value = request.GET[f'filter[{field}]']
             return Q(
                 Nested(path='owner', query=Term(**{field: value})) |
                 Nested(path='promoter', query=Term(promoter__id=value)) |
@@ -74,4 +74,4 @@ class InitiativeSearchFilter(ElasticSearchFilter):
                 Nested(path='activity_manager', query=Term(activity_manager__id=value))
             )
 
-        return super(InitiativeSearchFilter, self).get_filter(request, field)
+        return super().get_filter(request, field)

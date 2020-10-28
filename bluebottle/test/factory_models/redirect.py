@@ -1,11 +1,10 @@
-from builtins import object
 import factory
 from bluebottle.redirects.models import Redirect
 
 
 class RedirectFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Redirect
 
-    old_path = factory.Sequence(lambda n: '/old-{0}'.format(n))
-    new_path = factory.Sequence(lambda n: '/new/{0}'.format(n))
+    old_path = factory.Sequence(lambda n: f'/old-{n}')
+    new_path = factory.Sequence(lambda n: f'/new/{n}')

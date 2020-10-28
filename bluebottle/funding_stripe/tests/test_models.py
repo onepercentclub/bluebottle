@@ -1,5 +1,5 @@
 import munch
-import mock
+from unittest import mock
 import stripe
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory
 from django.db import ProgrammingError, connection
@@ -57,7 +57,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 })
             })
         })
-        super(ConnectAccountTestCase, self).setUp()
+        super().setUp()
 
     def test_save(self):
         self.check.account_id = None
@@ -73,7 +73,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 business_profile={'url': 'https://testserver', 'mcc': '8398'},
                 business_type='individual',
                 country=self.check.country,
-                metadata={'tenant_name': u'test', 'tenant_domain': u'testserver', 'member_id': self.check.owner.pk},
+                metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.check.owner.pk},
                 requested_capabilities=['transfers'],
                 settings={
                     'card_payments': {
@@ -180,11 +180,11 @@ class ConnectAccountTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             account.document_spec['supported_document_types'],
-            [u'passport', u'id-card', u'drivers-license']
+            ['passport', 'id-card', 'drivers-license']
         )
         self.assertEqual(
             account.document_spec['document_types_requiring_back'],
-            [u'id-card']
+            ['id-card']
         )
         account = StripePayoutAccountFactory.create(country='NL')
         self.assertEqual(
@@ -193,11 +193,11 @@ class ConnectAccountTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             account.document_spec['supported_document_types'],
-            [u'passport', u'id-card', u'drivers-license']
+            ['passport', 'id-card', 'drivers-license']
         )
         self.assertEqual(
             account.document_spec['document_types_requiring_back'],
-            [u'id-card', u'drivers-license']
+            ['id-card', 'drivers-license']
         )
         account = StripePayoutAccountFactory.create(country='XX')
         self.assertEqual(
@@ -206,11 +206,11 @@ class ConnectAccountTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             account.document_spec['supported_document_types'],
-            [u'passport', u'id-card', u'drivers-license']
+            ['passport', 'id-card', 'drivers-license']
         )
         self.assertEqual(
             account.document_spec['document_types_requiring_back'],
-            [u'id-card', u'drivers-license']
+            ['id-card', 'drivers-license']
         )
 
 
@@ -265,7 +265,7 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
             'account': 'acct_1032D82eZvKYlo2C'
         })
 
-        super(StripeExternalAccountTestCase, self).setUp()
+        super().setUp()
 
     def test_save(self):
         self.external_account.account_id = None

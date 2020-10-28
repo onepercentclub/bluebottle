@@ -1,4 +1,3 @@
-from builtins import str
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fsm.effects import Effect

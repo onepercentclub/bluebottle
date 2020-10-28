@@ -18,7 +18,7 @@ def get_payment_url(payment):
     domain = connection.tenant.domain_url
     if 'localhost' in domain:
         # Use a mocked url that will always return the expected result
-        domain = '{}.t.goodup.com'.format(connection.tenant.client_name)
+        domain = f'{connection.tenant.client_name}.t.goodup.com'
 
     provider = VitepayPaymentProvider.objects.get()
     credentials = provider.private_settings
@@ -77,7 +77,7 @@ def get_payment_url(payment):
         payment.payment_url = response.content.decode()
         payment.save()
     else:
-        raise PaymentException('Error creating payment: {0}'.format(response.content))
+        raise PaymentException(f'Error creating payment: {response.content}')
     return response.content.decode()
 
 

@@ -14,7 +14,7 @@ class PledgePaymentList(PaymentList):
     permission_classes = (PaymentPermission, PledgePaymentPermission)
 
     def perform_create(self, serializer):
-        super(PledgePaymentList, self).perform_create(serializer)
+        super().perform_create(serializer)
         payment = serializer.instance
         payment.states.succeed(save=True)
 
@@ -25,7 +25,7 @@ class PledgeBankAccountAccountList(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self, *args, **kwargs):
-        queryset = super(PledgeBankAccountAccountList, self).get_queryset(*args, **kwargs)
+        queryset = super().get_queryset(*args, **kwargs)
         return queryset.filter(connect_account__owner=self.request.user)
 
     related_permission_classes = {

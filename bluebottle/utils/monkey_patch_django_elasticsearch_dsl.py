@@ -7,7 +7,7 @@ class TenantAwareDocTypeOptions(elasticsearch_dsl.document.DocTypeOptions):
     @property
     def index(self):
         if self._index:
-            return '{}-{}'.format(connection.tenant.schema_name, self._index)
+            return f'{connection.tenant.schema_name}-{self._index}'
         else:
             return None
 

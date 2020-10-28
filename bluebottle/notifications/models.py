@@ -1,4 +1,3 @@
-from builtins import object
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -67,12 +66,12 @@ class NotificationPlatformSettings(BasePlatformSettings):
         max_length=100, choices=MATCH_OPTIONS, blank=True
     )
 
-    class Meta(object):
+    class Meta:
         verbose_name_plural = _('notification settings')
         verbose_name = _('notification settings')
 
 
-class NotificationModelMixin(object):
+class NotificationModelMixin:
     """
     This should be imported by models that need to trigger
     messages on change.

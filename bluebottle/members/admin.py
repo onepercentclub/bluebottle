@@ -1,9 +1,7 @@
 import functools
 
-import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
-from builtins import object
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -56,7 +54,7 @@ from .models import Member
 class MemberForm(forms.ModelForm):
     def __init__(self, data=None, files=None, current_user=None, *args, **kwargs):
         self.current_user = current_user
-        super(MemberForm, self).__init__(data, files, *args, **kwargs)
+        super().__init__(data, files, *args, **kwargs)
 
         if self.current_user.is_superuser:
             # Super users can assign every group to a user
@@ -73,7 +71,7 @@ class MemberForm(forms.ModelForm):
             initial=Group.objects.filter(name='Authenticated')
         )
 
-    class Meta(object):
+    class Meta:
         model = Member
         # Mind you these fields are also set in MemberAdmin.add_fieldsets
         fields = '__all__'
@@ -102,7 +100,7 @@ class MemberCreationForm(MemberForm):
         raise forms.ValidationError(self.error_messages['duplicate_email'])
 
     def save(self, commit=True):
-        user = super(MemberCreationForm, self).save(commit=False)
+        user = super().save(commit=False)
         if commit:
             user.save()
         return user
@@ -137,10 +135,10 @@ class CustomAdminFormMetaClass(ModelFormMetaclass):
                                                     label=field.name,
                                                     help_text=field.description)
 
-        return super(CustomAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
+        return super().__new__(cls, name, bases, attrs)
 
 
-class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm)):
+class MemberChangeForm(MemberForm, metaclass=CustomAdminFormMetaClass):
     """
     Change Member form
     """
@@ -148,12 +146,12 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm))
     email = forms.EmailField(label=_("email address"), max_length=254,
                              help_text=_("A valid, unique email address."))
 
-    class Meta(object):
+    class Meta:
         model = Member
         exclude = ()
 
     def __init__(self, *args, **kwargs):
-        super(MemberChangeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         f = self.fields.get('user_permissions', None)
         if f is not None:
             f.queryset = f.queryset.select_related('content_type')
@@ -174,7 +172,7 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm))
         return self.initial["password"]
 
     def save(self, commit=True):
-        member = super(MemberChangeForm, self).save(commit=commit)
+        member = super().save(commit=commit)
         for field in CustomMemberFieldSettings.objects.all():
             extra, created = CustomMemberField.objects.get_or_create(
                 member=member,
@@ -190,7 +188,7 @@ class LimitModelFormset(BaseInlineFormSet):
     LIMIT = 20
 
     def __init__(self, *args, **kwargs):
-        super(LimitModelFormset, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         _kwargs = {self.fk.name: kwargs['instance']}
         self.queryset = kwargs['queryset'].filter(**_kwargs).order_by('-id')[:self.LIMIT]
 
@@ -216,7 +214,7 @@ class MemberAdmin(UserAdmin):
     }
 
     def get_form(self, request, *args, **kwargs):
-        Form = super(MemberAdmin, self).get_form(request, *args, **kwargs)
+        Form = super().get_form(request, *args, **kwargs)
         return functools.partial(Form, current_user=request.user)
 
     def get_fieldsets(self, request, obj=None):
@@ -365,7 +363,7 @@ class MemberAdmin(UserAdmin):
         initiative_url = reverse('admin:initiatives_initiative_changelist')
         for field in ['owner', 'reviewer', 'promoter', 'activity_manager']:
             if Initiative.objects.filter(status__in=['draft', 'submitted', 'needs_work'], **{field: obj}).count():
-                link = initiative_url + '?{}_id={}'.format(field, obj.id)
+                link = initiative_url + f'?{field}_id={obj.id}'
                 initiatives.append(format_html(
                     '<a href="{}">{}</a> draft {}',
                     link,
@@ -373,7 +371,7 @@ class MemberAdmin(UserAdmin):
                     field,
                 ))
         if Initiative.objects.filter(status='approved', **{field: obj}).count():
-            link = initiative_url + '?{}_id={}'.format(field, obj.id)
+            link = initiative_url + f'?{field}_id={obj.id}'
             initiatives.append(format_html(
                 '<a href="{}">{}</a> open {}',
                 link,
@@ -388,7 +386,7 @@ class MemberAdmin(UserAdmin):
         participant_url = reverse('admin:events_participant_changelist')
         for status in ['new', 'succeeded', 'failed', 'withdrawn', 'rejected', 'no_show']:
             if Participant.objects.filter(status=status, user=obj).count():
-                link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
+                link = participant_url + f'?user_id={obj.id}&status={status}'
                 participants.append(format_html(
                     '<a href="{}">{}</a> {}',
                     link,
@@ -403,7 +401,7 @@ class MemberAdmin(UserAdmin):
         applicant_url = reverse('admin:assignments_applicant_changelist')
         for status in ['new', 'accepted', 'active', 'succeeded', 'failed', 'withdrawn', 'rejected', 'no_show']:
             if Applicant.objects.filter(status=status, user=obj).count():
-                link = applicant_url + '?user_id={}&status={}'.format(obj.id, status)
+                link = applicant_url + f'?user_id={obj.id}&status={status}'
                 applicants.append(format_html(
                     '<a href="{}">{}</a> {}',
                     link,
@@ -416,7 +414,7 @@ class MemberAdmin(UserAdmin):
         donations = []
         donation_url = reverse('admin:funding_donation_changelist')
         if Donation.objects.filter(status='succeeded', user=obj).count():
-            link = donation_url + '?user_id={}'.format(obj.id)
+            link = donation_url + f'?user_id={obj.id}'
             donations.append(format_html(
                 '<a href="{}">{}</a> donations',
                 link,
@@ -451,10 +449,10 @@ class MemberAdmin(UserAdmin):
         """ Override get_inline_instances so that the add form does not show inlines """
         if not obj:
             return []
-        return super(MemberAdmin, self).get_inline_instances(request, obj)
+        return super().get_inline_instances(request, obj)
 
     def get_urls(self):
-        urls = super(MemberAdmin, self).get_urls()
+        urls = super().get_urls()
 
         extra_urls = [
             url(r'^login-as/(?P<pk>\d+)/$',
@@ -532,7 +530,7 @@ class MemberAdmin(UserAdmin):
     def login_as_link(self, obj):
         url = reverse('admin:members_member_login_as', args=(obj.pk,))
         return format_html(
-            u"<a target='_blank' href='{}'>{}</a>",
+            "<a target='_blank' href='{}'>{}</a>",
             url, _('Login as user')
         )
     login_as_link.short_description = _('Login as')
@@ -549,7 +547,7 @@ admin.site.register(Member, MemberAdmin)
 class NewGroupChangeForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         # Dynamically set permission widget to make it Tenant aware
-        super(NewGroupChangeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         permissions = Permission.objects.all()
         self.fields['permissions'] = PermissionSelectMultipleField(queryset=permissions, required=False)
 
@@ -558,12 +556,12 @@ class GroupsAdmin(GroupAdmin):
     list_display = ["name", ]
     form = NewGroupChangeForm
 
-    class Media(object):
+    class Media:
         css = {
             'all': ('css/admin/permissions-table.css',)
         }
 
-    class Meta(object):
+    class Meta:
         model = Group
 
 

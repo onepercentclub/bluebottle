@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
@@ -80,7 +78,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     def stats(self):
         return {}
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Activity")
         verbose_name_plural = _("Activities")
         permissions = (
@@ -103,7 +101,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
         self.description = clean_html(self.description)
 
-        super(Activity, self).save(**kwargs)
+        super().save(**kwargs)
 
         if not self.segments.count():
             for segment in self.owner.segments.all():
@@ -112,7 +110,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        link = u"{}/{}/initiatives/activities/details/{}/{}/{}".format(
+        link = "{}/{}/initiatives/activities/details/{}/{}/{}".format(
             domain, language,
             self.__class__.__name__.lower(),
             self.pk,
@@ -154,9 +152,9 @@ class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         if not self.contribution_date:
             self.contribution_date = self.date
 
-        super(Contribution, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
-    class Meta(object):
+    class Meta:
         ordering = ('-created',)
 
     def __str__(self):
@@ -165,18 +163,18 @@ class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
 @python_2_unicode_compatible
 class Organizer(Contribution):
-    class Meta(object):
+    class Meta:
         verbose_name = _("Activity owner")
         verbose_name_plural = _("Activity owners")
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'contributions/organizers'
 
     def save(self, *args, **kwargs):
         if not self.contribution_date:
             self.contribution_date = self.activity.created
 
-        super(Organizer, self).save()
+        super().save()
 
     def __str__(self):
         if self.user:

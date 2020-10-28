@@ -20,7 +20,7 @@ class ActivitySegmentsTestCase(TestCase):
         self.user.segments.add(self.team)
         self.user.segments.add(self.unit)
 
-        super(ActivitySegmentsTestCase, self).setUp()
+        super().setUp()
 
     def test_segments(self):
         activity = EventFactory.create(owner=self.user)

@@ -1,4 +1,3 @@
-from builtins import object
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.functional import lazy
@@ -48,7 +47,7 @@ class DocumentItem(ContentItem):
     def __str__(self):
         return Truncator(strip_tags(self.text)).words(20)
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Document')
         verbose_name_plural = _('Document')
 
@@ -61,7 +60,7 @@ class ActionItem(ContentItem):
     def __str__(self):
         return Truncator(strip_tags(self.title)).words(20)
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Call to action')
         verbose_name_plural = _('Call to actions')
 
@@ -77,7 +76,7 @@ class ColumnsItem(ContentItem):
 
     objects = ContentItemManager()
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Text in columns')
         verbose_name_plural = _('Text in columns')
 
@@ -87,7 +86,7 @@ class ColumnsItem(ContentItem):
     def full_clean(self, *args, **kwargs):
         # This is called by the form when all values are assigned.
         # The pre filters are applied here, so any errors also appear as ValidationError.
-        super(ColumnsItem, self).full_clean(*args, **kwargs)
+        super().full_clean(*args, **kwargs)
 
         self.text1, self.text1_final = apply_filters(self, self.text1, field_name='text1')
         if self.text1_final == self.text1:
@@ -131,7 +130,7 @@ class ImageTextItem(ContentItem):
     def image_width(self):
         return 12 - self.text_width
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Picture + Text')
         verbose_name_plural = _('Picture + Text')
 
@@ -141,7 +140,7 @@ class ImageTextItem(ContentItem):
     def full_clean(self, *args, **kwargs):
         # This is called by the form when all values are assigned.
         # The pre filters are applied here, so any errors also appear as ValidationError.
-        super(ImageTextItem, self).full_clean(*args, **kwargs)
+        super().full_clean(*args, **kwargs)
 
         self.text, self.text_final = apply_filters(self, self.text, field_name='text')
         if self.text_final == self.text:
@@ -156,7 +155,7 @@ class ImageTextRoundItem(ContentItem):
 
     objects = ContentItemManager()
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Text + Round Image')
         verbose_name_plural = _('Text + Round Image')
 
@@ -166,7 +165,7 @@ class ImageTextRoundItem(ContentItem):
     def full_clean(self, *args, **kwargs):
         # This is called by the form when all values are assigned.
         # The pre filters are applied here, so any errors also appear as ValidationError.
-        super(ImageTextRoundItem, self).full_clean(*args, **kwargs)
+        super().full_clean(*args, **kwargs)
 
         self.text, self.text_final = apply_filters(self, self.text, field_name='text')
         if self.text_final == self.text:
@@ -212,7 +211,7 @@ class Page(PublishableModel):
     def content(self):
         return self.body
 
-    class Meta(object):
+    class Meta:
         ordering = ('language', 'slug')
         unique_together = ('language', 'slug')
 

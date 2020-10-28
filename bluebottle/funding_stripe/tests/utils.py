@@ -1,6 +1,6 @@
 import munch
 import stripe
-from mock import patch
+from unittest.mock import patch
 
 from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory

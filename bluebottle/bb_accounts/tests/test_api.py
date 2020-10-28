@@ -1,12 +1,11 @@
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str
 import json
 import re
 import urllib.parse
 import time
 
-import mock
+from unittest import mock
 
 import httmock
 
@@ -43,18 +42,19 @@ class UserApiIntegrationTest(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(UserApiIntegrationTest, self).setUp()
+        super().setUp()
 
         self.user_1 = BlueBottleUserFactory.create()
-        self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
+        self.user_1_token = f"JWT {self.user_1.get_jwt_token()}"
 
         self.user_2 = BlueBottleUserFactory.create()
-        self.user_2_token = "JWT {0}".format(self.user_2.get_jwt_token())
+        self.user_2_token = f"JWT {self.user_2.get_jwt_token()}"
 
         # User with partner organization
         self.user_with_partner_organization = BlueBottleUserFactory.create()
-        self.user_with_partner_organization_token = "JWT {0}".format(self.user_with_partner_organization.get_jwt_token()
-                                                                     )
+        self.user_with_partner_organization_token = "JWT {}".format(
+            self.user_with_partner_organization.get_jwt_token()
+        )
         self.organization = OrganizationFactory.create(name='Partner Organization',
                                                        slug='partner-organization',
                                                        website='http://partnerorg.nl')
@@ -80,7 +80,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                              'date_joined', 'website', 'twitter', 'facebook', 'skypename']
 
         for field in serializer_fields:
-            self.assertTrue(field in response.data, "Missing field {}".format(field))
+            self.assertTrue(field in response.data, f"Missing field {field}")
 
         excluded_fields = ['email', 'newsletter',
                            'campaign_notifications',
@@ -162,7 +162,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                              'newsletter', 'campaign_notifications',
                              'birthdate', 'gender', 'first_name', 'last_name']
         for field in serializer_fields:
-            self.assertTrue(field in response.data, "Missing field {}".format(field))
+            self.assertTrue(field in response.data, f"Missing field {field}")
 
     def test_user_with_partner_organization(self):
         user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_with_partner_organization.id})
@@ -345,9 +345,9 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['last_name'], self.user_1.first_name)
 
         self.assertEqual(response.data['permissions']['project_list'],
-                         {u'GET': True, u'OPTIONS': True, u'POST': True})
+                         {'GET': True, 'OPTIONS': True, 'POST': True})
         self.assertEqual(response.data['permissions']['homepage'],
-                         {u'GET': True, u'OPTIONS': True})
+                         {'GET': True, 'OPTIONS': True})
         self.client.logout()
 
     def test_logout_authenticated(self):
@@ -389,7 +389,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.user_create_api_url,
                                     {'email': new_user_email, 'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
-        "JWT {0}".format(response.data['jwt_token'])
+        "JWT {}".format(response.data['jwt_token'])
 
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [new_user_email])
@@ -559,22 +559,22 @@ class AuthLocaleMiddlewareTest(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(AuthLocaleMiddlewareTest, self).setUp()
+        super().setUp()
 
         self.user_en = BlueBottleUserFactory.create()
         self.user_en.primary_language = 'en'
         self.user_en.save()
-        self.user_en_token = "JWT {0}".format(self.user_en.get_jwt_token())
+        self.user_en_token = f"JWT {self.user_en.get_jwt_token()}"
 
         self.user_nl = BlueBottleUserFactory.create()
         self.user_nl.primary_language = 'nl'
         self.user_nl.save()
-        self.user_nl_token = "JWT {0}".format(self.user_nl.get_jwt_token())
+        self.user_nl_token = f"JWT {self.user_nl.get_jwt_token()}"
 
         self.user_es = BlueBottleUserFactory.create()
         self.user_es.primary_language = 'es'
         self.user_es.save()
-        self.user_es_token = "JWT {0}".format(self.user_es.get_jwt_token())
+        self.user_es_token = f"JWT {self.user_es.get_jwt_token()}"
 
     def test_no_redirect_for_supported_language(self):
         response = self.client.get('/nl/', follow=False,
@@ -606,10 +606,10 @@ class UserVerificationTest(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(UserVerificationTest, self).setUp()
+        super().setUp()
         self.user = BlueBottleUserFactory.create()
 
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = f"JWT {self.user.get_jwt_token()}"
         self.verify_user_url = reverse('user-verification')
 
     def test_verify(self):
@@ -622,7 +622,7 @@ class UserVerificationTest(BluebottleTestCase):
             self.assertEqual(response.status_code, 201)
             self.user.refresh_from_db()
             self.assertTrue(self.user.verified)
-            self.assertEqual(response.data, {'token': u'test-token', 'id': self.user.id})
+            self.assertEqual(response.data, {'token': 'test-token', 'id': self.user.id})
 
     def test_verify_unauthenticated(self):
         with httmock.HTTMock(captcha_mock):
@@ -655,7 +655,7 @@ class UserVerificationTest(BluebottleTestCase):
 
 class TokenLoginApiTest(BluebottleTestCase):
     def setUp(self):
-        super(TokenLoginApiTest, self).setUp()
+        super().setUp()
 
         self.user = BlueBottleUserFactory.create()
         self.other_user = BlueBottleUserFactory.create()

@@ -45,12 +45,12 @@ class Command(BaseCommand):
             with LocalTenant(tenant):
                 tokens += [
                     {
-                        u'api_key': token.key,
-                        u'name': tenant.client_name,
-                        u'domain': u'https://{}'.format(tenant.domain_url),
-                        u'fees': {
-                            u'under_target': properties.PROJECT_PAYOUT_FEES.get('not_fully_funded', 0),
-                            u'over_target': properties.PROJECT_PAYOUT_FEES.get('fully_funded', 0)
+                        'api_key': token.key,
+                        'name': tenant.client_name,
+                        'domain': f'https://{tenant.domain_url}',
+                        'fees': {
+                            'under_target': properties.PROJECT_PAYOUT_FEES.get('not_fully_funded', 0),
+                            'over_target': properties.PROJECT_PAYOUT_FEES.get('fully_funded', 0)
                         }
                     } for token in
                     Token.objects.filter(user__email=options['email'])

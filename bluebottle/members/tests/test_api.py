@@ -1,7 +1,6 @@
-from builtins import range
 import time
 
-import mock
+from unittest import mock
 from captcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
@@ -23,7 +22,7 @@ class LoginTestCase(BluebottleTestCase):
         self.password = 'blablabla'
         self.email = 'test@example.com'
         self.user = BlueBottleUserFactory.create(email=self.email, password=self.password)
-        super(LoginTestCase, self).setUp()
+        super().setUp()
 
     def test_login(self):
         response = self.client.post(
@@ -95,7 +94,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
     def setUp(self):
         (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
 
-        super(SignUpTokenTestCase, self).setUp()
+        super().setUp()
 
     def test_create(self):
         email = 'test@example.com'
@@ -107,7 +106,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
 
         member = Member.objects.get(email=email)
-        self.assertTrue('{}:'.format(member.pk) in mail.outbox[0].body)
+        self.assertTrue(f'{member.pk}:' in mail.outbox[0].body)
         self.assertEqual('Activate your account for Test', mail.outbox[0].subject)
         self.assertFalse(member.is_active)
 
@@ -163,7 +162,7 @@ class CreateUserTestCase(BluebottleTestCase):
     def setUp(self):
         (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
 
-        super(CreateUserTestCase, self).setUp()
+        super().setUp()
 
     def test_create(self):
         email = 'test@example.com'
@@ -217,7 +216,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
     def setUp(self):
         (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
 
-        super(ConfirmSignUpTestCase, self).setUp()
+        super().setUp()
 
     def test_confirm(self):
         email = 'test@example.com'
@@ -311,7 +310,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         response = self.client.put(
             reverse(
                 'user-signup-token-confirm',
-                args=('{}:wrong-signature'.format(member.pk), )
+                args=(f'{member.pk}:wrong-signature', )
             ),
             {'password': password}
         )
@@ -330,13 +329,13 @@ class UserDataExportTest(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(UserDataExportTest, self).setUp()
+        super().setUp()
 
         self.user_1 = BlueBottleUserFactory.create()
-        self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
+        self.user_1_token = f"JWT {self.user_1.get_jwt_token()}"
 
         self.user_2 = BlueBottleUserFactory.create()
-        self.user_2_token = "JWT {0}".format(self.user_2.get_jwt_token())
+        self.user_2_token = f"JWT {self.user_2.get_jwt_token()}"
 
         # User with partner organization
         self.user_export_url = reverse('user-export')
@@ -370,13 +369,13 @@ class EmailSetTest(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(EmailSetTest, self).setUp()
+        super().setUp()
 
         self.user = BlueBottleUserFactory.create(
             password='some-password',
             email='user@example.com'
         )
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = f"JWT {self.user.get_jwt_token()}"
         self.current_user_url = reverse('user-current')
 
         self.set_email_url = reverse('user-set-email')
@@ -438,7 +437,7 @@ class EmailSetTest(BluebottleTestCase):
         response = self.client.put(
             self.set_email_url,
             {'password': 'other-password', 'email': 'new@example.com'},
-            token="JWT {0}".format(other_user.get_jwt_token())
+            token=f"JWT {other_user.get_jwt_token()}"
         )
 
         self.assertEqual(response.status_code, 403)
@@ -453,13 +452,13 @@ class PasswordSetTest(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(PasswordSetTest, self).setUp()
+        super().setUp()
 
         self.user = BlueBottleUserFactory.create(
             password='some-password',
             email='user@example.com'
         )
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = f"JWT {self.user.get_jwt_token()}"
         self.current_user_url = reverse('user-current')
         self.set_password_url = reverse('user-set-password')
 
@@ -531,7 +530,7 @@ class PasswordSetTest(BluebottleTestCase):
         response = self.client.put(
             self.set_password_url,
             {'password': 'some-password', 'new_password': 'new-password'},
-            token="JWT {0}".format(other_user.get_jwt_token())
+            token=f"JWT {other_user.get_jwt_token()}"
         )
 
         self.assertEqual(response.status_code, 403)
@@ -543,10 +542,10 @@ class PasswordSetTest(BluebottleTestCase):
 
 class UserLogoutTest(BluebottleTestCase):
     def setUp(self):
-        super(UserLogoutTest, self).setUp()
+        super().setUp()
 
         self.user = BlueBottleUserFactory.create()
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = f"JWT {self.user.get_jwt_token()}"
 
         self.current_user_url = reverse('user-current')
         self.logout_url = reverse('user-logout')
@@ -575,10 +574,10 @@ class UserLogoutTest(BluebottleTestCase):
 
 class UserActivityTest(BluebottleTestCase):
     def setUp(self):
-        super(UserActivityTest, self).setUp()
+        super().setUp()
 
         self.user = BlueBottleUserFactory.create()
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = f"JWT {self.user.get_jwt_token()}"
         self.user_activity_url = reverse('user-activity')
 
     def test_log_activity(self):

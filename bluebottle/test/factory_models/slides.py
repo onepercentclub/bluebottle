@@ -1,4 +1,3 @@
-from builtins import object
 import factory
 from django.utils.timezone import now
 
@@ -7,14 +6,14 @@ from .accounts import BlueBottleUserFactory
 
 
 class SlideFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Slide
 
     author = factory.SubFactory(BlueBottleUserFactory)
     publication_date = now()
     status = Slide.SlideStatus.published
-    title = factory.Sequence(lambda n: 'Slide Title {0}'.format(n))
-    body = factory.Sequence(lambda n: 'Slide Body {0}'.format(n))
+    title = factory.Sequence(lambda n: f'Slide Title {n}')
+    body = factory.Sequence(lambda n: f'Slide Body {n}')
     sequence = factory.Sequence(lambda n: n)
 
 

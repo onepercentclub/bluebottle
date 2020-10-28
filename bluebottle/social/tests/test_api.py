@@ -3,7 +3,7 @@ standard_library.install_aliases()
 import json
 import urllib.parse
 
-import mock
+from unittest import mock
 import httmock
 
 from django.core.urlresolvers import reverse
@@ -13,12 +13,12 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
-@httmock.urlmatch(netloc='graph.facebook.com', path='/[v0-9\.]+/me')
+@httmock.urlmatch(netloc='graph.facebook.com', path=r'/[v0-9\.]+/me')
 def facebook_me_mock(url, request):
     return json.dumps({'firstname': 'bla', 'lastname': 'bla'})
 
 
-@httmock.urlmatch(netloc='graph.facebook.com', path='/[v0-9\.]+/oauth/access_token')
+@httmock.urlmatch(netloc='graph.facebook.com', path=r'/[v0-9\.]+/oauth/access_token')
 def facebook_access_token(url, request):
     if urllib.parse.parse_qs(request.body)['fb_exchange_token'][0] == 'test_token':
         return json.dumps({'access_token': 'long_lived_token'})
@@ -51,10 +51,10 @@ class SocialTokenAPITestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(SocialTokenAPITestCase, self).setUp()
+        super().setUp()
 
         self.user = BlueBottleUserFactory.create()
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = f"JWT {self.user.get_jwt_token()}"
 
         self.token_url = reverse('access-token', kwargs={'backend': 'facebook'})
 

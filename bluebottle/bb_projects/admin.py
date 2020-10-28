@@ -16,6 +16,6 @@ class ProjectThemeAdmin(TranslatableAdmin):
 
     def initiative_link(self, obj):
         url = "{}?theme__id__exact={}".format(reverse('admin:initiatives_initiative_changelist'), obj.id)
-        return format_html("<a href='{}'>{} initiatives</a>".format(url, obj.initiative_set.count()))
+        return format_html(f"<a href='{url}'>{obj.initiative_set.count()} initiatives</a>")
 
     initiative_link.short_description = _('Initiatives')

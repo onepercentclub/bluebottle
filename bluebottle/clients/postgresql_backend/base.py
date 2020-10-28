@@ -9,6 +9,6 @@ class DatabaseWrapper(base.DatabaseWrapper):
         Main API method to current database schema,
         but it does not actually modify the db connection.
         """
-        super(DatabaseWrapper, self).set_tenant(tenant, *args, **kwargs)
+        super().set_tenant(tenant, *args, **kwargs)
 
         properties.set_tenant(tenant)

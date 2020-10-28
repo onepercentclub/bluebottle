@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 import uuid
 
 from rest_framework.exceptions import ValidationError
@@ -7,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
 
 
-class Transition(object):
+class Transition:
     def __init__(self, resource, transition, message=None):
         self.resource = resource
         self.message = message
@@ -60,8 +58,8 @@ class TransitionSerializer(serializers.Serializer):
             user=self.context['request'].user)
         resource.save()
 
-    class Meta(object):
+    class Meta:
         fields = ('id', 'transition', 'message', 'resource')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'transitions'

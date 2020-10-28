@@ -89,7 +89,7 @@ class MediaWallpostAdmin(BaseWallpostAdmin):
     def get_text(self, obj):
         if len(obj.text) > 150:
             return format_html(
-                u'<span title="{}">{} [...]</span>',
+                '<span title="{}">{} [...]</span>',
                 obj.text, obj.text[:145])
 
     def thumbnail(self, obj):
@@ -148,7 +148,7 @@ class TextWallpostAdmin(BaseWallpostAdmin):
         if obj.donation:
             link = reverse('admin:funding_donation_change', args=(obj.donation.id,))
             return format_html(
-                u"<a href='{}'>{}</a>",
+                "<a href='{}'>{}</a>",
                 link, obj.donation
             )
 
@@ -173,7 +173,7 @@ class SystemWallpostAdmin(BaseWallpostAdmin):
         if obj.donation:
             link = reverse('admin:funding_donation_change', args=(obj.donation.id,))
             return format_html(
-                u"<a href='{}'>{}</a>",
+                "<a href='{}'>{}</a>",
                 link, obj.donation
             )
 
@@ -222,7 +222,7 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
         except MediaWallpost.DoesNotExist:
             pass
         if len(text) > 40:
-            return format_html(u'{}&hellip;', text[:38])
+            return format_html('{}&hellip;', text[:38])
         return text
 
 
@@ -250,7 +250,7 @@ class ReactionAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         """ Only show the relevant fields when adding a Reaction. """
         if obj:  # editing an existing object
-            return super(ReactionAdmin, self).get_fieldsets(request, obj)
+            return super().get_fieldsets(request, obj)
         return [(None, {'fields': ('wallpost', 'text')})]
 
     def author_full_name(self, obj):
@@ -270,7 +270,7 @@ class ReactionAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         """ Set the author or editor (as required) and ip when saving the model. """
         set_author_editor_ip(request, obj)
-        super(ReactionAdmin, self).save_model(request, obj, form, change)
+        super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
         """ The Admin needs to show all the Reactions. """
@@ -292,7 +292,7 @@ class DonationWallpostInline(admin.TabularInline):
 
     def wallpost(self, obj):
         url = reverse('admin:wallposts_wallpost_change', args=(obj.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj)
+        return format_html('<a href="{}">{}</a>', url, obj)
 
 
 class WallpostInline(GenericTabularInline):
@@ -308,7 +308,7 @@ class WallpostInline(GenericTabularInline):
 
     def wallpost(self, obj):
         url = reverse('admin:wallposts_wallpost_change', args=(obj.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj)
+        return format_html('<a href="{}">{}</a>', url, obj)
 
     def has_add_permission(self, request):
         return False

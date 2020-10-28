@@ -1,4 +1,3 @@
-from builtins import object
 from django.contrib import admin
 from django_summernote.widgets import SummernoteWidget
 
@@ -12,7 +11,7 @@ from bluebottle.fsm.forms import StateMachineModelForm
 
 class EventAdminForm(StateMachineModelForm):
 
-    class Meta(object):
+    class Meta:
         model = Event
         fields = '__all__'
         widgets = {
@@ -28,7 +27,7 @@ class ParticipantInline(ContributionInline):
 
 
 class ParticipantAdminForm(StateMachineModelForm):
-    class Meta(object):
+    class Meta:
         model = Participant
         exclude = ('transition_date', )
 

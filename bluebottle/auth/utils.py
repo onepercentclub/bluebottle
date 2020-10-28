@@ -25,7 +25,7 @@ def fallback_email(strategy, backend, *args, **kwargs):
 def save_profile_picture(strategy, user, response, details, backend,
                          is_new=False, *args, **kwargs):
     if is_new and backend.name == 'facebook':
-        url = 'http://graph.facebook.com/{0}/picture'.format(response['id'])
+        url = 'http://graph.facebook.com/{}/picture'.format(response['id'])
 
         try:
             response = request('GET', url, params={'type': 'large'})
@@ -34,7 +34,7 @@ def save_profile_picture(strategy, user, response, details, backend,
             pass
         else:
             if not user.picture:
-                user.picture.save('{0}_fb_social.jpg'.format(user.username),
+                user.picture.save(f'{user.username}_fb_social.jpg',
                                   ContentFile(response.content))
                 user.save()
 

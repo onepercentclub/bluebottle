@@ -36,7 +36,7 @@ class ExportAsCSVActionTest(BluebottleTestCase):
         self.admin = TestModelAdmin(TestModel, AdminSite())
         self.request = RequestFactory().get('')
 
-        super(ExportAsCSVActionTest, self).setUp()
+        super().setUp()
 
     def test_export(self):
         response = self.admin.actions[0](

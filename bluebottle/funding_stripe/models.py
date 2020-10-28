@@ -1,9 +1,5 @@
-from __future__ import absolute_import
-from __future__ import division
-
 from future.utils import python_2_unicode_compatible
 from past.utils import old_div
-from builtins import object
 import re
 import json
 from operator import attrgetter
@@ -62,7 +58,7 @@ class PaymentIntent(models.Model):
             self.intent_id = intent.id
             self.client_secret = intent.client_secret
 
-        super(PaymentIntent, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     @property
     def intent(self):
@@ -77,7 +73,7 @@ class PaymentIntent(models.Model):
             "activity_title": self.donation.activity.title,
         }
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'payments/stripe-payment-intents'
 
     def __str__(self):
@@ -195,7 +191,7 @@ class StripeSourcePayment(Payment):
     def save(self, *args, **kwargs):
         created = not self.pk
 
-        super(StripeSourcePayment, self).save()
+        super().save()
 
         if created:
             stripe.Source.modify(self.source_token, metadata=self.metadata)
@@ -277,7 +273,7 @@ class StripePaymentProvider(PaymentProvider):
                         methods.append(method)
         return methods
 
-    class Meta(object):
+    class Meta:
         verbose_name = 'Stripe payment provider'
 
 
@@ -320,7 +316,7 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def errors(self):
-        for error in super(StripePayoutAccount, self).errors:
+        for error in super().errors:
             yield error
 
         if self.account_id and hasattr(self.account.requirements, 'errors'):
@@ -483,7 +479,7 @@ class StripePayoutAccount(PayoutAccount):
             if len(self.owner.activities.all()):
                 url = self.owner.activities.first().get_absolute_url()
             else:
-                url = 'https://{}'.format(connection.tenant.domain_url)
+                url = f'https://{connection.tenant.domain_url}'
 
             if 'localhost' in url:
                 url = re.sub('localhost', 't.goodup.com', url)
@@ -512,7 +508,7 @@ class StripePayoutAccount(PayoutAccount):
                 if field not in self.eventually_due:
                     self.eventually_due.append(field)
 
-        super(StripePayoutAccount, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def update(self, token):
         self._account = stripe.Account.modify(
@@ -568,15 +564,15 @@ class StripePayoutAccount(PayoutAccount):
             "member_id": self.owner.pk,
         }
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('stripe payout account')
         verbose_name_plural = _('stripe payout accounts')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'payout-accounts/stripes'
 
     def __str__(self):
-        return u"Stripe connect account {}".format(self.account_id)
+        return f"Stripe connect account {self.account_id}"
 
 
 @python_2_unicode_compatible
@@ -623,15 +619,15 @@ class ExternalAccount(BankAccount):
             "tenant_domain": connection.tenant.domain_url,
         }
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'payout-accounts/stripe-external-accounts'
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Stripe external account')
         verbose_name_plural = _('Stripe exterrnal account')
 
     def __str__(self):
-        return "Stripe external account {}".format(self.account_id)
+        return f"Stripe external account {self.account_id}"
 
 
 from .states import *  # noqa

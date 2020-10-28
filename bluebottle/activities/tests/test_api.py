@@ -1,4 +1,3 @@
-from builtins import str
 import json
 from datetime import timedelta
 import dateutil
@@ -33,7 +32,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 @tag('elasticsearch')
 class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
-        super(ActivityListSearchAPITestCase, self).setUp()
+        super().setUp()
 
         self.client = JSONAPITestClient()
         self.url = reverse('activity-list')
@@ -91,7 +90,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         EventFactory.create(status='open')
 
         response = self.client.get(
-            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            self.url + f'?filter[owner.id]={self.owner.pk}',
             user=self.owner
         )
 
@@ -128,7 +127,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         EventFactory.create(status='open')
 
         response = self.client.get(
-            self.url + '?filter[initiative_location.id]={}'.format(location.pk),
+            self.url + f'?filter[initiative_location.id]={location.pk}',
             user=self.owner
         )
 
@@ -176,7 +175,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         response = self.client.get(
-            self.url + '?filter[date]={}-{}-{}'.format(after.year, after.month, after.day),
+            self.url + f'?filter[date]={after.year}-{after.month}-{after.day}',
             user=self.owner
         )
 
@@ -608,7 +607,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         AssignmentFactory.create(status='open', initiative=initiative4)
 
         response = self.client.get(
-            self.url + '?sort=popularity&filter[country]={}'.format(country1.id),
+            self.url + f'?sort=popularity&filter[country]={country1.id}',
             user=self.owner
         )
 
@@ -748,7 +747,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
 class ActivityRelatedImageAPITestCase(BluebottleTestCase):
     def setUp(self):
-        super(ActivityRelatedImageAPITestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory.create()
         self.funding = FundingFactory.create(
@@ -800,7 +799,7 @@ class ActivityRelatedImageAPITestCase(BluebottleTestCase):
 
         self.assertEqual(
             response.json()['included'][1]['attributes']['links']['large'].split('?')[0],
-            u'/api/activities/{}/related-image/600'.format(response.json()['data']['id'])
+            '/api/activities/{}/related-image/600'.format(response.json()['data']['id'])
         )
 
     def test_create_non_owner(self):
@@ -834,7 +833,7 @@ class ActivityRelatedImageAPITestCase(BluebottleTestCase):
 
 class ContributionListAPITestCase(BluebottleTestCase):
     def setUp(self):
-        super(ContributionListAPITestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 
@@ -918,7 +917,7 @@ class ContributionListAPITestCase(BluebottleTestCase):
 @tag('elasticsearch')
 class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
-        super(ActivityAPIAnonymizationTestCase, self).setUp()
+        super().setUp()
         self.member_settings = MemberPlatformSettings.load()
 
         self.client = JSONAPITestClient()

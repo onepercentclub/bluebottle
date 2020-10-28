@@ -1,9 +1,7 @@
-
 from future import standard_library
 standard_library.install_aliases()
 
 from urllib.parse import urlencode
-from builtins import chr
 import base64
 import hashlib
 import hmac
@@ -51,8 +49,8 @@ def _encode_message(message):
 
 def generate_token(email, username, first_name, last_name):
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    message = 'time={0}|username={1}|name={2} {3}|' \
-              'email={4}'.format(timestamp, username, first_name, last_name, email)
+    message = 'time={}|username={}|name={} {}|' \
+              'email={}'.format(timestamp, username, first_name, last_name, email)
     aes_message, hmac_digest = _encode_message(message)
     token = base64.urlsafe_b64encode(aes_message + hmac_digest.digest())
     return token
@@ -170,7 +168,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         return data
 
     def get_metadata(self):
-        metadata = "<sso-url>{0}</sso-url>".format(self.sso_url())
+        metadata = f"<sso-url>{self.sso_url()}</sso-url>"
         return metadata
 
     def sso_url(self, target_url=None):

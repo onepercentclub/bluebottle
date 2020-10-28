@@ -2,7 +2,7 @@ from django.core import mail
 from django.db import IntegrityError
 from django.test.utils import override_settings
 from django.utils import timezone
-from mock import patch
+from unittest.mock import patch
 
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -233,17 +233,18 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         """ Test that a base user model has all the expected fields """
         from bluebottle.members.models import Member
 
-        user_fields = set(
-            ['email', 'username', 'is_staff', 'is_active', 'date_joined',
-             'updated', 'deleted',
-             'user_type', 'first_name', 'last_name', 'location', 'picture',
-             'about_me',
-             'primary_language', 'share_time_knowledge', 'share_money',
-             'newsletter', 'phone_number',
-             'gender', 'birthdate', 'disable_token', 'campaign_notifications'])
+        user_fields = {
+            'email', 'username', 'is_staff', 'is_active', 'date_joined',
+            'updated', 'deleted',
+            'user_type', 'first_name', 'last_name', 'location', 'picture',
+            'about_me',
+            'primary_language', 'share_time_knowledge', 'share_money',
+            'newsletter', 'phone_number',
+            'gender', 'birthdate', 'disable_token', 'campaign_notifications'
+        }
 
         self.assertEquals(
-            set(f.name for f in Member._meta.fields) & user_fields, user_fields)
+            {f.name for f in Member._meta.fields} & user_fields, user_fields)
 
     def test_anonymize(self):
         self.user.anonymize()

@@ -68,7 +68,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     list_display = ['id', 'account_id', 'status']
 
     def get_fields(self, request, obj=None):
-        fields = super(StripePayoutAccountAdmin, self).get_fields(request, obj)
+        fields = super().get_fields(request, obj)
         if request.user.is_superuser:
             fields = fields + ['stripe_link']
         return fields
@@ -89,10 +89,10 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
                 'There is already a StripePayoutAccount with this account_id.',
                 messages.ERROR
             )
-        return super(StripePayoutAccountAdmin, self).save_model(request, obj, form, change)
+        return super().save_model(request, obj, form, change)
 
     def get_urls(self):
-        urls = super(StripePayoutAccountAdmin, self).get_urls()
+        urls = super().get_urls()
         custom_urls = [
             url(
                 r'^(?P<account_id>.+)/check_status/$',
@@ -131,9 +131,9 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
 
     def stripe_link(self, obj):
         if properties.LIVE_PAYMENTS_ENABLED:
-            url = 'https://dashboard.stripe.com/connect/accounts/{}'.format(obj.account_id)
+            url = f'https://dashboard.stripe.com/connect/accounts/{obj.account_id}'
         else:
-            url = 'https://dashboard.stripe.com/test/connect/accounts/{}'.format(obj.account_id)
+            url = f'https://dashboard.stripe.com/test/connect/accounts/{obj.account_id}'
         return format_html(
             '<a href="{}" target="_blank">{}</a><br/>'
             '<small>{}</small>',
@@ -170,7 +170,7 @@ class StripeBankAccountAdmin(BankAccountChildAdmin):
                 'There is already a StripeBankAccount with this account_id.',
                 messages.ERROR
             )
-        return super(StripeBankAccountAdmin, self).save_model(request, obj, form, change)
+        return super().save_model(request, obj, form, change)
 
     def account_details(self, obj):
         try:
@@ -179,5 +179,5 @@ class StripeBankAccountAdmin(BankAccountChildAdmin):
             )
             return template.render({'info': obj.account})
         except StripeError as e:
-            return "Error retrieving details: {}".format(e)
+            return f"Error retrieving details: {e}"
     account_details.short_description = _('Details')

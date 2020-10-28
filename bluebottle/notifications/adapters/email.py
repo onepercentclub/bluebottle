@@ -6,7 +6,7 @@ class EmailMessageAdapter(BaseMessageAdapter):
 
     @property
     def template_name(self):
-        return 'mails/{}'.format(self.message.template)
+        return f'mails/{self.message.template}'
 
     def send(self, **context):
         send_mail(

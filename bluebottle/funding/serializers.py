@@ -1,4 +1,3 @@
-from builtins import object
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
@@ -49,7 +48,7 @@ from bluebottle.utils.serializers import (
 )
 
 
-class FundingCurrencyValidator(object):
+class FundingCurrencyValidator:
     """
     Validates that the currency of the field is the same as the activity currency
     """
@@ -88,11 +87,11 @@ class RewardSerializer(ModelSerializer):
         'activity': 'bluebottle.funding.serializers.FundingSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = Reward
         fields = ('id', 'title', 'description', 'amount', 'limit', 'activity', 'count')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'activity',
         ]
@@ -110,11 +109,11 @@ class BudgetLineSerializer(ModelSerializer):
         'activity': 'bluebottle.funding.serializers.FundingSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = BudgetLine
         fields = ('activity', 'amount', 'description')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'activity',
         ]
@@ -129,11 +128,11 @@ class PaymentMethodSerializer(serializers.Serializer):
     currencies = serializers.SerializerMethodField()
     countries = serializers.ListField()
 
-    class Meta(object):
+    class Meta:
         model = PaymentMethod
         fields = ('code', 'name', 'provider', 'currencies', 'countries', 'activity')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'payments/payment-methods'
 
     def get_currencies(self, obj):
@@ -155,10 +154,10 @@ class BankAccountSerializer(PolymorphicModelSerializer):
         PledgeBankAccountSerializer
     ]
 
-    class Meta(object):
+    class Meta:
         model = BankAccount
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'owner',
         ]
@@ -234,7 +233,7 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
     account_info = serializers.DictField(source='bank_account.public_data', read_only=True)
 
     def get_fields(self):
-        fields = super(FundingSerializer, self).get_fields()
+        fields = super().get_fields()
 
         if not self.context['request'].user in [
             self.instance.owner,
@@ -318,12 +317,12 @@ class FundingTransitionSerializer(ModelSerializer):
         'resource': 'bluebottle.funding.serializers.FundingSerializer',
     }
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = ['resource', ]
         resource_name = 'funding-transitions'
 
 
-class IsRelatedToActivity(object):
+class IsRelatedToActivity:
     """
     Validates that the reward activity is the same as the donation activity
     """
@@ -347,7 +346,7 @@ def reward_amount_matches(data):
         )
 
 
-class DonationMemberValidator(object):
+class DonationMemberValidator:
     """
     Validates that the reward activity is the same as the donation activity
     """
@@ -430,7 +429,7 @@ class DonationSerializer(BaseContributionSerializer):
         """
         If the donation is anonymous, we do not return the user.
         """
-        fields = super(DonationSerializer, self).get_fields()
+        fields = super().get_fields()
         if isinstance(self.instance, Donation) and self.instance.anonymous:
             del fields['user']
 
@@ -469,7 +468,7 @@ class PlainPayoutAccountSerializer(serializers.ModelSerializer):
         'document': 'bluebottle.funding.serializers.KycDocumentSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = PlainPayoutAccount
 
         fields = (
@@ -483,7 +482,7 @@ class PlainPayoutAccountSerializer(serializers.ModelSerializer):
         )
         meta_fields = ('required', 'errors', 'status')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'payout-accounts/plains'
         included_resources = [
             'external_accounts',
@@ -505,7 +504,7 @@ class PayoutAccountSerializer(PolymorphicModelSerializer):
         ConnectAccountSerializer,
     ]
 
-    class Meta(object):
+    class Meta:
         model = PayoutAccount
         fields = (
             'id',
@@ -516,7 +515,7 @@ class PayoutAccountSerializer(PolymorphicModelSerializer):
         )
         meta_fields = ('required', 'errors', 'required_fields', 'status',)
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'payout-accounts/account'
         included_resources = [
             'external_accounts',
@@ -540,7 +539,7 @@ class PayoutBankAccountSerializer(PolymorphicModelSerializer):
     ]
 
     # For Payout service
-    class Meta(object):
+    class Meta:
         model = BankAccount
 
 
@@ -548,7 +547,7 @@ class PayoutDonationSerializer(serializers.ModelSerializer):
     # For Payout service
     amount = MoneySerializer(source='payout_amount')
 
-    class Meta(object):
+    class Meta:
         fields = (
             'id',
             'amount',
@@ -584,7 +583,7 @@ class PayoutSerializer(serializers.ModelSerializer):
     status = serializers.CharField(write_only=True)
     method = serializers.CharField(source='provider', read_only=True)
 
-    class Meta(object):
+    class Meta:
         fields = (
             'id',
             'status',
@@ -595,7 +594,7 @@ class PayoutSerializer(serializers.ModelSerializer):
         )
         model = Payout
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'funding/payouts'
         included_resources = [
             'activity',
@@ -611,7 +610,7 @@ class PayoutSerializer(serializers.ModelSerializer):
 
 
 class FundingPlatformSettingsSerializer(serializers.ModelSerializer):
-    class Meta(object):
+    class Meta:
         model = FundingPlatformSettings
 
         fields = (

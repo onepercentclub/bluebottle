@@ -1,7 +1,4 @@
-from __future__ import division
-
 from past.utils import old_div
-from builtins import object
 import logging
 
 from babel.numbers import get_currency_symbol
@@ -48,7 +45,7 @@ from bluebottle.wallposts.admin import DonationWallpostInline
 logger = logging.getLogger(__name__)
 
 
-class PaymentLinkMixin(object):
+class PaymentLinkMixin:
 
     def payment_link(self, obj):
         payment_url = reverse('admin:{}_{}_change'.format(
@@ -73,7 +70,7 @@ class RewardInline(admin.TabularInline):
 
     def link(self, obj):
         url = reverse('admin:funding_reward_change', args=(obj.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj.title)
+        return format_html('<a href="{}">{}</a>', url, obj.title)
 
 
 @admin.register(Reward)
@@ -115,12 +112,12 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
     def payout_link(self, obj):
         url = reverse('admin:funding_payout_change', args=(obj.id, ))
-        return format_html(u'<a href="{}">{}</a>', url, obj)
+        return format_html('<a href="{}">{}</a>', url, obj)
 
 
 class FundingAdminForm(StateMachineModelForm):
 
-    class Meta(object):
+    class Meta:
         model = Funding
         exclude = ('contribution_date', )
         widgets = {
@@ -217,12 +214,12 @@ class FundingAdmin(ActivityChildAdmin):
 
 
 class DonationAdminForm(StateMachineModelForm):
-    class Meta(object):
+    class Meta:
         model = Donation
         exclude = ()
 
     def __init__(self, *args, **kwargs):
-        super(DonationAdminForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.instance:
             if self.instance.id:
                 # You can only select a reward if the project is set on the donation
@@ -283,7 +280,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
             return format_html('<i style="color: #999">anonymous</i>')
         if obj.user:
             user_url = reverse('admin:members_member_change', args=(obj.user.id,))
-            return format_html(u'<a href="{}">{}</a>', user_url, obj.user.full_name)
+            return format_html('<a href="{}">{}</a>', user_url, obj.user.full_name)
         return format_html('<i style="color: #999">guest</i>')
 
     user_link.short_description = _('User')
@@ -322,7 +319,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
             donation.payment.update()
             self.message_user(
                 request,
-                'Checked payment status for {}'.format(donation.payment),
+                f'Checked payment status for {donation.payment}',
                 level='INFO'
             )
         else:
@@ -331,13 +328,13 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
                     donation.payment.update()
                     self.message_user(
                         request,
-                        'Checked payment status for {}'.format(donation.payment),
+                        f'Checked payment status for {donation.payment}',
                         level='INFO'
                     )
                 else:
                     self.message_user(
                         request,
-                        'Warning cannot check status for {}'.format(donation.payment),
+                        f'Warning cannot check status for {donation.payment}',
                         level='INFO'
                     )
             except Payment.DoesNotExist:
@@ -376,7 +373,7 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return fieldsets
 
     def get_urls(self):
-        urls = super(PaymentChildAdmin, self).get_urls()
+        urls = super().get_urls()
         process_urls = [
             url(r'^(?P<pk>\d+)/check/$', self.check_status, name="funding_payment_check"),
             url(r'^(?P<pk>\d+)/refund/$', self.refund, name="funding_payment_refund"),
@@ -390,7 +387,7 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         except PaymentException as e:
             self.message_user(
                 request,
-                'Error checking status {}'.format(e),
+                f'Error checking status {e}',
                 level='WARNING'
             )
         payment_url = reverse('admin:{}_{}_change'.format(
@@ -414,7 +411,7 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         except PaymentException as e:
             self.message_user(
                 request,
-                'Error checking status {}'.format(e),
+                f'Error checking status {e}',
                 level='WARNING'
             )
         payment_url = reverse('admin:funding_payment_change', args=(payment.id,))
@@ -487,12 +484,12 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
     )
 
 
-class PayoutAccountFundingLinkMixin(object):
+class PayoutAccountFundingLinkMixin:
     def funding_links(self, obj):
         if len(obj.funding_set.all()):
             return format_html(", ".join([
                 format_html(
-                    u"<a href='{}'>{}</a>",
+                    "<a href='{}'>{}</a>",
                     reverse('admin:funding_funding_change', args=(p.id,)),
                     p.title
                 ) for p in obj.funding_set.all()
@@ -649,11 +646,11 @@ class PayoutAdmin(StateMachineAdmin):
 
     def account_link(self, obj):
         url = reverse('admin:funding_bankaccount_change', args=(obj.activity.bank_account.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj.activity.bank_account)
+        return format_html('<a href="{}">{}</a>', url, obj.activity.bank_account)
 
     def activity_link(self, obj):
         url = reverse('admin:funding_funding_change', args=(obj.activity.id,))
-        return format_html(u'<a href="{}">{}</a>', url, obj.activity)
+        return format_html('<a href="{}">{}</a>', url, obj.activity)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (

@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-from builtins import str
 import json
 
 from datetime import timedelta
-import mock
+from unittest import mock
 
 from django.core import mail
 from django.db import connection
@@ -27,7 +25,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_inc
 class AssignmentCreateAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(AssignmentCreateAPITestCase, self).setUp()
+        super().setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
             activity_types=['assignment']
         )
@@ -47,7 +45,7 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
                 'type': 'activities/assignments',
                 'attributes': {
                     'title': 'Business plan Young Freddy',
-                    'date': str((timezone.now() + timedelta(days=21))),
+                    'date': str(timezone.now() + timedelta(days=21)),
                     'end_date_type': 'deadline',
                     'duration': 8,
                     'registration_deadline': str((timezone.now() + timedelta(days=14)).date()),
@@ -82,7 +80,7 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
                 'type': 'activities/assignments',
                 'attributes': {
                     'title': '',
-                    'date': str((timezone.now() + timedelta(days=21))),
+                    'date': str(timezone.now() + timedelta(days=21)),
                     'registration_deadline': str((timezone.now() + timedelta(days=14)).date()),
                     'description': 'Help Young Freddy write a business plan'
                 },
@@ -122,7 +120,7 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
                 'type': 'activities/assignments',
                 'attributes': {
                     'title': '',
-                    'date': str((timezone.now() + timedelta(days=21))),
+                    'date': str(timezone.now() + timedelta(days=21)),
                     'registration_deadline': str((timezone.now() + timedelta(days=22)).date()),
                     'description': 'Help Young Freddy write a business plan'
                 },
@@ -148,7 +146,7 @@ class AssignmentCreateAPITestCase(BluebottleTestCase):
 class AssignmentDetailAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(AssignmentDetailAPITestCase, self).setUp()
+        super().setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
             activity_types=['assignment']
         )
@@ -279,7 +277,7 @@ class AssignmentDetailAPITestCase(BluebottleTestCase):
 class AssignmentDetailApplicantsAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(AssignmentDetailApplicantsAPITestCase, self).setUp()
+        super().setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
             activity_types=['assignment']
         )
@@ -337,7 +335,7 @@ class AssignmentDetailApplicantsAPITestCase(BluebottleTestCase):
 class AssignmentTransitionTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(AssignmentTransitionTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory()
         self.manager = BlueBottleUserFactory()
@@ -415,7 +413,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         transitions = [
-            {u'available': True, u'name': u'delete', u'target': u'deleted'}
+            {'available': True, 'name': 'delete', 'target': 'deleted'}
         ]
         self.assertEqual(data['data']['meta']['transitions'], transitions)
 
@@ -441,12 +439,12 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 
         self.assertEqual(len(data['data']['meta']['transitions']), 2)
         self.assertTrue(
-            {u'available': True, u'name': u'submit', u'target': u'submitted'} in
+            {'available': True, 'name': 'submit', 'target': 'submitted'} in
             data['data']['meta']['transitions']
         )
 
         self.assertTrue(
-            {u'available': True, u'name': u'delete', u'target': u'deleted'} in
+            {'available': True, 'name': 'delete', 'target': 'deleted'} in
             data['data']['meta']['transitions']
         )
 
@@ -553,7 +551,7 @@ class AssignmentTransitionTestCase(BluebottleTestCase):
 class ApplicantAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(ApplicantAPITestCase, self).setUp()
+        super().setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
             activity_types=['assignment']
         )
@@ -605,7 +603,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.data['motivation'], 'Pick me! Pick me!')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
-            mail.outbox[0].subject, u'Someone applied to your task "Make coffee"! 🙌')
+            mail.outbox[0].subject, 'Someone applied to your task "Make coffee"! 🙌')
         self.assertTrue("Review the application and decide",
                         mail.outbox[0].body)
 
@@ -650,7 +648,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json()['errors'][0],
-            u'Mime-type is not allowed for this endpoint'
+            'Mime-type is not allowed for this endpoint'
         )
 
     def test_apply_with_document_fake_mime(self):
@@ -666,7 +664,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json()['errors'][0],
-            u'Mime-type does not match Content-Type'
+            'Mime-type does not match Content-Type'
         )
 
     def test_confirm_hours(self):
@@ -733,7 +731,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
 class ApplicantTransitionAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(ApplicantTransitionAPITestCase, self).setUp()
+        super().setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
             activity_types=['assignment']
         )
@@ -887,7 +885,7 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
 class SkillAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(SkillAPITestCase, self).setUp()
+        super().setUp()
 
         self.client = JSONAPITestClient()
         Skill.objects.all().delete()

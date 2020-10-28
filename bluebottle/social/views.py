@@ -41,7 +41,7 @@ class AccessTokenView(APIView):
             return Response({}, status=status.HTTP_201_CREATED)
         except (AuthCanceled, AuthMissingParameter, AuthException, HTTPError) as e:
             return Response(
-                {'error': 'Authentication process canceled: {}'.format(e)},
+                {'error': f'Authentication process canceled: {e}'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except AuthAlreadyAssociated:
@@ -55,7 +55,7 @@ class AccessTokenView(APIView):
 
         response = requests.get(
             'https://graph.facebook.com/me/permissions',
-            headers={'Authorization': 'Bearer {}'.format(access_token)}
+            headers={'Authorization': f'Bearer {access_token}'}
         )
 
         try:

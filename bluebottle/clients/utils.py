@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from builtins import object
 import importlib
 import itertools
 import logging
@@ -25,7 +22,7 @@ from bluebottle.funding_stripe.utils import get_stripe_settings
 logger = logging.getLogger(__name__)
 
 
-class LocalTenant(object):
+class LocalTenant:
     def __init__(self, tenant=None, clear_tenant=False):
         self.clear_tenant = clear_tenant
         self.previous_tenant = None
@@ -63,8 +60,8 @@ def tenant_url():
         domain = 'example.com'
 
     if domain.endswith("localhost"):
-        return "http://{0}:8000".format(domain)
-    return "https://{0}".format(domain)
+        return f"http://{domain}:8000"
+    return f"https://{domain}"
 
 
 def tenant_name():
@@ -86,7 +83,7 @@ def get_min_amounts(methods):
         for currency, data in list(method['currencies'].items()):
             result[currency].append(data.get('min_amount', 0))
 
-    return dict((currency, min(amounts)) for currency, amounts in list(result.items()))
+    return {currency: min(amounts) for currency, amounts in list(result.items())}
 
 
 def get_currencies():
@@ -177,11 +174,11 @@ def get_user_site_links(user):
 
 def get_platform_settings(name):
     app_name, model_name = name.split('.')
-    model_app_name = 'bluebottle.{}.models'.format(app_name)
+    model_app_name = f'bluebottle.{app_name}.models'
     settings_class = getattr(importlib.import_module(model_app_name), model_name)
     settings_object = settings_class.load()
-    serializer_app_name = 'bluebottle.{}.serializers'.format(app_name)
-    serializer_class = getattr(importlib.import_module(serializer_app_name), "{}Serializer".format(model_name))
+    serializer_app_name = f'bluebottle.{app_name}.serializers'
+    serializer_class = getattr(importlib.import_module(serializer_app_name), f"{model_name}Serializer")
     return serializer_class(settings_object).to_representation(settings_object)
 
 
@@ -292,7 +289,7 @@ def get_public_properties(request):
                 config[parent_key][child_key] = value
 
             elif len(parts) > 2:
-                logger.info("Depth is too great for exposed property: {}".format(item))
+                logger.info(f"Depth is too great for exposed property: {item}")
 
             else:
                 # Use camelcase for setting keys (convert from snakecase)

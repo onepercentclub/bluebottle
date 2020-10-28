@@ -1,4 +1,3 @@
-from builtins import str
 from django.core import mail
 
 from bluebottle.events.messages import EventRejectedOwnerMessage
@@ -20,6 +19,6 @@ class NotificationEffectsTestCase(BluebottleTestCase):
         )
         subject = 'Your event "Bound to fail" has been rejected'
         effect = NotificationEffect(EventRejectedOwnerMessage)(event)
-        self.assertEqual(str(effect), 'Message {} to faal@haas.nl'.format(subject))
+        self.assertEqual(str(effect), f'Message {subject} to faal@haas.nl')
         effect.execute()
         self.assertEqual(mail.outbox[0].subject, subject)

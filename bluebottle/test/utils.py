@@ -1,5 +1,3 @@
-from builtins import object
-from builtins import str
 from importlib import import_module
 
 from django.conf import settings
@@ -36,14 +34,18 @@ def css_dict(style):
         return {}
 
     try:
-        return dict([(k.strip(), v.strip()) for k, v in
-                     [prop.split(':') for prop in
-                      style.rstrip(';').split(';')]])
+        return {
+            k.strip(): v.strip() for k, v in
+            [
+                prop.split(':') for prop in
+                style.rstrip(';').split(';')
+            ]
+        }
     except ValueError as e:
-        raise ValueError('Could not parse CSS: %s (%s)' % (style, e))
+        raise ValueError(f'Could not parse CSS: {style} ({e})')
 
 
-class InitProjectDataMixin(object):
+class InitProjectDataMixin:
     def init_projects(self):
         from django.core import management
 
@@ -72,7 +74,7 @@ class ApiClient(RestAPIClient):
     default_format = api_settings.TEST_REQUEST_DEFAULT_FORMAT
 
     def __init__(self, tenant, enforce_csrf_checks=False, **defaults):
-        super(ApiClient, self).__init__(enforce_csrf_checks, **defaults)
+        super().__init__(enforce_csrf_checks, **defaults)
 
         self.tenant = tenant
 
@@ -88,7 +90,7 @@ class ApiClient(RestAPIClient):
         if 'HTTP_HOST' not in extra:
             extra['HTTP_HOST'] = self.tenant.domain_url
 
-        return super(ApiClient, self).get(path, data=data, **extra)
+        return super().get(path, data=data, **extra)
 
     def post(self, path, data=None, format='json', content_type=None, **extra):
         if 'token' in extra:
@@ -98,7 +100,7 @@ class ApiClient(RestAPIClient):
         if 'HTTP_HOST' not in extra:
             extra['HTTP_HOST'] = self.tenant.domain_url
 
-        return super(ApiClient, self).post(
+        return super().post(
             path, data=data, format=format, content_type=content_type, **extra)
 
     def put(self, path, data=None, format='json', content_type=None, **extra):
@@ -109,7 +111,7 @@ class ApiClient(RestAPIClient):
         if 'HTTP_HOST' not in extra:
             extra['HTTP_HOST'] = self.tenant.domain_url
 
-        return super(ApiClient, self).put(
+        return super().put(
             path, data=data, format=format, content_type=content_type, **extra)
 
     def patch(self, path, data=None, format='json', content_type=None, **extra):
@@ -120,7 +122,7 @@ class ApiClient(RestAPIClient):
         if 'HTTP_HOST' not in extra:
             extra['HTTP_HOST'] = self.tenant.domain_url
 
-        return super(ApiClient, self).patch(
+        return super().patch(
             path, data=data, format=format, content_type=content_type, **extra)
 
     def delete(self, path, data=None, format='json', content_type=None,
@@ -132,7 +134,7 @@ class ApiClient(RestAPIClient):
         if 'HTTP_HOST' not in extra:
             extra['HTTP_HOST'] = self.tenant.domain_url
 
-        return super(ApiClient, self).delete(
+        return super().delete(
             path, data=data, format=format, content_type=content_type, **extra)
 
 
@@ -143,7 +145,7 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(BluebottleTestCase, cls).setUpClass()
+        super().setUpClass()
         cls.tenant = get_tenant_model().objects.get(schema_name='test')
         connection.set_tenant(cls.tenant)
 
@@ -168,7 +170,7 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
         return response.content[start:end]
 
 
-class SessionTestMixin(object):
+class SessionTestMixin:
     def create_session(self):
         settings.SESSION_ENGINE = 'django.contrib.sessions.backends.file'
         engine = import_module(settings.SESSION_ENGINE)
@@ -182,7 +184,7 @@ class SessionTestMixin(object):
         self.session.flush()
 
 
-class FsmTestMixin(object):
+class FsmTestMixin:
     def pass_method(self, transaction):
         pass
 
@@ -221,12 +223,12 @@ class FsmTestMixin(object):
             pass
 
         self.assertEqual(instance.status, new_status,
-                         '{0} should change to {1} not {2}'.format(
+                         '{} should change to {} not {}'.format(
                              instance.__class__.__name__, new_status,
                              instance.status))
 
 
-class override_properties(object):
+class override_properties:
     def __init__(self, **kwargs):
         self.properties = kwargs
 
@@ -243,24 +245,24 @@ class JSONAPITestClient(Client):
     def patch(self, path, data='',
               content_type='application/vnd.api+json',
               follow=False, secure=False, **extra):
-        return super(JSONAPITestClient, self).patch(path, data, content_type, follow, secure, **extra)
+        return super().patch(path, data, content_type, follow, secure, **extra)
 
     def put(self, path, data='',
             content_type='application/vnd.api+json',
             follow=False, secure=False, **extra):
-        return super(JSONAPITestClient, self).put(path, data, content_type, follow, secure, **extra)
+        return super().put(path, data, content_type, follow, secure, **extra)
 
     def post(self, path, data='',
              content_type='application/vnd.api+json',
              follow=False, secure=False, **extra):
-        return super(JSONAPITestClient, self).post(path, data, content_type, follow, secure, **extra)
+        return super().post(path, data, content_type, follow, secure, **extra)
 
     def generic(self, method, path, data='',
                 content_type='application/vnd.api+json',
                 secure=False, user=None, **extra):
         if user:
-            extra['HTTP_AUTHORIZATION'] = "JWT {0}".format(user.get_jwt_token())
-        return super(JSONAPITestClient, self).generic(method, path, data, content_type, secure, **extra)
+            extra['HTTP_AUTHORIZATION'] = f"JWT {user.get_jwt_token()}"
+        return super().generic(method, path, data, content_type, secure, **extra)
 
 
 def get_included(response, type):

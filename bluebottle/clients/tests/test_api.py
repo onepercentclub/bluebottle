@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-import mock
+from unittest import mock
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
@@ -19,7 +19,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class ClientSettingsTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(ClientSettingsTestCase, self).setUp()
+        super().setUp()
         self.settings_url = reverse('settings')
 
     @override_settings(PARENT={'child': True}, EXPOSED_TENANT_PROPERTIES=['parent.child'])
@@ -93,30 +93,30 @@ class ClientSettingsTestCase(BluebottleTestCase):
         response = self.client.get(self.settings_url)
         expected = [
             {
-                'symbol': u'\u20ac',
+                'symbol': '\u20ac',
                 'code': 'EUR',
-                'name': u'Euro',
+                'name': 'Euro',
                 'rate': Decimal(1.5),
                 'minAmount': 0
             },
             {
-                'symbol': u'\u20a6',
+                'symbol': '\u20a6',
                 'code': 'NGN',
-                'name': u'Nigerian Naira',
+                'name': 'Nigerian Naira',
                 'rate': Decimal(500.0),
                 'minAmount': 3000
             },
             {
-                'symbol': u'$',
+                'symbol': '$',
                 'code': 'USD',
-                'name': u'US Dollar',
+                'name': 'US Dollar',
                 'rate': Decimal(1.0),
                 'minAmount': 5
             },
             {
-                'symbol': u'CFA',
+                'symbol': 'CFA',
                 'code': 'XOF',
-                'name': u'West African CFA Franc',
+                'name': 'West African CFA Franc',
                 'rate': Decimal(1000.0),
                 'minAmount': 5000
             },
@@ -138,11 +138,11 @@ class TestDefaultAPI(ESTestCase, BluebottleTestCase):
     """
 
     def setUp(self):
-        super(TestDefaultAPI, self).setUp()
+        super().setUp()
 
         self.init_projects()
         self.user = BlueBottleUserFactory.create()
-        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.user_token = f"JWT {self.user.get_jwt_token()}"
         self.initiatives_url = reverse('initiative-list')
 
     def test_open_api(self):
@@ -173,7 +173,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(TestPlatformSettingsApi, self).setUp()
+        super().setUp()
         self.init_projects()
         self.settings_url = reverse('settings')
 

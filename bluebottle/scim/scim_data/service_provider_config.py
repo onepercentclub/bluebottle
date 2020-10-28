@@ -39,6 +39,6 @@ SERVICE_PROVIDER_CONFIG = {
         "resourceType": "ServiceProviderConfig",
         "created": "2010-01-23T04:56:22Z",
         "lastModified": "2011-05-13T04:42:34Z",
-        "version": "W\/\"3694e05e9dff594\""
+        "version": "W\\/\"3694e05e9dff594\""
         }
     }

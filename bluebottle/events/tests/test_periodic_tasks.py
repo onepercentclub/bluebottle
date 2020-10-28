@@ -1,7 +1,7 @@
 from datetime import timedelta
 from django.core import mail
 from django.db import connection
-import mock
+from unittest import mock
 from django.utils import timezone
 
 from bluebottle.clients.utils import LocalTenant
@@ -18,7 +18,7 @@ from bluebottle.test.utils import BluebottleTestCase
 class EventScheduledTasksTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(EventScheduledTasksTestCase, self).setUp()
+        super().setUp()
         self.initiative = InitiativeFactory.create(status='approved')
         self.initiative.save()
         start = timezone.now() + timedelta(days=10, hours=10)

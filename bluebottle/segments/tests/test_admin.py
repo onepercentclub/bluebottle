@@ -15,7 +15,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 class TestSegmentAdmin(BluebottleAdminTestCase):
 
     def setUp(self):
-        super(TestSegmentAdmin, self).setUp()
+        super().setUp()
         self.client.force_login(self.superuser)
         self.site = AdminSite()
         self.segment_admin = SegmentAdmin(Segment, self.site)

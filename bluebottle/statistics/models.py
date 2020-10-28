@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 from adminsortable.models import SortableMixin
 from django.db import models
 from django.db.models import Sum
@@ -38,12 +36,12 @@ class BaseStatistic(PolymorphicModel, SortableMixin):
     def __str__(self):
         for child in (DatabaseStatistic, ManualStatistic, ImpactStatistic):
             try:
-                return u"{}".format(getattr(self, child.__name__.lower()).name)
+                return "{}".format(getattr(self, child.__name__.lower()).name)
             except child.DoesNotExist:
                 pass
-        return u"Stat #{}".format(self.id)
+        return f"Stat #{self.id}"
 
-    class Meta(object):
+    class Meta:
         ordering = ['sequence']
         verbose_name = _('Statistic')
         verbose_name_plural = _('Statistics')
@@ -64,13 +62,13 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
     def get_value(self, start=None, end=None):
         return self.value
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'statistics/manual-statistics'
 
     def __str__(self):
         return str(self.translations.name)
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Custom statistic')
         verbose_name_plural = _('Custom statistics')
 
@@ -149,10 +147,10 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
     def __str__(self):
         return str(self.query)
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'statistics/database-statistics'
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Engagement statistic')
         verbose_name_plural = _('Engagement statistics')
 
@@ -180,10 +178,10 @@ class ImpactStatistic(BaseStatistic):
     def __str__(self):
         return str(self.impact_type.name)
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'statistics/impact-statistics'
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Impact statistic')
         verbose_name_plural = _('Impact statistics')
 
@@ -242,5 +240,5 @@ class Statistic(models.Model):
 
         return getattr(self.statistics, self.type, 0)
 
-    class Meta(object):
+    class Meta:
         ordering = ('sequence', )

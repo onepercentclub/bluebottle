@@ -1,4 +1,3 @@
-from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -31,6 +30,6 @@ class AnalyticsPlatformSettings(BasePlatformSettings):
         max_length=10
     )
 
-    class Meta(object):
+    class Meta:
         verbose_name_plural = _('reporting platform settings')
         verbose_name = _('reporting platform settings')

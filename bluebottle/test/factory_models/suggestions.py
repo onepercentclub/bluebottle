@@ -1,4 +1,3 @@
-from builtins import object
 import factory
 import factory.fuzzy
 from datetime import timedelta
@@ -8,7 +7,7 @@ from .projects import ProjectFactory, ProjectThemeFactory
 
 
 class SuggestionFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Suggestion
 
     deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=4))

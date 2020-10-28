@@ -1,10 +1,9 @@
-from builtins import object
 import factory
 from djmoney.contrib.exchange.models import Rate, ExchangeBackend
 
 
 class ExchangeBackendFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = ExchangeBackend
 
     name = 'openexchangerates.org'
@@ -12,7 +11,7 @@ class ExchangeBackendFactory(factory.DjangoModelFactory):
 
 
 class RateFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Rate
 
     backend = factory.SubFactory(ExchangeBackendFactory)

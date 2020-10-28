@@ -40,7 +40,7 @@ def get_saml_request(request):
 class SAMLAuthentication(BaseTokenAuthentication):
 
     def __init__(self, request, **kwargs):
-        super(SAMLAuthentication, self).__init__(request, **kwargs)
+        super().__init__(request, **kwargs)
         self.auth = OneLogin_Saml2_Auth(get_saml_request(request), self.settings)
 
     def sso_url(self, target_url=None):
@@ -72,7 +72,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
         metadata = saml_settings.get_sp_metadata()
         errors = saml_settings.validate_metadata(metadata)
         if len(errors):
-            logger.error('Saml configuration error: {}'.format(errors))
+            logger.error(f'Saml configuration error: {errors}')
             raise TokenAuthenticationError(', '.join(errors))
         return metadata
 
@@ -84,7 +84,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
             return url
 
     def parse_user(self, user_data):
-        logger.info('SSO Data:{}'.format(user_data))
+        logger.info(f'SSO Data:{user_data}')
         data = {}
         for target, source in list(self.settings['assertion_mapping'].items()):
             if isinstance(source, (list, tuple)):
@@ -92,7 +92,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
                 if target_data:
                     data[target] = target_data
                 else:
-                    logger.error('Missing claim {}({})'.format(source, target))
+                    logger.error(f'Missing claim {source}({target})')
             else:
                 try:
                     if user_data[source] and len(user_data[source]):
@@ -100,7 +100,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
                     else:
                         data[target] = ''
                 except KeyError:
-                    logger.error('Missing claim {}({})'.format(source, target))
+                    logger.error(f'Missing claim {source}({target})')
         return data
 
     def authenticate_request(self):
@@ -114,7 +114,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
         try:
             self.auth.process_response(saml_request_id)
         except OneLogin_Saml2_Error as e:
-            logger.error('Saml login error: {}'.format(e))
+            logger.error(f'Saml login error: {e}')
             raise TokenAuthenticationError(e)
 
         if self.auth.is_authenticated():

@@ -1,7 +1,7 @@
 from future import standard_library
 standard_library.install_aliases()
 import json
-import mock
+from unittest import mock
 import time
 from urllib.parse import urlparse, parse_qs
 
@@ -24,7 +24,7 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(LookerEmbedDashboardTest, self).setUp()
+        super().setUp()
         self.user = BlueBottleUserFactory.create(
             first_name='Test',
             last_name='De Tester'
@@ -37,7 +37,7 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
 
         self.assertEqual(url.scheme, 'https')
         self.assertEqual(
-            url.netloc, 'looker.{}'.format(get_current_host.return_value)
+            url.netloc, f'looker.{get_current_host.return_value}'
         )
         self.assertEqual(
             query['first_name'][0], json.dumps(self.user.first_name)
@@ -47,7 +47,7 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
         )
         self.assertEqual(
             query['external_user_id'][0],
-            json.dumps('test-{}'.format(self.user.pk))
+            json.dumps(f'test-{self.user.pk}')
         )
         self.assertTrue(
             query['nonce'][0].startswith('"') and query['nonce'][0].endswith('"')

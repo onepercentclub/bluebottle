@@ -1,7 +1,7 @@
 import munch
 from django.core import mail
 from djmoney.money import Money
-from mock import patch
+from unittest.mock import patch
 import stripe
 
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonationFactory
@@ -35,7 +35,7 @@ class StripeSourcePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
 
     @patch('stripe.Source.modify')
     def setUp(self, mock_modify):
-        super(StripeSourcePaymentStateMachineTests, self).setUp()
+        super().setUp()
         self.donation = DonationFactory.create(activity=self.funding)
         self.payment = StripeSourcePaymentFactory.create(
             charge_token='some_token',

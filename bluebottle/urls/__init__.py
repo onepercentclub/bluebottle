@@ -7,7 +7,6 @@ Django does not permit to directly include i18n patterns into non-i18n ones,
 so we create a new i18n pattern to append to the existent one and there we
 include the i18n related urls.
 """
-from __future__ import absolute_import
 
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns

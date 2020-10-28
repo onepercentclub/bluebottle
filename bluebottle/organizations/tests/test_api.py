@@ -1,4 +1,3 @@
-
 from future import standard_library
 standard_library.install_aliases()
 from urllib.parse import urlencode
@@ -24,11 +23,11 @@ class OrganizationsEndpointTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(OrganizationsEndpointTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
 
         self.user_1 = BlueBottleUserFactory.create()
-        self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
+        self.user_1_token = f"JWT {self.user_1.get_jwt_token()}"
 
         self.user_2 = BlueBottleUserFactory.create()
 
@@ -133,7 +132,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
     """
 
     def setUp(self):
-        super(ManageOrganizationListTestCase, self).setUp()
+        super().setUp()
 
         self.post_data = {
             'data': {

@@ -1,4 +1,3 @@
-from builtins import str
 from bluebottle.clients import properties
 
 

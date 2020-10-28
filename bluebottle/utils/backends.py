@@ -1,8 +1,7 @@
-from builtins import object
 from django.contrib.auth.models import Group, Permission
 
 
-class AnonymousAuthenticationBackend(object):
+class AnonymousAuthenticationBackend:
     """
     Make anonymous users part of a permission group.
 

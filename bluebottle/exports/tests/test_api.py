@@ -13,7 +13,7 @@ from bluebottle.exports.tasks import export
 
 class TestExportAdmin(BluebottleTestCase):
     def setUp(self):
-        super(TestExportAdmin, self).setUp()
+        super().setUp()
 
         self.tenant = connection.tenant
 

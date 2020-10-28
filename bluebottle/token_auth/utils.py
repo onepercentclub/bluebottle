@@ -18,5 +18,5 @@ def get_settings():
         return properties.TOKEN_AUTH
     except AttributeError:
         raise ImproperlyConfigured(
-            'Missing TOKEN_AUTH attribute in {}'.format(properties_path)
+            f'Missing TOKEN_AUTH attribute in {properties_path}'
         )

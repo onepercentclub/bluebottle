@@ -53,7 +53,7 @@ class FilesystemLoader(BaseLoader):
             try:
                 with open(filepath, 'rb') as fp:
                     return (fp.read().decode(settings.FILE_CHARSET), filepath)
-            except IOError:
+            except OSError:
                 tried.append(filepath)
         if tried:
             error_msg = "Tried %s" % tried

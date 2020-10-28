@@ -1,7 +1,7 @@
 import json
 
 from django.urls import reverse
-from mock import patch
+from unittest.mock import patch
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, PlainPayoutAccountFactory
@@ -41,7 +41,7 @@ initiate_response_success = {
 class LipishaPaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(LipishaPaymentTestCase, self).setUp()
+        super().setUp()
         LipishaPaymentProvider.objects.all().delete()
         LipishaPaymentProviderFactory.create()
 
@@ -96,7 +96,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
 class LipishaPayoutAccountTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(LipishaPayoutAccountTestCase, self).setUp()
+        super().setUp()
 
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()

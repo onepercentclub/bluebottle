@@ -17,7 +17,7 @@ class PageTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(PageTestCase, self).setUp()
+        super().setUp()
         self.init_projects()
 
         self.user = BlueBottleUserFactory.create()

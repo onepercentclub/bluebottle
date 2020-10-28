@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 from django.contrib.auth.models import Group
 
 from rest_framework import (
@@ -40,14 +38,14 @@ class SCIMPaginator(pagination.LimitOffsetPagination):
             return 0
 
 
-class SCIMUser(object):
+class SCIMUser:
     is_authenticated = True
 
 
 class SCIMAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         token = SCIMPlatformSettings.objects.get().bearer_token
-        if request.META.get('HTTP_AUTHORIZATION') == 'Bearer {}'.format(token):
+        if request.META.get('HTTP_AUTHORIZATION') == f'Bearer {token}':
             return (SCIMUser(), None)
 
     def authenticate_header(self, request):
@@ -62,7 +60,7 @@ class SCIMParser(parsers.JSONParser):
     media_type = 'application/scim+json'
 
 
-class SCIMViewMixin(object):
+class SCIMViewMixin:
     authentication_classes = (SCIMAuthentication, )
     permission_classes = (permissions.IsAuthenticated, )
     pagination_class = SCIMPaginator
@@ -95,7 +93,7 @@ class StaticRetrieveAPIView(SCIMViewMixin, generics.RetrieveAPIView):
             if item['id'] == id:
                 return response.Response(item)
 
-        raise exceptions.NotFound('Resource not found: {}'.format(id))
+        raise exceptions.NotFound(f'Resource not found: {id}')
 
 
 class StaticListAPIView(SCIMViewMixin, generics.ListAPIView):

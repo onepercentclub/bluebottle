@@ -28,4 +28,4 @@ class ParticipantListFilter(DjangoFilterBackend):
 
         queryset = queryset.instance_of(Participant)
 
-        return super(ParticipantListFilter, self).filter_queryset(request, queryset, view)
+        return super().filter_queryset(request, queryset, view)

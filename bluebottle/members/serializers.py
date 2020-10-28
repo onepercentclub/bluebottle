@@ -1,4 +1,3 @@
-from builtins import object
 from axes.attempts import is_already_locked
 from django import forms
 from django.conf import settings
@@ -67,14 +66,14 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
             raise serializers.ValidationError(msg)
 
 
-class PrivateProfileMixin(object):
+class PrivateProfileMixin:
     private_fields = (
         'url', 'full_name', 'picture', 'about_me', 'location', 'last_name',
         'phone_number', 'avatar', 'website', 'twitter', 'facebook', 'skypename'
     )
 
     def to_representation(self, obj):
-        data = super(PrivateProfileMixin, self).to_representation(obj)
+        data = super().to_representation(obj)
 
         user = self.context['request'].user
         can_read_full_profile = self.context['request'].user.has_perm(
@@ -96,7 +95,7 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
 
     def __init__(self, *args, **kwargs):
         kwargs['read_only'] = True
-        super(BaseUserPreviewSerializer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     avatar = SorlImageField('133x133', source='picture', crop='center')
 
@@ -111,7 +110,7 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
     def get_is_anonymous(self, obj):
         return False
 
-    class Meta(object):
+    class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'first_name', 'last_name', 'initials', 'about_me',
                   'avatar', 'full_name', 'short_name', 'is_active', 'is_anonymous')
@@ -126,14 +125,14 @@ class AnonymizedUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSeri
 
     def __init__(self, *args, **kwargs):
         kwargs['read_only'] = True
-        super(AnonymizedUserPreviewSerializer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     id = 0
 
     def get_is_anonymous(self, obj):
         return False
 
-    class Meta(object):
+    class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'is_anonymous')
 
@@ -157,7 +156,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
             return {"id": 0, "is_anonymous": True}
         return BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
 
-    class Meta(object):
+    class Meta:
         model = BB_USER_MODEL
         fields = (
             'id',
@@ -180,7 +179,7 @@ class UserPermissionsSerializer(serializers.Serializer):
     project_manage_list = PermissionField('initiative-list')
     homepage = PermissionField('homepage', view_args=('primary_language', ))
 
-    class Meta(object):
+    class Meta:
         fields = [
             'project_list',
             'project_manage_list',
@@ -203,7 +202,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     organization = OrganizationSerializer(
         read_only=True, source='partner_organization')
 
-    class Meta(object):
+    class Meta:
         model = BB_USER_MODEL
         fields = UserPreviewSerializer.Meta.fields + (
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
@@ -217,7 +216,7 @@ class OldSegmentSerializer(serializers.ModelSerializer):
 
     type = SegmentTypeSerializer()
 
-    class Meta(object):
+    class Meta:
         model = Segment
         fields = (
             'id', 'name', 'type'
@@ -254,7 +253,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
 
     segments = OldSegmentSerializer(many=True, read_only=True)
 
-    class Meta(object):
+    class Meta:
         model = BB_USER_MODEL
         fields = (
             'id', 'url', 'full_name', 'short_name', 'initials', 'picture',
@@ -271,7 +270,7 @@ class UserActivitySerializer(serializers.ModelSerializer):
     """
     path = TruncatedCharField(length=200, required=False)
 
-    class Meta(object):
+    class Meta:
         model = UserActivity
         fields = (
             'id',
@@ -294,7 +293,7 @@ class ManageProfileSerializer(UserProfileSerializer):
         except instance.social_auth.model.DoesNotExist:
             return False
 
-    class Meta(object):
+    class Meta:
         model = BB_USER_MODEL
         fields = UserProfileSerializer.Meta.fields + (
             'email', 'newsletter', 'campaign_notifications', 'matching_options_set', 'location',
@@ -316,7 +315,7 @@ class ManageProfileSerializer(UserProfileSerializer):
             if instance.place:
                 instance.place.delete()
 
-        return super(ManageProfileSerializer, self).update(instance, validated_data)
+        return super().update(instance, validated_data)
 
 
 class UserDataExportSerializer(UserProfileSerializer):
@@ -324,7 +323,7 @@ class UserDataExportSerializer(UserProfileSerializer):
     Serializer for the a member's data dump.
     """
 
-    class Meta(object):
+    class Meta:
         model = BB_USER_MODEL
         fields = (
             'id', 'email', 'location', 'birthdate',
@@ -336,7 +335,7 @@ class UserDataExportSerializer(UserProfileSerializer):
         )
 
 
-class PasswordValidator(object):
+class PasswordValidator:
     def set_context(self, field):
         if field.parent.instance:
             self.user = field.parent.instance
@@ -356,7 +355,7 @@ class PasswordField(serializers.CharField):
     hidden_password_string = '********'
 
     def __init__(self, **kwargs):
-        super(PasswordField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         validator = PasswordValidator()
         self.validators.append(validator)
 
@@ -373,7 +372,7 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     """
     email = serializers.EmailField(max_length=254)
 
-    class Meta(object):
+    class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'email')
 
@@ -381,7 +380,7 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
         settings = MemberPlatformSettings.objects.get()
         if (
             settings.email_domain and
-            not email.endswith('@{}'.format(settings.email_domain))
+            not email.endswith(f'@{settings.email_domain}')
         ):
             raise serializers.ValidationError(
                 ('Only emails for the domain {} are allowed').format(
@@ -415,7 +414,7 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(max_length=100)
     last_name = serializers.CharField(max_length=100)
 
-    class Meta(object):
+    class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'password', 'jwt_token', 'first_name', 'last_name', )
 
@@ -438,7 +437,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     @property
     def errors(self):
-        errors = super(UserCreateSerializer, self).errors
+        errors = super().errors
 
         if 'email' in errors and 'email' in self.data:
             user = self.Meta.model.objects.get(email=self.data['email'])
@@ -477,7 +476,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
         return data
 
-    class Meta(object):
+    class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'first_name', 'last_name', 'email_confirmation',
                   'email', 'password', 'token', 'jwt_token', 'primary_language')
@@ -490,7 +489,7 @@ class PasswordResetSerializer(serializers.Serializer):
     """
     email = serializers.EmailField(required=True, max_length=254)
 
-    class Meta(object):
+    class Meta:
         fields = ('email',)
 
 
@@ -500,7 +499,7 @@ class PasswordProtectedMemberSerializer(serializers.ModelSerializer):
     )
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
 
-    class Meta(object):
+    class Meta:
         model = BB_USER_MODEL
         fields = ('password', 'jwt_token')
 
@@ -539,7 +538,7 @@ class PasswordSetSerializer(serializers.Serializer):
 
         return data
 
-    class Meta(object):
+    class Meta:
         fields = ('new_password1', 'new_password2')
 
 
@@ -554,7 +553,7 @@ class UserVerificationSerializer(serializers.Serializer):
 class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
     background = SorlImageField('1408x1080', crop='center')
 
-    class Meta(object):
+    class Meta:
         model = MemberPlatformSettings
         fields = (
             'require_consent',

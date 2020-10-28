@@ -1,4 +1,3 @@
-from builtins import str
 from django.http import HttpResponse
 from django.views.generic import View
 
@@ -185,7 +184,7 @@ class IntentWebHookView(View):
 
                 return HttpResponse('Updated payment')
             else:
-                return HttpResponse('Skipped event {}'.format(event.type))
+                return HttpResponse(f'Skipped event {event.type}')
 
         except StripePayment.DoesNotExist:
             return HttpResponse('Payment not found', status=400)
@@ -319,7 +318,7 @@ class ConnectWebHookView(View):
 
                 return HttpResponse('Updated payment')
             else:
-                return HttpResponse('Skipped event {}'.format(event.type))
+                return HttpResponse(f'Skipped event {event.type}')
 
         except StripePayoutAccount.DoesNotExist:
             return HttpResponse('Payment not found', status=400)

@@ -1,5 +1,3 @@
-from __future__ import print_function
-from builtins import str
 import logging
 import re
 import dkim
@@ -41,7 +39,7 @@ class TenantAwareBackend(EmailBackend):
             self.use_tls = tenant_mail_config.get('TLS', False)
             self.use_ssl = tenant_mail_config.get('SSL', False)
 
-        return super(TenantAwareBackend, self).open()
+        return super().open()
 
     def _send(self, email_message):
         """A helper method that does the actual sending + DKIM signing."""
@@ -115,9 +113,9 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
         ctx = ClientContext(kwargs)
         ctx['to'] = to  # Add the recipient to the context
         text_content = get_template(
-            '{0}.txt'.format(template_name)).render(ctx.flatten())
+            f'{template_name}.txt').render(ctx.flatten())
         html_content = get_template(
-            '{0}.html'.format(template_name)).render(ctx.flatten())
+            f'{template_name}.html').render(ctx.flatten())
 
         args = dict(subject=subject, body=text_content, to=[to.email])
         if cc:
@@ -151,7 +149,7 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
     # Simple check if email address is valid
     regex = r'[^@]+@[^@]+\.[^@]+'
     if not re.match(regex, to.email):
-        logger.error("Trying to send email to invalid email address: {0}"
+        logger.error("Trying to send email to invalid email address: {}"
                      .format(to.email))
         return
 
@@ -175,8 +173,8 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
     except Exception as e:
         msg = None
         print('#####################')
-        print("Exception while rendering email template: {0}".format(e))
-        logger.error("Exception while rendering email template: {0}".format(e))
+        print(f"Exception while rendering email template: {e}")
+        logger.error(f"Exception while rendering email template: {e}")
         return
 
     # Explicetly set CELERY usage in properties. Used primarily for
@@ -199,5 +197,5 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
                 logger.info("Tried to send async email, " +
                             "but mail sending is turned off.")
         except Exception as e:
-            logger.error("Exception sending synchronous email: {0}".format(e))
+            logger.error(f"Exception sending synchronous email: {e}")
             return

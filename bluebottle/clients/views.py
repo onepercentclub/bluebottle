@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from rest_framework import views, response
 
 from bluebottle.clients.utils import get_public_properties

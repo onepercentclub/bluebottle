@@ -1,4 +1,3 @@
-from builtins import object
 import factory
 
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
@@ -10,7 +9,7 @@ from bluebottle.files.tests.factories import ImageFactory
 
 
 class InitiativeFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Initiative
 
     title = factory.Faker('sentence')
@@ -27,5 +26,5 @@ class InitiativeFactory(factory.DjangoModelFactory):
 
 
 class InitiativePlatformSettingsFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = InitiativePlatformSettings

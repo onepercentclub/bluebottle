@@ -1,13 +1,12 @@
 from future import standard_library
 standard_library.install_aliases()
-from builtins import object
 from urllib.parse import urlencode
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test.utils import override_settings
 from django.test import RequestFactory
 from django.test.testcases import TestCase
 
-from mock import patch
+from unittest.mock import patch
 
 from bluebottle.token_auth.auth import booking, base
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
@@ -17,11 +16,11 @@ from bluebottle.token_auth.views import get_auth, TokenRedirectView, TokenLoginV
 DUMMY_AUTH = {'backend': 'token_auth.tests.test_views.DummyAuthentication'}
 
 
-class DummyUser(object):
+class DummyUser:
     pk = 1
 
-    class _meta(object):
-        class pk(object):
+    class _meta:
+        class pk:
             @staticmethod
             def value_to_string(obj):
                 return 1

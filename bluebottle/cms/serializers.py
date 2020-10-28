@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 from django.db.models import Sum
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
@@ -41,7 +39,7 @@ class RawHtmlItemSerializer(ItemSerializer):
     html = SafeField()
     item_type = 'raw-html'
 
-    class Meta(object):
+    class Meta:
         model = RawHtmlItem
         fields = ('id', 'html', 'type', )
 
@@ -49,7 +47,7 @@ class RawHtmlItemSerializer(ItemSerializer):
 class DocumentItemSerializer(ItemSerializer):
     item_type = 'document'
 
-    class Meta(object):
+    class Meta:
         model = DocumentItem
         fields = ('id', 'text', 'document', 'type', )
 
@@ -58,7 +56,7 @@ class ImageTextItemSerializer(ItemSerializer):
     image = ImageSerializer()
     item_type = 'image-text'
 
-    class Meta(object):
+    class Meta:
         model = ImageTextItem
         fields = ('id', 'text', 'image', 'ratio', 'align', 'type', )
 
@@ -67,7 +65,7 @@ class ImageTextRoundItemSerializer(ItemSerializer):
     image = ImageSerializer()
     item_type = 'image-text-round'
 
-    class Meta(object):
+    class Meta:
         model = ImageTextItem
         fields = ('id', 'text', 'image', 'type', )
 
@@ -76,7 +74,7 @@ class PictureItemSerializer(ItemSerializer):
     image = ImageSerializer()
     item_type = 'image'
 
-    class Meta(object):
+    class Meta:
         model = PictureItem
         fields = ('id', 'align', 'image', 'type', )
 
@@ -84,7 +82,7 @@ class PictureItemSerializer(ItemSerializer):
 class OEmbedItemSerializer(ItemSerializer):
     item_type = 'embed'
 
-    class Meta(object):
+    class Meta:
         model = OEmbedItem
         fields = ('id', 'title', 'width', 'height', 'html', 'type', )
 
@@ -92,7 +90,7 @@ class OEmbedItemSerializer(ItemSerializer):
 class TextItemSerializer(ItemSerializer):
     item_type = 'text'
 
-    class Meta(object):
+    class Meta:
         model = TextItem
         fields = ('id', 'text', 'type', )
 
@@ -104,7 +102,7 @@ class MediaFileContentSerializer(serializers.Serializer):
     def get_url(self, obj):
         return obj.file.url
 
-    class Meta(object):
+    class Meta:
         fields = ('id', 'url', 'type')
 
 
@@ -129,7 +127,7 @@ class StatSerializer(serializers.ModelSerializer):
         except AttributeError:
             return value
 
-    class Meta(object):
+    class Meta:
         model = Stat
         fields = ('id', 'title', 'type', 'value')
 
@@ -139,7 +137,7 @@ class StatsContentSerializer(serializers.ModelSerializer):
     title = serializers.CharField()
     sub_title = serializers.CharField()
 
-    class Meta(object):
+    class Meta:
         model = StatsContent
         fields = ('id', 'type', 'stats', 'title', 'sub_title', )
 
@@ -152,7 +150,7 @@ class HomepageStatisticsContentSerializer(serializers.ModelSerializer):
     def get_count(self, obj):
         return len(BaseStatistic.objects.filter(active=True))
 
-    class Meta(object):
+    class Meta:
         model = HomepageStatisticsContent
         fields = ('id', 'type', 'title', 'sub_title', 'count')
 
@@ -160,7 +158,7 @@ class HomepageStatisticsContentSerializer(serializers.ModelSerializer):
 class QuoteSerializer(serializers.ModelSerializer):
     image = SorlImageField('100x100', crop='center')
 
-    class Meta(object):
+    class Meta:
         model = Quote
         fields = ('id', 'name', 'quote', 'image')
 
@@ -168,7 +166,7 @@ class QuoteSerializer(serializers.ModelSerializer):
 class QuotesContentSerializer(serializers.ModelSerializer):
     quotes = QuoteSerializer(many=True)
 
-    class Meta(object):
+    class Meta:
         model = QuotesContent
         fields = ('id', 'quotes', 'type', 'title', 'sub_title')
 
@@ -180,10 +178,10 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
                 '%s') if self.context['start_date'] else 'none'
             end = self.context['end_date'].strftime(
                 '%s') if self.context['end_date'] else 'none'
-            return 'MapsContent({},{})'.format(start, end)
+            return f'MapsContent({start},{end})'
         return 'MapsContent'
 
-    class Meta(object):
+    class Meta:
         model = ProjectsMapContent
         fields = ('id', 'type', 'title', 'sub_title')
 
@@ -208,7 +206,7 @@ class ActivitiesContentSerializer(serializers.ModelSerializer):
             activities, many=True, context=self.context
         ).to_representation(activities)
 
-    class Meta(object):
+    class Meta:
         model = ActivitiesContent
         fields = ('id', 'type', 'title', 'sub_title', 'activities',
                   'action_text', 'action_link')
@@ -218,7 +216,7 @@ class SlideSerializer(serializers.ModelSerializer):
     image = SorlImageField('1600x674', crop='center')
     background_image = SorlImageField('1600x674', crop='center')
 
-    class Meta(object):
+    class Meta:
         model = Slide
         fields = (
             'background_image',
@@ -246,7 +244,7 @@ class SlidesContentSerializer(serializers.ModelSerializer):
             slides, many=True, context=self.context
         ).to_representation(slides)
 
-    class Meta(object):
+    class Meta:
         model = SlidesContent
         fields = ('id', 'type', 'slides', 'title', 'sub_title',)
 
@@ -254,7 +252,7 @@ class SlidesContentSerializer(serializers.ModelSerializer):
 class CategoriesContentSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True)
 
-    class Meta(object):
+    class Meta:
         model = CategoriesContent
         fields = ('id', 'type', 'title', 'sub_title', 'categories',)
 
@@ -263,7 +261,7 @@ class StepSerializer(serializers.ModelSerializer):
     image = SorlImageField('200x200', crop='center')
     text = SafeField(required=False, allow_blank=True)
 
-    class Meta(object):
+    class Meta:
         model = Step
         fields = ('id', 'image', 'header', 'text', )
 
@@ -271,7 +269,7 @@ class StepSerializer(serializers.ModelSerializer):
 class StepsContentSerializer(serializers.ModelSerializer):
     steps = StepSerializer(many=True)
 
-    class Meta(object):
+    class Meta:
         model = StepsContent
         fields = ('id', 'type', 'title', 'sub_title',
                   'steps', 'action_text', 'action_link')
@@ -280,7 +278,7 @@ class StepsContentSerializer(serializers.ModelSerializer):
 class LogoSerializer(serializers.ModelSerializer):
     image = SorlImageField('x150', crop='center')
 
-    class Meta(object):
+    class Meta:
         model = Logo
         fields = ('id', 'image', 'link')
 
@@ -288,7 +286,7 @@ class LogoSerializer(serializers.ModelSerializer):
 class LogosContentSerializer(serializers.ModelSerializer):
     logos = LogoSerializer(many=True)
 
-    class Meta(object):
+    class Meta:
         model = LogosContent
         fields = ('id', 'type', 'title', 'sub_title',
                   'logos', 'action_text', 'action_link')
@@ -297,7 +295,7 @@ class LogosContentSerializer(serializers.ModelSerializer):
 class LinkSerializer(serializers.ModelSerializer):
     image = SorlImageField('800x600', crop='center')
 
-    class Meta(object):
+    class Meta:
         model = ContentLink
         fields = ('id', 'image', 'action_link', 'action_text', )
 
@@ -305,7 +303,7 @@ class LinkSerializer(serializers.ModelSerializer):
 class ActionSerializer(ItemSerializer):
     item_type = 'action'
 
-    class Meta(object):
+    class Meta:
         model = ActionItem
         fields = ('id', 'type', 'link', 'title', )
 
@@ -313,7 +311,7 @@ class ActionSerializer(ItemSerializer):
 class ColumnsSerializer(ItemSerializer):
     item_type = 'columns'
 
-    class Meta(object):
+    class Meta:
         model = ColumnsItem
         fields = ('id', 'type', 'text1', 'text2', )
 
@@ -321,7 +319,7 @@ class ColumnsSerializer(ItemSerializer):
 class LinksContentSerializer(serializers.ModelSerializer):
     links = LinkSerializer(many=True)
 
-    class Meta(object):
+    class Meta:
         model = LinksContent
         fields = ('id', 'type', 'title', 'sub_title', 'links', )
 
@@ -332,7 +330,7 @@ class WelcomeContentSerializer(serializers.ModelSerializer):
     def get_greeting(self, instance):
         return instance.greetings.order_by('?')[0].text
 
-    class Meta(object):
+    class Meta:
         model = WelcomeContent
         fields = ('id', 'type', 'preamble', 'greeting')
 
@@ -340,7 +338,7 @@ class WelcomeContentSerializer(serializers.ModelSerializer):
 class LocationsContentSerializer(serializers.ModelSerializer):
     locations = LocationSerializer(many=True)
 
-    class Meta(object):
+    class Meta:
         model = LocationsContent
         fields = ('id', 'type', 'title', 'sub_title', 'locations',)
 
@@ -366,7 +364,7 @@ class ShareResultsContentSerializer(serializers.ModelSerializer):
             'events': stats.events_succeeded
         }
 
-    class Meta(object):
+    class Meta:
         model = ShareResultsContent
         fields = ('id', 'type', 'title', 'sub_title',
                   'statistics', 'share_title', 'share_text')
@@ -392,7 +390,7 @@ class CoFinancerSerializer(serializers.Serializer):
             'currency': obj['contribution__donation__amount_currency']
         }
 
-    class Meta(object):
+    class Meta:
         fields = ('id', 'user', 'total')
 
 
@@ -428,7 +426,7 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
             totals, many=True, context=self.context
         ).to_representation(totals)
 
-    class Meta(object):
+    class Meta:
         model = SupporterTotalContent
         fields = ('id', 'type',
                   'title', 'sub_title', 'co_financer_title',
@@ -505,7 +503,7 @@ class ResultPageSerializer(serializers.ModelSerializer):
         '1200x600', source='image', crop='center',
     )
 
-    class Meta(object):
+    class Meta:
         model = ResultPage
         fields = ('id', 'title', 'slug', 'start_date', 'image', 'share_image',
                   'end_date', 'description', 'blocks')
@@ -515,7 +513,7 @@ class HomePageSerializer(serializers.ModelSerializer):
     blocks = BlockSerializer(
         source='content.contentitems.all.translated', many=True)
 
-    class Meta(object):
+    class Meta:
         model = HomePage
         fields = ('id', 'blocks')
 
@@ -524,7 +522,7 @@ class PageSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     blocks = BlockSerializer(source='body.contentitems.all', many=True)
 
-    class Meta(object):
+    class Meta:
         model = Page
         fields = ('title', 'id', 'blocks', 'language', 'full_page')
 
@@ -535,7 +533,7 @@ class NewsItemSerializer(serializers.ModelSerializer):
     main_image = SorlImageField('800x400')
     author = UserPreviewSerializer()
 
-    class Meta(object):
+    class Meta:
         model = NewsItem
         fields = ('id', 'title', 'blocks', 'main_image', 'author',
                   'publication_date', 'allow_comments', 'language',
@@ -550,7 +548,7 @@ class FaviconsSerializer(serializers.Serializer):
 class SitePlatformSettingsSerializer(serializers.ModelSerializer):
     favicons = FaviconsSerializer(source='favicon')
 
-    class Meta(object):
+    class Meta:
         model = SitePlatformSettings
         fields = (
             'contact_email',

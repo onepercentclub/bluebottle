@@ -28,24 +28,24 @@ class FlutterwavePaymentList(PaymentList):
     )
 
     def perform_create(self, serializer):
-        super(FlutterwavePaymentList, self).perform_create(serializer)
+        super().perform_create(serializer)
         check_payment_status(serializer.instance)
 
 
 class FlutterwaveWebhookView(View):
 
     def post(self, request, **kwargs):
-        logger.info('Flutterwave webhook: {}'.format(request.body))
+        logger.info(f'Flutterwave webhook: {request.body}')
         try:
             data = json.loads(request.body.decode())
         except ValueError:
-            raise PaymentException('Error parsing Flutterwave webhook: {}'.format(request.body))
+            raise PaymentException(f'Error parsing Flutterwave webhook: {request.body}')
         try:
             # can be either tx_ref or txRef in Flutterwave responses
             tx_ref = data.get('txRef', data.get('tx_ref'))
             payment = FlutterwavePayment.objects.get(tx_ref=tx_ref)
         except KeyError:
-            raise PaymentException('Error parsing Flutterwave webhook: {}'.format(request.body))
+            raise PaymentException(f'Error parsing Flutterwave webhook: {request.body}')
         except FlutterwavePayment.DoesNotExist:
             try:
                 donation = Donation.objects.get(id=tx_ref)

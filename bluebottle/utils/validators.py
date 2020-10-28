@@ -1,4 +1,3 @@
-from builtins import object
 import os
 
 import magic
@@ -33,7 +32,7 @@ def validate_postal_code(value, country_code):
 
 # Taken from django 1.11
 # TODO: use normal validator once we have upgraded
-class FileExtensionValidator(object):
+class FileExtensionValidator:
     message = _(
         "File extension '%(extension)s' is not allowed. "
         "Allowed extensions are: '%(allowed_extensions)s'."
@@ -82,7 +81,7 @@ class FileExtensionValidator(object):
         )
 
 
-class FileMimetypeValidator(object):
+class FileMimetypeValidator:
     message = _(
         "Mime type '%(mimetype)s' is not allowed. "
         "Allowed mime-types are: '%(allowed_mimetypes)s'."

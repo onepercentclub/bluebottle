@@ -8,7 +8,7 @@ from bluebottle.test.utils import BluebottleTestCase
 
 class TelesomPaymentTestCase(BluebottleTestCase):
     def setUp(self):
-        super(TelesomPaymentTestCase, self).setUp()
+        super().setUp()
         TelesomPaymentProvider.objects.all().delete()
         TelesomPaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create()

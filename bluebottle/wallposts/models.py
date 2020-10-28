@@ -1,4 +1,3 @@
-from builtins import object
 from django.conf import settings
 from django.contrib.contenttypes import fields
 from django.contrib.contenttypes.models import ContentType
@@ -86,7 +85,7 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
     def parent(self):
         return self.content_object
 
-    class Analytics(object):
+    class Analytics:
         type = 'wallpost'
         tags = {}
         fields = {
@@ -105,7 +104,7 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
             else:
                 return obj.updated
 
-    class Meta(object):
+    class Meta:
         ordering = ('created',)
         base_manager_name = 'objects_with_deleted'
         permissions = (
@@ -121,7 +120,7 @@ class Wallpost(AnonymizationMixin, PolymorphicModel):
         )
 
     def __str__(self):
-        return "{} #{}".format(self.polymorphic_ctype, self.id)
+        return f"{self.polymorphic_ctype} #{self.id}"
 
 
 class MediaWallpost(Wallpost):
@@ -195,7 +194,7 @@ class MediaWallpostPhoto(models.Model):
         return self.mediawallpost.content_object
 
     def __str__(self):
-        return "Wallpost photo #{}".format(self.id)
+        return f"Wallpost photo #{self.id}"
 
 
 class TextWallpost(Wallpost):
@@ -271,7 +270,7 @@ class Reaction(AnonymizationMixin, models.Model):
     def parent(self):
         return self.wallpost.parent
 
-    class Analytics(object):
+    class Analytics:
         type = 'wallpost'
         tags = {}
 
@@ -291,7 +290,7 @@ class Reaction(AnonymizationMixin, models.Model):
             else:
                 return obj.updated
 
-    class Meta(object):
+    class Meta:
         ordering = ('created',)
         base_manager_name = 'objects_with_deleted'
         verbose_name = _('Reaction')

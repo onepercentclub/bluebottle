@@ -19,7 +19,7 @@ class LookerEmbedView(DetailView):
     queryset = LookerEmbed.objects.all()
 
     def get_context_data(self, **kwargs):
-        context = super(LookerEmbedView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['looker_embed_url'] = LookerSSOEmbed(
             self.request.user,
             type=context['object'].type,

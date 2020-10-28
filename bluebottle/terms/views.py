@@ -35,7 +35,7 @@ class TermsAgreementListView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        queryset = super(TermsAgreementListView, self).get_queryset()
+        queryset = super().get_queryset()
         return queryset.filter(user=self.request.user)
 
     def perform_create(self, serializer):

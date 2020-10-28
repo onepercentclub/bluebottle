@@ -1,4 +1,3 @@
-from builtins import object
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
@@ -42,7 +41,7 @@ class BaseActivitySerializer(ModelSerializer):
         user = self.context['request'].user
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
 
-    class Meta(object):
+    class Meta:
         model = Activity
         fields = (
             'type',  # Needed for old style API endpoints like pages / page blocks
@@ -72,7 +71,7 @@ class BaseActivitySerializer(ModelSerializer):
             'required',
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'owner',
             'image',
@@ -108,7 +107,7 @@ class BaseActivityListSerializer(ModelSerializer):
         user = self.context['request'].user
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
 
-    class Meta(object):
+    class Meta:
         model = Activity
         fields = (
             'type',  # Needed for old style API endpoints like pages / page blocks
@@ -131,7 +130,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'updated',
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'owner',
             'initiative',
@@ -149,7 +148,7 @@ class BaseTinyActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     slug = serializers.CharField(read_only=True)
 
-    class Meta(object):
+    class Meta:
         model = Activity
         fields = (
             'slug',
@@ -162,7 +161,7 @@ class BaseTinyActivitySerializer(ModelSerializer):
             'updated',
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         pass
 
 
@@ -177,7 +176,7 @@ class ActivitySubmitSerializer(ModelSerializer):
         }
     )
 
-    class Meta(object):
+    class Meta:
         model = Activity
         fields = (
             'owner',
@@ -196,12 +195,12 @@ class BaseContributionListSerializer(ModelSerializer):
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = Contribution
         fields = ('user', 'activity', 'status', 'created', 'updated', )
         meta_fields = ('created', 'updated', )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'user',
             'activity',
@@ -222,12 +221,12 @@ class BaseContributionSerializer(ModelSerializer):
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = Contribution
         fields = ('user', 'activity', 'status', )
         meta_fields = ('permissions', 'transitions', 'created', 'updated', )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'user',
             'activity',

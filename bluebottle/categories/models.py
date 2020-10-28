@@ -1,4 +1,3 @@
-from builtins import object
 from adminsortable.admin import SortableMixin
 from django.conf import settings
 from django.db import models
@@ -44,7 +43,7 @@ class Category(TranslatableModel):
         description=models.TextField(_("description"))
     )
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("category")
         verbose_name_plural = _("categories")
         # ordering = ['title']
@@ -59,10 +58,10 @@ class Category(TranslatableModel):
         if not self.slug:
             self.slug = slugify(self.title)
 
-        super(Category, self).save(**kwargs)
+        super().save(**kwargs)
 
     def get_absolute_url(self):
-        return 'https://{}/projects/?category={}'.format(properties.tenant.domain_url, self.slug)
+        return f'https://{properties.tenant.domain_url}/projects/?category={self.slug}'
 
 
 @python_2_unicode_compatible
@@ -110,7 +109,7 @@ class CategoryContent(SortableMixin, TranslatableModel):
                                             "are accepted. Max: %(chars)s characters.") % {'chars': 100})
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("content block")
         verbose_name_plural = _("content blocks")
         ordering = ['sequence']

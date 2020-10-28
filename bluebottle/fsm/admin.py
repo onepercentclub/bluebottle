@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 from collections import defaultdict
 
 from django.conf.urls import url
@@ -39,7 +37,7 @@ def get_effects(effects):
     return [cls.render(grouped) for (cls, instance_cls), grouped in list(grouped_effects.items())]
 
 
-class StateMachineAdminMixin(object):
+class StateMachineAdminMixin:
     form = StateMachineModelForm
 
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
@@ -52,7 +50,7 @@ class StateMachineAdminMixin(object):
             form = ModelForm(request.POST, request.FILES, instance=obj)
             # If there are form errors, then don't go to the confirm page yet.
             if not form.is_valid():
-                return super(StateMachineAdminMixin, self).changeform_view(request, object_id, form_url, extra_context)
+                return super().changeform_view(request, object_id, form_url, extra_context)
 
             new_obj = self.save_form(request, form, change=True)
 
@@ -87,7 +85,7 @@ class StateMachineAdminMixin(object):
                     request, "admin/change_effects_confirmation.html", context
                 )
 
-        return super(StateMachineAdminMixin, self).changeform_view(request, object_id, form_url, extra_context)
+        return super().changeform_view(request, object_id, form_url, extra_context)
 
     def save_model(self, request, obj, form, change):
         """
@@ -115,7 +113,7 @@ class StateMachineAdminMixin(object):
             self.model._meta.app_label, self.model._meta.model_name
         )
         if not request.user.has_perm(permission):
-            messages.error(request, 'Missing permission: {}'.format(permission))
+            messages.error(request, f'Missing permission: {permission}')
             return HttpResponseRedirect(link)
 
         instance = self.model.objects.get(pk=pk)
@@ -125,7 +123,7 @@ class StateMachineAdminMixin(object):
         transition = state_machine.transitions[transition_name]
 
         if transition not in state_machine.possible_transitions():
-            messages.error(request, 'Transition not possible: {}'.format(transition.name))
+            messages.error(request, f'Transition not possible: {transition.name}')
             return HttpResponseRedirect(link)
 
         if 'confirm' in request.POST and request.POST['confirm']:
@@ -137,12 +135,12 @@ class StateMachineAdminMixin(object):
                 try:
                     instance.save(send_messages=send_messages)
                 except TransitionNotPossible as e:
-                    messages.warning(request, 'Effect failed: {}'.format(e))
+                    messages.warning(request, f'Effect failed: {e}')
 
                 log_action(
                     instance,
                     request.user,
-                    'Changed status to {}'.format(transition.target.value)
+                    f'Changed status to {transition.target.value}'
                 )
 
                 return HttpResponseRedirect(link)
@@ -155,7 +153,7 @@ class StateMachineAdminMixin(object):
             ),
             args=(pk, )
         )
-        action_text = "change the status to {}".format(transition.target.name)
+        action_text = f"change the status to {transition.target.name}"
 
         context = dict(
             self.admin_site.each_context(request),
@@ -182,7 +180,7 @@ class StateMachineAdminMixin(object):
         )
 
     def get_urls(self):
-        urls = super(StateMachineAdminMixin, self).get_urls()
+        urls = super().get_urls()
         custom_urls = [
             url(
                 r'^(?P<pk>.+)/transition/(?P<field_name>.+)/(?P<transition_name>.+)$',
@@ -220,7 +218,7 @@ class StateMachineFilter(admin.SimpleListFilter):
         else:
             states = list(model_admin.model._state_machines['states'].states.items())
 
-        return set((status, state.name) for (status, state) in states)
+        return {(status, state.name) for (status, state) in states}
 
     def queryset(self, request, queryset):
         if self.value():

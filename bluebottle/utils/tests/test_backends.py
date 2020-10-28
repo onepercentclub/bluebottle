@@ -6,10 +6,10 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 class AnonymousAuthenticationBackendTest(BluebottleTestCase):
     def setUp(self):
-        super(AnonymousAuthenticationBackendTest, self).setUp()
+        super().setUp()
 
         self.codename = 'add_site'
-        self.permission_string = 'sites.{}'.format(self.codename)
+        self.permission_string = f'sites.{self.codename}'
 
         self.permission = Permission.objects.get(codename=self.codename)
         self.group, _ = Group.objects.get_or_create(name='Anonymous')

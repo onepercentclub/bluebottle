@@ -9,7 +9,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 class TestResultPageAdmin(BluebottleAdminTestCase):
     def setUp(self):
-        super(TestResultPageAdmin, self).setUp()
+        super().setUp()
         self.client.force_login(self.superuser)
         self.init_projects()
 

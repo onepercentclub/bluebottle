@@ -12,7 +12,7 @@ class NewsItemApiTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(NewsItemApiTestCase, self).setUp()
+        super().setUp()
 
         self.some_dutch_news = NewsItemFactory.create(language='nl')
         self.some_other_dutch_news = NewsItemFactory.create(language='nl')

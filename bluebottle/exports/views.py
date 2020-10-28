@@ -1,4 +1,3 @@
-from builtins import object
 import json
 import posixpath
 
@@ -32,7 +31,7 @@ from bluebottle.utils.views import (
 EXPORTDB_EXPORT_KEY = 'exportdb_export'
 
 
-class ExportPermissionMixin(object):
+class ExportPermissionMixin:
     """
     Check permissions
     """
@@ -41,7 +40,7 @@ class ExportPermissionMixin(object):
     def dispatch(self, request, *args, **kwargs):
         if not rules.test_rule('exportdb.can_export', request.user):
             raise PermissionDenied
-        return super(ExportPermissionMixin, self).dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
 
 class ExportView(ExportPermissionMixin, FormView):
@@ -72,11 +71,11 @@ class ExportView(ExportPermissionMixin, FormView):
         return self.exporter_class
 
     def get_context_data(self, **kwargs):
-        context = super(ExportView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['title'] = _('Export database')
         context['jquery_in_vendor'] = jquery_in_vendor()
         context['models'] = [
-            u'{name} ({app}.{model})'.format(
+            '{name} ({app}.{model})'.format(
                 name=model._meta.verbose_name,
                 app=model._meta.app_label,
                 model=model.__name__
@@ -98,7 +97,7 @@ class ExportView(ExportPermissionMixin, FormView):
         else:
             result = plain_export(self.get_exporter_class(), tenant=tenant, **form.cleaned_data)
             filename = result.split('/')[-1]
-            output = open(result, 'r')
+            output = open(result)
             response = HttpResponse(
                 output.read(),
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

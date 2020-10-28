@@ -1,4 +1,3 @@
-from builtins import object
 from fluent_contents.rendering import render_placeholder
 from django.utils.safestring import mark_safe
 
@@ -23,7 +22,7 @@ class NewsItemSerializer(serializers.ModelSerializer):
     main_image = SorlImageField('800x400')
     author = UserPreviewSerializer()
 
-    class Meta(object):
+    class Meta:
         model = NewsItem
         fields = ('id', 'title', 'body', 'main_image', 'author',
                   'publication_date', 'allow_comments', 'language',
@@ -33,6 +32,6 @@ class NewsItemSerializer(serializers.ModelSerializer):
 class NewsItemPreviewSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug')
 
-    class Meta(object):
+    class Meta:
         model = NewsItem
         fields = ('id', 'title', 'publication_date', 'language')

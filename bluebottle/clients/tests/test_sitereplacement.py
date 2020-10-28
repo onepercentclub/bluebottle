@@ -1,5 +1,5 @@
 from django.test import TestCase
-import mock
+from unittest import mock
 from ..utils import tenant_url, tenant_name, tenant_site
 
 

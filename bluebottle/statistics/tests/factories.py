@@ -1,4 +1,3 @@
-from builtins import object
 import factory.fuzzy
 
 from bluebottle.statistics.models import (
@@ -7,7 +6,7 @@ from bluebottle.statistics.models import (
 
 
 class ManualStatisticFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = ManualStatistic
 
     name = factory.Faker('sentence')
@@ -15,12 +14,12 @@ class ManualStatisticFactory(factory.DjangoModelFactory):
 
 
 class DatabaseStatisticFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = DatabaseStatistic
 
     name = factory.Faker('sentence')
 
 
 class ImpactStatisticFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = ImpactStatistic

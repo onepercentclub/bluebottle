@@ -16,7 +16,7 @@ def get_auth(request, **kwargs):
     try:
         backend = settings['backend']
         if not backend.startswith('bluebottle'):
-            backend = 'bluebottle.{}'.format(backend)
+            backend = f'bluebottle.{backend}'
     except AttributeError:
         raise ImproperlyConfigured('TokenAuth backend not set')
 
@@ -24,7 +24,7 @@ def get_auth(request, **kwargs):
         cls = import_string(backend)
     except AttributeError:
         raise ImproperlyConfigured(
-            'TokenAuth backend {} is not defined'.format(backend)
+            f'TokenAuth backend {backend} is not defined'
         )
     return cls(request, **kwargs)
 
@@ -55,11 +55,11 @@ class TokenLoginView(View):
             user, created = auth.authenticate()
             user.backend = 'django.contrib.auth.backends.ModelBackend'
         except TokenAuthenticationError as e:
-            url = '/token/error?message={0}'.format(e)
+            url = f'/token/error?message={e}'
             return HttpResponseRedirect(url)
 
         target_url = auth.target_url or "/"
-        if target_url and re.match('^\/\w\w\/admin', target_url):
+        if target_url and re.match(r'^\/\w\w\/admin', target_url):
             # Admin login:
             # Log user in using cookies and redirect directly
             login(request, user)

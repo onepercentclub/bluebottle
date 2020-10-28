@@ -8,7 +8,7 @@ from bluebottle.test.utils import BluebottleTestCase
 
 class VitepayPaymentTestCase(BluebottleTestCase):
     def setUp(self):
-        super(VitepayPaymentTestCase, self).setUp()
+        super().setUp()
         VitepayPaymentProvider.objects.all().delete()
         VitepayPaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create()

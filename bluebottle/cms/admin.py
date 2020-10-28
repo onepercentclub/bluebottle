@@ -1,4 +1,3 @@
-from builtins import str
 from django.core.urlresolvers import reverse
 from django.contrib import admin
 from django.db import models
@@ -67,10 +66,12 @@ class LinkGroupInline(SortableTabularInline):
         url = ''
 
         if obj.id is not None:
-            url = "admin:%s_%s_change" % (self.model._meta.app_label,
-                                          self.model._meta.model_name)
+            url = "admin:{}_{}_change".format(
+                self.model._meta.app_label,
+                self.model._meta.model_name
+            )
             return format_html(
-                u"<a href='{}'>{}</a>",
+                "<a href='{}'>{}</a>",
                 str(reverse(url, args=(obj.id,))), _('Edit this group')
             )
         return _('First save to edit this group')

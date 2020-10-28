@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 import os
 import uuid
 
@@ -38,29 +36,29 @@ class File(AnonymizationMixin, models.Model):
     def __str__(self):
         return str(self.id)
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'files'
 
-    class Meta(object):
+    class Meta:
         abstract = True
 
 
 class Image(File):
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'images'
 
 
 class Document(File):
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'documents'
 
 
 def get_private_path(self, filename):
     ext = filename.split('.')[-1]
-    filename = "%s.%s" % (uuid.uuid4(), ext)
+    filename = f"{uuid.uuid4()}.{ext}"
     upload_to = os.path.join('files', filename)
     if not upload_to.startswith('private'):
-        upload_to = 'private/{}'.format(upload_to)
+        upload_to = f'private/{upload_to}'
     return upload_to
 
 
@@ -68,7 +66,7 @@ class PrivateDocument(File):
 
     file = models.FileField(_('file'), upload_to=get_private_path)
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'private-documents'
 
 

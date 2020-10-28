@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from builtins import str
 from django.contrib.admin.sites import AdminSite
 from django.contrib.messages import get_messages
 from django.core import mail
@@ -19,7 +16,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 class TestInitiativeAdmin(BluebottleAdminTestCase):
 
     def setUp(self):
-        super(TestInitiativeAdmin, self).setUp()
+        super().setUp()
         self.site = AdminSite()
         self.initiative_admin = InitiativeAdmin(Initiative, self.site)
         self.initiative = InitiativeFactory.create()
@@ -202,6 +199,6 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
 
         # Should send out one mail that contains admin url and contact email
         self.assertEqual(len(mail.outbox), 1)
-        admin_url = '/admin/initiatives/initiative/{}/change'.format(self.initiative.id)
+        admin_url = f'/admin/initiatives/initiative/{self.initiative.id}/change'
         self.assertTrue(admin_url in mail.outbox[0].body)
         self.assertTrue('contact@my-bluebottle-project.com' in mail.outbox[0].body)

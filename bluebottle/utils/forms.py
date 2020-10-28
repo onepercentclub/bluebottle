@@ -19,12 +19,12 @@ class FSMModelFormMetaClass(ModelFormMetaclass):
                     widget=ButtonSelectWidget()
                 )
 
-        return super(FSMModelFormMetaClass, cls).__new__(cls, name, bases, attrs)
+        return super().__new__(cls, name, bases, attrs)
 
 
 class FSMModelForm(with_metaclass(FSMModelFormMetaClass, forms.ModelForm)):
     def __init__(self, *args, **kwargs):
-        super(FSMModelForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         for fsm_field in self.fsm_fields:
             transitions = getattr(self.instance, fsm_field).all_transitions
             self.fields[fsm_field].widget.attrs['obj'] = self.instance
@@ -48,7 +48,7 @@ class FSMModelForm(with_metaclass(FSMModelFormMetaClass, forms.ModelForm)):
             transition_name = self.cleaned_data.get(field_name)
             if transition_name:
                 getattr(getattr(self.instance, field_name), transition_name)()
-        return super(FSMModelForm, self).clean(*args, **kwargs)
+        return super().clean(*args, **kwargs)
 
     @property
     def fsm_fields(self):

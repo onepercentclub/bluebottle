@@ -1,4 +1,3 @@
-from builtins import str
 import uuid
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
@@ -92,7 +91,7 @@ class InitiativeMapList(generics.ListAPIView):
     owner_filter_field = 'owner'
 
     def get_queryset(self):
-        queryset = super(InitiativeMapList, self).get_queryset()
+        queryset = super().get_queryset()
         queryset = queryset.filter(status='approved').all()
         if not Location.objects.count():
             # Skip initiatives without proper location
@@ -100,7 +99,7 @@ class InitiativeMapList(generics.ListAPIView):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        cache_key = '{}.initiative_map_data'.format(connection.tenant.schema_name)
+        cache_key = f'{connection.tenant.schema_name}.initiative_map_data'
         data = cache.get(cache_key)
         if not data:
             queryset = self.get_queryset().order_by('created')

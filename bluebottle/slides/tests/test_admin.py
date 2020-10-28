@@ -1,4 +1,3 @@
-# coding=utf-8
 from bluebottle.test.factory_models.slides import SlideFactory
 from tenant_schemas.urlresolvers import reverse
 
@@ -7,7 +6,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 class SlideAdminTest(BluebottleAdminTestCase):
     def setUp(self):
-        super(SlideAdminTest, self).setUp()
+        super().setUp()
         self.news = SlideFactory()
         self.news_url = reverse('admin:slides_slide_changelist')
         self.client.force_login(self.superuser)

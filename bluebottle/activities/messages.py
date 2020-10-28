@@ -67,7 +67,7 @@ class ActivityWallpostFollowerMessage(TransitionMessage):
 
 
 class ImpactReminderMessage(TransitionMessage):
-    subject = (u'Please share the impact results for your activity "{title}".')
+    subject = ('Please share the impact results for your activity "{title}".')
     template = 'messages/activity_impact_reminder'
     context = {
         'title': 'title'

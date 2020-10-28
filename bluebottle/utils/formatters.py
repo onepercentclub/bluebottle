@@ -40,7 +40,7 @@ class DictFormatter(logging.Formatter):
         extra_attrs = kwargs.pop('extra_attrs', None)
         preserve_order = kwargs.pop('preserve_order', False)
         specific_order = kwargs.pop('specific_order', None)
-        super(DictFormatter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if regular_attrs is None:
             self.regular_attrs = copy.deepcopy(self.default_regular_attrs)
         else:
@@ -60,7 +60,7 @@ class DictFormatter(logging.Formatter):
         """
         Formats a log record into a dictionary using the arguments given to __init__.
         """
-        message = super(DictFormatter, self).format(record)
+        message = super().format(record)
         record_dict = record.__dict__
         record_dict["message"] = message
         if "asctime" not in record_dict:
@@ -101,9 +101,9 @@ class JsonFormatter(DictFormatter):
         Format an exception so that it prints on a single line.
         """
 
-        result = super(JsonFormatter, self).formatException(exc_info)
+        result = super().formatException(exc_info)
         return repr(result)  # or format into one line however you want to
 
     def format(self, record):
-        s = super(JsonFormatter, self).format(record)
+        s = super().format(record)
         return json.dumps(s)

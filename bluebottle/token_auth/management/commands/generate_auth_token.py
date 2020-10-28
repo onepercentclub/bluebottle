@@ -1,4 +1,3 @@
-from builtins import input
 from optparse import make_option
 
 from django.core.management.base import BaseCommand
@@ -18,7 +17,7 @@ class Command(BaseCommand):
                         help="First name for the user."),
         )
 
-        super(Command, self).__init__()
+        super().__init__()
 
     def handle(self, *args, **options):
         if options.get('email'):
@@ -32,20 +31,20 @@ class Command(BaseCommand):
             first_name = options['first-name']
         else:
             default = email.split('@')[0].title()
-            first_name = eval(input("Enter first name ({0}): ".format(default))) or default
+            first_name = eval(input(f"Enter first name ({default}): ")) or default
 
         if options.get('last-name'):
             last_name = options['last-name']
         else:
             default = email.split('@')[1].split('.')[0].title()
-            last_name = eval(input("Enter last name ({0}): ".format(default))) or default
+            last_name = eval(input(f"Enter last name ({default}): ")) or default
 
         if options.get('username'):
             username = options['username']
         else:
             default = email.split('@')[0]
-            username = eval(input("Enter username ({0}): ".format(default))) or default
+            username = eval(input(f"Enter username ({default}): ")) or default
 
         token = generate_token(email=email, username=username,
                                first_name=first_name, last_name=last_name)
-        self.stdout.write('Token:  {0}'.format(token))
+        self.stdout.write(f'Token:  {token}')

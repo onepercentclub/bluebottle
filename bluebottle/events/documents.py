@@ -1,4 +1,3 @@
-from builtins import object
 from bluebottle.activities.documents import ActivityDocument, activity
 
 from bluebottle.events.models import Event, Participant
@@ -15,7 +14,7 @@ SCORE_MAP = {
 
 @activity.doc_type
 class EventDocument(ActivityDocument):
-    class Meta(object):
+    class Meta:
         model = Event
         related_models = (Initiative, Member, Participant)
 
@@ -37,7 +36,7 @@ class EventDocument(ActivityDocument):
         if not instance.is_online and instance.location:
             return instance.location.country_id
         else:
-            return super(EventDocument, self).prepare_country(instance)
+            return super().prepare_country(instance)
 
     def prepare_position(self, instance):
         if not instance.is_online and instance.location:

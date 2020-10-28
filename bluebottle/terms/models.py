@@ -1,4 +1,3 @@
-from builtins import object
 from django.db import models
 from django.conf import settings
 from django.utils.timezone import now
@@ -21,9 +20,9 @@ class Terms(models.Model):
     version = models.CharField(max_length=40)
 
     def __str__(self):
-        return 'Terms {0} - {1}'.format(self.version, self.date.date())
+        return f'Terms {self.version} - {self.date.date()}'
 
-    class Meta(object):
+    class Meta:
         ordering = ('-date',)
         verbose_name_plural = _('Terms')
         verbose_name = _('Term')
@@ -53,7 +52,7 @@ class TermsAgreement(models.Model):
                 return queryset.all()[0]
         return None
 
-    class Meta(object):
+    class Meta:
         ordering = ('-created',)
         verbose_name_plural = _('Terms agreement')
         verbose_name = _('Term agreements')

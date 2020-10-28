@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from django.urls import reverse
 
 from bluebottle.notifications.models import MessageTemplate
@@ -8,7 +7,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 class TestMessageTemplateAdmin(BluebottleAdminTestCase):
 
     def setUp(self):
-        super(TestMessageTemplateAdmin, self).setUp()
+        super().setUp()
         self.client.force_login(self.superuser)
 
     def test_new_mail_template_admin(self):

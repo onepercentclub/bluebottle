@@ -1,4 +1,3 @@
-from __future__ import print_function
 from future import standard_library
 standard_library.install_aliases()
 from io import StringIO
@@ -33,9 +32,9 @@ class Command(BaseCommand):
         model = apps.get_model('cms', block_type)
         content_type = ContentType.objects.get_for_model(model)
 
-        block['kwargs'] = dict(
-            (key, val) for key, val in list(block['kwargs'].items()) if val
-        )
+        block['kwargs'] = {
+            key: val for key, val in list(block['kwargs'].items()) if val
+        }
 
         content_block = model.objects.create_for_placeholder(
             placeholder,
@@ -55,7 +54,7 @@ class Command(BaseCommand):
                             File(StringIO(response.content), name=item['image'].split('/')[-1])
                         )
                     else:
-                        print('Missing image for: {}({})'.format(block_type, language))
+                        print(f'Missing image for: {block_type}({language})')
                         del item['image']
 
                 item_model.objects.create(
@@ -70,10 +69,10 @@ class Command(BaseCommand):
             for source_object in source.objects.filter(
                 language=language, **block['migrate']['filter']
             ):
-                fields = dict(
-                    (field, getattr(source_object, field)) for field
+                fields = {
+                    field: getattr(source_object, field) for field
                     in block['migrate']['fields']
-                )
+                }
                 target.objects.create(
                     block=content_block,
                     **fields
@@ -102,7 +101,7 @@ class Command(BaseCommand):
             tenants = [Client.objects.get(schema_name=options['tenant'])]
 
         for client in tenants:
-            print("\n\nCreating homepage for {}".format(client.name))
+            print(f"\n\nCreating homepage for {client.name}")
             with LocalTenant(client, clear_tenant=True):
                 ContentType.objects.clear_cache()
 

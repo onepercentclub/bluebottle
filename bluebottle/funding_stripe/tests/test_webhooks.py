@@ -1,8 +1,7 @@
-from builtins import object
 import json
 
 import munch
-import mock
+from unittest import mock
 import stripe
 from django.core import mail
 from django.urls import reverse
@@ -28,7 +27,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
-class MockEvent(object):
+class MockEvent:
     def __init__(self, type, data):
         self.type = type
         self.data = munch.munchify(data)
@@ -37,7 +36,7 @@ class MockEvent(object):
 class IntentWebhookTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(IntentWebhookTestCase, self).setUp()
+        super().setUp()
         StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create()
@@ -300,7 +299,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
 class SourcePaymentWebhookTestCase(BluebottleTestCase):
     def setUp(self):
-        super(SourcePaymentWebhookTestCase, self).setUp()
+        super().setUp()
         StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
 
@@ -406,13 +405,13 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                     amount=int(self.donation.amount.amount * 100),
                     currency=self.donation.amount.currency,
                     metadata={
-                        'tenant_name': u'test',
+                        'tenant_name': 'test',
                         'activity_id': self.funding.pk,
                         'activity_title': self.funding.title,
-                        'tenant_domain': u'testserver'
+                        'tenant_domain': 'testserver'
                     },
-                    source=u'some-source-id',
-                    statement_descriptor_suffix=u'Test',
+                    source='some-source-id',
+                    statement_descriptor_suffix='Test',
                     transfer_data={
                         'destination': self.funding.bank_account.connect_account.account_id
                     }
@@ -456,14 +455,14 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
                     amount=int(self.donation.amount.amount * 100),
                     currency=self.donation.amount.currency,
                     metadata={
-                        'tenant_name': u'test',
+                        'tenant_name': 'test',
                         'activity_id': self.funding.pk,
                         'activity_title': self.funding.title,
-                        'tenant_domain': u'testserver'
+                        'tenant_domain': 'testserver'
                     },
-                    on_behalf_of=u'acct_1234567890',
-                    source=u'some-source-id',
-                    statement_descriptor_suffix=u'Test',
+                    on_behalf_of='acct_1234567890',
+                    source='some-source-id',
+                    statement_descriptor_suffix='Test',
                     transfer_data={
                         'destination': self.funding.bank_account.connect_account.account_id
                     }
@@ -735,7 +734,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 class StripeConnectWebhookTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(StripeConnectWebhookTestCase, self).setUp()
+        super().setUp()
         self.user = BlueBottleUserFactory.create()
 
         self.connect_account = stripe.Account('some-account-id')
@@ -833,7 +832,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         self.assertEqual(payout_account.status, 'verified')
         self.assertEqual(
-            message.subject, u'Your identity has been verified'
+            message.subject, 'Your identity has been verified'
         )
         self.assertTrue(
             self.funding.get_absolute_url() in message.body
@@ -914,7 +913,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         payout_account = StripePayoutAccount.objects.get(pk=self.payout_account.pk)
         self.funding.refresh_from_db()
-        self.assertEqual(payout_account.status, u'verified')
+        self.assertEqual(payout_account.status, 'verified')
 
     def test_pending(self):
         data = {
@@ -1001,7 +1000,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         message = mail.outbox[0]
         self.assertEqual(
-            message.subject, u'Your identity verification needs some work'
+            message.subject, 'Your identity verification needs some work'
         )
         self.assertTrue(
             '/initiatives/activities/funding/kyc' in message.body

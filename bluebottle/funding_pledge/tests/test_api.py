@@ -19,7 +19,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_inc
 class PaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(PaymentTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory(can_pledge=True)
         self.initiative = InitiativeFactory.create()
@@ -77,7 +77,7 @@ class PaymentTestCase(BluebottleTestCase):
 class PledgePayoutAccountListTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(PledgePayoutAccountListTestCase, self).setUp()
+        super().setUp()
 
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
@@ -160,7 +160,7 @@ class PledgePayoutAccountListTestCase(BluebottleTestCase):
 class PledgePayoutAccountDetailTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(PledgePayoutAccountDetailTestCase, self).setUp()
+        super().setUp()
 
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()

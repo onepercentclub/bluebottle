@@ -1,4 +1,3 @@
-from builtins import str
 import json
 
 from django.core.urlresolvers import reverse
@@ -18,7 +17,7 @@ class FileListAPITestCase(TestCase):
         self.image_path = './bluebottle/files/tests/files/test-image.png'
         self.document_path = './bluebottle/files/tests/files/test.rtf'
 
-        super(FileListAPITestCase, self).setUp()
+        super().setUp()
 
     def test_create_document(self):
         with open(self.document_path) as test_file:

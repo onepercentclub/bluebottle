@@ -56,7 +56,7 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             obj.activity._meta.model_name),
             args=(obj.activity.id,)
         )
-        return format_html(u"<a href='{}'>{}</a>", url, obj.activity.title or '-empty-')
+        return format_html("<a href='{}'>{}</a>", url, obj.activity.title or '-empty-')
     activity_link.short_description = _('Activity')
 
 
@@ -102,8 +102,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     inlines = (FollowAdminInline, WallpostInline, )
 
     def get_inline_instances(self, request, obj=None):
-        inlines = super(ActivityChildAdmin,
-                        self).get_inline_instances(request, obj)
+        inlines = super().get_inline_instances(request, obj)
 
         if InitiativePlatformSettings.objects.get().enable_impact:
             impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
@@ -207,13 +206,13 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             errors.append(_('The initiative is not approved'))
 
         return format_html("<ul class='validation-error-list'>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in errors
+            format_html("<li>{}</li>", value) for value in errors
         ])))
 
     valid.short_description = _('Steps to complete activity')
 
     def get_urls(self):
-        urls = super(ActivityChildAdmin, self).get_urls()
+        urls = super().get_urls()
         extra_urls = [
             url(r'^send-impact-reminder-message/(?P<pk>\d+)/$',
                 self.admin_site.admin_view(self.send_impact_reminder_message),
@@ -255,7 +254,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             args=(obj.pk,)
         )
         return format_html(
-            u"<a href='{}'>{}</a>",
+            "<a href='{}'>{}</a>",
             url, _('Send reminder message')
         )
     send_impact_reminder_message.short_description = _('Impact Reminder')
@@ -264,11 +263,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         kwargs.update({
             'help_texts': {
                 'send_impact_reminder_message_link': _(
-                    u"Request the activity manager to fill in the impact of this activity."
+                    "Request the activity manager to fill in the impact of this activity."
                 )
             }
         })
-        return super(ActivityChildAdmin, self).get_form(request, obj, **kwargs)
+        return super().get_form(request, obj, **kwargs)
 
 
 class ContributionInline(admin.TabularInline):
@@ -311,7 +310,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
                      'owner__first_name', 'owner__last_name')
 
     def link(self, obj):
-        return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title)
+        return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title)
 
     link.short_description = _("Show on site")
 
@@ -333,12 +332,12 @@ class ActivityInlineChild(StackedPolymorphicInline.Child):
             obj._meta.model_name),
             args=(obj.id,)
         )
-        return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
+        return format_html("<a href='{}'>{}</a>", url, obj.title or '-empty-')
 
     activity_link.short_description = _('Edit activity')
 
     def link(self, obj):
-        return format_html(u'<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
+        return format_html('<a href="{}" target="_blank">{}</a>', obj.get_absolute_url(), obj.title or '-empty-')
 
     link.short_description = _('View on site')
 

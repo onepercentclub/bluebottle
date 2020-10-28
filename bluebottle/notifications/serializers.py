@@ -1,11 +1,10 @@
-from builtins import object
 from rest_framework import serializers
 
 from bluebottle.notifications.models import NotificationPlatformSettings
 
 
 class NotificationPlatformSettingsSerializer(serializers.ModelSerializer):
-    class Meta(object):
+    class Meta:
         model = NotificationPlatformSettings
 
         fields = (

@@ -1,4 +1,3 @@
-from builtins import object
 import factory
 
 from django.contrib.contenttypes.models import ContentType
@@ -11,22 +10,22 @@ from bluebottle.geo.models import (
 
 
 class RegionFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Region
 
-    name = factory.Sequence(lambda n: 'Region{0}'.format(n))
+    name = factory.Sequence(lambda n: f'Region{n}')
 
 
 class SubRegionFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = SubRegion
 
-    name = factory.Sequence(lambda n: 'SubRegion{0}'.format(n))
+    name = factory.Sequence(lambda n: f'SubRegion{n}')
     region = factory.SubFactory(RegionFactory)
 
 
 class CountryFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Country
 
     name = factory.Faker('country')
@@ -34,24 +33,24 @@ class CountryFactory(factory.DjangoModelFactory):
 
 
 class LocationGroupFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = LocationGroup
 
-    name = factory.Sequence(lambda n: 'LocationGroup_{0}'.format(n))
+    name = factory.Sequence(lambda n: f'LocationGroup_{n}')
 
 
 class LocationFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Location
 
-    name = factory.Sequence(lambda n: 'Location_{0}'.format(n))
+    name = factory.Sequence(lambda n: f'Location_{n}')
     position = Geoposition(52.5, 13.4)
     country = factory.SubFactory(CountryFactory)
     group = factory.SubFactory(LocationGroupFactory)
 
 
 class PlaceFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Place
         exclude = ['content_object']
 
@@ -65,7 +64,7 @@ class PlaceFactory(factory.DjangoModelFactory):
 
 
 class GeolocationFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Geolocation
 
     street = factory.Faker('street_name')

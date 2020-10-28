@@ -1,4 +1,3 @@
-from builtins import object
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -41,9 +40,9 @@ class GeoBaseModel(SortableTranslatableModel):
         if self.numeric_code == '':
             self.numeric_code = None
 
-        super(GeoBaseModel, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
-    class Meta(object):
+    class Meta:
         abstract = True
 
 
@@ -144,7 +143,7 @@ class Location(models.Model):
         if not self.slug:
             self.slug = slugify(self.name)
 
-        super(Location, self).save()
+        super().save()
 
     def __str__(self):
         return self.name
@@ -195,11 +194,11 @@ class Geolocation(models.Model):
 
     anonymized = False
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'locations'
 
     def __str__(self):
         if self.locality:
-            return u"{}, {}".format(self.locality, self.country.name)
+            return f"{self.locality}, {self.country.name}"
         else:
             return self.country.name

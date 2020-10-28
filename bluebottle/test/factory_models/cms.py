@@ -1,4 +1,3 @@
-from builtins import object
 from datetime import timedelta
 import factory
 
@@ -14,23 +13,23 @@ from bluebottle.test.factory_models.utils import LanguageFactory
 
 
 class ResultPageFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = ResultPage
 
-    title = factory.Sequence(lambda n: 'Result Page Title {0}'.format(n))
-    slug = factory.Sequence(lambda n: 'slug-{0}'.format(n))
-    description = factory.Sequence(lambda n: 'Results description {0}'.format(n))
+    title = factory.Sequence(lambda n: f'Result Page Title {n}')
+    slug = factory.Sequence(lambda n: f'slug-{n}')
+    description = factory.Sequence(lambda n: f'Results description {n}')
     start_date = now() - timedelta(days=300)
     end_date = now() + timedelta(days=65)
 
 
 class HomePageFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = HomePage
 
 
 class StatFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Stat
 
     type = 'manual'
@@ -38,57 +37,57 @@ class StatFactory(factory.DjangoModelFactory):
 
 
 class QuoteFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Quote
 
-    name = factory.Sequence(lambda n: 'Name {}'.format(n))
-    quote = factory.Sequence(lambda n: 'Quote {}'.format(n))
+    name = factory.Sequence(lambda n: f'Name {n}')
+    quote = factory.Sequence(lambda n: f'Quote {n}')
 
 
 class ContentLinkFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = ContentLink
 
 
 class SlideFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Slide
 
 
 class StepFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Step
 
 
 class GreetingFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Greeting
 
 
 class SiteLinksFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = SiteLinks
 
     language = factory.SubFactory(LanguageFactory)
 
 
 class LinkGroupFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = LinkGroup
         django_get_or_create = ('name',)
 
     site_links = factory.SubFactory(SiteLinksFactory)
-    name = factory.Sequence(lambda n: 'Link Group {}'.format(n))
+    name = factory.Sequence(lambda n: f'Link Group {n}')
 
 
 class LinkFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Link
 
     link_group = factory.SubFactory(LinkGroupFactory)
-    title = factory.Sequence(lambda n: 'Title {}'.format(n))
+    title = factory.Sequence(lambda n: f'Title {n}')
 
 
 class LinkPermissionFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = LinkPermission

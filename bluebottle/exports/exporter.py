@@ -1,4 +1,3 @@
-from builtins import object
 import logging
 
 from django.conf import settings
@@ -108,7 +107,7 @@ def modelresource_factory(model, resource_class=ExportModelResource, **meta_kwar
         attrs['export_order'] = field_names
         del meta_kwargs['fields']
     else:
-        raise ImproperlyConfigured('Need to specify fields for {}'.format(model))
+        raise ImproperlyConfigured(f'Need to specify fields for {model}')
 
     attrs.update(**meta_kwargs)
 
@@ -155,7 +154,7 @@ def get_export_models(admin_only=False):
         if not_installed:
             raise ImproperlyConfigured(
                 'The following models can\'t be exported because they haven\'t '
-                'been installed: %s' % u', '.join(not_installed)
+                'been installed: %s' % ', '.join(not_installed)
             )
         return models
 
@@ -166,7 +165,7 @@ def get_resource_for_model(model, **kwargs):
     """
     # TODO: settings to map model to resource
 
-    model_name = u'{app_label}.{name}'.format(
+    model_name = '{app_label}.{name}'.format(
         app_label=model._meta.app_label,
         name=model.__name__
     )
@@ -192,7 +191,7 @@ def get_resource_for_model(model, **kwargs):
     return resources.modelresource_factory(model, resource_class=resource_class)(**kwargs)
 
 
-class Exporter(object):
+class Exporter:
 
     def __init__(self, resources):
         self.resources = resources
@@ -230,7 +229,7 @@ class Exporter(object):
             if resource.title is not None:
                 dataset.title = force_text(resource.title)[:31]  # maximum of 31 chars int title
             else:
-                dataset.title = u'{name} ({app}.{model})'.format(
+                dataset.title = '{name} ({app}.{model})'.format(
                     name=model._meta.verbose_name_plural,
                     app=model._meta.app_label,
                     model=model.__name__

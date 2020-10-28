@@ -1,4 +1,3 @@
-from builtins import object
 from django.conf import settings
 
 from django.contrib.gis.geos import Point
@@ -41,7 +40,7 @@ class CountrySerializer(serializers.ModelSerializer):
     code = serializers.CharField(source='alpha2_code')
     oda = serializers.BooleanField(source='oda_recipient')
 
-    class Meta(object):
+    class Meta:
         model = Country
         fields = ('id', 'name', 'code', 'oda')
 
@@ -53,16 +52,16 @@ class LocationSerializer(serializers.ModelSerializer):
 
     static_map_url = StaticMapsField(source='position')
 
-    class Meta(object):
+    class Meta:
         model = Location
         fields = ('id', 'name', 'description', 'image', 'latitude', 'longitude', 'static_map_url')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'locations'
 
 
 class PlaceSerializer(serializers.ModelSerializer):
-    class Meta(object):
+    class Meta:
         model = Place
         fields = (
             'id', 'street', 'street_number', 'locality', 'province', 'country',
@@ -74,11 +73,11 @@ class InitiativeCountrySerializer(ModelSerializer):
     code = serializers.CharField(source='alpha2_code')
     oda = serializers.BooleanField(source='oda_recipient')
 
-    class Meta(object):
+    class Meta:
         model = Country
         fields = ('id', 'name', 'code', 'oda')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'countries'
 
 
@@ -89,14 +88,14 @@ class InitiativePlaceSerializer(ModelSerializer):
         'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = InitiativePlace
         fields = (
             'id', 'street', 'street_number', 'locality', 'province', 'country',
             'position', 'formatted_address',
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = ['country', ]
         resource_name = 'places'
 
@@ -115,7 +114,7 @@ class PointSerializer(serializers.CharField):
         try:
             point = Point(float(data['longitude']), float(data['latitude']))
         except ValueError as e:
-            raise serializers.ValidationError("Invalid point. {}".format(e))
+            raise serializers.ValidationError(f"Invalid point. {e}")
         return point
 
 
@@ -136,7 +135,7 @@ class GeolocationSerializer(ModelSerializer):
         'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer'
     }
 
-    class Meta(object):
+    class Meta:
         model = Geolocation
         fields = (
             'id', 'street', 'street_number',
@@ -147,7 +146,7 @@ class GeolocationSerializer(ModelSerializer):
             'formatted_address',
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'country',
             'position'

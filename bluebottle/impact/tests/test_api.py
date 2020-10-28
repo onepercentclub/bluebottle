@@ -1,5 +1,3 @@
-# coding=utf-8
-from builtins import str
 import json
 
 from django.contrib.auth.models import Group, Permission
@@ -19,7 +17,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 class ImpactTypeListAPITestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(ImpactTypeListAPITestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.types = ImpactTypeFactory.create_batch(10)
         self.url = reverse('impact-type-list')
@@ -77,7 +75,7 @@ class ImpactTypeListAPITestCase(BluebottleTestCase):
 
 class ImpactGoalListAPITestCase(BluebottleTestCase):
     def setUp(self):
-        super(ImpactGoalListAPITestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.activity = EventFactory.create()
         self.type = ImpactTypeFactory.create()
@@ -163,7 +161,7 @@ class ImpactGoalListAPITestCase(BluebottleTestCase):
 
 class ImpactGoalDetailsAPITestCase(BluebottleTestCase):
     def setUp(self):
-        super(ImpactGoalDetailsAPITestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.activity = EventFactory.create()
         self.type = ImpactTypeFactory.create()

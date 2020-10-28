@@ -1,5 +1,3 @@
-# coding=utf-8
-from builtins import object
 import os
 
 from djmoney.money import Money
@@ -29,11 +27,11 @@ from bluebottle.utils.models import Language
 factory = RequestFactory()
 
 
-class MockRequest(object):
+class MockRequest:
     pass
 
 
-class MockUser(object):
+class MockUser:
     def __init__(self, perms=None, is_staff=True, is_superuser=False, groups=None):
         self.perms = perms or []
         self.is_superuser = is_superuser
@@ -46,7 +44,7 @@ class MockUser(object):
 
 class GroupAdminTest(BluebottleAdminTestCase):
     def setUp(self):
-        super(GroupAdminTest, self).setUp()
+        super().setUp()
         self.group_url = reverse('admin:auth_group_change', args=(1,))
 
     def test_prepare(self):
@@ -57,7 +55,7 @@ class GroupAdminTest(BluebottleAdminTestCase):
 @override_settings(SEND_WELCOME_MAIL=False)
 class MemberAdminTest(BluebottleAdminTestCase):
     def setUp(self):
-        super(MemberAdminTest, self).setUp()
+        super().setUp()
         self.add_member_url = reverse('admin:members_member_add')
         self.client.force_login(self.superuser)
 
@@ -143,7 +141,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [user.email])
         self.assertTrue(
-            'Welcome {}'.format(user.first_name) in welcome_email.body
+            f'Welcome {user.first_name}' in welcome_email.body
         )
 
     def test_resend_welcome_anonymous(self):
@@ -161,7 +159,7 @@ class MemberCustomFieldAdminTest(BluebottleAdminTestCase):
     """
 
     def setUp(self):
-        super(MemberCustomFieldAdminTest, self).setUp()
+        super().setUp()
         self.client.force_login(self.superuser)
 
     def test_load_custom_fields(self):
@@ -195,7 +193,7 @@ class MemberFormAdminTest(BluebottleAdminTestCase):
     """
 
     def setUp(self):
-        super(MemberFormAdminTest, self).setUp()
+        super().setUp()
         self.client.force_login(self.superuser)
         self.staff = BlueBottleUserFactory.create(is_staff=True)
 
@@ -258,7 +256,7 @@ class MemberFormAdminTest(BluebottleAdminTestCase):
 
 class MemberAdminFieldsTest(BluebottleTestCase):
     def setUp(self):
-        super(MemberAdminFieldsTest, self).setUp()
+        super().setUp()
         self.request = RequestFactory().get('/')
         self.request.user = MockUser()
 
@@ -267,23 +265,23 @@ class MemberAdminFieldsTest(BluebottleTestCase):
 
     def test_readonly_fields(self):
         fields = self.member_admin.get_readonly_fields(self.request, self.member)
-        expected_fields = set((
+        expected_fields = {
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'events', 'assignments', 'funding',
             'is_superuser'
-        ))
+        }
 
         self.assertEqual(expected_fields, set(fields))
 
     def test_readonly_fields_create(self):
         fields = self.member_admin.get_readonly_fields(self.request)
-        expected_fields = set((
+        expected_fields = {
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link',
             'reset_password', 'resend_welcome_link',
             'initiatives', 'events', 'assignments', 'funding',
             'is_superuser'
-        ))
+        }
 
         self.assertEqual(expected_fields, set(fields))
 
@@ -323,7 +321,7 @@ class MemberAdminExportTest(BluebottleTestCase):
     """
 
     def setUp(self):
-        super(MemberAdminExportTest, self).setUp()
+        super().setUp()
         self.init_projects()
         self.request_factory = RequestFactory()
         self.request = self.request_factory.post('/')
@@ -359,14 +357,14 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(user_data[0], 'malle-eppie')
         self.assertEqual(user_data[7], 'True')
         self.assertEqual(user_data[8], 'True')
-        self.assertEqual(user_data[9], u'35.00 €')
+        self.assertEqual(user_data[9], '35.00 €')
         self.assertEqual(user_data[10], '47.0')
         self.assertEqual(user_data[13], 'Fine')
 
     def test_member_unicode_export(self):
         member = BlueBottleUserFactory.create(username='stimpy')
         friend = CustomMemberFieldSettings.objects.create(name='Best friend')
-        CustomMemberField.objects.create(member=member, value=u'Ren Höek', field=friend)
+        CustomMemberField.objects.create(member=member, value='Ren Höek', field=friend)
 
         export_action = self.member_admin.actions[0]
         response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
@@ -379,13 +377,13 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(headers[0], 'username')
         self.assertEqual(headers[12], 'Best friend')
         self.assertEqual(data[0], 'stimpy')
-        self.assertEqual(data[12], u'Ren Höek')
+        self.assertEqual(data[12], 'Ren Höek')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)
 class AccountMailAdminTest(BluebottleAdminTestCase):
     def setUp(self):
-        super(AccountMailAdminTest, self).setUp()
+        super().setUp()
         self.add_member_url = reverse('admin:members_member_add')
         self.client.force_login(self.superuser)
 
@@ -459,25 +457,25 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.bg'])
         # BG translations not set so we should receive default language translation
-        self.assertEqual(welcome_email.subject, u'You have been assimilated to Test')
-        self.assertTrue(u'You are no longer Bob.' in welcome_email.body)
-        self.assertTrue(u'We are borg' in welcome_email.body)
+        self.assertEqual(welcome_email.subject, 'You have been assimilated to Test')
+        self.assertTrue('You are no longer Bob.' in welcome_email.body)
+        self.assertTrue('We are borg' in welcome_email.body)
 
         # Now set BG translations
         self.message.set_current_language('bg')
-        self.message.subject = u'Асимилирани сте към {site_name}'
-        self.message.body_html = u'Ти вече не си {first_name}.<br/><h1>Ние сме Борг</h1>'
-        self.message.body_txt = u'Ти вече не си {first_name}.\nНие сме Борг'
+        self.message.subject = 'Асимилирани сте към {site_name}'
+        self.message.body_html = 'Ти вече не си {first_name}.<br/><h1>Ние сме Борг</h1>'
+        self.message.body_txt = 'Ти вече не си {first_name}.\nНие сме Борг'
         self.message.save()
         mail.outbox = []
 
         BlueBottleUserFactory.create(
-            first_name=u'Бубка',
+            first_name='Бубка',
             email='bubka@bob.bg',
             primary_language='bg'
         )
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bubka@bob.bg'])
-        self.assertEqual(welcome_email.subject, u'Асимилирани сте към Test')
-        self.assertTrue(u'Ти вече не си Бубка.' in welcome_email.body)
-        self.assertTrue(u'Ние сме Борг' in welcome_email.body)
+        self.assertEqual(welcome_email.subject, 'Асимилирани сте към Test')
+        self.assertTrue('Ти вече не си Бубка.' in welcome_email.body)
+        self.assertTrue('Ние сме Борг' in welcome_email.body)

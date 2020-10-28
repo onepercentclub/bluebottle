@@ -1,4 +1,3 @@
-from builtins import str
 import datetime
 
 from django import template

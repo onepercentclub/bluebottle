@@ -24,11 +24,13 @@ class VerboseForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
             obj = self.rel.to._default_manager.using(self.db).get(
                 **{key: value})
             change_url = reverse(
-                "admin:{0}_{1}_change".format(obj._meta.app_label,
-                                              obj._meta.object_name.lower()),
+                "admin:{}_{}_change".format(
+                    obj._meta.app_label,
+                    obj._meta.object_name.lower()
+                ),
                 args=(obj.pk,)
             )
-            return u'&nbsp;<strong><a href="{0}">{1}</a></strong>'.format(
+            return '&nbsp;<strong><a href="{}">{}</a></strong>'.format(
                 change_url, escape(obj))
         except (ValueError, self.rel.to.DoesNotExist):
             return '???'
@@ -45,16 +47,18 @@ class VerboseManyToManyRawIdWidget(ManyToManyRawIdWidget):
                     **{key: v})
                 x = smart_unicode(obj)
                 change_url = reverse(
-                    "admin:{0}_{1}_change".format(obj._meta.app_label,
-                                                  obj._meta.object_name.lower()),
+                    "admin:{}_{}_change".format(
+                        obj._meta.app_label,
+                        obj._meta.object_name.lower()
+                    ),
                     args=(obj.pk,)
                 )
                 str_values += [
-                    '<strong><a href="{0}">{1}</a></strong>'.format(change_url,
-                                                                    escape(x))]
+                    '<strong><a href="{}">{}</a></strong>'.format(change_url,
+                                                                  escape(x))]
             except self.rel.to.DoesNotExist:
-                str_values += [u'???']
-        return u', '.join(str_values)
+                str_values += ['???']
+        return ', '.join(str_values)
 
 
 class ImprovedModelForm(admin.ModelAdmin):
@@ -69,5 +73,7 @@ class ImprovedModelForm(admin.ModelAdmin):
                 kwargs['widget'] = VerboseManyToManyRawIdWidget(db_field.rel,
                                                                 site)
             return db_field.formfield(**kwargs)
-        return super(ImprovedModelForm, self).formfield_for_dbfield(db_field,
-                                                                    **kwargs)
+        return super().formfield_for_dbfield(
+            db_field,
+            **kwargs
+        )

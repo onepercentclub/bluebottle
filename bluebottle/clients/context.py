@@ -9,7 +9,7 @@ class ClientContext(Context):
     ContextProcessor goodness
     """
     def __init__(self, *args, **kw):
-        super(ClientContext, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         try:
             self.update({
                 'TENANT_MAIL_PROPERTIES': properties.TENANT_MAIL_PROPERTIES,

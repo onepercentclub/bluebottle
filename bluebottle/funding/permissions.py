@@ -6,7 +6,7 @@ class DonationOwnerPermission(IsOwner):
         if not request.user.is_authenticated and request.auth and obj.client_secret:
             return obj.client_secret == request.auth
 
-        return super(DonationOwnerPermission, self).has_object_permission(request, view, obj)
+        return super().has_object_permission(request, view, obj)
 
 
 class PaymentPermission(IsOwner):
@@ -14,7 +14,7 @@ class PaymentPermission(IsOwner):
         if not request.user.is_authenticated and request.auth and obj.donation.client_secret:
             return obj.donation.client_secret == request.auth
 
-        return super(PaymentPermission, self).has_object_permission(request, view, obj.donation)
+        return super().has_object_permission(request, view, obj.donation)
 
 
 class CanExportSupportersPermission(IsOwner):

@@ -15,7 +15,7 @@ class QuoteList(generics.ListAPIView):
     filter_fields = ('language',)
 
     def get_queryset(self):
-        qs = super(QuoteList, self).get_queryset()
+        qs = super().get_queryset()
         qs = qs.filter(status=Quote.QuoteStatus.published)
         qs = qs.filter(publication_date__lte=now())
         qs = qs.filter(Q(publication_end_date__gte=now()) | Q(

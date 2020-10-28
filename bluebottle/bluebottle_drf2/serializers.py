@@ -38,7 +38,7 @@ class RestrictedImageField(serializers.ImageField):
             # that bring the application down.
             raise ValidationError(self.error_messages['invalid_image'])
 
-        return super(RestrictedImageField, self).to_internal_value(data)
+        return super().to_internal_value(data)
 
 
 class SorlImageField(RestrictedImageField):
@@ -50,7 +50,7 @@ class SorlImageField(RestrictedImageField):
             'colorspace': colorspace,
         }
 
-        super(SorlImageField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def to_representation(self, value):
         if not value:
@@ -73,7 +73,7 @@ class SorlImageField(RestrictedImageField):
         # so we need to deal with exceptions like is done in the template tag.
         try:
             thumbnail = get_thumbnail(value, self.geometry_string, **self.sorl_options)
-        except IOError:
+        except OSError:
             return ""
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
@@ -93,7 +93,7 @@ class ContentTextField(serializers.CharField):
 
     def to_representation(self, value):
         # Convert model instance text -> text for reading.
-        text = super(ContentTextField, self).to_representation(value)
+        text = super().to_representation(value)
         # This is equivalent to the django template filter:
         # '{{ value|urlize|linebreaks }}'. Note: Text from the
         # database is escaped again here (on read) just as a
@@ -104,14 +104,14 @@ class ContentTextField(serializers.CharField):
 
     def to_internal_value(self, value):
         # Convert text -> model instance text for writing.
-        text = super(ContentTextField, self).to_internal_value(value)
+        text = super().to_internal_value(value)
         # HTML tags are stripped and any HTML / JS that is left is escaped.
         return strip_tags(text)
 
 
 class OEmbedField(serializers.Field):
     def __init__(self, source, maxwidth=None, maxheight=None, **kwargs):
-        super(OEmbedField, self).__init__(source)
+        super().__init__(source)
         self.params = getattr(settings, 'MICAWBER_DEFAULT_SETTINGS', {})
         self.params.update(kwargs)
         # enforce HTTPS, see https://groups.google.com/forum/?fromgroups
@@ -244,7 +244,7 @@ class PrivateFileSerializer(FileSerializer):
         self.file_attr = file_attr
         self.filename = filename
 
-        super(PrivateFileSerializer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_attribute(self, value):
         return value  # Just pass the whole object back

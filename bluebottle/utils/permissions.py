@@ -47,7 +47,7 @@ class BasePermission(permissions.BasePermission):
             model_cls = view.model
         except AttributeError:
             message = (
-                'The related view `{}` does not have a model property.'.format(view.__class__.__name__),
+                f'The related view `{view.__class__.__name__}` does not have a model property.',
                 'Is this a legacy view using ResourcePermissions?'
             )
             raise PermissionsException(' '.join(message))
@@ -81,12 +81,12 @@ class BasePermission(permissions.BasePermission):
             )
         except TypeError as err:
             message = (
-                '{} not implemented correctly.'.format(self.__class__.__name__),
-                'Error: {}'.format(err.message)
+                f'{self.__class__.__name__} not implemented correctly.',
+                f'Error: {err.message}'
             )
             raise PermissionsException(' '.join(message))
         except PermissionsException:
-            return super(BasePermission, self).has_permission(request, view)
+            return super().has_permission(request, view)
 
     def has_parent_permission(self, method, user, parent, model=None):
         """
@@ -102,7 +102,7 @@ class BasePermission(permissions.BasePermission):
         Used by both the DRF permission system and for returning permissions to the user.
         """
 
-        message = 'has_object_action_permission() must be implemented on {}'.format(self)
+        message = f'has_object_action_permission() must be implemented on {self}'
         raise NotImplementedError(message)
 
     def has_action_permission(self, action, user, model_cls):
@@ -111,7 +111,7 @@ class BasePermission(permissions.BasePermission):
         Used by both the DRF permission system and for returning permissions to the user.
         """
 
-        message = 'has_action_permission() must be implemented on {}'.format(self)
+        message = f'has_action_permission() must be implemented on {self}'
         raise NotImplementedError(message)
 
 

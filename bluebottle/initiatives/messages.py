@@ -134,4 +134,4 @@ class InitiativeWallpostFollowerMessage(TransitionMessage):
                 user__in=(self.obj.author, initiative.owner)
             )
 
-        return set(follow.user for follow in follows)
+        return {follow.user for follow in follows}

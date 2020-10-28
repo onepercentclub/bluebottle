@@ -14,7 +14,7 @@ from bluebottle.test.factory_models.slides import SlideFactory, DraftSlideFactor
 class SlideTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(SlideTestCase, self).setUp()
+        super().setUp()
         self.user = BlueBottleUserFactory.create()
         self.slide1 = SlideFactory.create(
             author=self.user,

@@ -1,4 +1,3 @@
-from builtins import object
 from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
@@ -50,7 +49,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = Activity
         meta_fields = (
             'permissions',
@@ -59,7 +58,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
             'updated',
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'owner',
             'initiative',
@@ -94,7 +93,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         'initiative.organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = Activity
         meta_fields = (
             'permissions',
@@ -105,7 +104,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
             'required',
         )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'owner',
             'image',
@@ -128,7 +127,7 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
         TinyFundingSerializer
     ]
 
-    class Meta(object):
+    class Meta:
         model = Activity
         fields = ('id', 'slug', 'title', )
         meta_fields = (
@@ -148,13 +147,13 @@ class ContributionSerializer(PolymorphicModelSerializer):
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'user',
             'activity',
         ]
 
-    class Meta(object):
+    class Meta:
         model = Contribution
         meta_fields = (
             'created', 'updated',
@@ -173,13 +172,13 @@ class ContributionListSerializer(PolymorphicModelSerializer):
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'user',
             'activity',
         ]
 
-    class Meta(object):
+    class Meta:
         model = Contribution
         meta_fields = (
             'created', 'updated',
@@ -194,7 +193,7 @@ class ActivityTransitionSerializer(TransitionSerializer):
         'resource': 'bluebottle.activities.serializers.ActivitySerializer',
     }
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = ['resource']
         resource_name = 'activities/transitions'
 
@@ -212,11 +211,11 @@ class RelatedActivityImageSerializer(ModelSerializer):
         'image': 'bluebottle.activities.serializers.RelatedActivityImageContentSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = RelatedImage
         fields = ('image', 'resource', )
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = [
             'resource', 'image',
         ]

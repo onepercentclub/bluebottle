@@ -1,6 +1,5 @@
-from builtins import str
 import json
-import mock
+from unittest import mock
 
 import munch
 from django.db import connection
@@ -26,7 +25,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 class StripePaymentIntentTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(StripePaymentIntentTestCase, self).setUp()
+        super().setUp()
         StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
@@ -71,13 +70,13 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
                 metadata={
-                    'tenant_name': u'test',
+                    'tenant_name': 'test',
                     'activity_id': self.donation.activity.pk,
                     'activity_title': self.donation.activity.title,
-                    'tenant_domain': u'testserver'
+                    'tenant_domain': 'testserver'
                 },
-                statement_descriptor=u'Test',
-                statement_descriptor_suffix=u'Test',
+                statement_descriptor='Test',
+                statement_descriptor_suffix='Test',
                 transfer_data={
                     'destination': self.bank_account.connect_account.account_id
                 }
@@ -109,14 +108,14 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
                 metadata={
-                    'tenant_name': u'test',
+                    'tenant_name': 'test',
                     'activity_id': self.donation.activity.pk,
                     'activity_title': self.donation.activity.title,
-                    'tenant_domain': u'testserver'
+                    'tenant_domain': 'testserver'
                 },
                 on_behalf_of=self.bank_account.connect_account.account_id,
-                statement_descriptor=u'Test',
-                statement_descriptor_suffix=u'Test',
+                statement_descriptor='Test',
+                statement_descriptor_suffix='Test',
                 transfer_data={
                     'destination': self.bank_account.connect_account.account_id
                 }
@@ -139,7 +138,7 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
             response = self.client.post(
                 self.intent_url,
                 data=json.dumps(self.data),
-                HTTP_AUTHORIZATION='Donation {}'.format(self.donation.client_secret)
+                HTTP_AUTHORIZATION=f'Donation {self.donation.client_secret}'
             )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -188,7 +187,7 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
 class StripeSourcePaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(StripeSourcePaymentTestCase, self).setUp()
+        super().setUp()
         StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
@@ -242,7 +241,7 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
             response = self.client.post(
                 self.payment_url,
                 data=json.dumps(self.data),
-                HTTP_AUTHORIZATION='Donation {}'.format(self.donation.client_secret)
+                HTTP_AUTHORIZATION=f'Donation {self.donation.client_secret}'
             )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -274,7 +273,7 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
 
 class ConnectAccountDetailsTestCase(BluebottleTestCase):
     def setUp(self):
-        super(ConnectAccountDetailsTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         country = 'NL'
@@ -389,13 +388,13 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 requested_capabilities=['transfers'],
                 settings={
                     'card_payments': {
-                        'statement_descriptor_prefix': u'tst--'
+                        'statement_descriptor_prefix': 'tst--'
                     },
                     'payments': {
-                        'statement_descriptor': u'tst--'
+                        'statement_descriptor': 'tst--'
                     },
                     'payouts': {
-                        'statement_descriptor': u'tst--',
+                        'statement_descriptor': 'tst--',
                         'schedule': {'interval': 'manual'}
                     }
                 },
@@ -422,12 +421,12 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.assertEqual(
             data['data']['meta']['required-fields'],
             [
-                u'country',
-                u'external_accounts',
-                u'individual.verification.additional_document',
-                u'document_type',
-                u'individual.verification.document.front',
-                u'individual.dob'
+                'country',
+                'external_accounts',
+                'individual.verification.additional_document',
+                'document_type',
+                'individual.verification.document.front',
+                'individual.dob'
             ]
         )
         self.assertEqual(
@@ -494,13 +493,13 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 requested_capabilities=['transfers', 'card_payments'],
                 settings={
                     'card_payments': {
-                        'statement_descriptor_prefix': u'tst--'
+                        'statement_descriptor_prefix': 'tst--'
                     },
                     'payments': {
-                        'statement_descriptor': u'tst--'
+                        'statement_descriptor': 'tst--'
                     },
                     'payouts': {
-                        'statement_descriptor': u'tst--',
+                        'statement_descriptor': 'tst--',
                         'schedule': {'interval': 'manual'}
                     }
                 },
@@ -547,12 +546,12 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.assertEqual(
             data['data']['meta']['required-fields'],
             [
-                u'country',
-                u'external_accounts',
-                u'individual.verification.additional_document',
-                u'document_type',
-                u'individual.verification.document.front',
-                u'individual.dob'
+                'country',
+                'external_accounts',
+                'individual.verification.additional_document',
+                'document_type',
+                'individual.verification.document.front',
+                'individual.dob'
             ]
         )
         self.assertEqual(
@@ -679,7 +678,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
 
 class ExternalAccountsTestCase(BluebottleTestCase):
     def setUp(self):
-        super(ExternalAccountsTestCase, self).setUp()
+        super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         account_id = 'some-account-id'

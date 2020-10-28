@@ -20,14 +20,14 @@ class LipishaPaymentList(PaymentList):
     serializer_class = LipishaPaymentSerializer
 
     def perform_create(self, serializer):
-        super(LipishaPaymentList, self).perform_create(serializer)
+        super().perform_create(serializer)
         initiate_push_payment(serializer.save())
 
     def post(self, request, **kwargs):
         try:
-            return super(LipishaPaymentList, self).post(request, **kwargs)
+            return super().post(request, **kwargs)
         except PaymentException as e:
-            return HttpResponseBadRequest('Error creating payment: {}'.format(e.message))
+            return HttpResponseBadRequest(f'Error creating payment: {e.message}')
 
 
 class LipishaWebHookView(View):

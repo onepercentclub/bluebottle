@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from datetime import timedelta
 
 from django.core import mail
@@ -16,7 +15,7 @@ from bluebottle.test.utils import BluebottleTestCase
 
 class AssignmentStateMachineTestCase(BluebottleTestCase):
     def setUp(self):
-        super(AssignmentStateMachineTestCase, self).setUp()
+        super().setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
             activity_types=['assignment']
         )
@@ -102,7 +101,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'Your task "{}" has expired'.format(self.assignment.title)
+            f'Your task "{self.assignment.title}" has expired'
         )
         self.assertTrue('nobody applied to your task' in mail.outbox[0].body)
 
@@ -114,10 +113,10 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'Your task "{}" has been cancelled'.format(self.assignment.title)
+            f'Your task "{self.assignment.title}" has been cancelled'
         )
         self.assertTrue(
-            u'Unfortunately your task “{}” has been cancelled.'.format(
+            'Unfortunately your task “{}” has been cancelled.'.format(
                 self.assignment.title
             )
             in mail.outbox[0].body
@@ -140,10 +139,10 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(self.assignment.status, AssignmentStateMachine.rejected.value)
         self.assertEqual(
             mail.outbox[0].subject,
-            'Your task "{}" has been rejected'.format(self.assignment.title)
+            f'Your task "{self.assignment.title}" has been rejected'
         )
         self.assertTrue(
-            u'Unfortunately your task “{}” has been rejected.'.format(
+            'Unfortunately your task “{}” has been rejected.'.format(
                 self.assignment.title
             )
             in mail.outbox[0].body
@@ -189,7 +188,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(self.assignment.status, AssignmentStateMachine.succeeded.value)
         self.assertEqual(
             mail.outbox[-1].subject,
-            u'Your task "{}" has been successfully completed! 🎉'.format(self.assignment.title)
+            f'Your task "{self.assignment.title}" has been successfully completed! 🎉'
         )
         self.assertTrue('You did it!' in mail.outbox[-1].body)
 
@@ -231,7 +230,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 3)
         self.assertEqual(
             mail.outbox[0].subject,
-            'The date of your task "{}" has been changed.'.format(assignment.title)
+            f'The date of your task "{assignment.title}" has been changed.'
         )
 
     def test_change_deadline(self):
@@ -254,7 +253,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 3)
         self.assertEqual(
             mail.outbox[0].subject,
-            'The deadline for your task "{}" has been changed.'.format(assignment.title)
+            f'The deadline for your task "{assignment.title}" has been changed.'
         )
 
     def test_fill_capacity(self):
@@ -316,7 +315,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
 
 class ApplicantStateMachineTestCase(BluebottleTestCase):
     def setUp(self):
-        super(ApplicantStateMachineTestCase, self).setUp()
+        super().setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
             activity_types=['assignment']
         )
@@ -348,11 +347,11 @@ class ApplicantStateMachineTestCase(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Someone applied to your task "{}"! 🙌'.format(self.assignment.title)
+            f'Someone applied to your task "{self.assignment.title}"! 🙌'
         )
 
         self.assertTrue(
-            '{} applied to '.format(self.applicant.user.first_name)
+            f'{self.applicant.user.first_name} applied to '
             in mail.outbox[0].body
         )
 
@@ -387,7 +386,7 @@ class ApplicantStateMachineTestCase(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'You have been accepted for the task "{}"!'.format(
+            'You have been accepted for the task "{}"!'.format(
                 self.assignment.title
             )
         )
@@ -408,11 +407,11 @@ class ApplicantStateMachineTestCase(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Someone applied to your task "{}"! 🙌'.format(self.assignment.title)
+            f'Someone applied to your task "{self.assignment.title}"! 🙌'
         )
 
         self.assertTrue(
-            '{} applied to '.format(self.applicant.user.first_name)
+            f'{self.applicant.user.first_name} applied to '
             in mail.outbox[0].body
         )
 

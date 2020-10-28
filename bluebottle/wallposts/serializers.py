@@ -1,4 +1,3 @@
-from builtins import object
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
@@ -22,7 +21,7 @@ class ReactionSerializer(serializers.ModelSerializer):
     text = ContentTextField()
     wallpost = serializers.PrimaryKeyRelatedField(queryset=Wallpost.objects)
 
-    class Meta(object):
+    class Meta:
         model = Reaction
         fields = ('created', 'author', 'text', 'id', 'wallpost')
 
@@ -54,7 +53,7 @@ class WallpostDonationSerializer(serializers.ModelSerializer):
     user = UserPreviewSerializer()
     type = serializers.SerializerMethodField()
 
-    class Meta(object):
+    class Meta:
         model = Donation
         fields = (
             'type',
@@ -73,7 +72,7 @@ class WallpostDonationSerializer(serializers.ModelSerializer):
         """
         If the donation is anonymous, we do not return the user.
         """
-        fields = super(WallpostDonationSerializer, self).get_fields()
+        fields = super().get_fields()
         if isinstance(self.instance, Donation) and self.instance.anonymous:
             del fields['user']
         return fields
@@ -96,12 +95,12 @@ class WallpostSerializerBase(serializers.ModelSerializer):
     def to_representation(self, instance):
         # We want to connect a donation by just sending the id,
         # but reading we want an embedded object, so we do a little trick here.
-        response = super(WallpostSerializerBase, self).to_representation(instance)
+        response = super().to_representation(instance)
         if instance.donation:
             response['donation'] = WallpostDonationSerializer(instance.donation, context=self.context).data
         return response
 
-    class Meta(object):
+    class Meta:
         fields = ('id', 'type', 'author', 'created', 'reactions',
                   'parent_type', 'parent_id', 'pinned', 'donation',
                   'email_followers', 'share_with_facebook',
@@ -122,7 +121,7 @@ class MediaWallpostPhotoSerializer(serializers.ModelSerializer):
 
         return data
 
-    class Meta(object):
+    class Meta:
         model = MediaWallpostPhoto
         fields = ('id', 'photo', 'mediawallpost')
 
@@ -142,7 +141,7 @@ class MediaWallpostSerializer(WallpostSerializerBase):
     photos = MediaWallpostPhotoSerializer(many=True, required=False)
     video_url = serializers.CharField(required=False, allow_blank=True)
 
-    class Meta(object):
+    class Meta:
         model = MediaWallpost
         fields = WallpostSerializerBase.Meta.fields + ('text', 'video_html',
                                                        'video_url', 'photos')
@@ -156,7 +155,7 @@ class TextWallpostSerializer(WallpostSerializerBase):
     """
     text = ContentTextField()
 
-    class Meta(object):
+    class Meta:
         model = TextWallpost
         fields = WallpostSerializerBase.Meta.fields + ('text',)
 
@@ -172,7 +171,7 @@ class TextWallpostSerializer(WallpostSerializerBase):
 
 class WallpostRelatedField(serializers.RelatedField):
     def to_representation(self, obj):
-        return super(WallpostRelatedField, self).to_representation(obj)
+        return super().to_representation(obj)
 
 
 class SystemWallpostSerializer(WallpostSerializerBase):
@@ -186,7 +185,7 @@ class SystemWallpostSerializer(WallpostSerializerBase):
     # related_type = serializers.CharField(source='related_type.model')
     # related_object = WallpostRelatedField(source='related_object')
 
-    class Meta(object):
+    class Meta:
         model = TextWallpost
         fields = WallpostSerializerBase.Meta.fields + ('text',)
 
@@ -205,9 +204,9 @@ class WallpostSerializer(serializers.ModelSerializer):
             return MediaWallpostSerializer(obj, context=self.context).to_representation(obj)
         elif isinstance(obj, SystemWallpost):
             return SystemWallpostSerializer(obj, context=self.context).to_representation(obj)
-        return super(WallpostSerializer, self).to_representation(obj)
+        return super().to_representation(obj)
 
-    class Meta(object):
+    class Meta:
         model = Wallpost
         fields = ('id', 'type', 'author', 'created',
                   'email_followers', 'share_with_facebook',

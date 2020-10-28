@@ -1,7 +1,6 @@
 """
 ContentItem models for custom django-fluent-contents plugins.
 """
-from builtins import object
 
 from future.utils import python_2_unicode_compatible
 
@@ -27,9 +26,9 @@ class PictureItem(ContentItem):
     align = models.CharField(_("Align"), max_length=50,
                              choices=PictureAlignment.choices)
 
-    class Meta(object):
+    class Meta:
         verbose_name = _("Picture")
         verbose_name_plural = _("Pictures")
 
     def __str__(self):
-        return self.image.name if self.image else u'(no image)'
+        return self.image.name if self.image else '(no image)'

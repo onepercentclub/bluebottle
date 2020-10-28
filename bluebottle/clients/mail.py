@@ -26,7 +26,7 @@ def construct_from_header():
     if not mail_address:
         return None
 
-    return "{0} <{1}>".format(mail_name, mail_address)
+    return f"{mail_name} <{mail_address}>"
 
 
 class EmailMultiAlternatives(BaseEmailMultiAlternatives):
@@ -46,4 +46,4 @@ class EmailMultiAlternatives(BaseEmailMultiAlternatives):
         if not from_email:
             from_email = construct_from_header()
 
-        super(EmailMultiAlternatives, self).__init__(from_email=from_email, headers=headers, *args, **kwargs)
+        super().__init__(from_email=from_email, headers=headers, *args, **kwargs)

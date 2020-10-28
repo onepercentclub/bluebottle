@@ -11,7 +11,7 @@ class ExportDBForm(forms.Form):
                               widget=widgets.AdminDateWidget)
 
     def clean(self):
-        cleaned_data = super(ExportDBForm, self).clean()
+        cleaned_data = super().clean()
         frm, to = cleaned_data.get('from_date'), cleaned_data.get('to_date')
         if frm and to:
             if to < frm:

@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from builtins import str
 from django.contrib.admin.sites import AdminSite
 from django.urls.base import reverse
 from rest_framework import status
@@ -13,7 +10,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase
 
 class TestAssignmentAdmin(BluebottleAdminTestCase):
     def setUp(self):
-        super(TestAssignmentAdmin, self).setUp()
+        super().setUp()
         self.site = AdminSite()
         self.assignment_admin = AssignmentAdmin(Assignment, self.site)
         self.assignment = AssignmentFactory.create(status='created', end_date_type='on_date', preparation=5,)

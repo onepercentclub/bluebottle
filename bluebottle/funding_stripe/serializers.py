@@ -1,4 +1,3 @@
-from builtins import object
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
@@ -21,7 +20,7 @@ class PaymentIntentSerializer(serializers.ModelSerializer):
         'donation': 'bluebottle.funding.serializers.DonationSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = PaymentIntent
         fields = ('intent_id', 'client_secret', 'donation')
 
@@ -56,7 +55,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    class Meta(object):
+    class Meta:
         model = StripePayoutAccount
 
         fields = (
@@ -67,7 +66,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
         )
         meta_fields = ('required', 'errors', 'required_fields',)
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'payout-accounts/stripes'
 
         included_resources = ['external_accounts', 'owner']
@@ -122,7 +121,7 @@ class PayoutStripeBankSerializer(serializers.ModelSerializer):
     external_account_id = serializers.CharField(source='account_id')
     currency = serializers.CharField(read_only=True, source='account.currency')
 
-    class Meta(object):
+    class Meta:
         fields = (
             'id',
             'account_id',

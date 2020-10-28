@@ -1,7 +1,6 @@
 from future import standard_library
 
 standard_library.install_aliases()
-from builtins import object
 import binascii
 from collections import OrderedDict
 import json
@@ -20,14 +19,14 @@ from bluebottle.analytics.models import AnalyticsPlatformSettings
 from bluebottle.utils.utils import get_current_host
 
 
-class LookerSSOEmbed(object):
+class LookerSSOEmbed:
     session_length = settings.LOOKER_SESSION_LENGTH
     models = ('Projects', )
     permissions = ('see_user_dashboards', 'see_lookml_dashboards', 'access_data', 'see_looks', )
 
     def __init__(self, user, type, id):
         self.user = user
-        self._path = '/embed/{}s/{}'.format(type, id)
+        self._path = f'/embed/{type}s/{id}'
 
     @property
     def path(self):
@@ -75,7 +74,7 @@ class LookerSSOEmbed(object):
             ('nonce', self.nonce.decode()),
             ('time', self.time),
             ('session_length', self.session_length),
-            ('external_user_id', '{}-{}'.format(schema_name, self.user.id)),
+            ('external_user_id', f'{schema_name}-{self.user.id}'),
             ('permissions', self.permissions),
             ('models', self.models),
             ('access_filters', {}),

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 import json
@@ -32,31 +30,39 @@ def _send_celery_mail(msg, tenant=None, send=False):
 
         if send:
             try:
-                logger.info(u"Trying to send mail to:\n\
-                            recipients: {0}\n\
-                            from: {1}\n\
-                            subject: {2}\n\n".format(msg.to, msg.from_email,
-                                                     subject))
+                logger.info(
+                    "Trying to send mail to:\n\
+                            recipients: {}\n\
+                            from: {}\n\
+                            subject: {}\n\n".format(
+                        msg.to, msg.from_email,
+                        subject
+                    )
+                )
                 msg.send()
 
-                logger.info(u"Succesfully sent mail:\n\
-                            recipients: {0} \n\
-                            from: {1}\n\
-                            subject: {2} \n\
-                            body:{3} \n\n"
-                            .format(msg.to, msg.from_email,
-                                    subject,
-                                    body))
+                logger.info(
+                    "Succesfully sent mail:\n\
+                            recipients: {} \n\
+                            from: {}\n\
+                            subject: {} \n\
+                            body:{} \n\n"
+                    .format(
+                        msg.to, msg.from_email,
+                        subject,
+                        body
+                    )
+                )
             except Exception as e:
-                logger.error(u"Error sending mail: {0}".format(e))
+                logger.error(f"Error sending mail: {e}")
                 raise e
         else:
             logger.info((
-                u"Sending mail off. Mail task received for msg:"
-                u"recipients: {0}"
-                u"from: {1} "
-                u"subject: {2}"
-                u"body:{3}"
+                "Sending mail off. Mail task received for msg:"
+                "recipients: {}"
+                "from: {} "
+                "subject: {}"
+                "body:{}"
             ).format(
                 msg.to,
                 msg.from_email,
@@ -84,7 +90,7 @@ def update_salesforce(tenant=None,
                      csv_export=csv_export,
                      log_to_salesforce=log_to_salesforce)
     except Exception as e:
-        logger.error("Error running salesforce celery task: {0}".format(e))
+        logger.error(f"Error running salesforce celery task: {e}")
 
     logger.info("Finished updating Salesforce")
 
@@ -93,9 +99,9 @@ def update_salesforce(tenant=None,
 def _post_to_facebook(instance, tenant=None):
     """ Post a Wallpost to users Facebook page using Celery """
     logger.info("FB post for:")
-    logger.info("{0} with id {1} and tenant {2}".format(instance.__class__,
-                                                        instance.id,
-                                                        tenant.client_name))
+    logger.info("{} with id {} and tenant {}".format(instance.__class__,
+                                                     instance.id,
+                                                     tenant.client_name))
 
     if not tenant:
         return

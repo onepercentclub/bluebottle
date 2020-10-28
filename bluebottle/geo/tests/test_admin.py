@@ -1,4 +1,3 @@
-from builtins import str
 from django.contrib.admin.sites import AdminSite
 from django.contrib.gis.geos import Point
 from django.contrib.messages import get_messages
@@ -18,7 +17,7 @@ class LocationAdminTest(BluebottleTestCase):
     """ Tests for models in the geo app. """
 
     def setUp(self):
-        super(LocationAdminTest, self).setUp()
+        super().setUp()
         self.location = Location.objects.create(
             name='Amsterdam',
             position='52.3702157,52.3702157'
@@ -46,7 +45,7 @@ class GeolocationAdminTest(TestCase):
     """
 
     def setUp(self):
-        super(GeolocationAdminTest, self).setUp()
+        super().setUp()
         self.country = CountryFactory.create(name='Plopsaland')
         self.user = BlueBottleUserFactory(is_staff=True, is_superuser=True)
         self.admin_add_url = reverse('admin:geo_geolocation_add')

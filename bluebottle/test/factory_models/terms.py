@@ -1,4 +1,3 @@
-from builtins import object
 from bluebottle.terms.models import Terms, TermsAgreement
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 import factory
@@ -8,18 +7,18 @@ from datetime import timedelta
 
 
 class TermsFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Terms
         django_get_or_create = ('version',)
 
     author = factory.SubFactory(BlueBottleUserFactory)
     date = now() - timedelta(weeks=4)
-    contents = u"Apply yourself!"
+    contents = "Apply yourself!"
     version = "1.0"
 
 
 class TermsAgreementFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = TermsAgreement
 
     user = factory.SubFactory(BlueBottleUserFactory)

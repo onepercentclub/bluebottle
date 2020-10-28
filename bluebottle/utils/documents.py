@@ -7,7 +7,7 @@ class MultiTenantIndex(Index):
     @property
     def _name(self):
         if connection.tenant.schema_name != 'public':
-            return '{}-{}'.format(connection.tenant.schema_name, self.__name)
+            return f'{connection.tenant.schema_name}-{self.__name}'
         return self.__name
 
     @_name.setter

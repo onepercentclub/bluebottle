@@ -1,4 +1,3 @@
-from builtins import object
 from datetime import timedelta
 
 import factory.fuzzy
@@ -12,7 +11,7 @@ from bluebottle.test.factory_models.geo import GeolocationFactory
 
 class EventFactory(factory.DjangoModelFactory):
 
-    class Meta(object):
+    class Meta:
         model = Event
 
     title = factory.Faker('sentence')
@@ -31,7 +30,7 @@ class EventFactory(factory.DjangoModelFactory):
 
 
 class ParticipantFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Participant
 
     activity = factory.SubFactory(EventFactory)

@@ -1,4 +1,3 @@
-from builtins import str
 from django.db import models
 from django.contrib import admin
 from django.core.urlresolvers import reverse
@@ -18,10 +17,14 @@ class OrganizationInitiativeInline(admin.TabularInline):
     extra = 0
 
     def initiative_url(self, obj):
-        url = reverse('admin:{0}_{1}_change'.format(obj._meta.app_label,
-                                                    obj._meta.model_name),
-                      args=[obj.id])
-        return format_html(u"<a href='{}'>{}</a>", str(url), obj.title)
+        url = reverse(
+            'admin:{}_{}_change'.format(
+                obj._meta.app_label,
+                obj._meta.model_name
+            ),
+            args=[obj.id]
+        )
+        return format_html("<a href='{}'>{}</a>", str(url), obj.title)
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -70,6 +73,6 @@ class OrganizationAdmin(admin.ModelAdmin):
         """ Override get_inline_instances so that add form do not show inlines """
         if not obj:
             return []
-        return super(OrganizationAdmin, self).get_inline_instances(request, obj)
+        return super().get_inline_instances(request, obj)
 
     actions = (export_as_csv_action(fields=export_fields), )

@@ -1,12 +1,10 @@
-from builtins import str
-from builtins import object
 from django.utils.translation import ugettext_lazy as _
 from django.template.loader import render_to_string
 from future.utils import python_2_unicode_compatible
 
 
 @python_2_unicode_compatible
-class Effect(object):
+class Effect:
     effects = []
     save = False
     post_save = False
@@ -109,7 +107,7 @@ class BaseTransitionEffect(Effect):
         )
 
     def __repr__(self):
-        return '<Effect: {}>'.format(self.transition)
+        return f'<Effect: {self.transition}>'
 
     def __str__(self):
         return str(self.transition.target)
@@ -168,12 +166,10 @@ class BaseRelatedTransitionEffect(Effect):
 
         if value:
             try:
-                for instance in value.all().iterator():
-                    yield instance
+                yield from value.all().iterator()
             except AttributeError:
                 try:
-                    for instance in value:
-                        yield instance
+                    yield from value
                 except TypeError:
                     yield value
 
@@ -188,8 +184,8 @@ class BaseRelatedTransitionEffect(Effect):
                 effect.do(post_save, **kwargs)
 
     def all_effects(self, result=None):
-        result = super(BaseRelatedTransitionEffect, self).all_effects(result)
-        result = super(BaseRelatedTransitionEffect, self).all_effects(result)
+        result = super().all_effects(result)
+        result = super().all_effects(result)
         if self.is_valid:
             for effect in self.effects:
                 if effect not in result and effect.is_valid:

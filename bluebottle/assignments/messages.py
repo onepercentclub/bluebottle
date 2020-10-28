@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from bluebottle.notifications.messages import TransitionMessage
 from django.utils.translation import ugettext_lazy as _
 
@@ -76,7 +75,7 @@ class AssignmentClosedMessage(TransitionMessage):
 
 
 class AssignmentCompletedMessage(TransitionMessage):
-    subject = _(u'Your task "{title}" has been successfully completed! 🎉')
+    subject = _('Your task "{title}" has been successfully completed! 🎉')
     template = 'messages/assignment_completed'
     context = {
         'title': 'title'
@@ -88,7 +87,7 @@ class AssignmentCompletedMessage(TransitionMessage):
 
 
 class AssignmentApplicationMessage(TransitionMessage):
-    subject = _(u'Someone applied to your task "{assignment_title}"! 🙌')
+    subject = _('Someone applied to your task "{assignment_title}"! 🙌')
     template = 'messages/assignment_application'
     context = {
         'assignment_title': 'activity.title'

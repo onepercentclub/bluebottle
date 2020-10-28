@@ -6,7 +6,7 @@ from bluebottle.test.utils import BluebottleTestCase
 
 class LockdownTestCase(BluebottleTestCase):
     def setUp(self):
-        super(LockdownTestCase, self).setUp()
+        super().setUp()
 
     def test_lockdown_page(self):
         mw = LockdownMiddleware()

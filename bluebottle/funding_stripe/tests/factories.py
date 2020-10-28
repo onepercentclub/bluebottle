@@ -1,7 +1,6 @@
-from builtins import object
 import factory.fuzzy
 import munch
-import mock
+from unittest import mock
 
 from bluebottle.funding.tests.factories import DonationFactory
 from bluebottle.funding_stripe.models import (
@@ -14,7 +13,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
 class StripeSourcePaymentFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = StripeSourcePayment
 
     donation = factory.SubFactory(DonationFactory)
@@ -26,11 +25,11 @@ class StripeSourcePaymentFactory(factory.DjangoModelFactory):
             'client_secret': 'some client secret',
         })
         with mock.patch('stripe.Source.modify', return_value=source_payment):
-            return super(StripeSourcePaymentFactory, cls)._create(model_class, *args, **kwargs)
+            return super()._create(model_class, *args, **kwargs)
 
 
 class StripePaymentIntentFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = PaymentIntent
 
     donation = factory.SubFactory(DonationFactory)
@@ -42,11 +41,11 @@ class StripePaymentIntentFactory(factory.DjangoModelFactory):
             'client_secret': 'some client secret',
         })
         with mock.patch('stripe.PaymentIntent.create', return_value=payment_intent):
-            return super(StripePaymentIntentFactory, cls)._create(model_class, *args, **kwargs)
+            return super()._create(model_class, *args, **kwargs)
 
 
 class StripePaymentFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = StripePayment
 
     donation = factory.SubFactory(DonationFactory)
@@ -54,7 +53,7 @@ class StripePaymentFactory(factory.DjangoModelFactory):
 
 
 class StripePayoutAccountFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = StripePayoutAccount
 
     country = 'NL'
@@ -74,11 +73,11 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
         })
 
         with mock.patch('stripe.Account.create', return_value=account):
-            return super(StripePayoutAccountFactory, cls)._create(model_class, *args, **kwargs)
+            return super()._create(model_class, *args, **kwargs)
 
 
 class ExternalAccountFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = ExternalAccount
 
     connect_account = factory.SubFactory(StripePayoutAccountFactory)
@@ -86,7 +85,7 @@ class ExternalAccountFactory(factory.DjangoModelFactory):
 
 class StripePaymentProviderFactory(factory.DjangoModelFactory):
 
-    class Meta(object):
+    class Meta:
         model = StripePaymentProvider
 
     credit_card = True

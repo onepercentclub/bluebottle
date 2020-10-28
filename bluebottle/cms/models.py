@@ -65,7 +65,7 @@ class LinkPermission(models.Model):
                                   help_text=_('Should the permission be present or not to access the link?'))
 
     def __str__(self):
-        return u"{0} - {1}".format(self.permission, self.present)
+        return f"{self.permission} - {self.present}"
 
 
 @python_2_unicode_compatible
@@ -77,7 +77,7 @@ class SiteLinks(models.Model):
         verbose_name_plural = _("Site links")
 
     def __str__(self):
-        return u"Site Links {0}".format(self.language.code.upper())
+        return f"Site Links {self.language.code.upper()}"
 
 
 class LinkGroup(SortableMixin):

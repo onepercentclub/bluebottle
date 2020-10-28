@@ -1,11 +1,10 @@
-from builtins import object
 import factory.fuzzy
 
 from bluebottle.tasks.models import Skill
 
 
 class SkillFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Skill
 
-    name = factory.Sequence(lambda n: 'Skill_{0}'.format(n))
+    name = factory.Sequence(lambda n: f'Skill_{n}')

@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
-from builtins import str
-from builtins import object
 import dkim
-import mock
+from unittest import mock
 import unittest
 import uuid
 
@@ -103,7 +100,7 @@ class HashTagTestCase(unittest.TestCase):
         self.assertEqual('FooBar #Baz', clean_for_hashtag(text))
 
 
-class UserTestsMixin(object):
+class UserTestsMixin:
     """ Mixin base class for tests requiring users. """
 
     def create_user(self, email=None, password=None, **extra_fields):
@@ -307,7 +304,7 @@ class TestTenantAwareMailServer(unittest.TestCase):
             properties.DKIM_PRIVATE_KEY = DKIM_PRIVATE_KEY
 
             be = TenantAwareBackend()
-            msg = EmailMultiAlternatives(subject=u"test€", body=u"test€",
+            msg = EmailMultiAlternatives(subject="test€", body="test€",
                                          to=["test@example.com"])
 
             be.open()
@@ -408,7 +405,7 @@ class MoneySerializerTestCase(BluebottleTestCase):
 
 class TestTenantAwareParlerAppsettings(BluebottleTestCase):
     def setUp(self):
-        super(TestTenantAwareParlerAppsettings, self).setUp()
+        super().setUp()
         self.appsettings = TenantAwareParlerAppsettings()
         languages = (
             ('nl', 'Dutch'),
@@ -607,7 +604,7 @@ class TestOneOfPermission(BluebottleTestCase):
 
 class RestrictedImageFormFieldTestCase(TestCase):
     def setUp(self):
-        super(RestrictedImageFormFieldTestCase, self).setUp()
+        super().setUp()
 
         self.field = RestrictedImageFormField()
 

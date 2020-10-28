@@ -20,7 +20,7 @@ class DonationListFilter(DjangoFilterBackend):
             DonationStateMachine.activity_refunded.value
         ])
 
-        return super(DonationListFilter, self).filter_queryset(request, queryset, view)
+        return super().filter_queryset(request, queryset, view)
 
 
 class DonationAdminStatusFilter(SimpleListFilter):

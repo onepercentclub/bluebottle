@@ -1,4 +1,3 @@
-from builtins import object
 from datetime import timedelta
 
 from bluebottle.members.models import CustomMemberFieldSettings
@@ -7,20 +6,20 @@ from ..impact.models import ImpactType
 from ..segments.models import SegmentType
 
 
-class ImpactMixin(object):
+class ImpactMixin:
 
     def get_extra_fields(self):
-        return super(ImpactMixin, self).get_extra_fields() + tuple([
-            ("impact:{}".format(impact.slug), impact.name)
+        return super().get_extra_fields() + tuple([
+            (f"impact:{impact.slug}", impact.name)
             for impact in ImpactType.objects.filter(active=True).all()
         ])
 
 
-class SegmentMixin(object):
+class SegmentMixin:
 
     def get_extra_fields(self):
-        return super(SegmentMixin, self).get_extra_fields() + tuple([
-            ("segment:{}".format(segment.slug), segment.name)
+        return super().get_extra_fields() + tuple([
+            (f"segment:{segment.slug}", segment.name)
             for segment in SegmentType.objects.filter(is_active=True).all()
         ])
 
@@ -30,7 +29,7 @@ class DateRangeResource(ExportModelResource):
     select_related = None
 
     def get_queryset(self):
-        qs = super(DateRangeResource, self).get_queryset()
+        qs = super().get_queryset()
         if self.select_related:
             qs = qs.select_related(*self.select_related)
         frm, to = self.kwargs.get('from_date'), self.kwargs.get('to_date')
@@ -43,11 +42,11 @@ class UserResource(SegmentMixin, DateRangeResource):
     select_related = ('location', 'location__group')
 
     def get_queryset(self):
-        return super(UserResource, self).get_queryset().exclude(email='devteam+accounting@onepercentclub.com')
+        return super().get_queryset().exclude(email='devteam+accounting@onepercentclub.com')
 
     def get_extra_fields(self):
-        return super(UserResource, self).get_extra_fields() + tuple([
-            ("extra_{}".format(extra.name), extra.description)
+        return super().get_extra_fields() + tuple([
+            (f"extra_{extra.name}", extra.description)
             for extra in CustomMemberFieldSettings.objects.all()
         ])
 
@@ -71,7 +70,7 @@ class ApplicantResource(DateRangeResource):
 
     def get_extra_fields(self):
         return tuple([
-            ("user__extra_{}".format(extra.name), extra.description)
+            (f"user__extra_{extra.name}", extra.description)
             for extra in CustomMemberFieldSettings.objects.all()
         ])
 
@@ -89,7 +88,7 @@ class ParticipantResource(DateRangeResource):
 
     def get_extra_fields(self):
         return tuple([
-            ("user__extra_{}".format(extra.name), extra.description)
+            (f"user__extra_{extra.name}", extra.description)
             for extra in CustomMemberFieldSettings.objects.all()
         ])
 
@@ -107,6 +106,6 @@ class DonationResource(DateRangeResource):
 
     def get_extra_fields(self):
         return tuple([
-            ("user__extra_{}".format(extra.name), extra.description)
+            (f"user__extra_{extra.name}", extra.description)
             for extra in CustomMemberFieldSettings.objects.all()
         ])

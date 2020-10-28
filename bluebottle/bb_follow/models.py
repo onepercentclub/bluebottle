@@ -1,4 +1,3 @@
-from builtins import str
 from django.contrib.contenttypes import fields
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -32,4 +31,4 @@ class Follow(models.Model):
 
     def save(self, *args, **kwargs):
         if self.validate_unique():
-            super(Follow, self).save(*args, **kwargs)
+            super().save(*args, **kwargs)

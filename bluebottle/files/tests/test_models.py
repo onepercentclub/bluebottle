@@ -1,4 +1,3 @@
-from builtins import str
 from django.test import TestCase
 
 from bluebottle.files.tests.factories import ImageFactory

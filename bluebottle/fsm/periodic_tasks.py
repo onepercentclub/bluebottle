@@ -1,11 +1,9 @@
-from builtins import str
-from builtins import object
 from django.utils.translation import ugettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 
 @python_2_unicode_compatible
-class ModelPeriodicTask(object):
+class ModelPeriodicTask:
 
     def __init__(self, model, field='states'):
         self.model = model

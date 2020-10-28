@@ -1,4 +1,3 @@
-from builtins import object
 from adminsortable.admin import SortableAdmin
 from django.contrib import admin
 from django import forms
@@ -27,7 +26,7 @@ class StatisticsChildAdmin(PolymorphicChildModelAdmin):
             icon = 'default'
         else:
             icon = obj.icon
-        return format_html(u'<img src="/goodicons/impact/{}-impact.svg">', icon)
+        return format_html('<img src="/goodicons/impact/{}-impact.svg">', icon)
 
 
 class IconWidget(forms.RadioSelect):
@@ -37,7 +36,7 @@ class IconWidget(forms.RadioSelect):
 
 class ManualStatisticForm(TranslatableModelForm):
 
-    class Meta(object):
+    class Meta:
         model = ManualStatistic
         widgets = {
             'icon': IconWidget(),

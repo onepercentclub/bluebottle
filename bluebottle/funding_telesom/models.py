@@ -1,4 +1,3 @@
-from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -33,7 +32,7 @@ class TelesomPaymentProvider(PaymentProvider):
             'api_url': self.api_url
         }
 
-    class Meta(object):
+    class Meta:
         verbose_name = 'Telesom payment provider'
 
 
@@ -56,8 +55,8 @@ class TelesomPayment(Payment):
     def save(self, *args, **kwargs):
         if not self.unique_id:
             provider = TelesomPaymentProvider.objects.get()
-            self.unique_id = "{}-{}".format(provider.prefix, self.donation.id)
-        super(TelesomPayment, self).save(*args, **kwargs)
+            self.unique_id = f"{provider.prefix}-{self.donation.id}"
+        super().save(*args, **kwargs)
 
 
 class TelesomBankAccount(BankAccount):
@@ -66,13 +65,13 @@ class TelesomBankAccount(BankAccount):
     provider_class = TelesomPaymentProvider
 
     def save(self, *args, **kwargs):
-        super(TelesomBankAccount, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('Telesom bank account')
         verbose_name_plural = _('Telesom bank accounts')
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'payout-accounts/telesom-external-accounts'
 
 

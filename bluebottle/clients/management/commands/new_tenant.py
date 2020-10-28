@@ -1,5 +1,3 @@
-# coding=utf-8
-from builtins import input
 from optparse import make_option
 
 from django.core import exceptions
@@ -50,7 +48,7 @@ class Command(BaseCommand):
                 schema_name = client_name.replace('-', '_')
             if not domain_url:
                 base_domain = getattr(settings, 'TENANT_BASE_DOMAIN', 'localhost')
-                domain_url = '{0}.{1}'.format(client_name, base_domain)
+                domain_url = f'{client_name}.{base_domain}'
 
             client_name.replace('_', '-')
 
@@ -75,24 +73,24 @@ class Command(BaseCommand):
             default_client_name = ''.join(ch if ch.isalnum() else '-' for ch in name).lower()
             default_schema_name = default_client_name.replace('-', '_')
             base_domain = getattr(settings, 'TENANT_BASE_DOMAIN', 'localhost')
-            default_domain_url = '{0}.{1}'.format(default_client_name, base_domain)
+            default_domain_url = f'{default_client_name}.{base_domain}'
 
             while client_name is None:
                 if not client_name:
                     input_msg = 'Client name'
-                    input_msg = "%s (leave blank to use '%s')" % (input_msg, default_client_name)
+                    input_msg = f"{input_msg} (leave blank to use '{default_client_name}')"
                     client_name = eval(input(force_str('%s: ' % input_msg))) or default_client_name
 
             while schema_name is None:
                 if not schema_name:
                     input_msg = 'Database schema name'
-                    input_msg = "%s (leave blank to use '%s')" % (input_msg, default_schema_name)
+                    input_msg = f"{input_msg} (leave blank to use '{default_schema_name}')"
                     schema_name = eval(input(force_str('%s: ' % input_msg))) or default_schema_name
 
             while domain_url is None:
                 if not domain_url:
                     input_msg = 'Domain url'
-                    input_msg = "%s (leave blank to use '%s')" % (input_msg, default_domain_url)
+                    input_msg = f"{input_msg} (leave blank to use '{default_domain_url}')"
                     domain_url = eval(input(force_str('%s: ' % input_msg))) or default_domain_url
 
             client_name.replace('_', '-')
@@ -181,6 +179,6 @@ class Command(BaseCommand):
             self.stderr.write("Error: %s" % '; '.join(e.messages))
             name = None
             return False
-        except IntegrityError as e:
+        except IntegrityError:
             self.stderr.write("Error: We've already got a tenant with that name or property.")
             return False

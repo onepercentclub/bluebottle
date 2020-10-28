@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 from django_elasticsearch_dsl import DocType, fields
 
 from bluebottle.utils.documents import MultiTenantIndex
@@ -94,11 +92,11 @@ class ActivityDocument(DocType):
 
     activity_date = fields.DateField()
 
-    class Meta(object):
+    class Meta:
         model = Activity
 
     def get_queryset(self):
-        return super(ActivityDocument, self).get_queryset().select_related(
+        return super().get_queryset().select_related(
             'initiative', 'owner',
         )
 

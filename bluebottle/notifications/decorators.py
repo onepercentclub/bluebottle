@@ -7,7 +7,7 @@ from django_fsm import FSMMeta, Transition
 
 class NotificationTransition(Transition):
     def __init__(self, method, source, target, on_error, conditions, permission, custom, messages, form, serializer):
-        super(NotificationTransition, self).__init__(
+        super().__init__(
             method, source, target, on_error, conditions, permission, custom
         )
         self.messages = messages
@@ -21,7 +21,7 @@ class FSMNotificationsMeta(FSMMeta):
         permission=None, custom={}, messages=[], form=None, serializer=None
     ):
         if source in self.transitions:
-            raise AssertionError('Duplicate transition for {0} state'.format(source))
+            raise AssertionError(f'Duplicate transition for {source} state')
 
         self.transitions[source] = NotificationTransition(
             method=method,

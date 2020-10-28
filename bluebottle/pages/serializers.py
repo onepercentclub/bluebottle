@@ -1,4 +1,3 @@
-from builtins import object
 from django.template import Context, Template
 from django.utils.safestring import mark_safe
 
@@ -20,6 +19,6 @@ class PageSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     body = PageContentsField()
 
-    class Meta(object):
+    class Meta:
         model = Page
         fields = ('title', 'id', 'body', 'language', 'full_page')

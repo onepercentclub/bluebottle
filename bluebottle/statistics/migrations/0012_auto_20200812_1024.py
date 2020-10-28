@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.db import migrations, connection
 
 from bluebottle.utils.utils import update_group_permissions

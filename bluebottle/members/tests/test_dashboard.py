@@ -1,4 +1,3 @@
-# coding=utf-8
 from tenant_schemas.urlresolvers import reverse
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -11,7 +10,7 @@ class MemberDashboardTest(BluebottleAdminTestCase):
     """
 
     def setUp(self):
-        super(MemberDashboardTest, self).setUp()
+        super().setUp()
         self.client.force_login(self.superuser)
         self.member_admin_url = reverse('admin:app_list', args=('members', ))
         BlueBottleUserFactory.create(username='Cousin Sven')

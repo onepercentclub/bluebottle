@@ -8,7 +8,7 @@ from bluebottle.test.utils import BluebottleTestCase
 
 class LipishaPaymentTestCase(BluebottleTestCase):
     def setUp(self):
-        super(LipishaPaymentTestCase, self).setUp()
+        super().setUp()
         LipishaPaymentProvider.objects.all().delete()
         LipishaPaymentProviderFactory.create()
 

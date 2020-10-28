@@ -1,4 +1,3 @@
-from builtins import object
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.funding.models import Funding, Donation
 from bluebottle.initiatives.models import Initiative
@@ -14,7 +13,7 @@ SCORE_MAP = {
 
 @activity.doc_type
 class FundingDocument(ActivityDocument):
-    class Meta(object):
+    class Meta:
         model = Funding
         related_models = (Initiative, Member, Donation)
 

@@ -28,7 +28,7 @@ def export(exporter_class, format='xlsx', **kwargs):
     else:
         export_root = settings.EXPORTDB_EXPORT_ROOT
 
-    filename = u'export-{timestamp}.{ext}'.format(
+    filename = 'export-{timestamp}.{ext}'.format(
         timestamp=timezone.now().strftime('%Y-%m-%d_%H%M%S'),
         ext=format
     )
@@ -64,7 +64,7 @@ def plain_export(exporter_class, format='xlsx', **kwargs):
     else:
         export_root = settings.EXPORTDB_EXPORT_ROOT
 
-    filename = u'export-{timestamp}.{ext}'.format(
+    filename = 'export-{timestamp}.{ext}'.format(
         timestamp=timezone.now().strftime('%Y-%m-%d_%H%M%S'),
         ext=format
     )

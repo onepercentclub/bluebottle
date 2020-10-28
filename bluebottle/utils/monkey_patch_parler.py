@@ -1,4 +1,3 @@
-from builtins import object
 import parler.appsettings
 from parler.utils.conf import add_default_language_settings
 
@@ -7,7 +6,7 @@ from bluebottle.clients import properties
 appsettings = parler.appsettings
 
 
-class TenantAwareParlerAppsettings(object):
+class TenantAwareParlerAppsettings:
     @property
     def PARLER_DEFAULT_LANGUAGE_CODE(self):
         return properties.LANGUAGE_CODE

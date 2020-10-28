@@ -1,11 +1,9 @@
-
 from future import standard_library
 
 standard_library.install_aliases()
 
 from urllib.parse import urlencode
 
-from builtins import object
 import json
 import logging
 import socket
@@ -39,7 +37,7 @@ def get_languages():
     return properties.LANGUAGES
 
 
-class StatusDefinition(object):
+class StatusDefinition:
     """
     Various status definitions for FSM's
     """
@@ -69,7 +67,7 @@ class StatusDefinition(object):
     UNKNOWN = 'unknown'
 
 
-class FSMTransition(object):
+class FSMTransition:
     """
     Class mixin to add transition_to method for Django FSM
     """
@@ -82,7 +80,7 @@ class FSMTransition(object):
         # Lookup the available next transition - from Django FSM
         available_transitions = self.get_available_status_transitions()
 
-        logging.debug("{0} (pk={1}) state changing: '{2}' to '{3}'".format(
+        logging.debug("{} (pk={}) state changing: '{}' to '{}'".format(
             self.__class__.__name__, self.pk, self.status, new_status))
 
         # Check that the new_status is in the available transitions -
@@ -98,7 +96,7 @@ class FSMTransition(object):
         except UnboundLocalError:
             tenant = connection.tenant.schema_name
             raise TransitionNotAllowed(
-                "Can't switch from state '{0}' to state '{1}' for {2} {3} {4}".format(
+                "Can't switch from state '{}' to state '{}' for {} {} {}".format(
                     self.status,
                     new_status,
                     self.__class__.__name__,
@@ -183,7 +181,7 @@ def get_class(cls):
         return getattr(module, class_name)
 
     except (ImportError, AttributeError, ValueError) as err:
-        error_message = "Could not import '%s'. %s: %s." % (cls, err.__class__.__name__, err)
+        error_message = f"Could not import '{cls}'. {err.__class__.__name__}: {err}."
         raise GetClassError(error_message)
 
 
@@ -202,7 +200,7 @@ def get_current_host(include_scheme=True):
             scheme = 'https'
         else:
             scheme = 'http'
-        return '{0}://{1}'.format(scheme, host)
+        return f'{scheme}://{host}'
     else:
         return host
 
@@ -238,7 +236,7 @@ def get_country_by_ip(ip_address=None):
 
     try:
         socket.inet_aton(ip_address)
-    except socket.error:
+    except OSError:
         raise InvalidIpError("Invalid IP address")
 
     gip = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
@@ -256,7 +254,7 @@ def get_country_code_by_ip(ip_address=None):
 
     try:
         socket.inet_aton(ip_address)
-    except socket.error:
+    except OSError:
         raise InvalidIpError("Invalid IP address")
 
     gip = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
@@ -279,18 +277,18 @@ def update_group_permissions(label, group_perms, apps):
             except Permission.DoesNotExist as err:
                 logging.debug(err)
                 raise Exception(
-                    'Could not add permission: {}: {}'.format(perm_codename, err)
+                    f'Could not add permission: {perm_codename}: {err}'
                 )
         group.save()
 
 
-class PreviousStatusMixin(object):
+class PreviousStatusMixin:
     """
     Store the status of the instance on init to be accessed as _original_status
     """
 
     def __init__(self, *args, **kwargs):
-        super(PreviousStatusMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         try:
             self._original_status = self.status

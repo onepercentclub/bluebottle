@@ -1,4 +1,3 @@
-from builtins import range
 import json
 
 from bluebottle.funding.tests.factories import FundingFactory
@@ -24,7 +23,7 @@ class GeoTestCase(BluebottleTestCase):
     fixtures = ['geo_data.json']
 
     def setUp(self):
-        super(GeoTestCase, self).setUp()
+        super().setUp()
         self.init_projects()
         self.country_1 = Country.objects.get(translations__name="Abkhazia")
 
@@ -65,7 +64,7 @@ class UsedCountryListTestCase(GeoTestCase):
     """
 
     def setUp(self):
-        super(UsedCountryListTestCase, self).setUp()
+        super().setUp()
 
         belgium = Country.objects.get(translations__name="Belgium")
         location_be = GeolocationFactory.create(country=belgium)
@@ -132,9 +131,9 @@ class LocationListTestCase(GeoTestCase):
         self.locations = []
         for i in range(0, self.count):
             self.locations.append(Location.objects.create(
-                name="Name {}".format(i),
+                name=f"Name {i}",
                 position='10.0,20.0',
-                description="Description {}".format(i))
+                description=f"Description {i}")
             )
 
     def test_api_location_list_endpoint(self):

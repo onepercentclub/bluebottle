@@ -1,10 +1,9 @@
-from builtins import range
 import copy
 from collections import OrderedDict
 import inflection
 
 from django.db.models import Manager
-from django.utils import six, encoding
+from django.utils import encoding
 
 from rest_framework import relations
 from rest_framework.serializers import (
@@ -39,7 +38,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
         included_resources = copy.copy(included_resources)
         included_resources = [inflection.underscore(value) for value in included_resources]
 
-        for field_name, field in six.iteritems(fields):
+        for field_name, field in fields.items():
             # Skip URL field
             if field_name == api_settings.URL_FIELD_NAME:
                 continue
@@ -177,7 +176,7 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
         if resource_instance is None:
             return
 
-        for field_name, field in six.iteritems(fields):
+        for field_name, field in fields.items():
             # Skip URL field
             if field_name == api_settings.URL_FIELD_NAME:
                 continue

@@ -1,4 +1,3 @@
-from builtins import object
 import factory
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -6,7 +5,7 @@ from bluebottle.files.models import Image, Document, PrivateDocument
 
 
 class ImageFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Image
 
     owner = factory.SubFactory(BlueBottleUserFactory)
@@ -14,7 +13,7 @@ class ImageFactory(factory.DjangoModelFactory):
 
 
 class DocumentFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Document
 
     owner = factory.SubFactory(BlueBottleUserFactory)
@@ -22,7 +21,7 @@ class DocumentFactory(factory.DjangoModelFactory):
 
 
 class PrivateDocumentFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = PrivateDocument
 
     owner = factory.SubFactory(BlueBottleUserFactory)

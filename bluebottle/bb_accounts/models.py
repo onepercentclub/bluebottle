@@ -1,6 +1,3 @@
-from builtins import str
-from builtins import range
-from builtins import object
 import os
 import random
 import string
@@ -186,7 +183,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     objects = BlueBottleUserManager()
 
-    class Meta(object):
+    class Meta:
         abstract = True
         verbose_name = _('member')
         verbose_name_plural = _('members')
@@ -225,7 +222,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             while queryset.filter(username=username):
                 username = original_username
                 end = str(next_num)
-                username = '{0}_{1}'.format(username, end)
+                username = f'{username}_{end}'
                 next_num += 1
 
             # Finally set the generated username.
@@ -239,15 +236,15 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """
         Returns the first_name plus the last_name, with a space in between.
         """
-        full_name = u'{0} {1}'.format(self.first_name, self.last_name)
+        full_name = f'{self.first_name} {self.last_name}'
         return full_name.strip()
 
     def anonymize(self):
         self.is_active = False
         self.is_anonymized = True
-        self.email = '{}-anonymous@example.com'.format(self.pk)  # disabled emails need to be unique too
-        self.username = '{}-anonymous@example.com'.format(self.pk)  # disabled emails need to be unique too
-        self.remote_id = '{}-anonymous@example.com'.format(self.pk)  # disabled emails need to be unique too
+        self.email = f'{self.pk}-anonymous@example.com'  # disabled emails need to be unique too
+        self.username = f'{self.pk}-anonymous@example.com'  # disabled emails need to be unique too
+        self.remote_id = f'{self.pk}-anonymous@example.com'  # disabled emails need to be unique too
         self.set_unusable_password()
         self.first_name = 'Deactivated'
         self.last_name = 'Member'
@@ -360,15 +357,16 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
              update_fields=None):
         self.generate_username()
 
-        super(BlueBottleBaseUser, self).save(force_insert, force_update, using,
-                                             update_fields)
+        super().save(
+            force_insert, force_update, using, update_fields
+        )
 
     def __getattr__(self, name):
         # Magically get extra fields
         if name.startswith('extra_'):
             name = name.replace('extra_', '')
             return self.extra.get(field__name=name).value
-        return super(BlueBottleBaseUser, self).__getattribute__(name)
+        return super().__getattribute__(name)
 
 
 from django.db.models.signals import post_save

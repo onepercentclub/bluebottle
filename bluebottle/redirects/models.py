@@ -1,4 +1,3 @@
-from builtins import object
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -35,11 +34,11 @@ class Redirect(models.Model):
         default=0,
         help_text=_("Is incremented each time a visitor hits this redirect"))
 
-    class Meta(object):
+    class Meta:
         verbose_name = _('redirect')
         verbose_name_plural = _('redirects')
         db_table = 'django_redirect'
         ordering = ('fallback_redirect', 'regular_expression', 'old_path',)
 
     def __str__(self):
-        return "%s ---> %s" % (self.old_path, self.new_path)
+        return f"{self.old_path} ---> {self.new_path}"

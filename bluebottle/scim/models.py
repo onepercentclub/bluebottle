@@ -1,4 +1,3 @@
-from builtins import object
 from django.db import models
 from django.utils.crypto import get_random_string
 from django.utils.translation import ugettext_lazy as _
@@ -13,8 +12,8 @@ class SCIMPlatformSettings(BasePlatformSettings):
         if not self.bearer_token:
             self.bearer_token = get_random_string(32)
 
-        super(SCIMPlatformSettings, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
-    class Meta(object):
+    class Meta:
         verbose_name_plural = _('scim platform settings')
         verbose_name = _('scim platform settings')

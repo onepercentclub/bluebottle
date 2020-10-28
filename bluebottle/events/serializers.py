@@ -1,4 +1,3 @@
-from builtins import object
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework import serializers
 
@@ -69,7 +68,7 @@ class ParticipantTransitionSerializer(TransitionSerializer):
         'resource.activity': 'bluebottle.events.serializers.EventSerializer',
     }
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         resource_name = 'contributions/participant-transitions'
         included_resources = [
             'resource',
@@ -121,7 +120,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
         }
 
     def get_fields(self):
-        fields = super(EventSerializer, self).get_fields()
+        fields = super().get_fields()
         user = self.context['request'].user
 
         if (
@@ -191,6 +190,6 @@ class EventTransitionSerializer(TransitionSerializer):
         'resource': 'bluebottle.events.serializers.EventSerializer',
     }
 
-    class JSONAPIMeta(object):
+    class JSONAPIMeta:
         included_resources = ['resource', ]
         resource_name = 'event-transitions'

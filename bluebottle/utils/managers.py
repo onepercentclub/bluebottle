@@ -1,4 +1,3 @@
-from builtins import object
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Case, When, fields
@@ -11,7 +10,7 @@ from polymorphic.managers import PolymorphicManager
 from polymorphic.query import PolymorphicQuerySet
 
 
-class GenericForeignKeyManagerMixin(object):
+class GenericForeignKeyManagerMixin:
     """
     Manager for models that use generic foreign keys based on CommentManager from django.crontrib.comments.
     """
@@ -56,8 +55,8 @@ class SortableTranslatableQuerySet(TranslatableQuerySet):
                 )[:1]
 
                 obj = obj.annotate(
-                    **{'translated_{}'.format(field): Subquery(sub_query)}
-                ).order_by('translated_{}'.format(field))
+                    **{f'translated_{field}': Subquery(sub_query)}
+                ).order_by(f'translated_{field}')
 
         field_names = [
             field_name.replace('translations__', 'translated_') for field_name in field_names

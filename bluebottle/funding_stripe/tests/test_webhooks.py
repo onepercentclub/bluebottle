@@ -482,6 +482,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         data = {
             'object': {
                 'id': self.payment.charge_token,
+                'payment_intent': None
             }
         }
 
@@ -538,7 +539,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         data = {
             'object': {
                 'id': self.payment.charge_token,
-                'transfer': 'tr_some_id'
+                'transfer': 'tr_some_id',
+                'payment_intent': None
             }
         }
         transfer = stripe.Transfer(data['object']['transfer'])
@@ -574,13 +576,52 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self.assertEqual(self.donation.payout_amount, Money(25, 'EUR'))
         self.assertEqual(self.payment.status, 'succeeded')
 
+    def test_charge_succeeded_intent(self):
+        self.payment.charge_token = 'some-charge-token'
+        self.payment.states.charge(save=True)
+
+        data = {
+            'object': {
+                'id': 'blabla',
+                'transfer': 'tr_some_id',
+                'payment_intent': 'pi_23456789'
+
+            }
+        }
+        transfer = stripe.Transfer(data['object']['transfer'])
+        transfer.update({
+            'amount': 2500,
+            'currency': 'eur'
+        })
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.succeeded',
+                data
+            )
+        ):
+            with mock.patch(
+                'stripe.Transfer.retrieve',
+                return_value=transfer
+            ):
+                response = self.client.post(
+                    self.webhook,
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self._refresh()
+        self.assertEqual(self.donation.status, 'new')
+
     def test_charge_failed(self):
         self.payment.charge_token = 'some-charge-token'
         self.payment.states.charge(save=True)
 
         data = {
             'object': {
-                'id': self.payment.charge_token
+                'id': self.payment.charge_token,
+                'payment_intent': None
             }
         }
 
@@ -607,7 +648,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
         data = {
             'object': {
-                'id': self.payment.charge_token
+                'id': self.payment.charge_token,
+                'payment_intent': None
             }
         }
 
@@ -639,7 +681,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
         data = {
             'object': {
-                'id': self.payment.charge_token
+                'id': self.payment.charge_token,
+                'payment_intent': None
             }
         }
 
@@ -667,7 +710,8 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         data = {
             'object': {
                 'charge': self.payment.charge_token,
-                'status': 'lost'
+                'status': 'lost',
+                'payment_intent': None
             }
         }
 

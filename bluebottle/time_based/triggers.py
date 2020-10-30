@@ -22,12 +22,18 @@ from bluebottle.time_based.states import (
 
 def is_full(effect):
     "the activity is full"
-    return effect.instance.capacity <= len(effect.instance.accepted_applications)
+    return (
+        effect.instance.capacity and
+        effect.instance.capacity <= len(effect.instance.accepted_applications)
+    )
 
 
 def is_not_full(effect):
     "the activity is not full"
-    return effect.instance.capacity > len(effect.instance.accepted_applications)
+    return (
+        effect.instance.capacity and
+        effect.instance.capacity > len(effect.instance.accepted_applications)
+    )
 
 
 def has_applications(effect):

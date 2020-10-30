@@ -22,7 +22,6 @@ from bluebottle.time_based.filters import ApplicationListFilter
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
-    is_online = serializers.BooleanField(required=False)
     review = serializers.BooleanField(required=False)
     contributions = FilteredRelatedField(many=True, filter_backend=ApplicationListFilter)
 

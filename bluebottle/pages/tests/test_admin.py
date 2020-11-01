@@ -150,7 +150,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
             "documentitem-0-placeholder_slot": "blog_contents",
             "documentitem-0-sort_order": 0,
             "documentitem-0-text": "Link",
-            "documentitem-0-document": open('./bluebottle/files/tests/files/test-image.png', "rb"),
+            "documentitem-0-document": open('./bluebottle/pages/tests/files/xss.html', "rb"),
 
             "actionitem-TOTAL_FORMS": "0",
             "actionitem-INITIAL_FORMS": "0",
@@ -173,6 +173,10 @@ class TestPageAdmin(BluebottleAdminTestCase):
         }
 
         response = self.client.post(page_admin_url, data)
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Mime type &#39;application/pdf&#39; doesn&#39;t match the filename extension &#39;.html&#39;."
+        )
         self.assertEquals(page.content.contentitems.count(), 0)
         self.assertEquals(DocumentItem.objects.count(), 0)

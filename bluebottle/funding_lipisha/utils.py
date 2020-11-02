@@ -22,11 +22,14 @@ def init_client():
     else:
         env = lipisha.SANDBOX_ENV
     credentials = get_credentials()
-    return Lipisha(
+    lip = Lipisha(
         credentials['api_key'],
         credentials['api_signature'],
         api_environment=env
     )
+    if live_mode:
+        lip.api_base_url = 'https://api.lypa.io/v2/api/'
+    return lip
 
 
 def initiate_push_payment(payment):

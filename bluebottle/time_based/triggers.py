@@ -10,9 +10,12 @@ from bluebottle.activities.triggers import (
 )
 
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity, Application, Duration
+    OnADateActivity, WithADeadlineActivity, OngoingActivity,
+    OnADateApplication, PeriodApplication, Duration
 )
-from bluebottle.time_based.effects import CreateOveralDurationEffect
+from bluebottle.time_based.effects import (
+    CreateOnAdateDurationEffect, CreatePeriodDurationEffect
+)
 from bluebottle.time_based.messages import DateChanged, DeadlineChanged
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, OnADateStateMachine, WithADeadlineStateMachine,
@@ -37,11 +40,11 @@ def is_not_full(effect):
 
 
 def has_applications(effect):
-    return len(effect.instance.accepted_applications) > 0
+    return len(effect.instance.active_applications) > 0
 
 
 def has_no_applications(effect):
-    return len(effect.instance.accepted_applications) == 0
+    return len(effect.instance.active_applications) == 0
 
 
 def is_finished(effect):
@@ -155,7 +158,7 @@ class OnADateTriggers(TimeBasedTriggers):
             OnADateStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect(
-                    'accepted_application_durations',
+                    'accepted_durations',
                     DurationStateMachine.succeed
                 )
             ]
@@ -165,7 +168,7 @@ class OnADateTriggers(TimeBasedTriggers):
             OnADateStateMachine.reschedule,
             effects=[
                 RelatedTransitionEffect(
-                    'accepted_application_durations',
+                    'accepted_durations',
                     DurationStateMachine.reset
                 )
             ]
@@ -213,6 +216,15 @@ class WithADeadlineTriggers(TimeBasedTriggers):
                 TransitionEffect(TimeBasedStateMachine.lock, conditions=[is_full]),
                 TransitionEffect(
                     TimeBasedStateMachine.lock, conditions=[registration_deadline_is_passed]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            WithADeadlineStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'durations', DurationStateMachine.fail
                 )
             ]
         ),
@@ -312,13 +324,11 @@ def activity_is_finished(effect):
         return False
 
 
-@ register(Application)
 class ApplicationTriggers(ContributionTriggers):
     triggers = ContributionTriggers.triggers + [
         TransitionTrigger(
             ApplicationStateMachine.initiate,
             effects=[
-                CreateOveralDurationEffect,
                 TransitionEffect(
                     ApplicationStateMachine.accept,
                     conditions=[automatically_accept]
@@ -360,7 +370,12 @@ class ApplicationTriggers(ContributionTriggers):
                 RelatedTransitionEffect(
                     'contribution_values',
                     DurationStateMachine.reset,
-                )
+                ),
+
+                RelatedTransitionEffect(
+                    'finished_durations',
+                    DurationStateMachine.succeed,
+                ),
             ]
         ),
 
@@ -398,10 +413,41 @@ class ApplicationTriggers(ContributionTriggers):
     ]
 
 
-def is_overall(effect):
-    return effect.instance.duration_period == 'overall'
+@register(OnADateApplication)
+class OnADateApplicationTriggers(ApplicationTriggers):
+    triggers = ApplicationTriggers.triggers + [
+        TransitionTrigger(
+            ApplicationStateMachine.initiate,
+            effects=[
+                CreateOnAdateDurationEffect,
+            ]
+        ),
+    ]
 
 
-@ register(Duration)
+@register(PeriodApplication)
+class PeriodApplicationTriggers(ApplicationTriggers):
+    triggers = ApplicationTriggers.triggers + [
+        TransitionTrigger(
+            ApplicationStateMachine.initiate,
+            effects=[
+                CreatePeriodDurationEffect,
+            ]
+        ),
+    ]
+
+
+def duration_is_finished(effect):
+    return effect.instance.end is None or effect.instance.end < now()
+
+
+@register(Duration)
 class DurationTriggers(ContributionValueTriggers):
-    pass
+    triggers = ContributionValueTriggers.triggers + [
+        TransitionTrigger(
+            DurationStateMachine.reset,
+            effects=[
+                TransitionEffect(DurationStateMachine.succeed, conditions=[duration_is_finished]),
+            ]
+        ),
+    ]

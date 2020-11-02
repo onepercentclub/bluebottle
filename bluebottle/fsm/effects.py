@@ -40,7 +40,7 @@ class Effect(object):
 
     @property
     def is_valid(self):
-        return True
+        return all(condition(self) for condition in self.conditions)
 
     def __str__(self):
         return self.__class__.__name__
@@ -67,7 +67,7 @@ class BaseTransitionEffect(Effect):
     @property
     def is_valid(self):
         return (
-            all(condition(self) for condition in self.conditions) and
+            super().is_valid and
             self.transition in self.machine.possible_transitions()
         )
 
@@ -90,7 +90,7 @@ class BaseTransitionEffect(Effect):
     def __str__(self):
         return str(self.transition.target)
 
-    @property
+    @ property
     def help(self):
         return _('{}: {}').format(self.instance.__class__._meta.verbose_name, self.instance)
 
@@ -159,10 +159,6 @@ class BaseRelatedTransitionEffect(Effect):
         if self.executed:
             for instance in self.instances:
                 instance.save()
-
-    @property
-    def is_valid(self):
-        return all(condition(self) for condition in self.conditions)
 
     def __str__(self):
         return '{} related {}'.format(

@@ -4,7 +4,7 @@ from bluebottle.activities.permissions import (
 )
 from bluebottle.time_based.models import (
     OnADateActivity, WithADeadlineActivity, OngoingActivity,
-    Application
+    OnADateApplication
 )
 from bluebottle.time_based.serializers import (
     OnADateActivitySerializer,
@@ -101,7 +101,7 @@ class OngoingTransitionList(TransitionList):
 
 
 class ApplicationList(JsonApiViewMixin, ListCreateAPIView):
-    queryset = Application.objects.all()
+    queryset = OnADateApplication.objects.all()
     serializer_class = ApplicationSerializer
 
     permission_classes = (
@@ -129,7 +129,7 @@ class ApplicationList(JsonApiViewMixin, ListCreateAPIView):
 
 
 class ApplicationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
-    queryset = Application.objects.all()
+    queryset = OnADateApplication.objects.all()
     serializer_class = ApplicationSerializer
 
     permission_classes = (
@@ -145,7 +145,7 @@ class ApplicationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
 
 class ApplicationTransitionList(TransitionList):
     serializer_class = ApplicationTransitionSerializer
-    queryset = Application.objects.all()
+    queryset = OnADateApplication.objects.all()
     prefetch_for_includes = {
         'resource': ['participant', 'participant__activity'],
     }
@@ -153,6 +153,6 @@ class ApplicationTransitionList(TransitionList):
 
 class ApplicationDocumentDetail(PrivateFileView):
     max_age = 15 * 60  # 15 minutes
-    queryset = Application.objects
+    queryset = OnADateApplication.objects
     relation = 'document'
     field = 'file'

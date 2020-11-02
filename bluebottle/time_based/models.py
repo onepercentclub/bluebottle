@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 
@@ -33,17 +34,33 @@ class TimeBasedActivity(Activity):
 
     @property
     def applications(self):
-        return self.contributions.instance_of(Application)
+        return self.contributions.instance_of(PeriodApplication, OnADateApplication)
+
+    @property
+    def active_applications(self):
+        return self.applications.filter(status__in=('accepted', 'new',))
 
     @property
     def accepted_applications(self):
         return self.applications.filter(status='accepted')
 
     @property
-    def accepted_application_durations(self):
+    def durations(self):
+        return Duration.objects.filter(
+            contribution__activity=self
+        )
+
+    @property
+    def accepted_durations(self):
+        return self.durations.filter(
+            contribution__status='accepted'
+        )
+
+    @property
+    def values(self):
         return Duration.objects.filter(
             contribution__activity=self,
-            contribution__status='accepted'
+            status='succeeded'
         )
 
 
@@ -162,41 +179,60 @@ class OngoingActivity(TimeBasedActivity):
         return fields + ['duration', 'duration_period']
 
 
-class Application(Contribution):
+class Application():
     motivation = models.TextField(blank=True)
     document = PrivateDocumentField(blank=True, null=True)
-
-    class Meta(object):
-        verbose_name = _("Application")
-        verbose_name_plural = _("Application")
-        permissions = (
-            ('api_read_application', 'Can view application through the API'),
-            ('api_add_application', 'Can add application through the API'),
-            ('api_change_application', 'Can change application through the API'),
-            ('api_delete_application', 'Can delete application through the API'),
-
-            ('api_read_own_application', 'Can view own application through the API'),
-            ('api_add_own_application', 'Can add own application through the API'),
-            ('api_change_own_application', 'Can change own application through the API'),
-            ('api_delete_own_application', 'Can delete own application through the API'),
-        )
-
-    class JSONAPIMeta(object):
-        resource_name = 'contributions/applications'
 
     def __str__(self):
         return self.user.full_name
 
+    @property
+    def finished_durations(self):
+        return self.contribution_values.filter(
+            duration__end__lte=timezone.now()
+        )
+
+
+class OnADateApplication(Contribution, Application):
+    class Meta(object):
+        verbose_name = _("On a date application")
+        verbose_name_plural = _("On a date application")
+        permissions = (
+            ('api_read_onadateapplication', 'Can view application through the API'),
+            ('api_add_onadateapplication', 'Can add application through the API'),
+            ('api_change_onadateapplication', 'Can change application through the API'),
+            ('api_delete_onadateapplication', 'Can delete application through the API'),
+
+            ('api_read_own_onadateapplication', 'Can view own application through the API'),
+            ('api_add_own_onadateapplication', 'Can add own application through the API'),
+            ('api_change_own_onadateapplication', 'Can change own application through the API'),
+            ('api_delete_own_onadateapplication', 'Can delete own application through the API'),
+        )
+
+
+class PeriodApplication(Contribution, Application):
+    current_period = models.DateField(null=True, blank=True)
+
+    class Meta(object):
+        verbose_name = _("Period application")
+        verbose_name_plural = _("Period application")
+        permissions = (
+            ('api_read_periodapplication', 'Can view application through the API'),
+            ('api_add_periodapplication', 'Can add application through the API'),
+            ('api_change_periodapplication', 'Can change application through the API'),
+            ('api_delete_periodapplication', 'Can delete application through the API'),
+
+            ('api_read_own_periodapplication', 'Can view own application through the API'),
+            ('api_add_own_periodapplication', 'Can add own application through the API'),
+            ('api_change_own_periodapplication', 'Can change own application through the API'),
+            ('api_delete_own_periodapplication', 'Can delete own application through the API'),
+        )
+
 
 class Duration(ContributionValue):
-    value = models.DurationField(_('duration'), null=True, blank=True)
-    period = models.CharField(
-        _('period'),
-        max_length=20,
-        blank=True,
-        null=True,
-        choices=DurationPeriodChoices.choices,
-    )
+    value = models.DurationField(_('value'))
+    start = models.DateTimeField(_('start'))
+    end = models.DateTimeField(_('end'), null=True, blank=True)
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

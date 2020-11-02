@@ -8,7 +8,7 @@ from rest_framework import status
 
 from bluebottle.time_based.tests.factories import (
     OnADateActivityFactory, WithADeadlineActivityFactory, OngoingActivityFactory,
-    ApplicationFactory
+    OnADateApplicationFactory, PeriodApplicationFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -144,6 +144,7 @@ class TimeBasedListAPIViewTestCase():
 class OnADateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
     type = 'on-a-date'
     factory = OnADateActivityFactory
+    application_factory = OnADateApplicationFactory
 
     def setUp(self):
         super().setUp()
@@ -157,6 +158,7 @@ class OnADateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCas
 class WithADeadlineListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
     type = 'with-a-deadline'
     factory = WithADeadlineActivityFactory
+    application_factory = PeriodApplicationFactory
 
     def setUp(self):
         super().setUp()
@@ -171,6 +173,7 @@ class WithADeadlineListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleT
 class OngoingListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
     type = 'ongoing'
     factory = OngoingActivityFactory
+    application_factory = PeriodApplicationFactory
 
     def setUp(self):
         super().setUp()
@@ -239,7 +242,7 @@ class TimeBasedDetailAPIViewTestCase():
         )
 
     def test_get_contributions(self):
-        ApplicationFactory.create_batch(5, activity=self.activity)
+        self.application_factory.create_batch(5, activity=self.activity)
         response = self.client.get(self.url, user=self.activity.owner)
 
         data = response.json()['data']
@@ -330,6 +333,7 @@ class TimeBasedDetailAPIViewTestCase():
 class OnADateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
     type = 'on-a-date'
     factory = OnADateActivityFactory
+    application_factory = OnADateApplicationFactory
 
     def setUp(self):
         super().setUp()
@@ -343,6 +347,7 @@ class OnADateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTes
 class WithADeadlineDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
     type = 'with-a-deadline'
     factory = WithADeadlineActivityFactory
+    application_factory = PeriodApplicationFactory
 
     def setUp(self):
         super().setUp()
@@ -355,6 +360,7 @@ class WithADeadlineDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, Bluebot
 class OngoingDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
     type = 'ongoing'
     factory = OngoingActivityFactory
+    application_factory = PeriodApplicationFactory
 
 
 class TimeBasedTransitionAPIViewTestCase():
@@ -439,16 +445,19 @@ class TimeBasedTransitionAPIViewTestCase():
 class OnADatteTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'on-a-date'
     factory = OnADateActivityFactory
+    application_factory = OnADateApplicationFactory
 
 
 class WithADeadlineTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'with-a-deadline'
     factory = WithADeadlineActivityFactory
+    application_factory = PeriodApplicationFactory
 
 
 class OngoingTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'ongoing'
     factory = OngoingActivityFactory
+    application_factory = PeriodApplicationFactory
 
 
 class ApplicationListViewTestCase():
@@ -551,16 +560,19 @@ class ApplicationListViewTestCase():
 class OnADateApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
     type = 'on-a-date'
     factory = OnADateActivityFactory
+    application_factory = OnADateApplicationFactory
 
 
 class WithADeadlineApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
     type = 'with-a-deadline'
     factory = WithADeadlineActivityFactory
+    application_factory = PeriodApplicationFactory
 
 
 class OngoingApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
     type = 'ongoing'
     factory = OngoingActivityFactory
+    application_factory = PeriodApplicationFactory
 
 
 class ApplicationDetailViewTestCase():
@@ -569,7 +581,7 @@ class ApplicationDetailViewTestCase():
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.activity = self.factory.create()
-        self.application = ApplicationFactory(
+        self.application = self.application_factory(
             activity=self.activity,
             motivation='My motivation'
         )
@@ -713,16 +725,19 @@ class ApplicationDetailViewTestCase():
 class OnADateApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
     type = 'on-a-date'
     factory = OnADateActivityFactory
+    application_factory = OnADateApplicationFactory
 
 
 class WithADeadlineApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
     type = 'with-a-deadline'
     factory = WithADeadlineActivityFactory
+    application_factory = PeriodApplicationFactory
 
 
 class OngoingApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
     type = 'ongoing'
     factory = OngoingActivityFactory
+    application_factory = PeriodApplicationFactory
 
 
 class ApplicationTransitionAPIViewTestCase():
@@ -731,7 +746,7 @@ class ApplicationTransitionAPIViewTestCase():
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.activity = self.factory.create()
-        self.application = ApplicationFactory.create(
+        self.application = self.application_factory.create(
             activity=self.activity
         )
 
@@ -813,13 +828,16 @@ class ApplicationTransitionAPIViewTestCase():
 class OnADateApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'on-a-date'
     factory = OnADateActivityFactory
+    application_factory = OnADateApplicationFactory
 
 
 class WithADeadlineApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'with-a-deadline'
     factory = WithADeadlineActivityFactory
+    application_factory = PeriodApplicationFactory
 
 
 class OngoingApplicationTransitionListAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'ongoing'
     factory = OngoingActivityFactory
+    application_factory = PeriodApplicationFactory

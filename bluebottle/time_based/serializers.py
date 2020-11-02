@@ -15,7 +15,7 @@ from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 
 from bluebottle.time_based.models import (
-    TimeBasedActivity, OnADateActivity, WithADeadlineActivity, OngoingActivity, Application
+    TimeBasedActivity, OnADateActivity, WithADeadlineActivity, OngoingActivity, OnADateApplication
 )
 from bluebottle.time_based.permissions import ApplicationDocumentPermission
 from bluebottle.time_based.filters import ApplicationListFilter
@@ -237,7 +237,7 @@ class ApplicationListSerializer(BaseContributionSerializer):
     )
 
     class Meta(BaseContributionSerializer.Meta):
-        model = Application
+        model = OnADateApplication
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/time-based/applications'
@@ -274,7 +274,7 @@ class ApplicationSerializer(BaseContributionSerializer):
         return result
 
     class Meta(BaseContributionSerializer.Meta):
-        model = Application
+        model = OnADateApplication
         fields = BaseContributionSerializer.Meta.fields + (
             'motivation',
             'document'
@@ -282,7 +282,7 @@ class ApplicationSerializer(BaseContributionSerializer):
 
         validators = [
             UniqueTogetherValidator(
-                queryset=Application.objects.all(),
+                queryset=OnADateApplication.objects.all(),
                 fields=('activity', 'user')
             )
         ]
@@ -303,7 +303,7 @@ class ApplicationSerializer(BaseContributionSerializer):
 
 
 class ApplicationTransitionSerializer(TransitionSerializer):
-    resource = ResourceRelatedField(queryset=Application.objects.all())
+    resource = ResourceRelatedField(queryset=OnADateApplication.objects.all())
     field = 'states'
     included_serializers = {
         'resource': 'bluebottle.time_based.serializers.ApplicationSerializer',

@@ -4,7 +4,8 @@ from bluebottle.activities.states import (
     ActivityStateMachine, ContributionStateMachine, ContributionValueStateMachine
 )
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity, Application, Duration
+    OnADateActivity, WithADeadlineActivity, OngoingActivity,
+    OnADateApplication, PeriodApplication, Duration,
 )
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 
@@ -87,7 +88,6 @@ class OngoingStateMachine(TimeBasedStateMachine):
     pass
 
 
-@register(Application)
 class ApplicationStateMachine(ContributionStateMachine):
     accepted = State(
         _('accepted'),
@@ -196,6 +196,16 @@ class ApplicationStateMachine(ContributionStateMachine):
         automatic=False,
         permission=can_accept_application,
     )
+
+
+@register(OnADateApplication)
+class OnADateApplicationStateMachine(ApplicationStateMachine):
+    pass
+
+
+@register(PeriodApplication)
+class PeriodApplicationStateMachine(ApplicationStateMachine):
+    pass
 
 
 @register(Duration)

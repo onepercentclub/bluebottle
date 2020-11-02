@@ -2,15 +2,13 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
-
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
-from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.utils.models import PublishedStatus
 from .models import NewsItem
 
 
-class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
+class NewsItemAdmin(PlaceholderFieldAdmin):
     list_display = ('title', 'online', 'status', 'publication_date')
     list_filter = ('status',)
     date_hierarchy = 'publication_date'

@@ -68,7 +68,7 @@ class DashboardWidgetTestCase(BluebottleAdminTestCase):
             '_save': 'Save'
         }
 
-        response = self.client.post(self.widget_admin_url, data)
+        response = self.client.post(self.widget_admin_url, data, format='multipart')
         self.assertEquals(response.status_code, 403)
         self.dashboard.refresh_from_db()
         self.assertEquals(self.dashboard.title, 'Links')

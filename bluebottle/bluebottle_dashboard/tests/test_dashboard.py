@@ -5,7 +5,7 @@ from tenant_schemas.urlresolvers import reverse
 
 from bluebottle.bluebottle_dashboard.dashboard import CustomAppIndexDashboard
 from bluebottle.bluebottle_dashboard.tests.factories import UserDashboardModuleFactory
-from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.test.utils import BluebottleAdminTestCase, ApiClient
 
 
 class MainDashboardTestCase(BluebottleAdminTestCase):
@@ -54,11 +54,13 @@ class DashboardWidgetTestCase(BluebottleAdminTestCase):
             module='jet.dashboard.modules.LinkList'
         )
         self.widget_admin_url = reverse('jet-dashboard:update_module', args=(self.dashboard.id,))
+
+        self.client = ApiClient(self.__class__.tenant, enforce_csrf_checks=True)
         self.client.force_login(self.superuser)
 
     def test_changing_widget_title_without_csrf(self):
         data = {
-            'csrf': 'maga2020!',
+            'csrfmiddlewaretoken': 'invalid',
             'title': 'You have been owned!',
             'layout': 'stacked',
             'children-TOTAL_FORMS': 0,
@@ -67,7 +69,7 @@ class DashboardWidgetTestCase(BluebottleAdminTestCase):
         }
 
         response = self.client.post(self.widget_admin_url, data)
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, 403)
         self.dashboard.refresh_from_db()
         self.assertEquals(self.dashboard.title, 'Links')
 
@@ -75,14 +77,14 @@ class DashboardWidgetTestCase(BluebottleAdminTestCase):
         response = self.client.get(self.widget_admin_url)
         csrf = self.get_csrf_token(response)
         data = {
-            'csrf': csrf,
+            'csrfmiddlewaretoken': csrf,
             'title': 'Nice Links',
             'layout': 'stacked',
             'children-TOTAL_FORMS': 0,
             'children-INITIAL_FORMS': 0,
             '_save': 'Save'
         }
-        response = self.client.post(self.widget_admin_url, data)
+        response = self.client.post(self.widget_admin_url, data, format='multipart')
         self.assertEquals(response.status_code, 302)
         self.dashboard.refresh_from_db()
         self.assertEquals(self.dashboard.title, 'Nice Links')

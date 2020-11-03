@@ -180,9 +180,6 @@ class OngoingActivity(TimeBasedActivity):
 
 
 class Application():
-    motivation = models.TextField(blank=True)
-    document = PrivateDocumentField(blank=True, null=True)
-
     def __str__(self):
         return self.user.full_name
 
@@ -193,7 +190,10 @@ class Application():
         )
 
 
-class OnADateApplication(Contribution, Application):
+class OnADateApplication(Application, Contribution):
+    motivation = models.TextField(blank=True)
+    document = PrivateDocumentField(blank=True, null=True)
+
     class Meta(object):
         verbose_name = _("On a date application")
         verbose_name_plural = _("On a date application")
@@ -211,6 +211,9 @@ class OnADateApplication(Contribution, Application):
 
 
 class PeriodApplication(Contribution, Application):
+    motivation = models.TextField(blank=True)
+    document = PrivateDocumentField(blank=True, null=True)
+
     current_period = models.DateField(null=True, blank=True)
 
     class Meta(object):

@@ -467,14 +467,14 @@ class ApplicationListViewTestCase():
         self.user = BlueBottleUserFactory()
         self.activity = self.factory.create()
 
-        self.url = reverse('application-list')
+        self.url = reverse(self.url_name)
 
         self.private_document_url = reverse('private-document-list')
         self.png_document_path = './bluebottle/files/tests/files/test-image.png'
 
         self.data = {
             'data': {
-                'type': 'contributions/time-based/applications',
+                'type': self.application_type,
                 'attributes': {},
                 'relationships': {
                     'activity': {
@@ -562,17 +562,26 @@ class OnADateApplicationListAPIViewTestCase(ApplicationListViewTestCase, Bluebot
     factory = OnADateActivityFactory
     application_factory = OnADateApplicationFactory
 
+    url_name = 'on-a-date-application-list'
+    application_type = 'contributions/time-based/on-a-date-applications'
+
 
 class WithADeadlineApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
     type = 'with-a-deadline'
     factory = WithADeadlineActivityFactory
     application_factory = PeriodApplicationFactory
 
+    url_name = 'period-application-list'
+    application_type = 'contributions/time-based/period-applications'
+
 
 class OngoingApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
     type = 'ongoing'
     factory = OngoingActivityFactory
     application_factory = PeriodApplicationFactory
+
+    url_name = 'period-application-list'
+    application_type = 'contributions/time-based/period-applications'
 
 
 class ApplicationDetailViewTestCase():
@@ -586,14 +595,14 @@ class ApplicationDetailViewTestCase():
             motivation='My motivation'
         )
 
-        self.url = reverse('application-detail', args=(self.application.pk, ))
+        self.url = reverse(self.url_name, args=(self.application.pk, ))
 
         self.private_document_url = reverse('private-document-list')
         self.png_document_path = './bluebottle/files/tests/files/test-image.png'
 
         self.data = {
             'data': {
-                'type': 'contributions/time-based/applications',
+                'type': self.application_type,
                 'id': self.application.pk,
                 'attributes': {'motivation': 'Let\'s go!!!'},
             }
@@ -726,18 +735,24 @@ class OnADateApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, Blu
     type = 'on-a-date'
     factory = OnADateActivityFactory
     application_factory = OnADateApplicationFactory
+    url_name = 'on-a-date-application-detail'
+    application_type = 'contributions/time-based/on-a-date-applications'
 
 
 class WithADeadlineApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
     type = 'with-a-deadline'
     factory = WithADeadlineActivityFactory
     application_factory = PeriodApplicationFactory
+    url_name = 'period-application-detail'
+    application_type = 'contributions/time-based/period-applications'
 
 
 class OngoingApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
     type = 'ongoing'
     factory = OngoingActivityFactory
     application_factory = PeriodApplicationFactory
+    url_name = 'period-application-detail'
+    application_type = 'contributions/time-based/period-applications'
 
 
 class ApplicationTransitionAPIViewTestCase():
@@ -750,15 +765,15 @@ class ApplicationTransitionAPIViewTestCase():
             activity=self.activity
         )
 
-        self.url = reverse('application-transition-list')
+        self.url = reverse(self.url_name)
         self.data = {
             'data': {
-                'type': 'contributions/time-based/application-transitions',
+                'type': '{}-transitions'.format(self.application_type),
                 'attributes': {},
                 'relationships': {
                     'resource': {
                         'data': {
-                            'type': 'contributions/time-based/applications',
+                            'type': '{}s'.format(self.application_type),
                             'id': self.application.pk
                         }
                     }
@@ -827,17 +842,25 @@ class ApplicationTransitionAPIViewTestCase():
 
 class OnADateApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'on-a-date'
+    url_name = 'on-a-date-application-transition-list'
+    application_type = 'contributions/time-based/on-a-date-application'
     factory = OnADateActivityFactory
     application_factory = OnADateApplicationFactory
 
 
 class WithADeadlineApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'with-a-deadline'
+    application_type = 'contributions/time-based/period-application'
+    url_name = 'period-application-transition-list'
+
     factory = WithADeadlineActivityFactory
     application_factory = PeriodApplicationFactory
 
 
 class OngoingApplicationTransitionListAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'ongoing'
+    application_type = 'contributions/time-based/period-application'
+    url_name = 'period-application-transition-list'
+
     factory = OngoingActivityFactory
     application_factory = PeriodApplicationFactory

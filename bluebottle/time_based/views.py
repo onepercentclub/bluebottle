@@ -4,7 +4,7 @@ from bluebottle.activities.permissions import (
 )
 from bluebottle.time_based.models import (
     OnADateActivity, WithADeadlineActivity, OngoingActivity,
-    OnADateApplication
+    OnADateApplication, PeriodApplication
 )
 from bluebottle.time_based.serializers import (
     OnADateActivitySerializer,
@@ -13,8 +13,10 @@ from bluebottle.time_based.serializers import (
     OnADateTransitionSerializer,
     WithADeadlineTransitionSerializer,
     OngoingTransitionSerializer,
-    ApplicationSerializer,
-    ApplicationTransitionSerializer
+    PeriodApplicationSerializer,
+    OnADateApplicationSerializer,
+    OnADateApplicationTransitionSerializer,
+    PeriodApplicationTransitionSerializer
 )
 
 from bluebottle.transitions.views import TransitionList
@@ -101,9 +103,6 @@ class OngoingTransitionList(TransitionList):
 
 
 class ApplicationList(JsonApiViewMixin, ListCreateAPIView):
-    queryset = OnADateApplication.objects.all()
-    serializer_class = ApplicationSerializer
-
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
@@ -128,10 +127,17 @@ class ApplicationList(JsonApiViewMixin, ListCreateAPIView):
         serializer.save(user=self.request.user)
 
 
-class ApplicationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+class OnADateApplicationList(ApplicationList):
     queryset = OnADateApplication.objects.all()
-    serializer_class = ApplicationSerializer
+    serializer_class = OnADateApplicationSerializer
 
+
+class PeriodApplicationList(ApplicationList):
+    queryset = PeriodApplication.objects.all()
+    serializer_class = PeriodApplicationSerializer
+
+
+class ApplicationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission, ContributionPermission),
     )
@@ -143,12 +149,30 @@ class ApplicationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     }
 
 
-class ApplicationTransitionList(TransitionList):
-    serializer_class = ApplicationTransitionSerializer
+class OnADateApplicationDetail(ApplicationDetail):
     queryset = OnADateApplication.objects.all()
+    serializer_class = OnADateApplicationSerializer
+
+
+class PeriodApplicationDetail(ApplicationDetail):
+    queryset = PeriodApplication.objects.all()
+    serializer_class = PeriodApplicationSerializer
+
+
+class ApplicationTransitionList(TransitionList):
     prefetch_for_includes = {
         'resource': ['participant', 'participant__activity'],
     }
+
+
+class OnADateApplicationTransitionList(ApplicationTransitionList):
+    serializer_class = OnADateApplicationTransitionSerializer
+    queryset = OnADateApplication.objects.all()
+
+
+class PeriodApplicationTransitionList(ApplicationTransitionList):
+    serializer_class = PeriodApplicationTransitionSerializer
+    queryset = PeriodApplication.objects.all()
 
 
 class ApplicationDocumentDetail(PrivateFileView):
@@ -156,3 +180,11 @@ class ApplicationDocumentDetail(PrivateFileView):
     queryset = OnADateApplication.objects
     relation = 'document'
     field = 'file'
+
+
+class OnADateApplicationDocumentDetail(ApplicationDocumentDetail):
+    queryset = OnADateApplication.objects
+
+
+class PeriodApplicationDocumentDetail(ApplicationDocumentDetail):
+    queryset = PeriodApplication.objects

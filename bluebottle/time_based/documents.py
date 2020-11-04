@@ -1,5 +1,3 @@
-import datetime
-
 from bluebottle.activities.documents import ActivityDocument, activity
 
 from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity, OngoingActivity
@@ -51,7 +49,7 @@ class OnADateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
     def prepare_end(self, instance):
         if instance.start and instance.duration:
-            return instance.start + datetime.timedelta(hours=instance.duration)
+            return instance.start + instance.duration
 
 
 @activity.doc_type

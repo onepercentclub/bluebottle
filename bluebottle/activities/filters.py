@@ -165,7 +165,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
     def get_end_filter(self, value, request):
         date = dateutil.parser.parse(value).date()
-        return Range(start={'lte': date}) | ~Q('exists', field='start')
+        return Range(start={'lt': date}) | ~Q('exists', field='start')
 
     def get_filters(self, request):
         filters = super(ActivitySearchFilter, self).get_filters(request)

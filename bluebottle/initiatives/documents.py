@@ -65,7 +65,6 @@ class InitiativeDocument(DocType):
     activities = fields.NestedField(properties={
         'id': fields.LongField(),
         'title': fields.KeywordField(),
-        'contribution_date': fields.KeywordField(),
     })
 
     place = fields.NestedField(properties={

@@ -180,6 +180,9 @@ class IntentWebHookView(View):
                 return HttpResponse('Updated payment')
 
             elif event.type == 'charge.refunded':
+                if not event.data.object.payment_intent:
+                    return HttpResponse('Not an intent payment')
+
                 payment = self.get_payment(event.data.object.payment_intent)
                 payment.states.refund(save=True)
 

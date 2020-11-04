@@ -62,8 +62,9 @@ class NewPeriodForApplicationTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
-            current_period__lt=date.today(),
-            activity__status='running'
+            current_period__lte=date.today(),
+            activity__status='running',
+            status__in=('accepted', 'new', )
         )
 
     effects = [

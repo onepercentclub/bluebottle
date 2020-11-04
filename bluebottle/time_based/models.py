@@ -231,6 +231,10 @@ class PeriodApplication(Contribution, Application):
             ('api_delete_own_periodapplication', 'Can delete own application through the API'),
         )
 
+    @property
+    def current_duration(self):
+        return self.contribution_values.get(status='new')
+
 
 class Duration(ContributionValue):
     value = models.DurationField(_('value'))

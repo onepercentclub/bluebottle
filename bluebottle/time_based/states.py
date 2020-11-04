@@ -205,7 +205,27 @@ class OnADateApplicationStateMachine(ApplicationStateMachine):
 
 @register(PeriodApplication)
 class PeriodApplicationStateMachine(ApplicationStateMachine):
-    pass
+    stopped = State(
+        _('stopped'),
+        'stopped',
+        _('The application (temporarily) stopped. Durations will no longer be created.')
+    )
+
+    stop = Transition(
+        ApplicationStateMachine.accepted,
+        stopped,
+        name=_('Stop'),
+        description=_("Application stopped contributing."),
+        automatic=False,
+    )
+
+    start = Transition(
+        stopped,
+        ApplicationStateMachine.accepted,
+        name=_('Start'),
+        description=_("Application started contributing again."),
+        automatic=False,
+    )
 
 
 @register(Duration)

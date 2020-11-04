@@ -19,7 +19,7 @@ from bluebottle.time_based.effects import (
 from bluebottle.time_based.messages import DateChanged, DeadlineChanged
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, OnADateStateMachine, WithADeadlineStateMachine,
-    ApplicationStateMachine, DurationStateMachine
+    ApplicationStateMachine, PeriodApplicationStateMachine, DurationStateMachine
 )
 
 
@@ -434,6 +434,16 @@ class PeriodApplicationTriggers(ApplicationTriggers):
                 CreatePeriodDurationEffect,
             ]
         ),
+
+        TransitionTrigger(
+            PeriodApplicationStateMachine.stop,
+            effects=[
+                RelatedTransitionEffect(
+                    'current_duration',
+                    DurationStateMachine.fail
+                )
+            ]
+        ),
     ]
 
 
@@ -441,7 +451,7 @@ def duration_is_finished(effect):
     return effect.instance.end is None or effect.instance.end < now()
 
 
-@register(Duration)
+@ register(Duration)
 class DurationTriggers(ContributionValueTriggers):
     triggers = ContributionValueTriggers.triggers + [
         TransitionTrigger(

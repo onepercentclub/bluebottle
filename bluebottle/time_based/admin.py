@@ -17,7 +17,6 @@ class TimeBasedAdmin(ActivityChildAdmin):
 
     detail_fields = ActivityChildAdmin.detail_fields + (
         'capacity',
-        'duration',
         'is_online',
         'location',
         'location_hint',

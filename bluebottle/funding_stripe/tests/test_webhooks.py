@@ -241,6 +241,52 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.assertEqual(donation.status, 'refunded')
         self.assertEqual(payment.status, 'refunded')
 
+    def test_refund_no_intent(self):
+        with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
+            data = json.load(hook_file)
+            data['object']['id'] = self.intent.intent_id
+
+        transfer = stripe.Transfer(data['object']['charges']['data'][0]['transfer'])
+        transfer.update({
+            'id': data['object']['charges']['data'][0]['transfer'],
+            'amount': 2500,
+            'currency': 'eur'
+        })
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'payment_intent.succeeded', data
+            )
+        ):
+            with mock.patch(
+                'stripe.Transfer.retrieve',
+                return_value=transfer
+            ):
+                response = self.client.post(
+                    self.webhook,
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        with open('bluebottle/funding_stripe/tests/files/intent_webhook_refund.json') as hook_file:
+            data = json.load(hook_file)
+            data['object']['payment_intent'] = None
+
+        with mock.patch(
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.refunded', data
+            )
+        ):
+            response = self.client.post(
+                self.webhook,
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+            self.assertEqual(response.content, b'Not an intent payment')
+
     def test_refund_from_requested_refund(self):
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
             data = json.load(hook_file)

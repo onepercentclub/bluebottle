@@ -58,7 +58,32 @@ class WallpostOwnerFilterMixin(object):
         return qs
 
 
-class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
+class ParentTypeFilterMixin(object):
+
+    content_type_mapping = {
+        'on-a-date': 'onadateactivity',
+        'with-a-deadline': 'withadeadlineactivity',
+        'ongoing': 'ongoingactivity'
+    }
+
+    def get_queryset(self):
+        queryset = super(ParentTypeFilterMixin, self).get_queryset()
+        parent_type = self.request.query_params.get('parent_type', None)
+        parent_id = self.request.query_params.get('parent_id', None)
+        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding', 'time_based']
+        try:
+            parent_type = self.content_type_mapping[parent_type]
+        except KeyError:
+            pass
+        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
+
+        queryset = queryset.filter(content_type=content_type)
+        queryset = queryset.filter(object_id=parent_id)
+        queryset = queryset.order_by('-pinned', '-created')
+        return queryset
+
+
+class WallpostList(WallpostOwnerFilterMixin, ParentTypeFilterMixin, ListAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     pagination_class = BluebottlePagination
@@ -68,25 +93,12 @@ class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
         RelatedManagementOrReadOnlyPermission
     )
 
-    def get_queryset(self, queryset=queryset):
-        queryset = super(WallpostList, self).get_queryset()
-
-        # Some custom filtering projects slugs.
-        parent_type = self.request.query_params.get('parent_type', None)
-        parent_id = self.request.query_params.get('parent_id', None)
-        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding', 'time_based']
-        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
-        queryset = queryset.filter(content_type=content_type)
-        queryset = queryset.filter(object_id=parent_id)
-        queryset = queryset.order_by('-pinned', '-created')
-        return queryset
-
 
 class WallpostPagination(BluebottlePagination):
     page_size = 5
 
 
-class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIView):
+class TextWallpostList(WallpostOwnerFilterMixin, ParentTypeFilterMixin, SetAuthorMixin, ListCreateAPIView):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
@@ -97,17 +109,6 @@ class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIVi
         RelatedManagementOrReadOnlyPermission,
         DonationOwnerPermission,
     )
-
-    def get_queryset(self, queryset=None):
-        queryset = super(TextWallpostList, self).get_queryset()
-        parent_type = self.request.query_params.get('parent_type', None)
-        parent_id = self.request.query_params.get('parent_id', None)
-        white_listed_apps = ['initiatives', 'assignments', 'events', 'funding', 'time_based']
-        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
-        queryset = queryset.filter(content_type=content_type)
-        queryset = queryset.filter(object_id=parent_id)
-        queryset = queryset.order_by('-created')
-        return queryset
 
     def perform_create(self, serializer):
         self.check_object_permissions(

@@ -1,15 +1,18 @@
 from __future__ import division
+
 from past.utils import old_div
 from builtins import object
 import logging
 
 from babel.numbers import get_currency_symbol
+from bluebottle.utils.utils import reverse_signed
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin import TabularInline, SimpleListFilter
-from django.db import models
+from django.db import models, connection
 from django.http import HttpResponseRedirect
+from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -233,7 +236,7 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
 
     raw_id_fields = ['activity', 'payout', 'user']
     readonly_fields = ContributionChildAdmin.readonly_fields + [
-        'payment_link', 'payment_link', 'payout_amount',
+        'payment_link', 'payment_link', 'payout_amount', 'sync_payment_link'
     ]
     list_display = ['payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
     list_filter = [
@@ -247,7 +250,8 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
 
     superadmin_fields = [
         'force_status',
-        'amount'
+        'amount',
+        'sync_payment_link'
     ]
 
     fields = [
@@ -283,6 +287,69 @@ class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
     def get_changelist(self, request, **kwargs):
         self.total_column = 'amount'
         return TotalAmountAdminChangeList
+
+    def get_urls(self):
+        urls = super(StateMachineAdminMixin, self).get_urls()
+        custom_urls = [
+            url(
+                r'^(?P<pk>.+)/sync/$',
+                self.admin_site.admin_view(self.sync_payment),
+                name='funding_donation_sync',
+            )
+        ]
+        return custom_urls + urls
+
+    def sync_payment(self, request, pk=None):
+        donation = Donation.objects.get(pk=pk)
+        if str(donation.amount.currency) == 'NGN':
+            try:
+                donation.payment
+            except Payment.DoesNotExist:
+                payment = FlutterwavePayment.objects.create(
+                    donation=donation,
+                    tx_ref=donation.pk
+                )
+                payment.save()
+                self.message_user(
+                    request,
+                    'Generated missing payment',
+                    level='SUCCESS'
+                )
+            donation.payment.update()
+            self.message_user(
+                request,
+                'Checked payment status for {}'.format(donation.payment),
+                level='INFO'
+            )
+        else:
+            try:
+                if donation.payment.update:
+                    donation.payment.update()
+                    self.message_user(
+                        request,
+                        'Checked payment status for {}'.format(donation.payment),
+                        level='INFO'
+                    )
+                else:
+                    self.message_user(
+                        request,
+                        'Warning cannot check status for {}'.format(donation.payment),
+                        level='INFO'
+                    )
+            except Payment.DoesNotExist:
+                self.message_user(
+                    request,
+                    'Payment not found',
+                    level='WARNING'
+                )
+
+        donation_url = reverse('admin:funding_donation_change', args=(donation.id,))
+        response = HttpResponseRedirect(donation_url)
+        return response
+
+    def sync_payment_link(self, obj):
+        sync_url = reverse('admin:funding_donation_sync', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', sync_url, _('Sync donation with payment.'))
 
 
 class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
@@ -465,26 +532,34 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     ]
 
 
-class BankAccountChildAdmin(PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
+class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
     base_model = BankAccount
     raw_id_fields = ('connect_account',)
-    readonly_fields = ('verified', 'funding_links', 'created', 'updated')
-    fields = ('connect_account', 'reviewed', ) + readonly_fields
+    readonly_fields = ('document', 'funding_links', 'created', 'updated')
+    fields = ('funding_links', 'connect_account', 'document', 'status', 'states', 'created', 'updated')
     show_in_index = True
 
-    def get_form(self, request, obj=None, **kwargs):
-        help_texts = {
-            'verified': _('To verify this bank account review details here and also review the connected account.')
-        }
-        kwargs.update({'help_texts': help_texts})
-        return super(BankAccountChildAdmin, self).get_form(request, obj, **kwargs)
+    def document(self, obj):
+        if obj.connect_account and \
+                isinstance(obj.connect_account, PlainPayoutAccount) and \
+                obj.connect_account.document and \
+                obj.connect_account.document.file:
+            template = loader.get_template(
+                'admin/document_button.html'
+            )
+            if 'localhost' in connection.tenant.domain_url:
+                download_url = obj.connect_account.document.file.url
+            else:
+                download_url = reverse_signed('kyc-document', args=(obj.connect_account.id,))
+            return template.render({'document_url': download_url})
+        return "_"
 
 
 @admin.register(BankAccount)
 class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
     base_model = BankAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'funding_links')
-    list_filter = ('reviewed', PolymorphicChildModelFilter)
+    list_display = ('created', 'polymorphic_ctype', 'status', 'funding_links')
+    list_filter = ('status', PolymorphicChildModelFilter)
     raw_id_fields = ('connect_account',)
     show_in_index = True
     search_fields = ['externalaccount__account_id',
@@ -518,7 +593,20 @@ class BankAccountInline(TabularInline):
 class PlainPayoutAccountAdmin(PayoutAccountChildAdmin):
     model = PlainPayoutAccount
     inlines = [BankAccountInline]
-    fields = PayoutAccountChildAdmin.fields + ['document']
+    readonly_fields = ['document_link']
+    fields = PayoutAccountChildAdmin.fields + ['document', 'document_link']
+
+    def document_link(self, obj):
+        if obj.document and obj.document.file:
+            template = loader.get_template(
+                'admin/document_button.html'
+            )
+            if 'localhost' in connection.tenant.domain_url:
+                download_url = obj.document.file.url
+            else:
+                download_url = reverse_signed('kyc-document', args=(obj.id,))
+            return template.render({'document_url': download_url})
+        return "_"
 
 
 class DonationInline(PaymentLinkMixin, admin.TabularInline):

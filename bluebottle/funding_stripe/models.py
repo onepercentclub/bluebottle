@@ -190,7 +190,7 @@ class StripeSourcePayment(Payment):
                         self.states.succeed(save=True)
 
         except StripeError as error:
-            raise PaymentException(error.message)
+            raise PaymentException(error)
 
     def save(self, *args, **kwargs):
         created = not self.pk
@@ -574,6 +574,9 @@ class StripePayoutAccount(PayoutAccount):
 
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripes'
+
+    def __str__(self):
+        return u"Stripe connect account {}".format(self.account_id)
 
 
 @python_2_unicode_compatible

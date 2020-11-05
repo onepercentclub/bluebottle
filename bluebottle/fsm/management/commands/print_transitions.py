@@ -7,7 +7,7 @@ from django.utils.module_loading import import_string
 from bluebottle.fsm.triggers import TransitionTrigger
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.events.models import Event, Participant
-from bluebottle.funding.models import Donation, Funding
+from bluebottle.funding.models import Donation, Funding, PayoutAccount
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 
@@ -95,6 +95,9 @@ class Command(BaseCommand):
             instance.activity = Assignment(title="the assignment")
             instance.user = Member(first_name='the', last_name='applicant')
 
+        if isinstance(instance, PayoutAccount):
+            instance.owner = Member(first_name='the', last_name='owner')
+
         machine = instance.states
 
         text = ""
@@ -176,7 +179,7 @@ class Command(BaseCommand):
 
             for task in model.periodic_tasks:
                 text += u"<tr><td>{}</td><td><ul>{}</ul></td></tr>".format(
-                    str(task(instance)),
+                    task(instance),
                     "".join(["<li>{}</li>".format(effect(instance).to_html()) for effect in task(instance).effects])
                 )
             text += u"</table>"

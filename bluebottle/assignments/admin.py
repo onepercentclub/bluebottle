@@ -90,6 +90,7 @@ class AssignmentAdmin(ActivityChildAdmin):
         'preparation',
         'expertise',
         'is_online',
+        'online_meeting_url',
         'location',
         'highlight',
     )

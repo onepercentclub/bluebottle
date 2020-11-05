@@ -106,7 +106,7 @@ class PayoutTestCase(BluebottleTestCase):
         )
         BudgetLineFactory.create(activity=self.funding)
         payout_account = StripePayoutAccountFactory.create(reviewed=True, status='verified')
-        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
+        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = self.bank_account
         self.funding.states.submit()
         self.funding.states.approve(save=True)

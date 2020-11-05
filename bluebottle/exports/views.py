@@ -4,29 +4,26 @@ import posixpath
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.core.exceptions import PermissionDenied, ImproperlyConfigured
-from django.core.signing import BadSignature
 from django.db import connection
-from django.http import Http404, HttpResponse
+from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext_lazy as _
+from django.urls.base import reverse
 from django.views.generic import FormView, View
 from django.views.decorators.csrf import csrf_protect
+
+from django.views.generic.detail import DetailView
 
 import rules
 from celery.result import AsyncResult
 
 from bluebottle.exports.tasks import plain_export
-from bluebottle.utils.utils import reverse_signed
 
 from .compat import import_string, jquery_in_vendor
 from .exporter import get_export_models, Exporter
 from .tasks import export
-
-from bluebottle.utils.views import (
-    PrivateFileView
-)
 
 
 EXPORTDB_EXPORT_KEY = 'exportdb_export'
@@ -36,7 +33,7 @@ class ExportPermissionMixin(object):
     """
     Check permissions
     """
-    @method_decorator(login_required)
+    @method_decorator(staff_member_required)
     @method_decorator(csrf_protect)
     def dispatch(self, request, *args, **kwargs):
         if not rules.test_rule('exportdb.can_export', request.user):
@@ -129,23 +126,15 @@ class ExportPendingView(ExportPermissionMixin, View):
         content = {
             'status': async_result.state,
             'progress': progress,
-            'file': reverse_signed('exportdb_download', args=(async_result.result, )) if async_result.ready() else None
+            'file': reverse('exportdb_download', args=(async_result.result, )) if async_result.ready() else None
         }
         return self.json_response(content)
 
 
-class ExportDownloadView(PrivateFileView):
+class ExportDownloadView(ExportPermissionMixin, DetailView):
     """ Serve private files using X-sendfile header. """
 
     def get(self, request, filename):
-        try:
-            url = self.signer.unsign(self.request.GET['signature'], max_age=self.max_age)
-        except (KeyError, BadSignature):
-            raise Http404()
-
-        if not url == self.request.path:
-            raise Http404()
-
         response = HttpResponse()
 
         response['X-Accel-Redirect'] = posixpath.join(settings.EXPORTDB_EXPORT_MEDIA_URL, filename)

@@ -35,8 +35,8 @@ def _encode_message(message):
     encrypted message.
     2. The HMAC-SHA1 hash of that string.
     """
-    aes_key = get_settings()['aes_key']
-    hmac_key = get_settings()['hmac_key']
+    aes_key = get_settings()['aes_key'].encode('utf-8')
+    hmac_key = get_settings()['hmac_key'].encode('utf-8')
 
     pad = lambda s: s + (AES.block_size - len(s) % AES.block_size) * chr(
         AES.block_size - len(s) % AES.block_size)
@@ -87,7 +87,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         """
         data = message[:-20]
         checksum = message[-20:]
-        hmac_data = hmac.new(bytes(self.settings['hmac_key']), bytes(data), hashlib.sha1)
+        hmac_data = hmac.new(bytes(self.settings['hmac_key'].encode('utf-8')), bytes(data), hashlib.sha1)
 
         return True if hmac_data.digest() == checksum else False
 
@@ -140,7 +140,7 @@ class TokenAuthentication(BaseTokenAuthentication):
         init_vector = message[:16]
         enc_message = message[16:-20]
 
-        aes = AES.new(bytes(self.settings['aes_key']), AES.MODE_CBC, init_vector)
+        aes = AES.new(bytes(self.settings['aes_key'].encode('utf-8')), AES.MODE_CBC, init_vector)
         message = aes.decrypt(enc_message).decode('utf-8')
 
         # Get the login data in an easy-to-use tuple.

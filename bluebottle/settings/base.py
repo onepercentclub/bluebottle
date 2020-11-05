@@ -273,7 +273,6 @@ SHARED_APPS = (
     'lockdown',
     'django_extensions',
     'raven.contrib.django',
-    'djcelery',
     'micawber.contrib.mcdjango',  # Embedding videos
     'loginas',
     'geoposition',
@@ -400,8 +399,6 @@ TENANT_APPS = (
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
     'bluebottle.bb_projects',
-    'bluebottle.bb_fundraisers',
-    'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
 
@@ -456,7 +453,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s %(levelname)s %(name) %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(asctime)s %(levelname)s %(name)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
             'format': '%(asctime)s %(levelname)s %(name)s %(message)s'

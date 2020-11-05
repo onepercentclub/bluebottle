@@ -1,9 +1,11 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.effects import RelatedTransitionEffect
-from bluebottle.fsm.state import Transition, State, register
-from bluebottle.funding.states import BasePaymentStateMachine, PayoutAccountStateMachine
-from bluebottle.funding_stripe.models import StripePayment, StripeSourcePayment, StripePayoutAccount
+from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
+from bluebottle.fsm.state import Transition, State, EmptyState
+from bluebottle.fsm.state import register
+from bluebottle.funding.effects import SubmitConnectedActivitiesEffect
+from bluebottle.funding.states import BasePaymentStateMachine, PayoutAccountStateMachine, BankAccountStateMachine
+from bluebottle.funding_stripe.models import StripePayment, StripeSourcePayment, StripePayoutAccount, ExternalAccount
 
 
 @register(StripePayment)
@@ -85,3 +87,49 @@ class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
 @register(StripePayoutAccount)
 class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
     pass
+
+
+class StripeBankAccountStateMachine(BankAccountStateMachine):
+    model = ExternalAccount
+
+    def account_verified(self):
+        """the related connect account is verified"""
+        return self.instance.connect_account and self.instance.connect_account.status == 'verified'
+
+    initiate = Transition(
+        EmptyState(),
+        BankAccountStateMachine.unverified,
+        name=_("Initiate"),
+        description=_("Bank account details are entered."),
+        effects=[
+            TransitionEffect(
+                'verify',
+                conditions=[account_verified]
+            )
+        ]
+    )
+
+    reject = Transition(
+        [
+            BankAccountStateMachine.verified,
+            BankAccountStateMachine.unverified,
+            BankAccountStateMachine.incomplete],
+        BankAccountStateMachine.rejected,
+        name=_('Reject'),
+        description=_("Reject bank account"),
+        automatic=True
+    )
+
+    verify = Transition(
+        [
+            BankAccountStateMachine.incomplete,
+            BankAccountStateMachine.unverified
+        ],
+        BankAccountStateMachine.verified,
+        name=_('Verify'),
+        description=_("Verify that the bank account is complete."),
+        automatic=True,
+        effects=[
+            SubmitConnectedActivitiesEffect
+        ]
+    )

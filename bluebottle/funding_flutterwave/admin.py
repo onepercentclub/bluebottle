@@ -24,9 +24,9 @@ class FlutterwavePaymentProviderAdmin(PaymentProviderChildAdmin):
 class FlutterwaveBankAccountAdmin(BankAccountChildAdmin):
     model = FlutterwaveBankAccount
 
-    fields = BankAccountChildAdmin.fields + (
+    fields = (
         'account_holder_name', 'bank_country_code',
-        'bank_code', 'account_number', 'account')
+        'bank_code', 'account_number', 'account') + BankAccountChildAdmin.fields
     list_filter = ['bank_code', 'reviewed']
     search_fields = ['account_holder_name', 'account_number']
     list_display = ['created', 'account_holder_name', 'account_number', 'bank_code', 'reviewed']

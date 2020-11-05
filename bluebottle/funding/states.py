@@ -2,8 +2,12 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
+from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
+from bluebottle.funding.effects import SubmitConnectedActivitiesEffect, DeleteDocumentEffect
+from bluebottle.funding.messages import PayoutAccountVerified, PayoutAccountRejected
 from bluebottle.funding.models import Funding, Donation, Payment, Payout, PlainPayoutAccount
+from bluebottle.notifications.effects import NotificationEffect
 
 
 @register(Funding)
@@ -466,6 +470,75 @@ class PayoutStateMachine(ModelStateMachine):
     )
 
 
+class BankAccountStateMachine(ModelStateMachine):
+    verified = State(
+        _('verified'),
+        'verified',
+        _("Bank account is verified")
+    )
+    incomplete = State(
+        _('incomplete'),
+        'incomplete',
+        _("Bank account details are missing or incorrect")
+    )
+    unverified = State(
+        _('unverified'),
+        'unverified',
+        _("Bank account still needs to be verified")
+    )
+    rejected = State(
+        _('rejected'),
+        'rejected',
+        _("Bank account is rejected")
+    )
+
+    initiate = Transition(
+        EmptyState(),
+        unverified,
+        name=_("Initiate"),
+        description=_("Bank account details are entered.")
+    )
+
+    request_changes = Transition(
+        [verified, unverified],
+        incomplete,
+        name=_('Request changes'),
+        description=_("Bank account is missing details"),
+        automatic=False
+    )
+
+    reject = Transition(
+        [verified, unverified, incomplete],
+        rejected,
+        name=_('Reject'),
+        description=_("Reject bank account"),
+        automatic=False,
+        effects=[
+            RelatedTransitionEffect(
+                'connect_account',
+                'reject',
+                description='Reject connected KYC account'
+            )
+        ]
+    )
+
+    verify = Transition(
+        [incomplete, unverified],
+        verified,
+        name=_('Verify'),
+        description=_("Verify that the bank account is complete."),
+        automatic=False,
+        effects=[
+            SubmitConnectedActivitiesEffect,
+            RelatedTransitionEffect(
+                'connect_account',
+                'verify',
+                description='Verify connected KYC account'
+            )
+        ]
+    )
+
+
 class PayoutAccountStateMachine(ModelStateMachine):
     new = State(
         _('new'),
@@ -527,6 +600,10 @@ class PayoutAccountStateMachine(ModelStateMachine):
         description=_("Verify the payout account."),
         automatic=False,
         permission=can_approve,
+        effects=[
+            NotificationEffect(PayoutAccountVerified),
+            RelatedTransitionEffect('external_accounts', 'verify')
+        ]
     )
 
     reject = Transition(
@@ -535,6 +612,10 @@ class PayoutAccountStateMachine(ModelStateMachine):
         name=_('Reject'),
         description=_("Reject the payout account."),
         automatic=False,
+        effects=[
+            NotificationEffect(PayoutAccountRejected),
+            RelatedTransitionEffect('external_accounts', 'reject')
+        ]
     )
 
     set_incomplete = Transition(
@@ -549,4 +630,37 @@ class PayoutAccountStateMachine(ModelStateMachine):
 
 @register(PlainPayoutAccount)
 class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
-    pass
+    model = PlainPayoutAccount
+    verify = Transition(
+        [
+            PayoutAccountStateMachine.new,
+            PayoutAccountStateMachine.pending,
+            PayoutAccountStateMachine.incomplete,
+            PayoutAccountStateMachine.rejected
+        ],
+        PayoutAccountStateMachine.verified,
+        name=_('Verify'),
+        description=_("Verify the KYC account. You will hereby confirm that you verified the users identity."),
+        automatic=False,
+        permission=PayoutAccountStateMachine.can_approve,
+        effects=[
+            NotificationEffect(PayoutAccountVerified),
+            DeleteDocumentEffect
+        ]
+    )
+    reject = Transition(
+        [
+            PayoutAccountStateMachine.new,
+            PayoutAccountStateMachine.incomplete,
+            PayoutAccountStateMachine.verified
+        ],
+        PayoutAccountStateMachine.rejected,
+        name=_('Reject'),
+        description=_("Reject the payout account. The uploaded ID scan "
+                      "will be removed with this step."),
+        automatic=False,
+        effects=[
+            NotificationEffect(PayoutAccountRejected),
+            DeleteDocumentEffect
+        ]
+    )

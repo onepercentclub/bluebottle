@@ -34,7 +34,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(FlutterwavePaymentTestCase, self).setUp()
-        provider = FlutterwavePaymentProviderFactory.create()
+        self.provider = FlutterwavePaymentProviderFactory.create()
 
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
@@ -46,7 +46,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
 
         self.payment_url = reverse('flutterwave-payment-list')
 
-        self.tx_ref = "{}-{}".format(provider.prefix, self.donation.id)
+        self.tx_ref = "{}-{}".format(self.provider.prefix, self.donation.id)
 
         self.data = {
             'data': {
@@ -76,6 +76,47 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['attributes']['tx-ref'], self.tx_ref)
         self.donation.refresh_from_db()
         self.assertEqual(self.donation.status, 'succeeded')
+
+    @patch('bluebottle.funding_flutterwave.utils.post', return_value=success_response)
+    def test_create_anonymous_payment_success(self, flutterwave_post):
+        donation = DonationFactory.create(
+            activity=self.funding,
+            amount=Money(1000, 'NGN'),
+            user=self.user,
+            client_secret='348576245976234597'
+        )
+        self.tx_ref = "{}-{}".format(self.provider.prefix, donation.id)
+
+        self.data = {
+            'data': {
+                'type': 'payments/flutterwave-payments',
+                'attributes': {
+                    'tx-ref': self.tx_ref
+                },
+                'relationships': {
+                    'donation': {
+                        'data': {
+                            'type': 'contributions/donations',
+                            'id': donation.pk,
+                        }
+                    }
+                }
+            }
+        }
+
+        response = self.client.post(
+            self.payment_url,
+            data=json.dumps(self.data),
+            HTTP_AUTHORIZATION='Donation {}'.format(donation.client_secret)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['attributes']['status'], 'succeeded')
+        self.assertEqual(data['data']['attributes']['tx-ref'], self.tx_ref)
+        donation.refresh_from_db()
+        self.assertEqual(donation.status, 'succeeded')
 
     @patch('bluebottle.funding_flutterwave.utils.post', return_value=failed_response)
     def test_create_payment_failure(self, flutterwave_post):

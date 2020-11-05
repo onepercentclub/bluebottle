@@ -61,5 +61,7 @@ class PledgeBankAccount(BankAccount):
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/pledge-external-accounts'
 
+    def __str__(self):
+        return u"Pledge bank account {}".format(self.account_holder_name)
 
 from .states import *  # noqa

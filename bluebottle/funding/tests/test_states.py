@@ -27,7 +27,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         )
         BudgetLineFactory.create(activity=self.funding)
         payout_account = StripePayoutAccountFactory.create(status='verified')
-        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
+        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = self.bank_account
         self.funding.save()
 
@@ -146,7 +146,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         )
         BudgetLineFactory.create(activity=self.funding)
         payout_account = PlainPayoutAccountFactory.create()
-        bank_account = BankAccountFactory.create(connect_account=payout_account)
+        bank_account = BankAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = bank_account
         self.funding.save()
 
@@ -321,7 +321,7 @@ class DonationStateMachineTests(BluebottleTestCase):
         )
         BudgetLineFactory.create(activity=self.funding)
         payout_account = StripePayoutAccountFactory.create(status='verified')
-        bank_account = ExternalAccountFactory.create(connect_account=payout_account)
+        bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = bank_account
         self.funding.save()
         self.funding.states.submit()
@@ -490,7 +490,7 @@ class BasePaymentStateMachineTests(BluebottleTestCase):
         )
         BudgetLineFactory.create(activity=self.funding)
         payout_account = StripePayoutAccountFactory.create(status='verified')
-        bank_account = ExternalAccountFactory.create(connect_account=payout_account)
+        bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = bank_account
         self.funding.states.submit()
         self.funding.states.approve(save=True)

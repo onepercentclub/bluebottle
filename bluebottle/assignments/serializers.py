@@ -70,10 +70,31 @@ class AssignmentSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('assignment-detail', view_args=('pk',))
     contributions = FilteredRelatedField(many=True, filter_backend=ApplicantListFilter)
 
+    def get_fields(self):
+        fields = super(AssignmentSerializer, self).get_fields()
+        user = self.context['request'].user
+
+        if (
+            not user.is_authenticated or (
+                self.instance and (
+                    user not in [
+                        self.instance.owner,
+                        self.instance.initiative.owner,
+                        self.instance.initiative.activity_manager
+                    ] and
+                    not len(self.instance.applicants.filter(user=user))
+                )
+            )
+        ):
+            del fields['online_meeting_url']
+
+        return fields
+
     class Meta(BaseActivitySerializer.Meta):
         model = Assignment
         fields = BaseActivitySerializer.Meta.fields + (
             'is_online',
+            'online_meeting_url',
             'date',
             'local_date',
             'end_date_type',

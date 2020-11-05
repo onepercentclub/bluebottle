@@ -83,6 +83,7 @@ class EventAdmin(ActivityChildAdmin):
         'duration',
         'registration_deadline',
         'is_online',
+        'online_meeting_url',
         'location',
         'location_hint',
         'highlight',

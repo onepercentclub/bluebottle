@@ -115,4 +115,9 @@ celerybeat.pid
 # tenants
 tenants
 
+celerybeat-schedule
+
 reef-prod-current.sql.bz2
+.envrc
+.pre-commit-config.yml
+

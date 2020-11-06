@@ -297,13 +297,19 @@ def automatically_accept(effect):
 def activity_will_be_full(effect):
     "the activity is full"
     activity = effect.instance.activity
-    return activity.capacity == len(activity.accepted_applications) + 1
+    return (
+        activity.capacity and
+        activity.capacity == len(activity.accepted_applications) + 1
+    )
 
 
 def activity_will_not_be_full(effect):
     "the activity is full"
     activity = effect.instance.activity
-    return activity.capacity >= len(activity.accepted_applications)
+    return (
+        activity.capacity and
+        activity.capacity >= len(activity.accepted_applications)
+    )
 
 
 def activity_is_finished(effect):

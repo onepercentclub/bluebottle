@@ -1,0 +1,19 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=to.first_name assignment_title=obj.title assignment_date=obj.date|date context 'email' %}
+Hi {{ recipient_name }},
+
+Heads up: The deadline of your task "{{ assignment_title }}" has been changed.
+
+The new date is: {{ assignment_date }}.
+
+If you are unable to contribute, please withdraw via the platform so that others can take your place.
+{% endblocktrans %}
+
+{% endblock %}
+
+{% block action %}
+   {% trans 'Go to task' context 'email' %} {{ obj.get_absolute_url }}
+{% endblock %}`

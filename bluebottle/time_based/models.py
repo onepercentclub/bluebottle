@@ -91,7 +91,7 @@ class OnADateActivity(TimeBasedActivity):
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/on-a-date'
+        resource_name = 'activities/time-based/on-a-dates'
 
     @property
     def required_fields(self):
@@ -194,7 +194,7 @@ class WithADeadlineActivity(TimeBasedActivity):
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/with-a-deadline'
+        resource_name = 'activities/time-based/with-a-deadlines'
 
     @property
     def required_fields(self):
@@ -231,7 +231,7 @@ class OngoingActivity(TimeBasedActivity):
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/ongoing'
+        resource_name = 'activities/time-based/ongoings'
 
     @property
     def required_fields(self):

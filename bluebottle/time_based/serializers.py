@@ -65,11 +65,14 @@ class OnADateActivitySerializer(TimeBasedBaseSerializer):
     links = serializers.SerializerMethodField()
 
     def get_links(self, instance):
-        return {
-            'ical': reverse_signed('on-a-date-ical', args=(instance.pk, )),
-            'google': instance.google_calendar_link,
-            'outlook': instance.outlook_link,
-        }
+        if instance.start and instance.duration:
+            return {
+                'ical': reverse_signed('on-a-date-ical', args=(instance.pk, )),
+                'google': instance.google_calendar_link,
+                'outlook': instance.outlook_link,
+            }
+        else:
+            return {}
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = OnADateActivity
@@ -119,7 +122,7 @@ class OngoingActivitySerializer(TimeBasedBaseSerializer):
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
-        resource_name = 'activities/time-based/ongoing'
+        resource_name = 'activities/time-based/ongoings'
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,

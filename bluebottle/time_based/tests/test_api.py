@@ -1,8 +1,12 @@
 import json
 from datetime import timedelta, date
 
+from urllib.parse import urlparse, parse_qs
+
 from django.urls import reverse
-from django.utils.timezone import now
+from django.utils.timezone import now, utc
+
+import icalendar
 
 from rest_framework import status
 
@@ -343,6 +347,62 @@ class OnADateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTes
             'duration': '4:00',
         })
 
+    def test_get_calendar_links(self):
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        links = response.json()['data']['attributes']['links']
+        google_link = urlparse(links['google'])
+        google_query = parse_qs(google_link.query)
+
+        self.assertEqual(google_link.netloc, 'calendar.google.com')
+        self.assertEqual(google_link.path, '/calendar/render')
+
+        self.assertEqual(google_query['action'][0], 'TEMPLATE')
+        self.assertEqual(google_query['location'][0], self.activity.location.formatted_address)
+        self.assertEqual(google_query['text'][0], self.activity.title)
+        self.assertEqual(google_query['uid'][0], 'test-onadateactivity-{}'.format(self.activity.pk))
+
+        details = (
+            u"{}\n"
+            u"http://testserver/en/initiatives/activities/details/"
+            u"onadateactivity/{}/{}"
+        ).format(
+            self.activity.description, self.activity.pk, self.activity.slug
+        )
+
+        self.assertEqual(google_query['details'][0], details)
+        self.assertEqual(
+            google_query['dates'][0],
+            u'{}/{}'.format(
+                self.activity.start.astimezone(utc).strftime('%Y%m%dT%H%M%SZ'),
+                (self.activity.start + self.activity.duration).astimezone(utc).strftime('%Y%m%dT%H%M%SZ')
+            )
+        )
+
+        outlook_link = urlparse(links['outlook'])
+        outlook_query = parse_qs(outlook_link.query)
+
+        self.assertEqual(outlook_link.netloc, 'outlook.live.com')
+        self.assertEqual(outlook_link.path, '/owa/')
+
+        self.assertEqual(outlook_query['rru'][0], 'addevent')
+        self.assertEqual(outlook_query['path'][0], u'/calendar/action/compose&rru=addevent')
+        self.assertEqual(outlook_query['location'][0], self.activity.location.formatted_address)
+        self.assertEqual(outlook_query['subject'][0], self.activity.title)
+        self.assertEqual(outlook_query['body'][0], details)
+        self.assertEqual(
+            outlook_query['startdt'][0],
+            self.activity.start.astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
+        )
+        self.assertEqual(
+            outlook_query['enddt'][0],
+            (self.activity.start + self.activity.duration).astimezone(utc).strftime('%Y-%m-%dT%H:%M:%S')
+        )
+
+        self.assertTrue(
+            links['ical'].startswith(reverse('on-a-date-ical', args=(self.activity.pk, )))
+        )
+
 
 class WithADeadlineDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
     type = 'with-a-deadline'
@@ -475,7 +535,9 @@ class ApplicationListViewTestCase():
         self.data = {
             'data': {
                 'type': self.application_type,
-                'attributes': {},
+                'attributes': {
+                    'motiviation': 'I am great',
+                },
                 'relationships': {
                     'activity': {
                         'data': {
@@ -533,6 +595,8 @@ class ApplicationListViewTestCase():
             }
         }
 
+        print('url: {}'.format(self.url))
+        print('data: {}'.format(self.data))
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
 
         data = response.json()['data']
@@ -785,6 +849,9 @@ class ApplicationTransitionAPIViewTestCase():
         # Owner can delete the event
         self.data['data']['attributes']['transition'] = 'withdraw'
 
+        print('url: {}'.format(self.url))
+        print('data: {}'.format(self.data))
+
         response = self.client.post(
             self.url,
             json.dumps(self.data),
@@ -864,3 +931,59 @@ class OngoingApplicationTransitionListAPIViewTestCase(ApplicationTransitionAPIVi
 
     factory = OngoingActivityFactory
     application_factory = PeriodApplicationFactory
+
+
+class OnADateIcalTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.activity = OnADateActivityFactory.create(title='Pollute Katwijk Beach')
+
+        self.activity_url = reverse('on-a-date-detail', args=(self.activity.pk,))
+        response = self.client.get(self.activity_url)
+
+        self.signed_url = response.json()['data']['attributes']['links']['ical']
+        self.unsigned_url = reverse('on-a-date-ical', args=(self.activity.pk,))
+
+    def test_get(self):
+        response = self.client.get(self.signed_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.get('content-type'), 'text/calendar')
+        self.assertEqual(
+            response.get('content-disposition'),
+            'attachment; filename="{}.ics"'.format(self.activity.slug)
+        )
+
+        calendar = icalendar.Calendar.from_ical(response.content)
+
+        for ical_event in calendar.walk('vevent'):
+            self.assertAlmostEqual(
+                ical_event['dtstart'].dt,
+                self.activity.start,
+                delta=timedelta(seconds=10)
+            )
+            self.assertAlmostEqual(
+                ical_event['dtend'].dt,
+                self.activity.start + self.activity.duration,
+                delta=timedelta(seconds=10)
+            )
+
+            self.assertEqual(ical_event['dtstart'].dt.tzinfo, utc)
+            self.assertEqual(ical_event['dtend'].dt.tzinfo, utc)
+
+            self.assertEqual(str(ical_event['summary']), self.activity.title)
+            self.assertEqual(
+                str(ical_event['description']),
+                '{}\n{}'.format(self.activity.description, self.activity.get_absolute_url())
+            )
+            self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
+            self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
+
+    def test_get_no_signature(self):
+        response = self.client.get(self.unsigned_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_wrong_signature(self):
+        response = self.client.get('{}?signature=ewiorjewoijical_url'.format(self.unsigned_url))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

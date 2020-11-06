@@ -6,6 +6,7 @@ from bluebottle.time_based.views import (
     OnADateTransitionList, WithADeadlineTransitionList, OngoingTransitionList,
     OnADateApplicationList, OnADateApplicationDetail,
     OnADateApplicationTransitionList, OnADateApplicationDocumentDetail,
+    OnADateActivityIcalView,
 
     PeriodApplicationList, PeriodApplicationDetail,
     PeriodApplicationTransitionList, PeriodApplicationDocumentDetail
@@ -28,6 +29,10 @@ urlpatterns = [
     url(r'^/on-a-date/(?P<pk>\d+)$',
         OnADateActivityDetailView.as_view(),
         name='on-a-date-detail'),
+
+    url(r'^/on-a-date/ical/(?P<pk>\d+)$',
+        OnADateActivityIcalView.as_view(),
+        name='on-a-date-ical'),
 
     url(r'^/with-a-deadline/(?P<pk>\d+)$',
         WithADeadlineActivityDetailView.as_view(),

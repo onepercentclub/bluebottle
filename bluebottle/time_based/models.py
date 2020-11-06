@@ -1,12 +1,16 @@
-from django.db import models
+from urllib.parse import urlencode
+
+from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
-
+from django.utils.html import strip_tags
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution, ContributionValue
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
+
+from html.parser import HTMLParser
 
 
 class TimeBasedActivity(Activity):
@@ -94,6 +98,63 @@ class OnADateActivity(TimeBasedActivity):
         fields = super().required_fields
 
         return fields + ['start', 'duration']
+
+    @property
+    def uid(self):
+        return '{}-{}-{}'.format(connection.tenant.client_name, 'onadateactivity', self.pk)
+
+    @property
+    def google_calendar_link(self):
+        def format_date(date):
+            if date:
+                return date.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+
+        url = u'https://calendar.google.com/calendar/render'
+        params = {
+            'action': u'TEMPLATE',
+            'text': self.title,
+            'dates': u'{}/{}'.format(
+                format_date(self.start), format_date(self.start + self.duration)
+            ),
+            'details': HTMLParser().unescape(
+                u'{}\n{}'.format(
+                    strip_tags(self.description), self.get_absolute_url()
+                )
+            ),
+            'uid': self.uid,
+        }
+
+        if self.location:
+            params['location'] = self.location.formatted_address
+
+        return u'{}?{}'.format(url, urlencode(params))
+
+    @property
+    def outlook_link(self):
+        def format_date(date):
+            if date:
+                return date.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')
+
+        url = 'https://outlook.live.com/owa/'
+
+        params = {
+            'rru': 'addevent',
+            'path': '/calendar/action/compose&rru=addevent',
+            'allday': False,
+            'subject': self.title,
+            'startdt': format_date(self.start),
+            'enddt': format_date(self.start + self.duration),
+            'body': HTMLParser().unescape(
+                u'{}\n{}'.format(
+                    strip_tags(self.description), self.get_absolute_url()
+                )
+            ),
+        }
+
+        if self.location:
+            params['location'] = self.location.formatted_address
+
+        return u'{}?{}'.format(url, urlencode(params))
 
 
 class DurationPeriodChoices(DjangoChoices):

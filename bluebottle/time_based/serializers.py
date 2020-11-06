@@ -12,7 +12,6 @@ from bluebottle.activities.utils import (
 
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
 from bluebottle.fsm.serializers import TransitionSerializer
-from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 
 from bluebottle.time_based.models import (
     TimeBasedActivity, OnADateActivity, WithADeadlineActivity, OngoingActivity,
@@ -20,6 +19,9 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.time_based.permissions import ApplicationDocumentPermission
 from bluebottle.time_based.filters import ApplicationListFilter
+
+from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
+from bluebottle.utils.utils import reverse_signed
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
@@ -60,10 +62,19 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
 class OnADateActivitySerializer(TimeBasedBaseSerializer):
     permissions = ResourcePermissionField('on-a-date-detail', view_args=('pk',))
 
+    links = serializers.SerializerMethodField()
+
+    def get_links(self, instance):
+        return {
+            'ical': reverse_signed('on-a-date-ical', args=(instance.pk, )),
+            'google': instance.google_calendar_link,
+            'outlook': instance.outlook_link,
+        }
+
     class Meta(TimeBasedBaseSerializer.Meta):
         model = OnADateActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start', 'duration',
+            'start', 'duration', 'links'
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):

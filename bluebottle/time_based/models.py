@@ -159,9 +159,9 @@ class OnADateActivity(TimeBasedActivity):
 
 class DurationPeriodChoices(DjangoChoices):
     overall = ChoiceItem('overall', label=_("overall"))
-    day = ChoiceItem('day', label=_("per day"))
-    week = ChoiceItem('week', label=_("per week"))
-    month = ChoiceItem('month', label=_("per month"))
+    days = ChoiceItem('days', label=_("per day"))
+    weeks = ChoiceItem('weeks', label=_("per week"))
+    months = ChoiceItem('months', label=_("per month"))
 
 
 class WithADeadlineActivity(TimeBasedActivity):

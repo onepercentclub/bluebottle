@@ -80,6 +80,13 @@ class OnADateActivitySerializer(TimeBasedBaseSerializer):
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/on-a-dates'
 
+    included_serializers = dict(
+        TimeBasedBaseSerializer.included_serializers,
+        **{
+            'contributions': 'bluebottle.time_based.serializers.OnADateApplicationSerializer',
+        }
+    )
+
 
 class WithADeadlineActivitySerializer(TimeBasedBaseSerializer):
     permissions = ResourcePermissionField('with-a-deadline-detail', view_args=('pk',))
@@ -93,6 +100,13 @@ class WithADeadlineActivitySerializer(TimeBasedBaseSerializer):
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/with-a-deadlines'
 
+    included_serializers = dict(
+        TimeBasedBaseSerializer.included_serializers,
+        **{
+            'contributions': 'bluebottle.time_based.serializers.PeriodApplicationSerializer',
+        }
+    )
+
 
 class OngoingActivitySerializer(TimeBasedBaseSerializer):
     permissions = ResourcePermissionField('ongoing-detail', view_args=('pk',))
@@ -105,7 +119,14 @@ class OngoingActivitySerializer(TimeBasedBaseSerializer):
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
-        resource_name = 'activities/time-based/ongoings'
+        resource_name = 'activities/time-based/ongoing'
+
+    included_serializers = dict(
+        TimeBasedBaseSerializer.included_serializers,
+        **{
+            'contributions': 'bluebottle.time_based.serializers.PeriodApplicationSerializer',
+        }
+    )
 
 
 class TimeBasedActivitySerializer(PolymorphicModelSerializer):

@@ -102,6 +102,18 @@ models = [
         'page_id': '742359221'
     },
 
+    # Time-based Activities
+    {
+        'title': 'States - Time based - Activity on a date',
+        'model': 'bluebottle.time_based.models.OnADateActivity',
+        'page_id': '1120731198'
+    },
+    {
+        'title': 'States - Time based - Activity over time',
+        'model': 'bluebottle.assignments.models.OngoingActivity',
+        'page_id': '1120731205'
+    },
+
 ]
 
 api = settings.CONFLUENCE['api']

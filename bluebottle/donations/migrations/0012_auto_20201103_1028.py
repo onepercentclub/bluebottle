@@ -9,6 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('donations', '0011_auto_20191101_1046'),
+        ('wallposts', '0020_auto_20191017_2208'),
     ]
 
     operations = [

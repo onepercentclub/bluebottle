@@ -55,7 +55,7 @@ class TelesomPaymentTestCase(BluebottleTestCase):
             }
         }
 
-    @patch('bluebottle.funding_telesom.utils.requests.post', return_value=MockReponse())
+    @patch('bluebottle.funding_telesom.tasks.requests.post', return_value=MockReponse())
     def test_create_payment(self, telesom_post):
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

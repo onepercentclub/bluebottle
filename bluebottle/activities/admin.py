@@ -302,7 +302,14 @@ class ContributionInline(admin.TabularInline):
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
-    child_models = (Event, Funding, Assignment)
+    child_models = (
+        Event,
+        Funding,
+        Assignment,
+        WithADeadlineActivity,
+        OnADateActivity,
+        OngoingActivity
+    )
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter, 'highlight')

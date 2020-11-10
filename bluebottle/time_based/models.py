@@ -270,6 +270,9 @@ class OnADateApplication(Application, Contribution):
             ('api_delete_own_onadateapplication', 'Can delete own application through the API'),
         )
 
+    def __str__(self):
+        return str(_("On a date application"))
+
 
 class PeriodApplication(Contribution, Application):
     motivation = models.TextField(blank=True)
@@ -295,6 +298,9 @@ class PeriodApplication(Contribution, Application):
     @property
     def current_duration(self):
         return self.contribution_values.get(status='new')
+
+    def __str__(self):
+        return str(_("Period application"))
 
 
 class Duration(ContributionValue):

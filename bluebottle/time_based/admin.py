@@ -1,12 +1,39 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 
 from bluebottle.fsm.admin import StateMachineFilter
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity
+    OnADateActivity, WithADeadlineActivity, OngoingActivity, OnADateApplication, PeriodApplication, Application
 )
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import export_as_csv_action
+from django.utils.translation import ugettext_lazy as _
+
+
+class BaseApplicationAdminInline(admin.TabularInline):
+    model = Application
+    readonly_fields = ('edit', 'created', 'transition_date', 'status')
+    raw_id_fields = ('user', 'document')
+    extra = 0
+
+    def edit(self, obj):
+        if not obj.id:
+            return '-'
+        return format_html(
+            '<a href="{}">{}</a>',
+            reverse('admin:time_based_application_change', args=(obj.id,)),
+            _('Edit participant')
+        )
+
+
+class OnADateApplicationAdminInline(BaseApplicationAdminInline):
+    model = OnADateApplication
+
+
+class PeriodApplicationAdminInline(BaseApplicationAdminInline):
+    model = PeriodApplication
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
@@ -46,6 +73,8 @@ class TimeBasedAdmin(ActivityChildAdmin):
 @admin.register(OnADateActivity)
 class OnADateActivityAdmin(TimeBasedAdmin):
     base_model = OnADateActivity
+
+    inlines = (OnADateApplicationAdminInline, ) + TimeBasedAdmin.inlines
 
     date_hierarchy = 'start'
     list_display = TimeBasedAdmin.list_display + [
@@ -91,6 +120,7 @@ class WithADeadlineActivityAdmin(TimeBasedAdmin):
 @admin.register(OngoingActivity)
 class OngoingActivityAdmin(TimeBasedAdmin):
     base_model = OngoingActivity
+    inlines = (PeriodApplicationAdminInline, ) + TimeBasedAdmin.inlines
 
     list_display = TimeBasedAdmin.list_display + [
         'duration', 'duration_period'

@@ -10,7 +10,7 @@ from bluebottle.activities.triggers import (
 )
 
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity,
+    DateActivity, PeriodActivity,
     OnADateApplication, PeriodApplication, Duration
 )
 from bluebottle.time_based.effects import (
@@ -18,7 +18,7 @@ from bluebottle.time_based.effects import (
 )
 from bluebottle.time_based.messages import DateChanged, DeadlineChanged
 from bluebottle.time_based.states import (
-    TimeBasedStateMachine, OnADateStateMachine, WithADeadlineStateMachine,
+    TimeBasedStateMachine, DateStateMachine, PeriodStateMachine,
     ApplicationStateMachine, PeriodApplicationStateMachine, DurationStateMachine
 )
 
@@ -95,7 +95,7 @@ def deadline_is_not_passed(effect):
 def is_started(effect):
     to_compare = now()
 
-    if not isinstance(effect.instance, OnADateActivity):
+    if not isinstance(effect.instance, DateActivity):
         to_compare = to_compare.date()
 
     return (
@@ -107,7 +107,7 @@ def is_started(effect):
 def is_not_started(effect):
     to_compare = now()
 
-    if not isinstance(effect.instance, OnADateActivity):
+    if not isinstance(effect.instance, DateActivity):
         to_compare = to_compare.date()
 
     return (
@@ -144,18 +144,18 @@ class TimeBasedTriggers(ActivityTriggers):
     ]
 
 
-@register(OnADateActivity)
-class OnADateTriggers(TimeBasedTriggers):
+@register(DateActivity)
+class DateTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
         TransitionTrigger(
-            OnADateStateMachine.reschedule,
+            DateStateMachine.reschedule,
             effects=[
                 TransitionEffect(TimeBasedStateMachine.lock, conditions=[is_full]),
             ]
         ),
 
         TransitionTrigger(
-            OnADateStateMachine.succeed,
+            DateStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect(
                     'accepted_durations',
@@ -165,7 +165,7 @@ class OnADateTriggers(TimeBasedTriggers):
         ),
 
         TransitionTrigger(
-            OnADateStateMachine.reschedule,
+            DateStateMachine.reschedule,
             effects=[
                 RelatedTransitionEffect(
                     'accepted_durations',
@@ -184,19 +184,19 @@ class OnADateTriggers(TimeBasedTriggers):
                     ]
                 ),
                 TransitionEffect(
-                    OnADateStateMachine.succeed,
+                    DateStateMachine.succeed,
                     conditions=[
                         is_finished, has_applications
                     ]
                 ),
                 TransitionEffect(
-                    OnADateStateMachine.expire,
+                    DateStateMachine.expire,
                     conditions=[
                         is_finished, has_no_applications
                     ]
                 ),
                 TransitionEffect(
-                    OnADateStateMachine.reschedule,
+                    DateStateMachine.reschedule,
                     conditions=[
                         is_not_finished
                     ]
@@ -206,12 +206,12 @@ class OnADateTriggers(TimeBasedTriggers):
     ]
 
 
-@ register(WithADeadlineActivity)
-class WithADeadlineTriggers(TimeBasedTriggers):
+@ register(PeriodActivity)
+class PeriodTriggers(TimeBasedTriggers):
 
     triggers = TimeBasedTriggers.triggers + [
         TransitionTrigger(
-            WithADeadlineStateMachine.reschedule,
+            PeriodStateMachine.reschedule,
             effects=[
                 TransitionEffect(TimeBasedStateMachine.lock, conditions=[is_full]),
                 TransitionEffect(
@@ -221,7 +221,7 @@ class WithADeadlineTriggers(TimeBasedTriggers):
         ),
 
         TransitionTrigger(
-            WithADeadlineStateMachine.cancel,
+            PeriodStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect(
                     'durations', DurationStateMachine.fail
@@ -233,17 +233,17 @@ class WithADeadlineTriggers(TimeBasedTriggers):
             'start',
             effects=[
                 TransitionEffect(
-                    OnADateStateMachine.start,
+                    DateStateMachine.start,
                     conditions=[is_started]
                 ),
 
                 TransitionEffect(
-                    OnADateStateMachine.reopen,
+                    DateStateMachine.reopen,
                     conditions=[is_not_started, is_not_full]
                 ),
 
                 TransitionEffect(
-                    OnADateStateMachine.lock,
+                    DateStateMachine.lock,
                     conditions=[is_not_started, is_full]
                 ),
 
@@ -263,19 +263,19 @@ class WithADeadlineTriggers(TimeBasedTriggers):
                     ]
                 ),
                 TransitionEffect(
-                    OnADateStateMachine.succeed,
+                    DateStateMachine.succeed,
                     conditions=[
                         deadline_is_passed, has_applications
                     ]
                 ),
                 TransitionEffect(
-                    OnADateStateMachine.expire,
+                    DateStateMachine.expire,
                     conditions=[
                         deadline_is_passed, has_no_applications
                     ]
                 ),
                 TransitionEffect(
-                    WithADeadlineStateMachine.reschedule,
+                    PeriodStateMachine.reschedule,
                     conditions=[
                         deadline_is_not_passed
                     ]
@@ -310,13 +310,13 @@ def activity_will_not_be_full(effect):
 def activity_is_finished(effect):
     activity = effect.instance.activity
 
-    if isinstance(activity, OnADateActivity):
+    if isinstance(activity, DateActivity):
         return (
             activity.start and
             activity.duration and
             activity.start + activity.duration < now()
         )
-    elif isinstance(activity, WithADeadlineActivity):
+    elif isinstance(activity, PeriodActivity):
         return (
             activity.deadline and
             activity.deadline < date.today()

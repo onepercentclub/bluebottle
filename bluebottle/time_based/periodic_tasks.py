@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, PeriodApplication, Duration
+    DateActivity, PeriodActivity, PeriodApplication, Duration
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DurationStateMachine
@@ -37,7 +37,7 @@ class TimeBasedActivityStartedTask(ModelPeriodicTask):
         return _("Start an start when start date has passed.")
 
 
-class WithADeadlineActivityFinishedTask(ModelPeriodicTask):
+class PeriodActivityFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -75,7 +75,7 @@ class NewPeriodForApplicationTask(ModelPeriodicTask):
         return _("Create a new period for application")
 
 
-class OnADateActivityStartedTask(ModelPeriodicTask):
+class DateActivityStartedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -96,7 +96,7 @@ class OnADateActivityStartedTask(ModelPeriodicTask):
         return _("Start an start when start date has passed.")
 
 
-class OnADateActivityFinishedTask(ModelPeriodicTask):
+class DateActivityFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -134,9 +134,9 @@ class DurationFinishedTask(ModelPeriodicTask):
         return _("Finish an activity when end time has passed.")
 
 
-OnADateActivity.periodic_tasks = [OnADateActivityFinishedTask, OnADateActivityStartedTask]
-WithADeadlineActivity.periodic_tasks = [
-    TimeBasedActivityStartedTask, WithADeadlineActivityFinishedTask
+DateActivity.periodic_tasks = [DateActivityFinishedTask, DateActivityStartedTask]
+PeriodActivity.periodic_tasks = [
+    TimeBasedActivityStartedTask, PeriodActivityFinishedTask
 ]
 PeriodApplication.periodic_tasks = [NewPeriodForApplicationTask]
 Duration.periodic_tasks = [DurationFinishedTask]

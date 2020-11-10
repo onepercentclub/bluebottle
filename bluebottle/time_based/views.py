@@ -9,14 +9,14 @@ from bluebottle.activities.permissions import (
     ContributionPermission
 )
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity,
+    DateActivity, PeriodActivity,
     OnADateApplication, PeriodApplication
 )
 from bluebottle.time_based.serializers import (
-    OnADateActivitySerializer,
-    WithADeadlineActivitySerializer,
-    OnADateTransitionSerializer,
-    WithADeadlineTransitionSerializer,
+    DateActivitySerializer,
+    PeriodActivitySerializer,
+    DateTransitionSerializer,
+    PeriodTransitionSerializer,
     PeriodApplicationSerializer,
     OnADateApplicationSerializer,
     OnADateApplicationTransitionSerializer,
@@ -61,34 +61,34 @@ class TimeBasedActivityDetailView(JsonApiViewMixin, RetrieveUpdateAPIView):
     )
 
 
-class OnADateActivityListView(TimeBasedActivityListView):
-    queryset = OnADateActivity.objects.all()
-    serializer_class = OnADateActivitySerializer
+class DateActivityListView(TimeBasedActivityListView):
+    queryset = DateActivity.objects.all()
+    serializer_class = DateActivitySerializer
 
 
-class WithADeadlineActivityListView(TimeBasedActivityListView):
-    queryset = WithADeadlineActivity.objects.all()
-    serializer_class = WithADeadlineActivitySerializer
+class PeriodActivityListView(TimeBasedActivityListView):
+    queryset = PeriodActivity.objects.all()
+    serializer_class = PeriodActivitySerializer
 
 
-class OnADateActivityDetailView(TimeBasedActivityDetailView):
-    queryset = OnADateActivity.objects.all()
-    serializer_class = OnADateActivitySerializer
+class DateActivityDetailView(TimeBasedActivityDetailView):
+    queryset = DateActivity.objects.all()
+    serializer_class = DateActivitySerializer
 
 
-class WithADeadlineActivityDetailView(TimeBasedActivityDetailView):
-    queryset = WithADeadlineActivity.objects.all()
-    serializer_class = WithADeadlineActivitySerializer
+class PeriodActivityDetailView(TimeBasedActivityDetailView):
+    queryset = PeriodActivity.objects.all()
+    serializer_class = PeriodActivitySerializer
 
 
-class OnADateTransitionList(TransitionList):
-    serializer_class = OnADateTransitionSerializer
-    queryset = OnADateActivity.objects.all()
+class DateTransitionList(TransitionList):
+    serializer_class = DateTransitionSerializer
+    queryset = DateActivity.objects.all()
 
 
-class WithADeadlineTransitionList(TransitionList):
-    serializer_class = WithADeadlineTransitionSerializer
-    queryset = WithADeadlineActivity.objects.all()
+class PeriodTransitionList(TransitionList):
+    serializer_class = PeriodTransitionSerializer
+    queryset = PeriodActivity.objects.all()
 
 
 class ApplicationList(JsonApiViewMixin, ListCreateAPIView):
@@ -179,8 +179,8 @@ class PeriodApplicationDocumentDetail(ApplicationDocumentDetail):
     queryset = PeriodApplication.objects
 
 
-class OnADateActivityIcalView(PrivateFileView):
-    queryset = OnADateActivity.objects.exclude(
+class DateActivityIcalView(PrivateFileView):
+    queryset = DateActivity.objects.exclude(
         status__in=['cancelled', 'deleted', 'rejected']
     )
 

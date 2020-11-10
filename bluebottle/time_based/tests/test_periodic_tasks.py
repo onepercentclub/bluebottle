@@ -9,7 +9,7 @@ from bluebottle.time_based.tasks import (
     period_application_tasks, duration_tasks
 )
 from bluebottle.time_based.tests.factories import (
-    OnADateActivityFactory, WithADeadlineActivityFactory,
+    DateActivityFactory, PeriodActivityFactory,
     OnADateApplicationFactory, PeriodApplicationFactory
 )
 from bluebottle.initiatives.tests.factories import (
@@ -87,8 +87,8 @@ class TimeBasedActivityPeriodicTasksTestCase():
         self.assertEqual(self.activity.status, 'succeeded')
 
 
-class OnADateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
-    factory = OnADateActivityFactory
+class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
 
     def run_task(self, when):
@@ -104,8 +104,8 @@ class OnADateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, B
         return self.activity.start + self.activity.duration + timedelta(hours=1)
 
 
-class WithADeadlineActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
-    factory = WithADeadlineActivityFactory
+class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
+    factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
 
     def run_task(self, when):
@@ -124,8 +124,8 @@ class WithADeadlineActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestC
         return self.activity.deadline + timedelta(days=1)
 
 
-class WithADeadlineApplicationPeriodicTest(BluebottleTestCase):
-    factory = WithADeadlineActivityFactory
+class PeriodApplicationPeriodicTest(BluebottleTestCase):
+    factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
 
     def setUp(self):
@@ -227,8 +227,8 @@ class WithADeadlineApplicationPeriodicTest(BluebottleTestCase):
             self.assertEqual(contribution.status, 'failed')
 
 
-class WithADeadlineReviewApplicationPeriodicTest(BluebottleTestCase):
-    factory = WithADeadlineActivityFactory
+class PeriodReviewApplicationPeriodicTest(BluebottleTestCase):
+    factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
 
     def setUp(self):

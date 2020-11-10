@@ -3,7 +3,7 @@ from datetime import timedelta, date
 from django.utils.timezone import now
 
 from bluebottle.time_based.tests.factories import (
-    OnADateActivityFactory, WithADeadlineActivityFactory,
+    DateActivityFactory, PeriodActivityFactory,
     OnADateApplicationFactory, PeriodApplicationFactory
 )
 from bluebottle.activities.models import Organizer
@@ -115,8 +115,8 @@ class TimeBasedActivityTriggerTestCase():
         self.assertEqual(self.activity.status, 'open')
 
 
-class OnADateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
-    factory = OnADateActivityFactory
+class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
 
     def test_change_start(self):
@@ -215,8 +215,8 @@ class OnADateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottl
         self.assertEqual(self.activity.status, 'full')
 
 
-class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
-    factory = WithADeadlineActivityFactory
+class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
+    factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
 
     def test_change_deadline(self):
@@ -457,8 +457,8 @@ class ApplicationTriggerTestCase():
         self.assertEqual(self.activity.status, 'full')
 
 
-class OnADateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTestCase):
-    factory = OnADateActivityFactory
+class DateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
 
     def test_no_review_succeed_after_cancel(self):
@@ -522,8 +522,8 @@ class OnADateApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTe
         )
 
 
-class WithADeadlineApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTestCase):
-    factory = WithADeadlineActivityFactory
+class PeriodApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTestCase):
+    factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
 
     def test_no_review_succeed(self):

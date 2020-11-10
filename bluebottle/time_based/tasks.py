@@ -6,7 +6,7 @@ from celery.task import periodic_task
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity,
+    DateActivity, PeriodActivity,
     OnADateApplication, PeriodApplication, Duration
 )
 
@@ -21,7 +21,7 @@ logger = logging.getLogger('bluebottle')
 def on_a_date_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            for task in OnADateActivity.get_periodic_tasks():
+            for task in DateActivity.get_periodic_tasks():
                 task.execute()
 
 
@@ -33,7 +33,7 @@ def on_a_date_tasks():
 def with_a_deadline_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            for task in WithADeadlineActivity.get_periodic_tasks():
+            for task in PeriodActivity.get_periodic_tasks():
                 task.execute()
 
 

@@ -1,6 +1,6 @@
 from bluebottle.activities.documents import ActivityDocument, activity
 
-from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity
+from bluebottle.time_based.models import DateActivity, PeriodActivity
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 
@@ -38,9 +38,9 @@ class TimeBasedActivityDocument:
 
 
 @activity.doc_type
-class OnADateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
+class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     class Meta(TimeBasedActivityDocument):
-        model = OnADateActivity
+        model = DateActivity
 
     date_field = 'start'
 
@@ -53,9 +53,9 @@ class OnADateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
 
 @activity.doc_type
-class WithADeadlineActivityDocument(TimeBasedActivityDocument, ActivityDocument):
+class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     class Meta(TimeBasedActivityDocument):
-        model = WithADeadlineActivity
+        model = PeriodActivity
 
     date_field = 'deadline'
 

@@ -4,7 +4,7 @@ import factory.fuzzy
 from django.utils.timezone import now
 
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity,
+    DateActivity, PeriodActivity,
     OnADateApplication, PeriodApplication, Duration
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -28,17 +28,17 @@ class TimeBasedFactory(factory.DjangoModelFactory):
     registration_deadline = (now() + timedelta(weeks=2)).date()
 
 
-class OnADateActivityFactory(TimeBasedFactory):
+class DateActivityFactory(TimeBasedFactory):
     class Meta:
-        model = OnADateActivity
+        model = DateActivity
 
     start = (now() + timedelta(weeks=4))
     duration = timedelta(hours=2)
 
 
-class WithADeadlineActivityFactory(TimeBasedFactory):
+class PeriodActivityFactory(TimeBasedFactory):
     class Meta:
-        model = WithADeadlineActivity
+        model = PeriodActivity
 
     deadline = date.today() + timedelta(weeks=4)
     duration = timedelta(hours=20)
@@ -51,7 +51,7 @@ class OnADateApplicationFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = OnADateApplication
 
-    activity = factory.SubFactory(OnADateActivityFactory)
+    activity = factory.SubFactory(DateActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
 
 
@@ -59,7 +59,7 @@ class PeriodApplicationFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = PeriodApplication
 
-    activity = factory.SubFactory(OnADateActivityFactory)
+    activity = factory.SubFactory(DateActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
 
 

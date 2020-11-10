@@ -4,7 +4,7 @@ from bluebottle.activities.states import (
     ActivityStateMachine, ContributionStateMachine, ContributionValueStateMachine
 )
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity,
+    DateActivity, PeriodActivity,
     OnADateApplication, PeriodApplication, Duration,
 )
 from bluebottle.fsm.state import register, State, Transition, EmptyState
@@ -55,8 +55,8 @@ class TimeBasedStateMachine(ActivityStateMachine):
     )
 
 
-@register(OnADateActivity)
-class OnADateStateMachine(TimeBasedStateMachine):
+@register(DateActivity)
+class DateStateMachine(TimeBasedStateMachine):
     reschedule = Transition(
         [
             TimeBasedStateMachine.running,
@@ -69,8 +69,8 @@ class OnADateStateMachine(TimeBasedStateMachine):
     )
 
 
-@register(WithADeadlineActivity)
-class WithADeadlineStateMachine(TimeBasedStateMachine):
+@register(PeriodActivity)
+class PeriodStateMachine(TimeBasedStateMachine):
 
     reschedule = Transition(
         [

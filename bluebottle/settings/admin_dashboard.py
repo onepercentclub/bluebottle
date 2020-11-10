@@ -76,10 +76,6 @@ JET_SIDE_MENU_ITEMS = [
                 'name': 'time_based.withadeadlineactivity',
                 'permissions': ['events.change_withadeadlineactivity']
             },
-            {
-                'name': 'time_based.ongoingactivity',
-                'permissions': ['events.change_ongoingactivity']
-            },
         ]
     },
     {

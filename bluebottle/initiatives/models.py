@@ -243,8 +243,8 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
         ('withadeadlineactivity', _('Activity with a deadline')),
         ('onadateactivity', _('Activity on a specific date')),
-        ('ongoingactivity', _('Ongoing activity')),
     )
+
     ACTIVITY_SEARCH_FILTERS = (
         ('location', _('Office location')),
         ('country', _('Country')),

@@ -14,11 +14,9 @@ from bluebottle.events.serializers import (
 from bluebottle.time_based.serializers import (
     OnADateActivityListSerializer,
     WithADeadlineActivityListSerializer,
-    OngoingActivityListSerializer,
 
     OnADateActivitySerializer,
     WithADeadlineActivitySerializer,
-    OngoingActivitySerializer
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
@@ -49,7 +47,6 @@ class ActivityListSerializer(PolymorphicModelSerializer):
 
         OnADateActivityListSerializer,
         WithADeadlineActivityListSerializer,
-        OngoingActivityListSerializer
     ]
 
     included_serializers = {
@@ -94,7 +91,6 @@ class ActivitySerializer(PolymorphicModelSerializer):
 
         OnADateActivitySerializer,
         WithADeadlineActivitySerializer,
-        OngoingActivitySerializer
     ]
 
     included_serializers = {
@@ -146,7 +142,6 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
 
         OnADateActivityListSerializer,
         WithADeadlineActivityListSerializer,
-        OngoingActivityListSerializer
     ]
 
     class Meta(object):

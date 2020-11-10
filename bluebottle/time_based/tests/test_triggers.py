@@ -3,7 +3,7 @@ from datetime import timedelta, date
 from django.utils.timezone import now
 
 from bluebottle.time_based.tests.factories import (
-    OnADateActivityFactory, WithADeadlineActivityFactory, OngoingActivityFactory,
+    OnADateActivityFactory, WithADeadlineActivityFactory,
     OnADateApplicationFactory, PeriodApplicationFactory
 )
 from bluebottle.activities.models import Organizer
@@ -361,11 +361,6 @@ class WithADeadlineActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Blu
         self.assertEqual(self.activity.status, 'full')
 
 
-class OngoingActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
-    factory = OngoingActivityFactory
-    application_factory = PeriodApplicationFactory
-
-
 class ApplicationTriggerTestCase():
 
     def setUp(self):
@@ -542,8 +537,3 @@ class WithADeadlineApplicationTriggerTestCase(ApplicationTriggerTestCase, Bluebo
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'succeeded')
-
-
-class OngoingApplicationTriggerTestCase(ApplicationTriggerTestCase, BluebottleTestCase):
-    factory = OngoingActivityFactory
-    application_factory = PeriodApplicationFactory

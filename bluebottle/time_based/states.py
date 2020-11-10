@@ -4,7 +4,7 @@ from bluebottle.activities.states import (
     ActivityStateMachine, ContributionStateMachine, ContributionValueStateMachine
 )
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity,
+    OnADateActivity, WithADeadlineActivity,
     OnADateApplication, PeriodApplication, Duration,
 )
 from bluebottle.fsm.state import register, State, Transition, EmptyState
@@ -81,11 +81,6 @@ class WithADeadlineStateMachine(TimeBasedStateMachine):
         name=_("Reschedule"),
         description=_("People can join the event again, because the date has changed."),
     )
-
-
-@register(OngoingActivity)
-class OngoingStateMachine(TimeBasedStateMachine):
-    pass
 
 
 class ApplicationStateMachine(ContributionStateMachine):

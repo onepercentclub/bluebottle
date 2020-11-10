@@ -14,7 +14,7 @@ from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocum
 from bluebottle.fsm.serializers import TransitionSerializer
 
 from bluebottle.time_based.models import (
-    TimeBasedActivity, OnADateActivity, WithADeadlineActivity, OngoingActivity,
+    TimeBasedActivity, OnADateActivity, WithADeadlineActivity,
     OnADateApplication, PeriodApplication
 )
 from bluebottle.time_based.permissions import ApplicationDocumentPermission
@@ -111,33 +111,11 @@ class WithADeadlineActivitySerializer(TimeBasedBaseSerializer):
     )
 
 
-class OngoingActivitySerializer(TimeBasedBaseSerializer):
-    permissions = ResourcePermissionField('ongoing-detail', view_args=('pk',))
-
-    class Meta(TimeBasedBaseSerializer.Meta):
-        model = OngoingActivity
-
-        fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start', 'duration', 'duration_period',
-        )
-
-    class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
-        resource_name = 'activities/time-based/ongoings'
-
-    included_serializers = dict(
-        TimeBasedBaseSerializer.included_serializers,
-        **{
-            'contributions': 'bluebottle.time_based.serializers.PeriodApplicationSerializer',
-        }
-    )
-
-
 class TimeBasedActivitySerializer(PolymorphicModelSerializer):
 
     polymorphic_serializers = [
         OnADateActivitySerializer,
         WithADeadlineActivitySerializer,
-        OngoingActivitySerializer,
     ]
 
     class Meta(object):
@@ -182,17 +160,6 @@ class WithADeadlineTransitionSerializer(TransitionSerializer):
     class JSONAPIMeta(object):
         included_resources = ['resource', ]
         resource_name = 'activities/time-based/with-a-deadline-transitions'
-
-
-class OngoingTransitionSerializer(TransitionSerializer):
-    resource = ResourceRelatedField(queryset=OngoingActivity.objects.all())
-    included_serializers = {
-        'resource': 'bluebottle.time_based.serializers.OngoingActivitySerializer',
-    }
-
-    class JSONAPIMeta(object):
-        included_resources = ['resource', ]
-        resource_name = 'activities/time-based/ongoing-transitions'
 
 
 class TimeBasedActivityListSerializer(BaseActivityListSerializer):
@@ -245,20 +212,6 @@ class WithADeadlineActivityListSerializer(TimeBasedActivityListSerializer):
 
     class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/with-a-deadlines'
-
-
-class OngoingActivityListSerializer(TimeBasedActivityListSerializer):
-    permissions = ResourcePermissionField('ongoing-detail', view_args=('pk',))
-
-    class Meta(TimeBasedActivityListSerializer.Meta):
-        model = OngoingActivity
-
-        fields = TimeBasedActivityListSerializer.Meta.fields + (
-            'duration', 'duration_period',
-        )
-
-    class JSONAPIMeta(TimeBasedActivityListSerializer.JSONAPIMeta):
-        resource_name = 'activities/time-based/ongoings'
 
 
 class OnADateApplicationDocumentSerializer(PrivateDocumentSerializer):

@@ -63,7 +63,6 @@ class ParentTypeFilterMixin(object):
     content_type_mapping = {
         'on-a-date': 'onadateactivity',
         'with-a-deadline': 'withadeadlineactivity',
-        'ongoing': 'ongoingactivity'
     }
 
     def get_queryset(self):

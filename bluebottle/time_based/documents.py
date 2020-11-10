@@ -1,6 +1,6 @@
 from bluebottle.activities.documents import ActivityDocument, activity
 
-from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity, OngoingActivity
+from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 
@@ -61,9 +61,3 @@ class WithADeadlineActivityDocument(TimeBasedActivityDocument, ActivityDocument)
 
     def prepare_end(self, instance):
         return instance.deadline
-
-
-@activity.doc_type
-class OngoingActivityDocument(TimeBasedActivityDocument, ActivityDocument):
-    class Meta(TimeBasedActivityDocument):
-        model = OngoingActivity

@@ -9,16 +9,14 @@ from bluebottle.activities.permissions import (
     ContributionPermission
 )
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity,
+    OnADateActivity, WithADeadlineActivity,
     OnADateApplication, PeriodApplication
 )
 from bluebottle.time_based.serializers import (
     OnADateActivitySerializer,
     WithADeadlineActivitySerializer,
-    OngoingActivitySerializer,
     OnADateTransitionSerializer,
     WithADeadlineTransitionSerializer,
-    OngoingTransitionSerializer,
     PeriodApplicationSerializer,
     OnADateApplicationSerializer,
     OnADateApplicationTransitionSerializer,
@@ -73,11 +71,6 @@ class WithADeadlineActivityListView(TimeBasedActivityListView):
     serializer_class = WithADeadlineActivitySerializer
 
 
-class OngoingActivityListView(TimeBasedActivityListView):
-    queryset = OngoingActivity.objects.all()
-    serializer_class = OngoingActivitySerializer
-
-
 class OnADateActivityDetailView(TimeBasedActivityDetailView):
     queryset = OnADateActivity.objects.all()
     serializer_class = OnADateActivitySerializer
@@ -88,11 +81,6 @@ class WithADeadlineActivityDetailView(TimeBasedActivityDetailView):
     serializer_class = WithADeadlineActivitySerializer
 
 
-class OngoingActivityDetailView(TimeBasedActivityDetailView):
-    queryset = OngoingActivity.objects.all()
-    serializer_class = OngoingActivitySerializer
-
-
 class OnADateTransitionList(TransitionList):
     serializer_class = OnADateTransitionSerializer
     queryset = OnADateActivity.objects.all()
@@ -101,11 +89,6 @@ class OnADateTransitionList(TransitionList):
 class WithADeadlineTransitionList(TransitionList):
     serializer_class = WithADeadlineTransitionSerializer
     queryset = WithADeadlineActivity.objects.all()
-
-
-class OngoingTransitionList(TransitionList):
-    serializer_class = OngoingTransitionSerializer
-    queryset = OngoingActivity.objects.all()
 
 
 class ApplicationList(JsonApiViewMixin, ListCreateAPIView):

@@ -4,7 +4,7 @@ import factory.fuzzy
 from django.utils.timezone import now
 
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity,
+    OnADateActivity, WithADeadlineActivity,
     OnADateApplication, PeriodApplication, Duration
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -45,16 +45,6 @@ class WithADeadlineActivityFactory(TimeBasedFactory):
     duration_period = 'overall'
 
     start = (now() + timedelta(weeks=1)).date()
-
-
-class OngoingActivityFactory(TimeBasedFactory):
-    class Meta:
-        model = OngoingActivity
-
-    duration = timedelta(hours=20)
-    duration_period = 'overall'
-
-    start = date.today() + timedelta(weeks=4)
 
 
 class OnADateApplicationFactory(factory.DjangoModelFactory):

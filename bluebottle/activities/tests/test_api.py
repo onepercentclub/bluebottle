@@ -18,7 +18,7 @@ from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.time_based.tests.factories import (
-    OnADateActivityFactory, WithADeadlineActivityFactory, OngoingActivityFactory
+    OnADateActivityFactory, WithADeadlineActivityFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -410,15 +410,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             start=now() + timedelta(days=10)
         )
 
-        second = OngoingActivityFactory.create(
-            status='open',
-        )
-
-        third = FundingFactory.create(
+        second = FundingFactory.create(
             status='open',
             deadline=now() + timedelta(days=9)
         )
-        fourth = WithADeadlineActivityFactory.create(
+        third = WithADeadlineActivityFactory.create(
             status='open',
             deadline=now() + timedelta(days=11)
         )
@@ -432,10 +428,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 4)
 
-        self.assertEqual(data['data'][0]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][0]['id'], str(third.pk))
         self.assertEqual(data['data'][1]['id'], str(first.pk))
-        self.assertEqual(data['data'][2]['id'], str(third.pk))
-        self.assertEqual(data['data'][3]['id'], str(second.pk))
+        self.assertEqual(data['data'][2]['id'], str(second.pk))
 
     def test_sort_matching_popularity(self):
         first = OnADateActivityFactory.create(status='open')

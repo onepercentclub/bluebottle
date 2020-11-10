@@ -10,7 +10,7 @@ from bluebottle.activities.triggers import (
 )
 
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity,
+    OnADateActivity, WithADeadlineActivity,
     OnADateApplication, PeriodApplication, Duration
 )
 from bluebottle.time_based.effects import (
@@ -283,11 +283,6 @@ class WithADeadlineTriggers(TimeBasedTriggers):
             ]
         )
     ]
-
-
-@ register(OngoingActivity)
-class OngoingTriggers(TimeBasedTriggers):
-    pass
 
 
 def automatically_accept(effect):

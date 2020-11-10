@@ -203,43 +203,6 @@ class WithADeadlineActivity(TimeBasedActivity):
         return fields + ['deadline', 'duration', 'duration_period']
 
 
-class OngoingActivity(TimeBasedActivity):
-    start = models.DateField(_('Start of activity'), null=True, blank=True)
-
-    duration = models.DurationField(_('duration'), null=True, blank=True)
-    duration_period = models.CharField(
-        _('duration period'),
-        max_length=20,
-        blank=True,
-        null=True,
-        choices=DurationPeriodChoices.choices,
-    )
-
-    class Meta:
-        verbose_name = _("Ongoing activity")
-        verbose_name_plural = _("Ongoing activities")
-        permissions = (
-            ('api_read_ongoingactivity', 'Can view ongoing activities through the API'),
-            ('api_add_ongoingactivity', 'Can add ongoing activities through the API'),
-            ('api_change_ongoingactivity', 'Can change ongoing activities through the API'),
-            ('api_delete_ongoingactivity', 'Can delete ongoing activities through the API'),
-
-            ('api_read_own_ongoingactivity', 'Can view own ongoing activities through the API'),
-            ('api_add_own_ongoingactivity', 'Can add own ongoing activities through the API'),
-            ('api_change_own_ongoingactivity', 'Can change own ongoing activities through the API'),
-            ('api_delete_own_ongoingactivity', 'Can delete own ongoing activities through the API'),
-        )
-
-    class JSONAPIMeta:
-        resource_name = 'activities/time-based/ongoings'
-
-    @property
-    def required_fields(self):
-        fields = super().required_fields
-
-        return fields + ['duration', 'duration_period']
-
-
 class Application():
     def __str__(self):
         return self.user.full_name

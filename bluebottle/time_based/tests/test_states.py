@@ -1,5 +1,5 @@
 from bluebottle.time_based.tests.factories import (
-    OnADateActivityFactory, WithADeadlineActivityFactory, OngoingActivityFactory,
+    OnADateActivityFactory, WithADeadlineActivityFactory,
 )
 from bluebottle.time_based.states import TimeBasedStateMachine
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -136,7 +136,3 @@ class OnADateActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleT
 
 class WithADeadlineActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTestCase):
     factory = WithADeadlineActivityFactory
-
-
-class OngoingActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTestCase):
-    factory = OngoingActivityFactory

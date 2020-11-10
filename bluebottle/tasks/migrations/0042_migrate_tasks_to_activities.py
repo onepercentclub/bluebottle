@@ -228,6 +228,12 @@ def migrate_tasks(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('cms', '0063_auto_20200915_1023'),
+        ('fundraisers', '0007_auto_20170803_1730'),
+        ('initiatives', '0016_auto_20190726_0915'),
+        ('news', '0006_auto_20170803_1729'),
+        ('pages', '0005_auto_20170803_1729'),
+        ('projects', '0094_merge_20191107_0943'),
         ('tasks', '0041_remove_untranslated_fields'),
     ]
 

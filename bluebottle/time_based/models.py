@@ -271,7 +271,7 @@ class OnADateApplication(Application, Contribution):
         )
 
     def __str__(self):
-        return _("On a date application")
+        return str(_("On a date application"))
 
 
 class PeriodApplication(Contribution, Application):
@@ -300,7 +300,7 @@ class PeriodApplication(Contribution, Application):
         return self.contribution_values.get(status='new')
 
     def __str__(self):
-        return _("Period application")
+        return str(_("Period application"))
 
 
 class Duration(ContributionValue):

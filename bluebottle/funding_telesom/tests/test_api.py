@@ -6,7 +6,7 @@ from mock import patch
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
-from bluebottle.funding_telesom.models import TelesomPaymentProvider
+from bluebottle.funding_telesom.models import TelesomPaymentProvider, TelesomPayment
 from bluebottle.funding_telesom.tests.factories import TelesomPaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -55,11 +55,10 @@ class TelesomPaymentTestCase(BluebottleTestCase):
             }
         }
 
-    @patch('bluebottle.funding_telesom.utils.requests.post', return_value=MockReponse())
+    @patch('bluebottle.funding_telesom.tasks.requests.post', return_value=MockReponse())
     def test_create_payment(self, telesom_post):
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
-
-        self.assertEqual(data['data']['attributes']['status'], 'succeeded')
-        self.assertEqual(data['included'][0]['attributes']['status'], 'succeeded')
+        payment = TelesomPayment.objects.get(id=data['data']['id'])
+        self.assertEqual(payment.status, 'succeeded')

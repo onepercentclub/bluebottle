@@ -9,6 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('cms', '0064_auto_20201103_1028'),
+        ('initiatives', '0018_auto_20191108_1222'),
         ('payments_lipisha', '0003_auto_20201103_1028'),
         ('votes', '0003_auto_20201103_1028'),
         ('donations', '0012_auto_20201103_1028'),
@@ -17,6 +18,8 @@ class Migration(migrations.Migration):
         ('fundraisers', '0008_auto_20201103_1028'),
         ('tasks', '0043_auto_20200915_1023'),
         ('projects', '0094_merge_20191107_0943'),
+        ('looker', '0003_init_looker_embeds'),
+        ('surveys', '0010_auto_20160920_0854'),
     ]
 
     operations = [

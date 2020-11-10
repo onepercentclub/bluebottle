@@ -7,7 +7,9 @@ from bluebottle.fsm.effects import Effect
 from bluebottle.time_based.models import Duration
 
 
-class CreateOnAdateDurationEffect(Effect):
+class CreateOnADateDurationEffect(Effect):
+    template = 'admin/create_on_a_date_duration.html'
+
     def post_save(self, **kwargs):
         activity = self.instance.activity
         end = activity.start + activity.duration
@@ -23,6 +25,7 @@ class CreateOnAdateDurationEffect(Effect):
 
 class CreatePeriodDurationEffect(Effect):
     title = _('Create contribution duration')
+    template = 'admin/create_period_duration.html'
 
     def post_save(self, **kwargs):
         tz = get_current_timezone()

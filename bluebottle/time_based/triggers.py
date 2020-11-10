@@ -14,7 +14,7 @@ from bluebottle.time_based.models import (
     OnADateApplication, PeriodApplication, Duration
 )
 from bluebottle.time_based.effects import (
-    CreateOnAdateDurationEffect, CreatePeriodDurationEffect
+    CreateOnADateDurationEffect, CreatePeriodDurationEffect
 )
 from bluebottle.time_based.messages import DateChanged, DeadlineChanged
 from bluebottle.time_based.states import (
@@ -425,7 +425,7 @@ class OnADateApplicationTriggers(ApplicationTriggers):
         TransitionTrigger(
             ApplicationStateMachine.initiate,
             effects=[
-                CreateOnAdateDurationEffect,
+                CreateOnADateDurationEffect,
             ]
         ),
     ]

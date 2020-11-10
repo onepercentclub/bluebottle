@@ -307,6 +307,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         Funding,
         Assignment,
         WithADeadlineActivity,
+        OnADateActivity,
         OngoingActivity
     )
     date_hierarchy = 'transition_date'

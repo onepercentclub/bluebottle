@@ -17,9 +17,9 @@ from bluebottle.funding.effects import (
 
 from bluebottle.funding.states import (
     FundingStateMachine, DonationStateMachine, PayoutAccountStateMachine, BasePaymentStateMachine,
-    PayoutStateMachine
+    PayoutStateMachine, BankAccountStateMachine
 )
-from bluebottle.funding.models import Funding, PlainPayoutAccount, Donation, Payout, Payment
+from bluebottle.funding.models import Funding, PlainPayoutAccount, Donation, Payout, Payment, BankAccount
 
 from bluebottle.funding.messages import (
     DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
@@ -238,7 +238,7 @@ class PayoutAccountTriggers(TriggerManager):
             PayoutAccountStateMachine.verify,
             effects=[
                 NotificationEffect(PayoutAccountVerified),
-                SubmitConnectedActivitiesEffect,
+                RelatedTransitionEffect('external_accounts', 'verify')
             ]
         ),
 
@@ -246,20 +246,7 @@ class PayoutAccountTriggers(TriggerManager):
             PayoutAccountStateMachine.reject,
             effects=[
                 NotificationEffect(PayoutAccountRejected),
-            ]
-        ),
-
-        ModelChangedTrigger(
-            'reviewed',
-            effects=[
-                TransitionEffect(
-                    PayoutAccountStateMachine.verify,
-                    conditions=[is_reviewed]
-                ),
-                TransitionEffect(
-                    PayoutAccountStateMachine.reject,
-                    conditions=[is_unreviewed]
-                ),
+                RelatedTransitionEffect('external_accounts', 'reject')
             ]
         )
     ]
@@ -284,13 +271,39 @@ class PlainPayoutAccountTriggers(PayoutAccountTriggers):
     ]
 
 
+@register(BankAccount)
+class BankAccountTriggers(TriggerManager):
+    triggers = [
+        TransitionTrigger(
+            BankAccountStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect(
+                    'connect_account',
+                    'reject',
+                    description='Reject connected KYC account'
+                )
+            ]
+        ),
+        TransitionTrigger(
+            BankAccountStateMachine.verify,
+            effects=[
+                SubmitConnectedActivitiesEffect,
+                RelatedTransitionEffect(
+                    'connect_account',
+                    'verify',
+                    description='Verify connected KYC account'
+                )
+            ]
+        ),
+    ]
+
+
 @register(Payout)
 class PayoutTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
             PayoutStateMachine.approve,
             effects=[
-
                 SubmitPayoutEffect,
                 SetDateEffect('date_approved')
             ]

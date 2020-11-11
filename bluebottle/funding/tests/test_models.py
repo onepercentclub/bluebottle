@@ -203,6 +203,3 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertTrue(Money(2000, 'EUR') in payout_amounts)
         self.assertTrue(Money(2250, 'EUR') in payout_amounts)
         self.assertTrue(Money(750, 'EUR') in payout_amounts)
-
-    def test_donation_contribution_date(self):
-        self.assertEqual(self.donation.contribution_date, self.donation.created)

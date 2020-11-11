@@ -17,7 +17,7 @@ from bluebottle.funding.effects import (
 
 from bluebottle.funding.states import (
     FundingStateMachine, DonationStateMachine, PayoutAccountStateMachine, BasePaymentStateMachine,
-    PayoutStateMachine, BankAccountStateMachine
+    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine
 )
 from bluebottle.funding.models import Funding, PlainPayoutAccount, Donation, Payout, Payment, BankAccount
 
@@ -256,15 +256,17 @@ class PayoutAccountTriggers(TriggerManager):
 class PlainPayoutAccountTriggers(PayoutAccountTriggers):
     triggers = PayoutAccountTriggers.triggers + [
         TransitionTrigger(
-            PayoutAccountStateMachine.verify,
+            PlainPayoutAccountStateMachine.verify,
             effects=[
+                NotificationEffect(PayoutAccountVerified),
                 DeleteDocumentEffect
             ]
         ),
 
         TransitionTrigger(
-            PayoutAccountStateMachine.reject,
+            PlainPayoutAccountStateMachine.reject,
             effects=[
+                NotificationEffect(PayoutAccountRejected),
                 DeleteDocumentEffect
             ]
         ),

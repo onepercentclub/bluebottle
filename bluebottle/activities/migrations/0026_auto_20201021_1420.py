@@ -43,11 +43,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='activity',
-            name='status',
-            field=models.CharField(max_length=40),
-        ),
-        migrations.AlterField(
-            model_name='activity',
             name='title',
             field=models.CharField(max_length=255, verbose_name='Title'),
         ),
@@ -55,10 +50,5 @@ class Migration(migrations.Migration):
             model_name='activity',
             name='video_url',
             field=models.URLField(blank=True, default='', help_text="Do you have a video pitch or a short movie that explains your activity? Cool! We can't wait to see it! You can paste the link to YouTube or Vimeo video here", max_length=100, null=True, verbose_name='video'),
-        ),
-        migrations.AlterField(
-            model_name='contribution',
-            name='status',
-            field=models.CharField(max_length=40),
-        ),
+        )
     ]

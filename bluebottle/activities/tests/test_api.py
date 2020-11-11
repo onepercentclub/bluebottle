@@ -18,7 +18,7 @@ from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 
 from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
 from bluebottle.time_based.tests.factories import (
-    OnADateActivityFactory, WithADeadlineActivityFactory, OngoingActivityFactory
+    DateActivityFactory, PeriodActivityFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -44,10 +44,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.owner = BlueBottleUserFactory.create()
 
     def test_images(self):
-        OnADateActivityFactory.create(
+        DateActivityFactory.create(
             owner=self.owner, review_status='approved', image=ImageFactory.create()
         )
-        WithADeadlineActivityFactory.create(review_status='approved', image=ImageFactory.create())
+        PeriodActivityFactory.create(review_status='approved', image=ImageFactory.create())
         FundingFactory.create(review_status='approved', image=ImageFactory.create())
 
         response = self.client.get(self.url, user=self.owner)
@@ -59,13 +59,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             )
 
     def test_no_filter(self):
-        succeeded = OnADateActivityFactory.create(
+        succeeded = DateActivityFactory.create(
             owner=self.owner, status='succeeded'
         )
-        open = OnADateActivityFactory.create(status='open')
-        OnADateActivityFactory.create(status='submitted')
-        OnADateActivityFactory.create(status='closed')
-        OnADateActivityFactory.create(status='cancelled')
+        open = DateActivityFactory.create(status='open')
+        DateActivityFactory.create(status='submitted')
+        DateActivityFactory.create(status='closed')
+        DateActivityFactory.create(status='cancelled')
 
         response = self.client.get(self.url, user=self.owner)
         data = json.loads(response.content)
@@ -76,12 +76,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertTrue('meta' in data['data'][0])
 
     def test_anonymous(self):
-        succeeded = OnADateActivityFactory.create(
+        succeeded = DateActivityFactory.create(
             owner=self.owner, status='succeeded'
         )
-        open = OnADateActivityFactory.create(status='open')
-        OnADateActivityFactory.create(status='submitted')
-        OnADateActivityFactory.create(status='closed')
+        open = DateActivityFactory.create(status='open')
+        DateActivityFactory.create(status='submitted')
+        DateActivityFactory.create(status='closed')
 
         response = self.client.get(self.url)
         data = json.loads(response.content)
@@ -92,8 +92,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertTrue('meta' in data['data'][0])
 
     def test_filter_owner(self):
-        OnADateActivityFactory.create(owner=self.owner, status='open')
-        OnADateActivityFactory.create(status='open')
+        DateActivityFactory.create(owner=self.owner, status='open')
+        DateActivityFactory.create(status='open')
 
         response = self.client.get(
             self.url + '?filter[owner.id]={}'.format(self.owner.pk),
@@ -105,8 +105,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], str(self.owner.pk))
 
     def test_only_owner_permission(self):
-        OnADateActivityFactory.create(owner=self.owner, status='open')
-        OnADateActivityFactory.create(status='open')
+        DateActivityFactory.create(owner=self.owner, status='open')
+        DateActivityFactory.create(status='open')
 
         authenticated = Group.objects.get(name='Authenticated')
         authenticated.permissions.remove(
@@ -129,8 +129,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_initiative_location(self):
         location = LocationFactory.create()
         initiative = InitiativeFactory.create(status='open', location=location)
-        activity = OnADateActivityFactory.create(status='open', initiative=initiative)
-        OnADateActivityFactory.create(status='open')
+        activity = DateActivityFactory.create(status='open', initiative=initiative)
+        DateActivityFactory.create(status='open')
 
         response = self.client.get(
             self.url + '?filter[initiative_location.id]={}'.format(location.pk),
@@ -145,20 +145,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         next_month = now() + dateutil.relativedelta.relativedelta(months=1)
         after = now() + dateutil.relativedelta.relativedelta(months=2)
 
-        event = OnADateActivityFactory.create(
+        event = DateActivityFactory.create(
             status='open',
             start=next_month
         )
-        OnADateActivityFactory.create(
+        DateActivityFactory.create(
             status='open',
             start=after
         )
 
-        assignment = WithADeadlineActivityFactory.create(
+        assignment = PeriodActivityFactory.create(
             status='open',
             deadline=next_month
         )
-        WithADeadlineActivityFactory.create(
+        PeriodActivityFactory.create(
             status='open',
             deadline=after
         )
@@ -210,12 +210,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_filter_segment(self):
         segment = SegmentFactory.create()
-        first = OnADateActivityFactory.create(
+        first = DateActivityFactory.create(
             status='open',
         )
         first.segments.add(segment)
 
-        OnADateActivityFactory.create(
+        DateActivityFactory.create(
             status='open'
         )
 
@@ -232,7 +232,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], str(first.pk))
 
     def test_filter_segment_mismatch(self):
-        first = OnADateActivityFactory.create(
+        first = DateActivityFactory.create(
             status='open',
         )
         first_segment = SegmentFactory.create()
@@ -240,7 +240,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second_segment = SegmentFactory.create()
         first.segments.add(second_segment)
 
-        OnADateActivityFactory.create(
+        DateActivityFactory.create(
             status='open'
         )
 
@@ -256,12 +256,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['meta']['pagination']['count'], 0)
 
     def test_search(self):
-        first = OnADateActivityFactory.create(
+        first = DateActivityFactory.create(
             title='Lorem ipsum dolor sit amet',
             description="Lorem ipsum",
             status='open'
         )
-        second = OnADateActivityFactory.create(title='Lorem ipsum dolor sit amet', status='open')
+        second = DateActivityFactory.create(title='Lorem ipsum dolor sit amet', status='open')
 
         response = self.client.get(
             self.url + '?filter[search]=lorem ipsum',
@@ -275,7 +275,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(second.pk))
 
     def test_search_different_type(self):
-        first = OnADateActivityFactory.create(
+        first = DateActivityFactory.create(
             title='Lorem ipsum dolor sit amet',
             description="Lorem ipsum",
             status='open'
@@ -291,17 +291,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
         self.assertEqual(data['data'][0]['id'], str(first.pk))
-        self.assertEqual(data['data'][0]['type'], 'activities/time-based/on-a-date')
+        self.assertEqual(data['data'][0]['type'], 'activities/time-based/date')
         self.assertEqual(data['data'][1]['id'], str(second.pk))
         self.assertEqual(data['data'][1]['type'], 'activities/fundings')
 
     def test_search_boost(self):
-        first = OnADateActivityFactory.create(
+        first = DateActivityFactory.create(
             title='Something else',
             description='Lorem ipsum dolor sit amet',
             status='open'
         )
-        second = OnADateActivityFactory.create(
+        second = DateActivityFactory.create(
             title='Lorem ipsum dolor sit amet',
             description="Something else",
             status='open'
@@ -320,15 +320,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_search_formatted_address(self):
         location = GeolocationFactory.create(formatted_address='Roggeveenstraat')
-        first = OnADateActivityFactory.create(
+        first = DateActivityFactory.create(
             location=location,
             status='open'
         )
-        second = OnADateActivityFactory.create(
+        second = DateActivityFactory.create(
             title='Roggeveenstraat',
             status='open'
         )
-        OnADateActivityFactory.create(
+        DateActivityFactory.create(
             status='open'
         )
 
@@ -344,15 +344,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_search_initiative_title(self):
-        first = OnADateActivityFactory.create(
+        first = DateActivityFactory.create(
             initiative=InitiativeFactory.create(title='Test title'),
             status='open'
         )
-        second = OnADateActivityFactory.create(
+        second = DateActivityFactory.create(
             title='Test title',
             status='open'
         )
-        OnADateActivityFactory.create(
+        DateActivityFactory.create(
             status='open'
         )
 
@@ -368,12 +368,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][1]['id'], str(first.pk))
 
     def test_search_segment_name(self):
-        first = OnADateActivityFactory.create(
+        first = DateActivityFactory.create(
             status='open',
         )
         first.segments.add(SegmentFactory(name='Online Marketing'))
 
-        OnADateActivityFactory.create(
+        DateActivityFactory.create(
             status='open'
         )
 
@@ -388,9 +388,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][0]['id'], str(first.pk))
 
     def test_sort_title(self):
-        second = OnADateActivityFactory.create(title='B: something else', status='open')
-        first = OnADateActivityFactory.create(title='A: something', status='open')
-        third = OnADateActivityFactory.create(title='C: More', status='open')
+        second = DateActivityFactory.create(title='B: something else', status='open')
+        first = DateActivityFactory.create(title='A: something', status='open')
+        third = DateActivityFactory.create(title='C: More', status='open')
 
         response = self.client.get(
             self.url + '?sort=alphabetical',
@@ -405,20 +405,16 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][2]['id'], str(third.pk))
 
     def test_sort_activity_date(self):
-        first = OnADateActivityFactory.create(
+        first = DateActivityFactory.create(
             status='open',
             start=now() + timedelta(days=10)
         )
 
-        second = OngoingActivityFactory.create(
-            status='open',
-        )
-
-        third = FundingFactory.create(
+        second = FundingFactory.create(
             status='open',
             deadline=now() + timedelta(days=9)
         )
-        fourth = WithADeadlineActivityFactory.create(
+        third = PeriodActivityFactory.create(
             status='open',
             deadline=now() + timedelta(days=11)
         )
@@ -432,24 +428,23 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 4)
 
-        self.assertEqual(data['data'][0]['id'], str(fourth.pk))
+        self.assertEqual(data['data'][0]['id'], str(third.pk))
         self.assertEqual(data['data'][1]['id'], str(first.pk))
-        self.assertEqual(data['data'][2]['id'], str(third.pk))
-        self.assertEqual(data['data'][3]['id'], str(second.pk))
+        self.assertEqual(data['data'][2]['id'], str(second.pk))
 
     def test_sort_matching_popularity(self):
-        first = OnADateActivityFactory.create(status='open')
-        second = OnADateActivityFactory.create(status='open')
+        first = DateActivityFactory.create(status='open')
+        second = DateActivityFactory.create(status='open')
         ParticipantFactory.create(
             activity=second, created=now() - timedelta(days=7)
         )
 
-        third = OnADateActivityFactory.create(status='open')
+        third = DateActivityFactory.create(status='open')
         ParticipantFactory.create(
             activity=third, created=now() - timedelta(days=5)
         )
 
-        fourth = OnADateActivityFactory.create(status='open')
+        fourth = DateActivityFactory.create(status='open')
         ParticipantFactory.create(
             activity=fourth, created=now() - timedelta(days=7)
         )
@@ -472,17 +467,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][3]['id'], str(first.pk))
 
     def test_sort_matching_status(self):
-        OnADateActivityFactory.create(status='closed')
-        second = OnADateActivityFactory.create(status='succeeded')
+        DateActivityFactory.create(status='closed')
+        second = DateActivityFactory.create(status='succeeded')
         ParticipantFactory.create(activity=second)
-        third = OnADateActivityFactory.create(
+        third = DateActivityFactory.create(
             status='open',
             capacity=1
         )
         ParticipantFactory.create(activity=third)
-        fourth = OnADateActivityFactory.create(status='running')
+        fourth = DateActivityFactory.create(status='running')
         ParticipantFactory.create(activity=fourth)
-        fifth = OnADateActivityFactory.create(status='open')
+        fifth = DateActivityFactory.create(status='open')
         ParticipantFactory.create(activity=fifth)
 
         response = self.client.get(
@@ -504,14 +499,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.owner.skills.add(skill)
         self.owner.save()
 
-        first = WithADeadlineActivityFactory.create(status='full')
+        first = PeriodActivityFactory.create(status='full')
         ApplicantFactory.create_batch(3, activity=first, status='accepted')
 
-        second = WithADeadlineActivityFactory.create(status='full', expertise=skill)
+        second = PeriodActivityFactory.create(status='full', expertise=skill)
         ApplicantFactory.create_batch(3, activity=second, status='accepted')
 
-        third = WithADeadlineActivityFactory.create(status='open')
-        fourth = WithADeadlineActivityFactory.create(status='open', expertise=skill)
+        third = PeriodActivityFactory.create(status='open')
+        fourth = PeriodActivityFactory.create(status='open', expertise=skill)
 
         response = self.client.get(
             self.url + '?sort=popularity',
@@ -534,17 +529,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         initiative = InitiativeFactory.create(theme=theme)
 
-        first = OnADateActivityFactory.create(status='open', capacity=1)
+        first = DateActivityFactory.create(status='open', capacity=1)
         ParticipantFactory.create(activity=first)
-        second = OnADateActivityFactory.create(
+        second = DateActivityFactory.create(
             status='open',
             initiative=initiative,
             capacity=1
         )
         ParticipantFactory.create(activity=second)
-        third = OnADateActivityFactory.create(status='open')
+        third = DateActivityFactory.create(status='open')
         ParticipantFactory.create(activity=third)
-        fourth = OnADateActivityFactory.create(status='open', initiative=initiative)
+        fourth = DateActivityFactory.create(status='open', initiative=initiative)
         ParticipantFactory.create(activity=fourth)
 
         response = self.client.get(
@@ -564,26 +559,26 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_matching_location(self):
         PlaceFactory.create(content_object=self.owner, position='10.0, 20.0')
 
-        first = WithADeadlineActivityFactory.create(status='full')
+        first = PeriodActivityFactory.create(status='full')
         ApplicantFactory.create_batch(3, activity=first, status='accepted')
 
-        second = WithADeadlineActivityFactory.create(
+        second = PeriodActivityFactory.create(
             status='full',
             is_online=False,
             location=GeolocationFactory.create(position=Point(20.0, 10))
         )
         ApplicantFactory.create_batch(3, activity=second, status='accepted')
 
-        third = WithADeadlineActivityFactory.create(
+        third = PeriodActivityFactory.create(
             status='open',
             is_online=False,
         )
-        fourth = WithADeadlineActivityFactory.create(
+        fourth = PeriodActivityFactory.create(
             status='open',
             is_online=False,
             location=GeolocationFactory.create(position=Point(21.0, 9.0))
         )
-        fifth = WithADeadlineActivityFactory.create(
+        fifth = PeriodActivityFactory.create(
             is_online=False,
             status='open', location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
@@ -612,15 +607,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         initiative3 = InitiativeFactory.create(place=GeolocationFactory.create(country=country1))
         initiative4 = InitiativeFactory.create(place=GeolocationFactory.create(country=country2))
 
-        first = WithADeadlineActivityFactory.create(status='full', initiative=initiative1)
+        first = PeriodActivityFactory.create(status='full', initiative=initiative1)
         ApplicantFactory.create_batch(3, activity=first, status='accepted')
 
-        second = WithADeadlineActivityFactory.create(status='open', initiative=initiative3)
+        second = PeriodActivityFactory.create(status='open', initiative=initiative3)
 
-        third = WithADeadlineActivityFactory.create(status='full', initiative=initiative2)
+        third = PeriodActivityFactory.create(status='full', initiative=initiative2)
         ApplicantFactory.create_batch(3, activity=third, status='accepted')
 
-        WithADeadlineActivityFactory.create(status='open', initiative=initiative4)
+        PeriodActivityFactory.create(status='open', initiative=initiative4)
 
         response = self.client.get(
             self.url + '?sort=popularity&filter[country]={}'.format(country1.id),
@@ -638,23 +633,23 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.owner.location = LocationFactory.create(position='10.0, 20.0')
         self.owner.save()
 
-        first = WithADeadlineActivityFactory.create(status='full')
+        first = PeriodActivityFactory.create(status='full')
         ApplicantFactory.create_batch(3, activity=first, status='accepted')
 
-        second = WithADeadlineActivityFactory.create(
+        second = PeriodActivityFactory.create(
             status='full',
             is_online=False,
             location=GeolocationFactory.create(position=Point(20.0, 10.0))
         )
         ApplicantFactory.create_batch(3, activity=second, status='accepted')
 
-        third = WithADeadlineActivityFactory.create(status='open')
-        fourth = WithADeadlineActivityFactory.create(
+        third = PeriodActivityFactory.create(status='open')
+        fourth = PeriodActivityFactory.create(
             status='open',
             is_online=False,
             location=GeolocationFactory.create(position=Point(21.0, 9.0))
         )
-        fifth = WithADeadlineActivityFactory.create(
+        fifth = PeriodActivityFactory.create(
             status='open',
             is_online=False,
             location=GeolocationFactory.create(position=Point(20.0, 10.0))
@@ -676,13 +671,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(data['data'][4]['id'], str(first.pk))
 
     def test_sort_matching_created(self):
-        first = OnADateActivityFactory.create(
+        first = DateActivityFactory.create(
             status='open', created=now() - timedelta(days=7)
         )
-        second = OnADateActivityFactory.create(
+        second = DateActivityFactory.create(
             status='open', created=now() - timedelta(days=5)
         )
-        third = OnADateActivityFactory.create(status='open', created=now() - timedelta(days=1))
+        third = DateActivityFactory.create(status='open', created=now() - timedelta(days=1))
 
         response = self.client.get(
             self.url + '?sort=popularity',
@@ -709,18 +704,18 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         initiative = InitiativeFactory.create(theme=theme)
 
-        first = OnADateActivityFactory.create(
+        first = DateActivityFactory.create(
             status='open',
             initiative=initiative,
             is_online=False
         )
-        second = WithADeadlineActivityFactory.create(
+        second = PeriodActivityFactory.create(
             status='open',
             location=GeolocationFactory.create(position=Point(21.0, 9.0)),
             initiative=initiative,
             is_online=False
         )
-        third = WithADeadlineActivityFactory.create(
+        third = PeriodActivityFactory.create(
             status='open',
             location=GeolocationFactory.create(position=Point(21.0, 9.0)),
             initiative=initiative,
@@ -743,7 +738,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_limits(self):
         initiative = InitiativeFactory.create()
-        OnADateActivityFactory.create_batch(
+        DateActivityFactory.create_batch(
             7,
             status='open',
             initiative=initiative,

@@ -61,9 +61,8 @@ class WallpostOwnerFilterMixin(object):
 class ParentTypeFilterMixin(object):
 
     content_type_mapping = {
-        'on-a-date': 'onadateactivity',
-        'with-a-deadline': 'withadeadlineactivity',
-        'ongoing': 'ongoingactivity'
+        'date': 'dateactivity',
+        'period': 'periodactivity',
     }
 
     def get_queryset(self):

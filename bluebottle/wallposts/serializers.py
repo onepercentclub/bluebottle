@@ -8,7 +8,7 @@ from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ContentTextField, PhotoSerializer)
 from bluebottle.events.models import Event
 from bluebottle.funding.models import Funding, Donation
-from bluebottle.time_based.models import OnADateActivity, WithADeadlineActivity, OngoingActivity
+from bluebottle.time_based.models import DateActivity, PeriodActivity
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.utils.serializers import MoneySerializer
@@ -47,12 +47,10 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
             data = ContentType.objects.get_for_model(Assignment)
         elif data == 'funding':
             data = ContentType.objects.get_for_model(Funding)
-        elif data == 'on-a-date':
-            data = ContentType.objects.get_for_model(OnADateActivity)
-        elif data == 'with-a-deadline':
-            data = ContentType.objects.get_for_model(WithADeadlineActivity)
-        elif data == 'ongoing':
-            data = ContentType.objects.get_for_model(OngoingActivity)
+        elif data == 'date':
+            data = ContentType.objects.get_for_model(DateActivity)
+        elif data == 'period':
+            data = ContentType.objects.get_for_model(PeriodActivity)
 
         return data
 

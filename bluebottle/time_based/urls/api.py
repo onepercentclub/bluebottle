@@ -1,12 +1,12 @@
 from django.conf.urls import url
 
 from bluebottle.time_based.views import (
-    OnADateActivityListView, WithADeadlineActivityListView, OngoingActivityListView,
-    OnADateActivityDetailView, WithADeadlineActivityDetailView, OngoingActivityDetailView,
-    OnADateTransitionList, WithADeadlineTransitionList, OngoingTransitionList,
+    DateActivityListView, PeriodActivityListView,
+    DateActivityDetailView, PeriodActivityDetailView,
+    DateTransitionList, PeriodTransitionList,
     OnADateApplicationList, OnADateApplicationDetail,
     OnADateApplicationTransitionList, OnADateApplicationDocumentDetail,
-    OnADateActivityIcalView,
+    DateActivityIcalView,
 
     PeriodApplicationList, PeriodApplicationDetail,
     PeriodApplicationTransitionList, PeriodApplicationDocumentDetail
@@ -14,47 +14,33 @@ from bluebottle.time_based.views import (
 
 urlpatterns = [
     # Events
-    url(r'^/on-a-date$',
-        OnADateActivityListView.as_view(),
-        name='on-a-date-list'),
+    url(r'^/date$',
+        DateActivityListView.as_view(),
+        name='date-list'),
 
-    url(r'^/with-a-deadline$',
-        WithADeadlineActivityListView.as_view(),
-        name='with-a-deadline-list'),
+    url(r'^/period$',
+        PeriodActivityListView.as_view(),
+        name='period-list'),
 
-    url(r'^/ongoing$',
-        OngoingActivityListView.as_view(),
-        name='ongoing-list'),
+    url(r'^/date/(?P<pk>\d+)$',
+        DateActivityDetailView.as_view(),
+        name='date-detail'),
 
-    url(r'^/on-a-date/(?P<pk>\d+)$',
-        OnADateActivityDetailView.as_view(),
-        name='on-a-date-detail'),
+    url(r'^/date/ical/(?P<pk>\d+)$',
+        DateActivityIcalView.as_view(),
+        name='date-ical'),
 
-    url(r'^/on-a-date/ical/(?P<pk>\d+)$',
-        OnADateActivityIcalView.as_view(),
-        name='on-a-date-ical'),
+    url(r'^/period/(?P<pk>\d+)$',
+        PeriodActivityDetailView.as_view(),
+        name='period-detail'),
 
-    url(r'^/with-a-deadline/(?P<pk>\d+)$',
-        WithADeadlineActivityDetailView.as_view(),
-        name='with-a-deadline-detail'),
+    url(r'^/date/transitions$',
+        DateTransitionList.as_view(),
+        name='date-transition-list'),
 
-    url(r'^/ongoing/(?P<pk>\d+)$',
-        OngoingActivityDetailView.as_view(),
-        name='ongoing-detail'),
-
-
-    url(r'^/on-a-date/transitions$',
-        OnADateTransitionList.as_view(),
-        name='on-a-date-transition-list'),
-
-    url(r'^/with-a-deadline/transitions$',
-        WithADeadlineTransitionList.as_view(),
-        name='with-a-deadline-transition-list'),
-
-    url(r'^/ongoing/transitions$',
-        OngoingTransitionList.as_view(),
-        name='ongoing-transition-list'),
-
+    url(r'^/period/transitions$',
+        PeriodTransitionList.as_view(),
+        name='period-transition-list'),
 
     url(r'^/applications/on-a-date$',
         OnADateApplicationList.as_view(),

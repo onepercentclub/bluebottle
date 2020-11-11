@@ -5,7 +5,7 @@ from django.utils.html import format_html
 from bluebottle.fsm.admin import StateMachineFilter
 from bluebottle.activities.admin import ActivityChildAdmin
 from bluebottle.time_based.models import (
-    OnADateActivity, WithADeadlineActivity, OngoingActivity, OnADateApplication, PeriodApplication, Application
+    DateActivity, PeriodActivity, OnADateApplication, PeriodApplication, Application
 )
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import export_as_csv_action
@@ -70,9 +70,9 @@ class TimeBasedAdmin(ActivityChildAdmin):
     )
 
 
-@admin.register(OnADateActivity)
-class OnADateActivityAdmin(TimeBasedAdmin):
-    base_model = OnADateActivity
+@admin.register(DateActivity)
+class DateActivityAdmin(TimeBasedAdmin):
+    base_model = DateActivity
 
     inlines = (OnADateApplicationAdminInline, ) + TimeBasedAdmin.inlines
 
@@ -93,9 +93,9 @@ class OnADateActivityAdmin(TimeBasedAdmin):
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
 
-@admin.register(WithADeadlineActivity)
-class WithADeadlineActivityAdmin(TimeBasedAdmin):
-    base_model = WithADeadlineActivity
+@admin.register(PeriodActivity)
+class PeriodActivityAdmin(TimeBasedAdmin):
+    base_model = PeriodActivity
 
     date_hierarchy = 'deadline'
     list_display = TimeBasedAdmin.list_display + [
@@ -111,28 +111,6 @@ class WithADeadlineActivityAdmin(TimeBasedAdmin):
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('deadline', 'Deadline'),
-        ('duration', 'Duration'),
-        ('duration_period', 'Duration period'),
-    )
-    actions = [export_as_csv_action(fields=export_as_csv_fields)]
-
-
-@admin.register(OngoingActivity)
-class OngoingActivityAdmin(TimeBasedAdmin):
-    base_model = OngoingActivity
-    inlines = (PeriodApplicationAdminInline, ) + TimeBasedAdmin.inlines
-
-    list_display = TimeBasedAdmin.list_display + [
-        'duration', 'duration_period'
-    ]
-
-    detail_fields = TimeBasedAdmin.detail_fields + (
-        'start',
-        'duration',
-        'duration_period',
-    )
-
-    export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('duration', 'Duration'),
         ('duration_period', 'Duration period'),
     )

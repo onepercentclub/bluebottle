@@ -68,7 +68,7 @@ class TimeBasedActivity(Activity):
         )
 
 
-class OnADateActivity(TimeBasedActivity):
+class DateActivity(TimeBasedActivity):
     start = models.DateTimeField(_('activity date'), null=True, blank=True)
 
     duration = models.DurationField(_('duration'), null=True, blank=True)
@@ -79,19 +79,19 @@ class OnADateActivity(TimeBasedActivity):
         verbose_name = _("On a date activity")
         verbose_name_plural = _("On A Date Activities")
         permissions = (
-            ('api_read_onadateactivity', 'Can view on a date activities through the API'),
-            ('api_add_onadateactivity', 'Can add on a date activities through the API'),
-            ('api_change_onadateactivity', 'Can change on a date activities through the API'),
-            ('api_delete_onadateactivity', 'Can delete on a date activities through the API'),
+            ('api_read_dateactivity', 'Can view on a date activities through the API'),
+            ('api_add_dateactivity', 'Can add on a date activities through the API'),
+            ('api_change_dateactivity', 'Can change on a date activities through the API'),
+            ('api_delete_dateactivity', 'Can delete on a date activities through the API'),
 
-            ('api_read_own_onadateactivity', 'Can view own on a date activities through the API'),
-            ('api_add_own_onadateactivity', 'Can add own on a date activities through the API'),
-            ('api_change_own_onadateactivity', 'Can change own on a date activities through the API'),
-            ('api_delete_own_onadateactivity', 'Can delete own on a date activities through the API'),
+            ('api_read_own_dateactivity', 'Can view own on a date activities through the API'),
+            ('api_add_own_dateactivity', 'Can add own on a date activities through the API'),
+            ('api_change_own_dateactivity', 'Can change own on a date activities through the API'),
+            ('api_delete_own_dateactivity', 'Can delete own on a date activities through the API'),
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/on-a-dates'
+        resource_name = 'activities/time-based/date'
 
     @property
     def required_fields(self):
@@ -101,7 +101,7 @@ class OnADateActivity(TimeBasedActivity):
 
     @property
     def uid(self):
-        return '{}-{}-{}'.format(connection.tenant.client_name, 'onadateactivity', self.pk)
+        return '{}-{}-{}'.format(connection.tenant.client_name, 'dateactivity', self.pk)
 
     @property
     def google_calendar_link(self):
@@ -164,7 +164,7 @@ class DurationPeriodChoices(DjangoChoices):
     months = ChoiceItem('months', label=_("per month"))
 
 
-class WithADeadlineActivity(TimeBasedActivity):
+class PeriodActivity(TimeBasedActivity):
     start = models.DateField(_('start'), null=True, blank=True)
 
     deadline = models.DateField(_('deadline'), null=True, blank=True)
@@ -179,65 +179,28 @@ class WithADeadlineActivity(TimeBasedActivity):
     )
 
     class Meta:
-        verbose_name = _("Activity with a deadline")
-        verbose_name_plural = _("Activities with a deadline")
+        verbose_name = _("During a period activity")
+        verbose_name_plural = _("During a period activities")
         permissions = (
-            ('api_read_withadeadlineactivity', 'Can view activities with a deadline through the API'),
-            ('api_add_withadeadlineactivity', 'Can add activities with a deadline through the API'),
-            ('api_change_withadeadlineactivity', 'Can change activities with a deadline through the API'),
-            ('api_delete_withadeadlineactivity', 'Can delete activities with a deadline through the API'),
+            ('api_read_periodactivity', 'Can view during a period activities through the API'),
+            ('api_add_periodactivity', 'Can add during a period activities through the API'),
+            ('api_change_periodactivity', 'Can change during a period activities through the API'),
+            ('api_delete_periodactivity', 'Can delete during a period activities through the API'),
 
-            ('api_read_own_withadeadlineactivity', 'Can view own activities with a deadline through the API'),
-            ('api_add_own_withadeadlineactivity', 'Can add own activities with a deadline through the API'),
-            ('api_change_own_withadeadlineactivity', 'Can change own activities with a deadline through the API'),
-            ('api_delete_own_withadeadlineactivity', 'Can delete own activities with a deadline through the API'),
+            ('api_read_own_periodactivity', 'Can view own during a period activities through the API'),
+            ('api_add_own_periodactivity', 'Can add own during a period activities through the API'),
+            ('api_change_own_periodactivity', 'Can change own during a period activities through the API'),
+            ('api_delete_own_periodactivity', 'Can delete own during a period activities through the API'),
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/with-a-deadlines'
+        resource_name = 'activities/time-based/period'
 
     @property
     def required_fields(self):
         fields = super().required_fields
 
         return fields + ['deadline', 'duration', 'duration_period']
-
-
-class OngoingActivity(TimeBasedActivity):
-    start = models.DateField(_('Start of activity'), null=True, blank=True)
-
-    duration = models.DurationField(_('duration'), null=True, blank=True)
-    duration_period = models.CharField(
-        _('duration period'),
-        max_length=20,
-        blank=True,
-        null=True,
-        choices=DurationPeriodChoices.choices,
-    )
-
-    class Meta:
-        verbose_name = _("Ongoing activity")
-        verbose_name_plural = _("Ongoing activities")
-        permissions = (
-            ('api_read_ongoingactivity', 'Can view ongoing activities through the API'),
-            ('api_add_ongoingactivity', 'Can add ongoing activities through the API'),
-            ('api_change_ongoingactivity', 'Can change ongoing activities through the API'),
-            ('api_delete_ongoingactivity', 'Can delete ongoing activities through the API'),
-
-            ('api_read_own_ongoingactivity', 'Can view own ongoing activities through the API'),
-            ('api_add_own_ongoingactivity', 'Can add own ongoing activities through the API'),
-            ('api_change_own_ongoingactivity', 'Can change own ongoing activities through the API'),
-            ('api_delete_own_ongoingactivity', 'Can delete own ongoing activities through the API'),
-        )
-
-    class JSONAPIMeta:
-        resource_name = 'activities/time-based/ongoings'
-
-    @property
-    def required_fields(self):
-        fields = super().required_fields
-
-        return fields + ['duration', 'duration_period']
 
 
 class Application():

@@ -11,7 +11,7 @@ import icalendar
 from rest_framework import status
 
 from bluebottle.time_based.tests.factories import (
-    OnADateActivityFactory, WithADeadlineActivityFactory, OngoingActivityFactory,
+    DateActivityFactory, PeriodActivityFactory,
     OnADateApplicationFactory, PeriodApplicationFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -85,7 +85,7 @@ class TimeBasedListAPIViewTestCase():
         )
 
     def test_create_duplicate_title(self):
-        OnADateActivityFactory.create(
+        DateActivityFactory.create(
             title=self.data['data']['attributes']['title']
         )
 
@@ -145,9 +145,9 @@ class TimeBasedListAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class OnADateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
-    type = 'on-a-date'
-    factory = OnADateActivityFactory
+class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
+    type = 'date'
+    factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
 
     def setUp(self):
@@ -159,9 +159,9 @@ class OnADateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCas
         })
 
 
-class WithADeadlineListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
-    type = 'with-a-deadline'
-    factory = WithADeadlineActivityFactory
+class PeriodListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
+    type = 'period'
+    factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
 
     def setUp(self):
@@ -169,20 +169,6 @@ class WithADeadlineListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleT
 
         self.data['data']['attributes'].update({
             'deadline': str(date.today() + timedelta(days=21)),
-            'duration': '4:00:00',
-            'duration_period': 'overall',
-        })
-
-
-class OngoingListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
-    type = 'ongoing'
-    factory = OngoingActivityFactory
-    application_factory = PeriodApplicationFactory
-
-    def setUp(self):
-        super().setUp()
-
-        self.data['data']['attributes'].update({
             'duration': '4:00:00',
             'duration_period': 'overall',
         })
@@ -334,9 +320,9 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class OnADateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
-    type = 'on-a-date'
-    factory = OnADateActivityFactory
+class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
+    type = 'date'
+    factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
 
     def setUp(self):
@@ -360,12 +346,12 @@ class OnADateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTes
         self.assertEqual(google_query['action'][0], 'TEMPLATE')
         self.assertEqual(google_query['location'][0], self.activity.location.formatted_address)
         self.assertEqual(google_query['text'][0], self.activity.title)
-        self.assertEqual(google_query['uid'][0], 'test-onadateactivity-{}'.format(self.activity.pk))
+        self.assertEqual(google_query['uid'][0], 'test-dateactivity-{}'.format(self.activity.pk))
 
         details = (
             u"{}\n"
             u"http://testserver/en/initiatives/activities/details/"
-            u"onadateactivity/{}/{}"
+            u"dateactivity/{}/{}"
         ).format(
             self.activity.description, self.activity.pk, self.activity.slug
         )
@@ -400,13 +386,13 @@ class OnADateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTes
         )
 
         self.assertTrue(
-            links['ical'].startswith(reverse('on-a-date-ical', args=(self.activity.pk, )))
+            links['ical'].startswith(reverse('date-ical', args=(self.activity.pk, )))
         )
 
 
-class WithADeadlineDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
-    type = 'with-a-deadline'
-    factory = WithADeadlineActivityFactory
+class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
+    type = 'period'
+    factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
 
     def setUp(self):
@@ -415,12 +401,6 @@ class WithADeadlineDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, Bluebot
         self.data['data']['attributes'].update({
             'deadline': str(date.today() + timedelta(days=21)),
         })
-
-
-class OngoingDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
-    type = 'ongoing'
-    factory = OngoingActivityFactory
-    application_factory = PeriodApplicationFactory
 
 
 class TimeBasedTransitionAPIViewTestCase():
@@ -503,20 +483,14 @@ class TimeBasedTransitionAPIViewTestCase():
 
 
 class OnADatteTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
-    type = 'on-a-date'
-    factory = OnADateActivityFactory
+    type = 'date'
+    factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
 
 
-class WithADeadlineTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
-    type = 'with-a-deadline'
-    factory = WithADeadlineActivityFactory
-    application_factory = PeriodApplicationFactory
-
-
-class OngoingTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
-    type = 'ongoing'
-    factory = OngoingActivityFactory
+class PeriodTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
+    type = 'period'
+    factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
 
 
@@ -595,8 +569,6 @@ class ApplicationListViewTestCase():
             }
         }
 
-        print('url: {}'.format(self.url))
-        print('data: {}'.format(self.data))
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
 
         data = response.json()['data']
@@ -621,27 +593,18 @@ class ApplicationListViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class OnADateApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
-    type = 'on-a-date'
-    factory = OnADateActivityFactory
+class DateApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
+    type = 'date'
+    factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
 
     url_name = 'on-a-date-application-list'
     application_type = 'contributions/time-based/on-a-date-applications'
 
 
-class WithADeadlineApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
-    type = 'with-a-deadline'
-    factory = WithADeadlineActivityFactory
-    application_factory = PeriodApplicationFactory
-
-    url_name = 'period-application-list'
-    application_type = 'contributions/time-based/period-applications'
-
-
-class OngoingApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
-    type = 'ongoing'
-    factory = OngoingActivityFactory
+class PeriodApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
+    type = 'period'
+    factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
 
     url_name = 'period-application-list'
@@ -795,25 +758,17 @@ class ApplicationDetailViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class OnADateApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
-    type = 'on-a-date'
-    factory = OnADateActivityFactory
+class DateApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
+    type = 'date'
+    factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
     url_name = 'on-a-date-application-detail'
     application_type = 'contributions/time-based/on-a-date-applications'
 
 
-class WithADeadlineApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
-    type = 'with-a-deadline'
-    factory = WithADeadlineActivityFactory
-    application_factory = PeriodApplicationFactory
-    url_name = 'period-application-detail'
-    application_type = 'contributions/time-based/period-applications'
-
-
-class OngoingApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
-    type = 'ongoing'
-    factory = OngoingActivityFactory
+class PeriodApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
+    type = 'period'
+    factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
     url_name = 'period-application-detail'
     application_type = 'contributions/time-based/period-applications'
@@ -848,9 +803,6 @@ class ApplicationTransitionAPIViewTestCase():
     def test_withdraw_by_user(self):
         # Owner can delete the event
         self.data['data']['attributes']['transition'] = 'withdraw'
-
-        print('url: {}'.format(self.url))
-        print('data: {}'.format(self.data))
 
         response = self.client.post(
             self.url,
@@ -908,42 +860,33 @@ class ApplicationTransitionAPIViewTestCase():
 
 
 class OnADateApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
-    type = 'on-a-date'
+    type = 'date'
     url_name = 'on-a-date-application-transition-list'
     application_type = 'contributions/time-based/on-a-date-application'
-    factory = OnADateActivityFactory
+    factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
 
 
-class WithADeadlineApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
-    type = 'with-a-deadline'
+class PeriodApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
+    type = 'period'
     application_type = 'contributions/time-based/period-application'
     url_name = 'period-application-transition-list'
 
-    factory = WithADeadlineActivityFactory
+    factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
 
 
-class OngoingApplicationTransitionListAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
-    type = 'ongoing'
-    application_type = 'contributions/time-based/period-application'
-    url_name = 'period-application-transition-list'
-
-    factory = OngoingActivityFactory
-    application_factory = PeriodApplicationFactory
-
-
-class OnADateIcalTestCase(BluebottleTestCase):
+class DateIcalTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
 
-        self.activity = OnADateActivityFactory.create(title='Pollute Katwijk Beach')
+        self.activity = DateActivityFactory.create(title='Pollute Katwijk Beach')
 
-        self.activity_url = reverse('on-a-date-detail', args=(self.activity.pk,))
+        self.activity_url = reverse('date-detail', args=(self.activity.pk,))
         response = self.client.get(self.activity_url)
 
         self.signed_url = response.json()['data']['attributes']['links']['ical']
-        self.unsigned_url = reverse('on-a-date-ical', args=(self.activity.pk,))
+        self.unsigned_url = reverse('date-ical', args=(self.activity.pk,))
 
     def test_get(self):
         response = self.client.get(self.signed_url)

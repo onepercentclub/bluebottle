@@ -12,13 +12,11 @@ from bluebottle.events.serializers import (
     ParticipantListSerializer, TinyEventSerializer
 )
 from bluebottle.time_based.serializers import (
-    OnADateActivityListSerializer,
-    WithADeadlineActivityListSerializer,
-    OngoingActivityListSerializer,
+    DateActivityListSerializer,
+    PeriodActivityListSerializer,
 
-    OnADateActivitySerializer,
-    WithADeadlineActivitySerializer,
-    OngoingActivitySerializer
+    DateActivitySerializer,
+    PeriodActivitySerializer,
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
@@ -47,9 +45,8 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         FundingListSerializer,
         AssignmentListSerializer,
 
-        OnADateActivityListSerializer,
-        WithADeadlineActivityListSerializer,
-        OngoingActivityListSerializer
+        DateActivityListSerializer,
+        PeriodActivityListSerializer,
     ]
 
     included_serializers = {
@@ -92,9 +89,8 @@ class ActivitySerializer(PolymorphicModelSerializer):
         FundingSerializer,
         AssignmentSerializer,
 
-        OnADateActivitySerializer,
-        WithADeadlineActivitySerializer,
-        OngoingActivitySerializer
+        DateActivitySerializer,
+        PeriodActivitySerializer,
     ]
 
     included_serializers = {
@@ -144,9 +140,8 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
         TinyAssignmentSerializer,
         TinyFundingSerializer,
 
-        OnADateActivityListSerializer,
-        WithADeadlineActivityListSerializer,
-        OngoingActivityListSerializer
+        DateActivityListSerializer,
+        PeriodActivityListSerializer,
     ]
 
     class Meta(object):

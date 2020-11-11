@@ -69,16 +69,12 @@ JET_SIDE_MENU_ITEMS = [
         'permissions': ['activities.change_activity'],
         'items': [
             {
-                'name': 'time_based.onadateactivity',
-                'permissions': ['time_based.change_onadateactivity']
+                'name': 'time_based.dateactivity',
+                'permissions': ['time_based.change_dateactivity']
             },
             {
-                'name': 'time_based.withadeadlineactivity',
-                'permissions': ['events.change_withadeadlineactivity']
-            },
-            {
-                'name': 'time_based.ongoingactivity',
-                'permissions': ['events.change_ongoingactivity']
+                'name': 'time_based.periodactivity',
+                'permissions': ['events.change_periodactivity']
             },
         ]
     },

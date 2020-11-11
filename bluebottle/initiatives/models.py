@@ -241,10 +241,10 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('event', _('Events')),
         ('assignment', _('Assignment')),
 
-        ('withadeadlineactivity', _('Activity with a deadline')),
-        ('onadateactivity', _('Activity on a specific date')),
-        ('ongoingactivity', _('Ongoing activity')),
+        ('periodactivity', _('Activity during a period')),
+        ('dateactivity', _('Activity on a specific date')),
     )
+
     ACTIVITY_SEARCH_FILTERS = (
         ('location', _('Office location')),
         ('country', _('Country')),

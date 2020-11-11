@@ -107,11 +107,11 @@ class FileMimetypeValidator(object):
             self.code = code
 
     def __call__(self, value):
-        mimetype = mime.from_buffer(value.file.read(1000))
+        mimetype = mime.from_buffer(value.file.read(2048))
         value.file.seek(0)
         _name, extension = os.path.splitext(value.name)
 
-        if extension not in mimetypes.guess_all_extensions(mimetype):
+        if extension.lower() not in mimetypes.guess_all_extensions(mimetype):
             raise ValidationError(
                 message=_(
                     "Mime type '%(mimetype)s' doesn't match the filename extension '%(extension)s'."

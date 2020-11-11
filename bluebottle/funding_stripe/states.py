@@ -121,6 +121,7 @@ class StripeBankAccountStateMachine(BankAccountStateMachine):
 
     verify = Transition(
         [
+            BankAccountStateMachine.rejected,
             BankAccountStateMachine.incomplete,
             BankAccountStateMachine.unverified
         ],

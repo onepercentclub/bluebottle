@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -12,11 +13,20 @@ from bluebottle.geo.models import Location
 from bluebottle.utils.fields import ImageField
 from bluebottle.categories.models import Category
 from bluebottle.utils.models import BasePlatformSettings
-from bluebottle.utils.validators import FileExtensionValidator
+from bluebottle.utils.validators import FileExtensionValidator, FileMimetypeValidator, validate_file_infection
 
 
 class ResultPage(TranslatableModel):
-    image = models.ImageField(_('Header image'), blank=True, null=True)
+    image = models.ImageField(
+        _('Header image'), blank=True, null=True,
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
 
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
@@ -179,7 +189,14 @@ class Quote(models.Model):
     quote = models.TextField()
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
-        upload_to='quote_images/'
+        upload_to='quote_images/',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
     )
 
 
@@ -334,11 +351,25 @@ class Slide(SortableMixin, models.Model):
     body = models.TextField(_("Body text"), blank=True)
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
-        upload_to='banner_slides/'
+        upload_to='banner_slides/',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
     )
     background_image = ImageField(
         _("Background image"), max_length=255, blank=True,
-        null=True, upload_to='banner_slides/'
+        null=True, upload_to='banner_slides/',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
     )
     video_url = models.URLField(
         _("Video url"), max_length=100, blank=True, default=''
@@ -374,7 +405,14 @@ class Step(SortableMixin, models.Model):
     block = models.ForeignKey('cms.StepsContent', related_name='steps')
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
-        upload_to='step_images/'
+        upload_to='step_images/',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
     )
     header = models.CharField(_("Header"), max_length=100)
     text = models.CharField(_("Text"), max_length=400, null=True, blank=True)
@@ -433,7 +471,14 @@ class Logo(SortableMixin, models.Model):
     block = models.ForeignKey('cms.LogosContent', related_name='logos')
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
-        upload_to='logo_images/'
+        upload_to='logo_images/',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
     )
     link = models.CharField(max_length=100, blank=True, null=True)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
@@ -463,7 +508,14 @@ class ContentLink(SortableMixin, models.Model):
     block = models.ForeignKey('cms.LinksContent', related_name='links')
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
-        upload_to='link_images/'
+        upload_to='link_images/',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
     )
     action_text = models.CharField(max_length=40)
     action_link = models.CharField(
@@ -511,12 +563,32 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     copyright = models.CharField(max_length=100, null=True, blank=True)
     powered_by_text = models.CharField(max_length=100, null=True, blank=True)
     powered_by_link = models.CharField(max_length=100, null=True, blank=True)
-    powered_by_logo = models.ImageField(null=True, blank=True, upload_to='site_content/')
+    powered_by_logo = models.ImageField(
+        null=True, blank=True, upload_to='site_content/',
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
     logo = models.FileField(
         null=True, blank=True, upload_to='site_content/',
-        validators=[FileExtensionValidator(allowed_extensions=['svg'])]
+        validators=[
+            FileExtensionValidator(allowed_extensions=['svg']),
+            validate_file_infection
+        ]
     )
-    favicon = models.ImageField(null=True, blank=True, upload_to='site_content/')
+    favicon = models.ImageField(
+        null=True, blank=True, upload_to='site_content/',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
 
     translations = TranslatedFields(
         metadata_title=models.CharField(

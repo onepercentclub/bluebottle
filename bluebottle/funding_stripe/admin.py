@@ -154,6 +154,16 @@ class StripeBankAccountAdmin(BankAccountChildAdmin):
     search_fields = ['account_id']
     list_display = ['created', 'account_id', 'status']
 
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Basic'), {'fields': self.get_fields(request, obj)}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': ['force_status']}),
+            )
+        return fieldsets
+
     def save_model(self, request, obj, form, change):
         if 'acct_' in obj.account_id:
             obj.account_id = ''

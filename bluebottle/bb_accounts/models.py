@@ -17,6 +17,7 @@ from django.utils.functional import lazy, cached_property
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
+
 from future.utils import python_2_unicode_compatible
 from rest_framework_jwt.settings import api_settings
 
@@ -25,6 +26,7 @@ from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.clients import properties
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 def generate_picture_filename(instance, filename):
@@ -144,7 +146,16 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     birthdate = models.DateField(_('birthdate'), blank=True, null=True)
     about_me = models.TextField(_('about me'), blank=True, max_length=265)
     # TODO Use generate_picture_filename (or something) for upload_to
-    picture = ImageField(_('picture'), blank=True, upload_to='profiles')
+    picture = ImageField(
+        _('picture'), blank=True, upload_to='profiles',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
 
     is_co_financer = models.BooleanField(_('Co-financer'),
                                          default=False,

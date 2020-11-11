@@ -262,3 +262,10 @@ class StripeBankAccountStateMachineTests(BluebottleTestCase):
         new_bank_account = ExternalAccountFactory.create(connect_account=self.account)
         new_bank_account.refresh_from_db()
         self.assertEqual(new_bank_account.status, 'verified')
+
+    def test_rejeceted_bank_verifies(self):
+        self.bank_account.states.reject(save=True)
+        self.account.states.verify(save=True)
+        self.assertEqual(self.account.status, 'verified')
+        self.bank_account.refresh_from_db()
+        self.assertEqual(self.bank_account.status, 'verified')

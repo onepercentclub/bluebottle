@@ -5,13 +5,14 @@ from django.db import models
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
+
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
 from bluebottle.files.validators import validate_video_file_size
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import PublishableModel
-from bluebottle.utils.validators import FileMimetypeValidator
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 def get_languages():
@@ -42,11 +43,25 @@ class Slide(PublishableModel):
     image = ImageField(
         _("Image"), max_length=255,
         blank=True, null=True,
-        upload_to='banner_slides/')
+        upload_to='banner_slides/',
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
     background_image = ImageField(
         _("Background image"), max_length=255,
         blank=True, null=True,
-        upload_to='banner_slides/')
+        upload_to='banner_slides/',
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
     video = models.FileField(
         _("Video"), max_length=255,
         blank=True, null=True,

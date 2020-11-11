@@ -1,4 +1,5 @@
 from builtins import object
+from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.functional import lazy
@@ -7,6 +8,8 @@ from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
+
+
 from fluent_contents.extensions.model_fields import PluginHtmlField, PluginImageField
 from fluent_contents.models import PlaceholderField
 from fluent_contents.models.db import ContentItem
@@ -19,7 +22,7 @@ from future.utils import python_2_unicode_compatible
 from bluebottle.clients import properties
 from bluebottle.utils.models import PublishableModel
 from bluebottle.utils.serializers import MLStripper
-from bluebottle.utils.validators import FileMimetypeValidator
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 def get_languages():
@@ -32,17 +35,20 @@ class DocumentItem(ContentItem):
     document = models.FileField(
         _("Document"),
         upload_to='pages',
-        validators=[FileMimetypeValidator(
-            allowed_mimetypes=[
-                'application/pdf',
-                'application/zip',
-                'image/jpeg',
-                'image/png',
-                'image/gif',
-                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            ]
-        )]
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=[
+                    'application/pdf',
+                    'application/zip',
+                    'image/jpeg',
+                    'image/png',
+                    'image/gif',
+                    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                ]
+            ),
+            validate_file_infection
+        ]
     )
 
     def __str__(self):
@@ -106,7 +112,16 @@ class ImageTextItem(ContentItem):
     """
     text = PluginHtmlField(_('text'), blank=True)
     text_final = models.TextField(editable=False, blank=True, null=True)
-    image = PluginImageField(_("Image"), upload_to='pages')
+    image = PluginImageField(
+        _("Image"),
+        upload_to='pages',
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
 
     ALIGN_CHOICES = (
         ('left', _("Left")),
@@ -152,7 +167,16 @@ class ImageTextItem(ContentItem):
 class ImageTextRoundItem(ContentItem):
     text = PluginHtmlField(_('text'), blank=True)
     text_final = models.TextField(editable=False, blank=True, null=True)
-    image = PluginImageField(_("Image"), upload_to='pages')
+    image = PluginImageField(
+        _("Image"),
+        upload_to='pages',
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
 
     objects = ContentItemManager()
 

@@ -9,11 +9,12 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.files.fields import ImageField
 from bluebottle.utils.models import AnonymizationMixin
-from bluebottle.utils.validators import FileMimetypeValidator
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
@@ -23,9 +24,12 @@ class File(AnonymizationMixin, models.Model):
     file = models.FileField(
         _('file'),
         upload_to='files',
-        validators=[FileMimetypeValidator(
-            allowed_mimetypes=settings.PRIVATE_FILE_ALLOWED_MIME_TYPES
-        )]
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.PRIVATE_FILE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
 
     )
     owner = models.ForeignKey(

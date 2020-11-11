@@ -5,11 +5,14 @@ from builtins import object
 
 from future.utils import python_2_unicode_compatible
 
+from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
+
 from fluent_contents.models import ContentItem
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
@@ -23,7 +26,16 @@ class PictureItem(ContentItem):
         center = ChoiceItem('center', label=_("Center"))
         float_right = ChoiceItem('float-right', label=_("Float right"))
 
-    image = ImageField(_("Picture"), upload_to='content_images')
+    image = ImageField(
+        _("Picture"), upload_to='content_images',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
     align = models.CharField(_("Align"), max_length=50,
                              choices=PictureAlignment.choices)
 

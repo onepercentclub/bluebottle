@@ -1,10 +1,9 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.fsm.state import Transition, register
-from bluebottle.funding.states import BankAccountStateMachine
-from bluebottle.funding.states import BasePaymentStateMachine
-from bluebottle.funding_pledge.models import PledgeBankAccount
-from bluebottle.funding_pledge.models import PledgePayment
+from bluebottle.fsm.state import Transition
+from bluebottle.fsm.state import register
+from bluebottle.funding.states import BasePaymentStateMachine, BankAccountStateMachine
+from bluebottle.funding_pledge.models import PledgePayment, PledgeBankAccount
 
 
 @register(PledgePayment)

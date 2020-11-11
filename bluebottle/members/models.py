@@ -4,16 +4,20 @@ from future.utils import python_2_unicode_compatible
 
 from builtins import object
 from adminsortable.models import SortableMixin
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+
 from multiselectfield import MultiSelectField
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.geo.models import Place
 from bluebottle.utils.models import BasePlatformSettings
+
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 class CustomMemberFieldSettings(SortableMixin):
@@ -68,7 +72,15 @@ class MemberPlatformSettings(BasePlatformSettings):
         max_length=255
     )
 
-    background = models.ImageField(null=True, blank=True, upload_to='site_content/')
+    background = models.ImageField(
+        null=True, blank=True, upload_to='site_content/',
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
 
     enable_segments = models.BooleanField(
         default=False,

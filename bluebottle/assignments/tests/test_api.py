@@ -189,6 +189,33 @@ class AssignmentDetailAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'draft')
 
+        self.assertEqual(
+            self.assignment.online_meeting_url,
+            response.json()['data']['attributes']['online-meeting-url']
+        )
+
+    def test_retrieve_applicant(self):
+        applicant = ApplicantFactory.create(activity=self.assignment)
+        response = self.client.get(self.url, user=applicant.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'draft')
+
+        self.assertEqual(
+            self.assignment.online_meeting_url,
+            response.json()['data']['attributes']['online-meeting-url']
+        )
+
+    def test_retrieve_non_applicant(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'draft')
+
+        self.assertTrue(
+            'online-meeting-url' not in response.json()['data']['attributes']
+        )
+
     def test_update(self):
         response = self.client.put(self.url, json.dumps(self.data), user=self.assignment.owner)
 

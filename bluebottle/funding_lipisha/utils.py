@@ -22,11 +22,14 @@ def init_client():
     else:
         env = lipisha.SANDBOX_ENV
     credentials = get_credentials()
-    return Lipisha(
+    lip = Lipisha(
         credentials['api_key'],
         credentials['api_signature'],
         api_environment=env
     )
+    if live_mode:
+        lip.api_base_url = 'https://api.lypa.io/v2/api/'
+    return lip
 
 
 def initiate_push_payment(payment):
@@ -68,7 +71,7 @@ def check_payment_status(payment):
     else:
         response = client.get_transactions(
             transaction_type='Payment',
-            transaction_merchant_reference=payment.unique_id
+            transaction_reference=payment.unique_id
         )
 
     payment.update_response = json.dumps(response)
@@ -79,13 +82,20 @@ def check_payment_status(payment):
         except TransitionNotPossible:
             pass
         payment.save()
-        raise PaymentException('Payment could not be verified yet. Payment not found.')
+        raise PaymentException(
+            'Payment could not be verified yet. Payment not found.'
+        )
+    elif len(data) > 1:
+        raise PaymentException(
+            'Found multiple payments with code {}.'.format(payment.transaction or payment.unique_id)
+        )
     else:
         data = data[0]
         if data['transaction_amount'] != payment.donation.amount.amount:
             # Update donation amount based on the amount registered at Lipisha
             amount = Money(data['transaction_amount'], 'KES')
             payment.donation.amount = amount
+            payment.donation.payout_amount = amount
         payment.donation.name = data['transaction_name'].replace('+', ' ').title()
         payment.donation.save()
 

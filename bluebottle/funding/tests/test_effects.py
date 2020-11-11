@@ -23,12 +23,12 @@ class FundingEffectsTests(BluebottleTestCase):
         self.payout_account = PlainPayoutAccountFactory.create(
             status='verified'
         )
-        bank_account = BankAccountFactory.create(connect_account=self.payout_account)
+        self.bank_account = BankAccountFactory.create(connect_account=self.payout_account, status='verified')
         self.funding = FundingFactory.create(
             initiative=self.initiative,
             target=Money(1000, 'EUR'),
             duration=30,
-            bank_account=bank_account
+            bank_account=self.bank_account
         )
         BudgetLineFactory.create(activity=self.funding)
         self.funding.states.submit(save=True)
@@ -87,7 +87,7 @@ class FundingEffectsTests(BluebottleTestCase):
     def test_submit_connected_activities_effect(self):
         self.funding.status = 'draft'
         self.funding.save()
-        effect = SubmitConnectedActivitiesEffect(self.payout_account)
+        effect = SubmitConnectedActivitiesEffect(self.bank_account)
         self.assertEqual(str(effect), 'Submit connected activities')
         effect.post_save()
         self.funding.refresh_from_db()

@@ -21,7 +21,7 @@ class VitepayPaymentProviderAdmin(PaymentProviderChildAdmin):
 @admin.register(VitepayBankAccount)
 class VitepayBankAccountAdmin(BankAccountChildAdmin):
     model = VitepayBankAccount
-    fields = BankAccountChildAdmin.fields + ('account_name', 'mobile_number')
-    list_filter = ['reviewed']
+    fields = ('account_name', 'mobile_number') + BankAccountChildAdmin.fields
+    list_filter = ['status']
     search_fields = ['account_name', 'mobile_number']
-    list_display = ['created', 'account_name', 'mobile_number', 'reviewed']
+    list_display = ['created', 'account_name', 'mobile_number', 'status']

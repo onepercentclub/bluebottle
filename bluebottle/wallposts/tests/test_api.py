@@ -782,6 +782,7 @@ class WallpostPhotoTest(BluebottleTestCase):
             token="JWT {0}".format(self.photo.author.get_jwt_token())
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('jpg' in response.data['photo']['full'])
 
     def test_photo_different_wallpost_owner(self):
         photo_author = BlueBottleUserFactory.create()

@@ -93,7 +93,7 @@ class TransitionMessage(object):
         custom_message = self.options.get('custom_message', '')
         custom_template = self.get_message_template()
         recipients = list(set(self.get_recipients()))
-        for recipient in recipients:
+        for recipient in filter(None, recipients):
             with translation.override(recipient.primary_language):
                 if self.send_once:
                     try:

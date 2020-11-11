@@ -1,3 +1,4 @@
+from bluebottle.fsm.state import TransitionNotPossible
 from future.utils import python_2_unicode_compatible
 
 import datetime
@@ -147,11 +148,13 @@ class SubmitConnectedActivitiesEffect(Effect):
     template = 'admin/submit_connected_activities_effect.html'
 
     def post_save(self, **kwargs):
-        for external_account in self.instance.external_accounts.all():
-            for funding in external_account.funding_set.filter(
-                    status__in=('draft', 'needs_work')
-            ):
+        for funding in self.instance.funding_set.filter(
+                status__in=('draft', 'needs_work')
+        ):
+            try:
                 funding.states.submit(save=True)
+            except TransitionNotPossible:
+                pass
 
     def __str__(self):
         return _('Submit connected activities')

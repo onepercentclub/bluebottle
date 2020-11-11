@@ -1,8 +1,9 @@
 import logging
 
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, m2m_changed
 from django.contrib.auth.models import Group
 from django.dispatch import receiver
+from bluebottle.members.models import Member
 
 
 logger = logging.getLogger(__name__)
@@ -19,3 +20,27 @@ def member_created_groups(sender, instance, created, **kwargs):
             group.user_set.add(instance)
         except Group.DoesNotExist:
             logger.error('Group \'{}\' could not be found'.format('Authenticated'))
+
+
+@receiver(m2m_changed, sender=Member.segments.through)
+def segments_changed(sender, instance, action, pk_set, *args, **kwargs):
+    """
+    When a segment is added or removed from a user, update all *open* activities
+    and also add or remove the segment from there.
+    All closed or succeeded activities remain untouched, so that historical data
+    will stay accurate.
+    """
+    open_statuses = ('draft', 'needs_work', 'submitted', 'open', 'running', 'full', )
+    if action == 'post_add':
+        for activity in instance.activities.filter(
+            status__in=open_statuses
+        ):
+            for pk in pk_set:
+                activity.segments.add(pk)
+
+    if action == 'post_remove':
+        for activity in instance.activities.filter(
+            status__in=open_statuses
+        ):
+            for pk in pk_set:
+                activity.segments.remove(pk)

@@ -61,8 +61,8 @@ class WallpostOwnerFilterMixin(object):
 class ParentTypeFilterMixin(object):
 
     content_type_mapping = {
-        'date': 'dateactivity',
-        'period': 'periodactivity',
+        'activities/time-based/date': 'dateactivity',
+        'activities/time-based/period': 'periodactivity',
     }
 
     def get_queryset(self):

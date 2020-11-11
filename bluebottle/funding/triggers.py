@@ -1,12 +1,12 @@
 from django.utils import timezone
 
+from bluebottle.activities.states import OrganizerStateMachine, ContributionStateMachine
+from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
+from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
     ModelChangedTrigger, TransitionTrigger, register, TriggerManager
 )
-from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
-from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
-
 from bluebottle.funding.effects import (
     GeneratePayoutsEffect, GenerateDonationWallpostEffect,
     RemoveDonationWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
@@ -14,13 +14,6 @@ from bluebottle.funding.effects import (
     SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect,
     ClearPayoutDatesEffect, RemoveDonationFromPayoutEffect
 )
-
-from bluebottle.funding.states import (
-    FundingStateMachine, DonationStateMachine, PayoutAccountStateMachine, BasePaymentStateMachine,
-    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine
-)
-from bluebottle.funding.models import Funding, PlainPayoutAccount, Donation, Payout, Payment, BankAccount
-
 from bluebottle.funding.messages import (
     DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
     FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage,
@@ -30,9 +23,12 @@ from bluebottle.funding.messages import (
     FundingCancelledMessage, FundingApprovedMessage
 
 )
+from bluebottle.funding.models import Funding, PlainPayoutAccount, Donation, Payout, Payment, BankAccount
+from bluebottle.funding.states import (
+    FundingStateMachine, DonationStateMachine, BasePaymentStateMachine,
+    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine
+)
 from bluebottle.notifications.effects import NotificationEffect
-
-from bluebottle.activities.states import OrganizerStateMachine, ContributionStateMachine
 
 
 def should_finish(effect):
@@ -232,29 +228,9 @@ def is_unreviewed(effect):
     return not effect.instance.reviewed
 
 
-class PayoutAccountTriggers(TriggerManager):
-    triggers = [
-        TransitionTrigger(
-            PayoutAccountStateMachine.verify,
-            effects=[
-                NotificationEffect(PayoutAccountVerified),
-                RelatedTransitionEffect('external_accounts', 'verify')
-            ]
-        ),
-
-        TransitionTrigger(
-            PayoutAccountStateMachine.reject,
-            effects=[
-                NotificationEffect(PayoutAccountRejected),
-                RelatedTransitionEffect('external_accounts', 'reject')
-            ]
-        )
-    ]
-
-
 @register(PlainPayoutAccount)
-class PlainPayoutAccountTriggers(PayoutAccountTriggers):
-    triggers = PayoutAccountTriggers.triggers + [
+class PlainPayoutAccountTriggers(TriggerManager):
+    triggers = [
         TransitionTrigger(
             PlainPayoutAccountStateMachine.verify,
             effects=[
@@ -281,7 +257,7 @@ class BankAccountTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'connect_account',
-                    'reject',
+                    PlainPayoutAccountStateMachine.reject,
                     description='Reject connected KYC account'
                 )
             ]
@@ -292,7 +268,7 @@ class BankAccountTriggers(TriggerManager):
                 SubmitConnectedActivitiesEffect,
                 RelatedTransitionEffect(
                     'connect_account',
-                    'verify',
+                    PlainPayoutAccountStateMachine.verify,
                     description='Verify connected KYC account'
                 )
             ]

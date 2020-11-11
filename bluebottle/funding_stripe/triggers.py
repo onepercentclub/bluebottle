@@ -1,9 +1,12 @@
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
-from bluebottle.fsm.triggers import TransitionTrigger, register
+from bluebottle.fsm.triggers import TransitionTrigger, register, TriggerManager
+from bluebottle.funding.effects import SubmitConnectedActivitiesEffect
+from bluebottle.funding.messages import PayoutAccountVerified, PayoutAccountRejected
 from bluebottle.funding.states import DonationStateMachine, PayoutAccountStateMachine
-from bluebottle.funding.triggers import BasePaymentTriggers, PayoutAccountTriggers, BankAccountTriggers
+from bluebottle.funding.triggers import BasePaymentTriggers
 from bluebottle.funding_stripe.models import StripeSourcePayment, StripePayoutAccount, ExternalAccount
-from bluebottle.funding_stripe.states import StripeSourcePaymentStateMachine, StripePayoutAccountStateMachine
+from bluebottle.funding_stripe.states import StripeSourcePaymentStateMachine, StripeBankAccountStateMachine
+from bluebottle.notifications.effects import NotificationEffect
 
 
 @register(StripeSourcePayment)
@@ -15,7 +18,6 @@ class StripeSourcePaymentTriggers(BasePaymentTriggers):
                 RelatedTransitionEffect('donation', DonationStateMachine.succeed)
             ]
         ),
-
 
         TransitionTrigger(
             StripeSourcePaymentStateMachine.succeed,
@@ -41,8 +43,30 @@ class StripeSourcePaymentTriggers(BasePaymentTriggers):
 
 
 @register(StripePayoutAccount)
-class StripePayoutAccountTriggers(PayoutAccountTriggers):
-    pass
+class StripePayoutAccountTriggers(TriggerManager):
+    triggers = [
+        TransitionTrigger(
+            PayoutAccountStateMachine.verify,
+            effects=[
+                NotificationEffect(PayoutAccountVerified),
+                RelatedTransitionEffect(
+                    'external_accounts',
+                    StripeBankAccountStateMachine.verify
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            PayoutAccountStateMachine.reject,
+            effects=[
+                NotificationEffect(PayoutAccountRejected),
+                RelatedTransitionEffect(
+                    'external_accounts',
+                    StripeBankAccountStateMachine.reject
+                )
+            ]
+        )
+    ]
 
 
 def account_verified(effect):
@@ -51,15 +75,22 @@ def account_verified(effect):
 
 
 @register(ExternalAccount)
-class StripeBankAccountTriggers(BankAccountTriggers):
-
-    triggers = PayoutAccountTriggers.triggers + [
+class StripeBankAccountTriggers(TriggerManager):
+    triggers = [
         TransitionTrigger(
-            StripePayoutAccountStateMachine.initiate,
+            StripeBankAccountStateMachine.verify,
+            effects=[
+                SubmitConnectedActivitiesEffect
+            ]
+        ),
+        TransitionTrigger(
+            StripeBankAccountStateMachine.initiate,
             effects=[
                 TransitionEffect(
-                    'verify',
-                    conditions=[account_verified]
+                    StripeBankAccountStateMachine.verify,
+                    conditions=[
+                        account_verified
+                    ]
                 )
             ]
         )

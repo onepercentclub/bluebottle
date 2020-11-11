@@ -139,6 +139,7 @@ class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
     transition_date = models.DateTimeField(null=True, blank=True)
+    contribution_date = models.DateTimeField(null=True, blank=True)
 
     activity = models.ForeignKey(Activity, related_name='contributions', on_delete=NON_POLYMORPHIC_CASCADE)
     user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True, blank=True)

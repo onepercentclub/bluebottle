@@ -16,9 +16,10 @@ class Migration(migrations.Migration):
             name='organizer',
             options={'verbose_name': 'Activity owner', 'verbose_name_plural': 'Activity owners'},
         ),
-        migrations.RemoveField(
+        migrations.AlterField(
             model_name='contribution',
             name='contribution_date',
+            field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AlterField(
             model_name='activity',

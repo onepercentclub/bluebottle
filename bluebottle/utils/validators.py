@@ -107,7 +107,7 @@ class FileMimetypeValidator(object):
             self.code = code
 
     def __call__(self, value):
-        mimetype = mime.from_buffer(value.file.read(1000))
+        mimetype = mime.from_buffer(value.file.read(2048))
         value.file.seek(0)
         _name, extension = os.path.splitext(value.name)
 

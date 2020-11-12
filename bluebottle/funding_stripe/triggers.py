@@ -71,7 +71,10 @@ class StripePayoutAccountTriggers(TriggerManager):
 
 def account_verified(effect):
     """connected payout account is verified"""
-    return effect.instance.connect_account.status == PayoutAccountStateMachine.verified.value
+    return (
+        effect.instance.connect_account and
+        effect.instance.connect_account.status == PayoutAccountStateMachine.verified.value
+    )
 
 
 @register(ExternalAccount)

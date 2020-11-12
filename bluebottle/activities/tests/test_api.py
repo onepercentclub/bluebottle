@@ -433,20 +433,24 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first = DateActivityFactory.create(status='open')
         second = DateActivityFactory.create(status='open')
         OnADateApplicationFactory.create(
-            activity=second, created=now() - timedelta(days=7)
+            activity=second,
+            created=now() - timedelta(days=7),
         )
 
         third = DateActivityFactory.create(status='open')
         OnADateApplicationFactory.create(
-            activity=third, created=now() - timedelta(days=5)
+            activity=third,
+            created=now() - timedelta(days=5),
         )
 
         fourth = DateActivityFactory.create(status='open')
         OnADateApplicationFactory.create(
-            activity=fourth, created=now() - timedelta(days=7)
+            activity=fourth,
+            created=now() - timedelta(days=7),
         )
         OnADateApplicationFactory.create(
-            activity=fourth, created=now() - timedelta(days=5)
+            activity=fourth,
+            created=now() - timedelta(days=5),
         )
 
         response = self.client.get(
@@ -457,7 +461,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 4)
-
         self.assertEqual(data['data'][0]['id'], str(fourth.pk))
         self.assertEqual(data['data'][1]['id'], str(third.pk))
         self.assertEqual(data['data'][2]['id'], str(second.pk))

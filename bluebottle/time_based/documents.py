@@ -1,6 +1,7 @@
 from bluebottle.activities.documents import ActivityDocument, activity
 
-from bluebottle.time_based.models import DateActivity, PeriodActivity
+from bluebottle.time_based.models import DateActivity, PeriodActivity, OnADateApplication, PeriodApplication, \
+    TimeBasedActivity
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 
@@ -14,6 +15,7 @@ SCORE_MAP = {
 
 class TimeBasedActivityDocument:
     class Meta:
+        model = TimeBasedActivity
         related_models = (Initiative, Member)
 
     def get_instances_from_related(self, related_instance):
@@ -21,6 +23,10 @@ class TimeBasedActivityDocument:
             return self.Meta.model.objects.filter(initiative=related_instance)
         if isinstance(related_instance, Member):
             return self.Meta.model.objects.filter(owner=related_instance)
+        if isinstance(related_instance, OnADateApplication):
+            return self.Meta.model.objects.filter(contributions=related_instance)
+        if isinstance(related_instance, PeriodApplication):
+            return self.Meta.model.objects.filter(contributions=related_instance)
 
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)
@@ -40,6 +46,7 @@ class TimeBasedActivityDocument:
 @activity.doc_type
 class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     class Meta(TimeBasedActivityDocument):
+        related_models = (Initiative, Member, OnADateApplication)
         model = DateActivity
 
     date_field = 'start'
@@ -55,6 +62,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 @activity.doc_type
 class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     class Meta(TimeBasedActivityDocument):
+        related_models = (Initiative, Member, PeriodApplication)
         model = PeriodActivity
 
     date_field = 'deadline'

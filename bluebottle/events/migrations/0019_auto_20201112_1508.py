@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         ),
         AlterBaseOperation(
             model_name='participant',
-            bases=('activities.intention',),
-            prev_bases=('activities.contribution',)
+            bases=('activities.contribution',),
+            prev_bases=('activities.intention',)
         )
     ]

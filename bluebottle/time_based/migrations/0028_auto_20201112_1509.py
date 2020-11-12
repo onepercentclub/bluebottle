@@ -24,8 +24,8 @@ class Migration(migrations.Migration):
         ),
         AlterBaseOperation(
             model_name='periodapplication',
-            bases=('activities.intention',),
-            prev_bases=('activities.contribution',)
+            bases=('activities.contribution',),
+            prev_bases=('activities.intention',)
         ),
         migrations.AlterField(
             model_name='onadateapplication',
@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
         ),
         AlterBaseOperation(
             model_name='onadateapplication',
-            bases=('activities.intention',),
-            prev_bases=('activities.contribution',)
+            bases=('activities.contribution',),
+            prev_bases=('activities.intention',)
         )
     ]

@@ -16,17 +16,4 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameModel('Contribution', 'Intention'),
-        migrations.AlterField(
-            model_name='organizer',
-            name='contribution_ptr',
-            field=models.OneToOneField(
-                auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True,
-                primary_key=True, serialize=False, to='activities.Intention')
-        ),
-        AlterBaseOperation(
-            model_name='organizer',
-            bases=('activities.intention',),
-            prev_bases=('activities.contribution',)
-        )
-
     ]

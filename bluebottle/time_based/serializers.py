@@ -238,7 +238,7 @@ class ApplicationListSerializer(BaseContributionSerializer):
         ]
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.TinyActivitySerializer',
+        'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 

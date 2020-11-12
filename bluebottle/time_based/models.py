@@ -233,11 +233,14 @@ class OnADateApplication(Application, Contribution):
             ('api_delete_own_onadateapplication', 'Can delete own application through the API'),
         )
 
+    class JSONAPIMeta:
+        resource_name = 'intentions/time-based/date'
+
     def __str__(self):
         return str(_("On a date application"))
 
 
-class PeriodApplication(Contribution, Application):
+class PeriodApplication(Application, Contribution):
     motivation = models.TextField(blank=True)
     document = PrivateDocumentField(blank=True, null=True)
 
@@ -264,6 +267,9 @@ class PeriodApplication(Contribution, Application):
 
     def __str__(self):
         return str(_("Period application"))
+
+    class JSONAPIMeta:
+        resource_name = 'intentions/time-based/period'
 
 
 class Duration(ContributionValue):

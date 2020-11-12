@@ -423,7 +423,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['meta']['pagination']['count'], 4)
+        self.assertEqual(data['meta']['pagination']['count'], 3)
 
         self.assertEqual(data['data'][0]['id'], str(third.pk))
         self.assertEqual(data['data'][1]['id'], str(first.pk))
@@ -604,12 +604,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         initiative3 = InitiativeFactory.create(place=GeolocationFactory.create(country=country1))
         initiative4 = InitiativeFactory.create(place=GeolocationFactory.create(country=country2))
 
-        first = PeriodActivityFactory.create(status='full', initiative=initiative1)
+        location1 = GeolocationFactory(country=country1)
+        location2 = GeolocationFactory(country=country2)
+
+        first = PeriodActivityFactory.create(status='full', initiative=initiative1, location=location1)
         PeriodApplicationFactory.create_batch(3, activity=first, status='accepted')
 
-        second = PeriodActivityFactory.create(status='open', initiative=initiative3)
+        second = PeriodActivityFactory.create(status='open', initiative=initiative3, location=location1)
 
-        third = PeriodActivityFactory.create(status='full', initiative=initiative2)
+        third = PeriodActivityFactory.create(status='full', initiative=initiative2, location=location2)
         PeriodApplicationFactory.create_batch(3, activity=third, status='accepted')
 
         PeriodActivityFactory.create(status='open', initiative=initiative4)

@@ -22,8 +22,8 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['activities.change_activity']
             },
             {
-                'name': 'activities.contribution',
-                'permissions': ['activities.change_contribution']
+                'name': 'activities.intention',
+                'permissions': ['activities.change_intention']
             },
             {
                 'name': 'impact.impacttype',

@@ -25,7 +25,7 @@ class EventDocument(ActivityDocument):
         if isinstance(related_instance, Member):
             return Event.objects.filter(owner=related_instance)
         if isinstance(related_instance, Participant):
-            return Event.objects.filter(contributions=related_instance)
+            return Event.objects.filter(intentions=related_instance)
 
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)

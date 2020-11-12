@@ -389,7 +389,7 @@ class CoFinancerSerializer(serializers.Serializer):
     def get_total(self, obj):
         return {
             'amount': obj['total'],
-            'currency': obj['contribution__donation__amount_currency']
+            'currency': obj['intention__donation__amount_currency']
         }
 
     class Meta(object):
@@ -411,17 +411,17 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
         filters = {'is_co_financer': True}
 
         if 'start_date' in self.context:
-            filters['contribution__transition_date__gte'] = self.context['start_date']
+            filters['intention__transition_date__gte'] = self.context['start_date']
 
         if 'end_date' in self.context:
-            filters['contribution__transition_date__lte'] = self.context['end_date']
+            filters['intention__transition_date__lte'] = self.context['end_date']
 
         totals = Member.objects.filter(**filters)
 
         totals = totals.values(
-            'pk', 'contribution__donation__amount_currency'
+            'pk', 'intention__donation__amount_currency'
         ).annotate(
-            total=Sum('contribution__donation__amount', distinct=True)
+            total=Sum('intention__donation__amount', distinct=True)
         )
 
         return CoFinancerSerializer(

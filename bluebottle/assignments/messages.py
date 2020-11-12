@@ -110,8 +110,8 @@ class AssignmentDateChanged(TransitionMessage):
         """users that applied to the task"""
         from bluebottle.assignments.models import Applicant
         return [
-            contribution.user for contribution
-            in self.obj.contributions.instance_of(Applicant).filter(status__in=('new', 'accepted', ))
+            intention.user for intention
+            in self.obj.intentions.instance_of(Applicant).filter(status__in=('new', 'accepted', ))
         ]
 
 
@@ -126,8 +126,8 @@ class AssignmentDeadlineChanged(TransitionMessage):
         """users that applied to the task"""
         from bluebottle.assignments.models import Applicant
         return [
-            contribution.user for contribution
-            in self.obj.contributions.instance_of(Applicant).filter(status__in=('new', 'accepted', ))
+            intention.user for intention
+            in self.obj.intentions.instance_of(Applicant).filter(status__in=('new', 'accepted', ))
         ]
 
 
@@ -143,8 +143,8 @@ class AssignmentReminderOnDate(TransitionMessage):
         """users that applied to the task"""
         from bluebottle.assignments.models import Applicant
         return [
-            contribution.user for contribution
-            in self.obj.contributions.instance_of(Applicant).filter(status__in=('new', 'accepted', ))
+            intention.user for intention
+            in self.obj.intentions.instance_of(Applicant).filter(status__in=('new', 'accepted', ))
         ]
 
 
@@ -161,6 +161,6 @@ class AssignmentReminderDeadline(TransitionMessage):
         """users that applied to the task"""
         from bluebottle.assignments.models import Applicant
         return [
-            contribution.user for contribution
-            in self.obj.contributions.instance_of(Applicant).filter(status__in=('new', 'accepted', ))
+            intention.user for intention
+            in self.obj.intentions.instance_of(Applicant).filter(status__in=('new', 'accepted', ))
         ]

@@ -38,7 +38,7 @@ class PaymentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'contributions/donations',
+                            'type': 'intentions/donations',
                             'id': self.donation.pk,
                         }
                     }

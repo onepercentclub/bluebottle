@@ -11,7 +11,7 @@ from polymorphic.admin import (
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
-from bluebottle.activities.models import Activity, Contribution, Organizer
+from bluebottle.activities.models import Activity, Intention, Organizer
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.time_based.models import DateActivity, PeriodActivity
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
@@ -25,8 +25,8 @@ from bluebottle.segments.models import Segment
 from bluebottle.wallposts.admin import WallpostInline
 
 
-class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
-    base_model = Contribution
+class IntentionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+    base_model = Intention
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
     list_filter = [StateMachineFilter, ]
     ordering = ('-created', )
@@ -61,12 +61,12 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
 
 @admin.register(Organizer)
-class OrganizerAdmin(ContributionChildAdmin):
+class OrganizerAdmin(IntentionChildAdmin):
     model = Organizer
     list_display = ['user', 'status', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
-    readonly_fields = ContributionChildAdmin.readonly_fields + \
+    readonly_fields = IntentionChildAdmin.readonly_fields + \
         ['status', 'created', 'transition_date']
 
     date_hierarchy = 'created'
@@ -80,9 +80,9 @@ class OrganizerAdmin(ContributionChildAdmin):
     )
 
 
-@admin.register(Contribution)
-class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
-    base_model = Contribution
+@admin.register(Intention)
+class IntentionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+    base_model = Intention
     child_models = (Participant, Donation, Applicant, Organizer)
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
@@ -275,7 +275,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return super(ActivityChildAdmin, self).get_form(request, obj, **kwargs)
 
 
-class ContributionInline(admin.TabularInline):
+class IntentionInline(admin.TabularInline):
     raw_id_fields = ('user', )
     readonly_fields = ('created', 'edit', 'state_name', )
     fields = ('edit', 'user', 'created', 'state_name', )

@@ -15,7 +15,7 @@ from future import standard_library
 from html.parser import HTMLParser
 from timezonefinder import TimezoneFinder
 
-from bluebottle.activities.models import Activity, Contribution
+from bluebottle.activities.models import Activity, Intention
 from bluebottle.events.validators import RegistrationDeadlineValidator
 from bluebottle.geo.models import Geolocation
 
@@ -54,14 +54,14 @@ class Event(Activity):
     @property
     def stats(self):
         from .states import ParticipantStateMachine
-        contributions = self.contributions.instance_of(Participant)
+        intentions = self.intentions.instance_of(Participant)
 
-        stats = contributions.filter(
+        stats = intentions.filter(
             status=ParticipantStateMachine.succeeded.value
         ).aggregate(
             count=Count('user__id'), hours=Sum('participant__time_spent')
         )
-        committed = contributions.filter(
+        committed = intentions.filter(
             status=ParticipantStateMachine.new.value
         ).aggregate(
             committed_count=Count('user__id'), committed_hours=Sum('participant__time_spent')
@@ -91,7 +91,7 @@ class Event(Activity):
             return self.start
 
     @property
-    def contribution_date(self):
+    def intention_date(self):
         return self.start
 
     class Meta(object):
@@ -124,12 +124,12 @@ class Event(Activity):
 
     @property
     def all_participants(self):
-        return self.contributions.instance_of(Participant)
+        return self.intentions.instance_of(Participant)
 
     @property
     def participants(self):
         from .states import ParticipantStateMachine
-        return self.contributions.filter(
+        return self.intentions.filter(
             status__in=[
                 ParticipantStateMachine.new.value,
                 ParticipantStateMachine.succeeded.value
@@ -200,7 +200,7 @@ class Event(Activity):
 
 
 @python_2_unicode_compatible
-class Participant(Contribution):
+class Participant(Intention):
     time_spent = models.FloatField(default=0)
 
     class Meta(object):
@@ -220,10 +220,10 @@ class Participant(Contribution):
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'contributions/participants'
+        resource_name = 'intentions/participants'
 
     def save(self, *args, **kwargs):
-        if not self.contribution_date:
+        if not self.intention_date:
             self.contribution_date = self.activity.start
 
         super(Participant, self).save(*args, **kwargs)

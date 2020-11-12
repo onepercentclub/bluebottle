@@ -26,7 +26,7 @@ class FundingDocument(ActivityDocument):
         if isinstance(related_instance, Member):
             return Funding.objects.filter(owner=related_instance)
         if isinstance(related_instance, Donation):
-            return Funding.objects.filter(contributions=related_instance)
+            return Funding.objects.filter(intentions=related_instance)
 
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)

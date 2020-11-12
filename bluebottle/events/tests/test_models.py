@@ -153,7 +153,7 @@ class EventTestCase(BluebottleTestCase):
             formats.time_format(event.local_start) in mail.outbox[0].body
         )
 
-        for participant in event.contributions.instance_of(Participant):
+        for participant in event.intentions.instance_of(Participant):
             if participant.status == 'new':
                 self.assertTrue(participant.user.email in recipients)
             else:
@@ -176,7 +176,7 @@ class EventTestCase(BluebottleTestCase):
 
         recipients = [message.to[0] for message in mail.outbox]
 
-        for participant in event.contributions.instance_of(Participant):
+        for participant in event.intentions.instance_of(Participant):
             self.assertFalse(participant.user.email in recipients)
 
     def test_date_not_changed(self):

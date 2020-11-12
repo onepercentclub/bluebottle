@@ -53,7 +53,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         recipients = [message.to[0] for message in mail.outbox]
 
-        for applicant in assignment.contributions.instance_of(Applicant).all():
+        for applicant in assignment.intentions.instance_of(Applicant).all():
             if applicant.status in ['new', 'accepted']:
                 self.assertTrue(applicant.user.email in recipients)
             else:
@@ -89,7 +89,7 @@ class AssignmentTasksTestCase(BluebottleTestCase):
 
         recipients = [message.to[0] for message in mail.outbox]
 
-        for applicant in assignment.contributions.instance_of(Applicant).all():
+        for applicant in assignment.intentions.instance_of(Applicant).all():
             if applicant.status in ['new', 'accepted']:
                 self.assertTrue(applicant.user.email in recipients)
             else:

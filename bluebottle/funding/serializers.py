@@ -12,7 +12,7 @@ from rest_framework_json_api.serializers import (
 )
 
 from bluebottle.activities.utils import (
-    BaseContributionSerializer, BaseContributionListSerializer,
+    BaseIntentionSerializer, BaseIntentionListSerializer,
     BaseActivityListSerializer, BaseActivitySerializer,
     BaseTinyActivitySerializer
 )
@@ -215,7 +215,7 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
     payment_methods = SerializerMethodResourceRelatedField(
         read_only=True, many=True, source='get_payment_methods', model=PaymentMethod
     )
-    contributions = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
+    intentions = FilteredRelatedField(many=True, filter_backend=DonationListFilter)
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
 
     bank_account = PolymorphicResourceRelatedField(
@@ -261,7 +261,7 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             'rewards',
             'payment_methods',
             'budget_lines',
-            'contributions',
+            'intentions',
             'bank_account',
             'supporters_export_url',
         )
@@ -271,8 +271,8 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             'payment_methods',
             'rewards',
             'budget_lines',
-            'contributions',
-            'contributions.user',
+            'intentions',
+            'intentions.user',
             'bank_account',
         ]
         resource_name = 'activities/fundings'
@@ -282,7 +282,7 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
         **{
             'rewards': 'bluebottle.funding.serializers.BudgetLineSerializer',
             'budget_lines': 'bluebottle.funding.serializers.RewardSerializer',
-            'contributions': 'bluebottle.funding.serializers.DonationSerializer',
+            'intentions': 'bluebottle.funding.serializers.DonationSerializer',
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
             'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
         }
@@ -364,7 +364,7 @@ class DonationMemberValidator(object):
             raise ValidationError(self.message)
 
 
-class DonationListSerializer(BaseContributionListSerializer):
+class DonationListSerializer(BaseIntentionListSerializer):
     amount = MoneySerializer()
 
     user = ResourceRelatedField(
@@ -379,20 +379,20 @@ class DonationListSerializer(BaseContributionListSerializer):
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
-    class Meta(BaseContributionListSerializer.Meta):
+    class Meta(BaseIntentionListSerializer.Meta):
         model = Donation
-        fields = BaseContributionListSerializer.Meta.fields + ('amount', 'name', 'reward', 'anonymous',)
+        fields = BaseIntentionListSerializer.Meta.fields + ('amount', 'name', 'reward', 'anonymous',)
         meta_fields = ('created', 'updated', )
 
-    class JSONAPIMeta(BaseContributionListSerializer.JSONAPIMeta):
-        resource_name = 'contributions/donations'
+    class JSONAPIMeta(BaseIntentionListSerializer.JSONAPIMeta):
+        resource_name = 'intentions/donations'
         included_resources = [
             'user',
             'activity',
         ]
 
 
-class DonationSerializer(BaseContributionSerializer):
+class DonationSerializer(BaseIntentionSerializer):
     amount = MoneySerializer()
 
     user = ResourceRelatedField(
@@ -414,12 +414,12 @@ class DonationSerializer(BaseContributionSerializer):
         reward_amount_matches,
     ]
 
-    class Meta(BaseContributionSerializer.Meta):
+    class Meta(BaseIntentionSerializer.Meta):
         model = Donation
-        fields = BaseContributionSerializer.Meta.fields + ('amount', 'name', 'reward', 'anonymous',)
+        fields = BaseIntentionSerializer.Meta.fields + ('amount', 'name', 'reward', 'anonymous',)
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/donations'
+    class JSONAPIMeta(BaseIntentionSerializer.JSONAPIMeta):
+        resource_name = 'intentions/donations'
         included_resources = [
             'user',
             'activity',

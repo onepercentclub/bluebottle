@@ -7,7 +7,7 @@ from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from bluebottle.activities.models import Activity, Contribution, ContributionValue
+from bluebottle.activities.models import Activity, Intention, ContributionValue
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
 
@@ -37,7 +37,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def applications(self):
-        return self.contributions.instance_of(PeriodApplication, OnADateApplication)
+        return self.intentions.instance_of(PeriodApplication, OnADateApplication)
 
     @property
     def active_applications(self):
@@ -213,7 +213,7 @@ class Application():
         )
 
 
-class OnADateApplication(Application, Contribution):
+class OnADateApplication(Application, Intention):
     motivation = models.TextField(blank=True)
     document = PrivateDocumentField(blank=True, null=True)
 
@@ -233,13 +233,13 @@ class OnADateApplication(Application, Contribution):
         )
 
     class JSONAPIMeta:
-        resource_name = 'contributions/time-based/date-applications'
+        resource_name = 'intentions/time-based/date-applications'
 
     def __str__(self):
         return str(_("On a date application"))
 
 
-class PeriodApplication(Application, Contribution):
+class PeriodApplication(Application, Intention):
     motivation = models.TextField(blank=True)
     document = PrivateDocumentField(blank=True, null=True)
 
@@ -268,7 +268,7 @@ class PeriodApplication(Application, Contribution):
         return str(_("Period application"))
 
     class JSONAPIMeta:
-        resource_name = 'contributions/time-based/period-applications'
+        resource_name = 'intentions/time-based/period-applications'
 
 
 class Duration(ContributionValue):

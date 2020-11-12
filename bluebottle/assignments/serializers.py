@@ -4,7 +4,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseContributionSerializer,
+    BaseActivitySerializer, BaseIntentionSerializer,
     BaseActivityListSerializer, BaseTinyActivitySerializer
 )
 from bluebottle.tasks.models import Skill
@@ -68,7 +68,7 @@ class TinyAssignmentSerializer(BaseTinyActivitySerializer):
 
 class AssignmentSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('assignment-detail', view_args=('pk',))
-    contributions = FilteredRelatedField(many=True, filter_backend=ApplicantListFilter)
+    intentions = FilteredRelatedField(many=True, filter_backend=ApplicantListFilter)
 
     def get_fields(self):
         fields = super(AssignmentSerializer, self).get_fields()
@@ -104,7 +104,7 @@ class AssignmentSerializer(BaseActivitySerializer):
             'duration',
             'location',
             'permissions',
-            'contributions',
+            'intentions',
             'start_time',
             'preparation',
         )
@@ -114,9 +114,9 @@ class AssignmentSerializer(BaseActivitySerializer):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'location',
             'expertise',
-            'contributions',
-            'contributions.user',
-            'contributions.document'
+            'intentions',
+            'intentions.user',
+            'intentions.document'
         ]
 
     included_serializers = dict(
@@ -124,7 +124,7 @@ class AssignmentSerializer(BaseActivitySerializer):
         **{
             'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-            'contributions': 'bluebottle.assignments.serializers.ApplicantSerializer',
+            'intentions': 'bluebottle.assignments.serializers.ApplicantSerializer',
         }
     )
 
@@ -141,17 +141,17 @@ class AssignmentTransitionSerializer(TransitionSerializer):
         resource_name = 'assignment-transitions'
 
 
-class ApplicantListSerializer(BaseContributionSerializer):
+class ApplicantListSerializer(BaseIntentionSerializer):
     time_spent = serializers.FloatField(required=False, allow_null=True)
 
-    class Meta(BaseContributionSerializer.Meta):
+    class Meta(BaseIntentionSerializer.Meta):
         model = Applicant
-        fields = BaseContributionSerializer.Meta.fields + (
+        fields = BaseIntentionSerializer.Meta.fields + (
             'time_spent',
         )
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/applicants'
+    class JSONAPIMeta(BaseIntentionSerializer.JSONAPIMeta):
+        resource_name = 'intentions/applicants'
         included_resources = [
             'user',
             'activity',
@@ -163,14 +163,14 @@ class ApplicantListSerializer(BaseContributionSerializer):
     }
 
 
-class ApplicantSerializer(BaseContributionSerializer):
+class ApplicantSerializer(BaseIntentionSerializer):
     time_spent = serializers.FloatField(required=False, allow_null=True)
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     document = PrivateDocumentField(required=False, allow_null=True, permissions=[ApplicantDocumentPermission])
 
-    class Meta(BaseContributionSerializer.Meta):
+    class Meta(BaseIntentionSerializer.Meta):
         model = Applicant
-        fields = BaseContributionSerializer.Meta.fields + (
+        fields = BaseIntentionSerializer.Meta.fields + (
             'time_spent',
             'motivation',
             'document'
@@ -183,8 +183,8 @@ class ApplicantSerializer(BaseContributionSerializer):
             )
         ]
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/applicants'
+    class JSONAPIMeta(BaseIntentionSerializer.JSONAPIMeta):
+        resource_name = 'intentions/applicants'
         included_resources = [
             'user',
             'activity',
@@ -207,7 +207,7 @@ class ApplicantTransitionSerializer(TransitionSerializer):
     }
 
     class JSONAPIMeta(object):
-        resource_name = 'contributions/applicant-transitions'
+        resource_name = 'intentions/applicant-transitions'
         included_resources = [
             'resource',
             'resource.activity',

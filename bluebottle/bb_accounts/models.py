@@ -310,7 +310,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def is_supporter(self):
         from bluebottle.funding.states import DonationStateMachine
         from bluebottle.funding.models import Donation
-        return bool(self.contribution_set.instance_of(Donation).
+        return bool(self.intention_set.instance_of(Donation).
                     filter(status=DonationStateMachine.succeeded.value).count())
 
     @cached_property
@@ -318,7 +318,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         from bluebottle.assignments.models import Applicant
         from bluebottle.events.models import Participant
         from bluebottle.activities.states import ActivityStateMachine
-        return bool(self.contribution_set.instance_of(Applicant, Participant).
+        return bool(self.intention_set.instance_of(Applicant, Participant).
                     filter(status=ActivityStateMachine.succeeded.value).count())
 
     @cached_property
@@ -326,7 +326,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         from bluebottle.funding.states import DonationStateMachine
         from bluebottle.funding.models import Donation
         from bluebottle.funding.utils import calculate_total
-        donations = self.contribution_set.instance_of(Donation).filter(
+        donations = self.intention_set.instance_of(Donation).filter(
             status=DonationStateMachine.succeeded.value
         )
         return calculate_total(donations)
@@ -336,9 +336,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         from bluebottle.assignments.models import Applicant
         from bluebottle.events.models import Participant
         from bluebottle.activities.states import ActivityStateMachine
-        contributions = self.contribution_set.instance_of(Applicant, Participant).\
+        intentions = self.intention_set.instance_of(Applicant, Participant).\
             filter(status=ActivityStateMachine.succeeded.value).all()
-        return sum([c.time_spent for c in contributions])
+        return sum([c.time_spent for c in intentions])
 
     @cached_property
     def subscribed(self):

@@ -845,9 +845,9 @@ class ActivityRelatedImageAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class ContributionListAPITestCase(BluebottleTestCase):
+class IntentionListAPITestCase(BluebottleTestCase):
     def setUp(self):
-        super(ContributionListAPITestCase, self).setUp()
+        super(IntentionListAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 
@@ -860,7 +860,7 @@ class ContributionListAPITestCase(BluebottleTestCase):
         PeriodApplicationFactory.create()
         DonationFactory.create()
 
-        self.url = reverse('contribution-list')
+        self.url = reverse('intention-list')
 
     def test_get(self):
         response = self.client.get(
@@ -872,16 +872,16 @@ class ContributionListAPITestCase(BluebottleTestCase):
         data = response.json()
 
         self.assertEqual(len(data['data']), 6)
-        for contribution in data['data']:
+        for intention in data['data']:
             self.assertTrue(
-                contribution['type'] in (
-                    'contributions/time-based/date-applications',
-                    'contributions/time-based/period-applications',
-                    'contributions/donations',
+                intention['type'] in (
+                    'intentions/time-based/date-applications',
+                    'intentions/time-based/period-applications',
+                    'intentions/donations',
                 )
             )
             self.assertTrue(
-                contribution['relationships']['activity']['data']['type'] in (
+                intention['relationships']['activity']['data']['type'] in (
                     'activities/fundings',
                     'activities/time-based/date',
                     'activities/time-based/period'

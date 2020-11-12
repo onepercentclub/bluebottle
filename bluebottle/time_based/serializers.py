@@ -7,7 +7,7 @@ from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer,
-    BaseContributionSerializer
+    BaseIntentionSerializer
 )
 
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
@@ -26,7 +26,7 @@ from bluebottle.utils.utils import reverse_signed
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
-    contributions = FilteredRelatedField(many=True, filter_backend=ApplicationListFilter)
+    intentions = FilteredRelatedField(many=True, filter_backend=ApplicationListFilter)
 
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
@@ -37,16 +37,16 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'registration_deadline',
             'expertise',
             'review',
-            'contributions'
+            'intentions'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'location',
             'expertise',
-            'contributions',
-            'contributions.user',
-            'contributions.document'
+            'intentions',
+            'intentions.user',
+            'intentions.document'
         ]
 
     included_serializers = dict(
@@ -54,7 +54,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         **{
             'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-            'contributions': 'bluebottle.time_based.serializers.ApplicationSerializer',
+            'intentions': 'bluebottle.time_based.serializers.ApplicationSerializer',
         }
     )
 
@@ -86,7 +86,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
-            'contributions': 'bluebottle.time_based.serializers.OnADateApplicationSerializer',
+            'intentions': 'bluebottle.time_based.serializers.OnADateApplicationSerializer',
         }
     )
 
@@ -106,7 +106,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
-            'contributions': 'bluebottle.time_based.serializers.PeriodApplicationSerializer',
+            'intentions': 'bluebottle.time_based.serializers.PeriodApplicationSerializer',
         }
     )
 
@@ -224,14 +224,14 @@ class PeriodApplicationDocumentSerializer(PrivateDocumentSerializer):
     relationship = 'periodapplication_set'
 
 
-class ApplicationListSerializer(BaseContributionSerializer):
+class ApplicationListSerializer(BaseIntentionSerializer):
     activity = PolymorphicResourceRelatedField(
         TimeBasedActivitySerializer,
         queryset=TimeBasedActivity.objects.all()
     )
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/applications'
+    class JSONAPIMeta(BaseIntentionSerializer.JSONAPIMeta):
+        resource_name = 'intentions/time-based/applications'
         included_resources = [
             'user',
             'activity',
@@ -248,7 +248,7 @@ class OnADateApplicationListSerializer(ApplicationListSerializer):
         model = OnADateApplication
 
     class JSONAPIMeta(ApplicationListSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/date-applications'
+        resource_name = 'intentions/time-based/date-applications'
 
 
 class PeriodApplicationListSerializer(ApplicationListSerializer):
@@ -256,10 +256,10 @@ class PeriodApplicationListSerializer(ApplicationListSerializer):
         model = PeriodApplication
 
     class JSONAPIMeta(ApplicationListSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/period-applications'
+        resource_name = 'intentions/time-based/period-applications'
 
 
-class ApplicationSerializer(BaseContributionSerializer):
+class ApplicationSerializer(BaseIntentionSerializer):
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     document = PrivateDocumentField(required=False, allow_null=True, permissions=[ApplicationDocumentPermission])
 
@@ -280,9 +280,9 @@ class ApplicationSerializer(BaseContributionSerializer):
 
         return result
 
-    class Meta(BaseContributionSerializer.Meta):
+    class Meta(BaseIntentionSerializer.Meta):
         model = OnADateApplication
-        fields = BaseContributionSerializer.Meta.fields + (
+        fields = BaseIntentionSerializer.Meta.fields + (
             'motivation',
             'document'
         )
@@ -294,8 +294,8 @@ class ApplicationSerializer(BaseContributionSerializer):
             )
         ]
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/applications'
+    class JSONAPIMeta(BaseIntentionSerializer.JSONAPIMeta):
+        resource_name = 'intentions/time-based/applications'
         included_resources = [
             'user',
             'activity',
@@ -320,7 +320,7 @@ class OnADateApplicationSerializer(ApplicationSerializer):
         ]
 
     class JSONAPIMeta(ApplicationSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/date-applications'
+        resource_name = 'intentions/time-based/date-applications'
 
     included_serializers = dict(
         ApplicationSerializer.included_serializers,
@@ -340,7 +340,7 @@ class PeriodApplicationSerializer(ApplicationSerializer):
         ]
 
     class JSONAPIMeta(ApplicationSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/period-applications'
+        resource_name = 'intentions/time-based/period-applications'
 
     included_serializers = dict(
         ApplicationSerializer.included_serializers,
@@ -353,7 +353,7 @@ class ApplicationTransitionSerializer(TransitionSerializer):
     field = 'states'
 
     class JSONAPIMeta(object):
-        resource_name = 'contributions/time-based/application-transitions'
+        resource_name = 'intentions/time-based/application-transitions'
         included_resources = [
             'resource',
             'resource.activity',
@@ -368,7 +368,7 @@ class OnADateApplicationTransitionSerializer(ApplicationTransitionSerializer):
     }
 
     class JSONAPIMeta(ApplicationTransitionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/date-application-transitions'
+        resource_name = 'intentions/time-based/date-application-transitions'
 
 
 class PeriodApplicationTransitionSerializer(ApplicationTransitionSerializer):
@@ -379,4 +379,4 @@ class PeriodApplicationTransitionSerializer(ApplicationTransitionSerializer):
     }
 
     class JSONAPIMeta(ApplicationTransitionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/period-application-transitions'
+        resource_name = 'intentions/time-based/period-application-transitions'

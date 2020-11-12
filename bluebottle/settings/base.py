@@ -721,7 +721,7 @@ EXPORTDB_EXPORT_CONF = {
         }),
         ('assignments.Applicant', {
             'fields': (
-                ('id', 'Contribution ID'),
+                ('id', 'Intention ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -739,7 +739,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.ApplicantResource',
-            'title': _('Task contributions'),
+            'title': _('Task intentions'),
         }),
         ('events.Event', {
             'fields': (
@@ -768,7 +768,7 @@ EXPORTDB_EXPORT_CONF = {
         }),
         ('events.Participant', {
             'fields': (
-                ('id', 'Contribution ID'),
+                ('id', 'Intention ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -785,7 +785,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.ParticipantResource',
-            'title': _('Event contributions'),
+            'title': _('Event intentions'),
         }),
         ('funding.Funding', {
             'fields': (
@@ -812,7 +812,7 @@ EXPORTDB_EXPORT_CONF = {
         }),
         ('funding.Donation', {
             'fields': (
-                ('id', 'Contribution ID'),
+                ('id', 'Intention ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -832,7 +832,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.DonationResource',
-            'title': _('Funding contributions'),
+            'title': _('Funding intentions'),
         }),
     ])
 }

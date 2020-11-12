@@ -154,7 +154,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
 
         return {
             'activities': len(activities),
-            'contributions': sum(stat['count'] for stat in stats),
+            'intentions': sum(stat['count'] for stat in stats),
             'hours': sum(stat['hours'] or 0 for stat in stats if 'hours' in stat),
             'amount': sum(
                 convert(Money(stat['amount']['amount'], stat['amount']['currency']), currency).amount

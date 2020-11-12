@@ -116,7 +116,7 @@ class EventTasksTestCase(BluebottleTestCase):
         with LocalTenant(tenant, clear_tenant=True):
             event.refresh_from_db()
 
-        for participant in event.contributions.all():
+        for participant in event.intentions.all():
             if participant.status == 'new':
                 self.assertTrue(participant.user.email in recipients)
             else:
@@ -124,7 +124,7 @@ class EventTasksTestCase(BluebottleTestCase):
 
         recipients = [message.to[0] for message in mail.outbox]
 
-        for participant in event.contributions.all():
+        for participant in event.intentions.all():
             if participant.status == 'new':
                 self.assertTrue(participant.user.email in recipients)
             else:

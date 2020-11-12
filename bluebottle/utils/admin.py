@@ -15,7 +15,7 @@ from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 from parler.admin import TranslatableAdmin
 
-from bluebottle.activities.models import Contribution
+from bluebottle.activities.models import Intention
 from bluebottle.clients import properties
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.utils.exchange_rates import convert
@@ -97,7 +97,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 
         if header:
             row = labels if labels else field_names
-            if queryset.model is Member or issubclass(queryset.model, Contribution):
+            if queryset.model is Member or issubclass(queryset.model, Intention):
                 for field in CustomMemberFieldSettings.objects.all():
                     labels.append(field.name)
             writer.writerow([escape_csv_formulas(item) for item in row])
@@ -113,7 +113,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                     except CustomMemberField.DoesNotExist:
                         value = ''
                     row.append(value)
-            if isinstance(obj, Contribution):
+            if isinstance(obj, Intention):
                 for field in CustomMemberFieldSettings.objects.all():
                     try:
                         value = obj.user.extra.get(field=field).value

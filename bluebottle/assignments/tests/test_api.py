@@ -317,21 +317,21 @@ class AssignmentDetailApplicantsAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)['data']
         self.assertEqual(data['relationships']
-                         ['contributions']['meta']['count'], 8)
+                         ['intentions']['meta']['count'], 8)
 
     def test_applicant_list_authenticated(self):
         response = self.client.get(self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)['data']
         self.assertEqual(data['relationships']
-                         ['contributions']['meta']['count'], 8)
+                         ['intentions']['meta']['count'], 8)
 
     def test_applicant_list_owner(self):
         response = self.client.get(self.url, user=self.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)['data']
         self.assertEqual(data['relationships']
-                         ['contributions']['meta']['count'], 10)
+                         ['intentions']['meta']['count'], 10)
 
 
 class AssignmentTransitionTestCase(BluebottleTestCase):
@@ -578,7 +578,7 @@ class ApplicantAPITestCase(BluebottleTestCase):
         self.assignment.states.submit(save=True)
         self.apply_data = {
             'data': {
-                'type': 'contributions/applicants',
+                'type': 'intentions/applicants',
                 'attributes': {
                     'motivation': 'Pick me! Pick me!',
                 },
@@ -758,14 +758,14 @@ class ApplicantTransitionAPITestCase(BluebottleTestCase):
             'applicant-detail', args=(self.applicant.id,))
         self.transition_data = {
             'data': {
-                'type': 'contributions/applicant-transitions',
+                'type': 'intentions/applicant-transitions',
                 'attributes': {
                     'transition': 'accept',
                 },
                 'relationships': {
                     'resource': {
                         'data': {
-                            'type': 'contributions/applicants',
+                            'type': 'intentions/applicants',
                             'id': self.applicant.pk
                         }
                     }

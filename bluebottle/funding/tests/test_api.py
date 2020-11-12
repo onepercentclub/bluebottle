@@ -452,7 +452,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         # Should only see the three successful donations
         self.assertEqual(
-            len(data['data']['relationships']['contributions']['data']),
+            len(data['data']['relationships']['intentions']['data']),
             5
         )
 
@@ -684,7 +684,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'intentions/donations',
                 'attributes': {
                     'amount': {'amount': 100, 'currency': 'EUR'},
                 },
@@ -723,7 +723,7 @@ class DonationTestCase(BluebottleTestCase):
 
         response = self.client.get(self.funding_url, user=self.user)
 
-        donation = get_included(response, 'contributions/donations')
+        donation = get_included(response, 'intentions/donations')
         self.assertEqual(donation['relationships']['user']['data']['id'], str(self.user.pk))
 
         self.assertTrue(response.json()['data']['attributes']['is-follower'])
@@ -746,7 +746,7 @@ class DonationTestCase(BluebottleTestCase):
 
         response = self.client.get(self.funding_url, user=self.user)
 
-        donation = get_included(response, 'contributions/donations')
+        donation = get_included(response, 'intentions/donations')
         self.assertFalse('user' in donation['relationships'])
 
     def test_update(self):
@@ -760,7 +760,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'intentions/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -786,7 +786,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'intentions/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -813,7 +813,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'intentions/donations',
                 'id': data['data']['id'],
                 'relationships': {
                     'user': {
@@ -847,7 +847,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'intentions/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -870,7 +870,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'intentions/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -904,7 +904,7 @@ class DonationTestCase(BluebottleTestCase):
         update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'intentions/donations',
                 'id': data['data']['id'],
                 'relationships': {
                     'user': {
@@ -933,7 +933,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'intentions/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -957,7 +957,7 @@ class DonationTestCase(BluebottleTestCase):
         update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'intentions/donations',
                 'id': data['data']['id'],
                 'relationships': {
                     'user': {
@@ -989,7 +989,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'intentions/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -1017,7 +1017,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'intentions/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -1054,7 +1054,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'intentions/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -1390,7 +1390,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             sum(
                 donation['attributes']['amount']['amount']
                 for donation in data['included']
-                if donation['type'] == 'contributions/donations'
+                if donation['type'] == 'intentions/donations'
             ),
             1000.0
         )

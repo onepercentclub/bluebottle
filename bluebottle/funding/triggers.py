@@ -1,7 +1,7 @@
 from django.utils import timezone
 
-from bluebottle.activities.states import OrganizerStateMachine, ContributionStateMachine
-from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
+from bluebottle.activities.states import OrganizerStateMachine, IntentionStateMachine
+from bluebottle.activities.triggers import ActivityTriggers, IntentionTriggers
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
@@ -319,11 +319,11 @@ class PayoutTriggers(TriggerManager):
 
 def is_successful(instance):
     """donation is successful"""
-    return instance.instance.status == ContributionStateMachine.succeeded
+    return instance.instance.status == IntentionStateMachine.succeeded
 
 
 @register(Donation)
-class DonationTriggers(ContributionTriggers):
+class DonationTriggers(IntentionTriggers):
     triggers = [
 
         TransitionTrigger(

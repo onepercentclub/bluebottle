@@ -6,7 +6,7 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
 
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributionTriggers, ContributionValueTriggers
+    ActivityTriggers, IntentionTriggers, ContributionValueTriggers
 )
 
 from bluebottle.time_based.models import (
@@ -325,8 +325,8 @@ def activity_is_finished(effect):
         return False
 
 
-class ApplicationTriggers(ContributionTriggers):
-    triggers = ContributionTriggers.triggers + [
+class ApplicationTriggers(IntentionTriggers):
+    triggers = IntentionTriggers.triggers + [
         TransitionTrigger(
             ApplicationStateMachine.initiate,
             effects=[

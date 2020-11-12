@@ -6,7 +6,7 @@ import icalendar
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    ContributionPermission
+    IntentionPermission
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -128,7 +128,7 @@ class PeriodApplicationList(ApplicationList):
 
 class ApplicationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission, ContributionPermission),
+        OneOf(ResourcePermission, ResourceOwnerPermission, IntentionPermission),
     )
 
     prefetch_for_includes = {

@@ -73,7 +73,7 @@ class WallpostDonationSerializer(serializers.ModelSerializer):
             'anonymous',)
 
     def get_type(self, obj):
-        return 'contributions/donations'
+        return 'intentions/donations'
 
     def get_fields(self):
         """

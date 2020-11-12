@@ -57,7 +57,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'contributions/donations',
+                            'type': 'intentions/donations',
                             'id': self.donation.pk,
                         }
                     }
@@ -96,7 +96,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'contributions/donations',
+                            'type': 'intentions/donations',
                             'id': donation.pk,
                         }
                     }

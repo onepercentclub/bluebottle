@@ -875,8 +875,8 @@ class ContributionListAPITestCase(BluebottleTestCase):
         for contribution in data['data']:
             self.assertTrue(
                 contribution['type'] in (
-                    'intentions/time-based/date',
-                    'intentions/time-based/period',
+                    'contributions/time-based/date-applications',
+                    'contributions/time-based/period-applications',
                     'contributions/donations',
                 )
             )

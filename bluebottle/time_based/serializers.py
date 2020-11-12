@@ -248,7 +248,7 @@ class OnADateApplicationListSerializer(ApplicationListSerializer):
         model = OnADateApplication
 
     class JSONAPIMeta(ApplicationListSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/on-a-date-applications'
+        resource_name = 'contributions/time-based/date-applications'
 
 
 class PeriodApplicationListSerializer(ApplicationListSerializer):
@@ -320,7 +320,7 @@ class OnADateApplicationSerializer(ApplicationSerializer):
         ]
 
     class JSONAPIMeta(ApplicationSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/on-a-date-applications'
+        resource_name = 'contributions/time-based/date-applications'
 
     included_serializers = dict(
         ApplicationSerializer.included_serializers,
@@ -368,7 +368,7 @@ class OnADateApplicationTransitionSerializer(ApplicationTransitionSerializer):
     }
 
     class JSONAPIMeta(ApplicationTransitionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/on-a-date-application-transitions'
+        resource_name = 'contributions/time-based/date-application-transitions'
 
 
 class PeriodApplicationTransitionSerializer(ApplicationTransitionSerializer):

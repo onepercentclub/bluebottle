@@ -233,7 +233,7 @@ class OnADateApplication(Application, Contribution):
         )
 
     class JSONAPIMeta:
-        resource_name = 'intentions/time-based/date'
+        resource_name = 'contributions/time-based/date-applications'
 
     def __str__(self):
         return str(_("On a date application"))
@@ -268,7 +268,7 @@ class PeriodApplication(Application, Contribution):
         return str(_("Period application"))
 
     class JSONAPIMeta:
-        resource_name = 'intentions/time-based/period'
+        resource_name = 'contributions/time-based/period-applications'
 
 
 class Duration(ContributionValue):

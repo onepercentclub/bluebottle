@@ -1,16 +1,15 @@
+from html.parser import HTMLParser
 from urllib.parse import urlencode
 
 from django.db import models, connection
-from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.utils.html import strip_tags
+from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution, ContributionValue
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
-
-from html.parser import HTMLParser
 
 
 class TimeBasedActivity(Activity):

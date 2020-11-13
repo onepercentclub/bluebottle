@@ -224,7 +224,7 @@ class Participant(Intention):
 
     def save(self, *args, **kwargs):
         if not self.intention_date:
-            self.contribution_date = self.activity.start
+            self.intention_date = self.activity.start
 
         super(Participant, self).save(*args, **kwargs)
 

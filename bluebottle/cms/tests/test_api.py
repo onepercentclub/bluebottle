@@ -66,14 +66,14 @@ class ResultPageTestCase(BluebottleTestCase):
         DonationFactory.create(
             activity=funding,
             status='succeeded',
-            contribution_date=yesterday,
+            intention_date=yesterday,
             user=user,
             amount=Money(50, 'EUR')
         )
         DonationFactory.create(
             activity=funding,
             status='succeeded',
-            contribution_date=long_ago,
+            intention_date=long_ago,
             user=user,
             amount=Money(50, 'EUR')
         )

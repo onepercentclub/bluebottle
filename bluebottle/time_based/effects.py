@@ -15,7 +15,7 @@ class CreateOnADateDurationEffect(Effect):
         end = activity.start + activity.duration
 
         duration = Duration(
-            contribution=self.instance,
+            intention=self.instance,
             value=activity.duration,
             start=activity.start,
             end=end
@@ -42,7 +42,7 @@ class CreatePeriodDurationEffect(Effect):
         self.instance.save()
 
         duration = Duration(
-            contribution=self.instance,
+            intention=self.instance,
             value=activity.duration,
             start=tz.localize(datetime.combine(start, datetime.min.time())),
             end=tz.localize(datetime.combine(end, datetime.max.time())) if end else None,

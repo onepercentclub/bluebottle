@@ -31,10 +31,13 @@ class IntentionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     list_filter = [StateMachineFilter, ]
     ordering = ('-created', )
     show_in_index = True
+    raw_id_fields = ('user', 'activity')
+
+    date_hierarchy = 'intention_date'
 
     readonly_fields = [
         'created',
-        'activity_link',
+        'intention_date'
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields
@@ -277,7 +280,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
 class IntentionInline(admin.TabularInline):
     raw_id_fields = ('user', )
-    readonly_fields = ('created', 'edit', 'state_name', )
+    readonly_fields = ('intention_date', 'created', 'edit', 'state_name', )
     fields = ('edit', 'user', 'created', 'state_name', )
 
     extra = 0

@@ -248,9 +248,9 @@ class TimeBasedDetailAPIViewTestCase():
             5
         )
 
-        for contribution in data['relationships']['intentions']['data']:
+        for intention in data['relationships']['intentions']['data']:
             self.assertTrue(
-                contribution in included_resources
+                intention in included_resources
             )
 
     def test_get_non_anonymous(self):

@@ -50,19 +50,19 @@ class TimeBasedActivity(Activity):
     @property
     def durations(self):
         return Duration.objects.filter(
-            contribution__activity=self
+            intention__activity=self
         )
 
     @property
     def accepted_durations(self):
         return self.durations.filter(
-            contribution__status='accepted'
+            intention__status='accepted'
         )
 
     @property
     def values(self):
         return Duration.objects.filter(
-            contribution__activity=self,
+            intention__activity=self,
             status='succeeded'
         )
 

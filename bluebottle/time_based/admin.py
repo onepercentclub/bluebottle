@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 
 from bluebottle.fsm.admin import StateMachineFilter
-from bluebottle.activities.admin import ActivityChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, IntentionChildAdmin
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, OnADateApplication, PeriodApplication, Application
 )
@@ -14,7 +14,7 @@ from django.utils.translation import ugettext_lazy as _
 
 class BaseApplicationAdminInline(admin.TabularInline):
     model = Application
-    readonly_fields = ('edit', 'created', 'transition_date', 'status')
+    readonly_fields = ('intention_date', 'motivation', 'document', 'edit', 'created', 'transition_date', 'status')
     raw_id_fields = ('user', 'document')
     extra = 0
 
@@ -23,8 +23,10 @@ class BaseApplicationAdminInline(admin.TabularInline):
             return '-'
         return format_html(
             '<a href="{}">{}</a>',
-            reverse('admin:time_based_application_change', args=(obj.id,)),
-            _('Edit participant')
+            reverse(
+                'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
+                args=(obj.id,)),
+            _('Edit application')
         )
 
 
@@ -115,3 +117,13 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         ('duration_period', 'Duration period'),
     )
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
+
+
+@admin.register(PeriodApplication)
+class PeriodApplicationAdmin(IntentionChildAdmin):
+    pass
+
+
+@admin.register(OnADateApplication)
+class DateApplicationAdmin(IntentionChildAdmin):
+    pass

@@ -238,7 +238,7 @@ class DonationAdmin(IntentionChildAdmin, PaymentLinkMixin):
     readonly_fields = IntentionChildAdmin.readonly_fields + [
         'payment_link', 'payment_link', 'payout_amount', 'sync_payment_link'
     ]
-    list_display = ['payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
+    list_display = ['intention_date', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
     list_filter = [
         DonationAdminStatusFilter,
         DonationAdminCurrencyFilter,

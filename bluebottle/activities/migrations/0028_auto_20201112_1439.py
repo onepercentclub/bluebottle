@@ -34,6 +34,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL('DROP VIEW contributions;'),
+        migrations.RunSQL('DROP VIEW contributions CASCADE;'),
         RenameModelAndBaseOperation('Contribution', 'Intention'),
     ]

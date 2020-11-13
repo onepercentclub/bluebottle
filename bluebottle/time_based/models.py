@@ -69,8 +69,9 @@ class TimeBasedActivity(Activity):
 
 class DateActivity(TimeBasedActivity):
     start = models.DateTimeField(_('activity date'), null=True, blank=True)
-
     duration = models.DurationField(_('duration'), null=True, blank=True)
+
+    online_meeting_url = models.TextField(_('Online Meeting URL'), blank=True, default='')
 
     duration_period = 'overall'
 

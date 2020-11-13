@@ -85,7 +85,8 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     detail_fields = TimeBasedAdmin.detail_fields + (
         'start',
-        'duration'
+        'duration',
+        'online_meeting_url'
     )
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (

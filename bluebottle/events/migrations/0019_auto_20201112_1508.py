@@ -21,10 +21,5 @@ class Migration(migrations.Migration):
             field=models.OneToOneField(
                 auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True,
                 primary_key=True, serialize=False, to='activities.Intention')
-        ),
-        AlterBaseOperation(
-            model_name='participant',
-            bases=('activities.contribution',),
-            prev_bases=('activities.intention',)
         )
     ]

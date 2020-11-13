@@ -22,21 +22,11 @@ class Migration(migrations.Migration):
                 auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True,
                 primary_key=True, serialize=False, to='activities.Intention')
         ),
-        AlterBaseOperation(
-            model_name='periodapplication',
-            bases=('activities.contribution',),
-            prev_bases=('activities.intention',)
-        ),
         migrations.AlterField(
             model_name='onadateapplication',
             name='contribution_ptr',
             field=models.OneToOneField(
                 auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True,
                 primary_key=True, serialize=False, to='activities.Intention')
-        ),
-        AlterBaseOperation(
-            model_name='onadateapplication',
-            bases=('activities.contribution',),
-            prev_bases=('activities.intention',)
         )
     ]

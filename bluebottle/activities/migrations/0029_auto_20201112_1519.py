@@ -23,11 +23,6 @@ class Migration(migrations.Migration):
                 auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True,
                 primary_key=True, serialize=False, to='activities.Intention')
         ),
-        AlterBaseOperation(
-            model_name='organizer',
-            bases=('activities.contribution',),
-            prev_bases=('activities.intention',)
-        ),
         migrations.RenameField(
             model_name='contributionvalue',
             old_name='contribution',

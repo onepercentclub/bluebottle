@@ -12,7 +12,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('geo', '0017_auto_20201014_1155'),
-        ('tasks', '0044_auto_20201014_1155'),
     ]
 
     operations = [

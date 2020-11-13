@@ -16,7 +16,7 @@ urlpatterns = [
         name='activity-list'),
     url(r'^/contributions$',
         IntentionList.as_view(),
-        name='contribution-list'),
+        name='intention-list'),
 
     url(r'^/(?P<pk>\d+)$',
         ActivityDetail.as_view(),

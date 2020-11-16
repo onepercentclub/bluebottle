@@ -1,16 +1,15 @@
+from html.parser import HTMLParser
 from urllib.parse import urlencode
 
 from django.db import models, connection
-from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.utils.html import strip_tags
+from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution, ContributionValue
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
-
-from html.parser import HTMLParser
 
 
 class TimeBasedActivity(Activity):
@@ -234,11 +233,14 @@ class OnADateApplication(Application, Contribution):
             ('api_delete_own_onadateapplication', 'Can delete own application through the API'),
         )
 
+    class JSONAPIMeta:
+        resource_name = 'contributions/time-based/date-applications'
+
     def __str__(self):
         return str(_("On a date application"))
 
 
-class PeriodApplication(Contribution, Application):
+class PeriodApplication(Application, Contribution):
     motivation = models.TextField(blank=True)
     document = PrivateDocumentField(blank=True, null=True)
 
@@ -265,6 +267,9 @@ class PeriodApplication(Contribution, Application):
 
     def __str__(self):
         return str(_("Period application"))
+
+    class JSONAPIMeta:
+        resource_name = 'contributions/time-based/period-applications'
 
 
 class Duration(ContributionValue):

@@ -1,8 +1,7 @@
 from bluebottle.activities.documents import ActivityDocument, activity
-
-from bluebottle.time_based.models import DateActivity, PeriodActivity
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
+from bluebottle.time_based.models import DateActivity, PeriodActivity, OnADateApplication, PeriodApplication
 
 SCORE_MAP = {
     'open': 1,
@@ -13,14 +12,6 @@ SCORE_MAP = {
 
 
 class TimeBasedActivityDocument:
-    class Meta:
-        related_models = (Initiative, Member)
-
-    def get_instances_from_related(self, related_instance):
-        if isinstance(related_instance, Initiative):
-            return self.Meta.model.objects.filter(initiative=related_instance)
-        if isinstance(related_instance, Member):
-            return self.Meta.model.objects.filter(owner=related_instance)
 
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)
@@ -39,7 +30,17 @@ class TimeBasedActivityDocument:
 
 @activity.doc_type
 class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
-    class Meta(TimeBasedActivityDocument):
+
+    def get_instances_from_related(self, related_instance):
+        if isinstance(related_instance, Initiative):
+            return DateActivity.objects.filter(initiative=related_instance)
+        if isinstance(related_instance, Member):
+            return DateActivity.objects.filter(owner=related_instance)
+        if isinstance(related_instance, OnADateApplication):
+            return DateActivity.objects.filter(contributions=related_instance)
+
+    class Meta(object):
+        related_models = (Initiative, Member, OnADateApplication)
         model = DateActivity
 
     date_field = 'start'
@@ -50,11 +51,22 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     def prepare_end(self, instance):
         if instance.start and instance.duration:
             return instance.start + instance.duration
+        return None
 
 
 @activity.doc_type
 class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
-    class Meta(TimeBasedActivityDocument):
+
+    def get_instances_from_related(self, related_instance):
+        if isinstance(related_instance, Initiative):
+            return PeriodActivity.objects.filter(initiative=related_instance)
+        if isinstance(related_instance, Member):
+            return PeriodActivity.objects.filter(owner=related_instance)
+        if isinstance(related_instance, PeriodApplication):
+            return PeriodActivity.objects.filter(contributions=related_instance)
+
+    class Meta(object):
+        related_models = (Initiative, Member, PeriodApplication)
         model = PeriodActivity
 
     date_field = 'deadline'

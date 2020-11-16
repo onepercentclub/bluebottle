@@ -43,6 +43,7 @@ class PeriodActivityFactory(TimeBasedFactory):
     deadline = date.today() + timedelta(weeks=4)
     duration = timedelta(hours=20)
     duration_period = 'overall'
+    is_online = False
 
     start = (now() + timedelta(weeks=1)).date()
 

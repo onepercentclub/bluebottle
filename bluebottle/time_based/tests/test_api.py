@@ -599,7 +599,7 @@ class DateApplicationListAPIViewTestCase(ApplicationListViewTestCase, Bluebottle
     application_factory = OnADateApplicationFactory
 
     url_name = 'on-a-date-application-list'
-    application_type = 'contributions/time-based/on-a-date-applications'
+    application_type = 'contributions/time-based/date-applications'
 
 
 class PeriodApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
@@ -763,7 +763,7 @@ class DateApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, Bluebo
     factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
     url_name = 'on-a-date-application-detail'
-    application_type = 'contributions/time-based/on-a-date-applications'
+    application_type = 'contributions/time-based/date-applications'
 
 
 class PeriodApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
@@ -809,6 +809,7 @@ class ApplicationTransitionAPIViewTestCase():
             json.dumps(self.data),
             user=self.application.user
         )
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
@@ -862,7 +863,7 @@ class ApplicationTransitionAPIViewTestCase():
 class OnADateApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'date'
     url_name = 'on-a-date-application-transition-list'
-    application_type = 'contributions/time-based/on-a-date-application'
+    application_type = 'contributions/time-based/date-application'
     factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
 

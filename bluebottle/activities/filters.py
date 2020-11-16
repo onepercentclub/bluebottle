@@ -38,10 +38,17 @@ class ActivitySearchFilter(ElasticSearchFilter):
     )
 
     search_fields = (
-        'status', 'title', 'description', 'owner.full_name',
-        'initiative.title', 'initiative.pitch', 'initiative.pitch',
-        'initiative_location.name', 'initiative_location.city',
-        'location.formatted_address', 'segments.name',
+        'status',
+        'title',
+        'description',
+        'owner.full_name',
+        'initiative.title',
+        'initiative.pitch',
+        'initiative.pitch',
+        'initiative_location.name',
+        'initiative_location.city',
+        'location.formatted_address',
+        'segments.name',
     )
 
     boost = {

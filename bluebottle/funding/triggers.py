@@ -1,12 +1,12 @@
 from django.utils import timezone
 
+from bluebottle.activities.states import OrganizerStateMachine, ContributionStateMachine
+from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
+from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
     ModelChangedTrigger, TransitionTrigger, register, TriggerManager
 )
-from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
-from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
-
 from bluebottle.funding.effects import (
     GeneratePayoutsEffect, GenerateDonationWallpostEffect,
     RemoveDonationWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
@@ -14,13 +14,6 @@ from bluebottle.funding.effects import (
     SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect,
     ClearPayoutDatesEffect, RemoveDonationFromPayoutEffect
 )
-
-from bluebottle.funding.states import (
-    FundingStateMachine, DonationStateMachine, PayoutAccountStateMachine, BasePaymentStateMachine,
-    PayoutStateMachine
-)
-from bluebottle.funding.models import Funding, PlainPayoutAccount, Donation, Payout, Payment
-
 from bluebottle.funding.messages import (
     DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
     FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage,
@@ -30,9 +23,12 @@ from bluebottle.funding.messages import (
     FundingCancelledMessage, FundingApprovedMessage
 
 )
+from bluebottle.funding.models import Funding, PlainPayoutAccount, Donation, Payout, Payment, BankAccount
+from bluebottle.funding.states import (
+    FundingStateMachine, DonationStateMachine, BasePaymentStateMachine,
+    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine
+)
 from bluebottle.notifications.effects import NotificationEffect
-
-from bluebottle.activities.states import OrganizerStateMachine, ContributionStateMachine
 
 
 def should_finish(effect):
@@ -232,53 +228,49 @@ def is_unreviewed(effect):
     return not effect.instance.reviewed
 
 
-class PayoutAccountTriggers(TriggerManager):
+@register(PlainPayoutAccount)
+class PlainPayoutAccountTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
-            PayoutAccountStateMachine.verify,
+            PlainPayoutAccountStateMachine.verify,
             effects=[
                 NotificationEffect(PayoutAccountVerified),
-                SubmitConnectedActivitiesEffect,
+                DeleteDocumentEffect
             ]
         ),
 
         TransitionTrigger(
-            PayoutAccountStateMachine.reject,
+            PlainPayoutAccountStateMachine.reject,
             effects=[
                 NotificationEffect(PayoutAccountRejected),
+                DeleteDocumentEffect
             ]
         ),
-
-        ModelChangedTrigger(
-            'reviewed',
-            effects=[
-                TransitionEffect(
-                    PayoutAccountStateMachine.verify,
-                    conditions=[is_reviewed]
-                ),
-                TransitionEffect(
-                    PayoutAccountStateMachine.reject,
-                    conditions=[is_unreviewed]
-                ),
-            ]
-        )
     ]
 
 
-@register(PlainPayoutAccount)
-class PlainPayoutAccountTriggers(PayoutAccountTriggers):
-    triggers = PayoutAccountTriggers.triggers + [
+@register(BankAccount)
+class BankAccountTriggers(TriggerManager):
+    triggers = [
         TransitionTrigger(
-            PayoutAccountStateMachine.verify,
+            BankAccountStateMachine.reject,
             effects=[
-                DeleteDocumentEffect
+                RelatedTransitionEffect(
+                    'connect_account',
+                    PlainPayoutAccountStateMachine.reject,
+                    description='Reject connected KYC account'
+                )
             ]
         ),
-
         TransitionTrigger(
-            PayoutAccountStateMachine.reject,
+            BankAccountStateMachine.verify,
             effects=[
-                DeleteDocumentEffect
+                SubmitConnectedActivitiesEffect,
+                RelatedTransitionEffect(
+                    'connect_account',
+                    PlainPayoutAccountStateMachine.verify,
+                    description='Verify connected KYC account'
+                )
             ]
         ),
     ]
@@ -290,7 +282,6 @@ class PayoutTriggers(TriggerManager):
         TransitionTrigger(
             PayoutStateMachine.approve,
             effects=[
-
                 SubmitPayoutEffect,
                 SetDateEffect('date_approved')
             ]

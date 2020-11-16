@@ -16,7 +16,8 @@ from bluebottle.time_based.serializers import (
     PeriodActivityListSerializer,
 
     DateActivitySerializer,
-    PeriodActivitySerializer,
+    PeriodActivitySerializer, OnADateApplicationSerializer, PeriodApplicationSerializer,
+    OnADateApplicationListSerializer, PeriodApplicationListSerializer,
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
@@ -156,7 +157,10 @@ class ContributionSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         ParticipantListSerializer,
         ApplicantListSerializer,
-        DonationListSerializer
+        DonationListSerializer,
+
+        OnADateApplicationSerializer,
+        PeriodApplicationSerializer
     ]
 
     included_serializers = {
@@ -181,7 +185,10 @@ class ContributionListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         ParticipantListSerializer,
         ApplicantListSerializer,
-        DonationListSerializer
+        DonationListSerializer,
+
+        OnADateApplicationListSerializer,
+        PeriodApplicationListSerializer
     ]
 
     included_serializers = {

@@ -17,6 +17,7 @@ from bluebottle.events.models import Participant
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Donation
+from bluebottle.time_based.models import OnADateApplication, PeriodApplication
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission
@@ -84,7 +85,11 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
         return Contribution.objects.prefetch_related(
             'user', 'activity'
         ).instance_of(
-            Donation, Applicant, Participant
+            Donation,
+            Applicant,
+            Participant,
+            OnADateApplication,
+            PeriodApplication
         ).filter(
             user=self.request.user
         ).exclude(

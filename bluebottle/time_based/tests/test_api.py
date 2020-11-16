@@ -239,8 +239,6 @@ class TimeBasedDetailAPIViewTestCase():
         response = self.client.get(self.url, user=self.activity.owner)
 
         data = response.json()['data']
-        import ipdb
-        ipdb.set_trace()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(

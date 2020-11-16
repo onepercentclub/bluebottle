@@ -19,6 +19,7 @@ class BaseApplicationAdminInline(admin.TabularInline):
     extra = 0
 
     def edit(self, obj):
+        return
         if not obj.id:
             return '-'
         return format_html(
@@ -97,6 +98,8 @@ class DateActivityAdmin(TimeBasedAdmin):
 @admin.register(PeriodActivity)
 class PeriodActivityAdmin(TimeBasedAdmin):
     base_model = PeriodActivity
+
+    inlines = (PeriodApplicationAdminInline, ) + TimeBasedAdmin.inlines
 
     date_hierarchy = 'deadline'
     list_display = TimeBasedAdmin.list_display + [

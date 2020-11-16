@@ -211,6 +211,7 @@ class PeriodApplicationStateMachine(ApplicationStateMachine):
         stopped,
         name=_('Stop'),
         description=_("Application stopped contributing."),
+        permission=ApplicationStateMachine.can_accept_application,
         automatic=False,
     )
 
@@ -219,6 +220,7 @@ class PeriodApplicationStateMachine(ApplicationStateMachine):
         ApplicationStateMachine.accepted,
         name=_('Start'),
         description=_("Application started contributing again."),
+        permission=ApplicationStateMachine.can_accept_application,
         automatic=False,
     )
 

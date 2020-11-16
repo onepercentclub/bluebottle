@@ -234,6 +234,9 @@ class OnADateApplication(Application, Contribution):
             ('api_delete_own_onadateapplication', 'Can delete own application through the API'),
         )
 
+    class JSONAPIMeta:
+        resource_name = 'contributions/time-based/on-a-date-applications'
+
     def __str__(self):
         return str(_("On a date application"))
 
@@ -258,6 +261,9 @@ class PeriodApplication(Contribution, Application):
             ('api_change_own_periodapplication', 'Can change own application through the API'),
             ('api_delete_own_periodapplication', 'Can delete own application through the API'),
         )
+
+    class JSONAPIMeta:
+        resource_name = 'contributions/time-based/period-applications'
 
     @property
     def current_duration(self):

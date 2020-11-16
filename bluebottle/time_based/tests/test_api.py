@@ -232,25 +232,35 @@ class TimeBasedDetailAPIViewTestCase():
         )
 
     def test_get_contributions(self):
-        self.application_factory.create_batch(5, activity=self.activity)
+        applications = self.application_factory.create_batch(4, activity=self.activity)
+        applications.append(
+            self.application_factory.create(activity=self.activity, user=self.activity.owner)
+        )
         response = self.client.get(self.url, user=self.activity.owner)
 
         data = response.json()['data']
+        import ipdb
+        ipdb.set_trace()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        included_resources = [
-            {'type': included['type'], 'id': included['id']} for
-            included in response.json()['included']
-        ]
 
         self.assertEqual(
             len(data['relationships']['contributions']['data']),
             5
         )
+        contribution_response = self.client.get(
+            data['relationships']['contributions']['links']['related'],
+            user=self.activity.owner
+        )
+        contribution_data = contribution_response.json()
+        self.assertEqual(contribution_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            contribution_data['meta']['pagination']['count'], len(applications)
+        )
+        contribution_ids = [str(application.id) for application in applications]
+        for contribution in contribution_data['data']:
 
-        for contribution in data['relationships']['contributions']['data']:
             self.assertTrue(
-                contribution in included_resources
+                contribution['id'] in contribution_ids
             )
 
     def test_get_non_anonymous(self):

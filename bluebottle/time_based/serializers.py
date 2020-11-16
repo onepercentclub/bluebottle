@@ -3,7 +3,9 @@ from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from rest_framework_json_api.serializers import PolymorphicModelSerializer
-from rest_framework_json_api.relations import PolymorphicResourceRelatedField
+from rest_framework_json_api.relations import (
+    PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField
+)
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer,
@@ -26,7 +28,6 @@ from bluebottle.utils.utils import reverse_signed
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
-    contributions = FilteredRelatedField(many=True, filter_backend=ApplicationListFilter)
 
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
@@ -37,16 +38,15 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'registration_deadline',
             'expertise',
             'review',
-            'contributions'
+            'contributions',
+            'my_contribution'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'location',
             'expertise',
-            'contributions',
-            'contributions.user',
-            'contributions.document'
+            'my_contribution',
         ]
 
     included_serializers = dict(
@@ -54,15 +54,30 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         **{
             'expertise': 'bluebottle.assignments.serializers.SkillSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-            'contributions': 'bluebottle.time_based.serializers.ApplicationSerializer',
         }
     )
 
 
 class DateActivitySerializer(TimeBasedBaseSerializer):
     permissions = ResourcePermissionField('date-detail', view_args=('pk',))
+    my_contribution = SerializerMethodResourceRelatedField(
+        model=OnADateApplication,
+        read_only=True,
+        source='get_my_contribution'
+    )
+    contributions = FilteredRelatedField(
+        many=True,
+        filter_backend=ApplicationListFilter,
+        related_link_view_name='date-applications',
 
+        related_link_url_kwarg='activity_id'
+    )
     links = serializers.SerializerMethodField()
+
+    def get_my_contribution(self, instance):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return instance.contributions.filter(user=user).instance_of(OnADateApplication).first()
 
     def get_links(self, instance):
         if instance.start and instance.duration:
@@ -86,13 +101,32 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
-            'contributions': 'bluebottle.time_based.serializers.OnADateApplicationSerializer',
+            'my_contribution': 'bluebottle.time_based.serializers.OnADateApplicationSerializer'
         }
     )
 
 
 class PeriodActivitySerializer(TimeBasedBaseSerializer):
     permissions = ResourcePermissionField('period-detail', view_args=('pk',))
+
+    my_contribution = SerializerMethodResourceRelatedField(
+        model=OnADateApplication,
+        read_only=True,
+        source='get_my_contribution'
+    )
+
+    contributions = FilteredRelatedField(
+        many=True,
+        filter_backend=ApplicationListFilter,
+        related_link_view_name='period-applications',
+        related_link_url_kwarg='activity_id'
+
+    )
+
+    def get_my_contribution(self, instance):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return instance.contributions.filter(user=user).instance_of(OnADateApplication).first()
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodActivity
@@ -106,7 +140,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
-            'contributions': 'bluebottle.time_based.serializers.PeriodApplicationSerializer',
+            'my_contribution': 'bluebottle.time_based.serializers.PeriodApplicationSerializer'
         }
     )
 

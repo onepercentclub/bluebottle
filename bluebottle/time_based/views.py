@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.html import strip_tags
 from django.utils.timezone import utc
@@ -29,7 +30,8 @@ from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateAPIView, ListCreateAPIView, JsonApiViewMixin,
+    RetrieveUpdateAPIView, ListCreateAPIView,
+    ListAPIView, JsonApiViewMixin,
     PrivateFileView
 )
 
@@ -81,6 +83,42 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
     serializer_class = PeriodActivitySerializer
 
 
+class TimeBasedActivityRelatedApplicationsList(JsonApiViewMixin, ListAPIView):
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated():
+            queryset = self.queryset.filter(
+                Q(user=self.request.user) |
+                Q(activity__owner=self.request.user) |
+                Q(activity__initiative__activity_manager=self.request.user) |
+                Q(status__in=[
+                    'new', 'accepted', 'succeeded'
+                ])
+            )
+        else:
+            queryset = self.queryset.filter(
+                status__in=[
+                    'new', 'accepted', 'succeeded'
+                ])
+
+        return queryset.filter(
+            activity_id=self.kwargs['activity_id']
+        )
+
+
+class DateActivityRelatedApplicationsList(TimeBasedActivityRelatedApplicationsList):
+    queryset = OnADateApplication.objects.prefetch_related('user')
+    serializer_class = OnADateApplicationSerializer
+
+
+class PeriodActivityRelatedApplicationsList(TimeBasedActivityRelatedApplicationsList):
+    queryset = PeriodApplication.objects.prefetch_related('user')
+    serializer_class = PeriodApplicationSerializer
+
+
 class DateTransitionList(TransitionList):
     serializer_class = DateTransitionSerializer
     queryset = DateActivity.objects.all()
@@ -95,12 +133,6 @@ class ApplicationList(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
-
-    prefetch_for_includes = {
-        'assignment': ['assignment'],
-        'user': ['user'],
-        'document': ['document'],
-    }
 
     def perform_create(self, serializer):
         self.check_related_object_permissions(
@@ -131,12 +163,6 @@ class ApplicationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
         OneOf(ResourcePermission, ResourceOwnerPermission, ContributionPermission),
     )
 
-    prefetch_for_includes = {
-        'activity': ['activity'],
-        'user': ['user'],
-        'document': ['document'],
-    }
-
 
 class OnADateApplicationDetail(ApplicationDetail):
     queryset = OnADateApplication.objects.all()
@@ -149,9 +175,7 @@ class PeriodApplicationDetail(ApplicationDetail):
 
 
 class ApplicationTransitionList(TransitionList):
-    prefetch_for_includes = {
-        'resource': ['participant', 'participant__activity'],
-    }
+    pass
 
 
 class OnADateApplicationTransitionList(ApplicationTransitionList):

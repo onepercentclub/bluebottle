@@ -1,7 +1,9 @@
 from django.utils import timezone
 
-from bluebottle.activities.states import OrganizerStateMachine, IntentionStateMachine
-from bluebottle.activities.triggers import ActivityTriggers, IntentionTriggers
+from bluebottle.activities.states import IntentionStateMachine
+from bluebottle.activities.states import OrganizerStateMachine
+from bluebottle.activities.triggers import ActivityTriggers
+from bluebottle.activities.triggers import IntentionTriggers
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (

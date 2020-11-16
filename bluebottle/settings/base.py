@@ -1003,3 +1003,12 @@ AXES_META_PRECEDENCE_ORDER = [
 
 RECAPTCHA_PRIVATE_KEY = "6LdJvSUTAAAAALYWDHKOyhRkSt8MOAOW9ScSPcjS"
 RECAPTCHA_PUBLIC_KEY = "6LdJvSUTAAAAAMLwr45uU-qD7IScJM3US0J_RZQM"
+
+
+# Socket is not configured. Lets guess.
+if os.path.exists('/var/run/clamd.scan/'):
+    # Fedora, CentOS
+    CLAMD_SOCKET = '/var/run/clamd.scan/clamd.sock'
+else:
+    # This is default for Ubuntu, Debian based distributions
+    CLAMD_SOCKET = '/var/run/clamav/clamd.ctl'

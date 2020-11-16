@@ -20,6 +20,7 @@ install_requires = [
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
     'bleach==2.1.4',
+    'clamd==1.0.2',
     'celery==4.3',
     'dotted==0.1.8',
     'defusedxml==0.6.0',

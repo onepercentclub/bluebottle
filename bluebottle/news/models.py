@@ -1,4 +1,5 @@
 from builtins import object
+from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.functional import lazy
@@ -12,6 +13,7 @@ from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import PublishableModel, AnonymizationMixin
 from bluebottle.utils.serializers import MLStripper
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 def get_languages():
@@ -25,9 +27,18 @@ class NewsItem(AnonymizationMixin, PublishableModel):
     slug = models.SlugField(_("Slug"))
 
     # Contents
-    main_image = ImageField(_("Main image"),
-                            help_text=_("Shows at the top of your post."),
-                            upload_to='blogs', blank=True)
+    main_image = ImageField(
+        _("Main image"),
+        help_text=_("Shows at the top of your post."),
+        upload_to='blogs', blank=True,
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
     language = models.CharField(_("language"),
                                 max_length=5,
                                 choices=lazy(get_languages, tuple)())

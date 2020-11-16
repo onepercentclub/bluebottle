@@ -4,13 +4,14 @@ from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
+
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.clients import properties
 from bluebottle.files.validators import validate_video_file_size
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.validators import FileMimetypeValidator
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
@@ -20,7 +21,15 @@ class Category(TranslatableModel):
     image = ImageField(
         _("image"), max_length=255, blank=True, null=True,
         upload_to='categories/',
-        help_text=_("Category image"))
+        help_text=_("Category image"),
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
     video = models.FileField(
         _("video"), max_length=255,
         blank=True, null=True,
@@ -28,16 +37,26 @@ class Category(TranslatableModel):
             validate_video_file_size,
             FileMimetypeValidator(
                 allowed_mimetypes=settings.VIDEO_FILE_ALLOWED_MIME_TYPES
-            )
+            ),
+            validate_file_infection
         ],
         help_text=_('This video will autoplay at the background. '
                     'Allowed types are mp4, ogg, 3gp, avi, mov and webm. '
                     'File should be smaller then 10MB.'),
         upload_to='banner_slides/')
+
     image_logo = ImageField(
         _("logo"), max_length=255, blank=True, null=True,
         upload_to='categories/logos/',
-        help_text=_("Category Logo image"))
+        help_text=_("Category Logo image"),
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
 
     translations = TranslatedFields(
         title=models.CharField(_("name"), max_length=255),

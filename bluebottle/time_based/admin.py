@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db import models
-from django.urls import reverse
+from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from durationwidget.widgets import TimeDurationWidget
@@ -20,6 +20,18 @@ class BaseParticipantAdminInline(admin.TabularInline):
     raw_id_fields = ('user', 'document')
     extra = 0
 
+    def get_parent_object_from_request(self, request):
+        """
+        Returns the parent object from the request or None.
+
+        Note that this only works for Inlines, because the `parent_model`
+        is not available in the regular admin.ModelAdmin as an attribute.
+        """
+        resolved = resolve(request.path_info)
+        if resolved.args:
+            return self.parent_model.objects.get(pk=resolved.args[0])
+        return None
+
     def edit(self, obj):
         if not obj.id:
             return '-'
@@ -30,6 +42,12 @@ class BaseParticipantAdminInline(admin.TabularInline):
                 args=(obj.id,)),
             _('Edit application')
         )
+
+    def has_add_permission(self, request):
+        activity = self.get_parent_object_from_request(request)
+        if activity.status in ['draft', 'needs_work']:
+            return False
+        return True
 
 
 class DateParticipantAdminInline(BaseParticipantAdminInline):
@@ -49,6 +67,15 @@ class PeriodParticipantAdminInline(BaseParticipantAdminInline):
 
 class TimeBasedAdmin(ActivityChildAdmin):
     inlines = ActivityChildAdmin.inlines + (MessageAdminInline, )
+    formfield_overrides = {
+        models.DurationField: {
+            'widget': TimeDurationWidget(
+                show_days=False,
+                show_hours=True,
+                show_minutes=True,
+                show_seconds=False)
+        }
+    }
 
     search_fields = ['title', 'description']
     list_filter = [StateMachineFilter, 'is_online']
@@ -108,15 +135,6 @@ class DateActivityAdmin(TimeBasedAdmin):
 @admin.register(PeriodActivity)
 class PeriodActivityAdmin(TimeBasedAdmin):
     base_model = PeriodActivity
-    formfield_overrides = {
-        models.DurationField: {
-            'widget': TimeDurationWidget(
-                show_days=False,
-                show_hours=True,
-                show_minutes=True,
-                show_seconds=False)
-        }
-    }
 
     inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
 
@@ -140,7 +158,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
 
-class DurationInlineAdmin(admin.TabularInline):
+class ParticiationInlineAdmin(admin.TabularInline):
     model = Duration
     extra = 0
     readonly_fields = ('edit', 'status')
@@ -170,7 +188,7 @@ class DurationInlineAdmin(admin.TabularInline):
 
 @admin.register(PeriodParticipant)
 class PeriodApplicationAdmin(ContributorChildAdmin):
-    inlines = ContributorChildAdmin.inlines + [DurationInlineAdmin]
+    inlines = ContributorChildAdmin.inlines + [ParticiationInlineAdmin]
 
 
 @admin.register(Duration)
@@ -195,3 +213,4 @@ class DurationAdmin(StateMachineAdmin):
 @admin.register(DateParticipant)
 class DateApplicationAdmin(ContributorChildAdmin):
     fields = ContributorChildAdmin.fields
+    inlines = ContributorChildAdmin.inlines + [ParticiationInlineAdmin]

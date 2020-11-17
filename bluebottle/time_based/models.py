@@ -91,7 +91,7 @@ class DateActivity(TimeBasedActivity):
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/date'
+        resource_name = 'activities/time-based/dates'
 
     @property
     def required_fields(self):
@@ -194,7 +194,7 @@ class PeriodActivity(TimeBasedActivity):
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/period'
+        resource_name = 'activities/time-based/periods'
 
     @property
     def required_fields(self):

@@ -158,7 +158,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         verbose_name_plural = _('Contributors')
 
     def __str__(self):
-        return _('Contributor {name}').format(self.user)
+        return _('Contributor {name}').format(name=self.user)
 
 
 @python_2_unicode_compatible
@@ -171,7 +171,7 @@ class Organizer(Contributor):
         resource_name = 'contributors/organizers'
 
     def __str__(self):
-        return _('Activity owner {name}').format(self.user)
+        return _('Activity owner {name}').format(name=self.user)
 
 
 class ContributionValue(TriggerMixin, PolymorphicModel):

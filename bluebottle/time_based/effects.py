@@ -7,7 +7,7 @@ from bluebottle.fsm.effects import Effect
 from bluebottle.time_based.models import Duration
 
 
-class CreateOnADateDurationEffect(Effect):
+class CreateDateParticipationEffect(Effect):
     template = 'admin/create_on_a_date_duration.html'
 
     def post_save(self, **kwargs):
@@ -23,7 +23,7 @@ class CreateOnADateDurationEffect(Effect):
             duration.save()
 
 
-class CreatePeriodDurationEffect(Effect):
+class CreatePeriodParticipationEffect(Effect):
     title = _('Create contribution duration')
     template = 'admin/create_period_duration.html'
 

@@ -11,7 +11,7 @@ from bluebottle.time_based.states import (
     TimeBasedStateMachine, DurationStateMachine
 )
 from bluebottle.time_based.triggers import has_applications, has_no_applications
-from bluebottle.time_based.effects import CreatePeriodDurationEffect
+from bluebottle.time_based.effects import CreatePeriodParticipationEffect
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 
@@ -68,7 +68,7 @@ class NewPeriodForApplicationTask(ModelPeriodicTask):
         )
 
     effects = [
-        CreatePeriodDurationEffect
+        CreatePeriodParticipationEffect
     ]
 
     def __str__(self):

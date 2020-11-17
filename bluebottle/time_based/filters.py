@@ -5,7 +5,7 @@ from bluebottle.time_based.models import PeriodParticipant, DateParticipant
 from bluebottle.time_based.states import ApplicationStateMachine
 
 
-class ApplicationListFilter(DjangoFilterBackend):
+class ParticipantListFilter(DjangoFilterBackend):
     """
     Filter that shows all applicant if user is owner,
     otherwise only show accepted applicants.

@@ -4,12 +4,12 @@ from bluebottle.time_based.views import (
     DateActivityListView, PeriodActivityListView,
     DateActivityDetailView, PeriodActivityDetailView,
     DateTransitionList, PeriodTransitionList,
-    OnADateApplicationList, OnADateApplicationDetail,
-    OnADateApplicationTransitionList, OnADateApplicationDocumentDetail,
+    DateParticipantList, DateParticipantDetail,
+    DateParticipantTransitionList, DateParticipantDocumentDetail,
     DateActivityIcalView,
 
-    PeriodApplicationList, PeriodApplicationDetail,
-    PeriodApplicationTransitionList, PeriodApplicationDocumentDetail
+    PeriodParticipantList, PeriodParticipantDetail,
+    PeriodParticipantTransitionList, PeriodParticipantDocumentDetail
 )
 
 urlpatterns = [
@@ -43,28 +43,28 @@ urlpatterns = [
         name='period-transition-list'),
 
     url(r'^/applications/on-a-date$',
-        OnADateApplicationList.as_view(),
+        DateParticipantList.as_view(),
         name='on-a-date-application-list'),
     url(r'^/applications/on-a-date/(?P<pk>\d+)$',
-        OnADateApplicationDetail.as_view(),
+        DateParticipantDetail.as_view(),
         name='on-a-date-application-detail'),
     url(r'^/applications/on-a-date/transitions$',
-        OnADateApplicationTransitionList.as_view(),
+        DateParticipantTransitionList.as_view(),
         name='on-a-date-application-transition-list'),
     url(r'^/applications/on-a-date/(?P<pk>\d+)/document$',
-        OnADateApplicationDocumentDetail.as_view(),
+        DateParticipantDocumentDetail.as_view(),
         name='on-a-date-application-document'),
 
     url(r'^/applications/period$',
-        PeriodApplicationList.as_view(),
+        PeriodParticipantList.as_view(),
         name='period-application-list'),
     url(r'^/applications/period/(?P<pk>\d+)$',
-        PeriodApplicationDetail.as_view(),
+        PeriodParticipantDetail.as_view(),
         name='period-application-detail'),
     url(r'^/applications/period/transitions$',
-        PeriodApplicationTransitionList.as_view(),
+        PeriodParticipantTransitionList.as_view(),
         name='period-application-transition-list'),
     url(r'^/applications/period/(?P<pk>\d+)/document$',
-        PeriodApplicationDocumentDetail.as_view(),
+        PeriodParticipantDocumentDetail.as_view(),
         name='period-application-document')
 ]

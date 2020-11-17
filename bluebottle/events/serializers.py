@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseIntentionSerializer,
+    BaseActivitySerializer, BaseContributorSerializer,
     BaseActivityListSerializer, BaseTinyActivitySerializer
 )
 from bluebottle.events.filters import ParticipantListFilter
@@ -16,14 +16,14 @@ from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelate
 from bluebottle.utils.serializers import NoCommitMixin
 
 
-class ParticipantListSerializer(BaseIntentionSerializer):
+class ParticipantListSerializer(BaseContributorSerializer):
 
-    class Meta(BaseIntentionSerializer.Meta):
+    class Meta(BaseContributorSerializer.Meta):
         model = Participant
-        fields = BaseIntentionSerializer.Meta.fields + ('time_spent', )
+        fields = BaseContributorSerializer.Meta.fields + ('time_spent', )
 
-    class JSONAPIMeta(BaseIntentionSerializer.JSONAPIMeta):
-        resource_name = 'intentions/participants'
+    class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
+        resource_name = 'contributors/participants'
         included_resources = [
             'user',
             'activity'
@@ -35,11 +35,11 @@ class ParticipantListSerializer(BaseIntentionSerializer):
     }
 
 
-class ParticipantSerializer(BaseIntentionSerializer):
+class ParticipantSerializer(BaseContributorSerializer):
 
-    class Meta(BaseIntentionSerializer.Meta):
+    class Meta(BaseContributorSerializer.Meta):
         model = Participant
-        fields = BaseIntentionSerializer.Meta.fields + ('time_spent', )
+        fields = BaseContributorSerializer.Meta.fields + ('time_spent', )
 
         validators = [
             UniqueTogetherValidator(
@@ -48,8 +48,8 @@ class ParticipantSerializer(BaseIntentionSerializer):
             )
         ]
 
-    class JSONAPIMeta(BaseIntentionSerializer.JSONAPIMeta):
-        resource_name = 'intentions/participants'
+    class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
+        resource_name = 'contributors/participants'
         included_resources = [
             'user',
             'activity'
@@ -70,7 +70,7 @@ class ParticipantTransitionSerializer(TransitionSerializer):
     }
 
     class JSONAPIMeta(object):
-        resource_name = 'intentions/participant-transitions'
+        resource_name = 'contributors/participant-transitions'
         included_resources = [
             'resource',
             'resource.activity'
@@ -110,7 +110,7 @@ class EventListSerializer(BaseActivityListSerializer):
 
 class EventSerializer(NoCommitMixin, BaseActivitySerializer):
     permissions = ResourcePermissionField('event-detail', view_args=('pk',))
-    intentions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
+    contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
     links = serializers.SerializerMethodField()
 
     def get_links(self, instance):
@@ -153,15 +153,15 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
             'location_hint',
             'permissions',
             'registration_deadline',
-            'intentions',
+            'contributors',
             'links'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'location',
-            'intentions',
-            'intentions.user'
+            'contributors',
+            'contributors.user'
         ]
         resource_name = 'activities/events'
 
@@ -169,7 +169,7 @@ class EventSerializer(NoCommitMixin, BaseActivitySerializer):
         BaseActivitySerializer.included_serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-            'intentions': 'bluebottle.events.serializers.ParticipantSerializer',
+            'contributors': 'bluebottle.events.serializers.ParticipantSerializer',
         }
     )
 

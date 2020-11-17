@@ -495,7 +495,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         stats = response.json()['data']['meta']['stats']
         self.assertEqual(stats['hours'], 18)
         self.assertEqual(stats['activities'], 3)
-        self.assertEqual(stats['intentions'], 12)
+        self.assertEqual(stats['contributors'], 12)
         self.assertEqual(stats['amount'], 75.0)
 
     def test_get_other(self):

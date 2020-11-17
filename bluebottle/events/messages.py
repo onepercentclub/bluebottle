@@ -46,8 +46,8 @@ class EventDateChanged(TransitionMessage):
         """participants that signed up"""
         from bluebottle.events.models import Participant
         return [
-            intention.user for intention
-            in self.obj.intentions.instance_of(
+            contributor.user for contributor
+            in self.obj.contributors.instance_of(
                 Participant
             ).filter(status='new')
         ]
@@ -66,8 +66,8 @@ class EventReminderMessage(TransitionMessage):
         from bluebottle.events.models import Participant
 
         return [
-            intention.user for intention
-            in self.obj.intentions.instance_of(
+            contributor.user for contributor
+            in self.obj.contributors.instance_of(
                 Participant
             ).filter(status='new')
         ]

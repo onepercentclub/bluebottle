@@ -7,7 +7,7 @@ from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from bluebottle.activities.models import Activity, Intention, ContributionValue
+from bluebottle.activities.models import Activity, Contributor, ContributionValue
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
 
@@ -37,7 +37,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def applications(self):
-        return self.intentions.instance_of(PeriodApplication, OnADateApplication)
+        return self.contributors.instance_of(PeriodApplication, OnADateApplication)
 
     @property
     def active_applications(self):
@@ -50,19 +50,19 @@ class TimeBasedActivity(Activity):
     @property
     def durations(self):
         return Duration.objects.filter(
-            intention__activity=self
+            contributor__activity=self
         )
 
     @property
     def accepted_durations(self):
         return self.durations.filter(
-            intention__status='accepted'
+            contributor__status='accepted'
         )
 
     @property
     def values(self):
         return Duration.objects.filter(
-            intention__activity=self,
+            contributor__activity=self,
             status='succeeded'
         )
 
@@ -203,7 +203,7 @@ class PeriodActivity(TimeBasedActivity):
         return fields + ['deadline', 'duration', 'duration_period']
 
 
-class Application(Intention):
+class Application(Contributor):
     def __str__(self):
         return self.user
 
@@ -222,8 +222,8 @@ class OnADateApplication(Application):
     document = PrivateDocumentField(blank=True, null=True)
 
     class Meta(object):
-        verbose_name = _("participant")
-        verbose_name_plural = _("participants")
+        verbose_name = _("Participant on a date")
+        verbose_name_plural = _("Participants on a date")
         permissions = (
             ('api_read_onadateapplication', 'Can view application through the API'),
             ('api_add_onadateapplication', 'Can add application through the API'),
@@ -237,21 +237,21 @@ class OnADateApplication(Application):
         )
 
     class JSONAPIMeta:
-        resource_name = 'intentions/time-based/date-applications'
+        resource_name = 'contributors/time-based/date-applications'
 
     def __str__(self):
         return str(_("Participant"))
 
 
-class PeriodApplication(Application, Intention):
+class PeriodApplication(Application, Contributor):
     motivation = models.TextField(blank=True)
     document = PrivateDocumentField(blank=True, null=True)
 
     current_period = models.DateField(null=True, blank=True)
 
     class Meta(object):
-        verbose_name = _("participant")
-        verbose_name_plural = _("participants")
+        verbose_name = _("Participant during a period")
+        verbose_name_plural = _("Participants during a period")
         permissions = (
             ('api_read_periodapplication', 'Can view application through the API'),
             ('api_add_periodapplication', 'Can add application through the API'),
@@ -272,7 +272,7 @@ class PeriodApplication(Application, Intention):
         return _("Participant {}").format(self.user)
 
     class JSONAPIMeta:
-        resource_name = 'intentions/time-based/period-applications'
+        resource_name = 'contributors/time-based/period-applications'
 
 
 class Duration(ContributionValue):

@@ -24,7 +24,7 @@ class AssignmentDocument(ActivityDocument):
         if isinstance(related_instance, Member):
             return Assignment.objects.filter(owner=related_instance)
         if isinstance(related_instance, Applicant):
-            return Assignment.objects.filter(intentions=related_instance)
+            return Assignment.objects.filter(contributors=related_instance)
 
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)

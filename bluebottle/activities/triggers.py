@@ -67,7 +67,7 @@ class ActivityTriggers(TriggerManager):
     ]
 
 
-class IntentionTriggers(TriggerManager):
+class ContributorTriggers(TriggerManager):
     triggers = []
 
 

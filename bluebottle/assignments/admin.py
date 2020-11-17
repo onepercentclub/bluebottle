@@ -2,7 +2,7 @@ from builtins import object
 from django.contrib import admin
 from django_summernote.widgets import SummernoteWidget
 
-from bluebottle.activities.admin import ActivityChildAdmin, IntentionChildAdmin, IntentionInline
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributorInline
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine
 from bluebottle.fsm.admin import StateMachineFilter
@@ -21,11 +21,11 @@ class AssignmentAdminForm(StateMachineModelForm):
         }
 
 
-class ApplicantInline(IntentionInline):
+class ApplicantInline(ContributorInline):
     model = Applicant
 
-    readonly_fields = IntentionInline.readonly_fields + ('time_spent', )
-    fields = IntentionInline.fields + ('time_spent', )
+    readonly_fields = ContributorInline.readonly_fields + ('time_spent', )
+    fields = ContributorInline.fields + ('time_spent', )
 
 
 class ApplicantAdminForm(StateMachineModelForm):
@@ -35,14 +35,14 @@ class ApplicantAdminForm(StateMachineModelForm):
 
 
 @admin.register(Applicant)
-class ApplicantAdmin(IntentionChildAdmin):
+class ApplicantAdmin(ContributorChildAdmin):
     model = Applicant
     form = ApplicantAdminForm
     list_display = ['user', 'state_name', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
-    readonly_fields = IntentionChildAdmin.readonly_fields
-    fields = IntentionChildAdmin.fields + ['time_spent', 'motivation']
+    readonly_fields = ContributorChildAdmin.readonly_fields
+    fields = ContributorChildAdmin.fields + ['time_spent', 'motivation']
 
     date_hierarchy = 'transition_date'
 
@@ -55,7 +55,7 @@ class ApplicantAdmin(IntentionChildAdmin):
         ('motivation', 'Motivation'),
         ('time_spent', 'Time Spent'),
         ('document', 'Document'),
-        ('intention_date', 'Intention Date'),
+        ('contributor_date', 'Contributor Date'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

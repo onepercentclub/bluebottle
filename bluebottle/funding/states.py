@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, IntentionStateMachine
+from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
 from bluebottle.funding.models import Funding, Donation, Payment, Payout, PlainPayoutAccount
 
@@ -223,7 +223,7 @@ class FundingStateMachine(ActivityStateMachine):
 
 
 @register(Donation)
-class DonationStateMachine(IntentionStateMachine):
+class DonationStateMachine(ContributorStateMachine):
     refunded = State(
         _('refunded'),
         'refunded',
@@ -237,14 +237,14 @@ class DonationStateMachine(IntentionStateMachine):
 
     def is_successful(self):
         """donation is successful"""
-        return self.instance.status == IntentionStateMachine.succeeded
+        return self.instance.status == ContributorStateMachine.succeeded
 
     succeed = Transition(
         [
-            IntentionStateMachine.new,
-            IntentionStateMachine.failed
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed
         ],
-        IntentionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('Succeed'),
         description=_("The donation has been completed"),
         automatic=True,
@@ -252,10 +252,10 @@ class DonationStateMachine(IntentionStateMachine):
 
     fail = Transition(
         [
-            IntentionStateMachine.new,
-            IntentionStateMachine.succeeded
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded
         ],
-        IntentionStateMachine.failed,
+        ContributorStateMachine.failed,
         name=_('Fail'),
         description=_("The donation failed."),
         automatic=True,
@@ -263,8 +263,8 @@ class DonationStateMachine(IntentionStateMachine):
 
     refund = Transition(
         [
-            IntentionStateMachine.new,
-            IntentionStateMachine.succeeded,
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded,
         ],
         refunded,
         name=_('Refund'),
@@ -273,7 +273,7 @@ class DonationStateMachine(IntentionStateMachine):
     )
 
     activity_refund = Transition(
-        IntentionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         activity_refunded,
         name=_('Activity refund'),
         description=_(

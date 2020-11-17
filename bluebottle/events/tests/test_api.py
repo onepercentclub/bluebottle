@@ -667,7 +667,7 @@ class ParticipantListTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'intentions/participants',
+                'type': 'contributors/participants',
                 'attributes': {},
                 'relationships': {
                     'activity': {
@@ -698,7 +698,7 @@ class ParticipantListTestCase(BluebottleTestCase):
         )
         event_data = json.loads(response.content)
         self.assertEqual(
-            len(event_data['data']['relationships']['intentions']['data']),
+            len(event_data['data']['relationships']['contributors']['data']),
             1
         )
         self.assertEqual(
@@ -711,16 +711,16 @@ class ParticipantListTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(
-            event_data['data']['relationships']['intentions']['data'][0]['id'],
+            event_data['data']['relationships']['contributors']['data'][0]['id'],
             data['data']['id']
         )
         self.assertEqual(
-            event_data['data']['relationships']['intentions']['data'][0]['type'],
-            'intentions/participants'
+            event_data['data']['relationships']['contributors']['data'][0]['type'],
+            'contributors/participants'
         )
         self.assertTrue(event_data['data']['attributes']['is-follower'])
 
-        participant_data = get_included(response, 'intentions/participants')
+        participant_data = get_included(response, 'contributors/participants')
 
         self.assertTrue(participant_data['id'], self.participant.pk)
         self.assertTrue('meta' in participant_data)
@@ -792,13 +792,13 @@ class ParticipantListFilterCase(BluebottleTestCase):
         # Requesting an event Random user should see successful participants
         response = self.client.get(self.event_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['intentions']), 3)
+        self.assertEqual(len(response.data['contributors']), 3)
 
     def test_list_participants_by_event_owner(self):
         # Requesting an event event owner  should see successful all participants (rejected / no show etc)
         response = self.client.get(self.event_url, user=self.event.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['intentions']), 5)
+        self.assertEqual(len(response.data['contributors']), 5)
 
     def test_list_my_participation(self):
         response = self.client.get(
@@ -897,14 +897,14 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'intentions/participant-transitions',
+                'type': 'contributors/participant-transitions',
                 'attributes': {
                     'transition': 'withdraw',
                 },
                 'relationships': {
                     'resource': {
                         'data': {
-                            'type': 'intentions/participants',
+                            'type': 'contributors/participants',
                             'id': self.participant.pk
                         }
                     }
@@ -923,7 +923,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['included'][1]['type'], 'intentions/participants')
+        self.assertEqual(data['included'][1]['type'], 'contributors/participants')
         self.assertEqual(data['included'][1]['attributes']['status'], 'withdrawn')
 
         self.assertEqual(data['included'][0]['type'], 'activities/events')
@@ -951,7 +951,7 @@ class ParticipantTransitionTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
 
-        self.assertEqual(data['included'][1]['type'], 'intentions/participants')
+        self.assertEqual(data['included'][1]['type'], 'contributors/participants')
         self.assertEqual(data['included'][1]['attributes']['status'], 'new')
 
         self.assertEqual(data['included'][0]['type'], 'activities/events')

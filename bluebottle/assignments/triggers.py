@@ -1,6 +1,6 @@
 from django.utils import timezone
 
-from bluebottle.activities.triggers import ActivityTriggers, IntentionTriggers
+from bluebottle.activities.triggers import ActivityTriggers, ContributorTriggers
 
 from bluebottle.assignments.effects import SetTimeSpent, ClearTimeSpent
 from bluebottle.assignments.messages import (
@@ -294,7 +294,7 @@ def assignment_will_be_empty(effect):
 
 
 @register(Applicant)
-class ApplicantTriggers(IntentionTriggers):
+class ApplicantTriggers(ContributorTriggers):
     triggers = [
         TransitionTrigger(
             ApplicantStateMachine.initiate,

@@ -10,7 +10,7 @@ from bluebottle.funding_pledge.models import PledgePayment
 
 class DonationListFilter(DjangoFilterBackend):
     """
-    Filter that shows only successful intentions
+    Filter that shows only successful contributors
     """
     def filter_queryset(self, request, queryset, view):
         queryset = queryset.prefetch_related(

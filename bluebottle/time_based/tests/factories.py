@@ -68,7 +68,7 @@ class DurationFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Duration
 
-    intention = factory.SubFactory(PeriodApplicationFactory)
+    contributor = factory.SubFactory(PeriodApplicationFactory)
 
     value = timedelta(hours=20)
 

@@ -5,7 +5,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission,
     ActivityTypePermission,
     ActivityStatusPermission,
-    IntentionPermission
+    ContributorPermission
 )
 from bluebottle.tasks.models import Skill
 from bluebottle.assignments.models import Assignment, Applicant
@@ -57,7 +57,7 @@ class AssignmentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
         'initiative': ['initiative'],
         'location': ['location'],
         'owner': ['owner'],
-        'intentions': ['contributions']
+        'contributors': ['contributions']
     }
 
 
@@ -103,7 +103,7 @@ class ApplicantDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView
     serializer_class = ApplicantSerializer
 
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission, IntentionPermission),
+        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
     )
 
     prefetch_for_includes = {

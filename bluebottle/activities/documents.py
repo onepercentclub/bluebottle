@@ -86,8 +86,8 @@ class ActivityDocument(DocType):
         }
     )
 
-    intentions = fields.DateField()
-    intention_count = fields.IntegerField()
+    contributors = fields.DateField()
+    contributor_count = fields.IntegerField()
 
     start = fields.DateField()
     end = fields.DateField()
@@ -113,17 +113,17 @@ class ActivityDocument(DocType):
             model=cls._doc_type.model
         )
 
-    def prepare_intentions(self, instance):
+    def prepare_contributors(self, instance):
         return [
-            intention.created for intention
-            in instance.intentions.filter(status__in=('new', 'success', 'accepted'))
+            contributor.created for contributor
+            in instance.contributors.filter(status__in=('new', 'success', 'accepted'))
         ]
 
     def prepare_type(self, instance):
         return str(instance.__class__.__name__.lower())
 
-    def prepare_intention_count(self, instance):
-        return instance.intentions.filter(status__in=('new', 'success', 'accepted')).count()
+    def prepare_contributor_count(self, instance):
+        return instance.contributors.filter(status__in=('new', 'success', 'accepted')).count()
 
     def prepare_country(self, instance):
         if instance.initiative.location:

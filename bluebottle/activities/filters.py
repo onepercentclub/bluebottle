@@ -82,14 +82,14 @@ class ActivitySearchFilter(ElasticSearchFilter):
             functions=[
                 SF(
                     'field_value_factor',
-                    field='intention_count',
+                    field='contributor_count',
                     missing=0
                 ),
                 SF(
                     'gauss',
                     weight=0.1,
                     multi_value_mode='avg',
-                    intentions={
+                    contributors={
                         'scale': '5d'
                     },
                 ),
@@ -211,7 +211,7 @@ class ActivitySearchFilter(ElasticSearchFilter):
 
 class ActivityFilter(DjangoFilterBackend):
     """
-    Filter that shows only successful intentions
+    Filter that shows only successful contributors
     """
     public_statuses = [
         ActivityStateMachine.succeeded.value,

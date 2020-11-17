@@ -39,7 +39,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
     def test_create(self):
         self.assertEqual(self.event.status, EventStateMachine.draft.value)
 
-        organizer = self.event.intentions.get()
+        organizer = self.event.contributors.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.new.value)
 
@@ -47,7 +47,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.event.states.submit(save=True)
         self.assertEqual(self.event.status, EventStateMachine.open.value)
 
-        organizer = self.event.intentions.get()
+        organizer = self.event.contributors.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
 
@@ -63,7 +63,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
     def test_reject(self):
         self.event.states.reject(save=True)
         self.assertEqual(self.event.status, EventStateMachine.rejected.value)
-        organizer = self.event.intentions.get()
+        organizer = self.event.contributors.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.failed.value)
 
@@ -89,7 +89,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.event.status, EventStateMachine.needs_work.value)
         self.event.states.submit(save=True)
         self.assertEqual(self.event.status, EventStateMachine.open.value)
-        organizer = self.event.intentions.get()
+        organizer = self.event.contributors.get()
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
 
     def test_create_unapproved_initiative(self):
@@ -100,7 +100,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         event.states.submit(save=True)
         self.assertEqual(event.status, EventStateMachine.submitted.value)
 
-        organizer = event.intentions.get()
+        organizer = event.contributors.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.new.value)
 
@@ -123,7 +123,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
             event.states.submit
         )
 
-        organizer = event.intentions.get()
+        organizer = event.contributors.get()
         self.assertEqual(organizer.status, OrganizerStateMachine.new.value)
 
         event.title = 'Test title'
@@ -143,7 +143,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.event.refresh_from_db()
 
         self.assertEqual(self.event.status, EventStateMachine.open.value)
-        for participant in self.event.intentions.instance_of(Participant):
+        for participant in self.event.contributors.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.new.value)
 
     def test_full(self):
@@ -153,7 +153,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.event.refresh_from_db()
 
         self.assertEqual(self.event.status, EventStateMachine.full.value)
-        for participant in self.event.intentions.instance_of(Participant):
+        for participant in self.event.contributors.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.new.value)
 
     def test_change_capacity_full(self):
@@ -320,7 +320,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.event.status, EventStateMachine.succeeded.value)
 
         self.event.refresh_from_db()
-        for participant in self.event.intentions.instance_of(Participant):
+        for participant in self.event.contributors.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
             self.assertEqual(participant.time_spent, self.event.duration)
 
@@ -330,7 +330,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         participant = ParticipantFactory.create(activity=self.passed_event)
         self.assertEqual(self.passed_event.status, EventStateMachine.succeeded.value)
 
-        for participant in self.passed_event.intentions.instance_of(Participant):
+        for participant in self.passed_event.contributors.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
 
     def test_failed_when_passed(self):
@@ -358,7 +358,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(self.event.status, EventStateMachine.open.value)
 
-        for participant in self.event.intentions.instance_of(Participant):
+        for participant in self.event.contributors.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.new.value)
 
     def test_succeed_change_start(self):
@@ -373,7 +373,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(self.event.status, EventStateMachine.succeeded.value)
 
-        for participant in self.event.intentions.instance_of(Participant):
+        for participant in self.event.contributors.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
             self.assertEqual(participant.time_spent, self.event.duration)
 
@@ -385,20 +385,20 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.event.status, EventStateMachine.open.value)
         self.event.states.cancel(save=True)
 
-        for participant in self.event.intentions.instance_of(Participant):
+        for participant in self.event.contributors.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.failed.value)
 
         self.event.start = timezone.now() - timedelta(hours=2)
         self.event.states.restore(save=True)
 
-        for participant in self.event.intentions.instance_of(Participant):
+        for participant in self.event.contributors.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.new.value)
 
         self.event.states.submit(save=True)
 
         self.assertEqual(self.event.status, EventStateMachine.succeeded.value)
 
-        for participant in self.event.intentions.instance_of(Participant):
+        for participant in self.event.contributors.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.succeeded.value)
             self.assertEqual(participant.time_spent, self.event.duration)
 
@@ -422,7 +422,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(self.passed_event.status, EventStateMachine.open.value)
 
-        for participant in self.passed_event.intentions.instance_of(Participant):
+        for participant in self.passed_event.contributors.instance_of(Participant):
             self.assertEqual(participant.status, ParticipantStateMachine.new.value)
 
 

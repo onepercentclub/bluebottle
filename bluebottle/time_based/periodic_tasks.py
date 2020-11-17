@@ -123,7 +123,7 @@ class DurationFinishedTask(ModelPeriodicTask):
         return self.model.objects.filter(
             end__lt=timezone.now(),
             status='new',
-            intention__status='accepted'
+            contributor__status='accepted'
         )
 
     effects = [

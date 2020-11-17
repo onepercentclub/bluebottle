@@ -15,11 +15,11 @@ class Migration(migrations.Migration):
         migrations.RenameField(
             model_name='onadateapplication',
             old_name='contribution_ptr',
-            new_name='intention_ptr',
+            new_name='contributor_ptr',
         ),
         migrations.RenameField(
             model_name='periodapplication',
             old_name='contribution_ptr',
-            new_name='intention_ptr',
+            new_name='contributor_ptr',
         ),
     ]

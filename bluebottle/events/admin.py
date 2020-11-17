@@ -3,7 +3,7 @@ from django.contrib import admin
 from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.fsm.admin import StateMachineFilter
-from bluebottle.activities.admin import ActivityChildAdmin, IntentionChildAdmin, IntentionInline
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributorInline
 from bluebottle.events.models import Event, Participant
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import export_as_csv_action
@@ -20,11 +20,11 @@ class EventAdminForm(StateMachineModelForm):
         }
 
 
-class ParticipantInline(IntentionInline):
+class ParticipantInline(ContributorInline):
     model = Participant
 
-    readonly_fields = IntentionInline.readonly_fields + ('time_spent', )
-    fields = IntentionInline.fields + ('time_spent', )
+    readonly_fields = ContributorInline.readonly_fields + ('time_spent', )
+    fields = ContributorInline.fields + ('time_spent', )
 
 
 class ParticipantAdminForm(StateMachineModelForm):
@@ -34,14 +34,14 @@ class ParticipantAdminForm(StateMachineModelForm):
 
 
 @admin.register(Participant)
-class ParticipantAdmin(IntentionChildAdmin):
+class ParticipantAdmin(ContributorChildAdmin):
     model = Participant
     form = ParticipantAdminForm
     list_display = ['user', 'state_name', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
-    readonly_fields = IntentionChildAdmin.readonly_fields
-    fields = IntentionChildAdmin.fields + ['time_spent']
+    readonly_fields = ContributorChildAdmin.readonly_fields
+    fields = ContributorChildAdmin.fields + ['time_spent']
 
     date_hierarchy = 'transition_date'
 
@@ -52,7 +52,7 @@ class ParticipantAdmin(IntentionChildAdmin):
         ('user__full_name', 'Owner'),
         ('user__email', 'Email'),
         ('time_spent', 'Time Spent'),
-        ('intention_date', 'Intention Date'),
+        ('contributor_date', 'Contributor Date'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]

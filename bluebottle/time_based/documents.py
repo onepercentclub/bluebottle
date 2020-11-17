@@ -37,7 +37,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         if isinstance(related_instance, Member):
             return DateActivity.objects.filter(owner=related_instance)
         if isinstance(related_instance, OnADateApplication):
-            return DateActivity.objects.filter(intentions=related_instance)
+            return DateActivity.objects.filter(contributors=related_instance)
 
     class Meta(object):
         related_models = (Initiative, Member, OnADateApplication)
@@ -63,7 +63,7 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         if isinstance(related_instance, Member):
             return PeriodActivity.objects.filter(owner=related_instance)
         if isinstance(related_instance, PeriodApplication):
-            return PeriodActivity.objects.filter(intentions=related_instance)
+            return PeriodActivity.objects.filter(contributors=related_instance)
 
     class Meta(object):
         related_models = (Initiative, Member, PeriodApplication)

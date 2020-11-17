@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import (
-    ActivityStateMachine, IntentionStateMachine, ContributionValueStateMachine
+    ActivityStateMachine, ContributorStateMachine, ContributionValueStateMachine
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -88,7 +88,7 @@ class PeriodStateMachine(TimeBasedStateMachine):
     )
 
 
-class ApplicationStateMachine(IntentionStateMachine):
+class ApplicationStateMachine(ContributorStateMachine):
     accepted = State(
         _('accepted'),
         'accepted',
@@ -128,14 +128,14 @@ class ApplicationStateMachine(IntentionStateMachine):
 
     initiate = Transition(
         EmptyState(),
-        IntentionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('Initiate'),
         description=_("User applied to join the task."),
     )
 
     accept = Transition(
         [
-            IntentionStateMachine.new,
+            ContributorStateMachine.new,
             rejected
         ],
         accepted,
@@ -147,7 +147,7 @@ class ApplicationStateMachine(IntentionStateMachine):
 
     reject = Transition(
         [
-            IntentionStateMachine.new,
+            ContributorStateMachine.new,
             accepted
         ],
         rejected,
@@ -159,7 +159,7 @@ class ApplicationStateMachine(IntentionStateMachine):
 
     withdraw = Transition(
         [
-            IntentionStateMachine.new,
+            ContributorStateMachine.new,
             accepted
         ],
         withdrawn,
@@ -172,16 +172,16 @@ class ApplicationStateMachine(IntentionStateMachine):
 
     reapply = Transition(
         withdrawn,
-        IntentionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('Reapply'),
         description=_("User re-applies for the task after previously withdrawing."),
         automatic=False,
         conditions=[assignment_is_open],
-        permission=IntentionStateMachine.is_user,
+        permission=ContributorStateMachine.is_user,
     )
 
     mark_absent = Transition(
-        IntentionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         no_show,
         name=_('Mark absent'),
         description=_("User did not contribute to the task and is marked absent."),
@@ -190,7 +190,7 @@ class ApplicationStateMachine(IntentionStateMachine):
     )
     mark_present = Transition(
         no_show,
-        IntentionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('Mark present'),
         description=_("Application did contribute to the task, after first been marked absent."),
         automatic=False,

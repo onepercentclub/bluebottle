@@ -25,19 +25,19 @@ class TimeBasedActivityTriggerTestCase():
         self.activity = self.factory.create(initiative=self.initiative, review=False)
 
     def test_initial(self):
-        organizer = self.activity.intentions.instance_of(Organizer).get()
+        organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'new')
 
     def test_delete(self):
         self.activity.states.delete(save=True)
-        organizer = self.activity.intentions.instance_of(Organizer).get()
+        organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'failed')
 
     def test_reject(self):
         self.initiative.states.submit(save=True)
         self.activity.states.submit()
         self.activity.states.reject(save=True)
-        organizer = self.activity.intentions.instance_of(Organizer).get()
+        organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'failed')
 
     def test_submit_initiative(self):
@@ -70,7 +70,7 @@ class TimeBasedActivityTriggerTestCase():
 
         self.assertEqual(self.activity.status, 'open')
 
-        organizer = self.activity.intentions.instance_of(Organizer).get()
+        organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'succeeded')
 
     def test_change_capacity(self):
@@ -139,7 +139,7 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
 
         self.assertEqual(self.activity.status, 'open')
 
-    def test_change_start_with_intentions(self):
+    def test_change_start_with_contributors(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
 
@@ -170,7 +170,7 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
         )
 
     def test_change_start_back_again(self):
-        self.test_change_start_with_intentions()
+        self.test_change_start_with_contributors()
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
 
@@ -239,7 +239,7 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
 
         self.assertEqual(self.activity.status, 'open')
 
-    def test_change_deadline_with_intentions(self):
+    def test_change_deadline_with_contributors(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
 

@@ -2,7 +2,7 @@ from builtins import object
 from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
-from bluebottle.activities.models import Intention, Activity
+from bluebottle.activities.models import Contributor, Activity
 from bluebottle.assignments.serializers import (
     AssignmentListSerializer, AssignmentSerializer,
     ApplicantListSerializer, TinyAssignmentSerializer
@@ -153,7 +153,7 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
         )
 
 
-class IntentionSerializer(PolymorphicModelSerializer):
+class ContributorSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         ParticipantListSerializer,
         ApplicantListSerializer,
@@ -175,13 +175,13 @@ class IntentionSerializer(PolymorphicModelSerializer):
         ]
 
     class Meta(object):
-        model = Intention
+        model = Contributor
         meta_fields = (
             'created', 'updated',
         )
 
 
-class IntentionListSerializer(PolymorphicModelSerializer):
+class ContributorListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         ParticipantListSerializer,
         ApplicantListSerializer,
@@ -203,7 +203,7 @@ class IntentionListSerializer(PolymorphicModelSerializer):
         ]
 
     class Meta(object):
-        model = Intention
+        model = Contributor
         meta_fields = (
             'created', 'updated',
         )

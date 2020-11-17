@@ -21,22 +21,22 @@ class Migration(migrations.Migration):
             name='contribution_ptr',
             field=models.OneToOneField(
                 auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True,
-                primary_key=True, serialize=False, to='activities.Intention')
+                primary_key=True, serialize=False, to='activities.Contributor')
         ),
         migrations.RenameField(
             model_name='contributionvalue',
             old_name='contribution',
-            new_name='intention',
+            new_name='contributor',
         ),
         migrations.RenameField(
-            model_name='intention',
+            model_name='contributor',
             old_name='contribution_date',
-            new_name='intention_date',
+            new_name='contributor_date',
         ),
         migrations.RenameField(
             model_name='organizer',
             old_name='contribution_ptr',
-            new_name='intention_ptr',
+            new_name='contributor_ptr',
         ),
         migrations.AlterField(
             model_name='activity',
@@ -46,20 +46,20 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='activity',
             name='transition_date',
-            field=models.DateTimeField(blank=True, help_text='Date the intention took place.', null=True, verbose_name='intention date'),
+            field=models.DateTimeField(blank=True, help_text='Date the contributor took place.', null=True, verbose_name='contributor date'),
         ),
         migrations.AlterField(
-            model_name='intention',
+            model_name='contributor',
             name='activity',
-            field=models.ForeignKey(on_delete=bluebottle.activities.models.NON_POLYMORPHIC_CASCADE, related_name='intentions', to='activities.Activity'),
+            field=models.ForeignKey(on_delete=bluebottle.activities.models.NON_POLYMORPHIC_CASCADE, related_name='contributors', to='activities.Activity'),
         ),
         migrations.AlterField(
-            model_name='intention',
+            model_name='contributor',
             name='polymorphic_ctype',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_activities.intention_set+', to='contenttypes.ContentType'),
+            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_activities.contributor_set+', to='contenttypes.ContentType'),
         ),
         migrations.AlterField(
-            model_name='intention',
+            model_name='contributor',
             name='status',
             field=models.CharField(max_length=40),
         ),

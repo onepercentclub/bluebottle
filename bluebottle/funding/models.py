@@ -26,7 +26,7 @@ from moneyed import Money
 from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
-from bluebottle.activities.models import Activity, Intention
+from bluebottle.activities.models import Activity, Contributor
 from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
 from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.utils.exchange_rates import convert
@@ -183,17 +183,17 @@ class Funding(Activity):
         cache.delete(cache_key)
 
     @property
-    def intention_date(self):
+    def contributor_date(self):
         return self.deadline
 
     @property
     def donations(self):
-        return self.intentions.instance_of(Donation)
+        return self.contributors.instance_of(Donation)
 
     @property
     def amount_donated(self):
         """
-        The sum of all intentions (donations) converted to the targets currency
+        The sum of all contributors (donations) converted to the targets currency
         """
         from .states import DonationStateMachine
         from bluebottle.funding.utils import calculate_total
@@ -216,7 +216,7 @@ class Funding(Activity):
     @property
     def genuine_amount_donated(self):
         """
-        The sum of all intentions (donations) without pledges converted to the targets currency
+        The sum of all contributors (donations) without pledges converted to the targets currency
         """
         from .states import DonationStateMachine
         from bluebottle.funding.utils import calculate_total
@@ -240,7 +240,7 @@ class Funding(Activity):
     @cached_property
     def amount_pledged(self):
         """
-        The sum of all intentions (donations) converted to the targets currency
+        The sum of all contributors (donations) converted to the targets currency
         """
         from .states import DonationStateMachine
         from bluebottle.funding.utils import calculate_total
@@ -477,7 +477,7 @@ class Payout(TriggerMixin, models.Model):
 
 
 @python_2_unicode_compatible
-class Donation(Intention):
+class Donation(Contributor):
     amount = MoneyField()
     payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
@@ -516,7 +516,7 @@ class Donation(Intention):
         return u'{}'.format(self.amount)
 
     class JSONAPIMeta(object):
-        resource_name = 'intentions/donations'
+        resource_name = 'contributors/donations'
 
 
 @python_2_unicode_compatible

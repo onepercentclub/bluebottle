@@ -21,7 +21,7 @@ from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-from bluebottle.activities.admin import ActivityChildAdmin, IntentionChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineAdminMixin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
@@ -230,15 +230,15 @@ class DonationAdminForm(StateMachineModelForm):
 
 
 @admin.register(Donation)
-class DonationAdmin(IntentionChildAdmin, PaymentLinkMixin):
+class DonationAdmin(ContributorChildAdmin, PaymentLinkMixin):
     model = Donation
     form = DonationAdminForm
 
     raw_id_fields = ['activity', 'payout', 'user']
-    readonly_fields = IntentionChildAdmin.readonly_fields + [
+    readonly_fields = ContributorChildAdmin.readonly_fields + [
         'payment_link', 'payment_link', 'payout_amount', 'sync_payment_link'
     ]
-    list_display = ['intention_date', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
+    list_display = ['contributor_date', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
     list_filter = [
         DonationAdminStatusFilter,
         DonationAdminCurrencyFilter,

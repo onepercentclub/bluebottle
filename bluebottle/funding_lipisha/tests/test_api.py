@@ -66,7 +66,7 @@ class LipishaPaymentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'intentions/donations',
+                            'type': 'contributors/donations',
                             'id': self.donation.pk,
                         }
                     }

@@ -48,7 +48,7 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'intentions/donations',
+                            'type': 'contributors/donations',
                             'id': self.donation.pk,
                         }
                     }
@@ -212,7 +212,7 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'intentions/donations',
+                            'type': 'contributors/donations',
                             'id': self.donation.pk,
                         }
                     }

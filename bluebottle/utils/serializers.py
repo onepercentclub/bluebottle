@@ -178,7 +178,7 @@ class FilteredRelatedField(SerializerMethodResourceRelatedField):
     """
     Filter a related queryset based on `filter_backend`.
     Example:
-    `intentions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
+    `contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
     Note: `many=True` is required
     """
     def __init__(self, **kwargs):
@@ -201,7 +201,7 @@ class FilteredPolymorphicResourceRelatedField(SerializerMethodResourceRelatedFie
     """
     Filter a related queryset based on `filter_backend`.
     Example:
-    `intentions = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
+    `contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)`
     Note: `many=True` is required
     """
 

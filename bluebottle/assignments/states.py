@@ -2,7 +2,7 @@ from bluebottle.assignments.models import Assignment, Applicant
 
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, IntentionStateMachine
+from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
 from bluebottle.fsm.state import State, Transition, EmptyState, register
 
 
@@ -89,14 +89,14 @@ class AssignmentStateMachine(ActivityStateMachine):
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         description=_(
-            'The task ends and the intentions are counted. Triggered when the task date passes.'
+            'The task ends and the contributors are counted. Triggered when the task date passes.'
         ),
         automatic=True,
     )
 
 
 @register(Applicant)
-class ApplicantStateMachine(IntentionStateMachine):
+class ApplicantStateMachine(ContributorStateMachine):
 
     accepted = State(
         _('accepted'),
@@ -146,14 +146,14 @@ class ApplicantStateMachine(IntentionStateMachine):
 
     initiate = Transition(
         EmptyState(),
-        IntentionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('Initiate'),
         description=_("User applied to join the task."),
     )
 
     accept = Transition(
         [
-            IntentionStateMachine.new,
+            ContributorStateMachine.new,
             rejected
         ],
         accepted,
@@ -164,7 +164,7 @@ class ApplicantStateMachine(IntentionStateMachine):
     )
 
     reaccept = Transition(
-        IntentionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         accepted,
         name=_('Accept'),
         description=_("Applicant was accepted."),
@@ -173,7 +173,7 @@ class ApplicantStateMachine(IntentionStateMachine):
 
     reject = Transition(
         [
-            IntentionStateMachine.new,
+            ContributorStateMachine.new,
             accepted
         ],
         rejected,
@@ -185,7 +185,7 @@ class ApplicantStateMachine(IntentionStateMachine):
 
     withdraw = Transition(
         [
-            IntentionStateMachine.new,
+            ContributorStateMachine.new,
             accepted
         ],
         withdrawn,
@@ -199,20 +199,20 @@ class ApplicantStateMachine(IntentionStateMachine):
     reapply = Transition(
         [
             withdrawn,
-            IntentionStateMachine.failed
+            ContributorStateMachine.failed
         ],
-        IntentionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('Reapply'),
         description=_("Applicant re-applies for the task after previously withdrawing."),
         automatic=False,
         conditions=[assignment_is_open],
-        permission=IntentionStateMachine.is_user,
+        permission=ContributorStateMachine.is_user,
     )
 
     activate = Transition(
         [
             accepted,
-            # IntentionStateMachine.new
+            # ContributorStateMachine.new
         ],
         active,
         name=_('Activate'),
@@ -224,16 +224,16 @@ class ApplicantStateMachine(IntentionStateMachine):
         [
             accepted,
             active,
-            IntentionStateMachine.new
+            ContributorStateMachine.new
         ],
-        IntentionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('Succeed'),
         description=_("Applicant successfully completed the task."),
         automatic=True,
     )
 
     mark_absent = Transition(
-        IntentionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         no_show,
         name=_('Mark absent'),
         description=_("Applicant did not contribute to the task and is marked absent."),
@@ -242,7 +242,7 @@ class ApplicantStateMachine(IntentionStateMachine):
     )
     mark_present = Transition(
         no_show,
-        IntentionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('Mark present'),
         description=_("Applicant did contribute to the task, after first been marked absent."),
         automatic=False,
@@ -251,11 +251,11 @@ class ApplicantStateMachine(IntentionStateMachine):
 
     reset = Transition(
         [
-            IntentionStateMachine.succeeded,
+            ContributorStateMachine.succeeded,
             accepted,
-            IntentionStateMachine.failed,
+            ContributorStateMachine.failed,
         ],
-        IntentionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('Reset'),
         description=_("The applicant is reset to new after being successful or failed."),
     )

@@ -5,7 +5,7 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from durationwidget.widgets import TimeDurationWidget
 
-from bluebottle.activities.admin import ActivityChildAdmin, IntentionChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
@@ -16,7 +16,7 @@ from bluebottle.utils.admin import export_as_csv_action
 
 class BaseApplicationAdminInline(admin.TabularInline):
     model = Application
-    readonly_fields = ('intention_date', 'motivation', 'document', 'edit', 'created', 'transition_date', 'status')
+    readonly_fields = ('contributor_date', 'motivation', 'document', 'edit', 'created', 'transition_date', 'status')
     raw_id_fields = ('user', 'document')
     extra = 0
 
@@ -34,11 +34,17 @@ class BaseApplicationAdminInline(admin.TabularInline):
 
 class OnADateApplicationAdminInline(BaseApplicationAdminInline):
     model = OnADateApplication
+    verbose_name = _("Participant")
+    verbose_name_plural = _("Participants")
+    fields = ('edit', 'user', 'status', 'created')
 
 
 class PeriodApplicationAdminInline(BaseApplicationAdminInline):
     model = PeriodApplication
     readonly_fields = BaseApplicationAdminInline.readonly_fields + ('current_period', )
+    verbose_name = _("Participant")
+    verbose_name_plural = _("Participants")
+    fields = ('edit', 'user', 'status', 'created')
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
@@ -137,7 +143,18 @@ class PeriodActivityAdmin(TimeBasedAdmin):
 class DurationInlineAdmin(admin.TabularInline):
     model = Duration
     extra = 0
-    readonly_fields = ('edit', 'status', 'created')
+    readonly_fields = ('edit', 'status')
+    fields = readonly_fields + ('start', 'value')
+
+    formfield_overrides = {
+        models.DurationField: {
+            'widget': TimeDurationWidget(
+                show_days=False,
+                show_hours=True,
+                show_minutes=True,
+                show_seconds=False)
+        }
+    }
 
     def edit(self, obj):
         if not obj.id:
@@ -152,15 +169,15 @@ class DurationInlineAdmin(admin.TabularInline):
 
 
 @admin.register(PeriodApplication)
-class PeriodApplicationAdmin(IntentionChildAdmin):
-    inlines = IntentionChildAdmin.inlines + [DurationInlineAdmin]
+class PeriodApplicationAdmin(ContributorChildAdmin):
+    inlines = ContributorChildAdmin.inlines + [DurationInlineAdmin]
 
 
 @admin.register(Duration)
 class DurationAdmin(StateMachineAdmin):
-    raw_id_fields = ('intention',)
+    raw_id_fields = ('contributor',)
     readonly_fields = ('status', 'created', )
-    basic_fields = ('intention', 'created', 'start', 'end', 'value', 'status', 'states')
+    basic_fields = ('contributor', 'created', 'start', 'end', 'value', 'status', 'states')
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
@@ -176,5 +193,5 @@ class DurationAdmin(StateMachineAdmin):
 
 
 @admin.register(OnADateApplication)
-class DateApplicationAdmin(IntentionChildAdmin):
-    fields = IntentionChildAdmin.fields
+class DateApplicationAdmin(ContributorChildAdmin):
+    fields = ContributorChildAdmin.fields

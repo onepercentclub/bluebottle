@@ -722,7 +722,7 @@ EXPORTDB_EXPORT_CONF = {
         }),
         ('assignments.Applicant', {
             'fields': (
-                ('id', 'Intention ID'),
+                ('id', 'Contributor ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -740,7 +740,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.ApplicantResource',
-            'title': _('Task intentions'),
+            'title': _('Task contributors'),
         }),
         ('events.Event', {
             'fields': (
@@ -769,7 +769,7 @@ EXPORTDB_EXPORT_CONF = {
         }),
         ('events.Participant', {
             'fields': (
-                ('id', 'Intention ID'),
+                ('id', 'Contributor ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -786,7 +786,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.ParticipantResource',
-            'title': _('Event intentions'),
+            'title': _('Event contributors'),
         }),
         ('funding.Funding', {
             'fields': (
@@ -813,7 +813,7 @@ EXPORTDB_EXPORT_CONF = {
         }),
         ('funding.Donation', {
             'fields': (
-                ('id', 'Intention ID'),
+                ('id', 'Contributor ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -833,7 +833,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.DonationResource',
-            'title': _('Funding intentions'),
+            'title': _('Funding contributors'),
         }),
     ])
 }

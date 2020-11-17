@@ -20,13 +20,13 @@ class Migration(migrations.Migration):
             name='contribution_ptr',
             field=models.OneToOneField(
                 auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True,
-                primary_key=True, serialize=False, to='activities.Intention')
+                primary_key=True, serialize=False, to='activities.Contributor')
         ),
         migrations.AlterField(
             model_name='onadateapplication',
             name='contribution_ptr',
             field=models.OneToOneField(
                 auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True,
-                primary_key=True, serialize=False, to='activities.Intention')
+                primary_key=True, serialize=False, to='activities.Contributor')
         )
     ]

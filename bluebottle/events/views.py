@@ -69,7 +69,7 @@ class EventDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
         'initiative': ['initiative'],
         'location': ['location'],
         'owner': ['owner'],
-        'intentions': ['intentions'],
+        'contributors': ['contributors'],
     }
 
 

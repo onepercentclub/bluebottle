@@ -231,7 +231,7 @@ class TimeBasedDetailAPIViewTestCase():
             True
         )
 
-    def test_get_intentions(self):
+    def test_get_contributors(self):
         self.application_factory.create_batch(5, activity=self.activity)
         response = self.client.get(self.url, user=self.activity.owner)
 
@@ -244,13 +244,13 @@ class TimeBasedDetailAPIViewTestCase():
         ]
 
         self.assertEqual(
-            len(data['relationships']['intentions']['data']),
+            len(data['relationships']['contributors']['data']),
             5
         )
 
-        for intention in data['relationships']['intentions']['data']:
+        for contributor in data['relationships']['contributors']['data']:
             self.assertTrue(
-                intention in included_resources
+                contributor in included_resources
             )
 
     def test_get_non_anonymous(self):
@@ -599,7 +599,7 @@ class DateApplicationListAPIViewTestCase(ApplicationListViewTestCase, Bluebottle
     application_factory = OnADateApplicationFactory
 
     url_name = 'on-a-date-application-list'
-    application_type = 'intentions/time-based/date-applications'
+    application_type = 'contributors/time-based/date-applications'
 
 
 class PeriodApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
@@ -608,7 +608,7 @@ class PeriodApplicationListAPIViewTestCase(ApplicationListViewTestCase, Bluebott
     application_factory = PeriodApplicationFactory
 
     url_name = 'period-application-list'
-    application_type = 'intentions/time-based/period-applications'
+    application_type = 'contributors/time-based/period-applications'
 
 
 class ApplicationDetailViewTestCase():
@@ -763,7 +763,7 @@ class DateApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, Bluebo
     factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
     url_name = 'on-a-date-application-detail'
-    application_type = 'intentions/time-based/date-applications'
+    application_type = 'contributors/time-based/date-applications'
 
 
 class PeriodApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
@@ -771,7 +771,7 @@ class PeriodApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, Blue
     factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
     url_name = 'period-application-detail'
-    application_type = 'intentions/time-based/period-applications'
+    application_type = 'contributors/time-based/period-applications'
 
 
 class ApplicationTransitionAPIViewTestCase():
@@ -863,14 +863,14 @@ class ApplicationTransitionAPIViewTestCase():
 class OnADateApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'date'
     url_name = 'on-a-date-application-transition-list'
-    application_type = 'intentions/time-based/date-application'
+    application_type = 'contributors/time-based/date-application'
     factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
 
 
 class PeriodApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'period'
-    application_type = 'intentions/time-based/period-application'
+    application_type = 'contributors/time-based/period-application'
     url_name = 'period-application-transition-list'
 
     factory = PeriodActivityFactory

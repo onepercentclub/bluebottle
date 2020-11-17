@@ -49,7 +49,7 @@ class ActivityStateMachine(ModelStateMachine):
     open = State(
         _('open'),
         'open',
-        _('The activity is accepting new intentions.')
+        _('The activity is accepting new contributors.')
     )
     succeeded = State(
         _('succeeded'),
@@ -185,7 +185,7 @@ class ActivityStateMachine(ModelStateMachine):
         cancelled,
         name=_('Expire'),
         description=_(
-            "The activity didn't have any intentions before the deadline to apply and is cancelled."
+            "The activity didn't have any contributors before the deadline to apply and is cancelled."
         ),
         automatic=True,
     )
@@ -211,7 +211,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
 
-class IntentionStateMachine(ModelStateMachine):
+class ContributorStateMachine(ModelStateMachine):
     new = State(
         _('new'),
         'new',
@@ -294,28 +294,28 @@ class ContributionValueStateMachine(ModelStateMachine):
 
 
 @register(Organizer)
-class OrganizerStateMachine(IntentionStateMachine):
+class OrganizerStateMachine(ContributorStateMachine):
     succeed = Transition(
         [
-            IntentionStateMachine.new,
-            IntentionStateMachine.failed
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed
         ],
-        IntentionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('succeed'),
         description=_('The organizer was successful in setting up the activity.')
     )
     fail = Transition(
         AllStates(),
-        IntentionStateMachine.failed,
+        ContributorStateMachine.failed,
         name=_('fail'),
         description=_('The organizer failed to set up the activity.')
     )
     reset = Transition(
         [
-            IntentionStateMachine.succeeded,
-            IntentionStateMachine.failed
+            ContributorStateMachine.succeeded,
+            ContributorStateMachine.failed
         ],
-        IntentionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('reset'),
         description=_('The organizer is still busy setting up the activity.')
     )

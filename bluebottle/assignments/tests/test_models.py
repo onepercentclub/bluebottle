@@ -55,7 +55,7 @@ class AssignmentTestCase(BluebottleTestCase):
         messages = dict((message.to[0], message.body)
                         for message in mail.outbox)
 
-        for participant in assignment.intentions.instance_of(Applicant).all():
+        for participant in assignment.contributors.instance_of(Applicant).all():
 
             if participant.status in ('new', 'accepted'):
                 self.assertTrue(participant.user.email in messages)
@@ -86,7 +86,7 @@ class AssignmentTestCase(BluebottleTestCase):
         messages = dict((message.to[0], message.body)
                         for message in mail.outbox)
 
-        for participant in assignment.intentions.instance_of(Applicant).all():
+        for participant in assignment.contributors.instance_of(Applicant).all():
             self.assertFalse(participant.user.email in messages)
 
     def test_end_date_type_changed(self):

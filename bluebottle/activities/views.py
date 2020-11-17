@@ -3,14 +3,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
-from bluebottle.activities.models import Activity, Intention
+from bluebottle.activities.models import Activity, Contributor
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivitySerializer,
     ActivityTransitionSerializer,
     RelatedActivityImageSerializer,
     ActivityListSerializer,
-    IntentionListSerializer
+    ContributorListSerializer
 )
 from bluebottle.assignments.models import Applicant
 from bluebottle.events.models import Participant
@@ -74,15 +74,15 @@ class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyA
         'initiative': ['initiative'],
         'location': ['location'],
         'owner': ['owner'],
-        'intentions': ['intentions']
+        'contributors': ['contributors']
     }
 
 
-class IntentionList(JsonApiViewMixin, ListAPIView):
-    model = Intention
+class ContributorList(JsonApiViewMixin, ListAPIView):
+    model = Contributor
 
     def get_queryset(self):
-        return Intention.objects.prefetch_related(
+        return Contributor.objects.prefetch_related(
             'user', 'activity'
         ).instance_of(
             Donation,
@@ -98,7 +98,7 @@ class IntentionList(JsonApiViewMixin, ListAPIView):
             donation__status__in=['new']
         ).order_by('-created')
 
-    serializer_class = IntentionListSerializer
+    serializer_class = ContributorListSerializer
 
     pagination_class = None
 

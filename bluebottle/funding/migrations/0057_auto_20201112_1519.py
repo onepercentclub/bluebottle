@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         migrations.RenameField(
             model_name='donation',
             old_name='contribution_ptr',
-            new_name='intention_ptr',
+            new_name='contributor_ptr',
         ),
         migrations.AlterField(
             model_name='budgetline',

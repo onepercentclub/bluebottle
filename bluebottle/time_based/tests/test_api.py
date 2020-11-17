@@ -304,6 +304,31 @@ class TimeBasedDetailAPIViewTestCase():
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_delete_owner(self):
+        response = self.client.delete(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_unauthenticated(self):
+        response = self.client.delete(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete_wrong_user(self):
+        response = self.client.delete(
+            self.url, user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_submitted(self):
+        self.activity.initiative.states.submit(save=True)
+        response = self.client.delete(
+            self.url, user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_update_cancelled(self):
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)

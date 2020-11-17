@@ -7,7 +7,7 @@ import icalendar
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    ContributionPermission
+    ContributionPermission, DeleteActivityPermission
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -30,7 +30,7 @@ from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateAPIView, ListCreateAPIView,
+    RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView,
     ListAPIView, JsonApiViewMixin,
     PrivateFileView
 )
@@ -56,10 +56,11 @@ class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
-class TimeBasedActivityDetailView(JsonApiViewMixin, RetrieveUpdateAPIView):
+class TimeBasedActivityDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
+        DeleteActivityPermission
     )
 
 

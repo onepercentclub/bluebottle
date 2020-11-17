@@ -875,16 +875,16 @@ class ContributorListAPITestCase(BluebottleTestCase):
         for contributor in data['data']:
             self.assertTrue(
                 contributor['type'] in (
-                    'contributors/time-based/date-applications',
-                    'contributors/time-based/period-applications',
+                    'contributors/time-based/date-participants',
+                    'contributors/time-based/period-participants',
                     'contributors/donations',
                 )
             )
             self.assertTrue(
                 contributor['relationships']['activity']['data']['type'] in (
                     'activities/fundings',
-                    'activities/time-based/date',
-                    'activities/time-based/period'
+                    'activities/time-based/dates',
+                    'activities/time-based/periods'
                 )
             )
 

@@ -216,12 +216,12 @@ class PeriodActivityListSerializer(TimeBasedActivityListSerializer):
 
 class OnADateApplicationDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'period-application-document'
-    relationship = 'onadateapplication_set'
+    relationship = 'dateparticipant_set'
 
 
 class PeriodApplicationDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'on-a-date-application-document'
-    relationship = 'periodapplication_set'
+    relationship = 'periodparticipant_set'
 
 
 class ApplicationListSerializer(BaseContributorSerializer):
@@ -231,7 +231,7 @@ class ApplicationListSerializer(BaseContributorSerializer):
     )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        resource_name = 'contributors/time-based/applications'
+        resource_name = 'contributors/time-based/participants'
         included_resources = [
             'user',
             'activity',
@@ -248,7 +248,7 @@ class OnADateApplicationListSerializer(ApplicationListSerializer):
         model = DateParticipant
 
     class JSONAPIMeta(ApplicationListSerializer.JSONAPIMeta):
-        resource_name = 'contributors/time-based/date-applications'
+        resource_name = 'contributors/time-based/date-participants'
 
 
 class PeriodApplicationListSerializer(ApplicationListSerializer):
@@ -256,7 +256,7 @@ class PeriodApplicationListSerializer(ApplicationListSerializer):
         model = PeriodParticipant
 
     class JSONAPIMeta(ApplicationListSerializer.JSONAPIMeta):
-        resource_name = 'contributors/time-based/period-applications'
+        resource_name = 'contributors/time-based/period-participants'
 
 
 class ApplicationSerializer(BaseContributorSerializer):
@@ -320,7 +320,7 @@ class OnADateApplicationSerializer(ApplicationSerializer):
         ]
 
     class JSONAPIMeta(ApplicationSerializer.JSONAPIMeta):
-        resource_name = 'contributors/time-based/date-applications'
+        resource_name = 'contributors/time-based/date-participants'
 
     included_serializers = dict(
         ApplicationSerializer.included_serializers,
@@ -340,7 +340,7 @@ class PeriodApplicationSerializer(ApplicationSerializer):
         ]
 
     class JSONAPIMeta(ApplicationSerializer.JSONAPIMeta):
-        resource_name = 'contributors/time-based/period-applications'
+        resource_name = 'contributors/time-based/period-participants'
 
     included_serializers = dict(
         ApplicationSerializer.included_serializers,
@@ -353,7 +353,7 @@ class ApplicationTransitionSerializer(TransitionSerializer):
     field = 'states'
 
     class JSONAPIMeta(object):
-        resource_name = 'contributors/time-based/application-transitions'
+        resource_name = 'contributors/time-based/participant-transitions'
         included_resources = [
             'resource',
             'resource.activity',
@@ -368,7 +368,7 @@ class OnADateApplicationTransitionSerializer(ApplicationTransitionSerializer):
     }
 
     class JSONAPIMeta(ApplicationTransitionSerializer.JSONAPIMeta):
-        resource_name = 'contributors/time-based/date-application-transitions'
+        resource_name = 'contributors/time-based/date-participant-transitions'
 
 
 class PeriodApplicationTransitionSerializer(ApplicationTransitionSerializer):
@@ -379,4 +379,4 @@ class PeriodApplicationTransitionSerializer(ApplicationTransitionSerializer):
     }
 
     class JSONAPIMeta(ApplicationTransitionSerializer.JSONAPIMeta):
-        resource_name = 'contributors/time-based/period-application-transitions'
+        resource_name = 'contributors/time-based/period-participant-transitions'

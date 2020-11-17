@@ -225,19 +225,19 @@ class DateParticipant(Participant):
         verbose_name = _("Participant on a date")
         verbose_name_plural = _("Participants on a date")
         permissions = (
-            ('api_read_onadateapplication', 'Can view application through the API'),
-            ('api_add_onadateapplication', 'Can add application through the API'),
-            ('api_change_onadateapplication', 'Can change application through the API'),
-            ('api_delete_onadateapplication', 'Can delete application through the API'),
+            ('api_read_dateparticipant', 'Can view application through the API'),
+            ('api_add_dateparticipant', 'Can add application through the API'),
+            ('api_change_dateparticipant', 'Can change application through the API'),
+            ('api_delete_dateparticipant', 'Can delete application through the API'),
 
-            ('api_read_own_onadateapplication', 'Can view own application through the API'),
-            ('api_add_own_onadateapplication', 'Can add own application through the API'),
-            ('api_change_own_onadateapplication', 'Can change own application through the API'),
-            ('api_delete_own_onadateapplication', 'Can delete own application through the API'),
+            ('api_read_own_dateparticipant', 'Can view own application through the API'),
+            ('api_add_own_dateparticipant', 'Can add own application through the API'),
+            ('api_change_own_dateparticipant', 'Can change own application through the API'),
+            ('api_delete_own_dateparticipant', 'Can delete own application through the API'),
         )
 
     class JSONAPIMeta:
-        resource_name = 'contributors/time-based/date-applications'
+        resource_name = 'contributors/time-based/date-participants'
 
     def __str__(self):
         return str(_("Participant"))
@@ -253,15 +253,15 @@ class PeriodParticipant(Participant, Contributor):
         verbose_name = _("Participant during a period")
         verbose_name_plural = _("Participants during a period")
         permissions = (
-            ('api_read_periodapplication', 'Can view application through the API'),
-            ('api_add_periodapplication', 'Can add application through the API'),
-            ('api_change_periodapplication', 'Can change application through the API'),
-            ('api_delete_periodapplication', 'Can delete application through the API'),
+            ('api_read_periodparticipant', 'Can view period participant through the API'),
+            ('api_add_periodparticipant', 'Can add period participant through the API'),
+            ('api_change_periodparticipant', 'Can change period participant through the API'),
+            ('api_delete_periodparticipant', 'Can delete period participant through the API'),
 
-            ('api_read_own_periodapplication', 'Can view own application through the API'),
-            ('api_add_own_periodapplication', 'Can add own application through the API'),
-            ('api_change_own_periodapplication', 'Can change own application through the API'),
-            ('api_delete_own_periodapplication', 'Can delete own application through the API'),
+            ('api_read_own_periodparticipant', 'Can view own period participant through the API'),
+            ('api_add_own_periodparticipant', 'Can add own participant through the API'),
+            ('api_change_own_periodparticipant', 'Can change own period participant through the API'),
+            ('api_delete_own_periodparticipant', 'Can delete own period participant through the API'),
         )
 
     @property
@@ -272,7 +272,7 @@ class PeriodParticipant(Participant, Contributor):
         return _("Participant {}").format(self.user)
 
     class JSONAPIMeta:
-        resource_name = 'contributors/time-based/period-applications'
+        resource_name = 'contributors/time-based/period-participants'
 
 
 class Duration(ContributionValue):

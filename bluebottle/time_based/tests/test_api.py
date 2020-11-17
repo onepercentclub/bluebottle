@@ -525,7 +525,6 @@ class ApplicationListViewTestCase():
 
     def test_create(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = response.json()['data']
@@ -599,7 +598,7 @@ class DateApplicationListAPIViewTestCase(ApplicationListViewTestCase, Bluebottle
     application_factory = OnADateApplicationFactory
 
     url_name = 'on-a-date-application-list'
-    application_type = 'contributors/time-based/date-applications'
+    application_type = 'contributors/time-based/date-participants'
 
 
 class PeriodApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
@@ -608,7 +607,7 @@ class PeriodApplicationListAPIViewTestCase(ApplicationListViewTestCase, Bluebott
     application_factory = PeriodApplicationFactory
 
     url_name = 'period-application-list'
-    application_type = 'contributors/time-based/period-applications'
+    application_type = 'contributors/time-based/period-participants'
 
 
 class ApplicationDetailViewTestCase():
@@ -763,7 +762,7 @@ class DateApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, Bluebo
     factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
     url_name = 'on-a-date-application-detail'
-    application_type = 'contributors/time-based/date-applications'
+    application_type = 'contributors/time-based/date-participants'
 
 
 class PeriodApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
@@ -771,7 +770,7 @@ class PeriodApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, Blue
     factory = PeriodActivityFactory
     application_factory = PeriodApplicationFactory
     url_name = 'period-application-detail'
-    application_type = 'contributors/time-based/period-applications'
+    application_type = 'contributors/time-based/period-participants'
 
 
 class ApplicationTransitionAPIViewTestCase():
@@ -863,14 +862,14 @@ class ApplicationTransitionAPIViewTestCase():
 class OnADateApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'date'
     url_name = 'on-a-date-application-transition-list'
-    application_type = 'contributors/time-based/date-application'
+    application_type = 'contributors/time-based/date-participant'
     factory = DateActivityFactory
     application_factory = OnADateApplicationFactory
 
 
 class PeriodApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'period'
-    application_type = 'contributors/time-based/period-application'
+    application_type = 'contributors/time-based/period-participant'
     url_name = 'period-application-transition-list'
 
     factory = PeriodActivityFactory

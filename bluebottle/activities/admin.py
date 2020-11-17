@@ -13,7 +13,7 @@ from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
 from bluebottle.activities.models import Activity, Contributor, Organizer
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.time_based.models import DateActivity, PeriodActivity, OnADateApplication, PeriodApplication
+from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
@@ -91,8 +91,8 @@ class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         Donation,
         Applicant,
         Organizer,
-        OnADateApplication,
-        PeriodApplication
+        DateParticipant,
+        PeriodParticipant
     )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)

@@ -12,15 +12,15 @@ class CreateOnADateDurationEffect(Effect):
 
     def post_save(self, **kwargs):
         activity = self.instance.activity
-        end = activity.start + activity.duration
-
-        duration = Duration(
-            contributor=self.instance,
-            value=activity.duration,
-            start=activity.start,
-            end=end
-        )
-        duration.save()
+        if activity.start and activity.duration:
+            end = activity.start + activity.duration
+            duration = Duration(
+                contributor=self.instance,
+                value=activity.duration,
+                start=activity.start,
+                end=end
+            )
+            duration.save()
 
 
 class CreatePeriodDurationEffect(Effect):

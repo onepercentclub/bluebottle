@@ -10,7 +10,7 @@ from bluebottle.activities.permissions import (
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    OnADateApplication, PeriodApplication
+    DateParticipant, PeriodParticipant
 )
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
@@ -117,12 +117,12 @@ class ApplicationList(JsonApiViewMixin, ListCreateAPIView):
 
 
 class OnADateApplicationList(ApplicationList):
-    queryset = OnADateApplication.objects.all()
+    queryset = DateParticipant.objects.all()
     serializer_class = OnADateApplicationSerializer
 
 
 class PeriodApplicationList(ApplicationList):
-    queryset = PeriodApplication.objects.all()
+    queryset = PeriodParticipant.objects.all()
     serializer_class = PeriodApplicationSerializer
 
 
@@ -139,12 +139,12 @@ class ApplicationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
 
 
 class OnADateApplicationDetail(ApplicationDetail):
-    queryset = OnADateApplication.objects.all()
+    queryset = DateParticipant.objects.all()
     serializer_class = OnADateApplicationSerializer
 
 
 class PeriodApplicationDetail(ApplicationDetail):
-    queryset = PeriodApplication.objects.all()
+    queryset = PeriodParticipant.objects.all()
     serializer_class = PeriodApplicationSerializer
 
 
@@ -156,27 +156,27 @@ class ApplicationTransitionList(TransitionList):
 
 class OnADateApplicationTransitionList(ApplicationTransitionList):
     serializer_class = OnADateApplicationTransitionSerializer
-    queryset = OnADateApplication.objects.all()
+    queryset = DateParticipant.objects.all()
 
 
 class PeriodApplicationTransitionList(ApplicationTransitionList):
     serializer_class = PeriodApplicationTransitionSerializer
-    queryset = PeriodApplication.objects.all()
+    queryset = PeriodParticipant.objects.all()
 
 
 class ApplicationDocumentDetail(PrivateFileView):
     max_age = 15 * 60  # 15 minutes
-    queryset = OnADateApplication.objects
+    queryset = DateParticipant.objects
     relation = 'document'
     field = 'file'
 
 
 class OnADateApplicationDocumentDetail(ApplicationDocumentDetail):
-    queryset = OnADateApplication.objects
+    queryset = DateParticipant.objects
 
 
 class PeriodApplicationDocumentDetail(ApplicationDocumentDetail):
-    queryset = PeriodApplication.objects
+    queryset = PeriodParticipant.objects
 
 
 class DateActivityIcalView(PrivateFileView):

@@ -37,7 +37,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def applications(self):
-        return self.contributors.instance_of(PeriodApplication, OnADateApplication)
+        return self.contributors.instance_of(PeriodParticipant, DateParticipant)
 
     @property
     def active_applications(self):
@@ -203,7 +203,7 @@ class PeriodActivity(TimeBasedActivity):
         return fields + ['deadline', 'duration', 'duration_period']
 
 
-class Application(Contributor):
+class Participant(Contributor):
     def __str__(self):
         return self.user
 
@@ -217,7 +217,7 @@ class Application(Contributor):
         abstract = True
 
 
-class OnADateApplication(Application):
+class DateParticipant(Participant):
     motivation = models.TextField(blank=True, null=True)
     document = PrivateDocumentField(blank=True, null=True)
 
@@ -243,8 +243,8 @@ class OnADateApplication(Application):
         return str(_("Participant"))
 
 
-class PeriodApplication(Application, Contributor):
-    motivation = models.TextField(blank=True)
+class PeriodParticipant(Participant, Contributor):
+    motivation = models.TextField(blank=True, null=True)
     document = PrivateDocumentField(blank=True, null=True)
 
     current_period = models.DateField(null=True, blank=True)

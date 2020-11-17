@@ -11,7 +11,7 @@ from bluebottle.activities.triggers import (
 
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    OnADateApplication, PeriodApplication, Duration
+    DateParticipant, PeriodParticipant, Duration
 )
 from bluebottle.time_based.effects import (
     CreateOnADateDurationEffect, CreatePeriodDurationEffect
@@ -414,7 +414,7 @@ class ApplicationTriggers(ContributorTriggers):
     ]
 
 
-@register(OnADateApplication)
+@register(DateParticipant)
 class OnADateApplicationTriggers(ApplicationTriggers):
     triggers = ApplicationTriggers.triggers + [
         TransitionTrigger(
@@ -426,7 +426,7 @@ class OnADateApplicationTriggers(ApplicationTriggers):
     ]
 
 
-@register(PeriodApplication)
+@register(PeriodParticipant)
 class PeriodApplicationTriggers(ApplicationTriggers):
     triggers = ApplicationTriggers.triggers + [
         TransitionTrigger(

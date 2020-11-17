@@ -1,7 +1,7 @@
 from django.db.models import Q
 from rest_framework_json_api.django_filters import DjangoFilterBackend
 
-from bluebottle.time_based.models import PeriodApplication, OnADateApplication
+from bluebottle.time_based.models import PeriodParticipant, DateParticipant
 from bluebottle.time_based.states import ApplicationStateMachine
 
 
@@ -13,7 +13,7 @@ class ApplicationListFilter(DjangoFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
         if request.user.is_authenticated():
-            queryset = queryset.instance_of(OnADateApplication, PeriodApplication).filter(
+            queryset = queryset.instance_of(DateParticipant, PeriodParticipant).filter(
                 Q(user=request.user) |
                 Q(activity__owner=request.user) |
                 Q(activity__initiative__activity_manager=request.user) |
@@ -25,7 +25,7 @@ class ApplicationListFilter(DjangoFilterBackend):
             )
         else:
             queryset = queryset.instance_of(
-                PeriodApplication, OnADateApplication
+                PeriodParticipant, DateParticipant
             ).filter(
                 status__in=[
                     ApplicationStateMachine.new.value,

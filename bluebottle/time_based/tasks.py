@@ -7,7 +7,7 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    OnADateApplication, PeriodApplication, Duration
+    DateParticipant, PeriodParticipant, Duration
 )
 
 logger = logging.getLogger('bluebottle')
@@ -45,7 +45,7 @@ def with_a_deadline_tasks():
 def on_a_date_application_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            for task in OnADateApplication.get_periodic_tasks():
+            for task in DateParticipant.get_periodic_tasks():
                 task.execute()
 
 
@@ -57,7 +57,7 @@ def on_a_date_application_tasks():
 def period_application_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            for task in PeriodApplication.get_periodic_tasks():
+            for task in PeriodParticipant.get_periodic_tasks():
                 task.execute()
 
 

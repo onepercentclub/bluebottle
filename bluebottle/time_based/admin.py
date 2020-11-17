@@ -9,13 +9,13 @@ from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmi
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, OnADateApplication, PeriodApplication, Application, Duration
+    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, Duration
 )
 from bluebottle.utils.admin import export_as_csv_action
 
 
-class BaseApplicationAdminInline(admin.TabularInline):
-    model = Application
+class BaseParticipantAdminInline(admin.TabularInline):
+    model = Participant
     readonly_fields = ('contributor_date', 'motivation', 'document', 'edit', 'created', 'transition_date', 'status')
     raw_id_fields = ('user', 'document')
     extra = 0
@@ -32,19 +32,19 @@ class BaseApplicationAdminInline(admin.TabularInline):
         )
 
 
-class OnADateApplicationAdminInline(BaseApplicationAdminInline):
-    model = OnADateApplication
+class DateParticipantAdminInline(BaseParticipantAdminInline):
+    model = DateParticipant
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
-    fields = ('edit', 'user', 'status', 'created')
+    readonly_fields = BaseParticipantAdminInline.readonly_fields
+    fields = ('edit', 'user', 'status')
 
 
-class PeriodApplicationAdminInline(BaseApplicationAdminInline):
-    model = PeriodApplication
-    readonly_fields = BaseApplicationAdminInline.readonly_fields + ('current_period', )
+class PeriodParticipantAdminInline(BaseParticipantAdminInline):
+    model = PeriodParticipant
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
-    fields = ('edit', 'user', 'status', 'created')
+    fields = ('edit', 'user', 'status')
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
@@ -85,7 +85,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
 
-    inlines = (OnADateApplicationAdminInline, ) + TimeBasedAdmin.inlines
+    inlines = (DateParticipantAdminInline,) + TimeBasedAdmin.inlines
 
     date_hierarchy = 'start'
     list_display = TimeBasedAdmin.list_display + [
@@ -118,7 +118,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         }
     }
 
-    inlines = (PeriodApplicationAdminInline, ) + TimeBasedAdmin.inlines
+    inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
 
     date_hierarchy = 'deadline'
     list_display = TimeBasedAdmin.list_display + [
@@ -168,7 +168,7 @@ class DurationInlineAdmin(admin.TabularInline):
         )
 
 
-@admin.register(PeriodApplication)
+@admin.register(PeriodParticipant)
 class PeriodApplicationAdmin(ContributorChildAdmin):
     inlines = ContributorChildAdmin.inlines + [DurationInlineAdmin]
 
@@ -192,6 +192,6 @@ class DurationAdmin(StateMachineAdmin):
         return fieldsets
 
 
-@admin.register(OnADateApplication)
+@admin.register(DateParticipant)
 class DateApplicationAdmin(ContributorChildAdmin):
     fields = ContributorChildAdmin.fields

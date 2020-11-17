@@ -5,7 +5,7 @@ from bluebottle.activities.states import (
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    OnADateApplication, PeriodApplication, Duration,
+    DateParticipant, PeriodParticipant, Duration,
 )
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 
@@ -140,7 +140,7 @@ class ApplicationStateMachine(ContributorStateMachine):
         ],
         accepted,
         name=_('Accept'),
-        description=_("Application was accepted."),
+        description=_("Participant was accepted."),
         automatic=False,
         permission=can_accept_application,
     )
@@ -152,7 +152,7 @@ class ApplicationStateMachine(ContributorStateMachine):
         ],
         rejected,
         name=_('Reject'),
-        description=_("Application was rejected."),
+        description=_("Participant was rejected."),
         automatic=False,
         permission=can_accept_application,
     )
@@ -192,18 +192,18 @@ class ApplicationStateMachine(ContributorStateMachine):
         no_show,
         ContributorStateMachine.succeeded,
         name=_('Mark present'),
-        description=_("Application did contribute to the task, after first been marked absent."),
+        description=_("Participant did contribute to the task, after first been marked absent."),
         automatic=False,
         permission=can_accept_application,
     )
 
 
-@register(OnADateApplication)
+@register(DateParticipant)
 class OnADateApplicationStateMachine(ApplicationStateMachine):
     pass
 
 
-@register(PeriodApplication)
+@register(PeriodParticipant)
 class PeriodApplicationStateMachine(ApplicationStateMachine):
     stopped = State(
         _('stopped'),
@@ -215,7 +215,7 @@ class PeriodApplicationStateMachine(ApplicationStateMachine):
         ApplicationStateMachine.accepted,
         stopped,
         name=_('Stop'),
-        description=_("Application stopped contributing."),
+        description=_("Participant stopped contributing."),
         automatic=False,
     )
 
@@ -223,7 +223,7 @@ class PeriodApplicationStateMachine(ApplicationStateMachine):
         stopped,
         ApplicationStateMachine.accepted,
         name=_('Start'),
-        description=_("Application started contributing again."),
+        description=_("Participant started contributing again."),
         automatic=False,
     )
 

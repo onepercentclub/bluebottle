@@ -17,7 +17,7 @@ from bluebottle.events.models import Participant
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Donation
-from bluebottle.time_based.models import OnADateApplication, PeriodApplication
+from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission
@@ -88,8 +88,8 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
             Donation,
             Applicant,
             Participant,
-            OnADateApplication,
-            PeriodApplication
+            DateParticipant,
+            PeriodParticipant
         ).filter(
             user=self.request.user
         ).exclude(

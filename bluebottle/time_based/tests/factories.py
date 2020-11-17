@@ -5,7 +5,7 @@ from django.utils.timezone import now
 
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    OnADateApplication, PeriodApplication, Duration
+    DateParticipant, PeriodParticipant, Duration
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -50,7 +50,7 @@ class PeriodActivityFactory(TimeBasedFactory):
 
 class OnADateApplicationFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = OnADateApplication
+        model = DateParticipant
 
     activity = factory.SubFactory(DateActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
@@ -58,7 +58,7 @@ class OnADateApplicationFactory(factory.DjangoModelFactory):
 
 class PeriodApplicationFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = PeriodApplication
+        model = PeriodParticipant
 
     activity = factory.SubFactory(DateActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)

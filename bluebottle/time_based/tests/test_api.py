@@ -441,7 +441,7 @@ class TimeBasedTransitionAPIViewTestCase():
 
         self.assertEqual(
             data['included'][0]['type'],
-            'activities/time-based/{}'.format(self.type)
+            'activities/time-based/{}s'.format(self.type)
         )
         self.assertEqual(data['included'][0]['attributes']['status'], 'deleted')
 
@@ -814,7 +814,7 @@ class ApplicationTransitionAPIViewTestCase():
 
         self.assertEqual(
             data['included'][0]['type'],
-            'activities/time-based/{}'.format(self.type)
+            'activities/time-based/{}s'.format(self.type)
         )
         self.assertEqual(data['included'][1]['attributes']['status'], 'withdrawn')
 
@@ -843,7 +843,7 @@ class ApplicationTransitionAPIViewTestCase():
 
         self.assertEqual(
             data['included'][0]['type'],
-            'activities/time-based/{}'.format(self.type)
+            'activities/time-based/{}s'.format(self.type)
         )
         self.assertEqual(data['included'][1]['attributes']['status'], 'rejected')
 

@@ -288,7 +288,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
         self.assertEqual(data['data'][0]['id'], str(first.pk))
-        self.assertEqual(data['data'][0]['type'], 'activities/time-based/date')
+        self.assertEqual(data['data'][0]['type'], 'activities/time-based/dates')
         self.assertEqual(data['data'][1]['id'], str(second.pk))
         self.assertEqual(data['data'][1]['type'], 'activities/fundings')
 

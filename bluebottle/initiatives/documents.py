@@ -108,7 +108,7 @@ class InitiativeDocument(DocType):
             {
                 'id': activity.pk,
                 'title': activity.title,
-                'intention_date': activity.intention_date
+                'activity_date': activity.activity_date
             } for activity in instance.activities.filter(
                 status__in=(
                     'succeeded',

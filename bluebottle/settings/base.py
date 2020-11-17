@@ -288,6 +288,7 @@ SHARED_APPS = (
     'multiselectfield',
 
     'djmoney.contrib.exchange',
+    'durationwidget',
 )
 
 TENANT_APPS = (

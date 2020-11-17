@@ -76,8 +76,8 @@ class DateActivity(TimeBasedActivity):
     duration_period = 'overall'
 
     class Meta:
-        verbose_name = _("On a date activity")
-        verbose_name_plural = _("On A Date Activities")
+        verbose_name = _("Activity on a date")
+        verbose_name_plural = _("Activities on a date")
         permissions = (
             ('api_read_dateactivity', 'Can view on a date activities through the API'),
             ('api_add_dateactivity', 'Can add on a date activities through the API'),
@@ -179,8 +179,8 @@ class PeriodActivity(TimeBasedActivity):
     )
 
     class Meta:
-        verbose_name = _("During a period activity")
-        verbose_name_plural = _("During a period activities")
+        verbose_name = _("Activity during a period")
+        verbose_name_plural = _("Activities during a period")
         permissions = (
             ('api_read_periodactivity', 'Can view during a period activities through the API'),
             ('api_add_periodactivity', 'Can add during a period activities through the API'),
@@ -203,9 +203,9 @@ class PeriodActivity(TimeBasedActivity):
         return fields + ['deadline', 'duration', 'duration_period']
 
 
-class Application():
+class Application(Intention):
     def __str__(self):
-        return self.user.full_name
+        return self.user
 
     @property
     def finished_durations(self):
@@ -213,14 +213,17 @@ class Application():
             duration__end__lte=timezone.now()
         )
 
+    class Meta:
+        abstract = True
 
-class OnADateApplication(Application, Intention):
-    motivation = models.TextField(blank=True)
+
+class OnADateApplication(Application):
+    motivation = models.TextField(blank=True, null=True)
     document = PrivateDocumentField(blank=True, null=True)
 
     class Meta(object):
-        verbose_name = _("On a date application")
-        verbose_name_plural = _("On a date application")
+        verbose_name = _("participant")
+        verbose_name_plural = _("participants")
         permissions = (
             ('api_read_onadateapplication', 'Can view application through the API'),
             ('api_add_onadateapplication', 'Can add application through the API'),
@@ -237,7 +240,7 @@ class OnADateApplication(Application, Intention):
         resource_name = 'intentions/time-based/date-applications'
 
     def __str__(self):
-        return str(_("On a date application"))
+        return str(_("Participant"))
 
 
 class PeriodApplication(Application, Intention):
@@ -247,8 +250,8 @@ class PeriodApplication(Application, Intention):
     current_period = models.DateField(null=True, blank=True)
 
     class Meta(object):
-        verbose_name = _("Period application")
-        verbose_name_plural = _("Period application")
+        verbose_name = _("participant")
+        verbose_name_plural = _("participants")
         permissions = (
             ('api_read_periodapplication', 'Can view application through the API'),
             ('api_add_periodapplication', 'Can add application through the API'),
@@ -266,7 +269,7 @@ class PeriodApplication(Application, Intention):
         return self.contribution_values.get(status='new')
 
     def __str__(self):
-        return str(_("Period application"))
+        return _("Participant {}").format(self.user)
 
     class JSONAPIMeta:
         resource_name = 'intentions/time-based/period-applications'
@@ -276,6 +279,13 @@ class Duration(ContributionValue):
     value = models.DurationField(_('value'))
     start = models.DateTimeField(_('start'))
     end = models.DateTimeField(_('end'), null=True, blank=True)
+
+    class Meta:
+        verbose_name = _("Participation")
+        verbose_name_plural = _("Participations")
+
+    def __str__(self):
+        return str(_("Participation"))
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

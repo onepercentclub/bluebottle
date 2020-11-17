@@ -35,20 +35,23 @@ class CreatePeriodDurationEffect(Effect):
 
         if activity.duration_period == 'overall':
             end = activity.deadline if hasattr(activity, 'deadline') else None
-        else:
+        elif activity.duration_period:
             end = start + timedelta(**{activity.duration_period: 1})
+        else:
+            end = start
 
         self.instance.current_period = end
         self.instance.save()
 
-        duration = Duration(
-            intention=self.instance,
-            value=activity.duration,
-            start=tz.localize(datetime.combine(start, datetime.min.time())),
-            end=tz.localize(datetime.combine(end, datetime.max.time())) if end else None,
-        )
+        if start != end:
+            duration = Duration(
+                intention=self.instance,
+                value=activity.duration,
+                start=tz.localize(datetime.combine(start, datetime.min.time())),
+                end=tz.localize(datetime.combine(end, datetime.max.time())) if end else None,
+            )
 
-        duration.save()
+            duration.save()
 
     def __str__(self):
         return _('Create contribution duration')

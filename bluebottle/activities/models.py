@@ -154,9 +154,11 @@ class Intention(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
     class Meta(object):
         ordering = ('-created',)
+        verbose_name = _('Contributor')
+        verbose_name_plural = _('Contributors')
 
     def __str__(self):
-        return str(_('Intention'))
+        return _('Contributor {name}').format(self.user)
 
 
 @python_2_unicode_compatible
@@ -169,10 +171,7 @@ class Organizer(Intention):
         resource_name = 'intentions/organizers'
 
     def __str__(self):
-        if self.user:
-            return self.user.full_name
-        else:
-            return _('Activity owner')
+        return _('Activity owner {name}').format(self.user)
 
 
 class ContributionValue(TriggerMixin, PolymorphicModel):

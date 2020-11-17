@@ -13,7 +13,7 @@ from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
 from bluebottle.activities.models import Activity, Intention, Organizer
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.time_based.models import DateActivity, PeriodActivity
+from bluebottle.time_based.models import DateActivity, PeriodActivity, OnADateApplication, PeriodApplication
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
@@ -86,7 +86,14 @@ class OrganizerAdmin(IntentionChildAdmin):
 @admin.register(Intention)
 class IntentionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Intention
-    child_models = (Participant, Donation, Applicant, Organizer)
+    child_models = (
+        Participant,
+        Donation,
+        Applicant,
+        Organizer,
+        OnADateApplication,
+        PeriodApplication
+    )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
     date_hierarchy = 'created'

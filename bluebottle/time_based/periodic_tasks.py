@@ -58,7 +58,7 @@ class PeriodActivityFinishedTask(ModelPeriodicTask):
         return _("Finish an activity when deadline has passed.")
 
 
-class NewParticipationTask(ModelPeriodicTask):
+class NewPeriodForParticipantTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -72,7 +72,7 @@ class NewParticipationTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return _("Create a new participation for participant")
+        return _("Create a new period for participant")
 
 
 class DateActivityStartedTask(ModelPeriodicTask):
@@ -138,5 +138,5 @@ DateActivity.periodic_tasks = [DateActivityFinishedTask, DateActivityStartedTask
 PeriodActivity.periodic_tasks = [
     TimeBasedActivityStartedTask, PeriodActivityFinishedTask
 ]
-PeriodParticipant.periodic_tasks = [NewParticipationTask]
+PeriodParticipant.periodic_tasks = [NewPeriodForParticipantTask]
 Duration.periodic_tasks = [DurationFinishedTask]

@@ -4,7 +4,7 @@ import os
 
 from djmoney.money import Money
 
-from bluebottle.funding.tests.factories import DonationFactory
+from bluebottle.funding.tests.factories import DonorFactory
 
 from bluebottle.assignments.tests.factories import ApplicantFactory
 
@@ -339,7 +339,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         ParticipantFactory.create(time_spent=5, user=member, status='succeeded')
         ParticipantFactory.create(time_spent=12, user=member, status='succeeded')
         ApplicantFactory.create_batch(3, time_spent=10, user=member, status='succeeded')
-        DonationFactory.create_batch(7, amount=Money(5, 'EUR'), user=member, status='succeeded')
+        DonorFactory.create_batch(7, amount=Money(5, 'EUR'), user=member, status='succeeded')
 
         export_action = self.member_admin.actions[0]
         response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))

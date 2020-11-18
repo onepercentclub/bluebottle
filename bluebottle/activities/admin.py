@@ -18,7 +18,7 @@ from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
-from bluebottle.funding.models import Funding, Donation
+from bluebottle.funding.models import Funding, Donor
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import Segment
@@ -88,7 +88,7 @@ class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Contributor
     child_models = (
         Participant,
-        Donation,
+        Donor,
         Applicant,
         Organizer,
         DateParticipant,

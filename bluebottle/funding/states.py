@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
-from bluebottle.funding.models import Funding, Donation, Payment, Payout, PlainPayoutAccount
+from bluebottle.funding.models import Funding, Donor, Payment, Payout, PlainPayoutAccount
 
 
 @register(Funding)
@@ -222,8 +222,8 @@ class FundingStateMachine(ActivityStateMachine):
     )
 
 
-@register(Donation)
-class DonationStateMachine(ContributorStateMachine):
+@register(Donor)
+class DonorStateMachine(ContributorStateMachine):
     refunded = State(
         _('refunded'),
         'refunded',
@@ -318,8 +318,8 @@ class BasePaymentStateMachine(ModelStateMachine):
     def donation_not_refunded(self):
         """donation doesn't have status refunded or activity refunded"""
         return self.instance.donation.status not in [
-            DonationStateMachine.refunded.value,
-            DonationStateMachine.activity_refunded.value,
+            DonorStateMachine.refunded.value,
+            DonorStateMachine.activity_refunded.value,
         ]
 
     initiate = Transition(

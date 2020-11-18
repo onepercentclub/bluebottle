@@ -4,7 +4,7 @@ from django.urls import reverse
 from mock import patch
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import VitepayPaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -26,7 +26,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
-        self.donation = DonationFactory.create(activity=self.funding, user=self.user)
+        self.donation = DonorFactory.create(activity=self.funding, user=self.user)
 
         self.payment_url = reverse('vitepay-payment-list')
 

@@ -188,22 +188,22 @@ class Funding(Activity):
 
     @property
     def donations(self):
-        return self.contributors.instance_of(Donation)
+        return self.contributors.instance_of(Donor)
 
     @property
     def amount_donated(self):
         """
         The sum of all contributors (donations) converted to the targets currency
         """
-        from .states import DonationStateMachine
+        from .states import DonorStateMachine
         from bluebottle.funding.utils import calculate_total
         cache_key = '{}.{}.amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
             donations = self.donations.filter(
                 status__in=(
-                    DonationStateMachine.succeeded.value,
-                    DonationStateMachine.activity_refunded.value,
+                    DonorStateMachine.succeeded.value,
+                    DonorStateMachine.activity_refunded.value,
                 )
             )
             if self.target and self.target.currency:
@@ -218,15 +218,15 @@ class Funding(Activity):
         """
         The sum of all contributors (donations) without pledges converted to the targets currency
         """
-        from .states import DonationStateMachine
+        from .states import DonorStateMachine
         from bluebottle.funding.utils import calculate_total
         cache_key = '{}.{}.genuine_amount_donated'.format(connection.tenant.schema_name, self.id)
         total = cache.get(cache_key)
         if not total:
             donations = self.donations.filter(
                 status__in=(
-                    DonationStateMachine.succeeded.value,
-                    DonationStateMachine.activity_refunded.value,
+                    DonorStateMachine.succeeded.value,
+                    DonorStateMachine.activity_refunded.value,
                 ),
                 donation__payment__pledgepayment__isnull=True
             )
@@ -242,12 +242,12 @@ class Funding(Activity):
         """
         The sum of all contributors (donations) converted to the targets currency
         """
-        from .states import DonationStateMachine
+        from .states import DonorStateMachine
         from bluebottle.funding.utils import calculate_total
         donations = self.donations.filter(
             status__in=(
-                DonationStateMachine.succeeded.value,
-                DonationStateMachine.activity_refunded.value,
+                DonorStateMachine.succeeded.value,
+                DonorStateMachine.activity_refunded.value,
             ),
             donation__payment__pledgepayment__isnull=False
         )
@@ -277,9 +277,9 @@ class Funding(Activity):
 
     @property
     def stats(self):
-        from .states import DonationStateMachine
+        from .states import DonorStateMachine
         stats = self.donations.filter(
-            status=DonationStateMachine.succeeded.value
+            status=DonorStateMachine.succeeded.value
         ).aggregate(
             count=Count('user__id')
         )
@@ -321,9 +321,9 @@ class Reward(models.Model):
 
     @property
     def count(self):
-        from .states import DonationStateMachine
+        from .states import DonorStateMachine
         return self.donations.filter(
-            status=DonationStateMachine.succeeded.value
+            status=DonorStateMachine.succeeded.value
         ).count()
 
     def __str__(self):
@@ -393,11 +393,11 @@ class Fundraiser(AnonymizationMixin, models.Model):
 
     @cached_property
     def amount_donated(self):
-        from .states import DonationStateMachine
+        from .states import DonorStateMachine
         donations = self.donations.filter(
             status__in=[
-                DonationStateMachine.succeeded.value,
-                DonationStateMachine.activity_refunded.value,
+                DonorStateMachine.succeeded.value,
+                DonorStateMachine.activity_refunded.value,
             ]
         )
 
@@ -477,7 +477,7 @@ class Payout(TriggerMixin, models.Model):
 
 
 @python_2_unicode_compatible
-class Donation(Contributor):
+class Donor(Contributor):
     amount = MoneyField()
     payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
@@ -496,7 +496,7 @@ class Donation(Contributor):
         if not self.payout_amount:
             self.payout_amount = self.amount
 
-        super(Donation, self).save(*args, **kwargs)
+        super(Donor, self).save(*args, **kwargs)
 
     @property
     def date(self):
@@ -509,7 +509,7 @@ class Donation(Contributor):
         return self.payment.type
 
     class Meta(object):
-        verbose_name = _('Donation')
+        verbose_name = _('Donor')
         verbose_name_plural = _('Donations')
 
     def __str__(self):
@@ -526,7 +526,7 @@ class Payment(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField()
 
-    donation = models.OneToOneField(Donation, related_name='payment')
+    donation = models.OneToOneField(Donor, related_name='payment')
 
     @property
     def can_update(self):

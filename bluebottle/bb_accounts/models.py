@@ -319,10 +319,10 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_supporter(self):
-        from bluebottle.funding.states import DonationStateMachine
-        from bluebottle.funding.models import Donation
-        return bool(self.contributor_set.instance_of(Donation).
-                    filter(status=DonationStateMachine.succeeded.value).count())
+        from bluebottle.funding.states import DonorStateMachine
+        from bluebottle.funding.models import Donor
+        return bool(self.contributor_set.instance_of(Donor).
+                    filter(status=DonorStateMachine.succeeded.value).count())
 
     @cached_property
     def is_volunteer(self):
@@ -334,11 +334,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def amount_donated(self):
-        from bluebottle.funding.states import DonationStateMachine
-        from bluebottle.funding.models import Donation
+        from bluebottle.funding.states import DonorStateMachine
+        from bluebottle.funding.models import Donor
         from bluebottle.funding.utils import calculate_total
-        donations = self.contributor_set.instance_of(Donation).filter(
-            status=DonationStateMachine.succeeded.value
+        donations = self.contributor_set.instance_of(Donor).filter(
+            status=DonorStateMachine.succeeded.value
         )
         return calculate_total(donations)
 

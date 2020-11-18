@@ -7,7 +7,7 @@ from bluebottle.assignments.models import Assignment
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ContentTextField, PhotoSerializer)
 from bluebottle.events.models import Event
-from bluebottle.funding.models import Funding, Donation
+from bluebottle.funding.models import Funding, Donor
 from bluebottle.time_based.models import DateActivity, PeriodActivity
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import UserPreviewSerializer
@@ -61,7 +61,7 @@ class WallpostDonationSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
 
     class Meta(object):
-        model = Donation
+        model = Donor
         fields = (
             'type',
             'id',
@@ -80,7 +80,7 @@ class WallpostDonationSerializer(serializers.ModelSerializer):
         If the donation is anonymous, we do not return the user.
         """
         fields = super(WallpostDonationSerializer, self).get_fields()
-        if isinstance(self.instance, Donation) and self.instance.anonymous:
+        if isinstance(self.instance, Donor) and self.instance.anonymous:
             del fields['user']
         return fields
 
@@ -97,7 +97,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
     parent_id = serializers.IntegerField(source='object_id')
     reactions = ReactionSerializer(many=True, read_only=True, required=False)
 
-    donation = serializers.PrimaryKeyRelatedField(queryset=Donation.objects, required=False, allow_null=True)
+    donation = serializers.PrimaryKeyRelatedField(queryset=Donor.objects, required=False, allow_null=True)
 
     def to_representation(self, instance):
         # We want to connect a donation by just sending the id,

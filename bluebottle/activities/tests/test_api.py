@@ -13,7 +13,7 @@ from django_elasticsearch_dsl.test import ESTestCase
 from rest_framework import status
 from bluebottle.files.tests.factories import ImageFactory
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory
 )
@@ -853,12 +853,12 @@ class ContributorListAPITestCase(BluebottleTestCase):
 
         DateParticipantFactory.create_batch(2, user=self.user)
         PeriodParticipantFactory.create_batch(2, user=self.user)
-        DonationFactory.create_batch(2, user=self.user, status='succeeded')
-        DonationFactory.create_batch(2, user=self.user, status='new')
+        DonorFactory.create_batch(2, user=self.user, status='succeeded')
+        DonorFactory.create_batch(2, user=self.user, status='new')
 
         DateParticipantFactory.create()
         PeriodParticipantFactory.create()
-        DonationFactory.create()
+        DonorFactory.create()
 
         self.url = reverse('contributor-list')
 

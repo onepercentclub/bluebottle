@@ -10,11 +10,11 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 
-from bluebottle.funding.authentication import DonationAuthentication
+from bluebottle.funding.authentication import DonorAuthentication
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
-from bluebottle.funding.models import Donation
+from bluebottle.funding.models import Donor
 from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount, ExternalAccount
 )
@@ -36,7 +36,7 @@ class StripeSourcePaymentList(PaymentList):
     serializer_class = StripeSourcePaymentSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, DonationAuthentication,
+        JSONWebTokenAuthentication, DonorAuthentication,
     )
 
     permission_classes = (PaymentPermission, )
@@ -47,7 +47,7 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
     serializer_class = PaymentIntentSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, DonationAuthentication,
+        JSONWebTokenAuthentication, DonorAuthentication,
     )
 
     permission_classes = (PaymentPermission, )
@@ -203,7 +203,7 @@ class IntentWebHookView(View):
                 intent.donation.payment.payment_intent = intent
                 intent.donation.payment.save()
                 return intent.payment
-            except Donation.payment.RelatedObjectDoesNotExist:
+            except Donor.payment.RelatedObjectDoesNotExist:
                 return StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
 
 

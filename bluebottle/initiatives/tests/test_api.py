@@ -16,7 +16,7 @@ from rest_framework import status
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.members.models import MemberPlatformSettings
@@ -483,8 +483,8 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         ApplicantFactory.create_batch(3, activity=assignment, status='succeeded', time_spent=3)
 
         funding = FundingFactory.create(initiative=self.initiative, status='succeeded')
-        DonationFactory.create_batch(3, activity=funding, status='succeeded', amount=Money(10, 'EUR'))
-        DonationFactory.create_batch(3, activity=funding, status='succeeded', amount=Money(10, 'USD'))
+        DonorFactory.create_batch(3, activity=funding, status='succeeded', amount=Money(10, 'EUR'))
+        DonorFactory.create_batch(3, activity=funding, status='succeeded', amount=Money(10, 'USD'))
 
         response = self.client.get(
             self.url,

@@ -1,7 +1,7 @@
 from builtins import object
 import factory.fuzzy
 
-from bluebottle.funding.tests.factories import DonationFactory
+from bluebottle.funding.tests.factories import DonorFactory
 from bluebottle.funding_telesom.models import (
     TelesomPayment, TelesomPaymentProvider, TelesomBankAccount
 )
@@ -11,7 +11,7 @@ class TelesomPaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = TelesomPayment
 
-    donation = factory.SubFactory(DonationFactory)
+    donation = factory.SubFactory(DonorFactory)
 
 
 class TelesomPaymentProviderFactory(factory.DjangoModelFactory):

@@ -16,7 +16,7 @@ from bluebottle.assignments.models import Applicant
 from bluebottle.events.models import Participant
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
-from bluebottle.funding.models import Donation
+from bluebottle.funding.models import Donor
 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
@@ -85,7 +85,7 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
         return Contributor.objects.prefetch_related(
             'user', 'activity'
         ).instance_of(
-            Donation,
+            Donor,
             Applicant,
             Participant,
             DateParticipant,

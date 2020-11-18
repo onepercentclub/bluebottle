@@ -1,6 +1,6 @@
 from builtins import object
 from bluebottle.activities.documents import ActivityDocument, activity
-from bluebottle.funding.models import Funding, Donation
+from bluebottle.funding.models import Funding, Donor
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 
@@ -16,14 +16,14 @@ SCORE_MAP = {
 class FundingDocument(ActivityDocument):
     class Meta(object):
         model = Funding
-        related_models = (Initiative, Member, Donation)
+        related_models = (Initiative, Member, Donor)
 
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, Initiative):
             return Funding.objects.filter(initiative=related_instance)
         if isinstance(related_instance, Member):
             return Funding.objects.filter(owner=related_instance)
-        if isinstance(related_instance, Donation):
+        if isinstance(related_instance, Donor):
             return Funding.objects.filter(contributors=related_instance)
 
     def prepare_status_score(self, instance):

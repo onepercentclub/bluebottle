@@ -1,20 +1,20 @@
 from bluebottle.utils.permissions import IsOwner
 
 
-class DonationOwnerPermission(IsOwner):
+class DonorOwnerPermission(IsOwner):
     def has_object_permission(self, request, view, obj):
         if not request.user.is_authenticated and request.auth and obj.client_secret:
             return obj.client_secret == request.auth
 
-        return super(DonationOwnerPermission, self).has_object_permission(request, view, obj)
+        return super(DonorOwnerPermission, self).has_object_permission(request, view, obj)
 
 
 class PaymentPermission(IsOwner):
     def has_object_permission(self, request, view, obj):
-        if not request.user.is_authenticated and request.auth and obj.donation.client_secret:
-            return obj.donation.client_secret == request.auth
+        if not request.user.is_authenticated and request.auth and obj.donor.client_secret:
+            return obj.donor.client_secret == request.auth
 
-        return super(PaymentPermission, self).has_object_permission(request, view, obj.donation)
+        return super(PaymentPermission, self).has_object_permission(request, view, obj.donor)
 
 
 class CanExportSupportersPermission(IsOwner):

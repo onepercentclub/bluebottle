@@ -54,7 +54,7 @@ class UpdateFundingAmountsEffect(Effect):
 
 
 @python_2_unicode_compatible
-class RemoveDonationFromPayoutEffect(Effect):
+class RemoveDonorFromPayoutEffect(Effect):
     conditions = []
     title = _('Remove donation from payout')
 
@@ -106,7 +106,7 @@ class RefundPaymentAtPSPEffect(Effect):
 
 
 @python_2_unicode_compatible
-class GenerateDonationWallpostEffect(Effect):
+class GenerateDonorWallpostEffect(Effect):
     conditions = []
     title = _('Create wallpost')
     template = 'admin/generate_donation_wallpost_effect.html'
@@ -114,7 +114,7 @@ class GenerateDonationWallpostEffect(Effect):
     def post_save(self, **kwargs):
         SystemWallpost.objects.get_or_create(
             author=self.instance.user,
-            donation=self.instance,
+            donor=self.instance,
             defaults={
                 'content_object': self.instance.activity,
                 'related_object': self.instance
@@ -126,7 +126,7 @@ class GenerateDonationWallpostEffect(Effect):
 
 
 @python_2_unicode_compatible
-class RemoveDonationWallpostEffect(Effect):
+class RemoveDonorWallpostEffect(Effect):
     conditions = []
     title = _('Delete wallpost')
     template = 'admin/remove_donation_wallpost_effect.html'
@@ -134,7 +134,7 @@ class RemoveDonationWallpostEffect(Effect):
     def post_save(self, **kwargs):
         SystemWallpost.objects.filter(
             author=self.instance.user,
-            donation=self.instance,
+            donor=self.instance,
         ).all().delete()
 
     def __str__(self):

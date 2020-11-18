@@ -4,7 +4,7 @@ from moneyed import Money
 from pytz import UTC
 
 from bluebottle.funding.models import (
-    Funding, Donation, Reward, BudgetLine, Payment, BankAccount,
+    Funding, Donor, Reward, BudgetLine, Payment, BankAccount,
     PlainPayoutAccount, Payout
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -26,9 +26,9 @@ class FundingFactory(factory.DjangoModelFactory):
     amount_matching = Money(0, 'EUR')
 
 
-class DonationFactory(factory.DjangoModelFactory):
+class DonorFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = Donation
+        model = Donor
 
     activity = factory.SubFactory(FundingFactory)
     user = factory.SubFactory(BlueBottleUserFactory)

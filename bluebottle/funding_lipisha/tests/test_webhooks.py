@@ -4,7 +4,7 @@ from django.urls import reverse
 from mock import patch
 from rest_framework.status import HTTP_200_OK
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.funding_lipisha.models import LipishaPayment, LipishaPaymentProvider
 from bluebottle.funding_lipisha.tests.factories import LipishaPaymentFactory, LipishaPaymentProviderFactory, \
     LipishaBankAccountFactory
@@ -132,7 +132,7 @@ class LipishaPaymentInitiateTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
         self.account = LipishaBankAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.account)
-        self.donation = DonationFactory.create(activity=self.funding)
+        self.donation = DonorFactory.create(activity=self.funding)
         self.webhook = reverse('lipisha-payment-webhook')
 
     @patch('lipisha.Lipisha._make_api_call', return_value=lipisha_success_response)
@@ -221,7 +221,7 @@ class LipishaPaymentAcknowledgeTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
         self.account = LipishaBankAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.account)
-        self.donation = DonationFactory.create(activity=self.funding)
+        self.donation = DonorFactory.create(activity=self.funding)
         self.webhook = reverse('lipisha-payment-webhook')
         self.payment = LipishaPaymentFactory.create(
             donation=self.donation,

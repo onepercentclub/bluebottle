@@ -13,7 +13,7 @@ from bluebottle.activities.models import Contributor, Activity
 from bluebottle.members.models import Member
 from bluebottle.events.models import Event, Participant
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.funding.models import Donation, Funding
+from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding_pledge.models import PledgePayment
 from bluebottle.utils.exchange_rates import convert
 
@@ -76,7 +76,7 @@ class Statistics(object):
         ))
 
         # Add donations on behalve of another person
-        people_count += len(Donation.objects.filter(
+        people_count += len(Donor.objects.filter(
             self.date_filter('contributor_date'),
             user_id__isnull=False,
             status='succeeded',
@@ -168,7 +168,7 @@ class Statistics(object):
     @memoize(timeout=timeout)
     def donated_total(self):
         """ Total amount donated to all activities"""
-        donations = Donation.objects.filter(
+        donations = Donor.objects.filter(
             self.date_filter('contributor_date'),
             status='succeeded'
         )
@@ -223,7 +223,7 @@ class Statistics(object):
     @memoize(timeout=timeout)
     def donations(self):
         """ Total number of realized task members """
-        donations = Donation.objects.filter(
+        donations = Donor.objects.filter(
             self.date_filter('contributor_date'),
             status='succeeded'
         )

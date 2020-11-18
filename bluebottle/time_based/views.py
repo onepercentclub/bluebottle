@@ -89,6 +89,11 @@ class TimeBasedActivityRelatedApplicationsList(JsonApiViewMixin, ListAPIView):
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
+
+class DateTransitionList(TransitionList):
+    serializer_class = DateTransitionSerializer
+    queryset = DateActivity.objects.all()
+
     def get_queryset(self):
         if self.request.user.is_authenticated():
             queryset = self.queryset.filter(
@@ -118,11 +123,6 @@ class DateActivityRelatedApplicationsList(TimeBasedActivityRelatedApplicationsLi
 class PeriodActivityRelatedApplicationsList(TimeBasedActivityRelatedApplicationsList):
     queryset = PeriodApplication.objects.prefetch_related('user')
     serializer_class = PeriodApplicationSerializer
-
-
-class DateTransitionList(TransitionList):
-    serializer_class = DateTransitionSerializer
-    queryset = DateActivity.objects.all()
 
 
 class PeriodTransitionList(TransitionList):

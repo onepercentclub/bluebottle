@@ -38,7 +38,12 @@ class TimeBasedStateMachine(ActivityStateMachine):
     )
 
     succeed = Transition(
-        [ActivityStateMachine.open, ActivityStateMachine.cancelled, full, running],
+        [
+            ActivityStateMachine.open,
+            ActivityStateMachine.cancelled,
+            full,
+            running
+        ],
         ActivityStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,

@@ -106,7 +106,7 @@ class PayoutTestCase(BluebottleTestCase):
         )
         BudgetLineFactory.create(activity=self.funding)
         payout_account = StripePayoutAccountFactory.create(reviewed=True, status='verified')
-        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
+        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = self.bank_account
         self.funding.states.submit()
         self.funding.states.approve(save=True)
@@ -203,6 +203,3 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertTrue(Money(2000, 'EUR') in payout_amounts)
         self.assertTrue(Money(2250, 'EUR') in payout_amounts)
         self.assertTrue(Money(750, 'EUR') in payout_amounts)
-
-    def test_donation_contribution_date(self):
-        self.assertEqual(self.donation.contribution_date, self.donation.created)

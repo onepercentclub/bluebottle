@@ -22,6 +22,7 @@ class EventFactory(factory.DjangoModelFactory):
     initiative = factory.SubFactory(InitiativeFactory)
     capacity = 10
     is_online = False
+    online_meeting_url = factory.Faker('url')
 
     start = (now() + timedelta(weeks=4))
     duration = 100

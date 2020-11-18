@@ -13,7 +13,7 @@ class AccountActivationMessage(TransitionMessage):
 
 
 class SignUptokenMessage(TransitionMessage):
-    subject = _(u'Your activation link for {site_name}')
+    subject = _(u'Activate your account for {site_name}')
     template = 'messages/sign_up_token'
 
     def get_recipients(self):

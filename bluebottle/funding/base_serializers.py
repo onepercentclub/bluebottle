@@ -30,6 +30,7 @@ class PaymentSerializer(ModelSerializer):
 
 
 class BaseBankAccountSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
     connect_account = ResourceRelatedField(queryset=PayoutAccount.objects.all())
 
     class Meta(object):
@@ -37,7 +38,8 @@ class BaseBankAccountSerializer(ModelSerializer):
 
         fields = (
             'id',
-            'connect_account'
+            'connect_account',
+            'status'
         )
 
     included_serializers = {

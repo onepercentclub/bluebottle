@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from builtins import str
 from builtins import object
 from django.conf import settings
 from django.db import models
@@ -73,4 +75,4 @@ class OrganizationContact(ValidatedModelMixin, models.Model):
         verbose_name_plural = _('Partner Organization Contacts')
 
     def __str__(self):
-        return self.name
+        return str(self.name)

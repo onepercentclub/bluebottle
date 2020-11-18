@@ -184,7 +184,3 @@ class ApplicantTestCase(BluebottleTestCase):
         applicant.time_spent = 10
         applicant.save()
         self.assertEqual(applicant.status, 'succeeded')
-        self.assertEqual(
-            applicant.contribution_date,
-            assignment.date
-        )

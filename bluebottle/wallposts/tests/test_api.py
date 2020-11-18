@@ -7,7 +7,7 @@ from rest_framework import status
 from bluebottle.assignments.tests.factories import AssignmentFactory
 from bluebottle.events.tests.factories import EventFactory
 from bluebottle.time_based.tests.factories import (
-    OnADateActivityFactory
+    DateActivityFactory
 )
 from bluebottle.funding.tests.factories import DonationFactory, FundingFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -29,7 +29,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
         self.event = EventFactory.create(owner=self.owner)
-        self.on_a_data_activity = OnADateActivityFactory.create(owner=self.owner)
+        self.on_a_data_activity = DateActivityFactory.create(owner=self.owner)
         self.assignment = AssignmentFactory.create(owner=self.owner)
 
         self.other_user = BlueBottleUserFactory.create()
@@ -152,7 +152,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         Tests that only the event creator can share a wallpost.
         """
         wallpost_data = {'parent_id': str(self.on_a_data_activity.id),
-                         'parent_type': 'on-a-date',
+                         'parent_type': 'activities/time-based/date',
                          'text': 'I can share stuff!',
                          'share_with_facebook': True}
 
@@ -565,7 +565,7 @@ class InitiativeWallpostTest(BluebottleTestCase):
 
         self.initiative = InitiativeFactory.create(owner=self.owner)
         self.event = EventFactory.create(owner=self.owner)
-        self.on_a_data_activity = OnADateActivityFactory.create(owner=self.owner)
+        self.on_a_data_activity = DateActivityFactory.create(owner=self.owner)
 
         self.other_user = BlueBottleUserFactory.create()
         self.other_token = "JWT {0}".format(
@@ -621,7 +621,7 @@ class InitiativeWallpostTest(BluebottleTestCase):
         Tests that only the event creator can share a wallpost.
         """
         wallpost_data = {'parent_id': self.on_a_data_activity.id,
-                         'parent_type': 'on-a-date',
+                         'parent_type': 'activities/time-based/date',
                          'text': 'I can share stuff!',
                          'share_with_twitter': True}
 
@@ -782,6 +782,7 @@ class WallpostPhotoTest(BluebottleTestCase):
             token="JWT {0}".format(self.photo.author.get_jwt_token())
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('jpg' in response.data['photo']['full'])
 
     def test_photo_different_wallpost_owner(self):
         photo_author = BlueBottleUserFactory.create()

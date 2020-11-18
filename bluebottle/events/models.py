@@ -31,6 +31,7 @@ class Event(Activity):
     location = models.ForeignKey(Geolocation, verbose_name=_('location'),
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
+    online_meeting_url = models.TextField(_('Online Meeting URL'), blank=True, default='')
 
     start_date = models.DateField(_('start date'), null=True, blank=True)
     start_time = models.TimeField(_('start time'), null=True, blank=True)
@@ -140,6 +141,19 @@ class Event(Activity):
         return '{}-{}-{}'.format(connection.tenant.client_name, 'event', self.pk)
 
     @property
+    def details(self):
+        details = HTMLParser().unescape(
+            u'{}\n{}'.format(
+                strip_tags(self.description), self.get_absolute_url()
+            )
+        )
+
+        if self.is_online and self.online_meeting_url:
+            details += _('\nJoin: {url}').format(url=self.online_meeting_url)
+
+        return details
+
+    @property
     def google_calendar_link(self):
         def format_date(date):
             if date:
@@ -152,11 +166,7 @@ class Event(Activity):
             'dates': u'{}/{}'.format(
                 format_date(self.start), format_date(self.end)
             ),
-            'details': HTMLParser().unescape(
-                u'{}\n{}'.format(
-                    strip_tags(self.description), self.get_absolute_url()
-                )
-            ),
+            'details': self.details,
             'uid': self.uid,
         }
 
@@ -180,11 +190,7 @@ class Event(Activity):
             'subject': self.title,
             'startdt': format_date(self.start),
             'enddt': format_date(self.end),
-            'body': HTMLParser().unescape(
-                u'{}\n{}'.format(
-                    strip_tags(self.description), self.get_absolute_url()
-                )
-            ),
+            'body': self.details
         }
 
         if self.location:

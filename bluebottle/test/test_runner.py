@@ -1,12 +1,11 @@
-from builtins import range
 import locale
+from builtins import range
 
 from django.db import connection, IntegrityError
 from django_slowtests.testrunner import DiscoverSlowestTestsRunner
-
+from djmoney.contrib.exchange.models import Rate, ExchangeBackend
 from tenant_schemas.utils import get_tenant_model
 
-from bluebottle.test.factory_models.rates import RateFactory, ExchangeBackendFactory
 from bluebottle.test.utils import InitProjectDataMixin
 
 
@@ -42,13 +41,13 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         self.init_projects()
 
         try:
-            backend = ExchangeBackendFactory.create(base_currency='USD')
-            RateFactory.create(backend=backend, currency='USD', value=1)
-            RateFactory.create(backend=backend, currency='EUR', value=1.5)
-            RateFactory.create(backend=backend, currency='XOF', value=1000)
-            RateFactory.create(backend=backend, currency='NGN', value=500)
-            RateFactory.create(backend=backend, currency='UGX', value=5000)
-            RateFactory.create(backend=backend, currency='KES', value=100)
+            backend, _created = ExchangeBackend.objects.get_or_create(base_currency='USD')
+            Rate.objects.update_or_create(backend=backend, currency='USD', defaults={'value': 1})
+            Rate.objects.update_or_create(backend=backend, currency='EUR', defaults={'value': 1.5})
+            Rate.objects.update_or_create(backend=backend, currency='XOF', defaults={'value': 1000})
+            Rate.objects.update_or_create(backend=backend, currency='NGN', defaults={'value': 500})
+            Rate.objects.update_or_create(backend=backend, currency='UGX', defaults={'value': 5000})
+            Rate.objects.update_or_create(backend=backend, currency='KES', defaults={'value': 100})
         except IntegrityError:
             pass
 

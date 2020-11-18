@@ -1,8 +1,8 @@
 from datetime import timedelta
+
 from django.utils.timezone import now
 from djmoney.money import Money
 
-from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
     PlainPayoutAccountFactory, DonationFactory
@@ -22,7 +22,7 @@ class FundingTriggerTests(BluebottleTestCase):
         )
         BudgetLineFactory.create(activity=self.funding)
         payout_account = PlainPayoutAccountFactory.create()
-        bank_account = BankAccountFactory.create(connect_account=payout_account)
+        bank_account = BankAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = bank_account
         self.funding.states.submit(save=True)
 
@@ -59,17 +59,3 @@ class FundingTriggerTests(BluebottleTestCase):
         self.funding.save()
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
-
-
-class PlainPayoutAccountTriggerTests(BluebottleTestCase):
-
-    def setUp(self):
-        self.account = PlainPayoutAccountFactory.create(reviewed=False)
-        self.account.document = PrivateDocumentFactory()
-        self.account.save()
-
-    def test_reviewed(self):
-        self.assertEqual(self.account.status, 'new')
-        self.account.reviewed = True
-        self.account.save()
-        self.assertEqual(self.account.status, 'verified')

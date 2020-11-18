@@ -1,14 +1,14 @@
+from html.parser import HTMLParser
 from urllib.parse import urlencode
 
 import pytz
 
-from html.parser import HTMLParser
 from timezonefinder import TimezoneFinder
 
 from django.db import models, connection
-from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.utils.html import strip_tags
+from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution, ContributionValue
@@ -260,13 +260,14 @@ class OnADateApplication(Application, Contribution):
         )
 
     class JSONAPIMeta:
-        resource_name = 'contributions/time-based/on-a-date-applications'
-
-    def __str__(self):
-        return str(_("On a date application"))
+        resource_name = 'contributions/time-based/date-applications'
 
 
-class PeriodApplication(Contribution, Application):
+def __str__(self):
+    return str(_("On a date application"))
+
+
+class PeriodApplication(Application, Contribution):
     motivation = models.TextField(blank=True)
     document = PrivateDocumentField(blank=True, null=True)
 

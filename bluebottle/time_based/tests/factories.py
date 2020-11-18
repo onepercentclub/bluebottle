@@ -48,7 +48,7 @@ class PeriodActivityFactory(TimeBasedFactory):
     start = (now() + timedelta(weeks=1)).date()
 
 
-class OnADateApplicationFactory(factory.DjangoModelFactory):
+class DateParticipantFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = DateParticipant
 
@@ -56,7 +56,7 @@ class OnADateApplicationFactory(factory.DjangoModelFactory):
     user = factory.SubFactory(BlueBottleUserFactory)
 
 
-class PeriodApplicationFactory(factory.DjangoModelFactory):
+class PeriodParticipantFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = PeriodParticipant
 
@@ -68,7 +68,7 @@ class DurationFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Duration
 
-    contributor = factory.SubFactory(PeriodApplicationFactory)
+    contributor = factory.SubFactory(PeriodParticipantFactory)
 
     value = timedelta(hours=20)
 

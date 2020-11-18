@@ -92,7 +92,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start', 'duration', 'online_meeting_url', 'links'
+            'start', 'duration', 'utc_offset', 'online_meeting_url', 'links'
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
@@ -332,12 +332,10 @@ class ApplicationSerializer(BaseContributionSerializer):
         resource_name = 'contributions/time-based/applications'
         included_resources = [
             'user',
-            'activity',
             'document'
         ]
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
@@ -390,7 +388,6 @@ class ApplicationTransitionSerializer(TransitionSerializer):
         resource_name = 'contributions/time-based/application-transitions'
         included_resources = [
             'resource',
-            'resource.activity',
         ]
 
 
@@ -398,7 +395,6 @@ class OnADateApplicationTransitionSerializer(ApplicationTransitionSerializer):
     resource = ResourceRelatedField(queryset=OnADateApplication.objects.all())
     included_serializers = {
         'resource': 'bluebottle.time_based.serializers.OnADateApplicationSerializer',
-        'resource.activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }
 
     class JSONAPIMeta(ApplicationTransitionSerializer.JSONAPIMeta):
@@ -409,7 +405,6 @@ class PeriodApplicationTransitionSerializer(ApplicationTransitionSerializer):
     resource = ResourceRelatedField(queryset=PeriodApplication.objects.all())
     included_serializers = {
         'resource': 'bluebottle.time_based.serializers.PeriodApplicationSerializer',
-        'resource.activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }
 
     class JSONAPIMeta(ApplicationTransitionSerializer.JSONAPIMeta):

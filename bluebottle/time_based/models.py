@@ -1,5 +1,10 @@
 from urllib.parse import urlencode
 
+import pytz
+
+from html.parser import HTMLParser
+from timezonefinder import TimezoneFinder
+
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
@@ -10,7 +15,8 @@ from bluebottle.activities.models import Activity, Contribution, ContributionVal
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
 
-from html.parser import HTMLParser
+
+tf = TimezoneFinder()
 
 
 class TimeBasedActivity(Activity):
@@ -103,6 +109,21 @@ class DateActivity(TimeBasedActivity):
     @property
     def uid(self):
         return '{}-{}-{}'.format(connection.tenant.client_name, 'dateactivity', self.pk)
+
+    @property
+    def local_timezone(self):
+        if self.location and self.location.position:
+            tz_name = tf.timezone_at(
+                lng=self.location.position.x,
+                lat=self.location.position.y
+            )
+            return pytz.timezone(tz_name)
+
+    @property
+    def utc_offset(self):
+        tz = self.local_timezone or timezone.get_current_timezone()
+        if self.start and tz:
+            return self.start.astimezone(tz).utcoffset().total_seconds() / 60
 
     @property
     def google_calendar_link(self):

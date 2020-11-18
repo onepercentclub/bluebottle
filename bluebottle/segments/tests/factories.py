@@ -11,6 +11,7 @@ class SegmentTypeFactory(factory.DjangoModelFactory):
         model = SegmentType
 
     name = factory.Faker('word')
+    slug = factory.Faker('slug')
     is_active = True
 
 

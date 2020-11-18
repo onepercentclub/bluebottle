@@ -11,10 +11,10 @@ class DonorOwnerPermission(IsOwner):
 
 class PaymentPermission(IsOwner):
     def has_object_permission(self, request, view, obj):
-        if not request.user.is_authenticated and request.auth and obj.donor.client_secret:
-            return obj.donor.client_secret == request.auth
+        if not request.user.is_authenticated and request.auth and obj.donation.client_secret:
+            return obj.donation.client_secret == request.auth
 
-        return super(PaymentPermission, self).has_object_permission(request, view, obj.donor)
+        return super(PaymentPermission, self).has_object_permission(request, view, obj.donation)
 
 
 class CanExportSupportersPermission(IsOwner):

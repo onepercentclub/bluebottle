@@ -139,7 +139,7 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
             response = self.client.post(
                 self.intent_url,
                 data=json.dumps(self.data),
-                HTTP_AUTHORIZATION='Donor {}'.format(self.donation.client_secret)
+                HTTP_AUTHORIZATION='Donation {}'.format(self.donation.client_secret)
             )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -159,7 +159,7 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
             response = self.client.post(
                 self.intent_url,
                 data=json.dumps(self.data),
-                HTTP_AUTHORIZATION='Donor wrong-token'
+                HTTP_AUTHORIZATION='Donation wrong-token'
             )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -242,7 +242,7 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
             response = self.client.post(
                 self.payment_url,
                 data=json.dumps(self.data),
-                HTTP_AUTHORIZATION='Donor {}'.format(self.donation.client_secret)
+                HTTP_AUTHORIZATION='Donation {}'.format(self.donation.client_secret)
             )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

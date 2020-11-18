@@ -215,12 +215,12 @@ class PeriodActivityListSerializer(TimeBasedActivityListSerializer):
 
 
 class OnADateParticipantDocumentSerializer(PrivateDocumentSerializer):
-    content_view_name = 'period-application-document'
+    content_view_name = 'period-participant-document'
     relationship = 'dateparticipant_set'
 
 
 class PeriodParticipantDocumentSerializer(PrivateDocumentSerializer):
-    content_view_name = 'on-a-date-application-document'
+    content_view_name = 'date-participant-document'
     relationship = 'periodparticipant_set'
 
 
@@ -295,7 +295,7 @@ class ParticipantSerializer(BaseContributorSerializer):
         ]
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        resource_name = 'contributors/time-based/applications'
+        resource_name = 'contributors/time-based/participants'
         included_resources = [
             'user',
             'activity',

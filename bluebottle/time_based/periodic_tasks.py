@@ -10,7 +10,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DurationStateMachine
 )
-from bluebottle.time_based.triggers import has_applications, has_no_applications
+from bluebottle.time_based.triggers import has_participants, has_no_participants
 from bluebottle.time_based.effects import CreatePeriodParticipationEffect
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
@@ -26,10 +26,10 @@ class TimeBasedActivityStartedTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect(TimeBasedStateMachine.start, conditions=[
-            has_applications
+            has_participants
         ]),
         TransitionEffect(TimeBasedStateMachine.cancel, conditions=[
-            has_no_applications
+            has_no_participants
         ]),
     ]
 
@@ -47,10 +47,10 @@ class PeriodActivityFinishedTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect(TimeBasedStateMachine.succeed, conditions=[
-            has_applications
+            has_participants
         ]),
         TransitionEffect(TimeBasedStateMachine.cancel, conditions=[
-            has_no_applications
+            has_no_participants
         ]),
     ]
 
@@ -58,7 +58,7 @@ class PeriodActivityFinishedTask(ModelPeriodicTask):
         return _("Finish an activity when deadline has passed.")
 
 
-class NewPeriodForApplicationTask(ModelPeriodicTask):
+class NewPeriodForParticipantTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -72,7 +72,7 @@ class NewPeriodForApplicationTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return _("Create a new period for application")
+        return _("Create a new period for participant")
 
 
 class DateActivityStartedTask(ModelPeriodicTask):
@@ -85,10 +85,10 @@ class DateActivityStartedTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect(TimeBasedStateMachine.start, conditions=[
-            has_applications
+            has_participants
         ]),
         TransitionEffect(TimeBasedStateMachine.cancel, conditions=[
-            has_no_applications
+            has_no_participants
         ]),
     ]
 
@@ -106,10 +106,10 @@ class DateActivityFinishedTask(ModelPeriodicTask):
 
     effects = [
         TransitionEffect(TimeBasedStateMachine.succeed, conditions=[
-            has_applications
+            has_participants
         ]),
         TransitionEffect(TimeBasedStateMachine.cancel, conditions=[
-            has_no_applications
+            has_no_participants
         ]),
     ]
 
@@ -138,5 +138,5 @@ DateActivity.periodic_tasks = [DateActivityFinishedTask, DateActivityStartedTask
 PeriodActivity.periodic_tasks = [
     TimeBasedActivityStartedTask, PeriodActivityFinishedTask
 ]
-PeriodParticipant.periodic_tasks = [NewPeriodForApplicationTask]
+PeriodParticipant.periodic_tasks = [NewPeriodForParticipantTask]
 Duration.periodic_tasks = [DurationFinishedTask]

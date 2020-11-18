@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('is_online', models.NullBooleanField(default=None, verbose_name='is online')),
                 ('location_hint', models.TextField(blank=True, null=True, verbose_name='location hint')),
                 ('registration_deadline', models.DateField(blank=True, null=True, verbose_name='deadline to apply')),
-                ('review', models.NullBooleanField(default=None, verbose_name='review applications')),
+                ('review', models.NullBooleanField(default=None, verbose_name='review participants')),
             ],
             options={
                 'abstract': False,

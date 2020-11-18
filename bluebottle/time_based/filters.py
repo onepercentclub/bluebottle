@@ -2,7 +2,7 @@ from django.db.models import Q
 from rest_framework_json_api.django_filters import DjangoFilterBackend
 
 from bluebottle.time_based.models import PeriodParticipant, DateParticipant
-from bluebottle.time_based.states import ApplicationStateMachine
+from bluebottle.time_based.states import ParticipantStateMachine
 
 
 class ParticipantListFilter(DjangoFilterBackend):
@@ -18,9 +18,9 @@ class ParticipantListFilter(DjangoFilterBackend):
                 Q(activity__owner=request.user) |
                 Q(activity__initiative__activity_manager=request.user) |
                 Q(status__in=[
-                    ApplicationStateMachine.new.value,
-                    ApplicationStateMachine.accepted.value,
-                    ApplicationStateMachine.succeeded.value
+                    ParticipantStateMachine.new.value,
+                    ParticipantStateMachine.accepted.value,
+                    ParticipantStateMachine.succeeded.value
                 ])
             )
         else:
@@ -28,8 +28,8 @@ class ParticipantListFilter(DjangoFilterBackend):
                 PeriodParticipant, DateParticipant
             ).filter(
                 status__in=[
-                    ApplicationStateMachine.new.value,
-                    ApplicationStateMachine.accepted.value,
-                    ApplicationStateMachine.succeeded.value
+                    ParticipantStateMachine.new.value,
+                    ParticipantStateMachine.accepted.value,
+                    ParticipantStateMachine.succeeded.value
                 ])
         return super().filter_queryset(request, queryset, view)

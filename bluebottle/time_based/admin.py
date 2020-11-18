@@ -40,7 +40,7 @@ class BaseParticipantAdminInline(admin.TabularInline):
             reverse(
                 'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
                 args=(obj.id,)),
-            _('Edit application')
+            _('Edit participant')
         )
 
     def has_add_permission(self, request):
@@ -104,7 +104,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
         ('is_online', 'Will be hosted online?'),
         ('location', 'Location'),
         ('location_hint', 'Location Hint'),
-        ('review', 'Review applications')
+        ('review', 'Review participants')
     )
 
 
@@ -187,7 +187,7 @@ class ParticiationInlineAdmin(admin.TabularInline):
 
 
 @admin.register(PeriodParticipant)
-class PeriodApplicationAdmin(ContributorChildAdmin):
+class PeriodParticipantAdmin(ContributorChildAdmin):
     inlines = ContributorChildAdmin.inlines + [ParticiationInlineAdmin]
 
 
@@ -211,6 +211,6 @@ class DurationAdmin(StateMachineAdmin):
 
 
 @admin.register(DateParticipant)
-class DateApplicationAdmin(ContributorChildAdmin):
+class DateParticipantAdmin(ContributorChildAdmin):
     fields = ContributorChildAdmin.fields
     inlines = ContributorChildAdmin.inlines + [ParticiationInlineAdmin]

@@ -24,7 +24,7 @@ class TimeBasedActivity(Activity):
 
     expertise = models.ForeignKey('tasks.Skill', verbose_name=_('skill'), blank=True, null=True)
 
-    review = models.NullBooleanField(_('review applications'), null=True, default=None)
+    review = models.NullBooleanField(_('review participants'), null=True, default=None)
 
     @property
     def required_fields(self):
@@ -36,16 +36,16 @@ class TimeBasedActivity(Activity):
         return fields
 
     @property
-    def applications(self):
+    def participants(self):
         return self.contributors.instance_of(PeriodParticipant, DateParticipant)
 
     @property
-    def active_applications(self):
-        return self.applications.filter(status__in=('accepted', 'new',))
+    def active_participants(self):
+        return self.participants.filter(status__in=('accepted', 'new',))
 
     @property
-    def accepted_applications(self):
-        return self.applications.filter(status='accepted')
+    def accepted_participants(self):
+        return self.participants.filter(status='accepted')
 
     @property
     def durations(self):
@@ -225,15 +225,15 @@ class DateParticipant(Participant):
         verbose_name = _("Participant on a date")
         verbose_name_plural = _("Participants on a date")
         permissions = (
-            ('api_read_dateparticipant', 'Can view application through the API'),
-            ('api_add_dateparticipant', 'Can add application through the API'),
-            ('api_change_dateparticipant', 'Can change application through the API'),
-            ('api_delete_dateparticipant', 'Can delete application through the API'),
+            ('api_read_dateparticipant', 'Can view participant through the API'),
+            ('api_add_dateparticipant', 'Can add participant through the API'),
+            ('api_change_dateparticipant', 'Can change participant through the API'),
+            ('api_delete_dateparticipant', 'Can delete participant through the API'),
 
-            ('api_read_own_dateparticipant', 'Can view own application through the API'),
-            ('api_add_own_dateparticipant', 'Can add own application through the API'),
-            ('api_change_own_dateparticipant', 'Can change own application through the API'),
-            ('api_delete_own_dateparticipant', 'Can delete own application through the API'),
+            ('api_read_own_dateparticipant', 'Can view own participant through the API'),
+            ('api_add_own_dateparticipant', 'Can add own participant through the API'),
+            ('api_change_own_dateparticipant', 'Can change own participant through the API'),
+            ('api_delete_own_dateparticipant', 'Can delete own participant through the API'),
         )
 
     class JSONAPIMeta:

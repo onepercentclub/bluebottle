@@ -214,13 +214,13 @@ class PeriodActivityListSerializer(TimeBasedActivityListSerializer):
         resource_name = 'activities/time-based/period'
 
 
-class OnADateParticipantDocumentSerializer(PrivateDocumentSerializer):
-    content_view_name = 'period-application-document'
+class DateParticipantDocumentSerializer(PrivateDocumentSerializer):
+    content_view_name = 'period-participant-document'
     relationship = 'dateparticipant_set'
 
 
 class PeriodParticipantDocumentSerializer(PrivateDocumentSerializer):
-    content_view_name = 'on-a-date-application-document'
+    content_view_name = 'date-participant-document'
     relationship = 'periodparticipant_set'
 
 
@@ -295,7 +295,7 @@ class ParticipantSerializer(BaseContributorSerializer):
         ]
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        resource_name = 'contributors/time-based/applications'
+        resource_name = 'contributors/time-based/participants'
         included_resources = [
             'user',
             'activity',
@@ -324,7 +324,7 @@ class DateParticipantSerializer(ParticipantSerializer):
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers,
-        **{'document': 'bluebottle.time_based.serializers.OnADateParticipantDocumentSerializer'}
+        **{'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer'}
     )
 
 

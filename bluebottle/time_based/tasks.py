@@ -39,10 +39,10 @@ def with_a_deadline_tasks():
 
 @periodic_task(
     run_every=(crontab(minute='*/15')),
-    name="on_a_date_application_tasks",
+    name="date_participant_tasks",
     ignore_result=True
 )
-def on_a_date_application_tasks():
+def date_participant_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             for task in DateParticipant.get_periodic_tasks():
@@ -51,10 +51,10 @@ def on_a_date_application_tasks():
 
 @periodic_task(
     run_every=(crontab(minute='*/15')),
-    name="period_application_tasks",
+    name="period_participant_tasks",
     ignore_result=True
 )
-def period_application_tasks():
+def period_participant_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             for task in PeriodParticipant.get_periodic_tasks():

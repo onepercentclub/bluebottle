@@ -88,34 +88,34 @@ class PeriodStateMachine(TimeBasedStateMachine):
     )
 
 
-class ApplicationStateMachine(ContributorStateMachine):
+class ParticipantStateMachine(ContributorStateMachine):
     accepted = State(
         _('accepted'),
         'accepted',
-        _('The application was accepted and will join the activity.')
+        _('The participant was accepted and will join the activity.')
     )
     rejected = State(
         _('rejected'),
         'rejected',
-        _("The application was rejected and will not join the activity.")
+        _("The participant was rejected and will not join the activity.")
     )
     withdrawn = State(
         _('withdrawn'),
         'withdrawn',
-        _('The application withdrew and will no longer join the activity.')
+        _('The participant withdrew and will no longer join the activity.')
     )
     no_show = State(
         _('no show'),
         'no_show',
-        _('The application did not contribute to the activity.')
+        _('The participant did not contribute to the activity.')
     )
 
     def is_user(self, user):
-        """is application"""
+        """is participant"""
         return self.instance.user == user
 
-    def can_accept_application(self, user):
-        """can accept application"""
+    def can_accept_participant(self, user):
+        """can accept participant"""
         return user in [
             self.instance.activity.owner,
             self.instance.activity.initiative.activity_manager,
@@ -142,7 +142,7 @@ class ApplicationStateMachine(ContributorStateMachine):
         name=_('Accept'),
         description=_("Participant was accepted."),
         automatic=False,
-        permission=can_accept_application,
+        permission=can_accept_participant,
     )
 
     reject = Transition(
@@ -154,7 +154,7 @@ class ApplicationStateMachine(ContributorStateMachine):
         name=_('Reject'),
         description=_("Participant was rejected."),
         automatic=False,
-        permission=can_accept_application,
+        permission=can_accept_participant,
     )
 
     withdraw = Transition(
@@ -186,7 +186,7 @@ class ApplicationStateMachine(ContributorStateMachine):
         name=_('Mark absent'),
         description=_("User did not contribute to the task and is marked absent."),
         automatic=False,
-        permission=can_accept_application,
+        permission=can_accept_participant,
     )
     mark_present = Transition(
         no_show,
@@ -194,25 +194,25 @@ class ApplicationStateMachine(ContributorStateMachine):
         name=_('Mark present'),
         description=_("Participant did contribute to the task, after first been marked absent."),
         automatic=False,
-        permission=can_accept_application,
+        permission=can_accept_participant,
     )
 
 
 @register(DateParticipant)
-class OnADateApplicationStateMachine(ApplicationStateMachine):
+class DateParticipantStateMachine(ParticipantStateMachine):
     pass
 
 
 @register(PeriodParticipant)
-class PeriodApplicationStateMachine(ApplicationStateMachine):
+class PeriodParticipantStateMachine(ParticipantStateMachine):
     stopped = State(
         _('stopped'),
         'stopped',
-        _('The application (temporarily) stopped. Durations will no longer be created.')
+        _('The participant (temporarily) stopped. Durations will no longer be created.')
     )
 
     stop = Transition(
-        ApplicationStateMachine.accepted,
+        ParticipantStateMachine.accepted,
         stopped,
         name=_('Stop'),
         description=_("Participant stopped contributing."),
@@ -221,7 +221,7 @@ class PeriodApplicationStateMachine(ApplicationStateMachine):
 
     start = Transition(
         stopped,
-        ApplicationStateMachine.accepted,
+        ParticipantStateMachine.accepted,
         name=_('Start'),
         description=_("Participant started contributing again."),
         automatic=False,

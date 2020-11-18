@@ -19,7 +19,7 @@ from bluebottle.time_based.effects import (
 from bluebottle.time_based.messages import DateChanged, DeadlineChanged
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine,
-    ApplicationStateMachine, PeriodApplicationStateMachine, DurationStateMachine
+    ParticipantStateMachine, PeriodParticipantStateMachine, DurationStateMachine
 )
 
 
@@ -39,12 +39,12 @@ def is_not_full(effect):
     )
 
 
-def has_applications(effect):
-    return len(effect.instance.active_applications) > 0
+def has_participants(effect):
+    return len(effect.instance.active_participants) > 0
 
 
-def has_no_applications(effect):
-    return len(effect.instance.active_applications) == 0
+def has_no_participants(effect):
+    return len(effect.instance.active_participants) == 0
 
 
 def is_finished(effect):
@@ -186,13 +186,13 @@ class DateTriggers(TimeBasedTriggers):
                 TransitionEffect(
                     DateStateMachine.succeed,
                     conditions=[
-                        is_finished, has_applications
+                        is_finished, has_participants
                     ]
                 ),
                 TransitionEffect(
                     DateStateMachine.expire,
                     conditions=[
-                        is_finished, has_no_applications
+                        is_finished, has_no_participants
                     ]
                 ),
                 TransitionEffect(
@@ -265,13 +265,13 @@ class PeriodTriggers(TimeBasedTriggers):
                 TransitionEffect(
                     DateStateMachine.succeed,
                     conditions=[
-                        deadline_is_passed, has_applications
+                        deadline_is_passed, has_participants
                     ]
                 ),
                 TransitionEffect(
                     DateStateMachine.expire,
                     conditions=[
-                        deadline_is_passed, has_no_applications
+                        deadline_is_passed, has_no_participants
                     ]
                 ),
                 TransitionEffect(
@@ -328,10 +328,10 @@ def activity_is_finished(effect):
 class ApplicationTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
-            ApplicationStateMachine.initiate,
+            ParticipantStateMachine.initiate,
             effects=[
                 TransitionEffect(
-                    ApplicationStateMachine.accept,
+                    ParticipantStateMachine.accept,
                     conditions=[automatically_accept]
                 ),
 
@@ -339,10 +339,10 @@ class ApplicationTriggers(ContributorTriggers):
         ),
 
         TransitionTrigger(
-            ApplicationStateMachine.reapply,
+            ParticipantStateMachine.reapply,
             effects=[
                 TransitionEffect(
-                    ApplicationStateMachine.accept,
+                    ParticipantStateMachine.accept,
                     conditions=[automatically_accept]
                 ),
 
@@ -354,7 +354,7 @@ class ApplicationTriggers(ContributorTriggers):
         ),
 
         TransitionTrigger(
-            ApplicationStateMachine.accept,
+            ParticipantStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
                     'activity',
@@ -381,7 +381,7 @@ class ApplicationTriggers(ContributorTriggers):
         ),
 
         TransitionTrigger(
-            ApplicationStateMachine.reject,
+            ParticipantStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
                     'activity',
@@ -397,7 +397,7 @@ class ApplicationTriggers(ContributorTriggers):
         ),
 
         TransitionTrigger(
-            ApplicationStateMachine.withdraw,
+            ParticipantStateMachine.withdraw,
             effects=[
                 RelatedTransitionEffect(
                     'activity',
@@ -418,7 +418,7 @@ class ApplicationTriggers(ContributorTriggers):
 class OnADateApplicationTriggers(ApplicationTriggers):
     triggers = ApplicationTriggers.triggers + [
         TransitionTrigger(
-            ApplicationStateMachine.initiate,
+            ParticipantStateMachine.initiate,
             effects=[
                 CreateDateParticipationEffect,
             ]
@@ -430,14 +430,14 @@ class OnADateApplicationTriggers(ApplicationTriggers):
 class PeriodApplicationTriggers(ApplicationTriggers):
     triggers = ApplicationTriggers.triggers + [
         TransitionTrigger(
-            ApplicationStateMachine.initiate,
+            ParticipantStateMachine.initiate,
             effects=[
                 CreatePeriodParticipationEffect,
             ]
         ),
 
         TransitionTrigger(
-            PeriodApplicationStateMachine.stop,
+            PeriodParticipantStateMachine.stop,
             effects=[
                 RelatedTransitionEffect(
                     'current_duration',

@@ -228,7 +228,7 @@ class Funding(Activity):
                     DonorStateMachine.succeeded.value,
                     DonorStateMachine.activity_refunded.value,
                 ),
-                donation__payment__pledgepayment__isnull=True
+                donor__payment__pledgepayment__isnull=True
             )
             if self.target and self.target.currency:
                 total = calculate_total(donations, self.target.currency)
@@ -249,7 +249,7 @@ class Funding(Activity):
                 DonorStateMachine.succeeded.value,
                 DonorStateMachine.activity_refunded.value,
             ),
-            donation__payment__pledgepayment__isnull=False
+            donor__payment__pledgepayment__isnull=False
         )
         if self.target and self.target.currency:
             total = calculate_total(donations, self.target.currency)
@@ -442,7 +442,7 @@ class Payout(TriggerMixin, models.Model):
                 payout.delete()
             elif payout.donations.count() == 0:
                 raise AssertionError('Payout without donations already started!')
-        ready_donations = activity.donations.filter(status='succeeded', donation__payout__isnull=True)
+        ready_donations = activity.donations.filter(status='succeeded', donor__payout__isnull=True)
         groups = set([
             (don.payout_amount_currency, don.payment.provider) for don in
             ready_donations
@@ -450,7 +450,7 @@ class Payout(TriggerMixin, models.Model):
         for currency, provider in groups:
             donations = [
                 don for don in
-                ready_donations.filter(donation__payout_amount_currency=currency)
+                ready_donations.filter(donor__payout_amount_currency=currency)
                 if don.payment.provider == provider
             ]
             payout = cls.objects.create(

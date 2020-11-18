@@ -428,7 +428,7 @@ class DonorSerializer(BaseContributorSerializer):
 
     def get_fields(self):
         """
-        If the donation is anonymous, we do not return the user.
+        If the donor is anonymous, we do not return the user.
         """
         fields = super(DonorSerializer, self).get_fields()
         if isinstance(self.instance, Donor) and self.instance.anonymous:

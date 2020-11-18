@@ -6,9 +6,8 @@ from django.db import migrations, connection
 
 
 def create_update_function(apps, schema_editor):
-    drop_sql = "DROP FUNCTION refresh_union_view(text);"
     function_sql = """
-        CREATE OR REPLACE FUNCTION refresh_union_view(my_table text, my_view text) RETURNS void AS $$
+        CREATE OR REPLACE FUNCTION refresh_union_table(my_table text, my_view text) RETURNS void AS $$
         DECLARE
           schema TEXT;
           col TEXT;
@@ -32,7 +31,6 @@ def create_update_function(apps, schema_editor):
     """
 
     if connection.tenant.schema_name == 'public':
-        schema_editor.execute(drop_sql, params=None)
         schema_editor.execute(function_sql, params=None)
 
 

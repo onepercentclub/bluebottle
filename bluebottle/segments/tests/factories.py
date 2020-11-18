@@ -9,9 +9,7 @@ class SegmentTypeFactory(factory.DjangoModelFactory):
 
     class Meta(object):
         model = SegmentType
-
-    name = factory.Faker('word')
-    slug = factory.Faker('slug')
+    name = factory.Faker('sentence')
     is_active = True
 
 

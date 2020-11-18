@@ -267,14 +267,14 @@ class Statistics(object):
     def pledged_total(self):
         """ Total amount of pledged donations """
         donations = PledgePayment.objects.filter(
-            self.date_filter('donor__contributor_date'),
-            donor__status='succeeded'
+            self.date_filter('donation__contributor_date'),
+            donation__status='succeeded'
         )
         totals = donations.values(
-            'donor__amount_currency'
-        ).annotate(total=Sum('donor__amount'))
+            'donation__amount_currency'
+        ).annotate(total=Sum('donation__amount'))
 
-        amounts = [Money(total['total'], total['donor__amount_currency']) for total in totals]
+        amounts = [Money(total['total'], total['donation__amount_currency']) for total in totals]
         if totals:
             donated = sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
         else:

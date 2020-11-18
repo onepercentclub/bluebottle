@@ -46,7 +46,7 @@ class BaseNotificationEffect(Effect):
     def is_valid(self):
         return (
             all([condition(self) for condition in self.conditions]) and
-            self.message(self.instance).get_recipients()
+            len(self.message(self.instance).get_recipients()) > 0
         )
 
     def to_html(self):

@@ -1,0 +1,10 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block content %}{{block.super}}{% block message%}{% blocktrans with title=obj.title  context 'email' %}
+<p>Unfortunately, nobody applied to your activity "{{ title }}" before the deadline to apply. That’s why we have cancelled your activity.</p>
+
+<p>Don’t worry, you can always create a new activity and try again.</p> 
+
+<p>Need some tips to make your activity stand out? Reach out to the platform manager by replying to this email.</p>
+{% endblocktrans %}{% endblock %}{% endblock %}

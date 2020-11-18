@@ -111,6 +111,10 @@ class DateActivity(TimeBasedActivity):
         return '{}-{}-{}'.format(connection.tenant.client_name, 'dateactivity', self.pk)
 
     @property
+    def end(self):
+        return self.start + self.duration
+
+    @property
     def local_timezone(self):
         if self.location and self.location.position:
             tz_name = tf.timezone_at(

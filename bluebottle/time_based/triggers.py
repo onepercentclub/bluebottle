@@ -16,7 +16,12 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.effects import (
     CreateOnADateDurationEffect, CreatePeriodDurationEffect, SetEndDateEffect
 )
-from bluebottle.time_based.messages import DateChanged, DeadlineChanged
+from bluebottle.time_based.messages import (
+    DateChanged, DeadlineChanged,
+    ActivitySucceededNotification, ActivitySucceededManuallyNotification,
+    ActivityExpiredNotification, ActivityRejectedNotification,
+    ActivityCancelledNotification
+)
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine,
     ApplicationStateMachine, PeriodApplicationStateMachine, DurationStateMachine
@@ -51,7 +56,7 @@ def is_finished(effect):
     return (
         effect.instance.start and
         effect.instance.duration and
-        effect.instance.start + effect.instance.duration
+        effect.instance.start + effect.instance.duration < now()
     )
 
 
@@ -89,6 +94,13 @@ def deadline_is_not_passed(effect):
     return (
         effect.instance.deadline and
         effect.instance.deadline > date.today()
+    )
+
+
+def start_is_not_passed(effect):
+    return (
+        effect.instance.start and
+        effect.instance.start > date.today()
     )
 
 
@@ -139,6 +151,31 @@ class TimeBasedTriggers(ActivityTriggers):
                 TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
                     registration_deadline_is_not_passed
                 ]),
+            ]
+        ),
+
+        TransitionTrigger(
+            TimeBasedStateMachine.succeed,
+            effects=[
+                NotificationEffect(ActivitySucceededNotification),
+            ]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.reject,
+            effects=[
+                NotificationEffect(ActivityRejectedNotification),
+            ]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.cancel,
+            effects=[
+                NotificationEffect(ActivityCancelledNotification),
+            ]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.expire,
+            effects=[
+                NotificationEffect(ActivityExpiredNotification),
             ]
         ),
     ]
@@ -236,12 +273,20 @@ class PeriodTriggers(TimeBasedTriggers):
                 RelatedTransitionEffect(
                     'accepted_durations',
                     DurationStateMachine.succeed
-                )
+                ),
+                NotificationEffect(ActivitySucceededManuallyNotification),
             ]
         ),
+
         ModelChangedTrigger(
             'start',
             effects=[
+                NotificationEffect(
+                    DeadlineChanged,
+                    conditions=[
+                        start_is_not_passed
+                    ]
+                ),
                 TransitionEffect(
                     DateStateMachine.start,
                     conditions=[is_started]

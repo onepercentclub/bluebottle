@@ -27,7 +27,7 @@ def is_full(effect):
     "the activity is full"
     return (
         effect.instance.capacity and
-        effect.instance.capacity <= len(effect.instance.accepted_applications)
+        effect.instance.capacity <= len(effect.instance.accepted_participants)
     )
 
 
@@ -35,7 +35,7 @@ def is_not_full(effect):
     "the activity is not full"
     return (
         effect.instance.capacity and
-        effect.instance.capacity > len(effect.instance.accepted_applications)
+        effect.instance.capacity > len(effect.instance.accepted_participants)
     )
 
 
@@ -294,7 +294,7 @@ def activity_will_be_full(effect):
     activity = effect.instance.activity
     return (
         activity.capacity and
-        activity.capacity == len(activity.accepted_applications) + 1
+        activity.capacity == len(activity.accepted_participants) + 1
     )
 
 
@@ -303,7 +303,7 @@ def activity_will_not_be_full(effect):
     activity = effect.instance.activity
     return (
         activity.capacity and
-        activity.capacity >= len(activity.accepted_applications)
+        activity.capacity >= len(activity.accepted_participants)
     )
 
 
@@ -325,7 +325,7 @@ def activity_is_finished(effect):
         return False
 
 
-class ApplicationTriggers(ContributorTriggers):
+class ParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
             ParticipantStateMachine.initiate,
@@ -415,8 +415,8 @@ class ApplicationTriggers(ContributorTriggers):
 
 
 @register(DateParticipant)
-class OnADateApplicationTriggers(ApplicationTriggers):
-    triggers = ApplicationTriggers.triggers + [
+class OnADateParticipantTriggers(ParticipantTriggers):
+    triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
@@ -427,8 +427,8 @@ class OnADateApplicationTriggers(ApplicationTriggers):
 
 
 @register(PeriodParticipant)
-class PeriodApplicationTriggers(ApplicationTriggers):
-    triggers = ApplicationTriggers.triggers + [
+class PeriodParticipantTriggers(ParticipantTriggers):
+    triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[

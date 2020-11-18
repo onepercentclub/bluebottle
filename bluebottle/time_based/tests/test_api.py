@@ -232,7 +232,7 @@ class TimeBasedDetailAPIViewTestCase():
         )
 
     def test_get_contributors(self):
-        self.participant.create_batch(5, activity=self.activity)
+        self.participant_factory.create_batch(5, activity=self.activity)
         response = self.client.get(self.url, user=self.activity.owner)
 
         data = response.json()['data']
@@ -323,7 +323,7 @@ class TimeBasedDetailAPIViewTestCase():
 class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
     type = 'date'
     factory = DateActivityFactory
-    participant = DateParticipantFactory
+    participant_factory = DateParticipantFactory
 
     def setUp(self):
         super().setUp()
@@ -597,7 +597,7 @@ class DatePrticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleT
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 
-    url_name = 'on-a-date-participant-list'
+    url_name = 'date-participant-list'
     participant_type = 'contributors/time-based/date-participants'
 
 
@@ -761,7 +761,7 @@ class DateParticipantDetailAPIViewTestCase(ParticipantDetailViewTestCase, Bluebo
     type = 'date'
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
-    url_name = 'on-a-date-participant-detail'
+    url_name = 'date-participant-detail'
     participant_type = 'contributors/time-based/date-participants'
 
 
@@ -861,7 +861,7 @@ class ParticipantTransitionAPIViewTestCase():
 
 class OnADateParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'date'
-    url_name = 'on-a-date-participant-transition-list'
+    url_name = 'date-participant-transition-list'
     participant_type = 'contributors/time-based/date-participant'
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory

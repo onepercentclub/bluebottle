@@ -64,7 +64,7 @@ class PeriodParticipantFactory(factory.DjangoModelFactory):
     user = factory.SubFactory(BlueBottleUserFactory)
 
 
-class DurationFactory(factory.DjangoModelFactory):
+class ParticipationFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Duration
 

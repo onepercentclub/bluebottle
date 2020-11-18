@@ -240,7 +240,7 @@ class DateParticipant(Participant):
         resource_name = 'contributors/time-based/date-participants'
 
     def __str__(self):
-        return str(_("Participant"))
+        return _("Participant {name}").format(name=self.user)
 
 
 class PeriodParticipant(Participant, Contributor):
@@ -269,7 +269,7 @@ class PeriodParticipant(Participant, Contributor):
         return self.contribution_values.get(status='new')
 
     def __str__(self):
-        return _("Participant {}").format(self.user)
+        return _("Participant {name}").format(name=self.user)
 
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/period-participants'
@@ -281,11 +281,14 @@ class Duration(ContributionValue):
     end = models.DateTimeField(_('end'), null=True, blank=True)
 
     class Meta:
-        verbose_name = _("Participation")
-        verbose_name_plural = _("Participations")
+        verbose_name = _("Session")
+        verbose_name_plural = _("Sessions")
 
     def __str__(self):
-        return str(_("Participation"))
+        return _("Session {name} {date}").format(
+            name=self.contributor.user,
+            date=self.start.date()
+        )
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

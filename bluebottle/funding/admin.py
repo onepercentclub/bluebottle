@@ -208,7 +208,7 @@ class FundingAdmin(ActivityChildAdmin):
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
     def donors_link(self, obj):
-        url = reverse('admin:funding_donation_changelist')
+        url = reverse('admin:funding_donor_changelist')
         total = obj.donors.filter(status=DonorStateMachine.succeeded.value).count()
         return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
     donors_link.short_description = _("Donations")
@@ -306,7 +306,7 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
                 donor.payment
             except Payment.DoesNotExist:
                 payment = FlutterwavePayment.objects.create(
-                    donor=donor,
+                    donation=donor,
                     tx_ref=donor.pk
                 )
                 payment.save()
@@ -343,7 +343,7 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
                     level='WARNING'
                 )
 
-        donor_url = reverse('admin:funding_donation_change', args=(donor.id,))
+        donor_url = reverse('admin:funding_donor_change', args=(donor.id,))
         response = HttpResponseRedirect(donor_url)
         return response
 

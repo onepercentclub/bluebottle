@@ -389,7 +389,7 @@ class DonationAmountChangedTrigger(ModelChangedTrigger):
 
 def donation_not_refunded(effect):
     """donation doesn't have status refunded or activity refunded"""
-    return effect.instance.donor.status not in [
+    return effect.instance.donation.status not in [
         DonorStateMachine.refunded.value,
         DonorStateMachine.activity_refunded.value,
     ]

@@ -95,7 +95,7 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
         ).exclude(
             status__in=['rejected', 'failed']
         ).exclude(
-            donation__status__in=['new']
+            donor__status__in=['new']
         ).order_by('-created')
 
     serializer_class = ContributorListSerializer

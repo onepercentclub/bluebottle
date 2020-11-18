@@ -68,7 +68,6 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
     @patch('bluebottle.funding_flutterwave.utils.post', return_value=success_response)
     def test_create_payment_success(self, flutterwave_post):
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
@@ -107,7 +106,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         response = self.client.post(
             self.payment_url,
             data=json.dumps(self.data),
-            HTTP_AUTHORIZATION='Donor {}'.format(donation.client_secret)
+            HTTP_AUTHORIZATION='Donation {}'.format(donation.client_secret)
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

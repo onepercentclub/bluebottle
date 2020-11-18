@@ -9,17 +9,17 @@ from bluebottle.utils.fields import FSMField
 
 class PaymentSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    donor = ResourceRelatedField(queryset=Donor.objects.all())
+    donation = ResourceRelatedField(queryset=Donor.objects.all())
 
     transitions = AvailableTransitionsField()
 
     included_serializers = {
-        'donor': 'bluebottle.funding.serializers.DonorSerializer',
+        'donation': 'bluebottle.funding.serializers.DonorSerializer',
     }
 
     class Meta(object):
         model = Payment
-        fields = ('donor', 'status', )
+        fields = ('donation', 'status', )
         meta_fields = ('transitions', 'created', 'updated', )
 
     class JSONAPIMeta(object):

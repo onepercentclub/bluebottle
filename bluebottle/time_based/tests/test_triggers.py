@@ -360,6 +360,25 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
 
         self.assertEqual(self.activity.status, 'full')
 
+    def test_succeed_manually(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.application_factory.create_batch(
+            self.activity.capacity,
+            activity=self.activity,
+        )
+
+        self.activity.refresh_from_db()
+
+        self.activity.states.succeed_manually(save=True)
+        self.assertEqual(self.activity.end, date.today())
+
+        for duration in self.activity.durations:
+            self.assertEqual(duration.status, 'succeeded')
+
 
 class ApplicationTriggerTestCase():
 

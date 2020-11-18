@@ -232,6 +232,23 @@ class TimeBasedDetailAPIViewTestCase():
             data['meta']['permissions']['PATCH'],
             True
         )
+        self.assertTrue(
+            {'name': 'delete', 'target': 'deleted', 'available': True}
+            in data['meta']['transitions']
+        )
+
+    def test_get_open(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.data = response.json()['data']
+        self.assertTrue(
+            {'name': 'cancel', 'target': 'cancelled', 'available': True}
+            in self.data['meta']['transitions']
+        )
 
     def test_get_contributions(self):
         applications = self.application_factory.create_batch(4, activity=self.activity)
@@ -478,6 +495,14 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.data['data']['attributes'].update({
             'deadline': str(date.today() + timedelta(days=21)),
         })
+
+    def test_get_open(self):
+        super().test_get_open()
+
+        self.assertTrue(
+            {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
+            in self.data['meta']['transitions']
+        )
 
 
 class TimeBasedTransitionAPIViewTestCase():
@@ -743,17 +768,31 @@ class ApplicationDetailViewTestCase():
             data['meta']['permissions']['PATCH'],
             True
         )
+        self.assertTrue(
+            {'name': 'withdraw', 'target': 'withdrawn', 'available': True}
+            in data['meta']['transitions']
+        )
 
     def test_get_owner(self):
         response = self.client.get(self.url, user=self.activity.owner)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        data = response.json()['data']
+        self.data = response.json()['data']
 
         self.assertEqual(
-            data['attributes']['motivation'],
+            self.data['attributes']['motivation'],
             self.application.motivation
+        )
+
+        self.assertFalse(
+            {'name': 'withdraw', 'target': 'withdrawn', 'available': True}
+            in self.data['meta']['transitions']
+        )
+
+        self.assertTrue(
+            {'name': 'reject', 'target': 'rejected', 'available': True}
+            in self.data['meta']['transitions']
         )
 
     def test_get_activity_manager(self):
@@ -849,6 +888,14 @@ class PeriodApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, Blue
     application_factory = PeriodApplicationFactory
     url_name = 'period-application-detail'
     application_type = 'contributions/time-based/period-applications'
+
+    def test_get_owner(self):
+        super().test_get_owner()
+
+        self.assertTrue(
+            {'name': 'stop', 'target': 'stopped', 'available': True}
+            in self.data['meta']['transitions']
+        )
 
 
 class ApplicationTransitionAPIViewTestCase():

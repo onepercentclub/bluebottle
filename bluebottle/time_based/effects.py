@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 
 from django.utils.translation import ugettext as _
 from django.utils.timezone import now, get_current_timezone
@@ -52,3 +52,11 @@ class CreatePeriodDurationEffect(Effect):
 
     def __str__(self):
         return _('Create contribution duration')
+
+
+class SetEndDateEffect(Effect):
+    title = _('End the activity')
+    template = 'admin/set_end_date.html'
+
+    def post_save(self, **kwargs):
+        self.instance.end = date.today()

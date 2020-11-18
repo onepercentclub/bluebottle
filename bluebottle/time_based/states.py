@@ -44,12 +44,6 @@ class TimeBasedStateMachine(ActivityStateMachine):
         automatic=True,
     )
 
-    succeed_manually = Transition(
-        [ActivityStateMachine.open, full, running],
-        ActivityStateMachine.succeeded,
-        name=_('Succeed'),
-        automatic=False,
-    )
     start = Transition(
         [
             ActivityStateMachine.open,
@@ -77,6 +71,12 @@ class DateStateMachine(TimeBasedStateMachine):
 
 @register(PeriodActivity)
 class PeriodStateMachine(TimeBasedStateMachine):
+    succeed_manually = Transition(
+        [ActivityStateMachine.open, TimeBasedStateMachine.full, TimeBasedStateMachine.running],
+        ActivityStateMachine.succeeded,
+        name=_('Succeed'),
+        automatic=False,
+    )
 
     reschedule = Transition(
         [

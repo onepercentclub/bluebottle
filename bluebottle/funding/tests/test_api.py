@@ -920,10 +920,9 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.patch(
             update_url,
             json.dumps(patch_data),
-            HTTP_AUTHORIZATION='Donor {}'.format(data['data']['attributes']['client-secret'])
+            HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
         )
         data = response.json()
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
@@ -1000,7 +999,7 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.patch(
             update_url,
             json.dumps(patch_data),
-            HTTP_AUTHORIZATION='Donor {}'.format(data['data']['attributes']['client-secret'])
+            HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1036,7 +1035,7 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.patch(
             update_url,
             json.dumps(patch_data),
-            HTTP_AUTHORIZATION='Donor {}'.format(data['data']['attributes']['client-secret'])
+            HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1065,7 +1064,7 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.patch(
             update_url,
             json.dumps(patch_data),
-            HTTP_AUTHORIZATION='Donor wrong-token'
+            HTTP_AUTHORIZATION='Donation wrong-token'
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

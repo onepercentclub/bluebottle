@@ -114,7 +114,7 @@ class GenerateDonorWallpostEffect(Effect):
     def post_save(self, **kwargs):
         SystemWallpost.objects.get_or_create(
             author=self.instance.user,
-            donor=self.instance,
+            donation=self.instance,
             defaults={
                 'content_object': self.instance.activity,
                 'related_object': self.instance
@@ -134,7 +134,7 @@ class RemoveDonorWallpostEffect(Effect):
     def post_save(self, **kwargs):
         SystemWallpost.objects.filter(
             author=self.instance.user,
-            donor=self.instance,
+            donation=self.instance,
         ).all().delete()
 
     def __str__(self):

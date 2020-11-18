@@ -11,6 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('wallposts', '0020_auto_20191017_2208'),
+        ('funding', '0058_auto_20201118_0954')
     ]
 
     operations = [

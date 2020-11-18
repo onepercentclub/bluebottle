@@ -11,7 +11,6 @@ import djmoney.models.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wallposts', '0021_auto_20201118_0954'),
         ('activities', '0030_auto_20201117_1137'),
         ('funding', '0057_auto_20201112_1519'),
     ]

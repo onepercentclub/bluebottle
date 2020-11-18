@@ -104,7 +104,7 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
             initiative=self.initiative,
             bank_account=bank_account
         )
-        self.admin_url = reverse('admin:funding_donation_changelist')
+        self.admin_url = reverse('admin:funding_donor_changelist')
 
     def test_donation_total(self):
         for donation in DonorFactory.create_batch(
@@ -141,7 +141,7 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
     def test_donation_reward(self):
         donation = DonorFactory.create(activity=self.funding)
 
-        url = reverse('admin:funding_donation_change', args=(donation.pk, ))
+        url = reverse('admin:funding_donor_change', args=(donation.pk, ))
         first = RewardFactory.create(title='First', activity=self.funding)
         second = RewardFactory.create(title='Second', activity=self.funding)
         third = RewardFactory.create(title='Third')

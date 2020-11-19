@@ -26,6 +26,7 @@ from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFacto
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
+from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory
 
 
 def get_include(response, name):
@@ -827,21 +828,21 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         second = InitiativeFactory.create(status='approved')
-        EventFactory.create(
+        DateActivityFactory.create(
             initiative=second,
             status='open',
             start=now() + datetime.timedelta(days=7)
         )
         third = InitiativeFactory.create(status='approved')
-        EventFactory.create(
+        DateActivityFactory.create(
             initiative=third,
             status='open',
             start=now() + datetime.timedelta(days=7)
         )
-        AssignmentFactory.create(
+        PeriodActivityFactory.create(
             initiative=third,
             status='open',
-            date=now() + datetime.timedelta(days=9)
+            deadline=now() + datetime.timedelta(days=9)
         )
 
         response = self.client.get(
@@ -852,6 +853,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 3)
+
         self.assertEqual(data['data'][0]['id'], str(third.pk))
         self.assertEqual(data['data'][1]['id'], str(first.pk))
         self.assertEqual(data['data'][2]['id'], str(second.pk))

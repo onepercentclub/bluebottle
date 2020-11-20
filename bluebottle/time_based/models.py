@@ -215,9 +215,9 @@ class Participant(Contributor):
         return self.user
 
     @property
-    def finished_durations(self):
+    def finished_contributions(self):
         return self.contribution_values.filter(
-            duration__end__lte=timezone.now()
+            timecontribution__end__lte=timezone.now()
         )
 
     class Meta:
@@ -272,7 +272,7 @@ class PeriodParticipant(Participant, Contributor):
         )
 
     @property
-    def current_duration(self):
+    def current_contribution(self):
         return self.contribution_values.get(status='new')
 
     def __str__(self):

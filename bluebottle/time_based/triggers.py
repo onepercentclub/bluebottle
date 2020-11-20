@@ -374,7 +374,7 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
 
                 RelatedTransitionEffect(
-                    'finished_durations',
+                    'finished_contributions',
                     DurationStateMachine.succeed,
                 ),
             ]
@@ -440,7 +440,7 @@ class PeriodParticipantTriggers(ParticipantTriggers):
             PeriodParticipantStateMachine.stop,
             effects=[
                 RelatedTransitionEffect(
-                    'current_duration',
+                    'current_contribution',
                     DurationStateMachine.fail
                 )
             ]

@@ -63,10 +63,10 @@ def period_participant_tasks():
 
 @periodic_task(
     run_every=(crontab(minute='*/15')),
-    name="duration_tasks",
+    name="time_contribution_tasks",
     ignore_result=True
 )
-def duration_tasks():
+def time_contribution_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             for task in TimeContribution.get_periodic_tasks():

@@ -14,13 +14,13 @@ class CreateDateParticipationEffect(Effect):
         activity = self.instance.activity
         if activity.start and activity.duration:
             end = activity.start + activity.duration
-            duration = TimeContribution(
+            contribution = TimeContribution(
                 contributor=self.instance,
                 value=activity.duration,
                 start=activity.start,
                 end=end
             )
-            duration.save()
+            contribution.save()
 
 
 class CreatePeriodParticipationEffect(Effect):
@@ -44,14 +44,14 @@ class CreatePeriodParticipationEffect(Effect):
         self.instance.save()
 
         if start != end:
-            duration = TimeContribution(
+            contribution = TimeContribution(
                 contributor=self.instance,
                 value=activity.duration,
                 start=tz.localize(datetime.combine(start, datetime.min.time())),
                 end=tz.localize(datetime.combine(end, datetime.max.time())) if end else None,
             )
 
-            duration.save()
+            contribution.save()
 
     def __str__(self):
         return _('Create contribution duration')

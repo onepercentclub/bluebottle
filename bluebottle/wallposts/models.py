@@ -7,11 +7,15 @@ from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
+
 from future.utils import python_2_unicode_compatible
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.utils.models import AnonymizationMixin
 from .managers import ReactionManager, WallpostManager
+
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+
 
 WALLPOST_TEXT_MAX_LENGTH = getattr(settings, 'WALLPOST_TEXT_MAX_LENGTH', 1000)
 WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH',
@@ -173,7 +177,16 @@ class MediaWallpostPhoto(models.Model):
     mediawallpost = models.ForeignKey(MediaWallpost, related_name='photos',
                                       null=True, blank=True)
     results_page = models.BooleanField(default=True)
-    photo = models.ImageField(upload_to='mediawallpostphotos')
+    photo = models.ImageField(
+        upload_to='mediawallpostphotos',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
                                               default=None)

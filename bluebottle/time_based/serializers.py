@@ -9,7 +9,7 @@ from rest_framework_json_api.relations import (
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer,
-    BaseContributionSerializer
+    BaseContributorSerializer
 )
 
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
@@ -17,10 +17,10 @@ from bluebottle.fsm.serializers import TransitionSerializer
 
 from bluebottle.time_based.models import (
     TimeBasedActivity, DateActivity, PeriodActivity,
-    OnADateApplication, PeriodApplication
+    DateParticipant, PeriodParticipant
 )
-from bluebottle.time_based.permissions import ApplicationDocumentPermission
-from bluebottle.time_based.filters import ApplicationListFilter
+from bluebottle.time_based.permissions import ParticipantDocumentPermission
+from bluebottle.time_based.filters import ParticipantListFilter
 
 from bluebottle.utils.serializers import ResourcePermissionField, FilteredRelatedField
 from bluebottle.utils.utils import reverse_signed
@@ -28,6 +28,7 @@ from bluebottle.utils.utils import reverse_signed
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField(required=False)
+    contributors = FilteredRelatedField(many=True, filter_backend=ParticipantListFilter)
 
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (
@@ -38,15 +39,13 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'registration_deadline',
             'expertise',
             'review',
-            'contributions',
-            'my_contribution'
+            'contributors'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'location',
             'expertise',
-            'my_contribution',
         ]
 
     included_serializers = dict(
@@ -60,24 +59,24 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
 
 class DateActivitySerializer(TimeBasedBaseSerializer):
     permissions = ResourcePermissionField('date-detail', view_args=('pk',))
-    my_contribution = SerializerMethodResourceRelatedField(
-        model=OnADateApplication,
+    my_contributor = SerializerMethodResourceRelatedField(
+        model=DateParticipant,
         read_only=True,
-        source='get_my_contribution'
+        source='get_my_contributor'
     )
-    contributions = FilteredRelatedField(
+    contributors = FilteredRelatedField(
         many=True,
-        filter_backend=ApplicationListFilter,
-        related_link_view_name='date-applications',
+        filter_backend=ParticipantListFilter,
+        related_link_view_name='date-participants',
 
         related_link_url_kwarg='activity_id'
     )
     links = serializers.SerializerMethodField()
 
-    def get_my_contribution(self, instance):
+    def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
-            return instance.contributions.filter(user=user).instance_of(OnADateApplication).first()
+            return instance.contributors.filter(user=user).instance_of(DateParticipant).first()
 
     def get_links(self, instance):
         if instance.start and instance.duration:
@@ -92,7 +91,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start', 'duration', 'utc_offset', 'online_meeting_url', 'links'
+            'start', 'duration', 'utc_offset', 'online_meeting_url', 'links', 'my_contributor',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
@@ -101,7 +100,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
-            'my_contribution': 'bluebottle.time_based.serializers.OnADateApplicationSerializer'
+            'my_contributor': 'bluebottle.time_based.serializers.DateParticipantSerializer'
         }
     )
 
@@ -109,29 +108,29 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 class PeriodActivitySerializer(TimeBasedBaseSerializer):
     permissions = ResourcePermissionField('period-detail', view_args=('pk',))
 
-    my_contribution = SerializerMethodResourceRelatedField(
-        model=OnADateApplication,
+    my_contributor = SerializerMethodResourceRelatedField(
+        model=PeriodParticipant,
         read_only=True,
-        source='get_my_contribution'
+        source='get_my_contributor'
     )
 
-    contributions = FilteredRelatedField(
+    contributors = FilteredRelatedField(
         many=True,
-        filter_backend=ApplicationListFilter,
-        related_link_view_name='period-applications',
+        filter_backend=ParticipantListFilter,
+        related_link_view_name='period-participants',
         related_link_url_kwarg='activity_id'
 
     )
 
-    def get_my_contribution(self, instance):
+    def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
-            return instance.contributions.filter(user=user).instance_of(OnADateApplication).first()
+            return instance.contributors.filter(user=user).instance_of(PeriodParticipant).first()
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start', 'deadline', 'duration', 'duration_period',
+            'start', 'deadline', 'duration', 'duration_period', 'my_contributor',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
@@ -140,7 +139,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
-            'my_contribution': 'bluebottle.time_based.serializers.PeriodApplicationSerializer'
+            'my_contributor': 'bluebottle.time_based.serializers.PeriodParticipantSerializer'
         }
     )
 
@@ -248,24 +247,24 @@ class PeriodActivityListSerializer(TimeBasedActivityListSerializer):
         resource_name = 'activities/time-based/period'
 
 
-class OnADateApplicationDocumentSerializer(PrivateDocumentSerializer):
-    content_view_name = 'period-application-document'
-    relationship = 'onadateapplication_set'
+class DateParticipantDocumentSerializer(PrivateDocumentSerializer):
+    content_view_name = 'period-participant-document'
+    relationship = 'dateparticipant_set'
 
 
-class PeriodApplicationDocumentSerializer(PrivateDocumentSerializer):
-    content_view_name = 'on-a-date-application-document'
-    relationship = 'periodapplication_set'
+class PeriodParticipantDocumentSerializer(PrivateDocumentSerializer):
+    content_view_name = 'date-participant-document'
+    relationship = 'periodparticipant_set'
 
 
-class ApplicationListSerializer(BaseContributionSerializer):
+class ParticipantListSerializer(BaseContributorSerializer):
     activity = PolymorphicResourceRelatedField(
         TimeBasedActivitySerializer,
         queryset=TimeBasedActivity.objects.all()
     )
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/applications'
+    class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/participants'
         included_resources = [
             'user',
             'activity',
@@ -277,25 +276,25 @@ class ApplicationListSerializer(BaseContributionSerializer):
     }
 
 
-class OnADateApplicationListSerializer(ApplicationListSerializer):
-    class Meta(ApplicationListSerializer.Meta):
-        model = OnADateApplication
+class DateParticipantListSerializer(ParticipantListSerializer):
+    class Meta(ParticipantListSerializer.Meta):
+        model = DateParticipant
 
-    class JSONAPIMeta(ApplicationListSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/date-applications'
-
-
-class PeriodApplicationListSerializer(ApplicationListSerializer):
-    class Meta(ApplicationListSerializer.Meta):
-        model = PeriodApplication
-
-    class JSONAPIMeta(ApplicationListSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/period-applications'
+    class JSONAPIMeta(ParticipantListSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/date-participants'
 
 
-class ApplicationSerializer(BaseContributionSerializer):
+class PeriodParticipantListSerializer(ParticipantListSerializer):
+    class Meta(ParticipantListSerializer.Meta):
+        model = PeriodParticipant
+
+    class JSONAPIMeta(ParticipantListSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/period-participants'
+
+
+class ParticipantSerializer(BaseContributorSerializer):
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    document = PrivateDocumentField(required=False, allow_null=True, permissions=[ApplicationDocumentPermission])
+    document = PrivateDocumentField(required=False, allow_null=True, permissions=[ParticipantDocumentPermission])
 
     activity = PolymorphicResourceRelatedField(
         TimeBasedActivitySerializer,
@@ -314,22 +313,22 @@ class ApplicationSerializer(BaseContributionSerializer):
 
         return result
 
-    class Meta(BaseContributionSerializer.Meta):
-        model = OnADateApplication
-        fields = BaseContributionSerializer.Meta.fields + (
+    class Meta(BaseContributorSerializer.Meta):
+        model = DateParticipant
+        fields = BaseContributorSerializer.Meta.fields + (
             'motivation',
             'document'
         )
 
         validators = [
             UniqueTogetherValidator(
-                queryset=OnADateApplication.objects.all(),
+                queryset=DateParticipant.objects.all(),
                 fields=('activity', 'user')
             )
         ]
 
-    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/applications'
+    class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/participants'
         included_resources = [
             'user',
             'document'
@@ -340,72 +339,72 @@ class ApplicationSerializer(BaseContributionSerializer):
     }
 
 
-class OnADateApplicationSerializer(ApplicationSerializer):
-    class Meta(ApplicationSerializer.Meta):
-        model = OnADateApplication
+class DateParticipantSerializer(ParticipantSerializer):
+    class Meta(ParticipantSerializer.Meta):
+        model = DateParticipant
 
         validators = [
             UniqueTogetherValidator(
-                queryset=OnADateApplication.objects.all(),
+                queryset=DateParticipant.objects.all(),
                 fields=('activity', 'user')
             )
         ]
 
-    class JSONAPIMeta(ApplicationSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/date-applications'
+    class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/date-participants'
 
     included_serializers = dict(
-        ApplicationSerializer.included_serializers,
-        **{'document': 'bluebottle.time_based.serializers.OnADateApplicationDocumentSerializer'}
+        ParticipantSerializer.included_serializers,
+        **{'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer'}
     )
 
 
-class PeriodApplicationSerializer(ApplicationSerializer):
-    class Meta(ApplicationSerializer.Meta):
-        model = PeriodApplication
+class PeriodParticipantSerializer(ParticipantSerializer):
+    class Meta(ParticipantSerializer.Meta):
+        model = PeriodParticipant
 
         validators = [
             UniqueTogetherValidator(
-                queryset=PeriodApplication.objects.all(),
+                queryset=PeriodParticipant.objects.all(),
                 fields=('activity', 'user')
             )
         ]
 
-    class JSONAPIMeta(ApplicationSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/period-applications'
+    class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/period-participants'
 
     included_serializers = dict(
-        ApplicationSerializer.included_serializers,
-        **{'document': 'bluebottle.time_based.serializers.PeriodApplicationDocumentSerializer'}
+        ParticipantSerializer.included_serializers,
+        **{'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer'}
     )
 
 
-class ApplicationTransitionSerializer(TransitionSerializer):
-    resource = ResourceRelatedField(queryset=OnADateApplication.objects.all())
+class ParticipantTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=DateParticipant.objects.all())
     field = 'states'
 
     class JSONAPIMeta(object):
-        resource_name = 'contributions/time-based/application-transitions'
+        resource_name = 'contributors/time-based/participant-transitions'
         included_resources = [
             'resource',
         ]
 
 
-class OnADateApplicationTransitionSerializer(ApplicationTransitionSerializer):
-    resource = ResourceRelatedField(queryset=OnADateApplication.objects.all())
+class DateParticipantTransitionSerializer(ParticipantTransitionSerializer):
+    resource = ResourceRelatedField(queryset=DateParticipant.objects.all())
     included_serializers = {
-        'resource': 'bluebottle.time_based.serializers.OnADateApplicationSerializer',
+        'resource': 'bluebottle.time_based.serializers.DateParticipantSerializer',
     }
 
-    class JSONAPIMeta(ApplicationTransitionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/date-application-transitions'
+    class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/date-participant-transitions'
 
 
-class PeriodApplicationTransitionSerializer(ApplicationTransitionSerializer):
-    resource = ResourceRelatedField(queryset=PeriodApplication.objects.all())
+class PeriodParticipantTransitionSerializer(ParticipantTransitionSerializer):
+    resource = ResourceRelatedField(queryset=PeriodParticipant.objects.all())
     included_serializers = {
-        'resource': 'bluebottle.time_based.serializers.PeriodApplicationSerializer',
+        'resource': 'bluebottle.time_based.serializers.PeriodParticipantSerializer',
     }
 
-    class JSONAPIMeta(ApplicationTransitionSerializer.JSONAPIMeta):
-        resource_name = 'contributions/time-based/period-application-transitions'
+    class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/period-participant-transitions'

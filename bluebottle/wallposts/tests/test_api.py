@@ -704,7 +704,7 @@ class FundingWallpostTest(BluebottleTestCase):
                 'user': None,
                 'anonymous': False,
                 'reward': None,
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': self.donation.id
             }
         )
@@ -731,7 +731,7 @@ class FundingWallpostTest(BluebottleTestCase):
                 'user': None,
                 'anonymous': False,
                 'reward': None,
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': self.donation.id
             }
         )

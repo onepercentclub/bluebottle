@@ -538,7 +538,7 @@ class MemberAdmin(UserAdmin):
     login_as_link.short_description = _('Login as')
 
     def has_delete_permission(self, request, obj=None):
-        if obj and obj.contribution_set.exclude(status__in=['deleted', 'failed']).count() == 0:
+        if obj and obj.contributor_set.exclude(status__in=['deleted', 'failed']).count() == 0:
             return True
         return False
 

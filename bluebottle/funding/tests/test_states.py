@@ -128,13 +128,13 @@ class FundingStateMachineTests(BluebottleTestCase):
     def test_approve_organizer_succeed(self):
         self.funding.states.submit()
         self.funding.states.approve(save=True)
-        organizer = self.funding.contributions.get()
+        organizer = self.funding.contributors.get()
         self.assertEqual(organizer.status, 'succeeded')
 
     def test_approve_set_start_dat(self):
         self.funding.states.submit()
         self.funding.states.approve(save=True)
-        organizer = self.funding.contributions.get()
+        organizer = self.funding.contributors.get()
         self.assertEqual(organizer.status, 'succeeded')
 
     def test_approve_set_deadline(self):
@@ -210,7 +210,7 @@ class FundingStateMachineTests(BluebottleTestCase):
     def test_delete(self):
         self.funding.states.delete(save=True)
         self.assertEqual(self.funding.status, 'deleted')
-        organizer = self.funding.contributions.get()
+        organizer = self.funding.contributors.get()
         self.assertEqual(organizer.status, 'failed')
 
     def _prepare_succeeded(self):
@@ -291,7 +291,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.states.submit()
         self.funding.states.reject(save=True)
         self.assertEqual(self.funding.status, 'rejected')
-        organizer = self.funding.contributions.get()
+        organizer = self.funding.contributors.get()
         self.assertEqual(organizer.status, 'failed')
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(

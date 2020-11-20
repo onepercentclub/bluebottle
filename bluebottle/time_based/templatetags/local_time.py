@@ -6,15 +6,17 @@ register = template.Library()
 
 @register.filter(name="local_time")
 def local_time(value, tz):
-    return time(value + value.astimezone(tz).utcoffset())
+    if tz:
+        return time(value + value.astimezone(tz).utcoffset())
 
 
 @register.filter(name="local_date")
 def local_date(value, tz):
-    return date(value + value.astimezone(tz).utcoffset())
+    if tz:
+        return date(value + value.astimezone(tz).utcoffset())
 
 
 @register.filter(name="local_timezone")
 def local_timezone(value, tz):
-    print(value.astimezone(tz).strftime('%Z'))
-    return value.astimezone(tz).strftime('%Z')
+    if tz:
+        return value.astimezone(tz).strftime('%Z')

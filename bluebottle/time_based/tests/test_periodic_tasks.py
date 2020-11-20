@@ -6,11 +6,11 @@ from django.utils import timezone
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.time_based.tasks import (
     on_a_date_tasks, with_a_deadline_tasks,
-    period_application_tasks, duration_tasks
+    period_participant_tasks, duration_tasks
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
-    OnADateApplicationFactory, PeriodApplicationFactory
+    DateParticipantFactory, PeriodParticipantFactory
 )
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory
@@ -66,7 +66,7 @@ class TimeBasedActivityPeriodicTasksTestCase():
 
     def test_start(self):
         self.assertEqual(self.activity.status, 'open')
-        self.application_factory.create(activity=self.activity)
+        self.participant_factory.create(activity=self.activity)
 
         self.run_task(self.during)
 
@@ -77,7 +77,7 @@ class TimeBasedActivityPeriodicTasksTestCase():
 
     def test_succeed(self):
         self.assertEqual(self.activity.status, 'open')
-        self.application_factory.create(activity=self.activity)
+        self.participant_factory.create(activity=self.activity)
 
         self.run_task(self.after)
 
@@ -89,7 +89,7 @@ class TimeBasedActivityPeriodicTasksTestCase():
 
 class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
     factory = DateActivityFactory
-    application_factory = OnADateApplicationFactory
+    participant_factory = DateParticipantFactory
 
     def run_task(self, when):
         with mock.patch.object(timezone, 'now', return_value=when):
@@ -106,7 +106,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
 
 class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
     factory = PeriodActivityFactory
-    application_factory = PeriodApplicationFactory
+    participant_factory = PeriodParticipantFactory
 
     def run_task(self, when):
         with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
@@ -124,9 +124,9 @@ class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Bl
         return self.activity.deadline + timedelta(days=1)
 
 
-class PeriodApplicationPeriodicTest(BluebottleTestCase):
+class PeriodParticipantPeriodicTest(BluebottleTestCase):
     factory = PeriodActivityFactory
-    application_factory = PeriodApplicationFactory
+    participant_factory = PeriodParticipantFactory
 
     def setUp(self):
         super().setUp()
@@ -140,11 +140,11 @@ class PeriodApplicationPeriodicTest(BluebottleTestCase):
             duration_period='weeks'
         )
         self.activity.states.submit(save=True)
-        self.application = self.application_factory.create(activity=self.activity)
+        self.participant = self.participant_factory.create(activity=self.activity)
 
     def refresh(self):
         with LocalTenant(self.tenant, clear_tenant=True):
-            self.application.refresh_from_db()
+            self.participant.refresh_from_db()
             self.activity.refresh_from_db()
 
     def run_tasks(self, when):
@@ -163,7 +163,7 @@ class PeriodApplicationPeriodicTest(BluebottleTestCase):
                     )
                 ):
                     with_a_deadline_tasks()
-                    period_application_tasks()
+                    period_participant_tasks()
                     duration_tasks()
 
     def test_contribution_value_is_created(self):
@@ -171,7 +171,7 @@ class PeriodApplicationPeriodicTest(BluebottleTestCase):
         self.refresh()
 
         self.assertEqual(
-            self.application.contribution_values.get().status,
+            self.participant.contribution_values.get().status,
             'new'
         )
 
@@ -181,12 +181,12 @@ class PeriodApplicationPeriodicTest(BluebottleTestCase):
         self.refresh()
 
         self.assertEqual(
-            len(self.application.contribution_values.filter(status='succeeded')),
+            len(self.participant.contribution_values.filter(status='succeeded')),
             1
         )
 
         self.assertEqual(
-            len(self.application.contribution_values.filter(status='new')),
+            len(self.participant.contribution_values.filter(status='new')),
             1
         )
 
@@ -198,16 +198,16 @@ class PeriodApplicationPeriodicTest(BluebottleTestCase):
             self.refresh()
 
         self.assertEqual(
-            len(self.application.contribution_values.all()), 4
+            len(self.participant.contribution_values.all()), 4
         )
 
         self.assertEqual(
-            len(self.application.contribution_values.filter(status='succeeded')),
+            len(self.participant.contribution_values.filter(status='succeeded')),
             3
         )
 
         self.assertEqual(
-            len(self.application.contribution_values.filter(status='new')),
+            len(self.participant.contribution_values.filter(status='new')),
             1
         )
 
@@ -219,17 +219,17 @@ class PeriodApplicationPeriodicTest(BluebottleTestCase):
             self.refresh()
 
         self.assertEqual(
-            len(self.application.contribution_values.all()), 4
+            len(self.participant.contribution_values.all()), 4
         )
         self.activity.states.cancel(save=True)
 
-        for contribution in self.application.contribution_values.all():
+        for contribution in self.participant.contribution_values.all():
             self.assertEqual(contribution.status, 'failed')
 
 
-class PeriodReviewApplicationPeriodicTest(BluebottleTestCase):
+class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
     factory = PeriodActivityFactory
-    application_factory = PeriodApplicationFactory
+    participant_factory = PeriodParticipantFactory
 
     def setUp(self):
         super().setUp()
@@ -243,11 +243,11 @@ class PeriodReviewApplicationPeriodicTest(BluebottleTestCase):
             duration_period='weeks'
         )
         self.activity.states.submit(save=True)
-        self.application = self.application_factory.create(activity=self.activity)
+        self.participant = self.participant_factory.create(activity=self.activity)
 
     def refresh(self):
         with LocalTenant(self.tenant, clear_tenant=True):
-            self.application.refresh_from_db()
+            self.participant.refresh_from_db()
             self.activity.refresh_from_db()
 
     def run_tasks(self, when):
@@ -266,7 +266,7 @@ class PeriodReviewApplicationPeriodicTest(BluebottleTestCase):
                     )
                 ):
                     with_a_deadline_tasks()
-                    period_application_tasks()
+                    period_participant_tasks()
                     duration_tasks()
 
     def test_start(self):
@@ -274,7 +274,7 @@ class PeriodReviewApplicationPeriodicTest(BluebottleTestCase):
         self.refresh()
 
         self.assertEqual(
-            self.application.contribution_values.get().status,
+            self.participant.contribution_values.get().status,
             'new'
         )
 
@@ -285,7 +285,7 @@ class PeriodReviewApplicationPeriodicTest(BluebottleTestCase):
         self.refresh()
 
         self.assertEqual(
-            len(self.application.contribution_values.filter(status='new')),
+            len(self.participant.contribution_values.filter(status='new')),
             2
         )
 
@@ -295,14 +295,14 @@ class PeriodReviewApplicationPeriodicTest(BluebottleTestCase):
                 datetime.combine(self.activity.start, datetime.min.time()) + timedelta(weeks=1, days=1)
             )
         ):
-            self.application.states.accept(save=True)
+            self.participant.states.accept(save=True)
 
         self.assertEqual(
-            len(self.application.contribution_values.filter(status='succeeded')),
+            len(self.participant.contribution_values.filter(status='succeeded')),
             1
         )
 
         self.assertEqual(
-            len(self.application.contribution_values.filter(status='new')),
+            len(self.participant.contribution_values.filter(status='new')),
             1
         )

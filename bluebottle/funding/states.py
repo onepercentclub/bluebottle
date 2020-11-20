@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
+from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
 from bluebottle.funding.models import Funding, Donation, Payment, Payout, PlainPayoutAccount
 
@@ -223,7 +223,7 @@ class FundingStateMachine(ActivityStateMachine):
 
 
 @register(Donation)
-class DonationStateMachine(ContributionStateMachine):
+class DonationStateMachine(ContributorStateMachine):
     refunded = State(
         _('refunded'),
         'refunded',
@@ -237,14 +237,14 @@ class DonationStateMachine(ContributionStateMachine):
 
     def is_successful(self):
         """donation is successful"""
-        return self.instance.status == ContributionStateMachine.succeeded
+        return self.instance.status == ContributorStateMachine.succeeded
 
     succeed = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.failed
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed
         ],
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('Succeed'),
         description=_("The donation has been completed"),
         automatic=True,
@@ -252,10 +252,10 @@ class DonationStateMachine(ContributionStateMachine):
 
     fail = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.succeeded
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded
         ],
-        ContributionStateMachine.failed,
+        ContributorStateMachine.failed,
         name=_('Fail'),
         description=_("The donation failed."),
         automatic=True,
@@ -263,8 +263,8 @@ class DonationStateMachine(ContributionStateMachine):
 
     refund = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.succeeded,
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded,
         ],
         refunded,
         name=_('Refund'),
@@ -273,7 +273,7 @@ class DonationStateMachine(ContributionStateMachine):
     )
 
     activity_refund = Transition(
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         activity_refunded,
         name=_('Activity refund'),
         description=_(

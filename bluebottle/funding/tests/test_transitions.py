@@ -47,7 +47,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
     def test_default_status(self):
         self.assertEqual(self.funding.status, self.funding.states.open.value)
-        organizer = self.funding.contributions.instance_of(Organizer).get()
+        organizer = self.funding.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, organizer.states.succeeded.value)
         self.assertEqual(organizer.user, self.funding.owner)
 
@@ -62,7 +62,7 @@ class FundingTestCase(BluebottleAdminTestCase):
 
         funding.states.submit(save=True)
         self.assertEqual(funding.status, funding.states.submitted.value)
-        organizer = funding.contributions.instance_of(Organizer).get()
+        organizer = funding.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, organizer.states.new.value)
         self.assertEqual(organizer.user, funding.owner)
 
@@ -188,7 +188,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         )
         self.assertTrue(url in mail.outbox[4].body)
 
-        organizer = self.funding.contributions.instance_of(Organizer).get()
+        organizer = self.funding.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, organizer.states.succeeded.value)
 
     def test_extend(self):
@@ -268,7 +268,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         new_funding.bank_account.reviewed = True
 
         new_funding.states.reject(save=True)
-        organizer = new_funding.contributions.first()
+        organizer = new_funding.contributors.first()
         self.assertEqual(organizer.status, u'failed')
 
         new_funding.states.restore(save=True)

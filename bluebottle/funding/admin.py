@@ -21,7 +21,7 @@ from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineAdminMixin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
@@ -39,7 +39,7 @@ from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBan
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider, PledgeBankAccount
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount, StripePayment
-from bluebottle.funding_telesom.models import TelesomPaymentProvider, TelesomPayment
+from bluebottle.funding_telesom.models import TelesomPaymentProvider, TelesomPayment, TelesomBankAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import TotalAmountAdminChangeList, export_as_csv_action, BasePlatformSettingsAdmin
@@ -230,15 +230,15 @@ class DonationAdminForm(StateMachineModelForm):
 
 
 @admin.register(Donation)
-class DonationAdmin(ContributionChildAdmin, PaymentLinkMixin):
+class DonationAdmin(ContributorChildAdmin, PaymentLinkMixin):
     model = Donation
     form = DonationAdminForm
 
     raw_id_fields = ['activity', 'payout', 'user']
-    readonly_fields = ContributionChildAdmin.readonly_fields + [
+    readonly_fields = ContributorChildAdmin.readonly_fields + [
         'payment_link', 'payment_link', 'payout_amount', 'sync_payment_link'
     ]
-    list_display = ['payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
+    list_display = ['contributor_date', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
     list_filter = [
         DonationAdminStatusFilter,
         DonationAdminCurrencyFilter,
@@ -574,6 +574,7 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
         LipishaBankAccount,
         VitepayBankAccount,
         PledgeBankAccount,
+        TelesomBankAccount
     ]
 
 

@@ -26,6 +26,7 @@ from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFacto
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
+from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory
 
 
 def get_include(response, name):
@@ -495,7 +496,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         stats = response.json()['data']['meta']['stats']
         self.assertEqual(stats['hours'], 18)
         self.assertEqual(stats['activities'], 3)
-        self.assertEqual(stats['contributions'], 12)
+        self.assertEqual(stats['contributors'], 12)
         self.assertEqual(stats['amount'], 75.0)
 
     def test_get_other(self):
@@ -827,21 +828,21 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         second = InitiativeFactory.create(status='approved')
-        EventFactory.create(
+        DateActivityFactory.create(
             initiative=second,
             status='open',
             start=now() + datetime.timedelta(days=7)
         )
         third = InitiativeFactory.create(status='approved')
-        EventFactory.create(
+        DateActivityFactory.create(
             initiative=third,
             status='open',
-            start=now() + datetime.timedelta(days=7)
+            start=now() + datetime.timedelta(days=6)
         )
-        AssignmentFactory.create(
+        PeriodActivityFactory.create(
             initiative=third,
             status='open',
-            date=now() + datetime.timedelta(days=9)
+            deadline=now() + datetime.timedelta(days=9)
         )
 
         response = self.client.get(

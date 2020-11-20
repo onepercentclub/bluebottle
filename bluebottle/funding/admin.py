@@ -194,7 +194,7 @@ class FundingAdmin(ActivityChildAdmin):
         ('created', 'Created'),
         ('initiative__title', 'Initiative'),
         ('deadline', 'Deadline'),
-        ('duration', 'Duration'),
+        ('duration', 'TimeContribution'),
         ('target', 'Target'),
         ('country', 'Country'),
         ('owner__full_name', 'Owner'),

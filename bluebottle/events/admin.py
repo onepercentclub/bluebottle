@@ -96,7 +96,7 @@ class EventAdmin(ActivityChildAdmin):
         ('created', 'Created'),
         ('initiative__title', 'Initiative'),
         ('start', 'Start'),
-        ('duration', 'Duration'),
+        ('duration', 'TimeContribution'),
         ('end', 'End'),
         ('registration_deadline', 'Registration Deadline'),
         ('owner__full_name', 'Owner'),

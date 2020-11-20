@@ -104,7 +104,7 @@ class AssignmentAdmin(ActivityChildAdmin):
         ('expertise', 'Expertise'),
         ('end_date_type', 'End Time Type'),
         ('date', 'End Date'),
-        ('duration', 'Duration'),
+        ('duration', 'TimeContribution'),
         ('preparation', 'Preparation'),
         ('registration_deadline', 'Registration Deadline'),
         ('owner__full_name', 'Owner'),

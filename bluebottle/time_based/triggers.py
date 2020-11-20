@@ -11,7 +11,7 @@ from bluebottle.activities.triggers import (
 
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, Duration
+    DateParticipant, PeriodParticipant, TimeContribution
 )
 from bluebottle.time_based.effects import (
     CreateDateParticipationEffect, CreatePeriodParticipationEffect
@@ -452,7 +452,7 @@ def duration_is_finished(effect):
     return effect.instance.end is None or effect.instance.end < now()
 
 
-@ register(Duration)
+@ register(TimeContribution)
 class DurationTriggers(ContributionValueTriggers):
     triggers = ContributionValueTriggers.triggers + [
         TransitionTrigger(

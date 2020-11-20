@@ -1,34 +1,31 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from builtins import str
-from builtins import range
-from builtins import object
+
 import random
 import string
+from builtins import object
+from builtins import range
 
 from babel.numbers import get_currency_name
-from future.utils import python_2_unicode_compatible
-
-from bluebottle.clients import properties
-
-from bluebottle.fsm.triggers import TriggerMixin
-
-from django.db.models import Count
 from django.core.cache import cache
 from django.db import connection
 from django.db import models
+from django.db.models import Count
 from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
-from django.utils import timezone
+from future.utils import python_2_unicode_compatible
 from moneyed import Money
 from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
-from bluebottle.activities.models import Activity, Contributor
-from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
+from bluebottle.activities.models import Activity, Contributor, Contribution
+from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField, PrivateDocumentField
+from bluebottle.fsm.triggers import TriggerMixin
+from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
@@ -510,13 +507,23 @@ class Donor(Contributor):
 
     class Meta(object):
         verbose_name = _('Donor')
-        verbose_name_plural = _('Donations')
+        verbose_name_plural = _('Donors')
 
     def __str__(self):
         return u'{}'.format(self.amount)
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/donations'
+
+
+@python_2_unicode_compatible
+class MoneyContribution(Contribution):
+
+    amount = MoneyField()
+
+    class Meta(object):
+        verbose_name = _('Contribution')
+        verbose_name_plural = _('Contributions')
 
 
 @python_2_unicode_compatible

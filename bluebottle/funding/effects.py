@@ -1,3 +1,5 @@
+from bluebottle.funding.models import MoneyContribution
+
 from bluebottle.fsm.state import TransitionNotPossible
 from future.utils import python_2_unicode_compatible
 
@@ -51,6 +53,22 @@ class UpdateFundingAmountsEffect(Effect):
 
     def __str__(self):
         return _('Update total amounts')
+
+
+@python_2_unicode_compatible
+class UpdateDonationAmountEffect(Effect):
+    conditions = []
+    title = _('Update donation amount')
+
+    display = False
+
+    def post_save(self, **kwargs):
+        donation = self.instance.time_contributions.first()
+        donation.amount = self.instance.payout_amount
+        donation.save()
+
+    def __str__(self):
+        return _('Update donation amount')
 
 
 @python_2_unicode_compatible
@@ -226,3 +244,19 @@ class ClearPayoutDatesEffect(Effect):
 
     def __str__(self):
         return _('Clear payout event dates')
+
+
+@python_2_unicode_compatible
+class CreateDonationEffect(Effect):
+    conditions = []
+    display = False
+
+    def post_save(self, **kwargs):
+        donation = MoneyContribution(
+            contributor=self.instance,
+            amount=self.instance.amount
+        )
+        donation.save()
+
+    def __str__(self):
+        return _('Create a donation')

@@ -1,6 +1,6 @@
 from django.utils import timezone
 
-from bluebottle.activities.states import ContributorStateMachine
+from bluebottle.activities.states import ContributorStateMachine, ActivityStateMachine
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers
 from bluebottle.activities.triggers import ContributorTriggers
@@ -14,7 +14,7 @@ from bluebottle.funding.effects import (
     RemoveDonorWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
     DeletePayoutsEffect,
     SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect,
-    ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect
+    ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect, UpdateDonationAmountEffect
 )
 from bluebottle.funding.messages import (
     DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
@@ -325,8 +325,14 @@ def is_successful(instance):
 
 
 @register(Donor)
-class DonationTriggers(ContributorTriggers):
+class DonorTriggers(ContributorTriggers):
     triggers = [
+        TransitionTrigger(
+            ActivityStateMachine.initiate,
+            effects=[
+                CreateDonationEffect
+            ]
+        ),
 
         TransitionTrigger(
             DonorStateMachine.succeed,
@@ -383,7 +389,8 @@ class DonationAmountChangedTrigger(ModelChangedTrigger):
     field = 'payout_amount'
 
     effects = [
-        UpdateFundingAmountsEffect
+        UpdateFundingAmountsEffect,
+        UpdateDonationAmountEffect
     ]
 
 
@@ -431,7 +438,8 @@ class BasePaymentTriggers(TriggerManager):
             BasePaymentStateMachine.refund,
             effects=[
                 RelatedTransitionEffect(
-                    'donation', DonorStateMachine.refund,
+                    'donation',
+                    DonorStateMachine.refund,
                     conditions=[
                         donation_not_refunded
                     ]

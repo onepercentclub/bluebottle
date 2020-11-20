@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, PeriodParticipant, Duration
+    DateActivity, PeriodActivity, PeriodParticipant, TimeContribution
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DurationStateMachine
@@ -139,4 +139,4 @@ PeriodActivity.periodic_tasks = [
     TimeBasedActivityStartedTask, PeriodActivityFinishedTask
 ]
 PeriodParticipant.periodic_tasks = [NewPeriodForParticipantTask]
-Duration.periodic_tasks = [DurationFinishedTask]
+TimeContribution.periodic_tasks = [DurationFinishedTask]

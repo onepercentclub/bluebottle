@@ -5,7 +5,7 @@ from bluebottle.activities.states import (
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, Duration,
+    DateParticipant, PeriodParticipant, TimeContribution,
 )
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 
@@ -228,6 +228,6 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
     )
 
 
-@register(Duration)
+@register(TimeContribution)
 class DurationStateMachine(ContributionValueStateMachine):
     pass

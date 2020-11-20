@@ -9,7 +9,7 @@ from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmi
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, Duration
+    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution
 )
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -127,7 +127,7 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('start', 'Start'),
-        ('duration', 'Duration'),
+        ('duration', 'TimeContribution'),
     )
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
@@ -152,14 +152,14 @@ class PeriodActivityAdmin(TimeBasedAdmin):
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('deadline', 'Deadline'),
-        ('duration', 'Duration'),
-        ('duration_period', 'Duration period'),
+        ('duration', 'TimeContribution'),
+        ('duration_period', 'TimeContribution period'),
     )
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
 
 class ParticiationInlineAdmin(admin.TabularInline):
-    model = Duration
+    model = TimeContribution
     extra = 0
     readonly_fields = ('edit', 'status')
     fields = readonly_fields + ('start', 'value')
@@ -191,7 +191,7 @@ class PeriodParticipantAdmin(ContributorChildAdmin):
     inlines = ContributorChildAdmin.inlines + [ParticiationInlineAdmin]
 
 
-@admin.register(Duration)
+@admin.register(TimeContribution)
 class DurationAdmin(StateMachineAdmin):
     raw_id_fields = ('contributor',)
     readonly_fields = ('status', 'created', )

@@ -37,6 +37,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('tasks', '0039_translate_skill'),
+        ('clients', '0001_initial'),
     ]
 
     operations = [

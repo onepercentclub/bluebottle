@@ -226,7 +226,7 @@ class PeriodActivity(TimeBasedActivity):
     def required_fields(self):
         fields = super().required_fields
 
-        return fields + ['deadline', 'duration', 'duration_period']
+        return fields + ['duration', 'duration_period']
 
 
 class Application():

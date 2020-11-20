@@ -33,7 +33,6 @@ class BaseParticipantAdminInline(admin.TabularInline):
         return None
 
     def edit(self, obj):
-        return
         if not obj.id:
             return '-'
         return format_html(

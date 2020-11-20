@@ -1,6 +1,7 @@
 from builtins import object
 from django_elasticsearch_dsl import DocType, fields
 
+from bluebottle.time_based.models import PeriodActivity, DateActivity
 from bluebottle.utils.documents import MultiTenantIndex
 
 from bluebottle.initiatives.models import Initiative
@@ -88,7 +89,14 @@ class InitiativeDocument(DocType):
     class Meta(object):
         model = Initiative
         related_models = (
-            Geolocation, Member, ProjectTheme, Event, Funding, Assignment
+            Geolocation,
+            Member,
+            ProjectTheme,
+            Event,
+            Funding,
+            Assignment,
+            PeriodActivity,
+            DateActivity
         )
 
     def get_queryset(self):

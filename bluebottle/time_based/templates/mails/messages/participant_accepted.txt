@@ -1,8 +1,8 @@
-{% extends "mails/messages/application_base.html" %}
+{% extends "mails/messages/participant_base.txt" %}
 {% load i18n %}
 
 {% block content %}{{block.super}}{% block message%}{% blocktrans with title=obj.activity.title manager=obj.activity.owner.full_name context 'email' %}
-<p>Good news, you have been accepted for the activity "{{ title }}"!</p>
+Good news, you have been accepted for the activity "{{ title }}"!
 
-<p>{{ manager }}, the activity manager, will follow-up with more info soon.</p>
+{{ manager }}, the activity manager, will follow-up with more info soon.
 {% endblocktrans %}{% endblock %}{% endblock %}

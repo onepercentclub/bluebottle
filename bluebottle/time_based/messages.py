@@ -93,9 +93,9 @@ class ActivityExpiredNotification(TransitionMessage):
         return [self.obj.owner]
 
 
-class ApplicationAddedNotification(TransitionMessage):
+class ParticipantAddedNotification(TransitionMessage):
     subject = _('You have been added to the activity "{title}" 🎉')
-    template = 'messages/application_added'
+    template = 'messages/participant_added'
     context = {
         'title': 'activity.title'
     }
@@ -108,9 +108,9 @@ class ApplicationAddedNotification(TransitionMessage):
             return []
 
 
-class ApplicationCreatedNotification(TransitionMessage):
-    subject = _('You have a new application for your activity "{title}" 🎉')
-    template = 'messages/application_created'
+class ParticipantCreatedNotification(TransitionMessage):
+    subject = _('You have a new participant for your activity "{title}" 🎉')
+    template = 'messages/participant_created'
     context = {
         'title': 'activity.title'
     }
@@ -120,9 +120,9 @@ class ApplicationCreatedNotification(TransitionMessage):
         return [self.obj.activity.owner]
 
 
-class NewApplicationNotification(TransitionMessage):
+class NewParticipantNotification(TransitionMessage):
     subject = _('A new participant has joined your activity "{title}" 🎉')
-    template = 'messages/new_application'
+    template = 'messages/new_participant'
     context = {
         'title': 'activity.title'
     }
@@ -132,9 +132,9 @@ class NewApplicationNotification(TransitionMessage):
         return [self.obj.activity.owner]
 
 
-class ApplicationAcceptedNotification(TransitionMessage):
+class ParticipantAcceptedNotification(TransitionMessage):
     subject = _('You have been selected for the activity "{title}" 🎉')
-    template = 'messages/application_accepted'
+    template = 'messages/participantaccepted'
     context = {
         'title': 'activity.title'
     }
@@ -144,9 +144,9 @@ class ApplicationAcceptedNotification(TransitionMessage):
         return [self.obj.user]
 
 
-class ApplicationRejectedNotification(TransitionMessage):
+class ParticipantRejectedNotification(TransitionMessage):
     subject = _('You have not been selected for the activity "{title}"')
-    template = 'messages/application_rejected'
+    template = 'messages/participant_rejected'
     context = {
         'title': 'activity.title'
     }

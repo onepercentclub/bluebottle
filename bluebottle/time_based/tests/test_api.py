@@ -694,13 +694,13 @@ class ParticipantListViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class DatePrticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
+class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
     type = 'date'
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 
-    url_name = 'on-a-date-application-list'
-    application_type = 'contributions/time-based/date-applications'
+    url_name = 'on-a-date-participant-list'
+    application_type = 'contributions/time-based/date-participants'
     url_name = 'date-participant-list'
     participant_type = 'contributors/time-based/date-participants'
 

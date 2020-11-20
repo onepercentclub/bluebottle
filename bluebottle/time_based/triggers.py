@@ -18,9 +18,9 @@ from bluebottle.time_based.messages import (
     ActivitySucceededNotification, ActivitySucceededManuallyNotification,
     ActivityExpiredNotification, ActivityRejectedNotification,
     ActivityCancelledNotification,
-    ApplicationAddedNotification, ApplicationCreatedNotification,
-    ApplicationAcceptedNotification, ApplicationRejectedNotification,
-    NewApplicationNotification
+    ParticipantAddedNotification, ParticipantCreatedNotification,
+    ParticipantAcceptedNotification, ParticipantRejectedNotification,
+    NewParticipantNotification
 )
 from bluebottle.time_based.effects import (
     CreateDateParticipationEffect, CreatePeriodParticipationEffect, SetEndDateEffect
@@ -393,11 +393,11 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.initiate,
             effects=[
                 NotificationEffect(
-                    ApplicationCreatedNotification,
+                    ParticipantCreatedNotification,
                     conditions=[needs_review]
                 ),
                 NotificationEffect(
-                    ApplicationAddedNotification
+                    ParticipantAddedNotification
                 ),
                 TransitionEffect(
                     ParticipantStateMachine.accept,
@@ -426,11 +426,11 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.accept,
             effects=[
                 NotificationEffect(
-                    NewApplicationNotification,
+                    NewParticipantNotification,
                     conditions=[automatically_accept]
                 ),
                 NotificationEffect(
-                    ApplicationAcceptedNotification,
+                    ParticipantAcceptedNotification,
                     conditions=[needs_review]
                 ),
                 RelatedTransitionEffect(
@@ -461,7 +461,7 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.reject,
             effects=[
                 NotificationEffect(
-                    ApplicationRejectedNotification
+                    ParticipantRejectedNotification
                 ),
                 RelatedTransitionEffect(
                     'activity',

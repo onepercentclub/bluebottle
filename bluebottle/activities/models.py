@@ -32,8 +32,8 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
     transition_date = models.DateTimeField(
-        _('activity date'),
-        help_text=_('Date the activity took place.'),
+        _('transition date'),
+        help_text=_('Date of the last transition.'),
         null=True, blank=True
     )
 

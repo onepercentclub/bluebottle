@@ -14,7 +14,8 @@ class BaseNotificationEffect(Effect):
         if self.options.get('send_messages', True) and self.is_valid:
             self.message(
                 self.instance,
-                custom_message=self.options.get('message')
+                custom_message=self.options.get('message'),
+                **self.options
             ).compose_and_send()
 
     def __repr__(self):
@@ -46,7 +47,7 @@ class BaseNotificationEffect(Effect):
     def is_valid(self):
         return (
             all([condition(self) for condition in self.conditions]) and
-            len(self.message(self.instance).get_recipients()) > 0
+            len(self.message(self.instance, **self.options).get_recipients()) > 0
         )
 
     def to_html(self):

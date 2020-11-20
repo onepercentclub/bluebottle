@@ -20,7 +20,10 @@ from bluebottle.time_based.messages import (
     DateChanged, DeadlineChanged,
     ActivitySucceededNotification, ActivitySucceededManuallyNotification,
     ActivityExpiredNotification, ActivityRejectedNotification,
-    ActivityCancelledNotification
+    ActivityCancelledNotification,
+    ApplicationAddedNotification, ApplicationCreatedNotification,
+    ApplicationAcceptedNotification, ApplicationRejectedNotification,
+    NewApplicationNotification
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine,
@@ -344,6 +347,10 @@ def automatically_accept(effect):
     return not effect.instance.activity.review
 
 
+def needs_review(effect):
+    return effect.instance.activity.review
+
+
 def activity_will_be_full(effect):
     "the activity is full"
     activity = effect.instance.activity
@@ -385,6 +392,13 @@ class ApplicationTriggers(ContributionTriggers):
         TransitionTrigger(
             ApplicationStateMachine.initiate,
             effects=[
+                NotificationEffect(
+                    ApplicationCreatedNotification,
+                    conditions=[needs_review]
+                ),
+                NotificationEffect(
+                    ApplicationAddedNotification
+                ),
                 TransitionEffect(
                     ApplicationStateMachine.accept,
                     conditions=[automatically_accept]
@@ -411,6 +425,14 @@ class ApplicationTriggers(ContributionTriggers):
         TransitionTrigger(
             ApplicationStateMachine.accept,
             effects=[
+                NotificationEffect(
+                    NewApplicationNotification,
+                    conditions=[automatically_accept]
+                ),
+                NotificationEffect(
+                    ApplicationAcceptedNotification,
+                    conditions=[needs_review]
+                ),
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.lock,
@@ -438,12 +460,25 @@ class ApplicationTriggers(ContributionTriggers):
         TransitionTrigger(
             ApplicationStateMachine.reject,
             effects=[
+                NotificationEffect(
+                    ApplicationRejectedNotification
+                ),
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
                 ),
 
+                RelatedTransitionEffect(
+                    'contribution_values',
+                    DurationStateMachine.fail,
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            ApplicationStateMachine.mark_absent,
+            effects=[
                 RelatedTransitionEffect(
                     'contribution_values',
                     DurationStateMachine.fail,
@@ -507,7 +542,7 @@ def duration_is_finished(effect):
     return effect.instance.end is None or effect.instance.end < now()
 
 
-@ register(Duration)
+@register(Duration)
 class DurationTriggers(ContributionValueTriggers):
     triggers = ContributionValueTriggers.triggers + [
         TransitionTrigger(

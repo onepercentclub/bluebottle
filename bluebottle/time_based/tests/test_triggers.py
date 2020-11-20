@@ -306,8 +306,6 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         self.activity.save()
 
         self.assertEqual(self.activity.status, 'open')
-        import ipdb
-        ipdb.set_trace()
 
     def test_change_deadline_with_contributions(self):
         self.initiative.states.submit(save=True)
@@ -478,14 +476,70 @@ class ApplicationTriggerTestCase():
         self.review_activity.refresh_from_db()
 
     def test_initial_review(self):
+        mail.outbox = []
         application = self.application_factory.create(activity=self.review_activity)
 
         self.assertEqual(application.status, 'new')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have a new application for your activity "{}" 🎉'.format(
+                self.review_activity.title
+            )
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'You have been added to the activity "{}" 🎉'.format(self.review_activity.title)
+        )
+
+    def test_accept(self):
+        application = self.application_factory.create(activity=self.review_activity)
+
+        mail.outbox = []
+        application.states.accept(save=True)
+
+        self.assertEqual(application.status, 'accepted')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been selected for the activity "{}" 🎉'.format(
+                self.review_activity.title
+            )
+        )
+
+    def test_initial_review_not_added(self):
+        mail.outbox = []
+        application = self.application_factory.build(activity=self.review_activity)
+        application.user.save()
+        application.execute_triggers(user=application.user, send_messages=True)
+        application.save()
+
+        self.assertEqual(application.status, 'new')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have a new application for your activity "{}" 🎉'.format(
+                self.review_activity.title
+            )
+        )
 
     def test_initial_no_review(self):
+        mail.outbox = []
         application = self.application_factory.create(activity=self.activity)
 
         self.assertEqual(application.status, 'accepted')
+
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been added to the activity "{}" 🎉'.format(
+                self.activity.title
+            )
+        )
+
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new participant has joined your activity "{}" 🎉'.format(self.activity.title)
+        )
 
     def test_no_review_fill(self):
         self.application_factory.create_batch(
@@ -517,10 +571,19 @@ class ApplicationTriggerTestCase():
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, 'full')
+        mail.outbox = []
         self.applications[0].states.reject(save=True)
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'open')
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have not been selected for the activity "{}"'.format(
+                self.activity.title
+            )
+        )
 
     def test_reaccept(self):
         self.test_reject()

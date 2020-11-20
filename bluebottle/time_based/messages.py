@@ -91,3 +91,66 @@ class ActivityExpiredNotification(TransitionMessage):
     def get_recipients(self):
         """activity owner"""
         return [self.obj.owner]
+
+
+class ApplicationAddedNotification(TransitionMessage):
+    subject = _('You have been added to the activity "{title}" 🎉')
+    template = 'messages/application_added'
+    context = {
+        'title': 'activity.title'
+    }
+
+    def get_recipients(self):
+        """activity owner"""
+        if self.options.get('user') != self.obj.user:
+            return [self.obj.user]
+        else:
+            return []
+
+
+class ApplicationCreatedNotification(TransitionMessage):
+    subject = _('You have a new application for your activity "{title}" 🎉')
+    template = 'messages/application_created'
+    context = {
+        'title': 'activity.title'
+    }
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.activity.owner]
+
+
+class NewApplicationNotification(TransitionMessage):
+    subject = _('A new participant has joined your activity "{title}" 🎉')
+    template = 'messages/new_application'
+    context = {
+        'title': 'activity.title'
+    }
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.activity.owner]
+
+
+class ApplicationAcceptedNotification(TransitionMessage):
+    subject = _('You have been selected for the activity "{title}" 🎉')
+    template = 'messages/application_accepted'
+    context = {
+        'title': 'activity.title'
+    }
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.user]
+
+
+class ApplicationRejectedNotification(TransitionMessage):
+    subject = _('You have not been selected for the activity "{title}"')
+    template = 'messages/application_rejected'
+    context = {
+        'title': 'activity.title'
+    }
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.user]

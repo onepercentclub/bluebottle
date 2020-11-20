@@ -79,6 +79,10 @@ class Event(Activity):
             return pytz.timezone(tz_name)
 
     @property
+    def activity_date(self):
+        return self.start
+
+    @property
     def local_timezone_name(self):
         return self.local_timezone.tzname(self.local_start)
 

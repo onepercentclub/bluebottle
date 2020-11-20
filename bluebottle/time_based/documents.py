@@ -43,8 +43,6 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         related_models = (Initiative, Member, DateParticipant)
         model = DateActivity
 
-    date_field = 'start'
-
     def prepare_start(self, instance):
         return instance.start
 
@@ -68,8 +66,6 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     class Meta(object):
         related_models = (Initiative, Member, PeriodParticipant)
         model = PeriodActivity
-
-    date_field = 'deadline'
 
     def prepare_end(self, instance):
         return instance.deadline

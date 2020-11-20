@@ -100,7 +100,7 @@ class Assignment(Activity):
         return self.date
 
     @property
-    def contributor_date(self):
+    def activity_date(self):
         return self.date
 
     @property

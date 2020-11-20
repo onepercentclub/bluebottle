@@ -79,6 +79,10 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     auto_approve = True
 
     @property
+    def activity_date(self):
+        raise NotImplementedError
+
+    @property
     def stats(self):
         return {}
 

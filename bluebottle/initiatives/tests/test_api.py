@@ -837,7 +837,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         DateActivityFactory.create(
             initiative=third,
             status='open',
-            start=now() + datetime.timedelta(days=7)
+            start=now() + datetime.timedelta(days=6)
         )
         PeriodActivityFactory.create(
             initiative=third,
@@ -853,7 +853,6 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 3)
-
         self.assertEqual(data['data'][0]['id'], str(third.pk))
         self.assertEqual(data['data'][1]['id'], str(first.pk))
         self.assertEqual(data['data'][2]['id'], str(second.pk))

@@ -183,7 +183,7 @@ class Funding(Activity):
         cache.delete(cache_key)
 
     @property
-    def contributor_date(self):
+    def activity_date(self):
         return self.deadline
 
     @property

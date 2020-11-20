@@ -91,7 +91,7 @@ class ActivityDocument(DocType):
 
     start = fields.DateField()
     end = fields.DateField()
-    date = fields.DateField()
+    activity_date = fields.DateField()
 
     class Meta(object):
         model = Activity
@@ -150,7 +150,3 @@ class ActivityDocument(DocType):
 
     def prepare_start(self, instance):
         return None
-
-    def prepare_date(self, instance):
-        if self.date_field:
-            return getattr(instance, self.date_field)

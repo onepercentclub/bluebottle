@@ -94,6 +94,10 @@ class DateActivity(TimeBasedActivity):
         resource_name = 'activities/time-based/dates'
 
     @property
+    def activity_date(self):
+        return self.start
+
+    @property
     def required_fields(self):
         fields = super().required_fields
 
@@ -166,7 +170,6 @@ class DurationPeriodChoices(DjangoChoices):
 
 class PeriodActivity(TimeBasedActivity):
     start = models.DateField(_('start'), null=True, blank=True)
-
     deadline = models.DateField(_('deadline'), null=True, blank=True)
 
     duration = models.DurationField(_('duration'), null=True, blank=True)
@@ -177,6 +180,10 @@ class PeriodActivity(TimeBasedActivity):
         null=True,
         choices=DurationPeriodChoices.choices,
     )
+
+    @property
+    def activity_date(self):
+        return self.deadline or self.start
 
     class Meta:
         verbose_name = _("Activity during a period")

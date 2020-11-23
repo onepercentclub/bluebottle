@@ -9,7 +9,7 @@ from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmi
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, Duration
+    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution
 )
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -45,7 +45,7 @@ class BaseParticipantAdminInline(admin.TabularInline):
 
     def has_add_permission(self, request):
         activity = self.get_parent_object_from_request(request)
-        if activity.status in ['draft', 'needs_work']:
+        if not activity or activity.status in ['draft', 'needs_work']:
             return False
         return True
 
@@ -127,7 +127,7 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('start', 'Start'),
-        ('duration', 'Duration'),
+        ('duration', 'TimeContribution'),
     )
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
@@ -152,14 +152,14 @@ class PeriodActivityAdmin(TimeBasedAdmin):
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('deadline', 'Deadline'),
-        ('duration', 'Duration'),
-        ('duration_period', 'Duration period'),
+        ('duration', 'TimeContribution'),
+        ('duration_period', 'TimeContribution period'),
     )
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
 
-class ParticiationInlineAdmin(admin.TabularInline):
-    model = Duration
+class TimeContributionInlineAdmin(admin.TabularInline):
+    model = TimeContribution
     extra = 0
     readonly_fields = ('edit', 'status')
     fields = readonly_fields + ('start', 'value')
@@ -188,11 +188,11 @@ class ParticiationInlineAdmin(admin.TabularInline):
 
 @admin.register(PeriodParticipant)
 class PeriodParticipantAdmin(ContributorChildAdmin):
-    inlines = ContributorChildAdmin.inlines + [ParticiationInlineAdmin]
+    inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
 
 
-@admin.register(Duration)
-class DurationAdmin(StateMachineAdmin):
+@admin.register(TimeContribution)
+class TimeContributionAdmin(StateMachineAdmin):
     raw_id_fields = ('contributor',)
     readonly_fields = ('status', 'created', )
     basic_fields = ('contributor', 'created', 'start', 'end', 'value', 'status', 'states')
@@ -213,4 +213,4 @@ class DurationAdmin(StateMachineAdmin):
 @admin.register(DateParticipant)
 class DateParticipantAdmin(ContributorChildAdmin):
     fields = ContributorChildAdmin.fields
-    inlines = ContributorChildAdmin.inlines + [ParticiationInlineAdmin]
+    inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]

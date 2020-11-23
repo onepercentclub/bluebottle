@@ -22,8 +22,8 @@ models = [
 
     # Funding
     {
-        'title': 'States - Funding - Donation',
-        'model': 'bluebottle.funding.models.Donation',
+        'title': 'States - Funding - Donor',
+        'model': 'bluebottle.funding.models.Donor',
         'page_id': '739999825'
     },
     {

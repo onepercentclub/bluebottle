@@ -6,7 +6,7 @@ from django.utils import timezone
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.time_based.tasks import (
     on_a_date_tasks, with_a_deadline_tasks,
-    period_participant_tasks, duration_tasks
+    period_participant_tasks, time_contribution_tasks
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
@@ -164,7 +164,7 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
                 ):
                     with_a_deadline_tasks()
                     period_participant_tasks()
-                    duration_tasks()
+                    time_contribution_tasks()
 
     def test_contribution_value_is_created(self):
         self.run_tasks(self.activity.start)
@@ -267,7 +267,7 @@ class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
                 ):
                     with_a_deadline_tasks()
                     period_participant_tasks()
-                    duration_tasks()
+                    time_contribution_tasks()
 
     def test_start(self):
         self.run_tasks(self.activity.start)

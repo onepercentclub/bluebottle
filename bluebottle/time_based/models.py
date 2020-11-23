@@ -7,7 +7,7 @@ from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from bluebottle.activities.models import Activity, Contributor, ContributionValue
+from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
 
@@ -49,7 +49,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def durations(self):
-        return Duration.objects.filter(
+        return TimeContribution.objects.filter(
             contributor__activity=self
         )
 
@@ -61,7 +61,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def values(self):
-        return Duration.objects.filter(
+        return TimeContribution.objects.filter(
             contributor__activity=self,
             status='succeeded'
         )
@@ -215,9 +215,9 @@ class Participant(Contributor):
         return self.user
 
     @property
-    def finished_durations(self):
+    def finished_contributions(self):
         return self.contribution_values.filter(
-            duration__end__lte=timezone.now()
+            timecontribution__end__lte=timezone.now()
         )
 
     class Meta:
@@ -247,7 +247,7 @@ class DateParticipant(Participant):
         resource_name = 'contributors/time-based/date-participants'
 
     def __str__(self):
-        return str(_("Participant"))
+        return _("Participant {name}").format(name=self.user)
 
 
 class PeriodParticipant(Participant, Contributor):
@@ -272,27 +272,30 @@ class PeriodParticipant(Participant, Contributor):
         )
 
     @property
-    def current_duration(self):
+    def current_contribution(self):
         return self.contribution_values.get(status='new')
 
     def __str__(self):
-        return _("Participant {}").format(self.user)
+        return _("Participant {name}").format(name=self.user)
 
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/period-participants'
 
 
-class Duration(ContributionValue):
+class TimeContribution(Contribution):
     value = models.DurationField(_('value'))
     start = models.DateTimeField(_('start'))
     end = models.DateTimeField(_('end'), null=True, blank=True)
 
     class Meta:
-        verbose_name = _("Participation")
-        verbose_name_plural = _("Participations")
+        verbose_name = _("Contribution")
+        verbose_name_plural = _("Contributions")
 
     def __str__(self):
-        return str(_("Participation"))
+        return _("Session {name} {date}").format(
+            name=self.contributor.user,
+            date=self.start.date()
+        )
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

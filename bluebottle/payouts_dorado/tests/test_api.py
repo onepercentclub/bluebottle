@@ -8,7 +8,7 @@ from moneyed import Money
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, \
     StripePaymentFactory, StripePayoutAccountFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -42,7 +42,7 @@ class TestPayoutApi(BluebottleTestCase):
         self.funding.bank_account = self.bank_account
         self.funding.save()
 
-        donations = DonationFactory.create_batch(
+        donations = DonorFactory.create_batch(
             4,
             activity=self.funding,
             amount=Money(35, 'EUR'),

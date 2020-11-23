@@ -811,7 +811,7 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.EventResource',
             'title': _('Funding activities'),
         }),
-        ('funding.Donation', {
+        ('funding.Donor', {
             'fields': (
                 ('id', 'Contributor ID'),
                 ('activity__title', 'Activity Title'),
@@ -829,7 +829,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('name', 'Name'),
 
                 ('activity__funding__deadline', 'Activity date'),
-                ('created', 'Donation date'),
+                ('created', 'Donor date'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.DonationResource',

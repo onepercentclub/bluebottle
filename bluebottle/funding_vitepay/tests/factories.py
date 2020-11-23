@@ -1,7 +1,7 @@
 from builtins import object
 import factory.fuzzy
 
-from bluebottle.funding.tests.factories import DonationFactory, PlainPayoutAccountFactory
+from bluebottle.funding.tests.factories import DonorFactory, PlainPayoutAccountFactory
 from bluebottle.funding_vitepay.models import (
     VitepayPayment, VitepayPaymentProvider, VitepayBankAccount
 )
@@ -11,7 +11,7 @@ class VitepayPaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = VitepayPayment
 
-    donation = factory.SubFactory(DonationFactory)
+    donation = factory.SubFactory(DonorFactory)
 
 
 class VitepayPaymentProviderFactory(factory.DjangoModelFactory):

@@ -4,7 +4,7 @@ from django.utils.translation import ugettext as _
 from django.utils.timezone import now, get_current_timezone
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.time_based.models import Duration
+from bluebottle.time_based.models import TimeContribution
 
 
 class CreateDateParticipationEffect(Effect):
@@ -14,13 +14,13 @@ class CreateDateParticipationEffect(Effect):
         activity = self.instance.activity
         if activity.start and activity.duration:
             end = activity.start + activity.duration
-            duration = Duration(
+            contribution = TimeContribution(
                 contributor=self.instance,
                 value=activity.duration,
                 start=activity.start,
                 end=end
             )
-            duration.save()
+            contribution.save()
 
 
 class CreatePeriodParticipationEffect(Effect):
@@ -44,14 +44,14 @@ class CreatePeriodParticipationEffect(Effect):
         self.instance.save()
 
         if start != end:
-            duration = Duration(
+            contribution = TimeContribution(
                 contributor=self.instance,
                 value=activity.duration,
                 start=tz.localize(datetime.combine(start, datetime.min.time())),
                 end=tz.localize(datetime.combine(end, datetime.max.time())) if end else None,
             )
 
-            duration.save()
+            contribution.save()
 
     def __str__(self):
         return _('Create contribution duration')

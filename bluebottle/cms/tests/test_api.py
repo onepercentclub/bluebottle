@@ -23,7 +23,7 @@ from bluebottle.cms.models import (
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.events.tests.factories import EventFactory
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.pages.models import DocumentItem, ImageTextItem, ActionItem, ColumnsItem
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.cms import (
@@ -63,14 +63,14 @@ class ResultPageTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory(is_co_financer=False)
         funding = FundingFactory(status='open', owner=user)
 
-        DonationFactory.create(
+        DonorFactory.create(
             activity=funding,
             status='succeeded',
             contributor_date=yesterday,
             user=user,
             amount=Money(50, 'EUR')
         )
-        DonationFactory.create(
+        DonorFactory.create(
             activity=funding,
             status='succeeded',
             contributor_date=long_ago,
@@ -102,14 +102,14 @@ class ResultPageTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory(is_co_financer=False)
         funding = FundingFactory(status='open', owner=user)
 
-        DonationFactory.create(
+        DonorFactory.create(
             activity=funding,
             status='succeeded',
             transition_date=yesterday,
             user=user,
             amount=Money(50, 'EUR')
         )
-        DonationFactory.create(
+        DonorFactory.create(
             activity=funding,
             status='succeeded',
             transition_date=long_ago,
@@ -213,21 +213,21 @@ class ResultPageTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory(is_co_financer=False)
         funding = FundingFactory(status='open', owner=user)
 
-        DonationFactory.create(
+        DonorFactory.create(
             activity=funding,
             status='succeeded',
             transition_date=yesterday,
             user=user,
             amount=Money(50, 'EUR')
         )
-        DonationFactory.create(
+        DonorFactory.create(
             activity=funding,
             status='succeeded',
             transition_date=yesterday,
             user=co_financer,
             amount=Money(50, 'EUR')
         )
-        DonationFactory.create(
+        DonorFactory.create(
             activity=funding,
             status='succeeded',
             transition_date=yesterday,

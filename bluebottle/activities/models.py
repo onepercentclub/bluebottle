@@ -178,7 +178,7 @@ class Organizer(Contributor):
         return _('Activity owner {name}').format(name=self.user)
 
 
-class ContributionValue(TriggerMixin, PolymorphicModel):
+class Contribution(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)

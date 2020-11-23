@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, PeriodParticipant, Duration
+    DateActivity, PeriodActivity, PeriodParticipant, TimeContribution
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DurationStateMachine
@@ -58,7 +58,7 @@ class PeriodActivityFinishedTask(ModelPeriodicTask):
         return _("Finish an activity when deadline has passed.")
 
 
-class NewParticipationTask(ModelPeriodicTask):
+class NewPeriodForParticipantTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -72,7 +72,7 @@ class NewParticipationTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return _("Create a new participation for participant")
+        return _("Create a new contribution for participant")
 
 
 class DateActivityStartedTask(ModelPeriodicTask):
@@ -138,5 +138,5 @@ DateActivity.periodic_tasks = [DateActivityFinishedTask, DateActivityStartedTask
 PeriodActivity.periodic_tasks = [
     TimeBasedActivityStartedTask, PeriodActivityFinishedTask
 ]
-PeriodParticipant.periodic_tasks = [NewParticipationTask]
-Duration.periodic_tasks = [DurationFinishedTask]
+PeriodParticipant.periodic_tasks = [NewPeriodForParticipantTask]
+TimeContribution.periodic_tasks = [DurationFinishedTask]

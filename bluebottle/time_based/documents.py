@@ -31,6 +31,7 @@ class TimeBasedActivityDocument:
 
 @activity.doc_type
 class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
+
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, Initiative):
             return DateActivity.objects.filter(initiative=related_instance)
@@ -54,6 +55,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
 @activity.doc_type
 class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
+
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, Initiative):
             return PeriodActivity.objects.filter(initiative=related_instance)

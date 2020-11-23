@@ -37,7 +37,7 @@ class ContributorChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     readonly_fields = [
         'created',
-        'contributor_date',
+        'contributor_date'
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields

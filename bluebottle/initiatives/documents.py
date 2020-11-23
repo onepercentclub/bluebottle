@@ -113,7 +113,6 @@ class InitiativeDocument(DocType):
             return [related_instance.initiative]
 
     def prepare_activities(self, instance):
-        return []
         return [
             {
                 'id': activity.pk,

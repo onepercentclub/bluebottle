@@ -7,11 +7,12 @@ import icalendar
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    ContributorPermission, DeleteActivityPermission
+    ContributorPermission, ContributionPermission, DeleteActivityPermission
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant
+    DateParticipant, PeriodParticipant,
+    TimeContribution
 )
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
@@ -21,7 +22,8 @@ from bluebottle.time_based.serializers import (
     PeriodParticipantSerializer,
     DateParticipantSerializer,
     DateParticipantTransitionSerializer,
-    PeriodParticipantTransitionSerializer
+    PeriodParticipantTransitionSerializer,
+    TimeContributionSerializer
 )
 
 from bluebottle.transitions.views import TransitionList
@@ -163,6 +165,12 @@ class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
     )
+
+
+class TimeContributionDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+    queryset = TimeContribution.objects.all()
+    serializer_class = TimeContributionSerializer
+    permission_classes = [ContributionPermission]
 
 
 class DateParticipantDetail(ParticipantDetail):

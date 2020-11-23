@@ -123,6 +123,8 @@ class RelatedPermissionMixin(object):
         Raises an appropriate exception if the request is not permitted.
         """
         for related, permissions in list(self.related_permission_classes.items()):
+            import ipdb
+            ipdb.set_trace()
             related_obj = getattr(obj, related)
             for permission in permissions:
                 if not permission().has_object_permission(request, None, related_obj):

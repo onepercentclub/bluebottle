@@ -17,6 +17,7 @@ from bluebottle.time_based.tests.factories import (
     DateParticipantFactory, PeriodParticipantFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
@@ -998,6 +999,142 @@ class PeriodParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTes
     participant_type = 'contributors/time-based/period-participant'
     url_name = 'period-participant-transition-list'
 
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
+
+
+class RelatedParticipantsAPIViewTestCase():
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.activity = self.factory.create()
+        self.participants = self.participant_factory.create_batch(
+            5,
+            activity=self.activity
+        )
+        self.participants[0].states.reject(save=True)
+
+        self.url = reverse(self.url_name, args=(self.activity.pk,))
+
+    def test_get_owner(self):
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(len(response.json()['data']), 5)
+
+        included_contributions = [
+            resource for resource in response.json()['included']
+            if resource['type'] == 'contributions/time-contributions'
+        ]
+        self.assertEqual(len(included_contributions), 5)
+
+    def test_get_anonymous(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(len(response.json()['data']), 4)
+
+    def test_get_closed_site(self):
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class TimeContributionDetailAPIViewTestCase():
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.activity = self.factory.create()
+        self.participant = self.participant_factory.create(
+            activity=self.activity
+        )
+        self.contribution = self.participant.contributions.get()
+
+        self.url = reverse(
+            'time-contribution-detail',
+            args=(self.contribution.pk,)
+        )
+        self.data = {
+            'data': {
+                'type': 'contributions/time-contributions',
+                'id': self.contribution.pk,
+                'attributes': {
+                    'value': '5:00:00'
+                }
+            }
+        }
+
+    def test_get_owner(self):
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_contributor(self):
+        response = self.client.get(self.url, user=self.participant.user)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_other(self):
+        response = self.client.get(self.url, user=BlueBottleUserFactory.create())
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_anonymous(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_put_owner(self):
+        response = self.client.put(self.url, json.dumps(self.data), user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.contribution.refresh_from_db()
+
+        self.assertEqual(self.contribution.value, timedelta(hours=5))
+
+    def test_put_contributor(self):
+        response = self.client.put(self.url, json.dumps(self.data), user=self.participant.user)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_put_other(self):
+        response = self.client.put(self.url, json.dumps(self.data), user=BlueBottleUserFactory.create())
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_put_anonymous(self):
+        response = self.client.put(self.url, json.dumps(self.data))
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class OnADateTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
+
+
+class PeriodTimeContributionAPIViewTestCase(TimeContributionDetailAPIViewTestCase, BluebottleTestCase):
+    factory = PeriodActivityFactory
+    participant_factory = PeriodParticipantFactory
+
+
+class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
+    type = 'date'
+    url_name = 'date-participants'
+    participant_type = 'contributors/time-based/date-participant'
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
+
+
+class RelatedPeriodParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, BluebottleTestCase):
+    type = 'period'
+    url_name = 'period-participants'
+    participant_type = 'contributors/time-based/period-participant'
     factory = PeriodActivityFactory
     participant_factory = PeriodParticipantFactory
 

@@ -31,7 +31,7 @@ from bluebottle.funding.forms import RefundConfirmationForm
 from bluebottle.funding.models import (
     Funding, Donor, Payment, PaymentProvider,
     BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward,
-    FundingPlatformSettings)
+    FundingPlatformSettings, MoneyContribution)
 from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
     FlutterwavePayment
@@ -229,6 +229,12 @@ class DonorAdminForm(StateMachineModelForm):
                 self.fields['reward'].queryset = Reward.objects.none()
 
 
+class MoneyContributionInlineAdmin(admin.StackedInline):
+    model = MoneyContribution
+    extra = 0
+    readonly_fields = ('status', 'created')
+
+
 @admin.register(Donor)
 class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
     model = Donor
@@ -246,7 +252,10 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
     ]
     date_hierarchy = 'created'
 
-    inlines = [DonorWallpostInline]
+    inlines = [
+        MoneyContributionInlineAdmin,
+        DonorWallpostInline
+    ]
 
     superadmin_fields = [
         'force_status',

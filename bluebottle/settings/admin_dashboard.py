@@ -73,18 +73,8 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['time_based.change_dateactivity']
             },
             {
-                'name': 'time_based.onadateapplication',
-                'label': _(" ↳  Participants"),
-                'permissions': ['time_based.change_onadateapplication']
-            },
-            {
                 'name': 'time_based.periodactivity',
                 'permissions': ['time_based.change_periodactivity']
-            },
-            {
-                'name': 'time_based.periodapplication',
-                'label': _(" ↳  Participants"),
-                'permissions': ['time_based.change_periodapplication']
             },
         ]
     },

@@ -130,13 +130,13 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
 
         response = self.client.get(self.admin_url, {'status__exact': 'all'})
-        self.assertContains(response, '9 Donations')
+        self.assertContains(response, '9 Donors')
 
         response = self.client.get(self.admin_url, {'status__exact': 'all', 'pledge': 'paid'})
-        self.assertContains(response, '7 Donations')
+        self.assertContains(response, '7 Donors')
 
         response = self.client.get(self.admin_url, {'status__exact': 'all', 'pledge': 'pledged'})
-        self.assertContains(response, '2 Donations')
+        self.assertContains(response, '2 Donors')
 
     def test_donation_reward(self):
         donation = DonorFactory.create(activity=self.funding)

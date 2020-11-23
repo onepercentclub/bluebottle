@@ -28,7 +28,7 @@ from bluebottle.funding.messages import (
 from bluebottle.funding.models import Funding, PlainPayoutAccount, Donor, Payout, Payment, BankAccount
 from bluebottle.funding.states import (
     FundingStateMachine, DonorStateMachine, BasePaymentStateMachine,
-    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine
+    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine
 )
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -337,6 +337,7 @@ class DonorTriggers(ContributorTriggers):
         TransitionTrigger(
             DonorStateMachine.succeed,
             effects=[
+                RelatedTransitionEffect('contribution_values', DonationStateMachine.succeed),
                 NotificationEffect(DonationSuccessActivityManagerMessage),
                 NotificationEffect(DonationSuccessDonorMessage),
                 GenerateDonorWallpostEffect,
@@ -348,6 +349,7 @@ class DonorTriggers(ContributorTriggers):
         TransitionTrigger(
             DonorStateMachine.fail,
             effects=[
+                RelatedTransitionEffect('contribution_values', DonationStateMachine.fail),
                 RemoveDonorWallpostEffect,
                 UpdateFundingAmountsEffect,
                 RemoveDonorFromPayoutEffect
@@ -357,6 +359,7 @@ class DonorTriggers(ContributorTriggers):
         TransitionTrigger(
             DonorStateMachine.refund,
             effects=[
+                RelatedTransitionEffect('contribution_values', DonationStateMachine.fail),
                 RemoveDonorWallpostEffect,
                 UnFollowActivityEffect,
                 UpdateFundingAmountsEffect,
@@ -369,6 +372,7 @@ class DonorTriggers(ContributorTriggers):
         TransitionTrigger(
             DonorStateMachine.activity_refund,
             effects=[
+                RelatedTransitionEffect('contribution_values', DonationStateMachine.fail),
                 RelatedTransitionEffect('payment', BasePaymentStateMachine.request_refund),
                 NotificationEffect(DonationActivityRefundedDonorMessage)
             ]
@@ -376,7 +380,6 @@ class DonorTriggers(ContributorTriggers):
 
         ModelChangedTrigger(
             'payout_amount',
-
             effects=[
                 UpdateFundingAmountsEffect
             ]
@@ -408,7 +411,6 @@ class BasePaymentTriggers(TriggerManager):
         TransitionTrigger(
             BasePaymentStateMachine.authorize,
             effects=[
-
                 RelatedTransitionEffect('donation', DonorStateMachine.succeed)
             ]
         ),

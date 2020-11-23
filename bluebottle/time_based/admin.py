@@ -45,7 +45,7 @@ class BaseParticipantAdminInline(admin.TabularInline):
 
     def has_add_permission(self, request):
         activity = self.get_parent_object_from_request(request)
-        if activity.status in ['draft', 'needs_work']:
+        if not activity or activity.status in ['draft', 'needs_work']:
             return False
         return True
 
@@ -158,7 +158,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
 
-class ParticiationInlineAdmin(admin.TabularInline):
+class TimeContributionInlineAdmin(admin.TabularInline):
     model = TimeContribution
     extra = 0
     readonly_fields = ('edit', 'status')
@@ -188,11 +188,11 @@ class ParticiationInlineAdmin(admin.TabularInline):
 
 @admin.register(PeriodParticipant)
 class PeriodParticipantAdmin(ContributorChildAdmin):
-    inlines = ContributorChildAdmin.inlines + [ParticiationInlineAdmin]
+    inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
 
 
 @admin.register(TimeContribution)
-class DurationAdmin(StateMachineAdmin):
+class TimeContributionAdmin(StateMachineAdmin):
     raw_id_fields = ('contributor',)
     readonly_fields = ('status', 'created', )
     basic_fields = ('contributor', 'created', 'start', 'end', 'value', 'status', 'states')
@@ -213,4 +213,4 @@ class DurationAdmin(StateMachineAdmin):
 @admin.register(DateParticipant)
 class DateParticipantAdmin(ContributorChildAdmin):
     fields = ContributorChildAdmin.fields
-    inlines = ContributorChildAdmin.inlines + [ParticiationInlineAdmin]
+    inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]

@@ -6,7 +6,7 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
 
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, ContributionValueTriggers
+    ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
 
 from bluebottle.time_based.models import (
@@ -543,8 +543,8 @@ def duration_is_finished(effect):
 
 
 @ register(TimeContribution)
-class DurationTriggers(ContributionValueTriggers):
-    triggers = ContributionValueTriggers.triggers + [
+class DurationTriggers(ContributionTriggers):
+    triggers = ContributionTriggers.triggers + [
         TransitionTrigger(
             DurationStateMachine.reset,
             effects=[

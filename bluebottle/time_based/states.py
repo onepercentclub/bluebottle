@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import (
-    ActivityStateMachine, ContributorStateMachine, ContributionValueStateMachine
+    ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -237,5 +237,5 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
 
 
 @register(TimeContribution)
-class DurationStateMachine(ContributionValueStateMachine):
+class DurationStateMachine(ContributionStateMachine):
     pass

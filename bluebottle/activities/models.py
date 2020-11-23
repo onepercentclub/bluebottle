@@ -194,7 +194,13 @@ class Contribution(TriggerMixin, PolymorphicModel):
         ordering = ('-created',)
 
     def __str__(self):
-        return str(_('Contributor value'))
+        return str(_('Contribution'))
+
+
+class OrganizerContribution(Contribution):
+    class Meta(object):
+        verbose_name = _("Contribution")
+        verbose_name_plural = _("Contributions")
 
 
 from bluebottle.activities.signals import *  # noqa

@@ -2,7 +2,7 @@ from bluebottle.fsm.triggers import TriggerManager, TransitionTrigger
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 
 from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine
-from bluebottle.activities.effects import CreateOrganizer
+from bluebottle.activities.effects import CreateOrganizer, CreateOrganizerContribution
 
 
 def initiative_is_approved(effect):
@@ -71,5 +71,35 @@ class ContributorTriggers(TriggerManager):
     triggers = []
 
 
-class ContributionValueTriggers(TriggerManager):
+class ContributionTriggers(TriggerManager):
     triggers = []
+
+
+class OrganizerTriggers(TriggerManager):
+    triggers = [
+        TransitionTrigger(
+            ActivityStateMachine.initiate,
+            effects=[
+                CreateOrganizerContribution
+            ]
+        ),
+        TransitionTrigger(
+            ActivityStateMachine.fail,
+            effects=[
+                RelatedTransitionEffect('contribution_values', OrganizerStateMachine.fail)
+            ]
+        ),
+        TransitionTrigger(
+            ActivityStateMachine.reset,
+            effects=[
+                RelatedTransitionEffect('contribution_values', OrganizerStateMachine.reset)
+            ]
+        ),
+        TransitionTrigger(
+            ActivityStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect('contribution_values', OrganizerStateMachine.succeed)
+            ]
+        ),
+
+    ]

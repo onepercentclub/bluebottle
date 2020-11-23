@@ -1,7 +1,8 @@
-from bluebottle.fsm.triggers import TriggerManager, TransitionTrigger
+from bluebottle.activities.models import Organizer
+from bluebottle.fsm.triggers import TriggerManager, TransitionTrigger, register
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 
-from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine
+from bluebottle.activities.states import ActivityStateMachine, OrganizerStateMachine, OrganizerContributionStateMachine
 from bluebottle.activities.effects import CreateOrganizer, CreateOrganizerContribution
 
 
@@ -75,31 +76,31 @@ class ContributionTriggers(TriggerManager):
     triggers = []
 
 
+@register(Organizer)
 class OrganizerTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
-            ActivityStateMachine.initiate,
+            OrganizerStateMachine.initiate,
             effects=[
                 CreateOrganizerContribution
             ]
         ),
         TransitionTrigger(
-            ActivityStateMachine.fail,
+            OrganizerStateMachine.fail,
             effects=[
-                RelatedTransitionEffect('contribution_values', OrganizerStateMachine.fail)
+                RelatedTransitionEffect('contribution_values', OrganizerContributionStateMachine.fail)
             ]
         ),
         TransitionTrigger(
-            ActivityStateMachine.reset,
+            OrganizerStateMachine.reset,
             effects=[
-                RelatedTransitionEffect('contribution_values', OrganizerStateMachine.reset)
+                RelatedTransitionEffect('contribution_values', OrganizerContributionStateMachine.reset)
             ]
         ),
         TransitionTrigger(
-            ActivityStateMachine.succeed,
+            OrganizerStateMachine.succeed,
             effects=[
-                RelatedTransitionEffect('contribution_values', OrganizerStateMachine.succeed)
+                RelatedTransitionEffect('contribution_values', OrganizerContributionStateMachine.succeed)
             ]
         ),
-
     ]

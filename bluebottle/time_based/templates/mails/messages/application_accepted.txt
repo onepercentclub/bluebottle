@@ -1,0 +1,8 @@
+{% extends "mails/messages/application_base.txt" %}
+{% load i18n %}
+
+{% block content %}{{block.super}}{% block message%}{% blocktrans with title=obj.activity.title manager=obj.activity.owner.full_name context 'email' %}
+Good news, you have been accepted for the activity "{{ title }}"!
+
+{{ manager }}, the activity manager, will follow-up with more info soon.
+{% endblocktrans %}{% endblock %}{% endblock %}

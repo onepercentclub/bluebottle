@@ -3,6 +3,7 @@ from urllib.parse import urlencode
 
 import pytz
 
+from html.parser import HTMLParser
 from timezonefinder import TimezoneFinder
 
 from django.db import models, connection
@@ -272,6 +273,9 @@ class DateParticipant(Participant):
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/date-participants'
 
+    class JSONAPIMeta:
+        resource_name = 'contributions/time-based/on-a-date-applications'
+
     def __str__(self):
         return _("Participant {name}").format(name=self.user)
 
@@ -296,6 +300,9 @@ class PeriodParticipant(Participant, Contributor):
             ('api_change_own_periodparticipant', 'Can change own period participant through the API'),
             ('api_delete_own_periodparticipant', 'Can delete own period participant through the API'),
         )
+
+    class JSONAPIMeta:
+        resource_name = 'contributions/time-based/period-applications'
 
     @property
     def current_contribution(self):

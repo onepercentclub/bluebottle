@@ -250,6 +250,19 @@ class TimeBasedDetailAPIViewTestCase():
             in self.data['meta']['transitions']
         )
 
+    def test_get_open(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.data = response.json()['data']
+        self.assertTrue(
+            {'name': 'cancel', 'target': 'cancelled', 'available': True}
+            in self.data['meta']['transitions']
+        )
+
     def test_get_contributors(self):
         self.participant_factory.create_batch(4, activity=self.activity)
         self.participant_factory.create(activity=self.activity, user=self.activity.owner)
@@ -796,6 +809,16 @@ class ParticipantDetailViewTestCase():
             in self.data['meta']['transitions']
         )
 
+        self.assertFalse(
+            {'name': 'withdraw', 'target': 'withdrawn', 'available': True}
+            in self.data['meta']['transitions']
+        )
+
+        self.assertTrue(
+            {'name': 'reject', 'target': 'rejected', 'available': True}
+            in self.data['meta']['transitions']
+        )
+
     def test_get_activity_manager(self):
         response = self.client.get(self.url, user=self.activity.initiative.activity_manager)
 
@@ -893,10 +916,14 @@ class PeriodParticipantDetailAPIViewTestCase(ParticipantDetailViewTestCase, Blue
     def test_get_owner(self):
         super().test_get_owner()
 
+    def test_get_owner(self):
+        super().test_get_owner()
+
         self.assertTrue(
             {'name': 'stop', 'target': 'stopped', 'available': True}
             in self.data['meta']['transitions']
         )
+
 
 
 class ParticipantTransitionAPIViewTestCase():

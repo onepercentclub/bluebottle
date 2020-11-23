@@ -89,6 +89,36 @@ class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
+    def get_queryset(self):
+        if self.request.user.is_authenticated():
+            queryset = self.queryset.filter(
+                Q(user=self.request.user) |
+                Q(activity__owner=self.request.user) |
+                Q(activity__initiative__activity_manager=self.request.user) |
+                Q(status__in=[
+                    'new', 'accepted', 'succeeded'
+                ])
+            )
+        else:
+            queryset = self.queryset.filter(
+                status__in=[
+                    'new', 'accepted', 'succeeded'
+                ])
+
+        return queryset.filter(
+            activity_id=self.kwargs['activity_id']
+        )
+
+
+class DateActivityRelatedApplicationsList(TimeBasedActivityRelatedParticipantList):
+    queryset = DateParticipant.objects.prefetch_related('user')
+    serializer_class = DateParticipantSerializer
+
+
+class PeriodActivityRelatedApplicationsList(TimeBasedActivityRelatedParticipantList):
+    queryset = PeriodParticipant.objects.prefetch_related('user')
+    serializer_class = PeriodParticipantSerializer
+
 
 class DateTransitionList(TransitionList):
     serializer_class = DateTransitionSerializer

@@ -173,6 +173,27 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
 
         self.assertEqual(self.activity.status, 'open')
 
+        self.accepted = self.application_factory.create(
+            activity=self.activity,
+        )
+
+        self.activity.start = now() + timedelta(days=100)
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'open')
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            'The date and time for your activity "{}" has changed'.format(self.activity.title)
+        )
+
+    def test_change_start_future(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'open')
+
         self.accepted = self.participant_factory.create(
             activity=self.activity,
         )
@@ -291,6 +312,23 @@ class PeriodActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, Bluebottle
         self.assertEqual(self.activity.status, 'open')
 
     def test_change_deadline_future(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.application_factory.create(
+            activity=self.activity,
+            status='accepted'
+        )
+        self.assertEqual(self.activity.status, 'open')
+
+        self.activity.deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, 'open')
+
+    def test_change_deadline_with_contributions(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
 
@@ -527,6 +565,19 @@ class ParticipantTriggerTestCase():
         participant = self.participant_factory.create(activity=self.activity)
 
         self.assertEqual(participant.status, 'accepted')
+
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been added to the activity "{}" 🎉'.format(
+                self.activity.title
+            )
+        )
+
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new participant has joined your activity "{}" 🎉'.format(self.activity.title)
+        )
 
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(

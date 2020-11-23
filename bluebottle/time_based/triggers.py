@@ -1,29 +1,33 @@
 from datetime import date
-from django.utils.timezone import now
 
-from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTrigger
-from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
-from bluebottle.notifications.effects import NotificationEffect
+from django.utils.timezone import now
 
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionValueTriggers
 )
-
-from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution
+from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
+from bluebottle.fsm.triggers import register, ModelChangedTrigger, TransitionTrigger
+from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.effects import (
+    CreateDateParticipationEffect, CreatePeriodParticipationEffect, SetEndDateEffect
 )
 from bluebottle.time_based.messages import (
     DateChanged, DeadlineChanged,
     ActivitySucceededNotification, ActivitySucceededManuallyNotification,
     ActivityExpiredNotification, ActivityRejectedNotification,
     ActivityCancelledNotification,
+    ApplicationAddedNotification, ApplicationCreatedNotification,
+    ApplicationAcceptedNotification, ApplicationRejectedNotification,
+    NewApplicationNotification
+)
+from bluebottle.time_based.messages import (
     ParticipantAddedNotification, ParticipantCreatedNotification,
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
     NewParticipantNotification
 )
-from bluebottle.time_based.effects import (
-    CreateDateParticipationEffect, CreatePeriodParticipationEffect, SetEndDateEffect
+from bluebottle.time_based.models import (
+    DateActivity, PeriodActivity,
+    DateParticipant, PeriodParticipant, TimeContribution
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine,
@@ -469,6 +473,16 @@ class ParticipantTriggers(ContributorTriggers):
                     conditions=[activity_will_not_be_full]
                 ),
 
+                RelatedTransitionEffect(
+                    'contribution_values',
+                    DurationStateMachine.fail,
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            ApplicationStateMachine.mark_absent,
+            effects=[
                 RelatedTransitionEffect(
                     'contribution_values',
                     DurationStateMachine.fail,

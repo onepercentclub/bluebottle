@@ -51,6 +51,10 @@ urlpatterns = [
         PeriodActivityDetailView.as_view(),
         name='period-detail'),
 
+    url(r'^/period/(?P<activity_id>\d+)/applications$',
+        PeriodActivityRelatedApplicationsList.as_view(),
+        name='period-applications'),
+
     url(r'^/date/transitions$',
         DateTransitionList.as_view(),
         name='date-transition-list'),

@@ -288,6 +288,7 @@ SHARED_APPS = (
     'multiselectfield',
 
     'djmoney.contrib.exchange',
+    'durationwidget',
 )
 
 TENANT_APPS = (
@@ -721,7 +722,7 @@ EXPORTDB_EXPORT_CONF = {
         }),
         ('assignments.Applicant', {
             'fields': (
-                ('id', 'Contribution ID'),
+                ('id', 'Contributor ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -739,7 +740,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.ApplicantResource',
-            'title': _('Task contributions'),
+            'title': _('Task contributors'),
         }),
         ('events.Event', {
             'fields': (
@@ -768,7 +769,7 @@ EXPORTDB_EXPORT_CONF = {
         }),
         ('events.Participant', {
             'fields': (
-                ('id', 'Contribution ID'),
+                ('id', 'Contributor ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -785,7 +786,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.ParticipantResource',
-            'title': _('Event contributions'),
+            'title': _('Event contributors'),
         }),
         ('funding.Funding', {
             'fields': (
@@ -810,9 +811,9 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.EventResource',
             'title': _('Funding activities'),
         }),
-        ('funding.Donation', {
+        ('funding.Donor', {
             'fields': (
-                ('id', 'Contribution ID'),
+                ('id', 'Contributor ID'),
                 ('activity__title', 'Activity Title'),
                 ('activity__initiative__title', 'Initiative Title'),
                 ('activity__id', 'Activity ID'),
@@ -828,11 +829,11 @@ EXPORTDB_EXPORT_CONF = {
                 ('name', 'Name'),
 
                 ('activity__funding__deadline', 'Activity date'),
-                ('created', 'Donation date'),
+                ('created', 'Donor date'),
                 ('updated', 'Last update'),
             ),
             'resource_class': 'bluebottle.exports.resources.DonationResource',
-            'title': _('Funding contributions'),
+            'title': _('Funding contributors'),
         }),
     ])
 }

@@ -5,7 +5,7 @@ from djmoney.money import Money
 
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
-    PlainPayoutAccountFactory, DonationFactory
+    PlainPayoutAccountFactory, DonorFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -30,7 +30,7 @@ class FundingTriggerTests(BluebottleTestCase):
         self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, FundingStateMachine.open.value)
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         # Changing the deadline to the past should trigger a transition
         self.funding.deadline = now() - timedelta(days=1)
@@ -47,7 +47,7 @@ class FundingTriggerTests(BluebottleTestCase):
         self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, FundingStateMachine.open.value)
-        donation = DonationFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         PledgePaymentFactory.create(donation=donation)
         # Changing the deadline to the past should trigger a transition
         self.funding.deadline = now() - timedelta(days=1)

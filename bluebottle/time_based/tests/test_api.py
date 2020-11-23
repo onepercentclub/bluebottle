@@ -12,7 +12,7 @@ from rest_framework import status
 
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
-    OnADateApplicationFactory, PeriodApplicationFactory
+    DateParticipantFactory, PeriodParticipantFactory
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -148,7 +148,7 @@ class TimeBasedListAPIViewTestCase():
 class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
     type = 'date'
     factory = DateActivityFactory
-    application_factory = OnADateApplicationFactory
+    participant_factory = DateParticipantFactory
 
     def setUp(self):
         super().setUp()
@@ -162,7 +162,7 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
 class PeriodListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
     type = 'period'
     factory = PeriodActivityFactory
-    application_factory = PeriodApplicationFactory
+    participant_factory = PeriodParticipantFactory
 
     def setUp(self):
         super().setUp()
@@ -231,8 +231,8 @@ class TimeBasedDetailAPIViewTestCase():
             True
         )
 
-    def test_get_contributions(self):
-        self.application_factory.create_batch(5, activity=self.activity)
+    def test_get_contributors(self):
+        self.participant_factory.create_batch(5, activity=self.activity)
         response = self.client.get(self.url, user=self.activity.owner)
 
         data = response.json()['data']
@@ -244,13 +244,13 @@ class TimeBasedDetailAPIViewTestCase():
         ]
 
         self.assertEqual(
-            len(data['relationships']['contributions']['data']),
+            len(data['relationships']['contributors']['data']),
             5
         )
 
-        for contribution in data['relationships']['contributions']['data']:
+        for contributor in data['relationships']['contributors']['data']:
             self.assertTrue(
-                contribution in included_resources
+                contributor in included_resources
             )
 
     def test_get_non_anonymous(self):
@@ -323,7 +323,7 @@ class TimeBasedDetailAPIViewTestCase():
 class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
     type = 'date'
     factory = DateActivityFactory
-    application_factory = OnADateApplicationFactory
+    participant_factory = DateParticipantFactory
 
     def setUp(self):
         super().setUp()
@@ -393,7 +393,7 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
 class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
     type = 'period'
     factory = PeriodActivityFactory
-    application_factory = PeriodApplicationFactory
+    participant_factory = PeriodParticipantFactory
 
     def setUp(self):
         super().setUp()
@@ -441,7 +441,7 @@ class TimeBasedTransitionAPIViewTestCase():
 
         self.assertEqual(
             data['included'][0]['type'],
-            'activities/time-based/{}'.format(self.type)
+            'activities/time-based/{}s'.format(self.type)
         )
         self.assertEqual(data['included'][0]['attributes']['status'], 'deleted')
 
@@ -485,16 +485,16 @@ class TimeBasedTransitionAPIViewTestCase():
 class OnADatteTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'date'
     factory = DateActivityFactory
-    application_factory = OnADateApplicationFactory
+    participant_factory = DateParticipantFactory
 
 
 class PeriodTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'period'
     factory = PeriodActivityFactory
-    application_factory = PeriodApplicationFactory
+    participant_factory = PeriodParticipantFactory
 
 
-class ApplicationListViewTestCase():
+class ParticipantListViewTestCase():
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
@@ -508,7 +508,7 @@ class ApplicationListViewTestCase():
 
         self.data = {
             'data': {
-                'type': self.application_type,
+                'type': self.participant_type,
                 'attributes': {
                     'motiviation': 'I am great',
                 },
@@ -525,7 +525,6 @@ class ApplicationListViewTestCase():
 
     def test_create(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = response.json()['data']
@@ -593,50 +592,50 @@ class ApplicationListViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class DateApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
+class DatePrticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
     type = 'date'
     factory = DateActivityFactory
-    application_factory = OnADateApplicationFactory
+    participant_factory = DateParticipantFactory
 
-    url_name = 'on-a-date-application-list'
-    application_type = 'contributions/time-based/date-applications'
+    url_name = 'date-participant-list'
+    participant_type = 'contributors/time-based/date-participants'
 
 
-class PeriodApplicationListAPIViewTestCase(ApplicationListViewTestCase, BluebottleTestCase):
+class PeriodParticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
     type = 'period'
     factory = PeriodActivityFactory
-    application_factory = PeriodApplicationFactory
+    participant_factory = PeriodParticipantFactory
 
-    url_name = 'period-application-list'
-    application_type = 'contributions/time-based/period-applications'
+    url_name = 'period-participant-list'
+    participant_type = 'contributors/time-based/period-participants'
 
 
-class ApplicationDetailViewTestCase():
+class ParticipantDetailViewTestCase():
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.activity = self.factory.create()
-        self.application = self.application_factory(
+        self.participant = self.participant_factory(
             activity=self.activity,
             motivation='My motivation'
         )
 
-        self.url = reverse(self.url_name, args=(self.application.pk, ))
+        self.url = reverse(self.url_name, args=(self.participant.pk, ))
 
         self.private_document_url = reverse('private-document-list')
         self.png_document_path = './bluebottle/files/tests/files/test-image.png'
 
         self.data = {
             'data': {
-                'type': self.application_type,
-                'id': self.application.pk,
+                'type': self.participant_type,
+                'id': self.participant.pk,
                 'attributes': {'motivation': 'Let\'s go!!!'},
             }
         }
 
     def test_get_user(self):
-        response = self.client.get(self.url, user=self.application.user)
+        response = self.client.get(self.url, user=self.participant.user)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -644,12 +643,12 @@ class ApplicationDetailViewTestCase():
 
         self.assertEqual(
             data['attributes']['motivation'],
-            self.application.motivation
+            self.participant.motivation
         )
 
         self.assertEqual(
             data['relationships']['user']['data']['id'],
-            str(self.application.user.pk)
+            str(self.participant.user.pk)
         )
 
         self.assertEqual(
@@ -676,7 +675,7 @@ class ApplicationDetailViewTestCase():
 
         self.assertEqual(
             data['attributes']['motivation'],
-            self.application.motivation
+            self.participant.motivation
         )
 
     def test_get_activity_manager(self):
@@ -688,7 +687,7 @@ class ApplicationDetailViewTestCase():
 
         self.assertEqual(
             data['attributes']['motivation'],
-            self.application.motivation
+            self.participant.motivation
         )
 
     def test_get_other_user(self):
@@ -703,7 +702,7 @@ class ApplicationDetailViewTestCase():
         )
 
     def test_patch_user(self):
-        response = self.client.patch(self.url, json.dumps(self.data), user=self.application.user)
+        response = self.client.patch(self.url, json.dumps(self.data), user=self.participant.user)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -736,7 +735,7 @@ class ApplicationDetailViewTestCase():
             }
         }
 
-        response = self.client.patch(self.url, json.dumps(self.data), user=self.application.user)
+        response = self.client.patch(self.url, json.dumps(self.data), user=self.participant.user)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -758,42 +757,42 @@ class ApplicationDetailViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class DateApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
+class DateParticipantDetailAPIViewTestCase(ParticipantDetailViewTestCase, BluebottleTestCase):
     type = 'date'
     factory = DateActivityFactory
-    application_factory = OnADateApplicationFactory
-    url_name = 'on-a-date-application-detail'
-    application_type = 'contributions/time-based/date-applications'
+    participant_factory = DateParticipantFactory
+    url_name = 'date-participant-detail'
+    participant_type = 'contributors/time-based/date-participants'
 
 
-class PeriodApplicationDetailAPIViewTestCase(ApplicationDetailViewTestCase, BluebottleTestCase):
+class PeriodParticipantDetailAPIViewTestCase(ParticipantDetailViewTestCase, BluebottleTestCase):
     type = 'period'
     factory = PeriodActivityFactory
-    application_factory = PeriodApplicationFactory
-    url_name = 'period-application-detail'
-    application_type = 'contributions/time-based/period-applications'
+    participant_factory = PeriodParticipantFactory
+    url_name = 'period-participant-detail'
+    participant_type = 'contributors/time-based/period-participants'
 
 
-class ApplicationTransitionAPIViewTestCase():
+class ParticipantTransitionAPIViewTestCase():
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.activity = self.factory.create()
-        self.application = self.application_factory.create(
+        self.participant = self.participant_factory.create(
             activity=self.activity
         )
 
         self.url = reverse(self.url_name)
         self.data = {
             'data': {
-                'type': '{}-transitions'.format(self.application_type),
+                'type': '{}-transitions'.format(self.participant_type),
                 'attributes': {},
                 'relationships': {
                     'resource': {
                         'data': {
-                            'type': '{}s'.format(self.application_type),
-                            'id': self.application.pk
+                            'type': '{}s'.format(self.participant_type),
+                            'id': self.participant.pk
                         }
                     }
                 }
@@ -807,7 +806,7 @@ class ApplicationTransitionAPIViewTestCase():
         response = self.client.post(
             self.url,
             json.dumps(self.data),
-            user=self.application.user
+            user=self.participant.user
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -815,7 +814,7 @@ class ApplicationTransitionAPIViewTestCase():
 
         self.assertEqual(
             data['included'][0]['type'],
-            'activities/time-based/{}'.format(self.type)
+            'activities/time-based/{}s'.format(self.type)
         )
         self.assertEqual(data['included'][1]['attributes']['status'], 'withdrawn')
 
@@ -844,7 +843,7 @@ class ApplicationTransitionAPIViewTestCase():
 
         self.assertEqual(
             data['included'][0]['type'],
-            'activities/time-based/{}'.format(self.type)
+            'activities/time-based/{}s'.format(self.type)
         )
         self.assertEqual(data['included'][1]['attributes']['status'], 'rejected')
 
@@ -855,26 +854,26 @@ class ApplicationTransitionAPIViewTestCase():
         response = self.client.post(
             self.url,
             json.dumps(self.data),
-            user=self.application.user
+            user=self.participant.user
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class OnADateApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
+class OnADateParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'date'
-    url_name = 'on-a-date-application-transition-list'
-    application_type = 'contributions/time-based/date-application'
+    url_name = 'date-participant-transition-list'
+    participant_type = 'contributors/time-based/date-participant'
     factory = DateActivityFactory
-    application_factory = OnADateApplicationFactory
+    participant_factory = DateParticipantFactory
 
 
-class PeriodApplicationTransitionAPIViewTestCase(ApplicationTransitionAPIViewTestCase, BluebottleTestCase):
+class PeriodParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'period'
-    application_type = 'contributions/time-based/period-application'
-    url_name = 'period-application-transition-list'
+    participant_type = 'contributors/time-based/period-participant'
+    url_name = 'period-participant-transition-list'
 
     factory = PeriodActivityFactory
-    application_factory = PeriodApplicationFactory
+    participant_factory = PeriodParticipantFactory
 
 
 class DateIcalTestCase(BluebottleTestCase):

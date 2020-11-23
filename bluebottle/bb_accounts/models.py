@@ -319,26 +319,26 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_supporter(self):
-        from bluebottle.funding.states import DonationStateMachine
-        from bluebottle.funding.models import Donation
-        return bool(self.contribution_set.instance_of(Donation).
-                    filter(status=DonationStateMachine.succeeded.value).count())
+        from bluebottle.funding.states import DonorStateMachine
+        from bluebottle.funding.models import Donor
+        return bool(self.contributor_set.instance_of(Donor).
+                    filter(status=DonorStateMachine.succeeded.value).count())
 
     @cached_property
     def is_volunteer(self):
         from bluebottle.assignments.models import Applicant
         from bluebottle.events.models import Participant
         from bluebottle.activities.states import ActivityStateMachine
-        return bool(self.contribution_set.instance_of(Applicant, Participant).
+        return bool(self.contributor_set.instance_of(Applicant, Participant).
                     filter(status=ActivityStateMachine.succeeded.value).count())
 
     @cached_property
     def amount_donated(self):
-        from bluebottle.funding.states import DonationStateMachine
-        from bluebottle.funding.models import Donation
+        from bluebottle.funding.states import DonorStateMachine
+        from bluebottle.funding.models import Donor
         from bluebottle.funding.utils import calculate_total
-        donations = self.contribution_set.instance_of(Donation).filter(
-            status=DonationStateMachine.succeeded.value
+        donations = self.contributor_set.instance_of(Donor).filter(
+            status=DonorStateMachine.succeeded.value
         )
         return calculate_total(donations)
 
@@ -347,9 +347,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         from bluebottle.assignments.models import Applicant
         from bluebottle.events.models import Participant
         from bluebottle.activities.states import ActivityStateMachine
-        contributions = self.contribution_set.instance_of(Applicant, Participant).\
+        contributors = self.contributor_set.instance_of(Applicant, Participant).\
             filter(status=ActivityStateMachine.succeeded.value).all()
-        return sum([c.time_spent for c in contributions])
+        return sum([c.time_spent for c in contributors])
 
     @cached_property
     def subscribed(self):

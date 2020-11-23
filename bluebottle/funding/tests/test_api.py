@@ -15,10 +15,10 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 
 from bluebottle.funding.tests.factories import (
-    FundingFactory, RewardFactory, DonationFactory,
+    FundingFactory, RewardFactory, DonorFactory,
     BudgetLineFactory
 )
-from bluebottle.funding.models import Donation
+from bluebottle.funding.models import Donor
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_pledge.tests.factories import (
     PledgeBankAccountFactory, PledgePaymentProviderFactory
@@ -401,17 +401,17 @@ class FundingDetailTestCase(BluebottleTestCase):
 
     def test_view_funding_owner(self):
         co_financer = BlueBottleUserFactory.create(is_co_financer=True)
-        DonationFactory.create(
+        DonorFactory.create(
             user=co_financer,
             amount=Money(200, 'EUR'),
             activity=self.funding,
             status='succeeded')
-        DonationFactory.create_batch(
+        DonorFactory.create_batch(
             4,
             amount=Money(200, 'EUR'),
             activity=self.funding,
             status='succeeded')
-        DonationFactory.create_batch(
+        DonorFactory.create_batch(
             2,
             amount=Money(100, 'EUR'),
             activity=self.funding,
@@ -452,7 +452,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         # Should only see the three successful donations
         self.assertEqual(
-            len(data['data']['relationships']['contributions']['data']),
+            len(data['data']['relationships']['contributors']['data']),
             5
         )
 
@@ -470,7 +470,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         export_url = data['data']['attributes']['supporters-export-url']['url']
 
         export_response = self.client.get(export_url)
-        self.assertTrue(b'Email,Name,Donation Date' in export_response.content)
+        self.assertTrue(b'Email,Name,Donor Date' in export_response.content)
 
         wrong_signature_response = self.client.get(export_url + '111')
         self.assertEqual(
@@ -506,8 +506,8 @@ class FundingDetailTestCase(BluebottleTestCase):
         )
 
     def test_other_user(self):
-        DonationFactory.create_batch(5, amount=Money(200, 'EUR'), activity=self.funding, status='succeeded')
-        DonationFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')
+        DonorFactory.create_batch(5, amount=Money(200, 'EUR'), activity=self.funding, status='succeeded')
+        DonorFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')
 
         self.funding.bank_account = ExternalAccountFactory.create(
             account_id='some-external-account-id',
@@ -684,7 +684,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'attributes': {
                     'amount': {'amount': 100, 'currency': 'EUR'},
                 },
@@ -717,13 +717,13 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
-        donation = Donation.objects.get(pk=data['data']['id'])
+        donation = Donor.objects.get(pk=data['data']['id'])
         donation.states.succeed()
         donation.save()
 
         response = self.client.get(self.funding_url, user=self.user)
 
-        donation = get_included(response, 'contributions/donations')
+        donation = get_included(response, 'contributors/donations')
         self.assertEqual(donation['relationships']['user']['data']['id'], str(self.user.pk))
 
         self.assertTrue(response.json()['data']['attributes']['is-follower'])
@@ -738,7 +738,7 @@ class DonationTestCase(BluebottleTestCase):
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
         self.assertEqual(data['data']['attributes']['anonymous'], True)
-        donation = Donation.objects.get(pk=data['data']['id'])
+        donation = Donor.objects.get(pk=data['data']['id'])
         self.assertTrue(donation.user, self.user)
 
         donation.states.succeed()
@@ -746,7 +746,7 @@ class DonationTestCase(BluebottleTestCase):
 
         response = self.client.get(self.funding_url, user=self.user)
 
-        donation = get_included(response, 'contributions/donations')
+        donation = get_included(response, 'contributors/donations')
         self.assertFalse('user' in donation['relationships'])
 
     def test_update(self):
@@ -760,7 +760,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -786,7 +786,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -813,7 +813,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': data['data']['id'],
                 'relationships': {
                     'user': {
@@ -847,7 +847,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -870,7 +870,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -904,7 +904,7 @@ class DonationTestCase(BluebottleTestCase):
         update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': data['data']['id'],
                 'relationships': {
                     'user': {
@@ -923,7 +923,6 @@ class DonationTestCase(BluebottleTestCase):
             HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
         )
         data = response.json()
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(data['data']['attributes']['status'], 'new')
@@ -933,7 +932,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -957,7 +956,7 @@ class DonationTestCase(BluebottleTestCase):
         update_url = reverse('funding-donation-detail', args=(data['data']['id'], ))
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': data['data']['id'],
                 'relationships': {
                     'user': {
@@ -989,7 +988,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -1017,7 +1016,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -1054,7 +1053,7 @@ class DonationTestCase(BluebottleTestCase):
 
         patch_data = {
             'data': {
-                'type': 'contributions/donations',
+                'type': 'contributors/donations',
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
@@ -1322,7 +1321,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             self.funding.states.approve()
 
         for i in range(5):
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
                 payment=PledgePaymentFactory.create()
@@ -1330,7 +1329,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             PledgePaymentFactory.create(donation=donation)
 
         for i in range(5):
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 amount=Money(300, 'USD'),
                 payout_amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
@@ -1339,7 +1338,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
                 StripeSourcePaymentFactory.create(donation=donation)
 
         for i in range(2):
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding,
                 status='new',
@@ -1390,7 +1389,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
             sum(
                 donation['attributes']['amount']['amount']
                 for donation in data['included']
-                if donation['type'] == 'contributions/donations'
+                if donation['type'] == 'contributors/donations'
             ),
             1000.0
         )
@@ -1407,14 +1406,14 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.states.approve(save=True)
 
         for i in range(5):
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
             )
             VitepayPaymentFactory.create(donation=donation)
 
         for i in range(2):
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding,
                 status='new',
@@ -1449,14 +1448,14 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.states.approve(save=True)
 
         for i in range(5):
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
             )
             LipishaPaymentFactory.create(donation=donation)
 
         for i in range(2):
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding,
                 status='new',
@@ -1491,14 +1490,14 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.states.approve(save=True)
 
         for i in range(5):
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
             )
             FlutterwavePaymentFactory.create(donation=donation)
 
         for i in range(2):
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding,
                 status='new',
@@ -1533,14 +1532,14 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.states.approve(save=True)
 
         for i in range(5):
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
             )
             PledgePaymentFactory.create(donation=donation)
 
         for i in range(2):
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding,
                 status='new',
@@ -1576,7 +1575,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.states.approve(save=True)
 
         for i in range(5):
-            donation = DonationFactory.create(
+            donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
             )
@@ -1650,7 +1649,7 @@ class FundingAPIPermissionsTestCase(BluebottleTestCase):
         self.assertPostNotAllowed(url, self.user)
 
     def test_donation_list(self):
-        DonationFactory.create(status='succeeded')
+        DonorFactory.create(status='succeeded')
         url = reverse('funding-donation-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)

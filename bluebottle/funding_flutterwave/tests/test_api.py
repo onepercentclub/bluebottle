@@ -5,7 +5,7 @@ from djmoney.money import Money
 from mock import patch
 from rest_framework import status
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, PlainPayoutAccountFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory, PlainPayoutAccountFactory
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -42,7 +42,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(initiative=self.initiative)
-        self.donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'NGN'), user=self.user)
+        self.donation = DonorFactory.create(activity=self.funding, amount=Money(1000, 'NGN'), user=self.user)
 
         self.payment_url = reverse('flutterwave-payment-list')
 
@@ -57,7 +57,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'contributions/donations',
+                            'type': 'contributors/donations',
                             'id': self.donation.pk,
                         }
                     }
@@ -68,7 +68,6 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
     @patch('bluebottle.funding_flutterwave.utils.post', return_value=success_response)
     def test_create_payment_success(self, flutterwave_post):
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
@@ -79,7 +78,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
 
     @patch('bluebottle.funding_flutterwave.utils.post', return_value=success_response)
     def test_create_anonymous_payment_success(self, flutterwave_post):
-        donation = DonationFactory.create(
+        donation = DonorFactory.create(
             activity=self.funding,
             amount=Money(1000, 'NGN'),
             user=self.user,
@@ -96,7 +95,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'contributions/donations',
+                            'type': 'contributors/donations',
                             'id': donation.pk,
                         }
                     }
@@ -136,7 +135,7 @@ class FlutterwavePaymentTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        new_donation = DonationFactory.create(activity=self.funding, amount=Money(1000, 'NGN'), user=self.user)
+        new_donation = DonorFactory.create(activity=self.funding, amount=Money(1000, 'NGN'), user=self.user)
         self.data['data']['relationships']['donation']['data']['id'] = new_donation.id
 
         response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)

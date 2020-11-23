@@ -2,7 +2,7 @@ from builtins import object
 from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
-from bluebottle.activities.models import Contribution, Activity
+from bluebottle.activities.models import Contributor, Activity
 from bluebottle.assignments.serializers import (
     AssignmentListSerializer, AssignmentSerializer,
     ApplicantListSerializer, TinyAssignmentSerializer
@@ -16,15 +16,15 @@ from bluebottle.time_based.serializers import (
     PeriodActivityListSerializer,
 
     DateActivitySerializer,
-    PeriodActivitySerializer, OnADateApplicationSerializer, PeriodApplicationSerializer,
-    OnADateApplicationListSerializer, PeriodApplicationListSerializer,
+    PeriodActivitySerializer, DateParticipantSerializer, PeriodParticipantSerializer,
+    DateParticipantListSerializer, PeriodParticipantListSerializer,
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
-    DonationListSerializer, TinyFundingSerializer
+    DonorListSerializer, TinyFundingSerializer
 )
 
 
@@ -153,14 +153,14 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
         )
 
 
-class ContributionSerializer(PolymorphicModelSerializer):
+class ContributorSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         ParticipantListSerializer,
         ApplicantListSerializer,
-        DonationListSerializer,
+        DonorListSerializer,
 
-        OnADateApplicationSerializer,
-        PeriodApplicationSerializer
+        DateParticipantSerializer,
+        PeriodParticipantSerializer
     ]
 
     included_serializers = {
@@ -175,20 +175,20 @@ class ContributionSerializer(PolymorphicModelSerializer):
         ]
 
     class Meta(object):
-        model = Contribution
+        model = Contributor
         meta_fields = (
             'created', 'updated',
         )
 
 
-class ContributionListSerializer(PolymorphicModelSerializer):
+class ContributorListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         ParticipantListSerializer,
         ApplicantListSerializer,
-        DonationListSerializer,
+        DonorListSerializer,
 
-        OnADateApplicationListSerializer,
-        PeriodApplicationListSerializer
+        DateParticipantListSerializer,
+        PeriodParticipantListSerializer
     ]
 
     included_serializers = {
@@ -203,7 +203,7 @@ class ContributionListSerializer(PolymorphicModelSerializer):
         ]
 
     class Meta(object):
-        model = Contribution
+        model = Contributor
         meta_fields = (
             'created', 'updated',
         )

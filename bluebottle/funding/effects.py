@@ -1,3 +1,5 @@
+from bluebottle.funding.models import MoneyContribution
+
 from bluebottle.fsm.state import TransitionNotPossible
 from future.utils import python_2_unicode_compatible
 
@@ -54,7 +56,23 @@ class UpdateFundingAmountsEffect(Effect):
 
 
 @python_2_unicode_compatible
-class RemoveDonationFromPayoutEffect(Effect):
+class UpdateDonationAmountEffect(Effect):
+    conditions = []
+    title = _('Update donation amount')
+
+    display = False
+
+    def post_save(self, **kwargs):
+        donation = self.instance.time_contributions.first()
+        donation.amount = self.instance.payout_amount
+        donation.save()
+
+    def __str__(self):
+        return _('Update donation amount')
+
+
+@python_2_unicode_compatible
+class RemoveDonorFromPayoutEffect(Effect):
     conditions = []
     title = _('Remove donation from payout')
 
@@ -106,7 +124,7 @@ class RefundPaymentAtPSPEffect(Effect):
 
 
 @python_2_unicode_compatible
-class GenerateDonationWallpostEffect(Effect):
+class GenerateDonorWallpostEffect(Effect):
     conditions = []
     title = _('Create wallpost')
     template = 'admin/generate_donation_wallpost_effect.html'
@@ -126,7 +144,7 @@ class GenerateDonationWallpostEffect(Effect):
 
 
 @python_2_unicode_compatible
-class RemoveDonationWallpostEffect(Effect):
+class RemoveDonorWallpostEffect(Effect):
     conditions = []
     title = _('Delete wallpost')
     template = 'admin/remove_donation_wallpost_effect.html'
@@ -226,3 +244,19 @@ class ClearPayoutDatesEffect(Effect):
 
     def __str__(self):
         return _('Clear payout event dates')
+
+
+@python_2_unicode_compatible
+class CreateDonationEffect(Effect):
+    conditions = []
+    display = False
+
+    def post_save(self, **kwargs):
+        donation = MoneyContribution(
+            contributor=self.instance,
+            amount=self.instance.amount
+        )
+        donation.save()
+
+    def __str__(self):
+        return _('Create a donation')

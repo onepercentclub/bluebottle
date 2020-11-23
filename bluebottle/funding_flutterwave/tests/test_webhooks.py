@@ -3,7 +3,7 @@ from django.test.utils import override_settings
 from mock import patch
 from rest_framework.status import HTTP_200_OK
 
-from bluebottle.funding.tests.factories import DonationFactory
+from bluebottle.funding.tests.factories import DonorFactory
 from bluebottle.funding_flutterwave.tests.factories import FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
 from bluebottle.funding_flutterwave.views import FlutterwaveWebhookView
 from bluebottle.test.utils import BluebottleTestCase
@@ -29,7 +29,7 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
         self.webhook_url = reverse('flutterwave-payment-webhook')
 
     def test_webhook(self):
-        donation = DonationFactory.create()
+        donation = DonorFactory.create()
         payment = FlutterwavePaymentFactory.create(
             donation=donation,
             tx_ref=donation.id
@@ -80,7 +80,7 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
         self.assertEqual(donation.status, 'succeeded')
 
     def test_webhook_without_payment(self):
-        donation = DonationFactory.create()
+        donation = DonorFactory.create()
         payload = {
             "data": {
                 "id": 1231,
@@ -103,7 +103,7 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
         self.assertEqual(donation.status, 'succeeded')
 
     def test_webhook_bank_transfer_without_payment(self):
-        donation = DonationFactory.create()
+        donation = DonorFactory.create()
         payload = {
             "data": {
                 "id": 1231,
@@ -129,7 +129,7 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
         self.assertEqual(donation.payout_amount.amount, 17500)
 
     def test_webhook_without_payment_another(self):
-        donation = DonationFactory.create()
+        donation = DonorFactory.create()
         payload = {
             "event": "charge.completed",
             "data": {
@@ -175,7 +175,7 @@ class FlutterwaveWebhookTest(BluebottleTestCase):
         self.assertEqual(donation.status, 'succeeded')
 
     def test_webhook_view(self):
-        donation = DonationFactory.create()
+        donation = DonorFactory.create()
         payment = FlutterwavePaymentFactory.create(
             donation=donation,
             tx_ref=donation.id

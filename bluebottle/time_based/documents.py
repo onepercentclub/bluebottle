@@ -1,7 +1,7 @@
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
-from bluebottle.time_based.models import DateActivity, PeriodActivity, OnADateApplication, PeriodApplication
+from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant
 
 SCORE_MAP = {
     'open': 1,
@@ -36,14 +36,12 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
             return DateActivity.objects.filter(initiative=related_instance)
         if isinstance(related_instance, Member):
             return DateActivity.objects.filter(owner=related_instance)
-        if isinstance(related_instance, OnADateApplication):
-            return DateActivity.objects.filter(contributions=related_instance)
+        if isinstance(related_instance, DateParticipant):
+            return DateActivity.objects.filter(contributors=related_instance)
 
     class Meta(object):
-        related_models = (Initiative, Member, OnADateApplication)
+        related_models = (Initiative, Member, DateParticipant)
         model = DateActivity
-
-    date_field = 'start'
 
     def prepare_start(self, instance):
         return instance.start
@@ -62,14 +60,12 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
             return PeriodActivity.objects.filter(initiative=related_instance)
         if isinstance(related_instance, Member):
             return PeriodActivity.objects.filter(owner=related_instance)
-        if isinstance(related_instance, PeriodApplication):
-            return PeriodActivity.objects.filter(contributions=related_instance)
+        if isinstance(related_instance, PeriodParticipant):
+            return PeriodActivity.objects.filter(contributors=related_instance)
 
     class Meta(object):
-        related_models = (Initiative, Member, PeriodApplication)
+        related_models = (Initiative, Member, PeriodParticipant)
         model = PeriodActivity
-
-    date_field = 'deadline'
 
     def prepare_end(self, instance):
         return instance.deadline

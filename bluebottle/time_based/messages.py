@@ -134,7 +134,7 @@ class NewParticipantNotification(TransitionMessage):
 
 class ParticipantAcceptedNotification(TransitionMessage):
     subject = _('You have been selected for the activity "{title}" 🎉')
-    template = 'messages/participantaccepted'
+    template = 'messages/participant_accepted'
     context = {
         'title': 'activity.title'
     }

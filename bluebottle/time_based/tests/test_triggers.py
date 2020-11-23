@@ -482,7 +482,7 @@ class ParticipantTriggerTestCase():
         self.assertEqual(participant.status, 'new')
         self.assertEqual(
             mail.outbox[0].subject,
-            'You have a new application for your activity "{}" 🎉'.format(
+            'You have a new participant for your activity "{}" 🎉'.format(
                 self.review_activity.title
             )
         )
@@ -517,7 +517,7 @@ class ParticipantTriggerTestCase():
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'You have a new application for your activity "{}" 🎉'.format(
+            'You have a new participant for your activity "{}" 🎉'.format(
                 self.review_activity.title
             )
         )

@@ -973,13 +973,32 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
         members = self._get_members(data)
         anonymous = self._get_anonymous(data)
-        self.assertEqual(len(members), 3)
+        self.assertEqual(len(members), 1)
         self.assertEqual(len(anonymous), 0)
+
+        contributors_response = self.client.get(
+            data['data']['relationships']['contributors']['links']['related'], user=self.owner
+        )
+        contributors_data = json.loads(contributors_response.content)
+        members = self._get_members(contributors_data)
+        anonymous = self._get_anonymous(contributors_data)
+        self.assertEqual(len(members), 4)
+        self.assertEqual(len(anonymous), 0)
+
         response = self.client.get(self.new_url, user=self.owner)
         data = json.loads(response.content)
         members = self._get_members(data)
         anonymous = self._get_anonymous(data)
-        self.assertEqual(len(members), 3)
+        self.assertEqual(len(members), 1)
+        self.assertEqual(len(anonymous), 0)
+
+        contributors_response = self.client.get(
+            data['data']['relationships']['contributors']['links']['related'], user=self.owner
+        )
+        contributors_data = json.loads(contributors_response.content)
+        members = self._get_members(contributors_data)
+        anonymous = self._get_anonymous(contributors_data)
+        self.assertEqual(len(members), 4)
         self.assertEqual(len(anonymous), 0)
 
     def test_max_age(self):
@@ -990,11 +1009,30 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         data = json.loads(response.content)
         members = self._get_members(data)
         anonymous = self._get_anonymous(data)
-        self.assertEqual(len(members), 1)
+        self.assertEqual(len(members), 0)
+        self.assertEqual(len(anonymous), 1)
+
+        contributors_response = self.client.get(
+            data['data']['relationships']['contributors']['links']['related'], user=self.owner
+        )
+        contributors_data = json.loads(contributors_response.content)
+        members = self._get_members(contributors_data)
+        anonymous = self._get_anonymous(contributors_data)
+        self.assertEqual(len(members), 2)
         self.assertEqual(len(anonymous), 2)
+
         response = self.client.get(self.new_url, user=self.owner)
         data = json.loads(response.content)
         members = self._get_members(data)
         anonymous = self._get_anonymous(data)
+        self.assertEqual(len(members), 1)
+        self.assertEqual(len(anonymous), 0)
+
+        contributors_response = self.client.get(
+            data['data']['relationships']['contributors']['links']['related'], user=self.owner
+        )
+        contributors_data = json.loads(contributors_response.content)
+        members = self._get_members(contributors_data)
+        anonymous = self._get_anonymous(contributors_data)
         self.assertEqual(len(members), 2)
-        self.assertEqual(len(anonymous), 1)
+        self.assertEqual(len(anonymous), 2)

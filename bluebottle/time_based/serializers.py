@@ -46,6 +46,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'location',
             'expertise',
+            'my_contributor',
         ]
 
     included_serializers = dict(
@@ -331,7 +332,7 @@ class ParticipantSerializer(BaseContributorSerializer):
         resource_name = 'contributors/time-based/participants'
         included_resources = [
             'user',
-            'document'
+            'document',
         ]
 
     included_serializers = {

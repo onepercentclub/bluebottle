@@ -1,20 +1,13 @@
-{% extends "base.mail.html" %}
+{% extends "mails/messages/activity_base.html" %}
 {% load i18n %}
+{% load local_time %}
 
 {% block content %}
-{% blocktrans with recipient_name=to.first_name assignment_title=obj.title assignment_date=obj.date|date context 'email' %}
-Hi {{ recipient_name }},
-<br><br>
-Heads up: The date of your task "{{ assignment_title }}" has been changed.
-<br><br>
-The new date is: {{ assignment_date }}.
-<br>
-<i>If you are unable to participate, please withdraw via the platform so that others can take your place.</i>
-{% endblocktrans %}
-{% endblock %}
+{{block.super}}
+{% block message%}{% blocktrans with title=obj.title date=obj.start|local_date:obj.local_timezone start=obj.start|local_time:obj.local_timezone end=obj.end|local_time:obj.local_timezone tz=obj.start|local_timezone:obj.local_timezone context 'email' %}
+<p>The date and/or time of the activity "{{ title }}" has changed.</p>
 
-{% block action %}
-    <a href="{{ obj.get_absolute_url }}" class="action-email">
-       {% trans 'Go to task' context 'email' %}
-    </a>
-{% endblock %}`
+<p>The new date is {{ date }} from {{ start }} to {{ end }} ({{tz}}).</p>
+
+<p>If you are unable to participate, please withdraw via the activity page so that others can take your place.</p>
+{% endblocktrans %}{% endblock %}{% endblock %}

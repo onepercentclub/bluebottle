@@ -1,6 +1,10 @@
 from html.parser import HTMLParser
 from urllib.parse import urlencode
 
+import pytz
+
+from timezonefinder import TimezoneFinder
+
 from django.db import models, connection
 from django.utils import timezone
 from django.utils.html import strip_tags
@@ -10,6 +14,9 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.geo.models import Geolocation
+
+
+tf = TimezoneFinder()
 
 
 class TimeBasedActivity(Activity):
@@ -106,6 +113,25 @@ class DateActivity(TimeBasedActivity):
     @property
     def uid(self):
         return '{}-{}-{}'.format(connection.tenant.client_name, 'dateactivity', self.pk)
+
+    @property
+    def end(self):
+        return self.start + self.duration
+
+    @property
+    def local_timezone(self):
+        if self.location and self.location.position:
+            tz_name = tf.timezone_at(
+                lng=self.location.position.x,
+                lat=self.location.position.y
+            )
+            return pytz.timezone(tz_name)
+
+    @property
+    def utc_offset(self):
+        tz = self.local_timezone or timezone.get_current_timezone()
+        if self.start and tz:
+            return self.start.astimezone(tz).utcoffset().total_seconds() / 60
 
     @property
     def google_calendar_link(self):
@@ -207,7 +233,7 @@ class PeriodActivity(TimeBasedActivity):
     def required_fields(self):
         fields = super().required_fields
 
-        return fields + ['deadline', 'duration', 'duration_period']
+        return fields + ['duration', 'duration_period']
 
 
 class Participant(Contributor):

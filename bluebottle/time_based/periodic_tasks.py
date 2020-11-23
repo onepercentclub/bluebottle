@@ -72,7 +72,7 @@ class NewPeriodForParticipantTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return _("Create a new period for participant")
+        return _("Create a new contribution for participant")
 
 
 class DateActivityStartedTask(ModelPeriodicTask):

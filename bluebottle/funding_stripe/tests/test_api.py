@@ -11,7 +11,7 @@ from rest_framework import status
 
 import stripe
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
@@ -38,7 +38,7 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
         self.bank_account = ExternalAccountFactory.create()
 
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
-        self.donation = DonationFactory.create(activity=self.funding, user=None)
+        self.donation = DonorFactory.create(activity=self.funding, user=None)
 
         self.intent_url = reverse('stripe-payment-intent-list')
 
@@ -48,7 +48,7 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'contributions/donations',
+                            'type': 'contributors/donations',
                             'id': self.donation.pk,
                         }
                     }
@@ -199,7 +199,7 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
         self.bank_account = ExternalAccountFactory.create()
 
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
-        self.donation = DonationFactory.create(activity=self.funding, user=None)
+        self.donation = DonorFactory.create(activity=self.funding, user=None)
 
         self.payment_url = reverse('stripe-source-payment-list')
 
@@ -212,7 +212,7 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'contributions/donations',
+                            'type': 'contributors/donations',
                             'id': self.donation.pk,
                         }
                     }

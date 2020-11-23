@@ -32,8 +32,8 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
     transition_date = models.DateTimeField(
-        _('contribution date'),
-        help_text=_('Date the contribution took place.'),
+        _('activity date'),
+        help_text=_('Date the activity took place.'),
         null=True, blank=True
     )
 
@@ -77,6 +77,10 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     wallposts = GenericRelation('wallposts.Wallpost', related_query_name='activity_wallposts')
 
     auto_approve = True
+
+    @property
+    def activity_date(self):
+        raise NotImplementedError
 
     @property
     def stats(self):
@@ -124,7 +128,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     @property
     def organizer(self):
-        return self.contributions.instance_of(Organizer).first()
+        return self.contributors.instance_of(Organizer).first()
 
 
 def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
@@ -133,15 +137,15 @@ def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
 
 
 @python_2_unicode_compatible
-class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
+class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
     transition_date = models.DateTimeField(null=True, blank=True)
-    contribution_date = models.DateTimeField(null=True, blank=True)
+    contributor_date = models.DateTimeField(null=True, blank=True)
 
-    activity = models.ForeignKey(Activity, related_name='contributions', on_delete=NON_POLYMORPHIC_CASCADE)
+    activity = models.ForeignKey(Activity, related_name='contributors', on_delete=NON_POLYMORPHIC_CASCADE)
     user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True, blank=True)
 
     @property
@@ -150,48 +154,47 @@ class Contribution(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
     @property
     def date(self):
-        return self.activity.contribution_date
+        return self.activity.contributor_date
 
     class Meta(object):
         ordering = ('-created',)
+        verbose_name = _('Contributor')
+        verbose_name_plural = _('Contributors')
 
     def __str__(self):
-        return str(_('Contribution'))
+        return _('Contributor {name}').format(name=self.user)
 
 
 @python_2_unicode_compatible
-class Organizer(Contribution):
+class Organizer(Contributor):
     class Meta(object):
         verbose_name = _("Activity owner")
         verbose_name_plural = _("Activity owners")
 
     class JSONAPIMeta(object):
-        resource_name = 'contributions/organizers'
+        resource_name = 'contributors/organizers'
 
     def __str__(self):
-        if self.user:
-            return self.user.full_name
-        else:
-            return _('Activity owner')
+        return _('Activity owner {name}').format(name=self.user)
 
 
-class ContributionValue(TriggerMixin, PolymorphicModel):
+class Contribution(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
-    contribution = models.ForeignKey(
-        Contribution, related_name='contribution_values', on_delete=NON_POLYMORPHIC_CASCADE
+    contributor = models.ForeignKey(
+        Contributor, related_name='contribution_values', on_delete=NON_POLYMORPHIC_CASCADE
     )
 
     @property
     def owner(self):
-        return self.contribution.user
+        return self.contributor.user
 
     class Meta(object):
         ordering = ('-created',)
 
     def __str__(self):
-        return str(_('Contribution value'))
+        return str(_('Contributor value'))
 
 
 from bluebottle.activities.signals import *  # noqa

@@ -2,7 +2,7 @@ from builtins import object
 from django.contrib import admin
 from django_summernote.widgets import SummernoteWidget
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributionChildAdmin, ContributionInline
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributorInline
 from bluebottle.assignments.models import Assignment, Applicant
 from bluebottle.assignments.states import AssignmentStateMachine, ApplicantStateMachine
 from bluebottle.fsm.admin import StateMachineFilter
@@ -21,11 +21,11 @@ class AssignmentAdminForm(StateMachineModelForm):
         }
 
 
-class ApplicantInline(ContributionInline):
+class ApplicantInline(ContributorInline):
     model = Applicant
 
-    readonly_fields = ContributionInline.readonly_fields + ('time_spent', )
-    fields = ContributionInline.fields + ('time_spent', )
+    readonly_fields = ContributorInline.readonly_fields + ('time_spent', )
+    fields = ContributorInline.fields + ('time_spent', )
 
 
 class ApplicantAdminForm(StateMachineModelForm):
@@ -35,14 +35,14 @@ class ApplicantAdminForm(StateMachineModelForm):
 
 
 @admin.register(Applicant)
-class ApplicantAdmin(ContributionChildAdmin):
+class ApplicantAdmin(ContributorChildAdmin):
     model = Applicant
     form = ApplicantAdminForm
     list_display = ['user', 'state_name', 'time_spent', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
-    readonly_fields = ContributionChildAdmin.readonly_fields
-    fields = ContributionChildAdmin.fields + ['time_spent', 'motivation']
+    readonly_fields = ContributorChildAdmin.readonly_fields
+    fields = ContributorChildAdmin.fields + ['time_spent', 'motivation']
 
     date_hierarchy = 'transition_date'
 
@@ -55,7 +55,7 @@ class ApplicantAdmin(ContributionChildAdmin):
         ('motivation', 'Motivation'),
         ('time_spent', 'Time Spent'),
         ('document', 'Document'),
-        ('contribution_date', 'Contribution Date'),
+        ('contributor_date', 'Contributor Date'),
     )
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
@@ -104,7 +104,7 @@ class AssignmentAdmin(ActivityChildAdmin):
         ('expertise', 'Expertise'),
         ('end_date_type', 'End Time Type'),
         ('date', 'End Date'),
-        ('duration', 'Duration'),
+        ('duration', 'TimeContribution'),
         ('preparation', 'Preparation'),
         ('registration_deadline', 'Registration Deadline'),
         ('owner__full_name', 'Owner'),

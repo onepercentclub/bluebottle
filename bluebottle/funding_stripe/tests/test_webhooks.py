@@ -9,9 +9,9 @@ from django.urls import reverse
 from moneyed import Money
 from rest_framework import status
 
-from bluebottle.funding.models import Donation
+from bluebottle.funding.models import Donor
 from bluebottle.funding.tests.factories import (
-    FundingFactory, DonationFactory, BudgetLineFactory
+    FundingFactory, DonorFactory, BudgetLineFactory
 )
 from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
 from bluebottle.funding_stripe.models import StripeSourcePayment
@@ -45,7 +45,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
         self.bank_account = ExternalAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
-        self.donation = DonationFactory.create(activity=self.funding)
+        self.donation = DonorFactory.create(activity=self.funding)
         self.intent = StripePaymentIntentFactory.create(donation=self.donation)
         self.webhook = reverse('stripe-intent-webhook')
 
@@ -85,7 +85,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
         self.intent.refresh_from_db()
         payment = self.intent.payment
-        donation = Donation.objects.get(pk=self.donation.pk)
+        donation = Donor.objects.get(pk=self.donation.pk)
 
         self.assertEqual(donation.status, 'succeeded')
         self.assertEqual(donation.payout_amount, Money(25, 'EUR'))
@@ -115,7 +115,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.intent.refresh_from_db()
         payment = self.intent.payment
 
-        donation = Donation.objects.get(pk=self.donation.pk)
+        donation = Donor.objects.get(pk=self.donation.pk)
 
         self.assertEqual(donation.status, 'failed')
         self.assertEqual(payment.status, 'failed')
@@ -144,7 +144,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.intent.refresh_from_db()
         payment = self.intent.payment
 
-        donation = Donation.objects.get(pk=self.donation.pk)
+        donation = Donor.objects.get(pk=self.donation.pk)
 
         self.assertEqual(donation.status, 'failed')
         self.assertEqual(payment.status, 'failed')
@@ -236,7 +236,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.intent.refresh_from_db()
         payment = self.intent.payment
 
-        donation = Donation.objects.get(pk=self.donation.pk)
+        donation = Donor.objects.get(pk=self.donation.pk)
 
         self.assertEqual(donation.status, 'refunded')
         self.assertEqual(payment.status, 'refunded')
@@ -338,7 +338,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
         self.intent.payment.refresh_from_db()
 
-        donation = Donation.objects.get(pk=self.donation.pk)
+        donation = Donor.objects.get(pk=self.donation.pk)
 
         self.assertEqual(donation.status, 'refunded')
         self.assertEqual(self.intent.payment.status, 'refunded')
@@ -356,7 +356,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
 
         self.bank_account = ExternalAccountFactory.create()
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
-        self.donation = DonationFactory.create(activity=self.funding)
+        self.donation = DonorFactory.create(activity=self.funding)
 
         with mock.patch(
             'stripe.Source.modify'
@@ -369,7 +369,7 @@ class SourcePaymentWebhookTestCase(BluebottleTestCase):
         self.webhook = reverse('stripe-source-webhook')
 
     def _refresh(self):
-        self.donation = Donation.objects.get(pk=self.donation.pk)
+        self.donation = Donor.objects.get(pk=self.donation.pk)
         self.payment = StripeSourcePayment.objects.get(pk=self.payment.pk)
 
     def test_source_failed(self):

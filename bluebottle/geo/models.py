@@ -1,10 +1,12 @@
 from builtins import object
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.template.defaultfilters import slugify
 
 from django.utils.translation import ugettext_lazy as _
+
 from future.utils import python_2_unicode_compatible
 from geoposition.fields import GeopositionField
 from parler.models import TranslatedFields
@@ -14,6 +16,8 @@ from bluebottle.geo.fields import PointField
 from bluebottle.utils.models import SortableTranslatableModel
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
+
+from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
@@ -132,8 +136,16 @@ class Location(models.Model):
     city = models.CharField(_('city'), blank=True, null=True, max_length=255)
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     description = models.TextField(_('description'), blank=True)
-    image = ImageField(_('image'), max_length=255, null=True, blank=True,
-                       upload_to='location_images/', help_text=_('Location picture'))
+    image = ImageField(
+        _('image'), max_length=255, null=True, blank=True,
+        upload_to='location_images/', help_text=_('Location picture'),
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
 
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']

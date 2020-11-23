@@ -4,7 +4,7 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, ModelDeletedTrigger, TransitionTrigger, register
 
-from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
+from bluebottle.activities.triggers import ActivityTriggers, ContributorTriggers
 
 from bluebottle.events.effects import SetTimeSpent, ResetTimeSpent
 from bluebottle.follow.effects import (
@@ -249,7 +249,7 @@ class EventTriggers(ActivityTriggers):
 
 
 @register(Participant)
-class ParticpantTriggers(ContributionTriggers):
+class ParticpantTriggers(ContributorTriggers):
     triggers = [
         TransitionTrigger(
             ParticipantStateMachine.initiate,

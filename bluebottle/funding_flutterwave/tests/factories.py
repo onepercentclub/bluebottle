@@ -1,13 +1,13 @@
 from builtins import object
 import factory
 
-from bluebottle.funding.tests.factories import DonationFactory, PlainPayoutAccountFactory
+from bluebottle.funding.tests.factories import DonorFactory, PlainPayoutAccountFactory
 from bluebottle.funding_flutterwave.models import FlutterwavePayment, FlutterwavePaymentProvider, FlutterwaveBankAccount
 
 
 class FlutterwavePaymentFactory(factory.DjangoModelFactory):
 
-    donation = factory.SubFactory(DonationFactory)
+    donation = factory.SubFactory(DonorFactory)
     tx_ref = factory.Sequence(lambda n: 'uid-{0}'.format(n))
 
     class Meta(object):

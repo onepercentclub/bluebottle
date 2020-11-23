@@ -1,9 +1,9 @@
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
+from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionValueStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
-from bluebottle.funding.models import Funding, Donation, Payment, Payout, PlainPayoutAccount
+from bluebottle.funding.models import Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution
 
 
 @register(Funding)
@@ -222,8 +222,8 @@ class FundingStateMachine(ActivityStateMachine):
     )
 
 
-@register(Donation)
-class DonationStateMachine(ContributionStateMachine):
+@register(Donor)
+class DonorStateMachine(ContributorStateMachine):
     refunded = State(
         _('refunded'),
         'refunded',
@@ -237,14 +237,14 @@ class DonationStateMachine(ContributionStateMachine):
 
     def is_successful(self):
         """donation is successful"""
-        return self.instance.status == ContributionStateMachine.succeeded
+        return self.instance.status == ContributorStateMachine.succeeded
 
     succeed = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.failed
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed
         ],
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('Succeed'),
         description=_("The donation has been completed"),
         automatic=True,
@@ -252,10 +252,10 @@ class DonationStateMachine(ContributionStateMachine):
 
     fail = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.succeeded
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded
         ],
-        ContributionStateMachine.failed,
+        ContributorStateMachine.failed,
         name=_('Fail'),
         description=_("The donation failed."),
         automatic=True,
@@ -263,8 +263,8 @@ class DonationStateMachine(ContributionStateMachine):
 
     refund = Transition(
         [
-            ContributionStateMachine.new,
-            ContributionStateMachine.succeeded,
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded,
         ],
         refunded,
         name=_('Refund'),
@@ -273,7 +273,7 @@ class DonationStateMachine(ContributionStateMachine):
     )
 
     activity_refund = Transition(
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         activity_refunded,
         name=_('Activity refund'),
         description=_(
@@ -318,8 +318,8 @@ class BasePaymentStateMachine(ModelStateMachine):
     def donation_not_refunded(self):
         """donation doesn't have status refunded or activity refunded"""
         return self.instance.donation.status not in [
-            DonationStateMachine.refunded.value,
-            DonationStateMachine.activity_refunded.value,
+            DonorStateMachine.refunded.value,
+            DonorStateMachine.activity_refunded.value,
         ]
 
     initiate = Transition(
@@ -629,3 +629,8 @@ class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
                       "will be removed with this step."),
         automatic=False
     )
+
+
+@register(MoneyContribution)
+class DonationStateMachine(ContributionValueStateMachine):
+    pass

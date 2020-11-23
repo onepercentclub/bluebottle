@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from bluebottle.funding.tests.factories import (
-    FundingFactory, DonationFactory, PlainPayoutAccountFactory
+    FundingFactory, DonorFactory, PlainPayoutAccountFactory
 )
 from bluebottle.funding_pledge.tests.factories import (
     PledgePaymentProviderFactory, PledgeBankAccountFactory
@@ -27,7 +27,7 @@ class PaymentTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
-        self.donation = DonationFactory.create(activity=self.funding, user=self.user)
+        self.donation = DonorFactory.create(activity=self.funding, user=self.user)
 
         self.donation_url = reverse('funding-donation-list')
         self.payment_url = reverse('pledge-payment-list')
@@ -38,7 +38,7 @@ class PaymentTestCase(BluebottleTestCase):
                 'relationships': {
                     'donation': {
                         'data': {
-                            'type': 'contributions/donations',
+                            'type': 'contributors/donations',
                             'id': self.donation.pk,
                         }
                     }

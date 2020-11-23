@@ -6,7 +6,7 @@ from moneyed import Money
 from bluebottle.clients import properties
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Donation
+from bluebottle.funding.models import Donor
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaPayment, LipishaBankAccount
 
 
@@ -202,7 +202,7 @@ def initiate_payment(data):
 
         name = data['transaction_name'].replace('+', ' ').title()
 
-        donation = Donation.objects.create(
+        donation = Donor.objects.create(
             amount=Money(data['transaction_amount'], data['transaction_currency']),
             name=name,
             activity=funding)

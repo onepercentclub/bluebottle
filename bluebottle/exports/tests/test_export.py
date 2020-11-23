@@ -135,11 +135,11 @@ class TestExportAdmin(BluebottleTestCase):
             t += 1
 
         self.assertEqual(
-            book.sheet_by_name('Task contributions').cell(0, 13).value,
+            book.sheet_by_name('Task contributors').cell(0, 13).value,
             'Favourite colour'
         )
         self.assertEqual(
-            book.sheet_by_name('Task contributions').cell(1, 13).value,
+            book.sheet_by_name('Task contributors').cell(1, 13).value,
             'Parblue Yellow'
         )
 

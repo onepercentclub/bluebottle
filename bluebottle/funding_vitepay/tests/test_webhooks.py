@@ -3,7 +3,7 @@ import munch
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import VitepayPaymentFactory, VitepayPaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -28,7 +28,7 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
         self.funding = FundingFactory.create(initiative=self.initiative)
-        self.donation = DonationFactory.create(activity=self.funding)
+        self.donation = DonorFactory.create(activity=self.funding)
         self.payment = VitepayPaymentFactory.create(
             donation=self.donation,
             unique_id='some-id',

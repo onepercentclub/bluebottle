@@ -87,7 +87,7 @@ class TimeBasedActivityTriggerTestCase():
 
         self.assertEqual(self.activity.status, 'cancelled')
 
-        organizer = self.activity.contributions.instance_of(Organizer).get()
+        organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'failed')
 
         self.assertEqual(
@@ -492,7 +492,6 @@ class ParticipantTriggerTestCase():
         )
 
     def test_accept(self):
-        mail.outbox = []
         participant = self.participant_factory.create(activity=self.review_activity)
 
         mail.outbox = []

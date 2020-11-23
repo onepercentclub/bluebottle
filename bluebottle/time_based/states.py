@@ -221,6 +221,7 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
         ParticipantStateMachine.accepted,
         stopped,
         name=_('Stop'),
+        permission=ParticipantStateMachine.can_accept_participant,
         description=_("Participant stopped contributing."),
         automatic=False,
     )
@@ -229,6 +230,7 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
         stopped,
         ParticipantStateMachine.accepted,
         name=_('Start'),
+        permission=ParticipantStateMachine.can_accept_participant,
         description=_("Participant started contributing again."),
         automatic=False,
     )

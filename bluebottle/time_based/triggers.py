@@ -13,17 +13,17 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution
 )
-from bluebottle.time_based.effects import (
-    CreateDateParticipationEffect, CreatePeriodParticipationEffect, SetEndDateEffect
-)
 from bluebottle.time_based.messages import (
     DateChanged, DeadlineChanged,
     ActivitySucceededNotification, ActivitySucceededManuallyNotification,
     ActivityExpiredNotification, ActivityRejectedNotification,
     ActivityCancelledNotification,
-    ApplicationAddedNotification, ApplicationCreatedNotification,
-    ApplicationAcceptedNotification, ApplicationRejectedNotification,
-    NewApplicationNotification
+    ParticipantAddedNotification, ParticipantCreatedNotification,
+    ParticipantAcceptedNotification, ParticipantRejectedNotification,
+    NewParticipantNotification
+)
+from bluebottle.time_based.effects import (
+    CreateDateParticipationEffect, CreatePeriodParticipationEffect, SetEndDateEffect
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine,
@@ -184,7 +184,7 @@ class TimeBasedTriggers(ActivityTriggers):
     ]
 
 
-@register(DateActivity)
+@ register(DateActivity)
 class DateTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
         TransitionTrigger(
@@ -393,11 +393,11 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.initiate,
             effects=[
                 NotificationEffect(
-                    ApplicationCreatedNotification,
+                    ParticipantCreatedNotification,
                     conditions=[needs_review]
                 ),
                 NotificationEffect(
-                    ApplicationAddedNotification
+                    ParticipantAddedNotification
                 ),
                 TransitionEffect(
                     ParticipantStateMachine.accept,
@@ -426,11 +426,11 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.accept,
             effects=[
                 NotificationEffect(
-                    NewApplicationNotification,
+                    NewParticipantNotification,
                     conditions=[automatically_accept]
                 ),
                 NotificationEffect(
-                    ApplicationAcceptedNotification,
+                    ParticipantAcceptedNotification,
                     conditions=[needs_review]
                 ),
                 RelatedTransitionEffect(
@@ -461,7 +461,7 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.reject,
             effects=[
                 NotificationEffect(
-                    ApplicationRejectedNotification
+                    ParticipantRejectedNotification
                 ),
                 RelatedTransitionEffect(
                     'activity',
@@ -504,7 +504,7 @@ class ParticipantTriggers(ContributorTriggers):
     ]
 
 
-@register(DateParticipant)
+@ register(DateParticipant)
 class OnADateParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
@@ -516,7 +516,7 @@ class OnADateParticipantTriggers(ParticipantTriggers):
     ]
 
 
-@register(PeriodParticipant)
+@ register(PeriodParticipant)
 class PeriodParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(

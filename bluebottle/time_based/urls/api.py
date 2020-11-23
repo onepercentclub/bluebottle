@@ -3,7 +3,7 @@ from django.conf.urls import url
 from bluebottle.time_based.views import (
     DateActivityListView, PeriodActivityListView,
     DateActivityDetailView, PeriodActivityDetailView,
-    DateActivityRelatedApplicationsList, PeriodActivityRelatedApplicationsList,
+    DateActivityRelatedParticipantList, PeriodActivityRelatedParticipantList,
     DateTransitionList, PeriodTransitionList,
     DateParticipantList, DateParticipantDetail,
     DateParticipantTransitionList, DateParticipantDocumentDetail,
@@ -27,9 +27,9 @@ urlpatterns = [
         DateActivityDetailView.as_view(),
         name='date-detail'),
 
-    url(r'^/date/(?P<activity_id>\d+)/applications$',
-        DateActivityRelatedApplicationsList.as_view(),
-        name='date-applications'),
+    url(r'^/date/(?P<activity_id>\d+)/participants$',
+        DateActivityRelatedParticipantList.as_view(),
+        name='date-participants'),
 
     url(r'^/date/ical/(?P<pk>\d+)$',
         DateActivityIcalView.as_view(),
@@ -39,9 +39,9 @@ urlpatterns = [
         PeriodActivityDetailView.as_view(),
         name='period-detail'),
 
-    url(r'^/period/(?P<activity_id>\d+)/applications$',
-        PeriodActivityRelatedApplicationsList.as_view(),
-        name='period-applications'),
+    url(r'^/period/(?P<activity_id>\d+)/participants$',
+        PeriodActivityRelatedParticipantList.as_view(),
+        name='period-participants'),
 
     url(r'^/date/ical/(?P<pk>\d+)$',
         DateActivityIcalView.as_view(),

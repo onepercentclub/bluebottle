@@ -84,7 +84,7 @@ class PeriodActivityDetailView(TimeBasedActivityDetailView):
     serializer_class = PeriodActivitySerializer
 
 
-class TimeBasedActivityRelatedApplicationsList(JsonApiViewMixin, ListAPIView):
+class TimeBasedActivityRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
@@ -115,12 +115,12 @@ class DateTransitionList(TransitionList):
         )
 
 
-class DateActivityRelatedApplicationsList(TimeBasedActivityRelatedApplicationsList):
+class DateActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList):
     queryset = DateParticipant.objects.prefetch_related('user')
     serializer_class = DateParticipantSerializer
 
 
-class PeriodActivityRelatedApplicationsList(TimeBasedActivityRelatedApplicationsList):
+class PeriodActivityRelatedParticipantList(TimeBasedActivityRelatedParticipantList):
     queryset = PeriodParticipant.objects.prefetch_related('user')
     serializer_class = PeriodParticipantSerializer
 
@@ -176,9 +176,7 @@ class PeriodParticipantDetail(ParticipantDetail):
 
 
 class ParticipantTransitionList(TransitionList):
-    prefetch_for_includes = {
-        'resource': ['participant', 'participant__activity'],
-    }
+    pass
 
 
 class DateParticipantTransitionList(ParticipantTransitionList):

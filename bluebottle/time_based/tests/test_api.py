@@ -251,33 +251,33 @@ class TimeBasedDetailAPIViewTestCase():
         )
 
     def test_get_contributors(self):
-        participants = self.participant_factory.create_batch(4, activity=self.activity)
-        participants.append(
-            self.participant_factory.create(activity=self.activity, user=self.activity.owner)
-        )
+        self.participant_factory.create_batch(4, activity=self.activity)
+        self.participant_factory.create(activity=self.activity, user=self.activity.owner)
         response = self.client.get(self.url, user=self.activity.owner)
 
         data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+        contributor_ids = [
+            resource['id'] for resource in data['relationships']['contributors']['data']
+        ]
+
         self.assertEqual(
             len(data['relationships']['contributors']['data']),
             5
         )
-        contribution_response = self.client.get(
-            data['relationships']['contributions']['links']['related'],
+        contributor_response = self.client.get(
+            data['relationships']['contributors']['links']['related'],
             user=self.activity.owner
         )
-        contribution_data = contribution_response.json()
-        self.assertEqual(contribution_response.status_code, status.HTTP_200_OK)
+        contributor_data = contributor_response.json()
+        self.assertEqual(contributor_response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            contribution_data['meta']['pagination']['count'], len(participants)
+            contributor_data['meta']['pagination']['count'], len(contributor_ids)
         )
-        contribution_ids = [str(application.id) for application in participants]
-        for contribution in contribution_data['data']:
-
+        for contributor in contributor_data['data']:
             self.assertTrue(
-                contribution['id'] in contribution_ids
+                contributor['id'] in contributor_ids
             )
 
     def test_get_non_anonymous(self):
@@ -694,11 +694,13 @@ class ParticipantListViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class DatePrticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
+class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
     type = 'date'
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 
+    url_name = 'on-a-date-participant-list'
+    application_type = 'contributions/time-based/date-participants'
     url_name = 'date-participant-list'
     participant_type = 'contributors/time-based/date-participants'
 
@@ -938,9 +940,9 @@ class ParticipantTransitionAPIViewTestCase():
 
         self.assertEqual(
             data['included'][0]['type'],
-            'activities/time-based/{}s'.format(self.type)
+            '{}s'.format(self.participant_type)
         )
-        self.assertEqual(data['included'][1]['attributes']['status'], 'withdrawn')
+        self.assertEqual(data['included'][0]['attributes']['status'], 'withdrawn')
 
     def test_withdraw_by_other_user(self):
         # Owner can delete the event
@@ -967,9 +969,9 @@ class ParticipantTransitionAPIViewTestCase():
 
         self.assertEqual(
             data['included'][0]['type'],
-            'activities/time-based/{}s'.format(self.type)
+            '{}s'.format(self.participant_type)
         )
-        self.assertEqual(data['included'][1]['attributes']['status'], 'rejected')
+        self.assertEqual(data['included'][0]['attributes']['status'], 'rejected')
 
     def test_reject_by_user(self):
         # Owner can delete the event

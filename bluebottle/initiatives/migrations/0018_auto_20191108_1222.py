@@ -26,6 +26,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('initiatives', '0017_auto_20191031_1439'),
+        ('projects', '0001_initial'),
     ]
 
     operations = [

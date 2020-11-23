@@ -9,6 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('tasks', '0042_migrate_tasks_to_activities'),
+        ('surveys', '0035_auto_20200915_1023'),
     ]
 
     operations = [

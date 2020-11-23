@@ -3,7 +3,7 @@ import factory.fuzzy
 import munch
 import mock
 
-from bluebottle.funding.tests.factories import DonationFactory
+from bluebottle.funding.tests.factories import DonorFactory
 from bluebottle.funding_stripe.models import (
     PaymentIntent, StripeSourcePayment,
     StripePayment, StripePayoutAccount,
@@ -17,7 +17,7 @@ class StripeSourcePaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = StripeSourcePayment
 
-    donation = factory.SubFactory(DonationFactory)
+    donation = factory.SubFactory(DonorFactory)
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
@@ -33,7 +33,7 @@ class StripePaymentIntentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = PaymentIntent
 
-    donation = factory.SubFactory(DonationFactory)
+    donation = factory.SubFactory(DonorFactory)
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
@@ -49,7 +49,7 @@ class StripePaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = StripePayment
 
-    donation = factory.SubFactory(DonationFactory)
+    donation = factory.SubFactory(DonorFactory)
     payment_intent = factory.SubFactory(StripePaymentIntentFactory, donation=factory.SelfAttribute('..donation'))
 
 

@@ -33,7 +33,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
     def test_initial(self):
         self.assertEqual(self.assignment.status, AssignmentStateMachine.draft.value)
 
-        organizer = self.assignment.contributions.get()
+        organizer = self.assignment.contributors.get()
         self.assertTrue(
             isinstance(organizer, Organizer)
         )
@@ -48,7 +48,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
 
         self.assertEqual(self.assignment.status, AssignmentStateMachine.draft.value)
 
-        organizer = self.assignment.contributions.get()
+        organizer = self.assignment.contributors.get()
         self.assertTrue(
             isinstance(organizer, Organizer)
         )
@@ -86,7 +86,7 @@ class AssignmentStateMachineTestCase(BluebottleTestCase):
 
         self.assertEqual(self.assignment.status, AssignmentStateMachine.open.value)
 
-        organizer = self.assignment.contributions.get()
+        organizer = self.assignment.contributors.get()
         self.assertTrue(
             isinstance(organizer, Organizer)
         )

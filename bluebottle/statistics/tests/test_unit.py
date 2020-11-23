@@ -8,7 +8,7 @@ from moneyed.classes import Money
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
 from bluebottle.funding.tests.factories import (
-    FundingFactory, DonationFactory, BankAccountFactory, BudgetLineFactory, PlainPayoutAccountFactory
+    FundingFactory, DonorFactory, BankAccountFactory, BudgetLineFactory, PlainPayoutAccountFactory
 )
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -414,7 +414,7 @@ class FundingStatisticsTest(StatisticsTest):
     def test_donation(self):
         self.funding.states.succeed(save=True)
 
-        contribution = DonationFactory.create(
+        contribution = DonorFactory.create(
             activity=self.funding,
             user=self.other_user,
             amount=Money(50, 'EUR')
@@ -444,7 +444,7 @@ class FundingStatisticsTest(StatisticsTest):
         self.funding.states.succeed(save=True)
 
         for i in range(4):
-            contribution = DonationFactory.create(
+            contribution = DonorFactory.create(
                 activity=self.funding,
                 user=self.other_user,
                 amount=Money(50, 'EUR')
@@ -473,7 +473,7 @@ class FundingStatisticsTest(StatisticsTest):
     def test_pledge(self):
         self.funding.states.succeed(save=True)
 
-        contribution = DonationFactory.create(
+        contribution = DonorFactory.create(
             activity=self.funding,
             user=self.other_user,
             amount=Money(50, 'EUR')
@@ -507,7 +507,7 @@ class FundingStatisticsTest(StatisticsTest):
     def test_donation_other_currency(self):
         self.funding.states.succeed(save=True)
 
-        contribution = DonationFactory.create(
+        contribution = DonorFactory.create(
             activity=self.funding,
             user=self.other_user,
             amount=Money(50, 'USD')
@@ -537,7 +537,7 @@ class FundingStatisticsTest(StatisticsTest):
         self.funding.states.succeed(save=True)
 
         for currency in ('EUR', 'USD'):
-            contribution = DonationFactory.create(
+            contribution = DonorFactory.create(
                 activity=self.funding,
                 user=self.other_user,
                 amount=Money(50, currency)
@@ -564,7 +564,7 @@ class FundingStatisticsTest(StatisticsTest):
         )
 
     def test_donation_failed(self):
-        contribution = DonationFactory.create(
+        contribution = DonorFactory.create(
             activity=self.funding,
             user=self.other_user,
             amount=Money(50, 'EUR')

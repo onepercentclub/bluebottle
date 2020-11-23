@@ -9,11 +9,11 @@ from moneyed.classes import Money
 from bluebottle.clients import properties
 
 from bluebottle.initiatives.models import Initiative
-from bluebottle.activities.models import Contribution, Activity
+from bluebottle.activities.models import Contributor, Activity
 from bluebottle.members.models import Member
 from bluebottle.events.models import Event, Participant
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.funding.models import Donation, Funding
+from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding_pledge.models import PledgePayment
 from bluebottle.utils.exchange_rates import convert
 
@@ -44,8 +44,8 @@ class Statistics(object):
         The (unique) total number of people that donated, fundraised, campaigned, or was a
         task owner or  member.
         """
-        contributor_ids = Contribution.objects.filter(
-            self.date_filter('contribution_date'),
+        contributor_ids = Contributor.objects.filter(
+            self.date_filter('contributor_date'),
             user_id__isnull=False,
             status__in=('new', 'accepted', 'active', 'succeeded')
         ).order_by(
@@ -69,15 +69,15 @@ class Statistics(object):
         people_count = len(set(contributor_ids) | set(initiative_owner_ids) | set(activity_owner_ids))
 
         # Add anonymous donations
-        people_count += len(Contribution.objects.filter(
-            self.date_filter('contribution_date'),
+        people_count += len(Contributor.objects.filter(
+            self.date_filter('contributor_date'),
             user_id=None,
             status='succeeded'
         ))
 
         # Add donations on behalve of another person
-        people_count += len(Donation.objects.filter(
-            self.date_filter('contribution_date'),
+        people_count += len(Donor.objects.filter(
+            self.date_filter('contributor_date'),
             user_id__isnull=False,
             status='succeeded',
             name__isnull=False,
@@ -168,8 +168,8 @@ class Statistics(object):
     @memoize(timeout=timeout)
     def donated_total(self):
         """ Total amount donated to all activities"""
-        donations = Donation.objects.filter(
-            self.date_filter('contribution_date'),
+        donations = Donor.objects.filter(
+            self.date_filter('contributor_date'),
             status='succeeded'
         )
         totals = donations.order_by('amount_currency').values('amount_currency').annotate(total=Sum('amount'))
@@ -186,12 +186,12 @@ class Statistics(object):
     def time_spent(self):
         """ Total amount of time spent on realized tasks """
         participants = Participant.objects.filter(
-            self.date_filter('contribution_date'),
+            self.date_filter('contributor_date'),
             status='succeeded'
         ).aggregate(total_time_spent=Sum('time_spent'))['total_time_spent'] or 0
 
         applicants = Applicant.objects.filter(
-            self.date_filter('contribution_date'),
+            self.date_filter('contributor_date'),
             status='succeeded'
         ).aggregate(total_time_spent=Sum('time_spent'))['total_time_spent'] or 0
 
@@ -202,7 +202,7 @@ class Statistics(object):
     def event_members(self):
         """ Total number of realized task members """
         participants = Participant.objects.filter(
-            self.date_filter('contribution_date'),
+            self.date_filter('contributor_date'),
             status='succeeded'
         )
 
@@ -213,7 +213,7 @@ class Statistics(object):
     def assignment_members(self):
         """ Total number of realized task members """
         applicants = Applicant.objects.filter(
-            self.date_filter('contribution_date'),
+            self.date_filter('contributor_date'),
             status='succeeded'
         )
 
@@ -223,8 +223,8 @@ class Statistics(object):
     @memoize(timeout=timeout)
     def donations(self):
         """ Total number of realized task members """
-        donations = Donation.objects.filter(
-            self.date_filter('contribution_date'),
+        donations = Donor.objects.filter(
+            self.date_filter('contributor_date'),
             status='succeeded'
         )
 
@@ -267,7 +267,7 @@ class Statistics(object):
     def pledged_total(self):
         """ Total amount of pledged donations """
         donations = PledgePayment.objects.filter(
-            self.date_filter('donation__contribution_date'),
+            self.date_filter('donation__contributor_date'),
             donation__status='succeeded'
         )
         totals = donations.values(

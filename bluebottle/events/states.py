@@ -1,6 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, ContributionStateMachine
+from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
 from bluebottle.events.models import Event, Participant
 from bluebottle.fsm.state import State, EmptyState, Transition, register
 
@@ -70,14 +70,14 @@ class EventStateMachine(ActivityStateMachine):
         ActivityStateMachine.succeeded,
         name=_("Succeed"),
         description=_(
-            "The event ends and the contributions are counted. Triggered when the event "
+            "The event ends and the contributors are counted. Triggered when the event "
             "end time passes."
         ),
     )
 
 
 @register(Participant)
-class ParticipantStateMachine(ContributionStateMachine):
+class ParticipantStateMachine(ContributorStateMachine):
     def is_user(self, user):
         """is the participant"""
         return self.instance.user == user
@@ -109,12 +109,12 @@ class ParticipantStateMachine(ContributionStateMachine):
 
     initiate = Transition(
         EmptyState(),
-        ContributionStateMachine.new,
+        ContributorStateMachine.new,
         name=_("Join"),
         description=_("Participant is created. User signs up for the activity."),
     )
     withdraw = Transition(
-        ContributionStateMachine.new,
+        ContributorStateMachine.new,
         withdrawn,
         name=_('Withdraw'),
         description=_("Participant withdraws from the activity."),
@@ -123,14 +123,14 @@ class ParticipantStateMachine(ContributionStateMachine):
     )
     reapply = Transition(
         withdrawn,
-        ContributionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('Join again'),
         description=_("Participant signs up for the activity again, after previously withdrawing."),
         automatic=False,
         permission=is_user,
     )
     reject = Transition(
-        ContributionStateMachine.new,
+        ContributorStateMachine.new,
         rejected,
         automatic=False,
         name=_('Reject'),
@@ -140,7 +140,7 @@ class ParticipantStateMachine(ContributionStateMachine):
 
     accept = Transition(
         rejected,
-        ContributionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('Accept'),
         description=_("Accept a participant after previously being rejected."),
         automatic=False,
@@ -148,7 +148,7 @@ class ParticipantStateMachine(ContributionStateMachine):
     )
 
     mark_absent = Transition(
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         no_show,
         name=_('Mark absent'),
         description=_("The participant didn't show up at the activity and is marked absent."),
@@ -157,7 +157,7 @@ class ParticipantStateMachine(ContributionStateMachine):
     )
     mark_present = Transition(
         no_show,
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.succeeded,
         name=_('Mark present'),
         description=_("The participant showed up, after previously marked absent."),
         automatic=False,
@@ -165,29 +165,29 @@ class ParticipantStateMachine(ContributionStateMachine):
     )
 
     succeed = Transition(
-        ContributionStateMachine.new,
-        ContributionStateMachine.succeeded,
+        ContributorStateMachine.new,
+        ContributorStateMachine.succeeded,
         name=_('Succeed'),
         description=_("The participant successfully took part in the activity."),
     )
 
     reset = Transition(
         [
-            ContributionStateMachine.succeeded,
-            ContributionStateMachine.failed,
+            ContributorStateMachine.succeeded,
+            ContributorStateMachine.failed,
         ],
-        ContributionStateMachine.new,
+        ContributorStateMachine.new,
         name=_('Reset'),
         description=_("The participant is reset to new after being successful or failed."),
     )
 
     fail = Transition(
         (
-            ContributionStateMachine.new,
-            ContributionStateMachine.succeeded,
-            ContributionStateMachine.failed,
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded,
+            ContributorStateMachine.failed,
         ),
-        ContributionStateMachine.failed,
+        ContributorStateMachine.failed,
         name=_('fail'),
         description=_("The contribution failed. It will not be visible in reports."),
     )

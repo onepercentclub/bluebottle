@@ -13,7 +13,7 @@ class DateChanged(TransitionMessage):
     def get_recipients(self):
         """participants that signed up"""
         return [
-            application.user for application in self.obj.accepted_applications
+            participant.user for participant in self.obj.accepted_participants
         ]
 
 
@@ -27,5 +27,5 @@ class DeadlineChanged(TransitionMessage):
     def get_recipients(self):
         """participants that signed up"""
         return [
-            application.user for application in self.obj.accepted_applications
+            participant.user for participant in self.obj.accepted_participants
         ]

@@ -16,7 +16,7 @@ from rest_framework import status
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.members.models import MemberPlatformSettings
@@ -26,6 +26,7 @@ from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFacto
 from bluebottle.test.factory_models.projects import ProjectThemeFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
+from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory
 
 
 def get_include(response, name):
@@ -483,8 +484,8 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         ApplicantFactory.create_batch(3, activity=assignment, status='succeeded', time_spent=3)
 
         funding = FundingFactory.create(initiative=self.initiative, status='succeeded')
-        DonationFactory.create_batch(3, activity=funding, status='succeeded', amount=Money(10, 'EUR'))
-        DonationFactory.create_batch(3, activity=funding, status='succeeded', amount=Money(10, 'USD'))
+        DonorFactory.create_batch(3, activity=funding, status='succeeded', amount=Money(10, 'EUR'))
+        DonorFactory.create_batch(3, activity=funding, status='succeeded', amount=Money(10, 'USD'))
 
         response = self.client.get(
             self.url,
@@ -495,7 +496,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         stats = response.json()['data']['meta']['stats']
         self.assertEqual(stats['hours'], 18)
         self.assertEqual(stats['activities'], 3)
-        self.assertEqual(stats['contributions'], 12)
+        self.assertEqual(stats['contributors'], 12)
         self.assertEqual(stats['amount'], 75.0)
 
     def test_get_other(self):
@@ -827,21 +828,21 @@ class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
         )
 
         second = InitiativeFactory.create(status='approved')
-        EventFactory.create(
+        DateActivityFactory.create(
             initiative=second,
             status='open',
             start=now() + datetime.timedelta(days=7)
         )
         third = InitiativeFactory.create(status='approved')
-        EventFactory.create(
+        DateActivityFactory.create(
             initiative=third,
             status='open',
-            start=now() + datetime.timedelta(days=7)
+            start=now() + datetime.timedelta(days=6)
         )
-        AssignmentFactory.create(
+        PeriodActivityFactory.create(
             initiative=third,
             status='open',
-            date=now() + datetime.timedelta(days=9)
+            deadline=now() + datetime.timedelta(days=9)
         )
 
         response = self.client.get(

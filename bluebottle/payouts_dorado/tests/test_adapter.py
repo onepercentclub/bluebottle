@@ -5,7 +5,7 @@ from django.test.utils import override_settings
 from django.utils.timezone import now
 from moneyed.classes import Money
 
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory
+from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.test.utils import BluebottleTestCase
@@ -19,7 +19,7 @@ class TestPayoutAdapter(BluebottleTestCase):
     def setUp(self):
         super(TestPayoutAdapter, self).setUp()
         self.funding = FundingFactory.create(target=Money(500, 'EUR'), status='open')
-        donations = DonationFactory.create_batch(
+        donations = DonorFactory.create_batch(
             7,
             activity=self.funding,
             amount=Money(100, 'EUR'))

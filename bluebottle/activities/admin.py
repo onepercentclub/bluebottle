@@ -11,30 +11,33 @@ from polymorphic.admin import (
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
-from bluebottle.activities.models import Activity, Contribution, Organizer
+from bluebottle.activities.models import Activity, Contributor, Organizer
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.time_based.models import DateActivity, PeriodActivity
+from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
-from bluebottle.funding.models import Funding, Donation
+from bluebottle.funding.models import Funding, Donor
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import Segment
 from bluebottle.wallposts.admin import WallpostInline
 
 
-class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
-    base_model = Contribution
+class ContributorChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+    base_model = Contributor
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
     list_filter = [StateMachineFilter, ]
     ordering = ('-created', )
     show_in_index = True
+    raw_id_fields = ('user', 'activity')
+
+    date_hierarchy = 'contributor_date'
 
     readonly_fields = [
         'created',
-        'activity_link',
+        'contributor_date',
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields
@@ -61,12 +64,12 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
 
 @admin.register(Organizer)
-class OrganizerAdmin(ContributionChildAdmin):
+class OrganizerAdmin(ContributorChildAdmin):
     model = Organizer
     list_display = ['user', 'status', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
-    readonly_fields = ContributionChildAdmin.readonly_fields + \
+    readonly_fields = ContributorChildAdmin.readonly_fields + \
         ['status', 'created', 'transition_date']
 
     date_hierarchy = 'created'
@@ -80,10 +83,17 @@ class OrganizerAdmin(ContributionChildAdmin):
     )
 
 
-@admin.register(Contribution)
-class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
-    base_model = Contribution
-    child_models = (Participant, Donation, Applicant, Organizer)
+@admin.register(Contributor)
+class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+    base_model = Contributor
+    child_models = (
+        Participant,
+        Donor,
+        Applicant,
+        Organizer,
+        DateParticipant,
+        PeriodParticipant
+    )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
     date_hierarchy = 'created'
@@ -275,9 +285,9 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return super(ActivityChildAdmin, self).get_form(request, obj, **kwargs)
 
 
-class ContributionInline(admin.TabularInline):
+class ContributorInline(admin.TabularInline):
     raw_id_fields = ('user', )
-    readonly_fields = ('created', 'edit', 'state_name', )
+    readonly_fields = ('contributor_date', 'created', 'edit', 'state_name', )
     fields = ('edit', 'user', 'created', 'state_name', )
 
     extra = 0

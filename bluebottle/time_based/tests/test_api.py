@@ -1,10 +1,12 @@
 import json
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 
 from urllib.parse import urlparse, parse_qs
 
+
+from django.contrib.gis.geos import Point
 from django.urls import reverse
-from django.utils.timezone import now, utc
+from django.utils.timezone import now, utc, get_current_timezone
 
 import icalendar
 
@@ -230,27 +232,52 @@ class TimeBasedDetailAPIViewTestCase():
             data['meta']['permissions']['PATCH'],
             True
         )
+        self.assertTrue(
+            {'name': 'delete', 'target': 'deleted', 'available': True}
+            in data['meta']['transitions']
+        )
+
+    def test_get_open(self):
+        self.activity.initiative.states.submit(save=True)
+        self.activity.initiative.states.approve(save=True)
+
+        response = self.client.get(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.data = response.json()['data']
+        self.assertTrue(
+            {'name': 'cancel', 'target': 'cancelled', 'available': True}
+            in self.data['meta']['transitions']
+        )
 
     def test_get_contributors(self):
-        self.participant_factory.create_batch(5, activity=self.activity)
+        self.participant_factory.create_batch(4, activity=self.activity)
+        self.participant_factory.create(activity=self.activity, user=self.activity.owner)
         response = self.client.get(self.url, user=self.activity.owner)
 
         data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        included_resources = [
-            {'type': included['type'], 'id': included['id']} for
-            included in response.json()['included']
+        contributor_ids = [
+            resource['id'] for resource in data['relationships']['contributors']['data']
         ]
 
         self.assertEqual(
             len(data['relationships']['contributors']['data']),
             5
         )
-
-        for contributor in data['relationships']['contributors']['data']:
+        contributor_response = self.client.get(
+            data['relationships']['contributors']['links']['related'],
+            user=self.activity.owner
+        )
+        contributor_data = contributor_response.json()
+        self.assertEqual(contributor_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            contributor_data['meta']['pagination']['count'], len(contributor_ids)
+        )
+        for contributor in contributor_data['data']:
             self.assertTrue(
-                contributor in included_resources
+                contributor['id'] in contributor_ids
             )
 
     def test_get_non_anonymous(self):
@@ -296,6 +323,31 @@ class TimeBasedDetailAPIViewTestCase():
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_delete_owner(self):
+        response = self.client.delete(self.url, user=self.activity.owner)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_unauthenticated(self):
+        response = self.client.delete(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete_wrong_user(self):
+        response = self.client.delete(
+            self.url, user=BlueBottleUserFactory.create()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_submitted(self):
+        self.activity.initiative.states.submit(save=True)
+        response = self.client.delete(
+            self.url, user=self.activity.owner
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_update_cancelled(self):
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
@@ -332,6 +384,48 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
             'start': str(now() + timedelta(days=21)),
             'duration': '4:00',
         })
+
+    def test_get_utc_offset(self):
+        self.activity.location.position = Point(4.8888, 52.399)
+        self.activity.location.save()
+
+        self.activity.start = get_current_timezone().localize(
+            datetime(2025, 2, 23, 10, 00)
+        )
+        self.activity.save()
+
+        response = self.client.get(self.url)
+        self.assertEqual(
+            response.json()['data']['attributes']['utc-offset'], 60.0
+        )
+
+    def test_get_utc_offset_summertime(self):
+        self.activity.location.position = Point(4.8888, 52.399)
+        self.activity.location.save()
+
+        self.activity.start = get_current_timezone().localize(
+            datetime(2025, 7, 23, 10, 00)
+        )
+        self.activity.save()
+
+        response = self.client.get(self.url)
+        self.assertEqual(
+            response.json()['data']['attributes']['utc-offset'], 120.0
+        )
+
+    def test_get_utc_offset_new_york(self):
+        self.activity.location.position = Point(-74.259, 40.697)
+        self.activity.location.save()
+
+        self.activity.start = get_current_timezone().localize(
+            datetime(2025, 7, 23, 10, 00)
+        )
+        self.activity.save()
+
+        response = self.client.get(self.url)
+        self.assertEqual(
+            response.json()['data']['attributes']['utc-offset'], -240.0
+        )
 
     def test_get_calendar_links(self):
         response = self.client.get(self.url, user=self.activity.owner)
@@ -401,6 +495,14 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.data['data']['attributes'].update({
             'deadline': str(date.today() + timedelta(days=21)),
         })
+
+    def test_get_open(self):
+        super().test_get_open()
+
+        self.assertTrue(
+            {'name': 'succeed_manually', 'target': 'succeeded', 'available': True}
+            in self.data['meta']['transitions']
+        )
 
 
 class TimeBasedTransitionAPIViewTestCase():
@@ -592,11 +694,13 @@ class ParticipantListViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class DatePrticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
+class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
     type = 'date'
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 
+    url_name = 'on-a-date-participant-list'
+    application_type = 'contributions/time-based/date-participants'
     url_name = 'date-participant-list'
     participant_type = 'contributors/time-based/date-participants'
 
@@ -665,17 +769,31 @@ class ParticipantDetailViewTestCase():
             data['meta']['permissions']['PATCH'],
             True
         )
+        self.assertTrue(
+            {'name': 'withdraw', 'target': 'withdrawn', 'available': True}
+            in data['meta']['transitions']
+        )
 
     def test_get_owner(self):
         response = self.client.get(self.url, user=self.activity.owner)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        data = response.json()['data']
+        self.data = response.json()['data']
 
         self.assertEqual(
-            data['attributes']['motivation'],
+            self.data['attributes']['motivation'],
             self.participant.motivation
+        )
+
+        self.assertFalse(
+            {'name': 'withdraw', 'target': 'withdrawn', 'available': True}
+            in self.data['meta']['transitions']
+        )
+
+        self.assertTrue(
+            {'name': 'reject', 'target': 'rejected', 'available': True}
+            in self.data['meta']['transitions']
         )
 
     def test_get_activity_manager(self):
@@ -772,6 +890,14 @@ class PeriodParticipantDetailAPIViewTestCase(ParticipantDetailViewTestCase, Blue
     url_name = 'period-participant-detail'
     participant_type = 'contributors/time-based/period-participants'
 
+    def test_get_owner(self):
+        super().test_get_owner()
+
+        self.assertTrue(
+            {'name': 'stop', 'target': 'stopped', 'available': True}
+            in self.data['meta']['transitions']
+        )
+
 
 class ParticipantTransitionAPIViewTestCase():
     def setUp(self):
@@ -814,9 +940,9 @@ class ParticipantTransitionAPIViewTestCase():
 
         self.assertEqual(
             data['included'][0]['type'],
-            'activities/time-based/{}s'.format(self.type)
+            '{}s'.format(self.participant_type)
         )
-        self.assertEqual(data['included'][1]['attributes']['status'], 'withdrawn')
+        self.assertEqual(data['included'][0]['attributes']['status'], 'withdrawn')
 
     def test_withdraw_by_other_user(self):
         # Owner can delete the event
@@ -843,9 +969,9 @@ class ParticipantTransitionAPIViewTestCase():
 
         self.assertEqual(
             data['included'][0]['type'],
-            'activities/time-based/{}s'.format(self.type)
+            '{}s'.format(self.participant_type)
         )
-        self.assertEqual(data['included'][1]['attributes']['status'], 'rejected')
+        self.assertEqual(data['included'][0]['attributes']['status'], 'rejected')
 
     def test_reject_by_user(self):
         # Owner can delete the event

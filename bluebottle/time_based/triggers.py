@@ -13,10 +13,18 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution
 )
-from bluebottle.time_based.effects import (
-    CreateDateParticipationEffect, CreatePeriodParticipationEffect
+from bluebottle.time_based.messages import (
+    DateChanged, DeadlineChanged,
+    ActivitySucceededNotification, ActivitySucceededManuallyNotification,
+    ActivityExpiredNotification, ActivityRejectedNotification,
+    ActivityCancelledNotification,
+    ParticipantAddedNotification, ParticipantCreatedNotification,
+    ParticipantAcceptedNotification, ParticipantRejectedNotification,
+    NewParticipantNotification
 )
-from bluebottle.time_based.messages import DateChanged, DeadlineChanged
+from bluebottle.time_based.effects import (
+    CreateDateParticipationEffect, CreatePeriodParticipationEffect, SetEndDateEffect
+)
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine,
     ParticipantStateMachine, PeriodParticipantStateMachine, DurationStateMachine
@@ -51,7 +59,7 @@ def is_finished(effect):
     return (
         effect.instance.start and
         effect.instance.duration and
-        effect.instance.start + effect.instance.duration
+        effect.instance.start + effect.instance.duration < now()
     )
 
 
@@ -89,6 +97,13 @@ def deadline_is_not_passed(effect):
     return (
         effect.instance.deadline and
         effect.instance.deadline > date.today()
+    )
+
+
+def start_is_not_passed(effect):
+    return (
+        effect.instance.start and
+        effect.instance.start > date.today()
     )
 
 
@@ -141,10 +156,35 @@ class TimeBasedTriggers(ActivityTriggers):
                 ]),
             ]
         ),
+
+        TransitionTrigger(
+            TimeBasedStateMachine.succeed,
+            effects=[
+                NotificationEffect(ActivitySucceededNotification),
+            ]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.reject,
+            effects=[
+                NotificationEffect(ActivityRejectedNotification),
+            ]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.cancel,
+            effects=[
+                NotificationEffect(ActivityCancelledNotification),
+            ]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.expire,
+            effects=[
+                NotificationEffect(ActivityExpiredNotification),
+            ]
+        ),
     ]
 
 
-@register(DateActivity)
+@ register(DateActivity)
 class DateTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
         TransitionTrigger(
@@ -229,9 +269,27 @@ class PeriodTriggers(TimeBasedTriggers):
             ]
         ),
 
+        TransitionTrigger(
+            PeriodStateMachine.succeed_manually,
+            effects=[
+                SetEndDateEffect,
+                RelatedTransitionEffect(
+                    'accepted_durations',
+                    DurationStateMachine.succeed
+                ),
+                NotificationEffect(ActivitySucceededManuallyNotification),
+            ]
+        ),
+
         ModelChangedTrigger(
             'start',
             effects=[
+                NotificationEffect(
+                    DeadlineChanged,
+                    conditions=[
+                        start_is_not_passed
+                    ]
+                ),
                 TransitionEffect(
                     DateStateMachine.start,
                     conditions=[is_started]
@@ -289,6 +347,10 @@ def automatically_accept(effect):
     return not effect.instance.activity.review
 
 
+def needs_review(effect):
+    return effect.instance.activity.review
+
+
 def activity_will_be_full(effect):
     "the activity is full"
     activity = effect.instance.activity
@@ -330,6 +392,13 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
+                NotificationEffect(
+                    ParticipantCreatedNotification,
+                    conditions=[needs_review]
+                ),
+                NotificationEffect(
+                    ParticipantAddedNotification
+                ),
                 TransitionEffect(
                     ParticipantStateMachine.accept,
                     conditions=[automatically_accept]
@@ -356,6 +425,14 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             ParticipantStateMachine.accept,
             effects=[
+                NotificationEffect(
+                    NewParticipantNotification,
+                    conditions=[automatically_accept]
+                ),
+                NotificationEffect(
+                    ParticipantAcceptedNotification,
+                    conditions=[needs_review]
+                ),
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.lock,
@@ -383,12 +460,25 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             ParticipantStateMachine.reject,
             effects=[
+                NotificationEffect(
+                    ParticipantRejectedNotification
+                ),
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.reopen,
                     conditions=[activity_will_not_be_full]
                 ),
 
+                RelatedTransitionEffect(
+                    'contribution_values',
+                    DurationStateMachine.fail,
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            ParticipantStateMachine.mark_absent,
+            effects=[
                 RelatedTransitionEffect(
                     'contribution_values',
                     DurationStateMachine.fail,
@@ -414,7 +504,7 @@ class ParticipantTriggers(ContributorTriggers):
     ]
 
 
-@register(DateParticipant)
+@ register(DateParticipant)
 class OnADateParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
@@ -426,7 +516,7 @@ class OnADateParticipantTriggers(ParticipantTriggers):
     ]
 
 
-@register(PeriodParticipant)
+@ register(PeriodParticipant)
 class PeriodParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(

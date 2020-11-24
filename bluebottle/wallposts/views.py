@@ -1,6 +1,7 @@
 import django_filters
 from builtins import object
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db.models.query_utils import Q
 from rest_framework.generics import RetrieveDestroyAPIView
 
@@ -74,7 +75,10 @@ class ParentTypeFilterMixin(object):
             parent_type = self.content_type_mapping[parent_type]
         except KeyError:
             pass
-        content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
+        try:
+            content_type = ContentType.objects.filter(app_label__in=white_listed_apps).get(model=parent_type)
+        except ContentType.DoesNotExist:
+            raise ValidationError("ContentType does not exist {}".format(parent_type))
 
         queryset = queryset.filter(content_type=content_type)
         queryset = queryset.filter(object_id=parent_id)

@@ -42,7 +42,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         organizer = self.event.contributors.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.new.value)
-        self.assertEqual(organizer.contribution_values.first().status, 'new')
+        self.assertEqual(organizer.contributions.first().status, 'new')
 
     def test_submit(self):
         self.event.states.submit(save=True)
@@ -51,7 +51,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         organizer = self.event.contributors.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
-        self.assertEqual(organizer.contribution_values.first().status, 'succeeded')
+        self.assertEqual(organizer.contributions.first().status, 'succeeded')
 
     def test_submit_unsubmitted_initiative(self):
         initiative = InitiativeFactory.create()
@@ -68,7 +68,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         organizer = self.event.contributors.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.failed.value)
-        self.assertEqual(organizer.contribution_values.first().status, 'failed')
+        self.assertEqual(organizer.contributions.first().status, 'failed')
 
     def test_cancel(self):
         self.event.states.submit(save=True)
@@ -94,7 +94,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.event.status, EventStateMachine.open.value)
         organizer = self.event.contributors.get()
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
-        self.assertEqual(organizer.contribution_values.first().status, 'succeeded')
+        self.assertEqual(organizer.contributions.first().status, 'succeeded')
 
     def test_create_unapproved_initiative(self):
         initiative = InitiativeFactory.create()
@@ -107,7 +107,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         organizer = event.contributors.get()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.new.value)
-        self.assertEqual(organizer.contribution_values.first().status, 'new')
+        self.assertEqual(organizer.contributions.first().status, 'new')
 
         initiative.states.approve(save=True)
 
@@ -118,7 +118,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         organizer.refresh_from_db()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
-        self.assertEqual(organizer.contribution_values.first().status, 'succeeded')
+        self.assertEqual(organizer.contributions.first().status, 'succeeded')
 
     def test_create_incomplete(self):
         event = EventFactory.create(initiative=self.initiative, title='')
@@ -140,7 +140,7 @@ class ActivityStateMachineTests(BluebottleTestCase):
         organizer.refresh_from_db()
 
         self.assertEqual(organizer.status, OrganizerStateMachine.succeeded.value)
-        self.assertEqual(organizer.contribution_values.first().status, 'succeeded')
+        self.assertEqual(organizer.contributions.first().status, 'succeeded')
 
     def test_not_full(self):
         self.event.states.submit(save=True)

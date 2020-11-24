@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('status', models.CharField(max_length=40)),
                 ('created', models.DateTimeField(default=django.utils.timezone.now)),
-                ('contribution', models.ForeignKey(on_delete=bluebottle.activities.models.NON_POLYMORPHIC_CASCADE, related_name='contribution_values', to='activities.Contribution')),
+                ('contribution', models.ForeignKey(on_delete=bluebottle.activities.models.NON_POLYMORPHIC_CASCADE, related_name='contributions', to='activities.Contribution')),
                 ('polymorphic_ctype', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_activities.contributionvalue_set+', to='contenttypes.ContentType')),
             ],
             options={

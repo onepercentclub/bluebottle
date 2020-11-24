@@ -88,19 +88,19 @@ class OrganizerTriggers(TriggerManager):
         TransitionTrigger(
             OrganizerStateMachine.fail,
             effects=[
-                RelatedTransitionEffect('contribution_values', OrganizerContributionStateMachine.fail)
+                RelatedTransitionEffect('contributions', OrganizerContributionStateMachine.fail)
             ]
         ),
         TransitionTrigger(
             OrganizerStateMachine.reset,
             effects=[
-                RelatedTransitionEffect('contribution_values', OrganizerContributionStateMachine.reset)
+                RelatedTransitionEffect('contributions', OrganizerContributionStateMachine.reset)
             ]
         ),
         TransitionTrigger(
             OrganizerStateMachine.succeed,
             effects=[
-                RelatedTransitionEffect('contribution_values', OrganizerContributionStateMachine.succeed)
+                RelatedTransitionEffect('contributions', OrganizerContributionStateMachine.succeed)
             ]
         ),
     ]

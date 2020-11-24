@@ -416,7 +416,7 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
 
                 RelatedTransitionEffect(
-                    'contribution_values',
+                    'contributions',
                     DurationStateMachine.reset,
                 )
             ]
@@ -446,7 +446,7 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
 
                 RelatedTransitionEffect(
-                    'contribution_values',
+                    'contributions',
                     DurationStateMachine.reset,
                 ),
 
@@ -470,7 +470,7 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
 
                 RelatedTransitionEffect(
-                    'contribution_values',
+                    'contributions',
                     DurationStateMachine.fail,
                 )
             ]
@@ -480,7 +480,7 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.mark_absent,
             effects=[
                 RelatedTransitionEffect(
-                    'contribution_values',
+                    'contributions',
                     DurationStateMachine.fail,
                 )
             ]
@@ -496,7 +496,7 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
 
                 RelatedTransitionEffect(
-                    'contribution_values',
+                    'contributions',
                     DurationStateMachine.fail,
                 )
             ]

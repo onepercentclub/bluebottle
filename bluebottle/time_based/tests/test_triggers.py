@@ -213,11 +213,11 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
         )
 
         self.assertEqual(
-            self.rejected.contribution_values.get().status, 'failed'
+            self.rejected.contributions.get().status, 'failed'
         )
 
         self.assertEqual(
-            self.accepted.contribution_values.get().status, 'succeeded'
+            self.accepted.contributions.get().status, 'succeeded'
         )
 
     def test_change_start_back_again(self):
@@ -231,11 +231,11 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
         self.assertEqual(self.activity.status, 'open')
 
         self.assertEqual(
-            self.rejected.contribution_values.get().status, 'failed'
+            self.rejected.contributions.get().status, 'failed'
         )
 
         self.assertEqual(
-            self.accepted.contribution_values.get().status, 'new'
+            self.accepted.contributions.get().status, 'new'
         )
 
     def test_change_start_full(self):
@@ -636,7 +636,7 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
         super().test_initial_no_review()
 
         self.assertEqual(
-            self.activity.accepted_participants.get().contribution_values.get().status,
+            self.activity.accepted_participants.get().contributions.get().status,
             'new'
         )
 
@@ -644,7 +644,7 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
         super().test_initial_review()
 
         self.assertEqual(
-            self.review_activity.participants.get().contribution_values.get().status,
+            self.review_activity.participants.get().contributions.get().status,
             'new'
         )
 
@@ -652,7 +652,7 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
         super().test_withdraw()
 
         self.assertEqual(
-            self.participants[0].contribution_values.get().status,
+            self.participants[0].contributions.get().status,
             'failed'
         )
 
@@ -660,7 +660,7 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
         super().test_reapply()
 
         self.assertEqual(
-            self.participants[0].contribution_values.get().status,
+            self.participants[0].contributions.get().status,
             'new'
         )
 
@@ -668,7 +668,7 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
         super().test_reject()
 
         self.assertEqual(
-            self.participants[0].contribution_values.get().status,
+            self.participants[0].contributions.get().status,
             'failed'
         )
 
@@ -676,7 +676,7 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
         super().test_reaccept()
 
         self.assertEqual(
-            self.participants[0].contribution_values.get().status,
+            self.participants[0].contributions.get().status,
             'new'
         )
 

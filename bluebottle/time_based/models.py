@@ -242,7 +242,7 @@ class Participant(Contributor):
 
     @property
     def finished_contributions(self):
-        return self.contribution_values.filter(
+        return self.contributions.filter(
             timecontribution__end__lte=timezone.now()
         )
 
@@ -299,7 +299,7 @@ class PeriodParticipant(Participant, Contributor):
 
     @property
     def current_contribution(self):
-        return self.contribution_values.get(status='new')
+        return self.contributions.get(status='new')
 
     def __str__(self):
         return _("Participant {name}").format(name=self.user)

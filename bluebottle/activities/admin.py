@@ -11,14 +11,15 @@ from polymorphic.admin import (
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
-from bluebottle.activities.models import Activity, Contributor, Organizer
+from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, OrganizerContribution
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant
+from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
+    TimeContribution
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
-from bluebottle.funding.models import Funding, Donor
+from bluebottle.funding.models import Funding, Donor, MoneyContribution
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import Segment
@@ -102,6 +103,35 @@ class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
     def type(self, obj):
         return obj.get_real_instance_class()._meta.verbose_name
+
+
+@admin.register(Contribution)
+class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+    base_model = Contribution
+    child_models = (
+        MoneyContribution,
+        TimeContribution,
+        OrganizerContribution
+    )
+    list_display = ['created', 'type', 'contributor', 'state_name']
+    list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
+    date_hierarchy = 'created'
+
+    ordering = ('-created', )
+
+    def type(self, obj):
+        return obj.contributor.get_real_instance_class()._meta.verbose_name
+
+
+class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+    base_model = Contribution
+    raw_id_fields = ('contributor',)
+    readonly_fields = ('status', 'created', )
+
+
+@admin.register(OrganizerContribution)
+class OrganizerContributionAdmin(ContributionChildAdmin):
+    model = OrganizerContribution
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):

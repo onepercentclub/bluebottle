@@ -64,6 +64,7 @@ class ParentTypeFilterMixin(object):
     content_type_mapping = {
         'activities/time-based/date': 'dateactivity',
         'activities/time-based/period': 'periodactivity',
+        'activities/funding': 'fundingactivity',
     }
 
     def get_queryset(self):

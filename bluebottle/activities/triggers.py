@@ -71,5 +71,5 @@ class ContributorTriggers(TriggerManager):
     triggers = []
 
 
-class ContributionValueTriggers(TriggerManager):
+class ContributionTriggers(TriggerManager):
     triggers = []

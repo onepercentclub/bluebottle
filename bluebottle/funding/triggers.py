@@ -1,6 +1,6 @@
 from django.utils import timezone
 
-from bluebottle.activities.states import ContributorStateMachine, ActivityStateMachine
+from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers
 from bluebottle.activities.triggers import ContributorTriggers
@@ -328,7 +328,7 @@ def is_successful(instance):
 class DonorTriggers(ContributorTriggers):
     triggers = [
         TransitionTrigger(
-            ActivityStateMachine.initiate,
+            DonorStateMachine.initiate,
             effects=[
                 CreateDonationEffect
             ]

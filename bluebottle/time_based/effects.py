@@ -1,4 +1,6 @@
-from datetime import timedelta, datetime, date
+from datetime import datetime, date
+
+from dateutil.relativedelta import relativedelta
 
 from django.utils.translation import ugettext as _
 from django.utils.timezone import now, get_current_timezone
@@ -36,7 +38,7 @@ class CreatePeriodParticipationEffect(Effect):
         if activity.duration_period == 'overall':
             end = activity.deadline if hasattr(activity, 'deadline') else None
         elif activity.duration_period:
-            end = start + timedelta(**{activity.duration_period: 1})
+            end = start + relativedelta(**{activity.duration_period: 1})
         else:
             end = start
 

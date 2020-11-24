@@ -177,6 +177,7 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
 
     def test_contribution_value_is_succeeded(self):
         self.run_tasks(self.activity.start)
+
         self.run_tasks(self.activity.start + timedelta(weeks=1, days=1))
         self.refresh()
 
@@ -187,6 +188,47 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
 
         self.assertEqual(
             len(self.participant.contribution_values.filter(status='new')),
+            1
+        )
+
+    def test_contribution_value_is_succeeded_months(self):
+        activity = self.factory.create(
+            initiative=self.initiative,
+            review=True,
+            duration=timedelta(hours=2),
+            duration_period='months',
+            deadline=None
+        )
+        activity.states.submit(save=True)
+        participant = self.participant_factory.create(activity=activity)
+        participant.states.accept(save=True)
+
+        self.run_tasks(activity.start + timedelta(minutes=1))
+        self.run_tasks(activity.start + timedelta(weeks=1, days=1))
+
+        participant.refresh_from_db()
+
+        self.assertEqual(
+            len(participant.contribution_values.filter(status='succeeded')),
+            0
+        )
+
+        self.assertEqual(
+            len(self.participant.contribution_values.filter(status='new')),
+            1
+        )
+
+        self.run_tasks(activity.start + timedelta(weeks=5))
+
+        participant.refresh_from_db()
+
+        self.assertEqual(
+            len(participant.contribution_values.filter(status='succeeded')),
+            1
+        )
+
+        self.assertEqual(
+            len(participant.contribution_values.filter(status='new')),
             1
         )
 

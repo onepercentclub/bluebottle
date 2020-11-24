@@ -34,7 +34,7 @@ class TimeBasedActivityStartedTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return _("Start an start when start date has passed.")
+        return _("Start an activity when start date has passed.")
 
 
 class PeriodActivityFinishedTask(ModelPeriodicTask):

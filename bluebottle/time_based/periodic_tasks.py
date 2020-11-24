@@ -8,7 +8,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, PeriodParticipant, TimeContribution
 )
 from bluebottle.time_based.states import (
-    TimeBasedStateMachine, DurationStateMachine
+    TimeBasedStateMachine, TimeContributionStateMachine
 )
 from bluebottle.time_based.triggers import has_participants, has_no_participants
 from bluebottle.time_based.effects import CreatePeriodParticipationEffect
@@ -127,7 +127,7 @@ class DurationFinishedTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect(DurationStateMachine.succeed),
+        TransitionEffect(TimeContributionStateMachine.succeed),
     ]
 
     def __str__(self):

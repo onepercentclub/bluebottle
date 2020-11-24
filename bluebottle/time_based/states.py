@@ -214,7 +214,7 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
     stopped = State(
         _('stopped'),
         'stopped',
-        _('The participant (temporarily) stopped. Durations will no longer be created.')
+        _('The participant (temporarily) stopped. Contributions will no longer be created.')
     )
 
     stop = Transition(
@@ -237,5 +237,5 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
 
 
 @register(TimeContribution)
-class DurationStateMachine(ContributionStateMachine):
+class TimeContributionStateMachine(ContributionStateMachine):
     pass

@@ -128,7 +128,7 @@ class ParticipantStateMachine(ContributorStateMachine):
             self.instance.activity.initiative.owner
         ]
 
-    def assignment_is_open(self):
+    def activity_is_open(self):
         """task is open"""
         return self.instance.activity.status == ActivityStateMachine.open.value
 
@@ -182,7 +182,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         name=_('Reapply'),
         description=_("User re-applies for the task after previously withdrawing."),
         automatic=False,
-        conditions=[assignment_is_open],
+        conditions=[activity_is_open],
         permission=ContributorStateMachine.is_user,
     )
 
@@ -224,6 +224,7 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
         permission=ParticipantStateMachine.can_accept_participant,
         description=_("Participant stopped contributing."),
         automatic=False,
+        conditions=[ParticipantStateMachine.activity_is_open]
     )
 
     start = Transition(

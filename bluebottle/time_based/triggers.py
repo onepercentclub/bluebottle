@@ -27,7 +27,7 @@ from bluebottle.time_based.effects import (
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine,
-    ParticipantStateMachine, PeriodParticipantStateMachine, TimeContributionStateMachine
+    ParticipantStateMachine, TimeContributionStateMachine
 )
 
 
@@ -526,15 +526,6 @@ class PeriodParticipantTriggers(ParticipantTriggers):
             ]
         ),
 
-        TransitionTrigger(
-            PeriodParticipantStateMachine.stop,
-            effects=[
-                RelatedTransitionEffect(
-                    'current_contribution',
-                    TimeContributionStateMachine.fail
-                )
-            ]
-        ),
     ]
 
 

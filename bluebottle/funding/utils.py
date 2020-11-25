@@ -12,6 +12,7 @@ def get_currency_settings():
         for cur in provider.paymentcurrency_set.all():
             result.append({
                 'provider': provider.name,
+                'providerName': provider.title,
                 'code': cur.code,
                 'name': get_currency_name(cur.code),
                 'symbol': get_currency_symbol(cur.code).replace('US$', '$'),

@@ -21,7 +21,7 @@ from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineAdminMixin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
@@ -233,6 +233,11 @@ class MoneyContributionInlineAdmin(admin.StackedInline):
     model = MoneyContribution
     extra = 0
     readonly_fields = ('status', 'created')
+
+
+@admin.register(MoneyContribution)
+class MoneyContributionAdmin(ContributionChildAdmin):
+    model = MoneyContribution
 
 
 @admin.register(Donor)

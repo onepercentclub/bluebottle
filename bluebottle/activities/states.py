@@ -1,6 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.models import Organizer
+from bluebottle.activities.models import Organizer, OrganizerContribution
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition, register
 
 
@@ -245,7 +245,7 @@ class ContributorStateMachine(ModelStateMachine):
     )
 
 
-class ContributionValueStateMachine(ModelStateMachine):
+class ContributionStateMachine(ModelStateMachine):
     new = State(
         _('new'),
         'new',
@@ -271,6 +271,7 @@ class ContributionValueStateMachine(ModelStateMachine):
         name=_('initiate'),
         description=_('The contribution was created.')
     )
+
     fail = Transition(
         (new, succeeded, ),
         failed,
@@ -319,3 +320,8 @@ class OrganizerStateMachine(ContributorStateMachine):
         name=_('reset'),
         description=_('The organizer is still busy setting up the activity.')
     )
+
+
+@register(OrganizerContribution)
+class OrganizerContributionStateMachine(ContributionStateMachine):
+    pass

@@ -26,6 +26,10 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['activities.change_contributor']
             },
             {
+                'name': 'activities.contribution',
+                'permissions': ['activities.change_contribution']
+            },
+            {
                 'name': 'impact.impacttype',
                 'permissions': ['impact.change_impacttype']
             },
@@ -108,8 +112,8 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['funding.change_funding']
             },
             {
-                'name': 'funding.donation',
-                'permissions': ['funding.change_donation']
+                'name': 'funding.donor',
+                'permissions': ['funding.change_donor']
             },
             {
                 'name': 'funding.payment',

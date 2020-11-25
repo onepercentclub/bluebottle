@@ -5,8 +5,8 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from durationwidget.widgets import TimeDurationWidget
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin
-from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
+from bluebottle.fsm.admin import StateMachineFilter
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution
@@ -192,9 +192,7 @@ class PeriodParticipantAdmin(ContributorChildAdmin):
 
 
 @admin.register(TimeContribution)
-class TimeContributionAdmin(StateMachineAdmin):
-    raw_id_fields = ('contributor',)
-    readonly_fields = ('status', 'created', )
+class TimeContributionAdmin(ContributionChildAdmin):
     basic_fields = ('contributor', 'created', 'start', 'end', 'value', 'status', 'states')
 
     def get_fieldsets(self, request, obj=None):

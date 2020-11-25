@@ -7,37 +7,104 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
-    StackedPolymorphicInline)
+    StackedPolymorphicInline, PolymorphicInlineSupportMixin)
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages import ImpactReminderMessage
-from bluebottle.activities.models import Activity, Contributor, Organizer
+from bluebottle.activities.models import Activity, Contributor, Organizer, Contribution, OrganizerContribution
 from bluebottle.assignments.models import Assignment, Applicant
-from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant
+from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
+    TimeContribution
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.events.models import Event, Participant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
-from bluebottle.funding.models import Funding, Donor
+from bluebottle.funding.models import Funding, Donor, MoneyContribution
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import Segment
 from bluebottle.wallposts.admin import WallpostInline
 
 
-class ContributorChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+@admin.register(Contributor)
+class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+    base_model = Contributor
+    child_models = (
+        Participant,
+        Donor,
+        Applicant,
+        Organizer,
+        DateParticipant,
+        PeriodParticipant
+    )
+    list_display = ['created', 'owner', 'type', 'activity', 'state_name']
+    list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
+    date_hierarchy = 'created'
+
+    ordering = ('-created', )
+
+    def type(self, obj):
+        return obj.get_real_instance_class()._meta.verbose_name
+
+
+class ContributionInlineChild(StackedPolymorphicInline.Child):
+    def state_name(self, obj):
+        if obj.states.current_state:
+            return obj.states.current_state.name
+    state_name.short_description = _('status')
+
+    def contributor_link(self, obj):
+        url = reverse("admin:{}_{}_change".format(
+            obj._meta.app_label,
+            obj._meta.model_name),
+            args=(obj.id,)
+        )
+        return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
+
+    contributor_link.short_description = _('Edit contributor')
+
+
+class ContributionAdminInline(StackedPolymorphicInline):
+    model = Contribution
+    readonly_fields = ['created']
+    fields = readonly_fields
+    extra = 0
+    can_delete = False
+
+    class OrganizerContributionInline(ContributionInlineChild):
+        readonly_fields = ['contributor_link']
+        fields = readonly_fields
+        model = OrganizerContribution
+
+    class TimeContributionInline(ContributionInlineChild):
+        readonly_fields = ['contributor_link', 'start', 'end', 'value']
+        fields = readonly_fields
+        model = TimeContribution
+
+    class MoneyContributionInline(ContributionInlineChild):
+        readonly_fields = ['contributor_link', 'amount']
+        fields = readonly_fields
+        model = MoneyContribution
+
+    child_inlines = (
+        OrganizerContributionInline,
+        TimeContributionInline,
+        MoneyContributionInline
+    )
+
+
+class ContributorChildAdmin(PolymorphicChildModelAdmin, PolymorphicInlineSupportMixin, StateMachineAdmin):
     base_model = Contributor
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
     list_filter = [StateMachineFilter, ]
     ordering = ('-created', )
     show_in_index = True
     raw_id_fields = ('user', 'activity')
+    inlines = [ContributionAdminInline]
 
     date_hierarchy = 'contributor_date'
 
     readonly_fields = [
-        'created',
-        'contributor_date'
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields
@@ -83,25 +150,33 @@ class OrganizerAdmin(ContributorChildAdmin):
     )
 
 
-@admin.register(Contributor)
-class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
-    base_model = Contributor
+@admin.register(Contribution)
+class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+    base_model = Contribution
     child_models = (
-        Participant,
-        Donor,
-        Applicant,
-        Organizer,
-        DateParticipant,
-        PeriodParticipant
+        MoneyContribution,
+        TimeContribution,
+        OrganizerContribution
     )
-    list_display = ['created', 'owner', 'type', 'activity', 'state_name']
+    list_display = ['created', 'type', 'contributor', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
     date_hierarchy = 'created'
 
     ordering = ('-created', )
 
     def type(self, obj):
-        return obj.get_real_instance_class()._meta.verbose_name
+        return obj.contributor.get_real_instance_class()._meta.verbose_name
+
+
+class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+    base_model = Contribution
+    raw_id_fields = ('contributor',)
+    readonly_fields = ('status', 'created', )
+
+
+@admin.register(OrganizerContribution)
+class OrganizerContributionAdmin(ContributionChildAdmin):
+    model = OrganizerContribution
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):

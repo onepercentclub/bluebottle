@@ -209,12 +209,12 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
         participant.refresh_from_db()
 
         self.assertEqual(
-            len(participant.contribution_values.filter(status='succeeded')),
+            len(participant.contributions.filter(status='succeeded')),
             0
         )
 
         self.assertEqual(
-            len(self.participant.contribution_values.filter(status='new')),
+            len(self.participant.contributions.filter(status='new')),
             1
         )
 
@@ -223,12 +223,12 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
         participant.refresh_from_db()
 
         self.assertEqual(
-            len(participant.contribution_values.filter(status='succeeded')),
+            len(participant.contributions.filter(status='succeeded')),
             1
         )
 
         self.assertEqual(
-            len(participant.contribution_values.filter(status='new')),
+            len(participant.contributions.filter(status='new')),
             1
         )
 

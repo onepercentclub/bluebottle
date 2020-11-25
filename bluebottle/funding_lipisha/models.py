@@ -8,6 +8,8 @@ from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, B
 
 class LipishaPaymentProvider(PaymentProvider):
 
+    title = 'Lipisha / M-Pesa'
+
     api_key = models.CharField(max_length=100)
     api_signature = models.CharField(max_length=500)
     prefix = models.CharField(max_length=100, default='goodup')

@@ -1145,7 +1145,8 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                     'symbol': u'\u20ac',
                     'minAmount': 5.00,
                     'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                    'provider': 'stripe'
+                    'provider': 'stripe',
+                    'providerName': 'Stripe'
                 },
                 {
                     'code': 'USD',
@@ -1154,7 +1155,8 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                     'symbol': '$',
                     'minAmount': 5.00,
                     'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                    'provider': 'stripe'
+                    'provider': 'stripe',
+                    'providerName': 'Stripe'
                 },
                 {
                     'code': 'NGN',
@@ -1163,7 +1165,8 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                     'symbol': u'\u20a6',
                     'minAmount': 1000.00,
                     'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
-                    'provider': 'flutterwave'
+                    'provider': 'flutterwave',
+                    'providerName': 'Flutterwave'
                 }
             ]
         )

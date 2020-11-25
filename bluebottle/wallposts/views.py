@@ -67,7 +67,10 @@ class ParentTypeFilterMixin(object):
 
     def get_queryset(self):
         queryset = super(ParentTypeFilterMixin, self).get_queryset()
-        parent_type = self.request.query_params.get('parent_type', None) + 'activity'
+        parent_type = self.request.query_params.get('parent_type', None)
+        if parent_type in ['date', 'period']:
+            parent_type = '{}activity'.format(parent_type)
+
         parent_id = self.request.query_params.get('parent_id', None)
         white_listed_apps = ['initiatives', 'assignments', 'events', 'funding', 'time_based']
         try:

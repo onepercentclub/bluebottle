@@ -183,7 +183,7 @@ class Contribution(TriggerMixin, PolymorphicModel):
 
     created = models.DateTimeField(default=timezone.now)
     contributor = models.ForeignKey(
-        Contributor, related_name='contribution_values', on_delete=NON_POLYMORPHIC_CASCADE
+        Contributor, related_name='contributions', on_delete=NON_POLYMORPHIC_CASCADE
     )
 
     @property

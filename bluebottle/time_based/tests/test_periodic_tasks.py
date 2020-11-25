@@ -171,7 +171,7 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
         self.refresh()
 
         self.assertEqual(
-            self.participant.contribution_values.get().status,
+            self.participant.contributions.get().status,
             'new'
         )
 
@@ -181,12 +181,12 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
         self.refresh()
 
         self.assertEqual(
-            len(self.participant.contribution_values.filter(status='succeeded')),
+            len(self.participant.contributions.filter(status='succeeded')),
             1
         )
 
         self.assertEqual(
-            len(self.participant.contribution_values.filter(status='new')),
+            len(self.participant.contributions.filter(status='new')),
             1
         )
 
@@ -198,16 +198,16 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
             self.refresh()
 
         self.assertEqual(
-            len(self.participant.contribution_values.all()), 4
+            len(self.participant.contributions.all()), 4
         )
 
         self.assertEqual(
-            len(self.participant.contribution_values.filter(status='succeeded')),
+            len(self.participant.contributions.filter(status='succeeded')),
             3
         )
 
         self.assertEqual(
-            len(self.participant.contribution_values.filter(status='new')),
+            len(self.participant.contributions.filter(status='new')),
             1
         )
 
@@ -219,11 +219,11 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
             self.refresh()
 
         self.assertEqual(
-            len(self.participant.contribution_values.all()), 4
+            len(self.participant.contributions.all()), 4
         )
         self.activity.states.cancel(save=True)
 
-        for contribution in self.participant.contribution_values.all():
+        for contribution in self.participant.contributions.all():
             self.assertEqual(contribution.status, 'failed')
 
 
@@ -274,7 +274,7 @@ class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
         self.refresh()
 
         self.assertEqual(
-            self.participant.contribution_values.get().status,
+            self.participant.contributions.get().status,
             'new'
         )
 
@@ -285,7 +285,7 @@ class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
         self.refresh()
 
         self.assertEqual(
-            len(self.participant.contribution_values.filter(status='new')),
+            len(self.participant.contributions.filter(status='new')),
             2
         )
 
@@ -298,11 +298,11 @@ class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
             self.participant.states.accept(save=True)
 
         self.assertEqual(
-            len(self.participant.contribution_values.filter(status='succeeded')),
+            len(self.participant.contributions.filter(status='succeeded')),
             1
         )
 
         self.assertEqual(
-            len(self.participant.contribution_values.filter(status='new')),
+            len(self.participant.contributions.filter(status='new')),
             1
         )

@@ -237,5 +237,5 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
 
 
 @register(TimeContribution)
-class DurationStateMachine(ContributionValueStateMachine):
+class TimeContributionStateMachine(ContributionValueStateMachine):
     pass

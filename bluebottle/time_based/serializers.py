@@ -9,7 +9,7 @@ from rest_framework_json_api.relations import (
 
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer,
-    BaseContributorSerializer
+    BaseContributorSerializer, BaseContributionSerializer
 )
 
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
@@ -17,8 +17,9 @@ from bluebottle.fsm.serializers import TransitionSerializer
 
 from bluebottle.time_based.models import (
     TimeBasedActivity, DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant
+    DateParticipant, PeriodParticipant, TimeContribution
 )
+
 from bluebottle.time_based.permissions import ParticipantDocumentPermission
 from bluebottle.time_based.filters import ParticipantListFilter
 
@@ -301,6 +302,7 @@ class ParticipantSerializer(BaseContributorSerializer):
         TimeBasedActivitySerializer,
         queryset=TimeBasedActivity.objects.all()
     )
+    contributions = ResourceRelatedField(read_only=True, many=True)
 
     def to_representation(self, instance):
         result = super().to_representation(instance)
@@ -318,7 +320,8 @@ class ParticipantSerializer(BaseContributorSerializer):
         model = DateParticipant
         fields = BaseContributorSerializer.Meta.fields + (
             'motivation',
-            'document'
+            'document',
+            'contributions',
         )
 
         validators = [
@@ -333,10 +336,12 @@ class ParticipantSerializer(BaseContributorSerializer):
         included_resources = [
             'user',
             'document',
+            'contributions',
         ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
     }
 
 
@@ -378,6 +383,14 @@ class PeriodParticipantSerializer(ParticipantSerializer):
         ParticipantSerializer.included_serializers,
         **{'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer'}
     )
+
+
+class TimeContributionSerializer(BaseContributionSerializer):
+    class Meta(BaseContributionSerializer.Meta):
+        model = TimeContribution
+
+    class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
+        resource_name = 'contributions/time-contributions'
 
 
 class ParticipantTransitionSerializer(TransitionSerializer):

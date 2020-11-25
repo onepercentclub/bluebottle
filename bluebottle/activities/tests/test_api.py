@@ -982,7 +982,7 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         contributors_data = json.loads(contributors_response.content)
         members = self._get_members(contributors_data)
         anonymous = self._get_anonymous(contributors_data)
-        self.assertEqual(len(members), 4)
+        self.assertEqual(len(members), 2)
         self.assertEqual(len(anonymous), 0)
 
         response = self.client.get(self.new_url, user=self.owner)
@@ -998,7 +998,7 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         contributors_data = json.loads(contributors_response.content)
         members = self._get_members(contributors_data)
         anonymous = self._get_anonymous(contributors_data)
-        self.assertEqual(len(members), 4)
+        self.assertEqual(len(members), 2)
         self.assertEqual(len(anonymous), 0)
 
     def test_max_age(self):
@@ -1018,8 +1018,8 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         contributors_data = json.loads(contributors_response.content)
         members = self._get_members(contributors_data)
         anonymous = self._get_anonymous(contributors_data)
-        self.assertEqual(len(members), 2)
-        self.assertEqual(len(anonymous), 2)
+        self.assertEqual(len(members), 1)
+        self.assertEqual(len(anonymous), 1)
 
         response = self.client.get(self.new_url, user=self.owner)
         data = json.loads(response.content)
@@ -1034,5 +1034,5 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         contributors_data = json.loads(contributors_response.content)
         members = self._get_members(contributors_data)
         anonymous = self._get_anonymous(contributors_data)
-        self.assertEqual(len(members), 2)
-        self.assertEqual(len(anonymous), 2)
+        self.assertEqual(len(members), 1)
+        self.assertEqual(len(anonymous), 1)

@@ -6,7 +6,7 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
 
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, ContributionValueTriggers
+    ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
 
 from bluebottle.time_based.models import (
@@ -27,7 +27,7 @@ from bluebottle.time_based.effects import (
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine,
-    ParticipantStateMachine, PeriodParticipantStateMachine, DurationStateMachine
+    ParticipantStateMachine, PeriodParticipantStateMachine, TimeContributionStateMachine
 )
 
 
@@ -199,7 +199,7 @@ class DateTriggers(TimeBasedTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'accepted_durations',
-                    DurationStateMachine.succeed
+                    TimeContributionStateMachine.succeed
                 )
             ]
         ),
@@ -209,7 +209,7 @@ class DateTriggers(TimeBasedTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'accepted_durations',
-                    DurationStateMachine.reset
+                    TimeContributionStateMachine.reset
                 )
             ]
         ),
@@ -264,7 +264,7 @@ class PeriodTriggers(TimeBasedTriggers):
             PeriodStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect(
-                    'durations', DurationStateMachine.fail
+                    'durations', TimeContributionStateMachine.fail
                 )
             ]
         ),
@@ -275,7 +275,7 @@ class PeriodTriggers(TimeBasedTriggers):
                 SetEndDateEffect,
                 RelatedTransitionEffect(
                     'accepted_durations',
-                    DurationStateMachine.succeed
+                    TimeContributionStateMachine.succeed
                 ),
                 NotificationEffect(ActivitySucceededManuallyNotification),
             ]
@@ -416,8 +416,8 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
 
                 RelatedTransitionEffect(
-                    'contribution_values',
-                    DurationStateMachine.reset,
+                    'contributions',
+                    TimeContributionStateMachine.reset,
                 )
             ]
         ),
@@ -446,13 +446,13 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
 
                 RelatedTransitionEffect(
-                    'contribution_values',
-                    DurationStateMachine.reset,
+                    'contributions',
+                    TimeContributionStateMachine.reset,
                 ),
 
                 RelatedTransitionEffect(
                     'finished_contributions',
-                    DurationStateMachine.succeed,
+                    TimeContributionStateMachine.succeed,
                 ),
             ]
         ),
@@ -470,8 +470,8 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
 
                 RelatedTransitionEffect(
-                    'contribution_values',
-                    DurationStateMachine.fail,
+                    'contributions',
+                    TimeContributionStateMachine.fail,
                 )
             ]
         ),
@@ -480,8 +480,8 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.mark_absent,
             effects=[
                 RelatedTransitionEffect(
-                    'contribution_values',
-                    DurationStateMachine.fail,
+                    'contributions',
+                    TimeContributionStateMachine.fail,
                 )
             ]
         ),
@@ -496,8 +496,8 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
 
                 RelatedTransitionEffect(
-                    'contribution_values',
-                    DurationStateMachine.fail,
+                    'contributions',
+                    TimeContributionStateMachine.fail,
                 )
             ]
         ),
@@ -531,7 +531,7 @@ class PeriodParticipantTriggers(ParticipantTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'current_contribution',
-                    DurationStateMachine.fail
+                    TimeContributionStateMachine.fail
                 )
             ]
         ),
@@ -543,12 +543,19 @@ def duration_is_finished(effect):
 
 
 @ register(TimeContribution)
-class DurationTriggers(ContributionValueTriggers):
-    triggers = ContributionValueTriggers.triggers + [
+class TimeContributionTriggers(ContributionTriggers):
+    triggers = ContributionTriggers.triggers + [
         TransitionTrigger(
-            DurationStateMachine.reset,
+            TimeContributionStateMachine.reset,
             effects=[
-                TransitionEffect(DurationStateMachine.succeed, conditions=[duration_is_finished]),
+                TransitionEffect(TimeContributionStateMachine.succeed, conditions=[duration_is_finished]),
+            ]
+        ),
+
+        TransitionTrigger(
+            TimeContributionStateMachine.initiate,
+            effects=[
+                TransitionEffect(TimeContributionStateMachine.succeed, conditions=[duration_is_finished]),
             ]
         ),
     ]

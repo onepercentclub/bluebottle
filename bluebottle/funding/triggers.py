@@ -1,6 +1,6 @@
 from django.utils import timezone
 
-from bluebottle.activities.states import ContributorStateMachine, ActivityStateMachine
+from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers
 from bluebottle.activities.triggers import ContributorTriggers
@@ -328,7 +328,7 @@ def is_successful(instance):
 class DonorTriggers(ContributorTriggers):
     triggers = [
         TransitionTrigger(
-            ActivityStateMachine.initiate,
+            DonorStateMachine.initiate,
             effects=[
                 CreateDonationEffect
             ]
@@ -337,7 +337,7 @@ class DonorTriggers(ContributorTriggers):
         TransitionTrigger(
             DonorStateMachine.succeed,
             effects=[
-                RelatedTransitionEffect('contribution_values', DonationStateMachine.succeed),
+                RelatedTransitionEffect('contributions', DonationStateMachine.succeed),
                 NotificationEffect(DonationSuccessActivityManagerMessage),
                 NotificationEffect(DonationSuccessDonorMessage),
                 GenerateDonorWallpostEffect,
@@ -349,7 +349,7 @@ class DonorTriggers(ContributorTriggers):
         TransitionTrigger(
             DonorStateMachine.fail,
             effects=[
-                RelatedTransitionEffect('contribution_values', DonationStateMachine.fail),
+                RelatedTransitionEffect('contributions', DonationStateMachine.fail),
                 RemoveDonorWallpostEffect,
                 UpdateFundingAmountsEffect,
                 RemoveDonorFromPayoutEffect
@@ -359,7 +359,7 @@ class DonorTriggers(ContributorTriggers):
         TransitionTrigger(
             DonorStateMachine.refund,
             effects=[
-                RelatedTransitionEffect('contribution_values', DonationStateMachine.fail),
+                RelatedTransitionEffect('contributions', DonationStateMachine.fail),
                 RemoveDonorWallpostEffect,
                 UnFollowActivityEffect,
                 UpdateFundingAmountsEffect,
@@ -372,7 +372,7 @@ class DonorTriggers(ContributorTriggers):
         TransitionTrigger(
             DonorStateMachine.activity_refund,
             effects=[
-                RelatedTransitionEffect('contribution_values', DonationStateMachine.fail),
+                RelatedTransitionEffect('contributions', DonationStateMachine.fail),
                 RelatedTransitionEffect('payment', BasePaymentStateMachine.request_refund),
                 NotificationEffect(DonationActivityRefundedDonorMessage)
             ]

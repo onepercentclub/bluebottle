@@ -66,6 +66,19 @@ class ContributorPermission(ResourcePermission):
             ]
 
 
+class ContributionPermission(ResourcePermission):
+
+    def has_action_permission(self, action, user, model_cls):
+        return True
+
+    def has_object_action_permission(self, action, user, obj):
+        return user in [
+            obj.contributor.activity.owner,
+            obj.contributor.activity.initiative.owner,
+            obj.contributor.activity.initiative.activity_manager
+        ]
+
+
 class DeleteActivityPermission(ResourcePermission):
     def has_object_action_permission(self, action, user, obj):
         if (

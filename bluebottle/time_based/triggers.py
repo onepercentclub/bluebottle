@@ -551,4 +551,11 @@ class TimeContributionTriggers(ContributionTriggers):
                 TransitionEffect(TimeContributionStateMachine.succeed, conditions=[duration_is_finished]),
             ]
         ),
+
+        TransitionTrigger(
+            TimeContributionStateMachine.initiate,
+            effects=[
+                TransitionEffect(TimeContributionStateMachine.succeed, conditions=[duration_is_finished]),
+            ]
+        ),
     ]

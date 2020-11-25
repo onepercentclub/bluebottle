@@ -117,7 +117,7 @@ class DateActivityFinishedTask(ModelPeriodicTask):
         return _("Finish an activity when end time has passed.")
 
 
-class DurationFinishedTask(ModelPeriodicTask):
+class TimeContributionFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -139,4 +139,4 @@ PeriodActivity.periodic_tasks = [
     TimeBasedActivityStartedTask, PeriodActivityFinishedTask
 ]
 PeriodParticipant.periodic_tasks = [NewPeriodForParticipantTask]
-TimeContribution.periodic_tasks = [DurationFinishedTask]
+TimeContribution.periodic_tasks = [TimeContributionFinishedTask]

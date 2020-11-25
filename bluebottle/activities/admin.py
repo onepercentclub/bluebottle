@@ -105,7 +105,8 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
     date_hierarchy = 'contributor_date'
 
     readonly_fields = [
-        'transition_date', 'contributor_date'
+        'transition_date', 'contributor_date',
+        'created', 'updated'
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields

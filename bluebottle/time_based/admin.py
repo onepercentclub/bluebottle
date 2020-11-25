@@ -127,12 +127,6 @@ class DateActivityAdmin(TimeBasedAdmin):
         'start',
         'duration',
         'online_meeting_url',
-        'is_online',
-        'location',
-        'location_hint',
-        'review',
-        'registration_deadline',
-
     )
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
@@ -155,8 +149,8 @@ class PeriodActivityAdmin(TimeBasedAdmin):
 
     detail_fields = TimeBasedAdmin.detail_fields + (
         'start',
-        'deadline',
         'duration',
+        'deadline',
         'duration_period',
     )
 
@@ -228,5 +222,5 @@ class TimeContributionAdmin(ContributionChildAdmin):
 
 @admin.register(DateParticipant)
 class DateParticipantAdmin(ContributorChildAdmin):
-    fields = ContributorChildAdmin.fields
     inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
+    fields = ContributorChildAdmin.fields + ['motivation', 'document']

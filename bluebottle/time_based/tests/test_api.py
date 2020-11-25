@@ -3,7 +3,7 @@ from datetime import timedelta, date, datetime
 
 from urllib.parse import urlparse, parse_qs
 
-
+from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
 from django.urls import reverse
 from django.utils.timezone import now, utc, get_current_timezone
@@ -1038,6 +1038,9 @@ class RelatedParticipantsAPIViewTestCase():
 
     def test_get_closed_site(self):
         MemberPlatformSettings.objects.update(closed=True)
+        group = Group.objects.get(name='Anonymous')
+        group.permissions.remove(Permission.objects.get(codename='api_read_dateparticipant'))
+        group.permissions.remove(Permission.objects.get(codename='api_read_periodparticipant'))
 
         response = self.client.get(self.url)
 

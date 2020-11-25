@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.db import models
+from django.db.models import Sum
 from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -67,6 +68,7 @@ class PeriodParticipantAdminInline(BaseParticipantAdminInline):
 
 class TimeBasedAdmin(ActivityChildAdmin):
     inlines = ActivityChildAdmin.inlines + (MessageAdminInline, )
+
     formfield_overrides = {
         models.DurationField: {
             'widget': TimeDurationWidget(
@@ -114,6 +116,8 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     inlines = (DateParticipantAdminInline,) + TimeBasedAdmin.inlines
 
+    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
+
     date_hierarchy = 'start'
     list_display = TimeBasedAdmin.list_display + [
         'start', 'duration',
@@ -122,7 +126,13 @@ class DateActivityAdmin(TimeBasedAdmin):
     detail_fields = TimeBasedAdmin.detail_fields + (
         'start',
         'duration',
-        'online_meeting_url'
+        'online_meeting_url',
+        'is_online',
+        'location',
+        'location_hint',
+        'review',
+        'registration_deadline',
+
     )
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
@@ -161,7 +171,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
 class TimeContributionInlineAdmin(admin.TabularInline):
     model = TimeContribution
     extra = 0
-    readonly_fields = ('edit', 'status')
+    readonly_fields = ('edit', 'status', )
     fields = readonly_fields + ('start', 'value')
 
     formfield_overrides = {
@@ -189,6 +199,14 @@ class TimeContributionInlineAdmin(admin.TabularInline):
 @admin.register(PeriodParticipant)
 class PeriodParticipantAdmin(ContributorChildAdmin):
     inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
+    readonly_fields = ContributorChildAdmin.readonly_fields + ['total']
+    fields = ContributorChildAdmin.fields + ['total', 'motivation', 'current_period', 'document']
+
+    def total(self, obj):
+        if not obj:
+            return '-'
+        return obj.contributions.aggregate(total=Sum('timecontribution__value'))['total']
+    total.short_description = _('Total contributed')
 
 
 @admin.register(TimeContribution)

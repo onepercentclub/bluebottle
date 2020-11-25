@@ -188,7 +188,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             convert(
                 Money(c['amount'], c['moneycontribution__amount_currency']),
                 default_currency
-            )
+            ).amount
             for c in amounts if c['amount']
         )
         return stats

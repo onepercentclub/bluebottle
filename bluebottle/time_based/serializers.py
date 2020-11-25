@@ -302,6 +302,7 @@ class ParticipantSerializer(BaseContributorSerializer):
         TimeBasedActivitySerializer,
         queryset=TimeBasedActivity.objects.all()
     )
+    contributions = ResourceRelatedField(read_only=True, many=True)
 
     def to_representation(self, instance):
         result = super().to_representation(instance)

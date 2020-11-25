@@ -441,13 +441,16 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data['relationships']['activities']['data']), 1)
         self.assertEqual(data['relationships']['activities']['data'][0]['id'], str(event.pk))
-        self.assertEqual(data['relationships']['activities']['data'][0]['type'], 'activities/events')
-        activity_data = get_include(response, 'activities/events')
+        self.assertEqual(
+            data['relationships']['activities']['data'][0]['type'],
+            'activities/time-based/dates'
+        )
+        activity_data = get_include(response, 'activities/time-based/dates')
         self.assertEqual(
             activity_data['attributes']['title'],
             event.title
         )
-        self.assertEqual(activity_data['type'], 'activities/events')
+        self.assertEqual(activity_data['type'], 'activities/time-based/dates')
         activity_location = activity_data['relationships']['location']['data']
 
         self.assertTrue(

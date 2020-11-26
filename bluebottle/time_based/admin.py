@@ -126,6 +126,7 @@ class DateActivityAdmin(TimeBasedAdmin):
     detail_fields = TimeBasedAdmin.detail_fields + (
         'start',
         'duration',
+        'preparation',
         'online_meeting_url',
     )
 

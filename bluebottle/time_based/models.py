@@ -33,6 +33,11 @@ class TimeBasedActivity(Activity):
 
     review = models.NullBooleanField(_('review participants'), null=True, default=None)
 
+    preparation = models.DurationField(
+        _('Time required for preparation'),
+        null=True, blank=True,
+    )
+
     @property
     def required_fields(self):
         fields = ['title', 'description', 'is_online', 'review', ]
@@ -134,6 +139,19 @@ class DateActivity(TimeBasedActivity):
             return self.start.astimezone(tz).utcoffset().total_seconds() / 60
 
     @property
+    def details(self):
+        details = HTMLParser().unescape(
+            u'{}\n{}'.format(
+                strip_tags(self.description), self.get_absolute_url()
+            )
+        )
+
+        if self.is_online and self.online_meeting_url:
+            details += _('\nJoin: {url}').format(url=self.online_meeting_url)
+
+        return details
+
+    @property
     def google_calendar_link(self):
         def format_date(date):
             if date:
@@ -146,11 +164,7 @@ class DateActivity(TimeBasedActivity):
             'dates': u'{}/{}'.format(
                 format_date(self.start), format_date(self.start + self.duration)
             ),
-            'details': HTMLParser().unescape(
-                u'{}\n{}'.format(
-                    strip_tags(self.description), self.get_absolute_url()
-                )
-            ),
+            'details': self.details,
             'uid': self.uid,
         }
 
@@ -174,11 +188,7 @@ class DateActivity(TimeBasedActivity):
             'subject': self.title,
             'startdt': format_date(self.start),
             'enddt': format_date(self.start + self.duration),
-            'body': HTMLParser().unescape(
-                u'{}\n{}'.format(
-                    strip_tags(self.description), self.get_absolute_url()
-                )
-            ),
+            'body': self.details
         }
 
         if self.location:

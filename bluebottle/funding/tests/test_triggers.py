@@ -59,3 +59,39 @@ class FundingTriggerTests(BluebottleTestCase):
         self.funding.save()
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
+
+
+class DonorTriggerTests(BluebottleTestCase):
+    def setUp(self):
+        self.initiative = InitiativeFactory.create()
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+        self.funding = FundingFactory.create(
+            initiative=self.initiative,
+            target=Money(1000, 'EUR')
+        )
+        BudgetLineFactory.create(activity=self.funding)
+        payout_account = PlainPayoutAccountFactory.create()
+        bank_account = BankAccountFactory.create(connect_account=payout_account, status='verified')
+        self.funding.bank_account = bank_account
+        self.funding.states.submit(save=True)
+        self.donor = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
+        self.payment = PledgePaymentFactory.create(donation=self.donor)
+
+    def test_change_donor_amount(self):
+        self.assertEqual(self.donor.amount, Money(500, 'EUR'))
+        self.assertEqual(self.donor.payout_amount, Money(500, 'EUR'))
+        contribution = self.donor.contributions.get()
+        self.assertEqual(contribution.amount, Money(500, 'EUR'))
+        self.assertEqual(self.funding.amount_donated, Money(500, 'EUR'))
+
+        self.donor.amount = Money(200, 'EUR')
+        self.donor.payout_amount = Money(200, 'EUR')
+        self.donor.save()
+
+        self.funding.refresh_from_db()
+        self.assertEqual(self.donor.amount, Money(200, 'EUR'))
+        self.assertEqual(self.donor.payout_amount, Money(200, 'EUR'))
+        contribution = self.donor.contributions.get()
+        self.assertEqual(contribution.amount, Money(200, 'EUR'))
+        self.assertEqual(self.funding.amount_donated, Money(200, 'EUR'))

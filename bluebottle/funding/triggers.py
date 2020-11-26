@@ -381,7 +381,8 @@ class DonorTriggers(ContributorTriggers):
         ModelChangedTrigger(
             'payout_amount',
             effects=[
-                UpdateFundingAmountsEffect
+                UpdateFundingAmountsEffect,
+                UpdateDonationAmountEffect
             ]
         ),
 

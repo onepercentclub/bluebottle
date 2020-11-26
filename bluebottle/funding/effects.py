@@ -63,9 +63,10 @@ class UpdateDonationAmountEffect(Effect):
     display = False
 
     def post_save(self, **kwargs):
-        donation = self.instance.time_contributions.first()
-        donation.amount = self.instance.payout_amount
-        donation.save()
+        money_contribution = self.instance.contributions.first()
+        if money_contribution:
+            money_contribution.amount = self.instance.payout_amount
+            money_contribution.save()
 
     def __str__(self):
         return _('Update donation amount')
@@ -252,11 +253,11 @@ class CreateDonationEffect(Effect):
     display = False
 
     def post_save(self, **kwargs):
-        donation = MoneyContribution(
+        money_contribution = MoneyContribution(
             contributor=self.instance,
             amount=self.instance.amount
         )
-        donation.save()
+        money_contribution.save()
 
     def __str__(self):
         return _('Create a donation')

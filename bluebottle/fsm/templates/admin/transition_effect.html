@@ -1,23 +1,23 @@
 {% load i18n %}
-<h3>Change {{opts.verbose_name|lower}} status</h3>
+<h3>Change {{ opts.verbose_name|lower }} status</h3>
 
 <p>
     "{{ effects.0.instance }}"
 
-    {% if effects|length > 1 %} 
+    {% if effects|length > 1 %}
         {% blocktrans with extra=effects|length|add:"-1" model_name=opts.verbose_name_plural|lower %}
-            and {{ extra }} other {{model_name}}
+            and {{ extra }} other {{ model_name }}
         {% endblocktrans %}
     {% endif %}
 
-    {% blocktrans with name=effects.0.transition.target.name count total=effects|length %}  
-        is set to <b>{{name}}</b>
+    {% blocktrans with name=effects.0.transition.target.name count total=effects|length %}
+        is set to <b>{{ name }}</b>
     {% plural %}
-        are set to <b>{{name}}</b>
+        are set to <b>{{ name }}</b>
     {% endblocktrans %}
     <span class="et icon-info">
-            <span class="et-right">
-                    {{effects.0.transition.description}}
-            </span>
+        <span class="et-right">
+            {{effects.0.transition.description}}
+        </span>
     </span>
 </p>

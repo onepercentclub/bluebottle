@@ -219,8 +219,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ('funding', _('Funding')),
-        ('event', _('Events')),
-        ('assignment', _('Assignment')),
 
         ('periodactivity', _('Activity during a period')),
         ('dateactivity', _('Activity on a specific date')),

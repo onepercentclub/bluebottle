@@ -152,7 +152,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         Tests that only the event creator can share a wallpost.
         """
         wallpost_data = {'parent_id': str(self.on_a_data_activity.id),
-                         'parent_type': 'activities/time-based/date',
+                         'parent_type': 'date',
                          'text': 'I can share stuff!',
                          'share_with_facebook': True}
 
@@ -621,7 +621,7 @@ class InitiativeWallpostTest(BluebottleTestCase):
         Tests that only the event creator can share a wallpost.
         """
         wallpost_data = {'parent_id': self.on_a_data_activity.id,
-                         'parent_type': 'activities/time-based/date',
+                         'parent_type': 'date',
                          'text': 'I can share stuff!',
                          'share_with_twitter': True}
 

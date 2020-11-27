@@ -253,11 +253,11 @@ class CreateDonationEffect(Effect):
     display = False
 
     def post_save(self, **kwargs):
-        donation = MoneyContribution(
+        money_contribution = MoneyContribution(
             contributor=self.instance,
-            amount=self.instance.amount
+            value=self.instance.amount
         )
-        donation.save()
+        money_contribution.save()
 
     def __str__(self):
         return _('Create a donation')

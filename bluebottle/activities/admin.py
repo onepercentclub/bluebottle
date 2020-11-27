@@ -160,11 +160,16 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         TimeContribution,
         OrganizerContribution
     )
-    list_display = ['created', 'type', 'contributor', 'state_name']
+    list_display = ['created', 'type', 'contributor_link', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
     date_hierarchy = 'created'
 
     ordering = ('-created',)
+
+    def contributor_link(self, obj):
+        if obj:
+            url = reverse('admin:activities_contributor_change', args=(obj.contributor.id,))
+            return format_html('<a href="{}">{}</a>', url, obj.contributor)
 
     def type(self, obj):
         return obj.contributor.get_real_instance_class()._meta.verbose_name

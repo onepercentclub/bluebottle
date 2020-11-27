@@ -165,6 +165,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     detail_fields = TimeBasedAdmin.detail_fields + (
         'start',
         'duration',
+        'preparation',
         'deadline',
         'duration_period',
     )

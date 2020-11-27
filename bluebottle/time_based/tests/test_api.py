@@ -893,9 +893,8 @@ class PeriodParticipantDetailAPIViewTestCase(ParticipantDetailViewTestCase, Blue
 
     def test_get_owner(self):
         super().test_get_owner()
-
         self.assertTrue(
-            {'name': 'stop', 'target': 'stopped', 'available': True}
+            {'name': 'reject', 'target': 'rejected', 'available': True}
             in self.data['meta']['transitions']
         )
 

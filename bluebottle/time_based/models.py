@@ -247,8 +247,6 @@ class PeriodActivity(TimeBasedActivity):
 
 
 class Participant(Contributor):
-    def __str__(self):
-        return self.user
 
     @property
     def finished_contributions(self):
@@ -282,9 +280,6 @@ class DateParticipant(Participant):
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/date-participants'
 
-    def __str__(self):
-        return _("Participant {name}").format(name=self.user)
-
 
 class PeriodParticipant(Participant, Contributor):
     motivation = models.TextField(blank=True, null=True)
@@ -310,9 +305,6 @@ class PeriodParticipant(Participant, Contributor):
     @property
     def current_contribution(self):
         return self.contributions.get(status='new')
-
-    def __str__(self):
-        return _("Participant {name}").format(name=self.user)
 
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/period-participants'

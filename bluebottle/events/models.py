@@ -232,8 +232,5 @@ class Participant(Contributor):
 
         super(Participant, self).save(*args, **kwargs)
 
-    def __str__(self):
-        return self.user.full_name
-
 
 from bluebottle.events.periodic_tasks import *  # noqa

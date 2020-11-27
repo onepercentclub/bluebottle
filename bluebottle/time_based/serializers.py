@@ -94,6 +94,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         model = DateActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'start', 'duration', 'utc_offset', 'online_meeting_url', 'links', 'my_contributor',
+            'preparation',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):

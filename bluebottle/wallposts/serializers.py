@@ -47,9 +47,9 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
             data = ContentType.objects.get_for_model(Assignment)
         elif data == 'funding':
             data = ContentType.objects.get_for_model(Funding)
-        elif data == 'activities/time-based/date':
+        elif data == 'date':
             data = ContentType.objects.get_for_model(DateActivity)
-        elif data == 'activities/time-based/period':
+        elif data == 'period':
             data = ContentType.objects.get_for_model(PeriodActivity)
 
         return data

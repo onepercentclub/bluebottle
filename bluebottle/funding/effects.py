@@ -56,20 +56,20 @@ class UpdateFundingAmountsEffect(Effect):
 
 
 @python_2_unicode_compatible
-class UpdateDonationAmountEffect(Effect):
+class UpdateDonationValueEffect(Effect):
     conditions = []
-    title = _('Update donation amount')
+    title = _('Update contribution value')
 
     display = False
 
     def post_save(self, **kwargs):
-        money_contribution = self.instance.contributions.first()
-        if money_contribution:
-            money_contribution.amount = self.instance.payout_amount
-            money_contribution.save()
+        contribution = self.instance.contributions.first()
+        if contribution:
+            contribution.value = self.instance.payout_amount
+            contribution.save()
 
     def __str__(self):
-        return _('Update donation amount')
+        return _('Update contribution value')
 
 
 @python_2_unicode_compatible

@@ -164,7 +164,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     def __str__(self):
         if self.user:
             return str(self.user)
-        return _('Contributor')
+        return _('Guest')
 
 
 @python_2_unicode_compatible
@@ -175,9 +175,6 @@ class Organizer(Contributor):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/organizers'
-
-    def __str__(self):
-        return _('Activity owner {name}').format(name=self.user)
 
 
 class Contribution(TriggerMixin, PolymorphicModel):

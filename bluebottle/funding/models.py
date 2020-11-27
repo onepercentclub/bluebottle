@@ -510,9 +510,6 @@ class Donor(Contributor):
         verbose_name = _('Donor')
         verbose_name_plural = _('Donors')
 
-    def __str__(self):
-        return u'{}'.format(self.amount)
-
     class JSONAPIMeta(object):
         resource_name = 'contributors/donations'
 

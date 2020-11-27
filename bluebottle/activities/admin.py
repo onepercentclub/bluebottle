@@ -1,5 +1,6 @@
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.contenttypes.models import ContentType
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.urls import reverse
@@ -152,6 +153,30 @@ class OrganizerAdmin(ContributorChildAdmin):
     )
 
 
+class ContributionTypeFilter(admin.SimpleListFilter):
+
+    title = _('Contributor type')
+    parameter_name = 'contributor_type'
+
+    def lookups(self, request, model_admin):
+        choices = []
+        for child_model in ContributorAdmin.child_models:
+            ct = ContentType.objects.get_for_model(child_model, for_concrete_model=False)
+            choices.append((ct.id, child_model._meta.verbose_name))
+        return choices
+
+    def queryset(self, request, queryset):
+        try:
+            value = int(self.value())
+        except TypeError:
+            value = None
+        if value:
+            for choice_value, t in self.lookup_choices:
+                if choice_value == value:
+                    return queryset.filter(contributor__polymorphic_ctype_id=choice_value)
+        return queryset
+
+
 @admin.register(Contribution)
 class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Contribution
@@ -160,8 +185,8 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         TimeContribution,
         OrganizerContribution
     )
-    list_display = ['created', 'type', 'contributor_link', 'state_name']
-    list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
+    list_display = ['created', 'contributor_type', 'contributor_link', 'state_name', 'value']
+    list_filter = (ContributionTypeFilter, StateMachineFilter,)
     date_hierarchy = 'created'
 
     ordering = ('-created',)
@@ -171,8 +196,16 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
             url = reverse('admin:activities_contributor_change', args=(obj.contributor.id,))
             return format_html('<a href="{}">{}</a>', url, obj.contributor)
 
-    def type(self, obj):
+    def contributor_type(self, obj):
         return obj.contributor.get_real_instance_class()._meta.verbose_name
+
+    def value(self, obj):
+        type = obj.get_real_instance_class().__name__
+        if type == 'MoneyContribution':
+            return obj.moneycontribution.value
+        if type == 'TimeContribution':
+            return obj.timecontribution.value
+        return '-'
 
 
 class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):

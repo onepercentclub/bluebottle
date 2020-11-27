@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionValueStateMachine
+from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
 from bluebottle.funding.models import Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution
 
@@ -632,5 +632,5 @@ class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
 
 
 @register(MoneyContribution)
-class DonationStateMachine(ContributionValueStateMachine):
+class DonationStateMachine(ContributionStateMachine):
     pass

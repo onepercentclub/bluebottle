@@ -26,6 +26,10 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['activities.change_contributor']
             },
             {
+                'name': 'activities.contribution',
+                'permissions': ['activities.change_contribution']
+            },
+            {
                 'name': 'impact.impacttype',
                 'permissions': ['impact.change_impacttype']
             },
@@ -49,21 +53,6 @@ JET_SIDE_MENU_ITEMS = [
         ]
     },
     {
-        'label': _('Events'),
-        'app_label': 'events',
-        'permissions': ['activities.change_activity'],
-        'items': [
-            {
-                'name': 'events.event',
-                'permissions': ['events.change_event']
-            },
-            {
-                'name': 'events.participant',
-                'permissions': ['events.change_participant']
-            },
-        ]
-    },
-    {
         'label': _('Time Based'),
         'app_label': 'time_based',
         'permissions': ['activities.change_activity'],
@@ -79,26 +68,6 @@ JET_SIDE_MENU_ITEMS = [
         ]
     },
     {
-        'label': _('Tasks'),
-        'app_label': 'assignments',
-        'permissions': ['activities.change_activity'],
-        'items': [
-            {
-                'name': 'assignments.assignment',
-                'permissions': ['assignments.change_assignment']
-            },
-            {
-                'name': 'assignments.applicant',
-                'permissions': ['assignments.change_assignment']
-            },
-            {
-                'name': 'tasks.skill',
-                'permissions': ['tasks.change_skill']
-            },
-        ]
-    },
-
-    {
         'label': _('Funding'),
         'app_label': 'funding',
         'permissions': ['activities.change_activity'],
@@ -108,8 +77,8 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['funding.change_funding']
             },
             {
-                'name': 'funding.donation',
-                'permissions': ['funding.change_donation']
+                'name': 'funding.donor',
+                'permissions': ['funding.change_donor']
             },
             {
                 'name': 'funding.payment',

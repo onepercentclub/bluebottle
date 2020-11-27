@@ -1,6 +1,5 @@
 from django.db.models import Q
 from django.http import HttpResponse
-from django.utils.html import strip_tags
 from django.utils.timezone import utc
 
 import icalendar
@@ -225,10 +224,7 @@ class DateActivityIcalView(PrivateFileView):
 
         event = icalendar.Event()
         event.add('summary', instance.title)
-        event.add(
-            'description',
-            u'{}\n{}'.format(strip_tags(instance.description), instance.get_absolute_url())
-        )
+        event.add('description', instance.details)
         event.add('url', instance.get_absolute_url())
         event.add('dtstart', instance.start.astimezone(utc))
         event.add('dtend', (instance.start + instance.duration).astimezone(utc))

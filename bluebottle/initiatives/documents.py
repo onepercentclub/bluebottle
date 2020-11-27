@@ -9,8 +9,6 @@ from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.geo.models import Geolocation
 from bluebottle.categories.models import Category
 from bluebottle.activities.models import Activity
-from bluebottle.events.models import Event
-from bluebottle.assignments.models import Assignment
 from bluebottle.funding.models import Funding
 from bluebottle.members.models import Member
 
@@ -92,9 +90,7 @@ class InitiativeDocument(DocType):
             Geolocation,
             Member,
             ProjectTheme,
-            Event,
             Funding,
-            Assignment,
             PeriodActivity,
             DateActivity
         )

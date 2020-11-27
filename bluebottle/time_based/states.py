@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.activities.states import (
-    ActivityStateMachine, ContributorStateMachine, ContributionValueStateMachine
+    ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -214,7 +214,7 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
     stopped = State(
         _('stopped'),
         'stopped',
-        _('The participant (temporarily) stopped. Durations will no longer be created.')
+        _('The participant (temporarily) stopped. Contributions will no longer be created.')
     )
 
     stop = Transition(
@@ -238,5 +238,5 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
 
 
 @register(TimeContribution)
-class TimeContributionStateMachine(ContributionValueStateMachine):
+class TimeContributionStateMachine(ContributionStateMachine):
     pass

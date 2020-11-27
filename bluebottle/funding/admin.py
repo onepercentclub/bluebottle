@@ -21,7 +21,7 @@ from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin
+from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineAdminMixin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm
@@ -194,7 +194,7 @@ class FundingAdmin(ActivityChildAdmin):
         ('created', 'Created'),
         ('initiative__title', 'Initiative'),
         ('deadline', 'Deadline'),
-        ('duration', 'TimeContribution'),
+        ('contribution', 'MoneyContribution'),
         ('target', 'Target'),
         ('country', 'Country'),
         ('owner__full_name', 'Owner'),
@@ -209,7 +209,7 @@ class FundingAdmin(ActivityChildAdmin):
 
     def donors_link(self, obj):
         url = reverse('admin:funding_donor_changelist')
-        total = obj.donors.filter(status=DonorStateMachine.succeeded.value).count()
+        total = obj.donations.filter(status=DonorStateMachine.succeeded.value).count()
         return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
     donors_link.short_description = _("Donations")
 
@@ -232,7 +232,12 @@ class DonorAdminForm(StateMachineModelForm):
 class MoneyContributionInlineAdmin(admin.StackedInline):
     model = MoneyContribution
     extra = 0
-    readonly_fields = ('status', 'created')
+    readonly_fields = ('status', 'created', 'value')
+
+
+@admin.register(MoneyContribution)
+class MoneyContributionAdmin(ContributionChildAdmin):
+    model = MoneyContribution
 
 
 @admin.register(Donor)
@@ -242,9 +247,11 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
 
     raw_id_fields = ['activity', 'payout', 'user']
     readonly_fields = ContributorChildAdmin.readonly_fields + [
-        'payment_link', 'payment_link', 'payout_amount', 'sync_payment_link'
+        'amount_value', 'payout_amount_value',
+        'payment_link', 'sync_payment_link'
     ]
-    list_display = ['contributor_date', 'payment_link', 'activity_link', 'user_link', 'state_name', 'amount', ]
+    list_display = ['contributor_date', 'payment_link', 'activity_link', 'user_link',
+                    'state_name', 'amount', 'payout_amount']
     list_filter = [
         DonorAdminStatusFilter,
         DonorAdminCurrencyFilter,
@@ -260,11 +267,13 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
     superadmin_fields = [
         'force_status',
         'amount',
+        'payout_amount',
         'sync_payment_link'
     ]
 
     fields = [
-        'created', 'activity', 'payout', 'user', 'payout_amount',
+        'created', 'activity', 'payout', 'user',
+        'amount_value', 'payout_amount_value',
         'reward', 'anonymous', 'name', 'status', 'payment_link'
     ]
 
@@ -280,6 +289,16 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
         ('name', 'name'),
         ('anonymous', 'Anonymous'),
     )
+
+    def amount_value(self, obj):
+        if obj:
+            return obj.amount
+    amount_value.short_description = _('Amount')
+
+    def payout_amount_value(self, obj):
+        if obj:
+            return obj.payout_amount
+    payout_amount_value.short_description = _('Payout amount')
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
 

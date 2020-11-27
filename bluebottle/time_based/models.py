@@ -34,7 +34,7 @@ class TimeBasedActivity(Activity):
     review = models.NullBooleanField(_('review participants'), null=True, default=None)
 
     preparation = models.DurationField(
-        _('Time required for preparation'),
+        _('Preparation time'),
         null=True, blank=True,
     )
 

@@ -4,6 +4,7 @@ from django.db.models import Sum
 from django.urls import reverse, resolve
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from django_summernote.widgets import SummernoteWidget
 from durationwidget.widgets import TimeDurationWidget
 
 from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin
@@ -13,6 +14,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution
 )
 from bluebottle.utils.admin import export_as_csv_action
+from build.lib.bluebottle.fsm.forms import StateMachineModelForm
 
 
 class BaseParticipantAdminInline(admin.TabularInline):
@@ -110,10 +112,20 @@ class TimeBasedAdmin(ActivityChildAdmin):
     )
 
 
+class TimeBasedActivityAdminForm(StateMachineModelForm):
+
+    class Meta(object):
+        model = PeriodActivity
+        fields = '__all__'
+        widgets = {
+            'description': SummernoteWidget(attrs={'height': 400})
+        }
+
+
 @admin.register(DateActivity)
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
-
+    form = TimeBasedActivityAdminForm
     inlines = (DateParticipantAdminInline,) + TimeBasedAdmin.inlines
 
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
@@ -142,6 +154,8 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     base_model = PeriodActivity
 
     inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
+
+    form = TimeBasedActivityAdminForm
 
     date_hierarchy = 'deadline'
     list_display = TimeBasedAdmin.list_display + [

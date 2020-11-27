@@ -520,7 +520,7 @@ class Donor(Contributor):
 @python_2_unicode_compatible
 class MoneyContribution(Contribution):
 
-    amount = MoneyField()
+    value = MoneyField()
 
     class Meta(object):
         verbose_name = _('Contribution')

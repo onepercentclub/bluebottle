@@ -162,7 +162,9 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         verbose_name_plural = _('Contributors')
 
     def __str__(self):
-        return _('Contributor {name}').format(name=self.user)
+        if self.user:
+            return str(self.user)
+        return _('Contributor')
 
 
 @python_2_unicode_compatible

@@ -178,15 +178,15 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         )
 
         amounts = contributions.values(
-            'moneycontribution__amount_currency'
+            'moneycontribution__value_currency'
         ).annotate(
-            amount=Sum('moneycontribution__amount')
+            amount=Sum('moneycontribution__value')
         ).order_by()
 
         stats['hours'] = stats['hours'].total_seconds() / 3600 if stats['hours'] else 0
         stats['amount'] = sum(
             convert(
-                Money(c['amount'], c['moneycontribution__amount_currency']),
+                Money(c['amount'], c['moneycontribution__value_currency']),
                 default_currency
             ).amount
             for c in amounts if c['amount']

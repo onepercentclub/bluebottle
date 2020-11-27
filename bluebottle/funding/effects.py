@@ -255,7 +255,7 @@ class CreateDonationEffect(Effect):
     def post_save(self, **kwargs):
         money_contribution = MoneyContribution(
             contributor=self.instance,
-            amount=self.instance.amount
+            value=self.instance.amount
         )
         money_contribution.save()
 

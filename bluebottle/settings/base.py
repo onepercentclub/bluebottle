@@ -288,7 +288,6 @@ SHARED_APPS = (
     'multiselectfield',
 
     'djmoney.contrib.exchange',
-    'durationwidget',
 )
 
 TENANT_APPS = (
@@ -304,6 +303,7 @@ TENANT_APPS = (
     'bluebottle.bluebottle_dashboard',
     'jet',
     'jet.dashboard',
+    'durationwidget',
 
     'rest_framework',
 

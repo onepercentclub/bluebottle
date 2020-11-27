@@ -126,7 +126,7 @@ class ParticipantStateMachine(ContributorStateMachine):
             self.instance.activity.owner,
             self.instance.activity.initiative.activity_manager,
             self.instance.activity.initiative.owner
-        ]
+        ] or user.is_staff
 
     def activity_is_open(self):
         """task is open"""

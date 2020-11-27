@@ -35,6 +35,7 @@ class TimeBasedActivity(Activity):
 
     preparation = models.DurationField(
         _('Preparation time'),
+        help_text=_('Time required for preparation'),
         null=True, blank=True,
     )
 

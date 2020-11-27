@@ -14,7 +14,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution
 )
 from bluebottle.utils.admin import export_as_csv_action
-from build.lib.bluebottle.fsm.forms import StateMachineModelForm
+from bluebottle.fsm.forms import StateMachineModelForm
 
 
 class BaseParticipantAdminInline(admin.TabularInline):
